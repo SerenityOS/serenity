@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    String zip_file_path { zip_path };
+    DeprecatedString zip_file_path { zip_path };
     if (Core::File::exists(zip_file_path)) {
         if (force) {
             outln("{} already exists, overwriting...", zip_file_path);
@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Archive::ZipOutputStream zip_stream { file_stream };
 
-    auto add_file = [&](String path) {
+    auto add_file = [&](DeprecatedString path) {
         auto file = Core::File::construct(path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", path, file->error_string());
@@ -83,8 +83,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         zip_stream.add_member(member);
     };
 
-    auto add_directory = [&](String path, auto handle_directory) -> void {
-        auto canonicalized_path = String::formatted("{}/", LexicalPath::canonicalized_path(path));
+    auto add_directory = [&](DeprecatedString path, auto handle_directory) -> void {
+        auto canonicalized_path = DeprecatedString::formatted("{}/", LexicalPath::canonicalized_path(path));
         Archive::ZipMember member {};
         member.name = canonicalized_path;
         member.compressed_data = {};

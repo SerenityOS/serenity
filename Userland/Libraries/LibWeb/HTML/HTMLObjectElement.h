@@ -32,12 +32,12 @@ class HTMLObjectElement final
 public:
     virtual ~HTMLObjectElement() override;
 
-    virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
 
-    String data() const;
-    void set_data(String const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
+    DeprecatedString data() const;
+    void set_data(DeprecatedString const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
 
-    String type() const { return attribute(HTML::AttributeNames::type); }
+    DeprecatedString type() const { return attribute(HTML::AttributeNames::type); }
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
@@ -51,7 +51,7 @@ private:
     bool has_ancestor_media_element_or_object_element_not_showing_fallback_content() const;
 
     void queue_element_task_to_run_object_representation_steps();
-    void run_object_representation_handler_steps(Optional<String> resource_type);
+    void run_object_representation_handler_steps(Optional<DeprecatedString> resource_type);
     void run_object_representation_completed_steps(Representation);
     void run_object_representation_fallback_steps();
 

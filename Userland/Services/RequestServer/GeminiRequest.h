@@ -25,7 +25,7 @@ public:
 private:
     explicit GeminiRequest(ConnectionFromClient&, NonnullRefPtr<Gemini::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
-    virtual void set_certificate(String certificate, String key) override;
+    virtual void set_certificate(DeprecatedString certificate, DeprecatedString key) override;
 
     NonnullRefPtr<Gemini::Job> m_job;
 };

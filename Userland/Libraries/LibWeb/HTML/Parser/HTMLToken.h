@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -39,10 +39,10 @@ public:
     };
 
     struct Attribute {
-        String prefix;
-        String local_name { "" };
-        String namespace_;
-        String value { "" };
+        DeprecatedString prefix;
+        DeprecatedString local_name { "" };
+        DeprecatedString namespace_;
+        DeprecatedString value { "" };
         Position name_start_position;
         Position value_start_position;
         Position name_end_position;
@@ -51,9 +51,9 @@ public:
 
     struct DoctypeData {
         // NOTE: "Missing" is a distinct state from the empty string.
-        String name;
-        String public_identifier;
-        String system_identifier;
+        DeprecatedString name;
+        DeprecatedString public_identifier;
+        DeprecatedString system_identifier;
         bool missing_name { true };
         bool missing_public_identifier { true };
         bool missing_system_identifier { true };
@@ -140,7 +140,7 @@ public:
         return m_string_data;
     }
 
-    void set_comment(String comment)
+    void set_comment(DeprecatedString comment)
     {
         VERIFY(is_comment());
         m_string_data = move(comment);
@@ -152,7 +152,7 @@ public:
         return m_string_data;
     }
 
-    void set_tag_name(String name)
+    void set_tag_name(DeprecatedString name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         m_string_data = move(name);
@@ -315,7 +315,7 @@ public:
 
     Type type() const { return m_type; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }

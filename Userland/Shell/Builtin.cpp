@@ -7,10 +7,10 @@
 #include "AST.h"
 #include "Shell.h"
 #include "Shell/Formatter.h"
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -41,7 +41,7 @@ int Shell::builtin_dump(int argc, char const** argv)
 
 int Shell::builtin_alias(int argc, char const** argv)
 {
-    Vector<String> arguments;
+    Vector<DeprecatedString> arguments;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
@@ -77,7 +77,7 @@ int Shell::builtin_alias(int argc, char const** argv)
 int Shell::builtin_unalias(int argc, char const** argv)
 {
     bool remove_all { false };
-    Vector<String> arguments;
+    Vector<DeprecatedString> arguments;
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
@@ -180,7 +180,7 @@ int Shell::builtin_bg(int argc, char const** argv)
 
 int Shell::builtin_type(int argc, char const** argv)
 {
-    Vector<String> commands;
+    Vector<DeprecatedString> commands;
     bool dont_show_function_source = false;
 
     Core::ArgsParser parser;
@@ -257,7 +257,7 @@ int Shell::builtin_cd(int argc, char const** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    String new_path;
+    DeprecatedString new_path;
 
     if (!arg_path) {
         new_path = home;
@@ -342,7 +342,7 @@ int Shell::builtin_dirs(int argc, char const** argv)
     bool number_when_printing = false;
     char separator = ' ';
 
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
 
     Core::ArgsParser parser;
     parser.add_option(clear, "Clear the directory stack", "clear", 'c');
@@ -426,7 +426,7 @@ int Shell::builtin_exit(int argc, char const** argv)
 
 int Shell::builtin_export(int argc, char const** argv)
 {
-    Vector<String> vars;
+    Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
@@ -472,7 +472,7 @@ int Shell::builtin_export(int argc, char const** argv)
 
 int Shell::builtin_glob(int argc, char const** argv)
 {
-    Vector<String> globs;
+    Vector<DeprecatedString> globs;
     Core::ArgsParser parser;
     parser.add_positional_argument(globs, "Globs to resolve", "glob");
 
@@ -704,8 +704,8 @@ int Shell::builtin_pushd(int argc, char const** argv)
             return 1;
         }
 
-        String dir1 = directory_stack.take_first();
-        String dir2 = directory_stack.take_first();
+        DeprecatedString dir1 = directory_stack.take_first();
+        DeprecatedString dir2 = directory_stack.take_first();
         directory_stack.insert(0, dir2);
         directory_stack.insert(1, dir1);
 
@@ -855,7 +855,7 @@ int Shell::builtin_shift(int argc, char const** argv)
 int Shell::builtin_source(int argc, char const** argv)
 {
     char const* file_to_source = nullptr;
-    Vector<String> args;
+    Vector<DeprecatedString> args;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(file_to_source, "File to read commands from", "path");
@@ -919,7 +919,7 @@ int Shell::builtin_time(int argc, char const** argv)
 
         warnln("Timing report: {} ms", iteration_times.sum());
         warnln("==============");
-        warnln("Command:         {}", String::join(' ', Span<char const*>(argv, argc)));
+        warnln("Command:         {}", DeprecatedString::join(' ', Span<char const*>(argv, argc)));
         warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})",
             iteration_times.average(), iteration_times.median(),
             iteration_times.standard_deviation(),
@@ -1021,7 +1021,7 @@ int Shell::builtin_wait(int argc, char const** argv)
 
 int Shell::builtin_unset(int argc, char const** argv)
 {
-    Vector<String> vars;
+    Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
@@ -1074,7 +1074,7 @@ int Shell::builtin_not(int argc, char const** argv)
 int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
-    Vector<String> replaced_values;
+    Vector<DeprecatedString> replaced_values;
     auto kill_path = Core::File::resolve_executable_from_environment("kill"sv);
     if (!kill_path.has_value()) {
         warnln("kill: `kill' not found in PATH");
@@ -1085,7 +1085,7 @@ int Shell::builtin_kill(int argc, char const** argv)
         if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
-                replaced_values.append(String::number(job->pid()));
+                replaced_values.append(DeprecatedString::number(job->pid()));
             } else {
                 warnln("kill: Job with pid {} not found", job_id.value());
                 return 1;
@@ -1177,7 +1177,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
 
     Vector<char const*> arguments;
     Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
-    String current_variable;
+    DeprecatedString current_variable;
     // if max > 1 or min < 1, or explicit `--list`.
     bool treat_arg_as_list = false;
     enum class Type {
@@ -1199,19 +1199,19 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
             return AST::make_ref_counted<AST::StringValue>(value);
         case Type::I32:
             if (auto number = value.to_int(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(String::number(*number));
+                return AST::make_ref_counted<AST::StringValue>(DeprecatedString::number(*number));
 
             warnln("Invalid value for type i32: {}", value);
             return {};
         case Type::U32:
         case Type::Size:
             if (auto number = value.to_uint(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(String::number(*number));
+                return AST::make_ref_counted<AST::StringValue>(DeprecatedString::number(*number));
 
             warnln("Invalid value for type u32|size: {}", value);
             return {};
         case Type::Double: {
-            String string = value;
+            DeprecatedString string = value;
             char* endptr = nullptr;
             auto number = strtod(string.characters(), &endptr);
             if (endptr != string.characters() + string.length()) {
@@ -1219,7 +1219,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return {};
             }
 
-            return AST::make_ref_counted<AST::StringValue>(String::number(number));
+            return AST::make_ref_counted<AST::StringValue>(DeprecatedString::number(number));
         }
         default:
             VERIFY_NOT_REACHED();

@@ -53,7 +53,7 @@ void HTMLElement::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-dir
-String HTMLElement::dir() const
+DeprecatedString HTMLElement::dir() const
 {
     auto dir = attribute(HTML::AttributeNames::dir);
 #define __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(keyword) \
@@ -65,7 +65,7 @@ String HTMLElement::dir() const
     return {};
 }
 
-void HTMLElement::set_dir(String const& dir)
+void HTMLElement::set_dir(DeprecatedString const& dir)
 {
     MUST(set_attribute(HTML::AttributeNames::dir, dir));
 }
@@ -97,7 +97,7 @@ bool HTMLElement::is_editable() const
     }
 }
 
-String HTMLElement::content_editable() const
+DeprecatedString HTMLElement::content_editable() const
 {
     switch (content_editable_state()) {
     case ContentEditableState::True:
@@ -112,7 +112,7 @@ String HTMLElement::content_editable() const
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
-WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_editable)
+WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(DeprecatedString const& content_editable)
 {
     if (content_editable.equals_ignoring_case("inherit"sv)) {
         remove_attribute(HTML::AttributeNames::contenteditable);
@@ -137,7 +137,7 @@ void HTMLElement::set_inner_text(StringView text)
     set_needs_style_update(true);
 }
 
-String HTMLElement::inner_text()
+DeprecatedString HTMLElement::inner_text()
 {
     StringBuilder builder;
 
@@ -231,7 +231,7 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     Element::parse_attribute(name, value);
 

@@ -8,9 +8,9 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <string.h>
@@ -70,7 +70,7 @@ public:
             t.deserialize(*this);
     }
 
-    void deserialize_to(String& text);
+    void deserialize_to(DeprecatedString& text);
 
     template<typename T, typename... Args>
     NonnullOwnPtr<T> make_and_deserialize(Args&&... args)
@@ -105,7 +105,7 @@ public:
             t.serialize(*this);
     }
 
-    void serialize(String const&);
+    void serialize(DeprecatedString const&);
 
     template<typename T>
     bool serialize_and_write(T const& t)
@@ -154,13 +154,13 @@ private:
         return buffer_ptr;
     }
 
-    static void dump(u8 const* ptr, size_t sz, String const& prefix)
+    static void dump(u8 const* ptr, size_t sz, DeprecatedString const& prefix)
     {
         StringBuilder builder;
         builder.appendff("{0} {1:04x} | ", prefix, sz);
-        Vector<String> bytes;
+        Vector<DeprecatedString> bytes;
         for (auto ix = 0u; ix < sz; ++ix) {
-            bytes.append(String::formatted("{0:02x}", *(ptr + ix)));
+            bytes.append(DeprecatedString::formatted("{0:02x}", *(ptr + ix)));
         }
         StringBuilder bytes_builder;
         bytes_builder.join(' ', bytes);

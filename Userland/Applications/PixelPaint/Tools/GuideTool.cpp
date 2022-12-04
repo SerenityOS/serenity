@@ -74,7 +74,7 @@ void GuideTool::on_mousedown(Layer*, MouseEvent& event)
 
     if (m_selected_guide) {
         m_guide_origin = m_selected_guide->offset();
-        GUI::Application::the()->show_tooltip_immediately(String::formatted("{}", m_guide_origin), GUI::Application::the()->tooltip_source_widget());
+        GUI::Application::the()->show_tooltip_immediately(DeprecatedString::formatted("{}", m_guide_origin), GUI::Application::the()->tooltip_source_widget());
     }
 }
 
@@ -120,7 +120,7 @@ void GuideTool::on_mousemove(Layer*, MouseEvent& event)
 
     m_selected_guide->set_offset(new_offset);
 
-    GUI::Application::the()->show_tooltip_immediately(String::formatted("{}", new_offset), GUI::Application::the()->tooltip_source_widget());
+    GUI::Application::the()->show_tooltip_immediately(DeprecatedString::formatted("{}", new_offset), GUI::Application::the()->tooltip_source_widget());
 
     editor()->layers_did_change();
 }
@@ -140,7 +140,7 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
                     return;
                 auto dialog = EditGuideDialog::construct(
                     editor()->window(),
-                    String::formatted("{}", m_context_menu_guide->offset()),
+                    DeprecatedString::formatted("{}", m_context_menu_guide->offset()),
                     m_context_menu_guide->orientation());
                 if (dialog->exec() != GUI::Dialog::ExecResult::OK)
                     return;

@@ -13,7 +13,7 @@
 
 namespace GUI {
 
-PasswordInputDialog::PasswordInputDialog(Window* parent_window, String title, String server, String username)
+PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString title, DeprecatedString server, DeprecatedString username)
     : Dialog(parent_window)
 {
     if (parent_window)
@@ -60,7 +60,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, String title, St
     password_box.set_focus(true);
 }
 
-Dialog::ExecResult PasswordInputDialog::show(Window* parent_window, String& text_value, String title, String server, String username)
+Dialog::ExecResult PasswordInputDialog::show(Window* parent_window, DeprecatedString& text_value, DeprecatedString title, DeprecatedString server, DeprecatedString username)
 {
     auto box = PasswordInputDialog::construct(parent_window, move(title), move(server), move(username));
     auto result = box->exec();

@@ -35,7 +35,7 @@ public:
         return m_node.ptr() == other.m_node.ptr() && m_offset == other.m_offset;
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     JS::Handle<Node> m_node;

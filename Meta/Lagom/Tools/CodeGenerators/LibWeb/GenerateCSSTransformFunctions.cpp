@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-static String title_casify_transform_function(StringView input)
+static DeprecatedString title_casify_transform_function(StringView input)
 {
     // Transform function names look like `fooBar`, so we just have to make the first character uppercase.
     StringBuilder builder;
@@ -189,7 +189,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
             member_generator.append(first ? " "sv : ", "sv);
             first = false;
 
-            member_generator.append(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv).to_string()));
+            member_generator.append(DeprecatedString::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv).to_string()));
         });
 
         member_generator.append(R"~~~( }

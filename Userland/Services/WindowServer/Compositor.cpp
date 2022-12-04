@@ -31,7 +31,7 @@ Compositor& Compositor::the()
     return s_the;
 }
 
-static WallpaperMode mode_to_enum(String const& name)
+static WallpaperMode mode_to_enum(DeprecatedString const& name)
 {
     if (name == "Tile")
         return WallpaperMode::Tile;
@@ -779,7 +779,7 @@ void Compositor::start_compose_async_timer()
     }
 }
 
-bool Compositor::set_background_color(String const& background_color)
+bool Compositor::set_background_color(DeprecatedString const& background_color)
 {
     auto color = Color::from_string(background_color);
     if (!color.has_value())
@@ -799,7 +799,7 @@ bool Compositor::set_background_color(String const& background_color)
     return succeeded;
 }
 
-bool Compositor::set_wallpaper_mode(String const& mode)
+bool Compositor::set_wallpaper_mode(DeprecatedString const& mode)
 {
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Mode", mode);

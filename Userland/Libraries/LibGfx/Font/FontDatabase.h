@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <LibGfx/Font/Typeface.h>
 #include <LibGfx/Forward.h>
 
@@ -38,15 +38,15 @@ public:
     static Font& default_fixed_width_font();
     static Font& window_title_font();
 
-    static String default_font_query();
-    static String window_title_font_query();
-    static String fixed_width_font_query();
+    static DeprecatedString default_font_query();
+    static DeprecatedString window_title_font_query();
+    static DeprecatedString fixed_width_font_query();
 
-    static String default_fonts_lookup_path();
-    static void set_default_font_query(String);
-    static void set_window_title_font_query(String);
-    static void set_fixed_width_font_query(String);
-    static void set_default_fonts_lookup_path(String);
+    static DeprecatedString default_fonts_lookup_path();
+    static void set_default_font_query(DeprecatedString);
+    static void set_window_title_font_query(DeprecatedString);
+    static void set_fixed_width_font_query(DeprecatedString);
+    static void set_default_fonts_lookup_path(DeprecatedString);
 
     RefPtr<Gfx::Font> get(FlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
@@ -56,7 +56,7 @@ public:
 
     void for_each_typeface(Function<void(Typeface const&)>);
 
-    void load_all_fonts_from_path(String const&);
+    void load_all_fonts_from_path(DeprecatedString const&);
 
 private:
     FontDatabase();
@@ -64,7 +64,7 @@ private:
 
     void load_fonts();
 
-    RefPtr<Typeface> get_or_create_typeface(String const& family, String const& variant);
+    RefPtr<Typeface> get_or_create_typeface(DeprecatedString const& family, DeprecatedString const& variant);
 
     struct Private;
     OwnPtr<Private> m_private;

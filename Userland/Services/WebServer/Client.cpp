@@ -81,7 +81,7 @@ void Client::start()
         }
 
         auto request = builder.to_byte_buffer();
-        dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", String::copy(request));
+        dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", DeprecatedString::copy(request));
 
         auto maybe_did_handle = handle_request(request);
         if (maybe_did_handle.is_error()) {
@@ -233,9 +233,9 @@ ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest 
     return {};
 }
 
-static String folder_image_data()
+static DeprecatedString folder_image_data()
 {
-    static String cache;
+    static DeprecatedString cache;
     if (cache.is_empty()) {
         auto file = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors();
         cache = encode_base64(file->bytes());
@@ -243,9 +243,9 @@ static String folder_image_data()
     return cache;
 }
 
-static String file_image_data()
+static DeprecatedString file_image_data()
 {
-    static String cache;
+    static DeprecatedString cache;
     if (cache.is_empty()) {
         auto file = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors();
         cache = encode_base64(file->bytes());
@@ -253,7 +253,7 @@ static String file_image_data()
     return cache;
 }
 
-ErrorOr<void> Client::handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const& request)
+ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested_path, DeprecatedString const& real_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
 
@@ -277,7 +277,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     builder.append("<code><table>\n"sv);
 
     Core::DirIterator dt(real_path);
-    Vector<String> names;
+    Vector<DeprecatedString> names;
     while (dt.has_next())
         names.append(dt.next_path());
     quick_sort(names);
@@ -332,7 +332,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     return send_response(stream, request, { .type = "text/html", .length = response.length() });
 }
 
-ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)
+ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<DeprecatedString> const& headers)
 {
     auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
 

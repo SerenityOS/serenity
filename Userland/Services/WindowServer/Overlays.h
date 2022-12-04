@@ -145,13 +145,13 @@ private:
     void update_rect();
 
     WeakPtr<Window> m_window;
-    String m_label;
+    DeprecatedString m_label;
     Gfx::IntRect m_label_rect;
 };
 
 class DndOverlay : public BitmapOverlay {
 public:
-    DndOverlay(String const&, Gfx::Bitmap const*);
+    DndOverlay(DeprecatedString const&, Gfx::Bitmap const*);
 
     void cursor_moved()
     {
@@ -166,7 +166,7 @@ private:
     void update_rect();
 
     RefPtr<Gfx::Bitmap> m_bitmap;
-    String m_text;
+    DeprecatedString m_text;
     Gfx::IntRect m_label_rect;
 };
 

@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Bytecode/CodeGenerationError.h>
@@ -58,7 +58,7 @@ public:
 
     void set_end_offset(Badge<Parser>, u32 end_offset) { m_end_offset = end_offset; }
 
-    String class_name() const;
+    DeprecatedString class_name() const;
 
     template<typename T>
     bool fast_is() const = delete;
@@ -596,7 +596,7 @@ struct FunctionParameter {
 class FunctionNode {
 public:
     FlyString const& name() const { return m_name; }
-    String const& source_text() const { return m_source_text; }
+    DeprecatedString const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
     Vector<FunctionParameter> const& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
@@ -607,7 +607,7 @@ public:
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(FlyString name, String source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+    FunctionNode(FlyString name, DeprecatedString source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
         : m_name(move(name))
         , m_source_text(move(source_text))
         , m_body(move(body))
@@ -623,11 +623,11 @@ protected:
             VERIFY(!m_might_need_arguments_object);
     }
 
-    void dump(int indent, String const& class_name) const;
+    void dump(int indent, DeprecatedString const& class_name) const;
 
 private:
     FlyString m_name;
-    String m_source_text;
+    DeprecatedString m_source_text;
     NonnullRefPtr<Statement> m_body;
     Vector<FunctionParameter> const m_parameters;
     const i32 m_function_length;
@@ -644,7 +644,7 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
+    FunctionDeclaration(SourceRange source_range, FlyString const& name, DeprecatedString source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
         : Declaration(source_range)
         , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false)
     {
@@ -670,7 +670,7 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, FlyString const& name, DeprecatedString source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
         : Expression(source_range)
         , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function)
     {
@@ -1104,7 +1104,7 @@ private:
 
 class BigIntLiteral final : public Literal {
 public:
-    explicit BigIntLiteral(SourceRange source_range, String value)
+    explicit BigIntLiteral(SourceRange source_range, DeprecatedString value)
         : Literal(source_range)
         , m_value(move(value))
     {
@@ -1115,12 +1115,12 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
-    String m_value;
+    DeprecatedString m_value;
 };
 
 class StringLiteral final : public Literal {
 public:
-    explicit StringLiteral(SourceRange source_range, String value)
+    explicit StringLiteral(SourceRange source_range, DeprecatedString value)
         : Literal(source_range)
         , m_value(move(value))
     {
@@ -1135,7 +1135,7 @@ public:
 private:
     virtual bool is_string_literal() const override { return true; }
 
-    String m_value;
+    DeprecatedString m_value;
 };
 
 class NullLiteral final : public Literal {
@@ -1152,7 +1152,7 @@ public:
 
 class RegExpLiteral final : public Literal {
 public:
-    RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, String parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, String pattern, String flags)
+    RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, DeprecatedString parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, DeprecatedString pattern, DeprecatedString flags)
         : Literal(source_range)
         , m_parsed_regex(move(parsed_regex))
         , m_parsed_pattern(move(parsed_pattern))
@@ -1167,17 +1167,17 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     regex::Parser::Result const& parsed_regex() const { return m_parsed_regex; }
-    String const& parsed_pattern() const { return m_parsed_pattern; }
+    DeprecatedString const& parsed_pattern() const { return m_parsed_pattern; }
     regex::RegexOptions<ECMAScriptFlags> const& parsed_flags() const { return m_parsed_flags; }
-    String const& pattern() const { return m_pattern; }
-    String const& flags() const { return m_flags; }
+    DeprecatedString const& pattern() const { return m_pattern; }
+    DeprecatedString const& flags() const { return m_flags; }
 
 private:
     regex::Parser::Result m_parsed_regex;
-    String m_parsed_pattern;
+    DeprecatedString m_parsed_pattern;
     regex::RegexOptions<ECMAScriptFlags> m_parsed_flags;
-    String m_pattern;
-    String m_flags;
+    DeprecatedString m_pattern;
+    DeprecatedString m_flags;
 };
 
 class Identifier final : public Expression {
@@ -1341,7 +1341,7 @@ public:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, String name, String source_text, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassElement> elements)
+    ClassExpression(SourceRange source_range, DeprecatedString name, DeprecatedString source_text, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassElement> elements)
         : Expression(source_range)
         , m_name(move(name))
         , m_source_text(move(source_text))
@@ -1352,7 +1352,7 @@ public:
     }
 
     StringView name() const { return m_name; }
-    String const& source_text() const { return m_source_text; }
+    DeprecatedString const& source_text() const { return m_source_text; }
     RefPtr<FunctionExpression> constructor() const { return m_constructor; }
 
     virtual Completion execute(Interpreter&) const override;
@@ -1366,8 +1366,8 @@ public:
 private:
     virtual bool is_class_expression() const override { return true; }
 
-    String m_name;
-    String m_source_text;
+    DeprecatedString m_name;
+    DeprecatedString m_source_text;
     RefPtr<FunctionExpression> m_constructor;
     RefPtr<Expression> m_super_class;
     NonnullRefPtrVector<ClassElement> m_elements;
@@ -1450,7 +1450,7 @@ protected:
     virtual bool is_call_expression() const override { return true; }
 
     Completion throw_type_error_for_callee(Interpreter&, Value callee_value, StringView call_type) const;
-    Optional<String> expression_string() const;
+    Optional<DeprecatedString> expression_string() const;
 
     NonnullRefPtr<Expression> m_callee;
     Vector<Argument> const m_arguments;
@@ -1795,7 +1795,7 @@ public:
     Expression const& object() const { return *m_object; }
     Expression const& property() const { return *m_property; }
 
-    String to_string_approximation() const;
+    DeprecatedString to_string_approximation() const;
 
     bool ends_in_private_name() const;
 

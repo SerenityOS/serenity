@@ -434,7 +434,7 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
 }
 
 // 4.5.9 TemporalTimeToString ( hour, minute, second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaltimetostring
-String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
+DeprecatedString temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
@@ -445,7 +445,7 @@ String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u
     auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
 
     // 5. Return the string-concatenation of hour, the code unit 0x003A (COLON), minute, and seconds.
-    return String::formatted("{:02}:{:02}{}", hour, minute, seconds);
+    return DeprecatedString::formatted("{:02}:{:02}{}", hour, minute, seconds);
 }
 
 // 4.5.10 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime

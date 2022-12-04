@@ -66,14 +66,14 @@ void HTMLCanvasElement::reset_context_to_default_state()
 
 void HTMLCanvasElement::set_width(unsigned value)
 {
-    MUST(set_attribute(HTML::AttributeNames::width, String::number(value)));
+    MUST(set_attribute(HTML::AttributeNames::width, DeprecatedString::number(value)));
     m_bitmap = nullptr;
     reset_context_to_default_state();
 }
 
 void HTMLCanvasElement::set_height(unsigned value)
 {
-    MUST(set_attribute(HTML::AttributeNames::height, String::number(value)));
+    MUST(set_attribute(HTML::AttributeNames::height, DeprecatedString::number(value)));
     m_bitmap = nullptr;
     reset_context_to_default_state();
 }
@@ -106,7 +106,7 @@ JS::ThrowCompletionOr<HTMLCanvasElement::HasOrCreatedContext> HTMLCanvasElement:
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
-JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::get_context(String const& type, JS::Value options)
+JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::get_context(DeprecatedString const& type, JS::Value options)
 {
     // 1. If options is not an object, then set options to null.
     if (!options.is_object())
@@ -170,7 +170,7 @@ bool HTMLCanvasElement::create_bitmap(size_t minimum_width, size_t minimum_heigh
     return m_bitmap;
 }
 
-String HTMLCanvasElement::to_data_url(String const& type, [[maybe_unused]] Optional<double> quality) const
+DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, [[maybe_unused]] Optional<double> quality) const
 {
     if (!m_bitmap)
         return {};

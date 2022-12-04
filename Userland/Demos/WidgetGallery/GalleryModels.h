@@ -27,7 +27,7 @@ public:
 
     virtual int row_count(const GUI::ModelIndex&) const override { return m_cursors.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
-    virtual String column_name(int column_index) const override
+    virtual DeprecatedString column_name(int column_index) const override
     {
         switch (column_index) {
         case Column::Bitmap:
@@ -60,7 +60,7 @@ public:
     {
         m_cursors.clear();
 
-        Core::DirIterator iterator(String::formatted("/res/cursor-themes/{}", GUI::ConnectionToWindowServer::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
+        Core::DirIterator iterator(DeprecatedString::formatted("/res/cursor-themes/{}", GUI::ConnectionToWindowServer::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
             auto path = iterator.next_full_path();
@@ -90,8 +90,8 @@ private:
 
     struct Cursor {
         RefPtr<Gfx::Bitmap> bitmap;
-        String path;
-        String name;
+        DeprecatedString path;
+        DeprecatedString name;
         Gfx::CursorParams params;
     };
 
@@ -112,7 +112,7 @@ public:
 
     virtual int row_count(const GUI::ModelIndex&) const override { return m_icon_sets.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
-    virtual String column_name(int column_index) const override
+    virtual DeprecatedString column_name(int column_index) const override
     {
         switch (column_index) {
         case Column::BigIcon:
@@ -194,7 +194,7 @@ private:
     struct IconSet {
         RefPtr<Gfx::Bitmap> big_icon;
         RefPtr<Gfx::Bitmap> little_icon;
-        String name;
+        DeprecatedString name;
     };
 
     Vector<IconSet> m_icon_sets;

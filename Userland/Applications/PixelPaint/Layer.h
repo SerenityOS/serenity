@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
@@ -29,8 +29,8 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize const&, String name);
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
+    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize const&, DeprecatedString name);
+    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
     static ErrorOr<NonnullRefPtr<Layer>> try_create_snapshot(Image&, Layer const&);
 
     ~Layer() = default;
@@ -53,8 +53,8 @@ public:
     Gfx::IntRect relative_rect() const { return { location(), size() }; }
     Gfx::IntRect rect() const { return { {}, size() }; }
 
-    String const& name() const { return m_name; }
-    void set_name(String);
+    DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString);
 
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
@@ -97,11 +97,11 @@ public:
     Gfx::Bitmap& currently_edited_bitmap();
 
 private:
-    Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
+    Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
 
     Image& m_image;
 
-    String m_name;
+    DeprecatedString m_name;
     Gfx::IntPoint m_location;
     NonnullRefPtr<Gfx::Bitmap> m_content_bitmap;
     RefPtr<Gfx::Bitmap> m_scratch_edited_bitmap { nullptr };

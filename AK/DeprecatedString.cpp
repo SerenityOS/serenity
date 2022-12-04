@@ -5,43 +5,43 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
-bool String::operator==(FlyString const& fly_string) const
+bool DeprecatedString::operator==(FlyString const& fly_string) const
 {
     return m_impl == fly_string.impl() || view() == fly_string.view();
 }
 
-bool String::operator==(String const& other) const
+bool DeprecatedString::operator==(DeprecatedString const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }
 
-bool String::operator==(StringView other) const
+bool DeprecatedString::operator==(StringView other) const
 {
     return view() == other;
 }
 
-bool String::operator<(String const& other) const
+bool DeprecatedString::operator<(DeprecatedString const& other) const
 {
     return view() < other.view();
 }
 
-bool String::operator>(String const& other) const
+bool DeprecatedString::operator>(DeprecatedString const& other) const
 {
     return view() > other.view();
 }
 
-bool String::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
+bool DeprecatedString::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
 {
     // We must fit at least the NUL-terminator.
     VERIFY(buffer_size > 0);
@@ -53,7 +53,7 @@ bool String::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
     return characters_to_copy == length();
 }
 
-String String::isolated_copy() const
+DeprecatedString DeprecatedString::isolated_copy() const
 {
     if (!m_impl)
         return {};
@@ -62,27 +62,27 @@ String String::isolated_copy() const
     char* buffer;
     auto impl = StringImpl::create_uninitialized(length(), buffer);
     memcpy(buffer, m_impl->characters(), m_impl->length());
-    return String(move(*impl));
+    return DeprecatedString(move(*impl));
 }
 
-String String::substring(size_t start, size_t length) const
+DeprecatedString DeprecatedString::substring(size_t start, size_t length) const
 {
     if (!length)
-        return String::empty();
+        return DeprecatedString::empty();
     VERIFY(m_impl);
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
     return { characters() + start, length };
 }
 
-String String::substring(size_t start) const
+DeprecatedString DeprecatedString::substring(size_t start) const
 {
     VERIFY(m_impl);
     VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 
-StringView String::substring_view(size_t start, size_t length) const
+StringView DeprecatedString::substring_view(size_t start, size_t length) const
 {
     VERIFY(m_impl);
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
@@ -90,24 +90,24 @@ StringView String::substring_view(size_t start, size_t length) const
     return { characters() + start, length };
 }
 
-StringView String::substring_view(size_t start) const
+StringView DeprecatedString::substring_view(size_t start) const
 {
     VERIFY(m_impl);
     VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 
-Vector<String> String::split(char separator, SplitBehavior split_behavior) const
+Vector<DeprecatedString> DeprecatedString::split(char separator, SplitBehavior split_behavior) const
 {
     return split_limit(separator, 0, split_behavior);
 }
 
-Vector<String> String::split_limit(char separator, size_t limit, SplitBehavior split_behavior) const
+Vector<DeprecatedString> DeprecatedString::split_limit(char separator, size_t limit, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
 
-    Vector<String> v;
+    Vector<DeprecatedString> v;
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
@@ -126,7 +126,7 @@ Vector<String> String::split_limit(char separator, size_t limit, SplitBehavior s
     return v;
 }
 
-Vector<StringView> String::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const
+Vector<StringView> DeprecatedString::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
@@ -150,12 +150,12 @@ Vector<StringView> String::split_view(Function<bool(char)> separator, SplitBehav
     return v;
 }
 
-Vector<StringView> String::split_view(char const separator, SplitBehavior split_behavior) const
+Vector<StringView> DeprecatedString::split_view(char const separator, SplitBehavior split_behavior) const
 {
     return split_view([separator](char ch) { return ch == separator; }, split_behavior);
 }
 
-ByteBuffer String::to_byte_buffer() const
+ByteBuffer DeprecatedString::to_byte_buffer() const
 {
     if (!m_impl)
         return {};
@@ -164,65 +164,65 @@ ByteBuffer String::to_byte_buffer() const
 }
 
 template<typename T>
-Optional<T> String::to_int(TrimWhitespace trim_whitespace) const
+Optional<T> DeprecatedString::to_int(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_int<T>(view(), trim_whitespace);
 }
 
-template Optional<i8> String::to_int(TrimWhitespace) const;
-template Optional<i16> String::to_int(TrimWhitespace) const;
-template Optional<i32> String::to_int(TrimWhitespace) const;
-template Optional<i64> String::to_int(TrimWhitespace) const;
+template Optional<i8> DeprecatedString::to_int(TrimWhitespace) const;
+template Optional<i16> DeprecatedString::to_int(TrimWhitespace) const;
+template Optional<i32> DeprecatedString::to_int(TrimWhitespace) const;
+template Optional<i64> DeprecatedString::to_int(TrimWhitespace) const;
 
 template<typename T>
-Optional<T> String::to_uint(TrimWhitespace trim_whitespace) const
+Optional<T> DeprecatedString::to_uint(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
 }
 
-template Optional<u8> String::to_uint(TrimWhitespace) const;
-template Optional<u16> String::to_uint(TrimWhitespace) const;
-template Optional<u32> String::to_uint(TrimWhitespace) const;
-template Optional<unsigned long> String::to_uint(TrimWhitespace) const;
-template Optional<unsigned long long> String::to_uint(TrimWhitespace) const;
+template Optional<u8> DeprecatedString::to_uint(TrimWhitespace) const;
+template Optional<u16> DeprecatedString::to_uint(TrimWhitespace) const;
+template Optional<u32> DeprecatedString::to_uint(TrimWhitespace) const;
+template Optional<unsigned long> DeprecatedString::to_uint(TrimWhitespace) const;
+template Optional<unsigned long long> DeprecatedString::to_uint(TrimWhitespace) const;
 
 #ifndef KERNEL
-Optional<double> String::to_double(TrimWhitespace trim_whitespace) const
+Optional<double> DeprecatedString::to_double(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_floating_point<double>(*this, trim_whitespace);
 }
 
-Optional<float> String::to_float(TrimWhitespace trim_whitespace) const
+Optional<float> DeprecatedString::to_float(TrimWhitespace trim_whitespace) const
 {
     return StringUtils::convert_to_floating_point<float>(*this, trim_whitespace);
 }
 #endif
 
-bool String::starts_with(StringView str, CaseSensitivity case_sensitivity) const
+bool DeprecatedString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);
 }
 
-bool String::starts_with(char ch) const
+bool DeprecatedString::starts_with(char ch) const
 {
     if (is_empty())
         return false;
     return characters()[0] == ch;
 }
 
-bool String::ends_with(StringView str, CaseSensitivity case_sensitivity) const
+bool DeprecatedString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
 
-bool String::ends_with(char ch) const
+bool DeprecatedString::ends_with(char ch) const
 {
     if (is_empty())
         return false;
     return characters()[length() - 1] == ch;
 }
 
-String String::repeated(char ch, size_t count)
+DeprecatedString DeprecatedString::repeated(char ch, size_t count)
 {
     if (!count)
         return empty();
@@ -232,7 +232,7 @@ String String::repeated(char ch, size_t count)
     return *impl;
 }
 
-String String::repeated(StringView string, size_t count)
+DeprecatedString DeprecatedString::repeated(StringView string, size_t count)
 {
     if (!count || string.is_empty())
         return empty();
@@ -243,7 +243,7 @@ String String::repeated(StringView string, size_t count)
     return *impl;
 }
 
-String String::bijective_base_from(size_t value, unsigned base, StringView map)
+DeprecatedString DeprecatedString::bijective_base_from(size_t value, unsigned base, StringView map)
 {
     if (map.is_null())
         map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"sv;
@@ -267,13 +267,13 @@ String String::bijective_base_from(size_t value, unsigned base, StringView map)
     for (size_t j = 0; j < i / 2; ++j)
         swap(buffer[j], buffer[i - j - 1]);
 
-    return String { ReadonlyBytes(buffer.data(), i) };
+    return DeprecatedString { ReadonlyBytes(buffer.data(), i) };
 }
 
-String String::roman_number_from(size_t value)
+DeprecatedString DeprecatedString::roman_number_from(size_t value)
 {
     if (value > 3999)
-        return String::number(value);
+        return DeprecatedString::number(value);
 
     StringBuilder builder;
 
@@ -323,32 +323,32 @@ String String::roman_number_from(size_t value)
     return builder.to_string();
 }
 
-bool String::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+bool DeprecatedString::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
 }
 
-bool String::matches(StringView mask, CaseSensitivity case_sensitivity) const
+bool DeprecatedString::matches(StringView mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
 
-bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
+bool DeprecatedString::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
-bool String::contains(char needle, CaseSensitivity case_sensitivity) const
+bool DeprecatedString::contains(char needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, StringView(&needle, 1), case_sensitivity);
 }
 
-bool String::equals_ignoring_case(StringView other) const
+bool DeprecatedString::equals_ignoring_case(StringView other) const
 {
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-String String::reverse() const
+DeprecatedString DeprecatedString::reverse() const
 {
     StringBuilder reversed_string(length());
     for (size_t i = length(); i-- > 0;) {
@@ -357,7 +357,7 @@ String String::reverse() const
     return reversed_string.to_string();
 }
 
-String escape_html_entities(StringView html)
+DeprecatedString escape_html_entities(StringView html)
 {
     StringBuilder builder;
     for (size_t i = 0; i < html.length(); ++i) {
@@ -375,46 +375,46 @@ String escape_html_entities(StringView html)
     return builder.to_string();
 }
 
-String::String(FlyString const& string)
+DeprecatedString::DeprecatedString(FlyString const& string)
     : m_impl(string.impl())
 {
 }
 
-String String::to_lowercase() const
+DeprecatedString DeprecatedString::to_lowercase() const
 {
     if (!m_impl)
         return {};
     return m_impl->to_lowercase();
 }
 
-String String::to_uppercase() const
+DeprecatedString DeprecatedString::to_uppercase() const
 {
     if (!m_impl)
         return {};
     return m_impl->to_uppercase();
 }
 
-String String::to_snakecase() const
+DeprecatedString DeprecatedString::to_snakecase() const
 {
     return StringUtils::to_snakecase(*this);
 }
 
-String String::to_titlecase() const
+DeprecatedString DeprecatedString::to_titlecase() const
 {
     return StringUtils::to_titlecase(*this);
 }
 
-String String::invert_case() const
+DeprecatedString DeprecatedString::invert_case() const
 {
     return StringUtils::invert_case(*this);
 }
 
-bool String::operator==(char const* cstring) const
+bool DeprecatedString::operator==(char const* cstring) const
 {
     return view() == cstring;
 }
 
-InputStream& operator>>(InputStream& stream, String& string)
+InputStream& operator>>(InputStream& stream, DeprecatedString& string)
 {
     StringBuilder builder;
 
@@ -437,14 +437,14 @@ InputStream& operator>>(InputStream& stream, String& string)
     }
 }
 
-String String::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
+DeprecatedString DeprecatedString::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
     MUST(vformat(builder, fmtstr, params));
     return builder.to_string();
 }
 
-Vector<size_t> String::find_all(StringView needle) const
+Vector<size_t> DeprecatedString::find_all(StringView needle) const
 {
     return StringUtils::find_all(*this, needle);
 }

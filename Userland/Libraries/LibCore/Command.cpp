@@ -18,7 +18,7 @@ namespace Core {
 // Only supported in serenity mode because we use `posix_spawn_file_actions_addchdir`
 #ifdef AK_OS_SERENITY
 
-ErrorOr<CommandResult> command(String const& command_string, Optional<LexicalPath> chdir)
+ErrorOr<CommandResult> command(DeprecatedString const& command_string, Optional<LexicalPath> chdir)
 {
     auto parts = command_string.split(' ');
     if (parts.is_empty())
@@ -28,7 +28,7 @@ ErrorOr<CommandResult> command(String const& command_string, Optional<LexicalPat
     return command(program, parts, chdir);
 }
 
-ErrorOr<CommandResult> command(String const& program, Vector<String> const& arguments, Optional<LexicalPath> chdir)
+ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<DeprecatedString> const& arguments, Optional<LexicalPath> chdir)
 {
     int stdout_pipe[2] = {};
     int stderr_pipe[2] = {};
@@ -78,7 +78,7 @@ ErrorOr<CommandResult> command(String const& program, Vector<String> const& argu
             perror("open");
             VERIFY_NOT_REACHED();
         }
-        return String::copy(result_file->read_all());
+        return DeprecatedString::copy(result_file->read_all());
     };
     auto output = read_all_from_pipe(stdout_pipe);
     auto error = read_all_from_pipe(stderr_pipe);

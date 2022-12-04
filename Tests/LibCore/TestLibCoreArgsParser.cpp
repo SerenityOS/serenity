@@ -12,7 +12,7 @@
 
 class ParserResult {
 public:
-    ParserResult(Vector<String> const& arguments)
+    ParserResult(Vector<DeprecatedString> const& arguments)
     {
         argv = new char*[arguments.size() + 1];
         argc = 0;
@@ -60,7 +60,7 @@ public:
     size_t argc { 0 };
 };
 
-static ParserResult run_parser(Vector<String> arguments, Function<void(Core::ArgsParser&)> parser_initialization = {})
+static ParserResult run_parser(Vector<DeprecatedString> arguments, Function<void(Core::ArgsParser&)> parser_initialization = {})
 {
     Core::ArgsParser parser;
     if (parser_initialization)
@@ -139,7 +139,7 @@ TEST_CASE(bool_option)
 TEST_CASE(positional_string_argument)
 {
     // Single required string argument
-    String name = "";
+    DeprecatedString name = "";
     auto parser_result = run_parser({ "app", "buggie" }, [&](auto& parser) {
         parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::Yes);
     });

@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -72,7 +72,7 @@ public:
         No,
     };
 
-    String to_utf8(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
+    DeprecatedString to_utf8(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
 
     bool is_null() const { return m_code_units.is_null(); }
     bool is_empty() const { return m_code_units.is_empty(); }

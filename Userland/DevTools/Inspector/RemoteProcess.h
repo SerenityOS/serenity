@@ -22,7 +22,7 @@ public:
     void update();
 
     pid_t pid() const { return m_pid; }
-    String const& process_name() const { return m_process_name; }
+    DeprecatedString const& process_name() const { return m_process_name; }
 
     RemoteObjectGraphModel& object_graph_model() { return *m_object_graph_model; }
     NonnullOwnPtrVector<RemoteObject> const& roots() const { return m_roots; }
@@ -42,7 +42,7 @@ private:
     void send_request(JsonObject const&);
 
     pid_t m_pid { -1 };
-    String m_process_name;
+    DeprecatedString m_process_name;
     NonnullRefPtr<RemoteObjectGraphModel> m_object_graph_model;
     NonnullOwnPtrVector<RemoteObject> m_roots;
     RefPtr<InspectorServerClient> m_client;

@@ -23,7 +23,7 @@ public:
     double date_value() const { return m_date_value; }
     void set_date_value(double value) { m_date_value = value; }
 
-    String iso_date_string() const;
+    DeprecatedString iso_date_string() const;
 
 private:
     Date(double date_value, Object& prototype);

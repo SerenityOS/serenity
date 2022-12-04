@@ -5,7 +5,7 @@
  */
 
 #include "QOIWriter.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Gfx {
 

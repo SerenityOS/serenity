@@ -626,7 +626,7 @@
 namespace PDF {
 
 struct CharDescriptor {
-    String name;
+    DeprecatedString name;
     u32 code_point;
 };
 
@@ -643,13 +643,13 @@ public:
     static NonnullRefPtr<Encoding> zapf_encoding();
 
     HashMap<u16, CharDescriptor> const& descriptors() const { return m_descriptors; }
-    HashMap<String, u16> const& name_mapping() const { return m_name_mapping; }
+    HashMap<DeprecatedString, u16> const& name_mapping() const { return m_name_mapping; }
 
     CharDescriptor const& get_char_code_descriptor(u16 char_code) const;
 
 protected:
     HashMap<u16, CharDescriptor> m_descriptors;
-    HashMap<String, u16> m_name_mapping;
+    HashMap<DeprecatedString, u16> m_name_mapping;
 };
 
 }

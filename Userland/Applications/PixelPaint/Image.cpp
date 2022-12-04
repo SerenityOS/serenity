@@ -474,7 +474,7 @@ void Image::did_change_rect(Gfx::IntRect const& a_modified_rect)
         client->image_did_change_rect(modified_rect);
 }
 
-ImageUndoCommand::ImageUndoCommand(Image& image, String action_text)
+ImageUndoCommand::ImageUndoCommand(Image& image, DeprecatedString action_text)
     : m_snapshot(image.take_snapshot().release_value_but_fixme_should_propagate_errors())
     , m_image(image)
     , m_action_text(move(action_text))

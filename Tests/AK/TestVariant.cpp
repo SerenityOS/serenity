@@ -18,21 +18,21 @@ struct Object : public RefCounted<Object> {
 
 TEST_CASE(basic)
 {
-    Variant<int, String> the_value { 42 };
+    Variant<int, DeprecatedString> the_value { 42 };
     EXPECT(the_value.has<int>());
     EXPECT_EQ(the_value.get<int>(), 42);
-    the_value = String("42");
-    EXPECT(the_value.has<String>());
-    EXPECT_EQ(the_value.get<String>(), "42");
+    the_value = DeprecatedString("42");
+    EXPECT(the_value.has<DeprecatedString>());
+    EXPECT_EQ(the_value.get<DeprecatedString>(), "42");
 }
 
 TEST_CASE(visit)
 {
     bool correct = false;
-    Variant<int, String, float> the_value { 42.0f };
+    Variant<int, DeprecatedString, float> the_value { 42.0f };
     the_value.visit(
         [&](int const&) { correct = false; },
-        [&](String const&) { correct = false; },
+        [&](DeprecatedString const&) { correct = false; },
         [&](float const&) { correct = true; });
     EXPECT(correct);
 }
@@ -40,10 +40,10 @@ TEST_CASE(visit)
 TEST_CASE(visit_const)
 {
     bool correct = false;
-    Variant<int, String> const the_value { "42"sv };
+    Variant<int, DeprecatedString> const the_value { "42"sv };
 
     the_value.visit(
-        [&](String const&) { correct = true; },
+        [&](DeprecatedString const&) { correct = true; },
         [&](auto&) {},
         [&](auto const&) {});
 
@@ -52,7 +52,7 @@ TEST_CASE(visit_const)
     correct = false;
     auto the_value_but_not_const = the_value;
     the_value_but_not_const.visit(
-        [&](String const&) { correct = true; },
+        [&](DeprecatedString const&) { correct = true; },
         [&](auto&) {});
 
     EXPECT(correct);
@@ -168,13 +168,13 @@ TEST_CASE(duplicated_types)
 
 TEST_CASE(return_values)
 {
-    using MyVariant = Variant<int, String, float>;
+    using MyVariant = Variant<int, DeprecatedString, float>;
     {
         MyVariant the_value { 42.0f };
 
         float value = the_value.visit(
             [&](int const&) { return 1.0f; },
-            [&](String const&) { return 2.0f; },
+            [&](DeprecatedString const&) { return 2.0f; },
             [&](float const& f) { return f; });
         EXPECT_EQ(value, 42.0f);
     }
@@ -183,17 +183,17 @@ TEST_CASE(return_values)
 
         int value = the_value.visit(
             [&](int& i) { return i; },
-            [&](String&) { return 2; },
+            [&](DeprecatedString&) { return 2; },
             [&](float&) { return 3; });
         EXPECT_EQ(value, 42);
     }
     {
         const MyVariant the_value { "str" };
 
-        String value = the_value.visit(
-            [&](int const&) { return String { "wrong" }; },
-            [&](String const& s) { return s; },
-            [&](float const&) { return String { "wrong" }; });
+        DeprecatedString value = the_value.visit(
+            [&](int const&) { return DeprecatedString { "wrong" }; },
+            [&](DeprecatedString const& s) { return s; },
+            [&](float const&) { return DeprecatedString { "wrong" }; });
         EXPECT_EQ(value, "str");
     }
 }
@@ -201,11 +201,11 @@ TEST_CASE(return_values)
 TEST_CASE(return_values_by_reference)
 {
     auto ref = adopt_ref_if_nonnull(new (nothrow) Object());
-    Variant<int, String, float> the_value { 42.0f };
+    Variant<int, DeprecatedString, float> the_value { 42.0f };
 
     auto& value = the_value.visit(
         [&](int const&) -> RefPtr<Object>& { return ref; },
-        [&](String const&) -> RefPtr<Object>& { return ref; },
+        [&](DeprecatedString const&) -> RefPtr<Object>& { return ref; },
         [&](float const&) -> RefPtr<Object>& { return ref; });
 
     EXPECT_EQ(ref, value);
@@ -223,7 +223,7 @@ struct HoldsFloat {
 TEST_CASE(copy_assign)
 {
     {
-        Variant<int, String, float> the_value { 42.0f };
+        Variant<int, DeprecatedString, float> the_value { 42.0f };
 
         VERIFY(the_value.has<float>());
         EXPECT_EQ(the_value.get<float>(), 42.0f);
@@ -233,12 +233,12 @@ TEST_CASE(copy_assign)
         VERIFY(the_value.has<int>());
         EXPECT_EQ(the_value.get<int>(), 12);
 
-        the_value = String("Hello, world!");
-        VERIFY(the_value.has<String>());
-        EXPECT_EQ(the_value.get<String>(), "Hello, world!");
+        the_value = DeprecatedString("Hello, world!");
+        VERIFY(the_value.has<DeprecatedString>());
+        EXPECT_EQ(the_value.get<DeprecatedString>(), "Hello, world!");
     }
     {
-        Variant<HoldsInt, String, HoldsFloat> the_value { HoldsFloat { 42.0f } };
+        Variant<HoldsInt, DeprecatedString, HoldsFloat> the_value { HoldsFloat { 42.0f } };
 
         VERIFY(the_value.has<HoldsFloat>());
         EXPECT_EQ(the_value.get<HoldsFloat>().f, 42.0f);
@@ -248,9 +248,9 @@ TEST_CASE(copy_assign)
         VERIFY(the_value.has<HoldsInt>());
         EXPECT_EQ(the_value.get<HoldsInt>().i, 12);
 
-        the_value = String("Hello, world!");
-        VERIFY(the_value.has<String>());
-        EXPECT_EQ(the_value.get<String>(), "Hello, world!");
+        the_value = DeprecatedString("Hello, world!");
+        VERIFY(the_value.has<DeprecatedString>());
+        EXPECT_EQ(the_value.get<DeprecatedString>(), "Hello, world!");
     }
 }
 

@@ -949,12 +949,12 @@ DecoderErrorOr<void> SampleIterator::seek_to_cue_point(CuePoint const& cue_point
     return {};
 }
 
-ErrorOr<String> Streamer::read_string()
+ErrorOr<DeprecatedString> Streamer::read_string()
 {
     auto string_length = TRY(read_variable_size_integer());
     if (remaining() < string_length)
         return Error::from_string_literal("String length extends past the end of the stream");
-    auto string_value = String(data_as_chars(), string_length);
+    auto string_value = DeprecatedString(data_as_chars(), string_length);
     TRY(read_raw_octets(string_length));
     return string_value;
 }

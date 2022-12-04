@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
@@ -32,9 +32,9 @@ struct Range {
     }
 };
 
-static bool expand_list(String& list, Vector<Range>& ranges)
+static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
 {
-    Vector<String> tokens = list.split(',');
+    Vector<DeprecatedString> tokens = list.split(',');
 
     for (auto& token : tokens) {
         if (token.length() == 0) {
@@ -127,7 +127,7 @@ static void process_line_bytes(char* line, size_t length, Vector<Range> const& r
             continue;
 
         auto to = min(i.m_to, length);
-        auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
+        auto sub_string = DeprecatedString(line).substring(i.m_from - 1, to - i.m_from + 1);
         out("{}", sub_string);
     }
     outln();
@@ -135,8 +135,8 @@ static void process_line_bytes(char* line, size_t length, Vector<Range> const& r
 
 static void process_line_fields(char* line, size_t length, Vector<Range> const& ranges, char delimiter)
 {
-    auto string_split = String(line, length).split(delimiter);
-    Vector<String> output_fields;
+    auto string_split = DeprecatedString(line, length).split(delimiter);
+    Vector<DeprecatedString> output_fields;
 
     for (auto& range : ranges) {
         for (size_t i = range.m_from - 1; i < min(range.m_to, string_split.size()); i++) {
@@ -144,14 +144,14 @@ static void process_line_fields(char* line, size_t length, Vector<Range> const& 
         }
     }
 
-    outln("{}", String::join(delimiter, output_fields));
+    outln("{}", DeprecatedString::join(delimiter, output_fields));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    String byte_list = "";
-    String fields_list = "";
-    String delimiter = "\t";
+    DeprecatedString byte_list = "";
+    DeprecatedString fields_list = "";
+    DeprecatedString delimiter = "\t";
 
     Vector<StringView> files;
 
@@ -185,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    String ranges_list;
+    DeprecatedString ranges_list;
     Vector<Range> ranges_vector;
 
     if (selected_bytes) {
@@ -224,13 +224,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (files.is_empty())
-        files.append(String());
+        files.append(DeprecatedString());
 
     /* Process each file */
     for (auto& file : files) {
         FILE* fp = stdin;
         if (!file.is_null()) {
-            fp = fopen(String(file).characters(), "r");
+            fp = fopen(DeprecatedString(file).characters(), "r");
             if (!fp) {
                 warnln("cut: Could not open file '{}'", file);
                 continue;

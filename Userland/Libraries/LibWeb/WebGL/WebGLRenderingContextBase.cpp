@@ -113,18 +113,18 @@ bool WebGLRenderingContextBase::is_context_lost() const
     return m_context_lost;
 }
 
-Optional<Vector<String>> WebGLRenderingContextBase::get_supported_extensions() const
+Optional<Vector<DeprecatedString>> WebGLRenderingContextBase::get_supported_extensions() const
 {
     if (m_context_lost)
-        return Optional<Vector<String>> {};
+        return Optional<Vector<DeprecatedString>> {};
 
     dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::get_supported_extensions()");
 
     // FIXME: We don't currently support any extensions.
-    return Vector<String> {};
+    return Vector<DeprecatedString> {};
 }
 
-JS::Object* WebGLRenderingContextBase::get_extension(String const& name) const
+JS::Object* WebGLRenderingContextBase::get_extension(DeprecatedString const& name) const
 {
     if (m_context_lost)
         return nullptr;

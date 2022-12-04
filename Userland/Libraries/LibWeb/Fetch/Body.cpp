@@ -107,7 +107,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
     case PackageDataType::Blob: {
         // Return a Blob whose contents are bytes and type attribute is mimeType.
         // NOTE: If extracting the mime type returns failure, other browsers set it to an empty string - not sure if that's spec'd.
-        auto mime_type_string = mime_type.has_value() ? mime_type->serialized() : String::empty();
+        auto mime_type_string = mime_type.has_value() ? mime_type->serialized() : DeprecatedString::empty();
         return FileAPI::Blob::create(realm, move(bytes), move(mime_type_string));
     }
     case PackageDataType::FormData:
@@ -134,7 +134,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         return Infra::parse_json_bytes_to_javascript_value(vm, bytes);
     case PackageDataType::Text:
         // Return the result of running UTF-8 decode on bytes.
-        return JS::js_string(vm, String::copy(bytes));
+        return JS::js_string(vm, DeprecatedString::copy(bytes));
     default:
         VERIFY_NOT_REACHED();
     }
@@ -152,7 +152,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
     }
 
     // 2. Let promise be a promise resolved with an empty byte sequence.
-    auto promise = WebIDL::create_resolved_promise(realm, JS::js_string(vm, String::empty()));
+    auto promise = WebIDL::create_resolved_promise(realm, JS::js_string(vm, DeprecatedString::empty()));
 
     // 3. If object’s body is non-null, then set promise to the result of fully reading body as promise given object’s body.
     auto const& body = object.body_impl();

@@ -24,7 +24,7 @@
 namespace Web::XHR {
 
 // https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit
-using DocumentOrXMLHttpRequestBodyInit = Variant<JS::Handle<Web::DOM::Document>, JS::Handle<Web::FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<Web::URL::URLSearchParams>, AK::String>;
+using DocumentOrXMLHttpRequestBodyInit = Variant<JS::Handle<Web::DOM::Document>, JS::Handle<Web::FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<Web::URL::URLSearchParams>, AK::DeprecatedString>;
 
 class XMLHttpRequest final : public XMLHttpRequestEventTarget {
     WEB_PLATFORM_OBJECT(XMLHttpRequest, XMLHttpRequestEventTarget);
@@ -44,24 +44,24 @@ public:
 
     State ready_state() const { return m_state; };
     Fetch::Infrastructure::Status status() const { return m_status; };
-    WebIDL::ExceptionOr<String> response_text() const;
+    WebIDL::ExceptionOr<DeprecatedString> response_text() const;
     WebIDL::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
-    WebIDL::ExceptionOr<void> open(String const& method, String const& url);
-    WebIDL::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
+    WebIDL::ExceptionOr<void> open(DeprecatedString const& method, DeprecatedString const& url);
+    WebIDL::ExceptionOr<void> open(DeprecatedString const& method, DeprecatedString const& url, bool async, DeprecatedString const& username = {}, DeprecatedString const& password = {});
     WebIDL::ExceptionOr<void> send(Optional<DocumentOrXMLHttpRequestBodyInit> body);
 
-    WebIDL::ExceptionOr<void> set_request_header(String const& header, String const& value);
+    WebIDL::ExceptionOr<void> set_request_header(DeprecatedString const& header, DeprecatedString const& value);
     WebIDL::ExceptionOr<void> set_response_type(Bindings::XMLHttpRequestResponseType);
 
-    String get_response_header(String const& name) { return m_response_headers.get(name).value_or({}); }
-    String get_all_response_headers() const;
+    DeprecatedString get_response_header(DeprecatedString const& name) { return m_response_headers.get(name).value_or({}); }
+    DeprecatedString get_all_response_headers() const;
 
     WebIDL::CallbackType* onreadystatechange();
     void set_onreadystatechange(WebIDL::CallbackType*);
 
-    WebIDL::ExceptionOr<void> override_mime_type(String const& mime);
+    WebIDL::ExceptionOr<void> override_mime_type(DeprecatedString const& mime);
 
     u32 timeout() const;
     WebIDL::ExceptionOr<void> set_timeout(u32 timeout);
@@ -76,20 +76,20 @@ private:
     virtual bool must_survive_garbage_collection() const override;
 
     void set_status(Fetch::Infrastructure::Status status) { m_status = status; }
-    void fire_progress_event(String const&, u64, u64);
+    void fire_progress_event(DeprecatedString const&, u64, u64);
 
     MimeSniff::MimeType get_response_mime_type() const;
     Optional<StringView> get_final_encoding() const;
     MimeSniff::MimeType get_final_mime_type() const;
 
-    String get_text_response() const;
+    DeprecatedString get_text_response() const;
 
     XMLHttpRequest(HTML::Window&, Fetch::Infrastructure::HeaderList&);
 
     // Non-standard
     JS::NonnullGCPtr<HTML::Window> m_window;
     Fetch::Infrastructure::Status m_status { 0 };
-    HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
 
     // https://xhr.spec.whatwg.org/#concept-xmlhttprequest-state
     // state
@@ -114,7 +114,7 @@ private:
     // https://xhr.spec.whatwg.org/#request-method
     // request method
     //     A method.
-    String m_request_method;
+    DeprecatedString m_request_method;
 
     // https://xhr.spec.whatwg.org/#request-url
     // request URL

@@ -28,7 +28,7 @@ static void on_http_only_attribute(ParsedCookie& parsed_cookie);
 static void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
 static Optional<Core::DateTime> parse_date_time(StringView date_string);
 
-Optional<ParsedCookie> parse_cookie(String const& cookie_string)
+Optional<ParsedCookie> parse_cookie(DeprecatedString const& cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
 
@@ -197,7 +197,7 @@ void on_domain_attribute(ParsedCookie& parsed_cookie, StringView attribute_value
     }
 
     // Convert the cookie-domain to lower case.
-    parsed_cookie.domain = String(cookie_domain).to_lowercase();
+    parsed_cookie.domain = DeprecatedString(cookie_domain).to_lowercase();
 }
 
 void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_value)

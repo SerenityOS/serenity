@@ -29,7 +29,7 @@ public:
     virtual ~Editor() override = default;
 
     Function<void()> on_focus;
-    Function<void(String)> on_open;
+    Function<void(DeprecatedString)> on_open;
 
     EditorWrapper& wrapper();
     EditorWrapper const& wrapper() const;
@@ -71,8 +71,8 @@ private:
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    void show_documentation_tooltip_if_available(String const&, Gfx::IntPoint const& screen_location);
-    void navigate_to_include_if_available(String);
+    void show_documentation_tooltip_if_available(DeprecatedString const&, Gfx::IntPoint const& screen_location);
+    void navigate_to_include_if_available(DeprecatedString);
     void on_navigatable_link_click(const GUI::TextDocumentSpan&);
     void on_identifier_click(const GUI::TextDocumentSpan&);
 
@@ -111,7 +111,7 @@ private:
 
     explicit Editor();
 
-    String m_last_parsed_token;
+    DeprecatedString m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
     bool m_hovering_clickable { false };

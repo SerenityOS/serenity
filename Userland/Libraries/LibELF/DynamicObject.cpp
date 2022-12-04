@@ -6,7 +6,7 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibC/elf.h>
 #include <LibELF/DynamicLoader.h>
@@ -16,7 +16,7 @@
 
 namespace ELF {
 
-DynamicObject::DynamicObject(String const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+DynamicObject::DynamicObject(DeprecatedString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
     : m_filepath(filepath)
     , m_base_address(base_address)
     , m_dynamic_address(dynamic_section_address)
@@ -45,7 +45,7 @@ void DynamicObject::dump() const
         size_t num_dynamic_sections = 0;
 
         for_each_dynamic_entry([&](DynamicObject::DynamicEntry const& entry) {
-            String name_field = String::formatted("({})", name_for_dtag(entry.tag()));
+            DeprecatedString name_field = DeprecatedString::formatted("({})", name_for_dtag(entry.tag()));
             builder.appendff("{:#08x} {:17} {:#08x}\n", entry.tag(), name_field, entry.val());
             num_dynamic_sections++;
         });
@@ -475,7 +475,7 @@ auto DynamicObject::lookup_symbol(HashSymbol const& symbol) const -> Optional<Sy
     return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), symbol_result.type(), this };
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::create(String const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+NonnullRefPtr<DynamicObject> DynamicObject::create(DeprecatedString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
 {
     return adopt_ref(*new DynamicObject(filepath, base_address, dynamic_section_address));
 }

@@ -51,7 +51,7 @@ WebSocketClientSocketAdapter::WebSocketClientSocketAdapter(NonnullRefPtr<Protoco
             }
         }
     };
-    m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, String reason, bool was_clean) {
+    m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, DeprecatedString reason, bool was_clean) {
         if (auto strong_this = weak_this.strong_ref())
             if (strong_this->on_close)
                 strong_this->on_close(code, move(reason), was_clean);
@@ -97,7 +97,7 @@ void WebSocketClientSocketAdapter::send(StringView text_message)
     m_websocket->send(text_message);
 }
 
-void WebSocketClientSocketAdapter::close(u16 code, String reason)
+void WebSocketClientSocketAdapter::close(u16 code, DeprecatedString reason)
 {
     m_websocket->close(code, reason);
 }
@@ -115,7 +115,7 @@ WebSocketClientManagerAdapter::WebSocketClientManagerAdapter(NonnullRefPtr<Proto
 
 WebSocketClientManagerAdapter::~WebSocketClientManagerAdapter() = default;
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const AK::URL& url, String const& origin)
+RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const AK::URL& url, DeprecatedString const& origin)
 {
     auto underlying_websocket = m_websocket_client->connect(url, origin);
     if (!underlying_websocket)

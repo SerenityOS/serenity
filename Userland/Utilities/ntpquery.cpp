@@ -76,7 +76,7 @@ static timeval timeval_from_ntp_timestamp(NtpTimestamp const& ntp_timestamp)
     return t;
 }
 
-static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
+static DeprecatedString format_ntp_timestamp(NtpTimestamp ntp_timestamp)
 {
     char buffer[28]; // YYYY-MM-DDTHH:MM:SS.UUUUUUZ is 27 characters long.
     timeval t = timeval_from_ntp_timestamp(ntp_timestamp);

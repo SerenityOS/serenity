@@ -24,7 +24,7 @@ void CSSRule::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssrule-csstext
-String CSSRule::css_text() const
+DeprecatedString CSSRule::css_text() const
 {
     // The cssText attribute must return a serialization of the CSS rule.
     return serialized();

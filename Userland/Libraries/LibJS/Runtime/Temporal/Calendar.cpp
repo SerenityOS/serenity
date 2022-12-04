@@ -27,14 +27,14 @@
 namespace JS::Temporal {
 
 // 12 Temporal.Calendar Objects, https://tc39.es/proposal-temporal/#sec-temporal-calendar-objects
-Calendar::Calendar(String identifier, Object& prototype)
+Calendar::Calendar(DeprecatedString identifier, Object& prototype)
     : Object(prototype)
     , m_identifier(move(identifier))
 {
 }
 
 // 12.1.1 IsBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-isbuiltincalendar
-bool is_builtin_calendar(String const& identifier)
+bool is_builtin_calendar(DeprecatedString const& identifier)
 {
     // 1. Let calendars be AvailableCalendars().
     auto calendars = available_calendars();
@@ -65,7 +65,7 @@ Span<StringView const> available_calendars()
 }
 
 // 12.2.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
-ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& identifier, FunctionObject const* new_target)
+ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, DeprecatedString const& identifier, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
 
@@ -85,7 +85,7 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& iden
 }
 
 // 12.2.2 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar
-ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, String const& identifier)
+ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, DeprecatedString const& identifier)
 {
     // 1. If IsBuiltinCalendar(id) is false, throw a RangeError exception.
     if (!is_builtin_calendar(identifier))
@@ -103,7 +103,7 @@ Calendar* get_iso8601_calendar(VM& vm)
 }
 
 // 12.2.4 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
-ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vector<StringView> const& field_names)
+ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& calendar, Vector<StringView> const& field_names)
 {
     auto& realm = *vm.current_realm();
 
@@ -112,7 +112,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
 
     // 2. If fields is undefined, return fieldNames.
     if (!fields) {
-        Vector<String> result;
+        Vector<DeprecatedString> result;
         for (auto& value : field_names)
             result.append(value);
         return result;
@@ -124,7 +124,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
     auto list = TRY(iterable_to_list_of_type(vm, fields_array, { OptionType::String }));
 
-    Vector<String> result;
+    Vector<DeprecatedString> result;
     for (auto& value : list)
         result.append(value.as_string().string());
     return result;
@@ -232,7 +232,7 @@ ThrowCompletionOr<double> calendar_month(VM& vm, Object& calendar, Object& date_
 }
 
 // 12.2.10 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
-ThrowCompletionOr<String> calendar_month_code(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<DeprecatedString> calendar_month_code(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
 
@@ -573,11 +573,11 @@ ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM& vm, Object&
 }
 
 // 12.2.26 MaybeFormatCalendarAnnotation ( calendarObject, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-maybeformatcalendarannotation
-ThrowCompletionOr<String> maybe_format_calendar_annotation(VM& vm, Object const* calendar_object, StringView show_calendar)
+ThrowCompletionOr<DeprecatedString> maybe_format_calendar_annotation(VM& vm, Object const* calendar_object, StringView show_calendar)
 {
     // 1. If showCalendar is "never", return the empty String.
     if (show_calendar == "never"sv)
-        return String::empty();
+        return DeprecatedString::empty();
 
     // 2. Assert: Type(calendarObject) is Object.
     VERIFY(calendar_object);
@@ -590,23 +590,23 @@ ThrowCompletionOr<String> maybe_format_calendar_annotation(VM& vm, Object const*
 }
 
 // 12.2.27 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
-String format_calendar_annotation(StringView id, StringView show_calendar)
+DeprecatedString format_calendar_annotation(StringView id, StringView show_calendar)
 {
     VERIFY(show_calendar == "auto"sv || show_calendar == "always"sv || show_calendar == "never"sv || show_calendar == "critical"sv);
 
     // 1. If showCalendar is "never", return the empty String.
     if (show_calendar == "never"sv)
-        return String::empty();
+        return DeprecatedString::empty();
 
     // 2. If showCalendar is "auto" and id is "iso8601", return the empty String.
     if (show_calendar == "auto"sv && id == "iso8601"sv)
-        return String::empty();
+        return DeprecatedString::empty();
 
     // 3. If showCalendar is "critical", let flag be "!"; else, let flag be the empty String.
     auto flag = show_calendar == "critical"sv ? "!"sv : ""sv;
 
     // 4. Return the string-concatenation of "[", flag, "u-ca=", id, and "]".
-    return String::formatted("[{}u-ca={}]", flag, id);
+    return DeprecatedString::formatted("[{}u-ca={}]", flag, id);
 }
 
 // 12.2.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
@@ -758,11 +758,11 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 }
 
 // 12.2.32 ISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
-String iso_month_code(u8 month)
+DeprecatedString iso_month_code(u8 month)
 {
     // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
     // 2. Return the string-concatenation of "M" and numberPart.
-    return String::formatted("M{:02}", month);
+    return DeprecatedString::formatted("M{:02}", month);
 }
 
 // 12.2.33 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth

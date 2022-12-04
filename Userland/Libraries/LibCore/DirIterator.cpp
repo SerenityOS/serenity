@@ -11,7 +11,7 @@
 
 namespace Core {
 
-DirIterator::DirIterator(String path, Flags flags)
+DirIterator::DirIterator(DeprecatedString path, Flags flags)
     : m_path(move(path))
     , m_flags(flags)
 {
@@ -49,7 +49,7 @@ bool DirIterator::advance_next()
         auto* de = readdir(m_dir);
         if (!de) {
             m_error = errno;
-            m_next = String();
+            m_next = DeprecatedString();
             return false;
         }
 
@@ -75,17 +75,17 @@ bool DirIterator::has_next()
     return advance_next();
 }
 
-String DirIterator::next_path()
+DeprecatedString DirIterator::next_path()
 {
     if (m_next.is_null())
         advance_next();
 
     auto tmp = m_next;
-    m_next = String();
+    m_next = DeprecatedString();
     return tmp;
 }
 
-String DirIterator::next_full_path()
+DeprecatedString DirIterator::next_full_path()
 {
     StringBuilder builder;
     builder.append(m_path);

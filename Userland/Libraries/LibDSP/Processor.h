@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/ProcessorParameter.h>

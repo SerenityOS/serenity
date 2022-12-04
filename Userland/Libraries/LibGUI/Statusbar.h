@@ -19,10 +19,10 @@ class Statusbar : public Widget {
 public:
     virtual ~Statusbar() override = default;
 
-    String text(size_t index = 0) const;
-    void set_text(String);
-    void set_text(size_t index, String);
-    void set_override_text(String);
+    DeprecatedString text(size_t index = 0) const;
+    void set_text(DeprecatedString);
+    void set_text(size_t index, DeprecatedString);
+    void set_override_text(DeprecatedString);
 
     class Segment final : public Button {
         C_OBJECT(Segment)
@@ -51,11 +51,11 @@ public:
         void set_frame_shape(Gfx::FrameShape shape) { m_shape = shape; }
         void set_restored_width(int width) { m_restored_width = width; }
         int restored_width() const { return m_restored_width; }
-        String const& override_text() const { return m_override_text; }
-        String const& restored_text() const { return m_restored_text; }
+        DeprecatedString const& override_text() const { return m_override_text; }
+        DeprecatedString const& restored_text() const { return m_restored_text; }
 
-        String m_override_text;
-        String m_restored_text;
+        DeprecatedString m_override_text;
+        DeprecatedString m_restored_text;
         bool m_clickable { false };
         int m_restored_width { 0 };
         int m_thickness { 1 };

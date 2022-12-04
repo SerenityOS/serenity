@@ -14,7 +14,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio dpath"));
 
-    String mode_string;
+    DeprecatedString mode_string;
     mode_t mask_reference_mode = 0777;
     mode_t mode = 0666;
     Vector<StringView> paths;

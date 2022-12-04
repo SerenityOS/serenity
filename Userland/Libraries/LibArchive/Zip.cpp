@@ -93,7 +93,7 @@ bool Zip::for_each_member(Function<IterationDecision(ZipMember const&)> callback
         char null_terminated_name[central_directory_record.name_length + 1];
         memcpy(null_terminated_name, central_directory_record.name, central_directory_record.name_length);
         null_terminated_name[central_directory_record.name_length] = 0;
-        member.name = String { null_terminated_name };
+        member.name = DeprecatedString { null_terminated_name };
         member.compressed_data = { local_file_header.compressed_data, central_directory_record.compressed_size };
         member.compression_method = central_directory_record.compression_method;
         member.uncompressed_size = central_directory_record.uncompressed_size;

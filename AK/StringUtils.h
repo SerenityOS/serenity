@@ -98,11 +98,11 @@ enum class SearchDirection {
 };
 Optional<size_t> find_any_of(StringView haystack, StringView needles, SearchDirection);
 
-String to_snakecase(StringView);
-String to_titlecase(StringView);
-String invert_case(StringView);
+DeprecatedString to_snakecase(StringView);
+DeprecatedString to_titlecase(StringView);
+DeprecatedString invert_case(StringView);
 
-String replace(StringView, StringView needle, StringView replacement, ReplaceMode);
+DeprecatedString replace(StringView, StringView needle, StringView replacement, ReplaceMode);
 size_t count(StringView, StringView needle);
 
 }

@@ -97,7 +97,7 @@ Utf16View Utf16String::substring_view(size_t code_unit_offset) const
     return view().substring_view(code_unit_offset);
 }
 
-String Utf16String::to_utf8() const
+DeprecatedString Utf16String::to_utf8() const
 {
     return view().to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
 }

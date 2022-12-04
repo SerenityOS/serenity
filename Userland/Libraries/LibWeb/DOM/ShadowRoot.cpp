@@ -31,13 +31,13 @@ EventTarget* ShadowRoot::get_parent(Event const& event)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-WebIDL::ExceptionOr<String> ShadowRoot::inner_html() const
+WebIDL::ExceptionOr<DeprecatedString> ShadowRoot::inner_html() const
 {
     return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-WebIDL::ExceptionOr<void> ShadowRoot::set_inner_html(String const& markup)
+WebIDL::ExceptionOr<void> ShadowRoot::set_inner_html(DeprecatedString const& markup)
 {
     TRY(DOMParsing::inner_html_setter(*this, markup));
 

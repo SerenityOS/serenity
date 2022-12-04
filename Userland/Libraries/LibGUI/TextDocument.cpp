@@ -148,7 +148,7 @@ size_t TextDocumentLine::leading_spaces() const
     return count;
 }
 
-String TextDocumentLine::to_utf8() const
+DeprecatedString TextDocumentLine::to_utf8() const
 {
     StringBuilder builder;
     builder.append(view());
@@ -344,7 +344,7 @@ void TextDocument::set_all_cursors(TextPosition const& position)
     }
 }
 
-String TextDocument::text() const
+DeprecatedString TextDocument::text() const
 {
     StringBuilder builder;
     for (size_t i = 0; i < line_count(); ++i) {
@@ -356,11 +356,11 @@ String TextDocument::text() const
     return builder.to_string();
 }
 
-String TextDocument::text_in_range(TextRange const& a_range) const
+DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
 {
     auto range = a_range.normalized();
     if (is_empty() || line_count() < range.end().line() - range.start().line())
-        return String("");
+        return DeprecatedString("");
 
     StringBuilder builder;
     for (size_t i = range.start().line(); i <= range.end().line(); ++i) {
@@ -433,7 +433,7 @@ void TextDocument::update_regex_matches(StringView needle)
         }
         re.search(views, m_regex_result);
         m_regex_needs_update = false;
-        m_regex_needle = String { needle };
+        m_regex_needle = DeprecatedString { needle };
         m_regex_result_match_index = -1;
         m_regex_result_match_capture_group_index = -1;
     }
@@ -771,14 +771,14 @@ TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)
 {
 }
 
-InsertTextCommand::InsertTextCommand(TextDocument& document, String const& text, TextPosition const& position)
+InsertTextCommand::InsertTextCommand(TextDocument& document, DeprecatedString const& text, TextPosition const& position)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range({ position, position })
 {
 }
 
-String InsertTextCommand::action_text() const
+DeprecatedString InsertTextCommand::action_text() const
 {
     return "Insert Text";
 }
@@ -872,14 +872,14 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
-RemoveTextCommand::RemoveTextCommand(TextDocument& document, String const& text, TextRange const& range)
+RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString const& text, TextRange const& range)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
 {
 }
 
-String RemoveTextCommand::action_text() const
+DeprecatedString RemoveTextCommand::action_text() const
 {
     return "Remove Text";
 }
@@ -919,7 +919,7 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
-ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range, String const& action_text)
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
@@ -950,7 +950,7 @@ bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
     return false;
 }
 
-String ReplaceAllTextCommand::action_text() const
+DeprecatedString ReplaceAllTextCommand::action_text() const
 {
     return m_action_text;
 }
@@ -964,7 +964,7 @@ IndentSelection::IndentSelection(TextDocument& document, size_t tab_width, TextR
 
 void IndentSelection::redo()
 {
-    auto const tab = String::repeated(' ', m_tab_width);
+    auto const tab = DeprecatedString::repeated(' ', m_tab_width);
 
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         m_document.insert_at({ i, 0 }, tab, m_client);
@@ -1003,7 +1003,7 @@ void UnindentSelection::redo()
 
 void UnindentSelection::undo()
 {
-    auto const tab = String::repeated(' ', m_tab_width);
+    auto const tab = DeprecatedString::repeated(' ', m_tab_width);
 
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++)
         m_document.insert_at({ i, 0 }, tab, m_client);

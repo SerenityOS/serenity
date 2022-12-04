@@ -48,9 +48,9 @@ struct Tag {
     Type type;
 };
 
-String kind_name(Kind);
-String class_name(Class);
-String type_name(Type);
+DeprecatedString kind_name(Kind);
+DeprecatedString class_name(Class);
+DeprecatedString type_name(Type);
 
 Optional<Core::DateTime> parse_utc_time(StringView);
 Optional<Core::DateTime> parse_generalized_time(StringView);

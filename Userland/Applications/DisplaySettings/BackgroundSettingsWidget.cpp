@@ -50,7 +50,7 @@ void BackgroundSettingsWidget::create_frame()
     m_wallpaper_view->set_model(GUI::FileSystemModel::create("/res/wallpapers"));
     m_wallpaper_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_wallpaper_view->on_selection_change = [this] {
-        String path;
+        DeprecatedString path;
         if (m_wallpaper_view->selection().is_empty()) {
             path = "";
         } else {
@@ -97,7 +97,7 @@ void BackgroundSettingsWidget::create_frame()
 
     m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
-    m_mode_combo->set_model(*GUI::ItemListModel<String>::create(m_modes));
+    m_mode_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_modes));
     bool first_mode_change = true;
     m_mode_combo->on_change = [this, first_mode_change](auto&, const GUI::ModelIndex& index) mutable {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
@@ -154,7 +154,7 @@ void BackgroundSettingsWidget::load_current_settings()
 void BackgroundSettingsWidget::apply_settings()
 {
     if (!GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper_bitmap(), m_monitor_widget->wallpaper()))
-        GUI::MessageBox::show_error(window(), String::formatted("Unable to load file {} as wallpaper", m_monitor_widget->wallpaper()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to load file {} as wallpaper", m_monitor_widget->wallpaper()));
 
     GUI::Desktop::the().set_background_color(m_color_input->text());
     GUI::Desktop::the().set_wallpaper_mode(m_monitor_widget->wallpaper_mode());

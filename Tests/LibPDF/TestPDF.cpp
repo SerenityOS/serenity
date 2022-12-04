@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/String.h>
 #include <LibCore/MappedFile.h>
 #include <LibPDF/Document.h>
 #include <LibTest/Macros.h>
@@ -47,7 +47,7 @@ TEST_CASE(empty_file_issue_10702)
 
 TEST_CASE(truncated_pdf_header_issue_10717)
 {
-    AK::String string { "%PDF-2.11%" };
+    AK::DeprecatedString string { "%PDF-2.11%" };
     auto document = PDF::Document::create(string.bytes());
     EXPECT(document.is_error());
 }

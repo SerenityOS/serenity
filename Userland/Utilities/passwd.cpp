@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool lock = false;
     bool unlock = false;
     // FIXME: Replace with StringView once Core::Account::from_name stops taking a char const*.
-    String username {};
+    DeprecatedString username {};
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify an account password.");

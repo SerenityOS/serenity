@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <LibCore/IODevice.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Serializer.h>
@@ -15,7 +15,7 @@
 
 namespace SQL {
 
-Heap::Heap(String file_name)
+Heap::Heap(DeprecatedString file_name)
 {
     set_name(move(file_name));
 }

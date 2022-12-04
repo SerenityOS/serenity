@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     } else if (is<WebAssemblyModuleObject>(buffer)) {
         module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();
     } else {
-        auto error = JS::TypeError::create(realm, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
+        auto error = JS::TypeError::create(realm, DeprecatedString::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
         promise->reject(error);
         return promise;
     }
@@ -439,7 +439,7 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM& vm, JS::Value va
     VERIFY_NOT_REACHED();
 }
 
-JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress address, String const& name)
+JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress address, DeprecatedString const& name)
 {
     auto& realm = *vm.current_realm();
     Optional<Wasm::FunctionType> type;
@@ -463,7 +463,7 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
             auto result = WebAssemblyObject::s_abstract_machine.invoke(address, move(values));
             // FIXME: Use the convoluted mapping of errors defined in the spec.
             if (result.is_trap())
-                return vm.throw_completion<JS::TypeError>(String::formatted("Wasm execution trapped (WIP): {}", result.trap().reason));
+                return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Wasm execution trapped (WIP): {}", result.trap().reason));
 
             if (result.values().is_empty())
                 return JS::js_undefined();

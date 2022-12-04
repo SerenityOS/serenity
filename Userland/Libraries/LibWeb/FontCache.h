@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 

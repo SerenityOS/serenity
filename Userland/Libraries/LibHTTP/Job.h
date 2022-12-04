@@ -37,7 +37,7 @@ protected:
     void on_socket_connected();
     void flush_received_buffers();
     void register_on_ready_to_read(Function<void()>);
-    ErrorOr<String> read_line(size_t);
+    ErrorOr<DeprecatedString> read_line(size_t);
     ErrorOr<ByteBuffer> receive(size_t);
     void timer_event(Core::TimerEvent&) override;
 
@@ -54,8 +54,8 @@ protected:
     Core::Stream::BufferedSocketBase* m_socket { nullptr };
     bool m_legacy_connection { false };
     int m_code { -1 };
-    HashMap<String, String, CaseInsensitiveStringTraits> m_headers;
-    Vector<String> m_set_cookie_headers;
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_headers;
+    Vector<DeprecatedString> m_set_cookie_headers;
 
     struct ReceivedBuffer {
         ReceivedBuffer(ByteBuffer d)

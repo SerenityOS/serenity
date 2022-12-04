@@ -121,7 +121,7 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, StringView input, DeprecatedString const& encoding)
     : m_tokenizer(input, encoding)
     , m_scripting_enabled(document.is_scripting_enabled())
     , m_document(JS::make_handle(document))
@@ -3552,13 +3552,13 @@ JS::NonnullGCPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Doc
     return *document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
-JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, String const& encoding)
+JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, DeprecatedString const& encoding)
 {
     return *document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm
-String HTMLParser::serialize_html_fragment(DOM::Node const& node)
+DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
 {
     // The algorithm takes as input a DOM Element, Document, or DocumentFragment referred to as the node.
     VERIFY(node.is_element() || node.is_document() || node.is_document_fragment());
@@ -3570,7 +3570,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
         // 1. If the node serializes as void, then return the empty string.
         //    (NOTE: serializes as void is defined only on elements in the spec)
         if (element.serializes_as_void())
-            return String::empty();
+            return DeprecatedString::empty();
 
         // 3. If the node is a template element, then let the node instead be the template element's template contents (a DocumentFragment node).
         //    (NOTE: This is out of order of the spec to avoid another dynamic cast. The second step just creates a string builder, so it shouldn't matter)
@@ -3583,7 +3583,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
         Yes,
     };
 
-    auto escape_string = [](StringView string, AttributeMode attribute_mode) -> String {
+    auto escape_string = [](StringView string, AttributeMode attribute_mode) -> DeprecatedString {
         // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
         StringBuilder builder;
         for (auto& ch : string) {
@@ -3622,7 +3622,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 
             // 1. If current node is an element in the HTML namespace, the MathML namespace, or the SVG namespace, then let tagname be current node's local name.
             //    Otherwise, let tagname be current node's qualified name.
-            String tag_name;
+            DeprecatedString tag_name;
 
             if (element.namespace_().is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
                 tag_name = element.local_name();

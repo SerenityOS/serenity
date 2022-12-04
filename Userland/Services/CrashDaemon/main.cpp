@@ -17,7 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static void wait_until_coredump_is_ready(String const& coredump_path)
+static void wait_until_coredump_is_ready(DeprecatedString const& coredump_path)
 {
     while (true) {
         struct stat statbuf;
@@ -32,7 +32,7 @@ static void wait_until_coredump_is_ready(String const& coredump_path)
     }
 }
 
-static void launch_crash_reporter(String const& coredump_path, bool unlink_on_exit)
+static void launch_crash_reporter(DeprecatedString const& coredump_path, bool unlink_on_exit)
 {
     auto pid = Core::Process::spawn("/bin/CrashReporter"sv,
         unlink_on_exit

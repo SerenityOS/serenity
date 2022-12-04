@@ -14,7 +14,7 @@ Storage& Storage::the()
     return s_the;
 }
 
-void Storage::set_data(Core::AnonymousBuffer data, String const& mime_type, HashMap<String, String> const& metadata)
+void Storage::set_data(Core::AnonymousBuffer data, DeprecatedString const& mime_type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
     m_buffer = move(data);
     m_data_size = data.size();

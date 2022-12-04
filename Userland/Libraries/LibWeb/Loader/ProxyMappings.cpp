@@ -29,7 +29,7 @@ Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
     return {};
 }
 
-void Web::ProxyMappings::set_mappings(Vector<String> proxies, OrderedHashMap<String, size_t> mappings)
+void Web::ProxyMappings::set_mappings(Vector<DeprecatedString> proxies, OrderedHashMap<DeprecatedString, size_t> mappings)
 {
     m_proxies = move(proxies);
     m_mappings = move(mappings);

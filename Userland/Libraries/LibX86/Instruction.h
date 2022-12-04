@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <stdio.h>
 
@@ -21,7 +21,7 @@ typedef void (Interpreter::*InstructionHandler)(Instruction const&);
 
 class SymbolProvider {
 public:
-    virtual String symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
+    virtual DeprecatedString symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
 
 protected:
     virtual ~SymbolProvider() = default;
@@ -518,20 +518,20 @@ class MemoryOrRegisterReference {
     friend class Instruction;
 
 public:
-    String to_string_o8(Instruction const&) const;
-    String to_string_o16(Instruction const&) const;
-    String to_string_o32(Instruction const&) const;
-    String to_string_o64(Instruction const&) const;
-    String to_string_fpu_reg() const;
-    String to_string_fpu_mem(Instruction const&) const;
-    String to_string_fpu_ax16() const;
-    String to_string_fpu16(Instruction const&) const;
-    String to_string_fpu32(Instruction const&) const;
-    String to_string_fpu64(Instruction const&) const;
-    String to_string_fpu80(Instruction const&) const;
-    String to_string_mm(Instruction const&) const;
-    String to_string_xmm(Instruction const&) const;
-    String sib_to_string(ProcessorMode) const;
+    DeprecatedString to_string_o8(Instruction const&) const;
+    DeprecatedString to_string_o16(Instruction const&) const;
+    DeprecatedString to_string_o32(Instruction const&) const;
+    DeprecatedString to_string_o64(Instruction const&) const;
+    DeprecatedString to_string_fpu_reg() const;
+    DeprecatedString to_string_fpu_mem(Instruction const&) const;
+    DeprecatedString to_string_fpu_ax16() const;
+    DeprecatedString to_string_fpu16(Instruction const&) const;
+    DeprecatedString to_string_fpu32(Instruction const&) const;
+    DeprecatedString to_string_fpu64(Instruction const&) const;
+    DeprecatedString to_string_fpu80(Instruction const&) const;
+    DeprecatedString to_string_mm(Instruction const&) const;
+    DeprecatedString to_string_xmm(Instruction const&) const;
+    DeprecatedString sib_to_string(ProcessorMode) const;
 
     bool is_register() const { return m_register_index != 0x7f; }
 
@@ -580,10 +580,10 @@ public:
 private:
     MemoryOrRegisterReference() = default;
 
-    String to_string(Instruction const&) const;
-    String to_string_a16() const;
-    String to_string_a32() const;
-    String to_string_a64() const;
+    DeprecatedString to_string(Instruction const&) const;
+    DeprecatedString to_string_a16() const;
+    DeprecatedString to_string_a32() const;
+    DeprecatedString to_string_a64() const;
 
     template<typename InstructionStreamType>
     void decode(InstructionStreamType&, AddressSize, bool has_rex_r, bool has_rex_x, bool has_rex_b);
@@ -643,7 +643,7 @@ public:
 
     unsigned length() const;
 
-    String mnemonic() const;
+    DeprecatedString mnemonic() const;
 
     u8 op() const { return m_op; }
     u8 modrm_byte() const { return m_modrm.modrm_byte(); }
@@ -695,7 +695,7 @@ public:
     OperandSize operand_size() const { return m_operand_size; }
     ProcessorMode mode() const { return m_mode; }
 
-    String to_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
+    DeprecatedString to_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
 
 private:
     template<typename InstructionStreamType>

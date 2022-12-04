@@ -5,9 +5,9 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/DeprecatedString.h>
 #include <AK/FloatingPointStringConversions.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>
@@ -18,14 +18,14 @@
 
 namespace Gfx {
 
-String Color::to_string() const
+DeprecatedString Color::to_string() const
 {
-    return String::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha());
+    return DeprecatedString::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha());
 }
 
-String Color::to_string_without_alpha() const
+DeprecatedString Color::to_string_without_alpha() const
 {
-    return String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
+    return DeprecatedString::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
 
 static Optional<Color> parse_rgb_color(StringView string)

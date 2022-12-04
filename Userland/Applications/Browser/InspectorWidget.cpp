@@ -126,7 +126,7 @@ void InspectorWidget::select_default_node()
     m_dom_tree_view->set_cursor({}, GUI::AbstractView::SelectionUpdate::ClearIfNotSelected);
 }
 
-void InspectorWidget::set_dom_json(String json)
+void InspectorWidget::set_dom_json(DeprecatedString json)
 {
     if (m_dom_json.has_value() && m_dom_json.value() == json)
         return;
@@ -148,7 +148,7 @@ void InspectorWidget::clear_dom_json()
     clear_style_json();
 }
 
-void InspectorWidget::set_dom_node_properties_json(Selection selection, String specified_values_json, String computed_values_json, String custom_properties_json, String node_box_sizing_json)
+void InspectorWidget::set_dom_node_properties_json(Selection selection, DeprecatedString specified_values_json, DeprecatedString computed_values_json, DeprecatedString custom_properties_json, DeprecatedString node_box_sizing_json)
 {
     if (selection != m_selection) {
         dbgln("Got data for the wrong node id! Wanted ({}), got ({})", m_selection.to_string(), selection.to_string());
@@ -159,7 +159,7 @@ void InspectorWidget::set_dom_node_properties_json(Selection selection, String s
     update_node_box_model(node_box_sizing_json);
 }
 
-void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json)
+void InspectorWidget::load_style_json(DeprecatedString specified_values_json, DeprecatedString computed_values_json, DeprecatedString custom_properties_json)
 {
     m_selection_specified_values_json = specified_values_json;
     m_computed_style_table_view->set_model(WebView::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
@@ -174,7 +174,7 @@ void InspectorWidget::load_style_json(String specified_values_json, String compu
     m_custom_properties_table_view->set_searchable(true);
 }
 
-void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_json)
+void InspectorWidget::update_node_box_model(Optional<DeprecatedString> node_box_sizing_json)
 {
     if (!node_box_sizing_json.has_value()) {
         return;

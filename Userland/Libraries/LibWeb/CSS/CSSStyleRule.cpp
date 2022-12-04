@@ -37,7 +37,7 @@ CSSStyleDeclaration* CSSStyleRule::style()
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
-String CSSStyleRule::serialized() const
+DeprecatedString CSSStyleRule::serialized() const
 {
     StringBuilder builder;
 
@@ -50,7 +50,7 @@ String CSSStyleRule::serialized() const
     auto decls = declaration().serialized();
 
     // FIXME: 3. Let rules be the result of performing serialize a CSS rule on each rule in the rule’s cssRules list, or null if there are no such rules.
-    String rules;
+    DeprecatedString rules;
 
     // 4. If decls and rules are both null, append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)) and return s.
     if (decls.is_null() && rules.is_null()) {
@@ -81,7 +81,7 @@ String CSSStyleRule::serialized() const
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-selectortext
-String CSSStyleRule::selector_text() const
+DeprecatedString CSSStyleRule::selector_text() const
 {
     // The selectorText attribute, on getting, must return the result of serializing the associated group of selectors.
     return serialize_a_group_of_selectors(selectors());

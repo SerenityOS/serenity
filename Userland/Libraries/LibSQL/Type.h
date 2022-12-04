@@ -6,18 +6,18 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace SQL {
 
-#define ENUMERATE_SQL_TYPES(S)                   \
-    S("null", 1, Null, int, sizeof(int))         \
-    S("text", 2, Text, String, 65 + sizeof(u32)) \
-    S("int", 4, Integer, int, sizeof(int))       \
-    S("float", 8, Float, double, sizeof(double)) \
-    S("bool", 16, Boolean, bool, sizeof(bool))   \
+#define ENUMERATE_SQL_TYPES(S)                             \
+    S("null", 1, Null, int, sizeof(int))                   \
+    S("text", 2, Text, DeprecatedString, 65 + sizeof(u32)) \
+    S("int", 4, Integer, int, sizeof(int))                 \
+    S("float", 8, Float, double, sizeof(double))           \
+    S("bool", 16, Boolean, bool, sizeof(bool))             \
     S("tuple", 32, Tuple, int, sizeof(int))
 
 enum class SQLType {

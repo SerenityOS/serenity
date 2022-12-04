@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 struct Options {
-    String data;
+    DeprecatedString data;
     StringView type;
     bool clear;
 };
@@ -24,7 +24,7 @@ struct Options {
 static ErrorOr<Options> parse_options(Main::Arguments arguments)
 {
     auto type = "text/plain"sv;
-    Vector<String> text;
+    Vector<DeprecatedString> text;
     bool clear = false;
 
     Core::ArgsParser args_parser;

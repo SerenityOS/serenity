@@ -46,7 +46,7 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
         auto values = row_value.to_vector().release_value();
 
         if (m_column_names.is_empty() && values.size() != row.size())
-            return Result { SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, String::empty() };
+            return Result { SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, DeprecatedString::empty() };
 
         for (auto ix = 0u; ix < values.size(); ix++) {
             auto input_value_type = values[ix].type();

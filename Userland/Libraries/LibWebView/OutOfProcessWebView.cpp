@@ -6,7 +6,7 @@
 
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -240,7 +240,7 @@ void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, Gfx:
     set_content_size(content_size);
 }
 
-void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>, String const& title)
+void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>, DeprecatedString const& title)
 {
     if (on_title_change)
         on_title_change(title);
@@ -263,7 +263,7 @@ void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebCo
     scroll_into_view(rect, true, true);
 }
 
-void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, String const& title)
+void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, DeprecatedString const& title)
 {
     GUI::Application::the()->show_tooltip(title, nullptr);
 }
@@ -286,13 +286,13 @@ void OutOfProcessWebView::notify_server_did_unhover_link(Badge<WebContentClient>
         on_link_hover({});
 }
 
-void OutOfProcessWebView::notify_server_did_click_link(Badge<WebContentClient>, const AK::URL& url, String const& target, unsigned int modifiers)
+void OutOfProcessWebView::notify_server_did_click_link(Badge<WebContentClient>, const AK::URL& url, DeprecatedString const& target, unsigned int modifiers)
 {
     if (on_link_click)
         on_link_click(url, target, modifiers);
 }
 
-void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL& url, String const& target, unsigned int modifiers)
+void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL& url, DeprecatedString const& target, unsigned int modifiers)
 {
     if (on_link_middle_click)
         on_link_middle_click(url, target, modifiers);
@@ -336,19 +336,19 @@ void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebConten
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, String const&, unsigned)
+void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, DeprecatedString const&, unsigned)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, String const&, unsigned, Gfx::ShareableBitmap const& bitmap)
+void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     if (on_image_context_menu_request)
         on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);
 }
 
-void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
+void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, DeprecatedString const& message)
 {
     m_dialog = GUI::MessageBox::construct(window(), message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
     m_dialog->set_icon(window()->icon());
@@ -358,7 +358,7 @@ void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient
     m_dialog = nullptr;
 }
 
-void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
+void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, DeprecatedString const& message)
 {
     m_dialog = GUI::MessageBox::construct(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     m_dialog->set_icon(window()->icon());
@@ -367,7 +367,7 @@ void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClie
     m_dialog = nullptr;
 }
 
-void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
+void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, DeprecatedString const& message, DeprecatedString const& default_)
 {
     m_dialog = GUI::InputBox::construct(window(), default_, message, "Prompt"sv, StringView {}, GUI::InputType::Text);
     m_dialog->set_icon(window()->icon());
@@ -380,7 +380,7 @@ void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClien
     m_dialog = nullptr;
 }
 
-void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
+void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, DeprecatedString const& message)
 {
     if (m_dialog && is<GUI::InputBox>(*m_dialog))
         static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message);
@@ -398,19 +398,19 @@ void OutOfProcessWebView::notify_server_did_request_dismiss_dialog(Badge<WebCont
         m_dialog->done(GUI::Dialog::ExecResult::Cancel);
 }
 
-void OutOfProcessWebView::notify_server_did_get_source(const AK::URL& url, String const& source)
+void OutOfProcessWebView::notify_server_did_get_source(const AK::URL& url, DeprecatedString const& source)
 {
     if (on_get_source)
         on_get_source(url, source);
 }
 
-void OutOfProcessWebView::notify_server_did_get_dom_tree(String const& dom_tree)
+void OutOfProcessWebView::notify_server_did_get_dom_tree(DeprecatedString const& dom_tree)
 {
     if (on_get_dom_tree)
         on_get_dom_tree(dom_tree);
 }
 
-void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)
+void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
 {
     if (on_get_dom_node_properties)
         on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
@@ -422,7 +422,7 @@ void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 messag
         on_js_console_new_message(message_index);
 }
 
-void OutOfProcessWebView::notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
+void OutOfProcessWebView::notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
 {
     if (on_get_js_console_messages)
         on_get_js_console_messages(start_index, message_types, messages);
@@ -441,14 +441,14 @@ Vector<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_all_c
     return {};
 }
 
-Optional<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, String const& name)
+Optional<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& name)
 {
     if (on_get_named_cookie)
         return on_get_named_cookie(url, name);
     return {};
 }
 
-String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source)
+DeprecatedString OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source)
 {
     if (on_get_cookie)
         return on_get_cookie(url, source);
@@ -514,7 +514,7 @@ Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
     return {};
 }
 
-void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
+void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
     auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
     if (file.is_error())
@@ -550,7 +550,7 @@ WebContentClient& OutOfProcessWebView::client()
     return *m_client_state.client;
 }
 
-void OutOfProcessWebView::debug_request(String const& request, String const& argument)
+void OutOfProcessWebView::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     client().async_debug_request(request, argument);
 }
@@ -588,7 +588,7 @@ i32 OutOfProcessWebView::get_hovered_node_id()
     return client().get_hovered_node_id();
 }
 
-void OutOfProcessWebView::js_console_input(String const& js_source)
+void OutOfProcessWebView::js_console_input(DeprecatedString const& js_source)
 {
     client().async_js_console_input(js_source);
 }
@@ -603,7 +603,7 @@ void OutOfProcessWebView::run_javascript(StringView js_source)
     client().async_run_javascript(js_source);
 }
 
-String OutOfProcessWebView::selected_text()
+DeprecatedString OutOfProcessWebView::selected_text()
 {
     return client().get_selected_text();
 }
@@ -613,27 +613,27 @@ void OutOfProcessWebView::select_all()
     client().async_select_all();
 }
 
-String OutOfProcessWebView::dump_layout_tree()
+DeprecatedString OutOfProcessWebView::dump_layout_tree()
 {
     return client().dump_layout_tree();
 }
 
-OrderedHashMap<String, String> OutOfProcessWebView::get_local_storage_entries()
+OrderedHashMap<DeprecatedString, DeprecatedString> OutOfProcessWebView::get_local_storage_entries()
 {
     return client().get_local_storage_entries();
 }
 
-OrderedHashMap<String, String> OutOfProcessWebView::get_session_storage_entries()
+OrderedHashMap<DeprecatedString, DeprecatedString> OutOfProcessWebView::get_session_storage_entries()
 {
     return client().get_session_storage_entries();
 }
 
-void OutOfProcessWebView::set_content_filters(Vector<String> filters)
+void OutOfProcessWebView::set_content_filters(Vector<DeprecatedString> filters)
 {
     client().async_set_content_filters(filters);
 }
 
-void OutOfProcessWebView::set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings)
+void OutOfProcessWebView::set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings)
 {
     client().async_set_proxy_mappings(move(proxies), move(mappings));
 }
@@ -643,7 +643,7 @@ void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorSch
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
-void OutOfProcessWebView::connect_to_webdriver(String const& webdriver_ipc_path)
+void OutOfProcessWebView::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     client().async_connect_to_webdriver(webdriver_ipc_path);
 }

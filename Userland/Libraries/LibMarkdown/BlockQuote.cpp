@@ -10,7 +10,7 @@
 
 namespace Markdown {
 
-String BlockQuote::render_to_html(bool) const
+DeprecatedString BlockQuote::render_to_html(bool) const
 {
     StringBuilder builder;
     builder.append("<blockquote>\n"sv);
@@ -19,7 +19,7 @@ String BlockQuote::render_to_html(bool) const
     return builder.build();
 }
 
-String BlockQuote::render_for_terminal(size_t view_width) const
+DeprecatedString BlockQuote::render_for_terminal(size_t view_width) const
 {
     // FIXME: Rewrite the whole terminal renderer to make blockquote rendering possible
     return m_contents->render_for_terminal(view_width);

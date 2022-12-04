@@ -12,7 +12,7 @@
 
 namespace HTTP {
 
-String to_string(HttpRequest::Method method)
+DeprecatedString to_string(HttpRequest::Method method)
 {
     switch (method) {
     case HttpRequest::Method::GET:
@@ -38,7 +38,7 @@ String to_string(HttpRequest::Method method)
     }
 }
 
-String HttpRequest::method_name() const
+DeprecatedString HttpRequest::method_name() const
 {
     return to_string(m_method);
 }
@@ -102,15 +102,15 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
 
     Vector<u8, 256> buffer;
 
-    String method;
-    String resource;
-    String protocol;
+    DeprecatedString method;
+    DeprecatedString resource;
+    DeprecatedString protocol;
     Vector<Header> headers;
     Header current_header;
     ByteBuffer body;
 
     auto commit_and_advance_to = [&](auto& output, State new_state) {
-        output = String::copy(buffer);
+        output = DeprecatedString::copy(buffer);
         buffer.clear();
         state = new_state;
     };
@@ -228,7 +228,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
     return request;
 }
 
-void HttpRequest::set_headers(HashMap<String, String> const& headers)
+void HttpRequest::set_headers(HashMap<DeprecatedString, DeprecatedString> const& headers)
 {
     for (auto& it : headers)
         m_headers.append({ it.key, it.value });
@@ -249,7 +249,7 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
     return Header { "Authorization", builder.to_string() };
 }
 
-Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(String const& value)
+Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(DeprecatedString const& value)
 {
     if (!value.starts_with("Basic "sv, AK::CaseSensitivity::CaseInsensitive))
         return {};
@@ -259,7 +259,7 @@ Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_ba
     auto decoded_token_bb = decode_base64(token);
     if (decoded_token_bb.is_error())
         return {};
-    auto decoded_token = String::copy(decoded_token_bb.value());
+    auto decoded_token = DeprecatedString::copy(decoded_token_bb.value());
     auto colon_index = decoded_token.find(':');
     if (!colon_index.has_value())
         return {};

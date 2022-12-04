@@ -27,7 +27,7 @@ DOMParser::DOMParser(JS::Realm& realm)
 DOMParser::~DOMParser() = default;
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
-JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(String const& string, Bindings::DOMParserSupportedType type)
+JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString const& string, Bindings::DOMParserSupportedType type)
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
     auto document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());

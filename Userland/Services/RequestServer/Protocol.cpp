@@ -13,18 +13,18 @@
 
 namespace RequestServer {
 
-static HashMap<String, Protocol*>& all_protocols()
+static HashMap<DeprecatedString, Protocol*>& all_protocols()
 {
-    static HashMap<String, Protocol*> map;
+    static HashMap<DeprecatedString, Protocol*> map;
     return map;
 }
 
-Protocol* Protocol::find_by_name(String const& name)
+Protocol* Protocol::find_by_name(DeprecatedString const& name)
 {
     return all_protocols().get(name).value_or(nullptr);
 }
 
-Protocol::Protocol(String const& name)
+Protocol::Protocol(DeprecatedString const& name)
 {
     all_protocols().set(name, this);
 }

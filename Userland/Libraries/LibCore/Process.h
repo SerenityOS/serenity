@@ -14,9 +14,9 @@ namespace Core {
 
 class Process {
 public:
-    static ErrorOr<pid_t> spawn(StringView path, Span<String const> arguments, String working_directory = {});
-    static ErrorOr<pid_t> spawn(StringView path, Span<StringView const> arguments, String working_directory = {});
-    static ErrorOr<pid_t> spawn(StringView path, Span<char const* const> arguments = {}, String working_directory = {});
+    static ErrorOr<pid_t> spawn(StringView path, Span<DeprecatedString const> arguments, DeprecatedString working_directory = {});
+    static ErrorOr<pid_t> spawn(StringView path, Span<StringView const> arguments, DeprecatedString working_directory = {});
+    static ErrorOr<pid_t> spawn(StringView path, Span<char const* const> arguments = {}, DeprecatedString working_directory = {});
 };
 
 }

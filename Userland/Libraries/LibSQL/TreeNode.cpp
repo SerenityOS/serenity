@@ -209,40 +209,40 @@ TreeNode* TreeNode::down_node(size_t ix)
 
 TreeNode* TreeNode::node_for(Key const& key)
 {
-    dump_if(SQL_DEBUG, String::formatted("node_for(Key {})", key.to_string()));
+    dump_if(SQL_DEBUG, DeprecatedString::formatted("node_for(Key {})", key.to_string()));
     if (is_leaf())
         return this;
     for (size_t ix = 0; ix < size(); ix++) {
         if (key < m_entries[ix]) {
             dbgln_if(SQL_DEBUG, "[{}] {} < {} v{}",
-                pointer(), (String)key, (String)m_entries[ix], m_down[ix].pointer());
+                pointer(), (DeprecatedString)key, (DeprecatedString)m_entries[ix], m_down[ix].pointer());
             return down_node(ix)->node_for(key);
         }
     }
     dbgln_if(SQL_DEBUG, "[#{}] {} >= {} v{}",
-        pointer(), key.to_string(), (String)m_entries[size() - 1], m_down[size()].pointer());
+        pointer(), key.to_string(), (DeprecatedString)m_entries[size() - 1], m_down[size()].pointer());
     return down_node(size())->node_for(key);
 }
 
 Optional<u32> TreeNode::get(Key& key)
 {
-    dump_if(SQL_DEBUG, String::formatted("get({})", key.to_string()));
+    dump_if(SQL_DEBUG, DeprecatedString::formatted("get({})", key.to_string()));
     for (auto ix = 0u; ix < size(); ix++) {
         if (key < m_entries[ix]) {
             if (is_leaf()) {
                 dbgln_if(SQL_DEBUG, "[#{}] {} < {} -> 0",
-                    pointer(), key.to_string(), (String)m_entries[ix]);
+                    pointer(), key.to_string(), (DeprecatedString)m_entries[ix]);
                 return {};
             } else {
                 dbgln_if(SQL_DEBUG, "[{}] {} < {} ({} -> {})",
-                    pointer(), key.to_string(), (String)m_entries[ix],
+                    pointer(), key.to_string(), (DeprecatedString)m_entries[ix],
                     ix, m_down[ix].pointer());
                 return down_node(ix)->get(key);
             }
         }
         if (key == m_entries[ix]) {
             dbgln_if(SQL_DEBUG, "[#{}] {} == {} -> {}",
-                pointer(), key.to_string(), (String)m_entries[ix],
+                pointer(), key.to_string(), (DeprecatedString)m_entries[ix],
                 m_entries[ix].pointer());
             key.set_pointer(m_entries[ix].pointer());
             return m_entries[ix].pointer();
@@ -254,11 +254,11 @@ Optional<u32> TreeNode::get(Key& key)
     }
     if (is_leaf()) {
         dbgln_if(SQL_DEBUG, "[#{}] {} > {} -> 0",
-            pointer(), key.to_string(), (String)m_entries[size() - 1]);
+            pointer(), key.to_string(), (DeprecatedString)m_entries[size() - 1]);
         return {};
     }
     dbgln_if(SQL_DEBUG, "[#{}] {} > {} ({} -> {})",
-        pointer(), key.to_string(), (String)m_entries[size() - 1],
+        pointer(), key.to_string(), (DeprecatedString)m_entries[size() - 1],
         size(), m_down[size()].pointer());
     return down_node(size())->get(key);
 }
@@ -266,7 +266,7 @@ Optional<u32> TreeNode::get(Key& key)
 void TreeNode::just_insert(Key const& key, TreeNode* right)
 {
     dbgln_if(SQL_DEBUG, "[#{}] just_insert({}, right = {})",
-        pointer(), (String)key, (right) ? right->pointer() : 0);
+        pointer(), (DeprecatedString)key, (right) ? right->pointer() : 0);
     dump_if(SQL_DEBUG, "Before");
     for (auto ix = 0u; ix < size(); ix++) {
         if (key < m_entries[ix]) {
@@ -334,7 +334,7 @@ void TreeNode::split()
     m_up->just_insert(median, new_node);
 }
 
-void TreeNode::dump_if(int flag, String&& msg)
+void TreeNode::dump_if(int flag, DeprecatedString&& msg)
 {
     if (!flag)
         return;
@@ -352,7 +352,7 @@ void TreeNode::dump_if(int flag, String&& msg)
             builder.appendff("[v{}] ", m_down[ix].pointer());
         else
             VERIFY(m_down[ix].pointer() == 0);
-        builder.appendff("'{}' ", (String)m_entries[ix]);
+        builder.appendff("'{}' ", (DeprecatedString)m_entries[ix]);
     }
     if (!is_leaf()) {
         builder.appendff("[v{}]", m_down[size()].pointer());

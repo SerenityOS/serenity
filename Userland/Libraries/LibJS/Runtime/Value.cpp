@@ -9,8 +9,8 @@
 #include <AK/AllOf.h>
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
+#include <AK/DeprecatedString.h>
 #include <AK/FloatingPointStringConversions.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringFloatingPointConversions.h>
 #include <AK/Utf8View.h>
@@ -71,7 +71,7 @@ ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 
 // 6.1.6.1.20 Number::toString ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-tostring
 // Implementation for radix = 10
-String number_to_string(double d, NumberToStringMode mode)
+DeprecatedString number_to_string(double d, NumberToStringMode mode)
 {
     auto convert_to_decimal_digits_array = [](auto x, auto& digits, auto& length) {
         for (; x; x /= 10)
@@ -270,7 +270,7 @@ ThrowCompletionOr<bool> Value::is_regexp(VM& vm) const
 }
 
 // 13.5.3 The typeof Operator, https://tc39.es/ecma262/#sec-typeof-operator
-String Value::typeof() const
+DeprecatedString Value::typeof() const
 {
     if (is_number())
         return "number";
@@ -300,7 +300,7 @@ String Value::typeof() const
     }
 }
 
-String Value::to_string_without_side_effects() const
+DeprecatedString Value::to_string_without_side_effects() const
 {
     if (is_double())
         return number_to_string(m_value.as_double);
@@ -313,7 +313,7 @@ String Value::to_string_without_side_effects() const
     case BOOLEAN_TAG:
         return as_bool() ? "true" : "false";
     case INT32_TAG:
-        return String::number(as_i32());
+        return DeprecatedString::number(as_i32());
     case STRING_TAG:
         return as_string().string();
     case SYMBOL_TAG:
@@ -321,7 +321,7 @@ String Value::to_string_without_side_effects() const
     case BIGINT_TAG:
         return as_bigint().to_string();
     case OBJECT_TAG:
-        return String::formatted("[object {}]", as_object().class_name());
+        return DeprecatedString::formatted("[object {}]", as_object().class_name());
     case ACCESSOR_TAG:
         return "<accessor>";
     default:
@@ -338,7 +338,7 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
-ThrowCompletionOr<String> Value::to_string(VM& vm) const
+ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
 {
     if (is_double())
         return number_to_string(m_value.as_double);
@@ -351,7 +351,7 @@ ThrowCompletionOr<String> Value::to_string(VM& vm) const
     case BOOLEAN_TAG:
         return as_bool() ? "true"sv : "false"sv;
     case INT32_TAG:
-        return String::number(as_i32());
+        return DeprecatedString::number(as_i32());
     case STRING_TAG:
         return as_string().string();
     case SYMBOL_TAG:
@@ -412,7 +412,7 @@ bool Value::to_boolean() const
 // 7.1.1 ToPrimitive ( input [ , preferredType ] ), https://tc39.es/ecma262/#sec-toprimitive
 ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_type) const
 {
-    auto get_hint_for_preferred_type = [&]() -> String {
+    auto get_hint_for_preferred_type = [&]() -> DeprecatedString {
         switch (preferred_type) {
         case PreferredType::Default:
             return "default";
@@ -532,7 +532,7 @@ static Optional<NumberParseResult> parse_number_text(StringView text)
 Optional<Value> string_to_number(StringView string)
 {
     // 1. Let text be StringToCodePoints(str).
-    String text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
+    DeprecatedString text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
 
     // 2. Let literal be ParseText(text, StringNumericLiteral).
     if (text.is_empty())

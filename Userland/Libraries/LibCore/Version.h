@@ -10,6 +10,6 @@
 
 namespace Core::Version {
 
-String read_long_version_string();
+DeprecatedString read_long_version_string();
 
 }

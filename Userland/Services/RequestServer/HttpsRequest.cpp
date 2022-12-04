@@ -18,7 +18,7 @@ HttpsRequest::HttpsRequest(ConnectionFromClient& client, NonnullRefPtr<HTTP::Htt
     Detail::init(this, job);
 }
 
-void HttpsRequest::set_certificate(String certificate, String key)
+void HttpsRequest::set_certificate(DeprecatedString certificate, DeprecatedString key)
 {
     m_job->set_certificate(move(certificate), move(key));
 }

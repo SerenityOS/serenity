@@ -54,11 +54,11 @@ static RefPtr<MultiScaleBitmaps> s_inactive_window_shadow;
 static RefPtr<MultiScaleBitmaps> s_menu_shadow;
 static RefPtr<MultiScaleBitmaps> s_taskbar_shadow;
 static RefPtr<MultiScaleBitmaps> s_tooltip_shadow;
-static String s_last_active_window_shadow_path;
-static String s_last_inactive_window_shadow_path;
-static String s_last_menu_shadow_path;
-static String s_last_taskbar_shadow_path;
-static String s_last_tooltip_shadow_path;
+static DeprecatedString s_last_active_window_shadow_path;
+static DeprecatedString s_last_inactive_window_shadow_path;
+static DeprecatedString s_last_menu_shadow_path;
+static DeprecatedString s_last_taskbar_shadow_path;
+static DeprecatedString s_last_tooltip_shadow_path;
 
 static Gfx::IntRect frame_rect_for_window(Window& window, Gfx::IntRect const& rect)
 {
@@ -148,7 +148,7 @@ void WindowFrame::set_button_icons()
 
 void WindowFrame::reload_config()
 {
-    String icons_path = WindowManager::the().palette().title_button_icons_path();
+    DeprecatedString icons_path = WindowManager::the().palette().title_button_icons_path();
 
     auto reload_bitmap = [&](RefPtr<MultiScaleBitmaps>& multiscale_bitmap, StringView path, StringView default_path = ""sv) {
         StringBuilder full_path;
@@ -177,9 +177,9 @@ void WindowFrame::reload_config()
     reload_icon(s_close_icon, "window-close"sv, "/res/icons/16x16/window-close.png"sv);
     reload_icon(s_close_modified_icon, "window-close-modified"sv, "/res/icons/16x16/window-close-modified.png"sv);
 
-    auto load_shadow = [](String const& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
+    auto load_shadow = [](DeprecatedString const& path, DeprecatedString& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
         if (path.is_empty()) {
-            last_path = String::empty();
+            last_path = DeprecatedString::empty();
             shadow_bitmap = nullptr;
         } else if (!shadow_bitmap || last_path != path) {
             if (shadow_bitmap)
@@ -189,7 +189,7 @@ void WindowFrame::reload_config()
             if (shadow_bitmap)
                 last_path = path;
             else
-                last_path = String::empty();
+                last_path = DeprecatedString::empty();
         }
     };
     load_shadow(WindowManager::the().palette().active_window_shadow_path(), s_last_active_window_shadow_path, s_active_window_shadow);

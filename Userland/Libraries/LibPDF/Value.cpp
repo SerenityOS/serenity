@@ -9,27 +9,27 @@
 
 namespace PDF {
 
-String Value::to_string(int indent) const
+DeprecatedString Value::to_string(int indent) const
 {
     return visit(
-        [&](Empty const&) -> String {
+        [&](Empty const&) -> DeprecatedString {
             // Return type deduction means that we can't use implicit conversions.
             return "<empty>";
         },
-        [&](std::nullptr_t const&) -> String {
+        [&](std::nullptr_t const&) -> DeprecatedString {
             return "null";
         },
-        [&](bool const& b) -> String {
+        [&](bool const& b) -> DeprecatedString {
             return b ? "true" : "false";
         },
         [&](int const& i) {
-            return String::number(i);
+            return DeprecatedString::number(i);
         },
         [&](float const& f) {
-            return String::number(f);
+            return DeprecatedString::number(f);
         },
         [&](Reference const& ref) {
-            return String::formatted("{} {} R", ref.as_ref_index(), ref.as_ref_generation_index());
+            return DeprecatedString::formatted("{} {} R", ref.as_ref_index(), ref.as_ref_generation_index());
         },
         [&](NonnullRefPtr<Object> const& object) {
             return object->to_string(indent);

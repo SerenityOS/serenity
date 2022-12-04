@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TextBox.h>
 
@@ -29,7 +29,7 @@ public:
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
-    virtual String column_name(int) const override;
+    virtual DeprecatedString column_name(int) const override;
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;
@@ -56,7 +56,7 @@ private:
     // Maps row to actual model index.
     Vector<ModelIndex> m_matching_indices;
 
-    String m_filter_term;
+    DeprecatedString m_filter_term;
 };
 
 }

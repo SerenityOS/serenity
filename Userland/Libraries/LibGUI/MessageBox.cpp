@@ -56,7 +56,7 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
     return box->exec();
 }
 
-void MessageBox::set_text(String text)
+void MessageBox::set_text(DeprecatedString text)
 {
     m_text = move(text);
     build();
@@ -151,7 +151,7 @@ void MessageBox::build()
     constexpr int button_width = 80;
     int button_count = 0;
 
-    auto add_button = [&](String label, ExecResult result) -> GUI::Button& {
+    auto add_button = [&](DeprecatedString label, ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
         button.set_text(label);

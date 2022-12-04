@@ -13,7 +13,7 @@
 
 TEST_CASE(catch_all)
 {
-    String pattern = "^.*$";
+    DeprecatedString pattern = "^.*$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -24,7 +24,7 @@ TEST_CASE(catch_all)
 
 TEST_CASE(simple_start)
 {
-    String pattern = "^hello friends";
+    DeprecatedString pattern = "^hello friends";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -37,7 +37,7 @@ TEST_CASE(simple_start)
 
 TEST_CASE(simple_end)
 {
-    String pattern = ".*hello\\.\\.\\. there$";
+    DeprecatedString pattern = ".*hello\\.\\.\\. there$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -51,7 +51,7 @@ TEST_CASE(simple_end)
 
 TEST_CASE(simple_period)
 {
-    String pattern = "hello.";
+    DeprecatedString pattern = "hello.";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -65,7 +65,7 @@ TEST_CASE(simple_period)
 
 TEST_CASE(simple_period_end)
 {
-    String pattern = "hello.$";
+    DeprecatedString pattern = "hello.$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB), REG_NOERR);
@@ -79,7 +79,7 @@ TEST_CASE(simple_period_end)
 
 TEST_CASE(simple_escaped)
 {
-    String pattern = "hello\\.";
+    DeprecatedString pattern = "hello\\.";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -91,7 +91,7 @@ TEST_CASE(simple_escaped)
 
 TEST_CASE(simple_period2_end)
 {
-    String pattern = ".*hi... there$";
+    DeprecatedString pattern = ".*hi... there$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -106,7 +106,7 @@ TEST_CASE(simple_period2_end)
 
 TEST_CASE(simple_plus)
 {
-    String pattern = "a+";
+    DeprecatedString pattern = "a+";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB), REG_NOERR);
@@ -120,7 +120,7 @@ TEST_CASE(simple_plus)
 
 TEST_CASE(simple_questionmark)
 {
-    String pattern = "da?d";
+    DeprecatedString pattern = "da?d";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -137,7 +137,7 @@ TEST_CASE(simple_questionmark)
 
 TEST_CASE(simple_questionmark_matchall)
 {
-    String pattern = "da?d";
+    DeprecatedString pattern = "da?d";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -170,12 +170,12 @@ TEST_CASE(simple_questionmark_matchall)
 
 TEST_CASE(character_class)
 {
-    String pattern = "[[:alpha:]]";
+    DeprecatedString pattern = "[[:alpha:]]";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
 
-    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOMATCH);
     EXPECT_EQ(matches[0].rm_cnt, 0);
@@ -189,12 +189,12 @@ TEST_CASE(character_class)
 
 TEST_CASE(character_class2)
 {
-    String pattern = "[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]";
+    DeprecatedString pattern = "[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]";
     regex_t regex;
     static constexpr int num_matches { 9 };
     regmatch_t matches[num_matches];
 
-    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    DeprecatedString haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NEWLINE), REG_NOERR);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOERR);
 
@@ -235,7 +235,7 @@ TEST_CASE(character_class2)
 
 TEST_CASE(escaped_char_questionmark)
 {
-    String pattern = "This\\.?And\\.?That";
+    DeprecatedString pattern = "This\\.?And\\.?That";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -249,7 +249,7 @@ TEST_CASE(escaped_char_questionmark)
 
 TEST_CASE(char_qualifier_asterisk)
 {
-    String pattern = "regex*";
+    DeprecatedString pattern = "regex*";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -263,7 +263,7 @@ TEST_CASE(char_qualifier_asterisk)
 
 TEST_CASE(char_utf8)
 {
-    String pattern = "😀";
+    DeprecatedString pattern = "😀";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -277,7 +277,7 @@ TEST_CASE(char_utf8)
 
 TEST_CASE(parens)
 {
-    String pattern = "test(hello)test";
+    DeprecatedString pattern = "test(hello)test";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -297,7 +297,7 @@ TEST_CASE(parens)
 
 TEST_CASE(parser_error_parens)
 {
-    String pattern = "test()test";
+    DeprecatedString pattern = "test()test";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -310,7 +310,7 @@ TEST_CASE(parser_error_parens)
 
 TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 {
-    String pattern;
+    DeprecatedString pattern;
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -371,7 +371,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 
 TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
 {
-    String pattern;
+    DeprecatedString pattern;
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -403,7 +403,7 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
 
 TEST_CASE(parens_qualifier_questionmark)
 {
-    String pattern = "test(hello)?test";
+    DeprecatedString pattern = "test(hello)?test";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -433,7 +433,7 @@ TEST_CASE(parens_qualifier_questionmark)
 
 TEST_CASE(parens_qualifier_asterisk)
 {
-    String pattern = "test(hello)*test";
+    DeprecatedString pattern = "test(hello)*test";
     regex_t regex;
     static constexpr int num_matches { 6 };
     regmatch_t matches[num_matches];
@@ -479,7 +479,7 @@ TEST_CASE(parens_qualifier_asterisk)
 
 TEST_CASE(parens_qualifier_asterisk_2)
 {
-    String pattern = "test(.*)test";
+    DeprecatedString pattern = "test(.*)test";
     regex_t regex;
     static constexpr int num_matches { 6 };
     regmatch_t matches[num_matches];
@@ -523,7 +523,7 @@ TEST_CASE(parens_qualifier_asterisk_2)
 
 TEST_CASE(mulit_parens_qualifier_too_less_result_values)
 {
-    String pattern = "test(a)?(b)?(c)?test";
+    DeprecatedString pattern = "test(a)?(b)?(c)?test";
     regex_t regex;
     static constexpr int num_matches { 4 };
     regmatch_t matches[num_matches];
@@ -587,7 +587,7 @@ TEST_CASE(mulit_parens_qualifier_too_less_result_values)
 
 TEST_CASE(multi_parens_qualifier_questionmark)
 {
-    String pattern = "test(a)?(b)?(c)?test";
+    DeprecatedString pattern = "test(a)?(b)?(c)?test";
     regex_t regex;
     static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
@@ -651,7 +651,7 @@ TEST_CASE(multi_parens_qualifier_questionmark)
 
 TEST_CASE(simple_alternative)
 {
-    String pattern = "test|hello|friends";
+    DeprecatedString pattern = "test|hello|friends";
     regex_t regex;
     static constexpr int num_matches { 1 };
     regmatch_t matches[num_matches];
@@ -678,7 +678,7 @@ TEST_CASE(simple_alternative)
 
 TEST_CASE(alternative_match_groups)
 {
-    String pattern = "test(a)?(b)?|hello ?(dear|my)? friends";
+    DeprecatedString pattern = "test(a)?(b)?|hello ?(dear|my)? friends";
     regex_t regex;
     static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
@@ -784,7 +784,7 @@ TEST_CASE(alternative_match_groups)
 
 TEST_CASE(parens_qualifier_exact)
 {
-    String pattern = "(hello){3}";
+    DeprecatedString pattern = "(hello){3}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -831,7 +831,7 @@ TEST_CASE(parens_qualifier_exact)
 
 TEST_CASE(parens_qualifier_minimum)
 {
-    String pattern = "(hello){3,}";
+    DeprecatedString pattern = "(hello){3,}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -889,7 +889,7 @@ TEST_CASE(parens_qualifier_minimum)
 
 TEST_CASE(parens_qualifier_maximum)
 {
-    String pattern = "(hello){2,3}";
+    DeprecatedString pattern = "(hello){2,3}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -946,7 +946,7 @@ TEST_CASE(parens_qualifier_maximum)
 
 TEST_CASE(char_qualifier_min_max)
 {
-    String pattern = "c{3,30}";
+    DeprecatedString pattern = "c{3,30}";
     regex_t regex;
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
@@ -966,7 +966,7 @@ TEST_CASE(char_qualifier_min_max)
 
 TEST_CASE(simple_bracket_chars)
 {
-    String pattern = "[abc]";
+    DeprecatedString pattern = "[abc]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -980,7 +980,7 @@ TEST_CASE(simple_bracket_chars)
 
 TEST_CASE(simple_bracket_chars_inverse)
 {
-    String pattern = "[^abc]";
+    DeprecatedString pattern = "[^abc]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -994,7 +994,7 @@ TEST_CASE(simple_bracket_chars_inverse)
 
 TEST_CASE(simple_bracket_chars_range)
 {
-    String pattern = "[a-d]";
+    DeprecatedString pattern = "[a-d]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1008,7 +1008,7 @@ TEST_CASE(simple_bracket_chars_range)
 
 TEST_CASE(simple_bracket_chars_range_inverse)
 {
-    String pattern = "[^a-df-z]";
+    DeprecatedString pattern = "[^a-df-z]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1024,7 +1024,7 @@ TEST_CASE(simple_bracket_chars_range_inverse)
 
 TEST_CASE(bracket_character_class_uuid)
 {
-    String pattern = "^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{12})$";
+    DeprecatedString pattern = "^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{4})-([[:xdigit:]]{12})$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1036,7 +1036,7 @@ TEST_CASE(bracket_character_class_uuid)
 
 TEST_CASE(simple_bracket_character_class_inverse)
 {
-    String pattern = "[^[:digit:]]";
+    DeprecatedString pattern = "[^[:digit:]]";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1050,7 +1050,7 @@ TEST_CASE(simple_bracket_character_class_inverse)
 
 TEST_CASE(email_address)
 {
-    String pattern = "^[A-Z0-9a-z._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$";
+    DeprecatedString pattern = "^[A-Z0-9a-z._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
@@ -1062,7 +1062,7 @@ TEST_CASE(email_address)
 
 TEST_CASE(error_message)
 {
-    String pattern = "^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$";
+    DeprecatedString pattern = "^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EBRACK);
@@ -1070,7 +1070,7 @@ TEST_CASE(error_message)
     char buf[1024];
     size_t buflen = 1024;
     auto len = regerror(0, &regex, buf, buflen);
-    String expected = "Error during parsing of regular expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n             ^---- [ ] imbalance.";
+    DeprecatedString expected = "Error during parsing of regular expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n             ^---- [ ] imbalance.";
     for (size_t i = 0; i < len; ++i) {
         EXPECT_EQ(buf[i], expected[i]);
     }
@@ -1080,7 +1080,7 @@ TEST_CASE(error_message)
 
 TEST_CASE(simple_ignorecase)
 {
-    String pattern = "^hello friends";
+    DeprecatedString pattern = "^hello friends";
     regex_t regex;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
@@ -1098,8 +1098,8 @@ TEST_CASE(simple_ignorecase)
 
 TEST_CASE(simple_notbol_noteol)
 {
-    String pattern = "^hello friends$";
-    String pattern2 = "hello friends";
+    DeprecatedString pattern = "^hello friends$";
+    DeprecatedString pattern2 = "hello friends";
     regex_t regex, regex2;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);

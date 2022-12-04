@@ -18,14 +18,14 @@ public:
     static ProxyMappings& the();
 
     Core::ProxyData proxy_for_url(AK::URL const&) const;
-    void set_mappings(Vector<String> proxies, OrderedHashMap<String, size_t> mappings);
+    void set_mappings(Vector<DeprecatedString> proxies, OrderedHashMap<DeprecatedString, size_t> mappings);
 
 private:
     ProxyMappings() = default;
     ~ProxyMappings() = default;
 
-    Vector<String> m_proxies;
-    OrderedHashMap<String, size_t> m_mappings;
+    Vector<DeprecatedString> m_proxies;
+    OrderedHashMap<DeprecatedString, size_t> m_mappings;
 };
 
 }

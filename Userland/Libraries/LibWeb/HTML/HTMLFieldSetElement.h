@@ -20,9 +20,9 @@ class HTMLFieldSetElement final
 public:
     virtual ~HTMLFieldSetElement() override;
 
-    String const& type() const
+    DeprecatedString const& type() const
     {
-        static String fieldset = "fieldset";
+        static DeprecatedString fieldset = "fieldset";
         return fieldset;
     }
 

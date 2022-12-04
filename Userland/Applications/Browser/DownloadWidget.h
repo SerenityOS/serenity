@@ -30,7 +30,7 @@ private:
     void did_finish(bool success);
 
     URL m_url;
-    String m_destination_path;
+    DeprecatedString m_destination_path;
     RefPtr<Web::ResourceLoaderConnectorRequest> m_download;
     RefPtr<GUI::Progressbar> m_progressbar;
     RefPtr<GUI::Label> m_progress_label;

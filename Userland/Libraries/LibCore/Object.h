@@ -7,13 +7,13 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
@@ -109,8 +109,8 @@ public:
 
     virtual bool is_widget() const { return false; }
 
-    String const& name() const { return m_name; }
-    void set_name(String name) { m_name = move(name); }
+    DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString name) { m_name = move(name); }
 
     NonnullRefPtrVector<Object>& children() { return m_children; }
     NonnullRefPtrVector<Object> const& children() const { return m_children; }
@@ -129,11 +129,11 @@ public:
     requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_child_of_type_named(String const&)
+    T* find_child_of_type_named(DeprecatedString const&)
     requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_descendant_of_type_named(String const&)
+    T* find_descendant_of_type_named(DeprecatedString const&)
     requires IsBaseOf<Object, T>;
 
     bool is_ancestor_of(Object const&) const;
@@ -160,9 +160,9 @@ public:
 
     void save_to(JsonObject&);
 
-    bool set_property(String const& name, JsonValue const& value);
-    JsonValue property(String const& name) const;
-    HashMap<String, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }
+    bool set_property(DeprecatedString const& name, JsonValue const& value);
+    JsonValue property(DeprecatedString const& name) const;
+    HashMap<DeprecatedString, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }
 
     static IntrusiveList<&Object::m_all_objects_list_node>& all_objects();
 
@@ -200,7 +200,7 @@ public:
 protected:
     explicit Object(Object* parent = nullptr);
 
-    void register_property(String const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
+    void register_property(DeprecatedString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
 
     virtual void event(Core::Event&);
 
@@ -215,10 +215,10 @@ protected:
 
 private:
     Object* m_parent { nullptr };
-    String m_name;
+    DeprecatedString m_name;
     int m_timer_id { 0 };
     unsigned m_inspector_count { 0 };
-    HashMap<String, NonnullOwnPtr<Property>> m_properties;
+    HashMap<DeprecatedString, NonnullOwnPtr<Property>> m_properties;
     NonnullRefPtrVector<Object> m_children;
     Function<bool(Core::Event&)> m_event_filter;
 };
@@ -246,7 +246,7 @@ requires IsBaseOf<Object, T>
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(String const& name)
+T* Object::find_child_of_type_named(DeprecatedString const& name)
 requires IsBaseOf<Object, T>
 {
     T* found_child = nullptr;
@@ -262,7 +262,7 @@ requires IsBaseOf<Object, T>
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(String const& name)
+T* Object::find_descendant_of_type_named(DeprecatedString const& name)
 requires IsBaseOf<Object, T>
 {
     if (is<T>(*this) && this->name() == name) {
@@ -381,7 +381,7 @@ requires IsBaseOf<Object, T>
         [this]() -> JsonValue {                                              \
             struct {                                                         \
                 EnumType enum_value;                                         \
-                String string_value;                                         \
+                DeprecatedString string_value;                               \
             } options[] = { __VA_ARGS__ };                                   \
             auto enum_value = getter();                                      \
             for (size_t i = 0; i < array_size(options); ++i) {               \
@@ -394,7 +394,7 @@ requires IsBaseOf<Object, T>
         [this](auto& value) {                                                \
             struct {                                                         \
                 EnumType enum_value;                                         \
-                String string_value;                                         \
+                DeprecatedString string_value;                               \
             } options[] = { __VA_ARGS__ };                                   \
             if (!value.is_string())                                          \
                 return false;                                                \

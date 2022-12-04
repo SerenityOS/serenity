@@ -118,14 +118,14 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
     return resource;
 }
 
-static String sanitized_url_for_logging(AK::URL const& url)
+static DeprecatedString sanitized_url_for_logging(AK::URL const& url)
 {
     if (url.scheme() == "data"sv)
-        return String::formatted("[data URL, mime-type={}, size={}]", url.data_mime_type(), url.data_payload().length());
+        return DeprecatedString::formatted("[data URL, mime-type={}, size={}]", url.data_mime_type(), url.data_payload().length());
     return url.to_string();
 }
 
-static void emit_signpost(String const& message, int id)
+static void emit_signpost(DeprecatedString const& message, int id)
 {
 #ifdef AK_OS_SERENITY
     auto string_id = perf_register_string(message.characters(), message.length());
@@ -138,30 +138,30 @@ static void emit_signpost(String const& message, int id)
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     auto& url = request.url();
     request.start_timer();
 
     auto id = resource_id++;
     auto url_for_logging = sanitized_url_for_logging(url);
-    emit_signpost(String::formatted("Starting load: {}", url_for_logging), id);
+    emit_signpost(DeprecatedString::formatted("Starting load: {}", url_for_logging), id);
     dbgln("ResourceLoader: Starting load of: \"{}\"", url_for_logging);
 
     auto const log_success = [url_for_logging, id](auto const& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        emit_signpost(String::formatted("Finished load: {}", url_for_logging), id);
+        emit_signpost(DeprecatedString::formatted("Finished load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
     auto const log_failure = [url_for_logging, id](auto const& request, auto const error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        emit_signpost(String::formatted("Failed load: {}", url_for_logging), id);
+        emit_signpost(DeprecatedString::formatted("Failed load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
     };
 
     if (is_port_blocked(url.port_or_default())) {
-        log_failure(request, String::formatted("The port #{} is blocked", url.port_or_default()));
+        log_failure(request, DeprecatedString::formatted("The port #{} is blocked", url.port_or_default()));
         return;
     }
 
@@ -176,11 +176,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
         log_success(request);
 
-        HashMap<String, String, CaseInsensitiveStringTraits> response_headers;
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
         response_headers.set("Content-Type", "text/html; charset=UTF-8");
 
         Platform::EventLoopPlugin::the().deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
-            success_callback(String::empty().to_byte_buffer(), response_headers, {});
+            success_callback(DeprecatedString::empty().to_byte_buffer(), response_headers, {});
         });
         return;
     }
@@ -228,7 +228,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (file_or_error.is_error()) {
                 log_failure(request, file_or_error.error());
                 if (error_callback)
-                    error_callback(String::formatted("{}", file_or_error.error()), file_or_error.error().code());
+                    error_callback(DeprecatedString::formatted("{}", file_or_error.error()), file_or_error.error().code());
                 return;
             }
 
@@ -238,7 +238,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)
-                    error_callback(String::formatted("{}", maybe_file.error()), maybe_file.error().code());
+                    error_callback(DeprecatedString::formatted("{}", maybe_file.error()), maybe_file.error().code());
                 return;
             }
 
@@ -247,7 +247,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (maybe_data.is_error()) {
                 log_failure(request, maybe_data.error());
                 if (error_callback)
-                    error_callback(String::formatted("{}", maybe_data.error()), maybe_data.error().code());
+                    error_callback(DeprecatedString::formatted("{}", maybe_data.error()), maybe_data.error().code());
                 return;
             }
             auto data = maybe_data.release_value();
@@ -266,7 +266,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
         auto proxy = ProxyMappings::the().proxy_for_url(url);
 
-        HashMap<String, String> headers;
+        HashMap<DeprecatedString, DeprecatedString> headers;
         headers.set("User-Agent", m_user_agent);
         headers.set("Accept-Encoding", "gzip, deflate, br");
 
@@ -326,13 +326,13 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         return;
     }
 
-    auto not_implemented_error = String::formatted("Protocol not implemented: {}", url.scheme());
+    auto not_implemented_error = DeprecatedString::formatted("Protocol not implemented: {}", url.scheme());
     log_failure(request, not_implemented_error);
     if (error_callback)
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     LoadRequest request;
     request.set_url(url);

@@ -41,9 +41,9 @@ void Process::handle_thread_exit(pid_t tid, EventSerialNumber serial)
     thread->end_valid = serial;
 }
 
-HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;
+HashMap<DeprecatedString, OwnPtr<MappedObject>> g_mapped_object_cache;
 
-static MappedObject* get_or_create_mapped_object(String const& path)
+static MappedObject* get_or_create_mapped_object(DeprecatedString const& path)
 {
     if (auto it = g_mapped_object_cache.find(path); it != g_mapped_object_cache.end())
         return it->value.ptr();
@@ -67,7 +67,7 @@ static MappedObject* get_or_create_mapped_object(String const& path)
     return ptr;
 }
 
-void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
+void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, DeprecatedString const& name)
 {
     StringView path;
     if (name.contains("Loader.so"sv))
@@ -82,25 +82,25 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
     // associated base address and size as new regions are discovered.
 
     // We don't allocate a temporary String object if an entry already exists.
-    // This assumes that String::hash and StringView::hash return the same result.
+    // This assumes that DeprecatedString::hash and StringView::hash return the same result.
     auto string_view_compare = [&path](auto& entry) { return path == entry.key.view(); };
     if (auto existing_it = m_libraries.find(path.hash(), string_view_compare); existing_it != m_libraries.end()) {
         auto& entry = *existing_it->value;
         entry.base = min(entry.base, base);
         entry.size = max(entry.size + size, base - entry.base + size);
     } else {
-        String path_string = path.to_string();
-        String full_path;
+        DeprecatedString path_string = path.to_string();
+        DeprecatedString full_path;
         if (path_string.starts_with('/'))
             full_path = path_string;
         else if (Core::File::looks_like_shared_library(path_string))
-            full_path = String::formatted("/usr/lib/{}", path);
+            full_path = DeprecatedString::formatted("/usr/lib/{}", path);
         else
             full_path = path_string;
 
         auto* mapped_object = get_or_create_mapped_object(full_path);
         if (!mapped_object) {
-            full_path = String::formatted("/usr/local/lib/{}", path);
+            full_path = DeprecatedString::formatted("/usr/local/lib/{}", path);
             mapped_object = get_or_create_mapped_object(full_path);
             if (!mapped_object)
                 return;
@@ -112,14 +112,14 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
 Debug::DebugInfo const& LibraryMetadata::Library::load_debug_info(FlatPtr base_address) const
 {
     if (debug_info == nullptr)
-        debug_info = make<Debug::DebugInfo>(object->elf, String::empty(), base_address);
+        debug_info = make<Debug::DebugInfo>(object->elf, DeprecatedString::empty(), base_address);
     return *debug_info.ptr();
 }
 
-String LibraryMetadata::Library::symbolicate(FlatPtr ptr, u32* offset) const
+DeprecatedString LibraryMetadata::Library::symbolicate(FlatPtr ptr, u32* offset) const
 {
     if (!object)
-        return String::formatted("?? <{:p}>", ptr);
+        return DeprecatedString::formatted("?? <{:p}>", ptr);
 
     return object->elf.symbolicate(ptr - base, offset);
 }

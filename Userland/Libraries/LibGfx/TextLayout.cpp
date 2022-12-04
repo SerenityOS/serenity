@@ -40,7 +40,7 @@ IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
     return bounding_rect;
 }
 
-Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping, int line_spacing, FitWithinRect fit_within_rect) const
+Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping, int line_spacing, FitWithinRect fit_within_rect) const
 {
     Vector<Block> blocks;
 
@@ -117,7 +117,7 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
     if (max_lines_that_can_fit == 0)
         return {};
 
-    Vector<String> lines;
+    Vector<DeprecatedString> lines;
     StringBuilder builder;
     size_t line_width = 0;
     size_t current_block = 0;
@@ -183,7 +183,7 @@ blocks_processed:
     return lines;
 }
 
-String TextLayout::elide_text_from_right(Utf8View text, bool force_elision) const
+DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_elision) const
 {
     size_t text_width = m_font->width(text);
     if (force_elision || text_width > static_cast<unsigned>(m_rect.width())) {

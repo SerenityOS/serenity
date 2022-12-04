@@ -8,8 +8,8 @@
 
 #include <AK/Array.h>
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibCore/Stream.h>
@@ -89,7 +89,7 @@ public:
     ErrorOr<void> flush();
 
 private:
-    explicit Heap(String);
+    explicit Heap(DeprecatedString);
 
     ErrorOr<void> write_block(u32, ByteBuffer&);
     ErrorOr<void> seek_block(u32);

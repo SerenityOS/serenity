@@ -10,9 +10,9 @@
 
 namespace PDF {
 
-String OutlineItem::to_string(int indent) const
+DeprecatedString OutlineItem::to_string(int indent) const
 {
-    auto indent_str = String::repeated("  "sv, indent + 1);
+    auto indent_str = DeprecatedString::repeated("  "sv, indent + 1);
 
     StringBuilder child_builder;
     child_builder.append('[');
@@ -29,7 +29,7 @@ String OutlineItem::to_string(int indent) const
     builder.appendff("{}italic={}\n", indent_str, italic);
     builder.appendff("{}bold={}\n", indent_str, bold);
     builder.appendff("{}children={}\n", indent_str, child_builder.to_string());
-    builder.appendff("{}}}", String::repeated("  "sv, indent));
+    builder.appendff("{}}}", DeprecatedString::repeated("  "sv, indent));
 
     return builder.to_string();
 }

@@ -256,7 +256,7 @@ ErrorOr<void> FormatBuilder::put_u64(
 
     size_t used_by_prefix = 0;
     if (align == Align::Right && zero_pad) {
-        // We want String::formatted("{:#08x}", 32) to produce '0x00000020' instead of '0x000020'. This
+        // We want DeprecatedString::formatted("{:#08x}", 32) to produce '0x00000020' instead of '0x000020'. This
         // behavior differs from both fmtlib and printf, but is more intuitive.
         used_by_prefix = 0;
     } else {

@@ -26,7 +26,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_octave_container = add<GUI::Widget>();
     m_octave_container->set_layout<GUI::VerticalBoxLayout>();
     m_octave_container->add<GUI::Label>("Octave");
-    m_octave_value = m_octave_container->add<GUI::Label>(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
+    m_octave_value = m_octave_container->add<GUI::Label>(DeprecatedString::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
 
     // FIXME: Implement vertical flipping in GUI::Slider, not here.
     m_octave_knob = m_octave_container->add<GUI::VerticalSlider>();
@@ -39,7 +39,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         if (m_change_underlying)
             m_main_widget.set_octave_and_ensure_note_change(new_octave);
         VERIFY(new_octave == m_track_manager.keyboard()->virtual_keyboard_octave());
-        m_octave_value->set_text(String::number(new_octave));
+        m_octave_value->set_text(DeprecatedString::number(new_octave));
     };
 
     for (auto& parameter : m_track_manager.current_track()->track_mastering()->parameters())

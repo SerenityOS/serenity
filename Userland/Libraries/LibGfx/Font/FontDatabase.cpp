@@ -26,17 +26,17 @@ FontDatabase& FontDatabase::the()
 }
 
 static RefPtr<Font> s_default_font;
-static String s_default_font_query;
+static DeprecatedString s_default_font_query;
 
 static RefPtr<Font> s_window_title_font;
-static String s_window_title_font_query;
+static DeprecatedString s_window_title_font_query;
 
 static RefPtr<Font> s_fixed_width_font;
-static String s_fixed_width_font_query;
+static DeprecatedString s_fixed_width_font_query;
 
-static String s_default_fonts_lookup_path = "/res/fonts";
+static DeprecatedString s_default_fonts_lookup_path = "/res/fonts";
 
-void FontDatabase::set_default_font_query(String query)
+void FontDatabase::set_default_font_query(DeprecatedString query)
 {
     if (s_default_font_query == query)
         return;
@@ -44,12 +44,12 @@ void FontDatabase::set_default_font_query(String query)
     s_default_font = nullptr;
 }
 
-String FontDatabase::default_font_query()
+DeprecatedString FontDatabase::default_font_query()
 {
     return s_default_font_query;
 }
 
-void FontDatabase::set_window_title_font_query(String query)
+void FontDatabase::set_window_title_font_query(DeprecatedString query)
 {
     if (s_window_title_font_query == query)
         return;
@@ -57,19 +57,19 @@ void FontDatabase::set_window_title_font_query(String query)
     s_window_title_font = nullptr;
 }
 
-String FontDatabase::window_title_font_query()
+DeprecatedString FontDatabase::window_title_font_query()
 {
     return s_window_title_font_query;
 }
 
-void FontDatabase::set_default_fonts_lookup_path(String path)
+void FontDatabase::set_default_fonts_lookup_path(DeprecatedString path)
 {
     if (s_default_fonts_lookup_path == path)
         return;
     s_default_fonts_lookup_path = move(path);
 }
 
-String FontDatabase::default_fonts_lookup_path()
+DeprecatedString FontDatabase::default_fonts_lookup_path()
 {
     return s_default_fonts_lookup_path;
 }
@@ -94,7 +94,7 @@ Font& FontDatabase::window_title_font()
     return *s_window_title_font;
 }
 
-void FontDatabase::set_fixed_width_font_query(String query)
+void FontDatabase::set_fixed_width_font_query(DeprecatedString query)
 {
     if (s_fixed_width_font_query == query)
         return;
@@ -102,7 +102,7 @@ void FontDatabase::set_fixed_width_font_query(String query)
     s_fixed_width_font = nullptr;
 }
 
-String FontDatabase::fixed_width_font_query()
+DeprecatedString FontDatabase::fixed_width_font_query()
 {
     return s_fixed_width_font_query;
 }
@@ -118,13 +118,13 @@ Font& FontDatabase::default_fixed_width_font()
 }
 
 struct FontDatabase::Private {
-    HashMap<String, NonnullRefPtr<Gfx::Font>> full_name_to_font_map;
+    HashMap<DeprecatedString, NonnullRefPtr<Gfx::Font>> full_name_to_font_map;
     HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>> typefaces;
 };
 
-void FontDatabase::load_all_fonts_from_path(String const& root)
+void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
 {
-    Queue<String> path_queue;
+    Queue<DeprecatedString> path_queue;
     path_queue.enqueue(root);
 
     while (!path_queue.is_empty()) {
@@ -206,7 +206,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
             auto slope = parts.take_last().to_int().value_or(0);
             auto weight = parts.take_last().to_int().value_or(0);
             auto size = parts.take_last().to_int().value_or(0);
-            auto family = String::join(' ', parts);
+            auto family = DeprecatedString::join(' ', parts);
             return get(family, size, weight, slope);
         }
         dbgln("Font lookup failed: '{}'", name);
@@ -239,7 +239,7 @@ RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& va
     return nullptr;
 }
 
-RefPtr<Typeface> FontDatabase::get_or_create_typeface(String const& family, String const& variant)
+RefPtr<Typeface> FontDatabase::get_or_create_typeface(DeprecatedString const& family, DeprecatedString const& variant)
 {
     auto it = m_private->typefaces.find(family);
     if (it != m_private->typefaces.end()) {

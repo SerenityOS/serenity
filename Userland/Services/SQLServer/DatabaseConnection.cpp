@@ -23,7 +23,7 @@ RefPtr<DatabaseConnection> DatabaseConnection::connection_for(int connection_id)
 
 static int s_next_connection_id = 0;
 
-DatabaseConnection::DatabaseConnection(String database_name, int client_id)
+DatabaseConnection::DatabaseConnection(DeprecatedString database_name, int client_id)
     : Object()
     , m_database_name(move(database_name))
     , m_connection_id(s_next_connection_id++)
@@ -38,7 +38,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection {} initiating connection with database '{}'", connection_id(), m_database_name);
     s_connections.set(m_connection_id, *this);
     deferred_invoke([this]() {
-        m_database = SQL::Database::construct(String::formatted("/home/anon/sql/{}.db", m_database_name));
+        m_database = SQL::Database::construct(DeprecatedString::formatted("/home/anon/sql/{}.db", m_database_name));
         auto client_connection = ConnectionFromClient::client_connection_for(m_client_id);
         if (auto maybe_error = m_database->open(); maybe_error.is_error()) {
             client_connection->async_connection_error(m_connection_id, to_underlying(maybe_error.error().error()), maybe_error.error().error_string());
@@ -67,7 +67,7 @@ void DatabaseConnection::disconnect()
     });
 }
 
-int DatabaseConnection::prepare_statement(String const& sql)
+int DatabaseConnection::prepare_statement(DeprecatedString const& sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::prepare_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
     auto client_connection = ConnectionFromClient::client_connection_for(client_id());

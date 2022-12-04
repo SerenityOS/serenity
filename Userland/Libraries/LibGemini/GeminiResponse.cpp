@@ -8,7 +8,7 @@
 
 namespace Gemini {
 
-GeminiResponse::GeminiResponse(int status, String meta)
+GeminiResponse::GeminiResponse(int status, DeprecatedString meta)
     : m_status(status)
     , m_meta(meta)
 {

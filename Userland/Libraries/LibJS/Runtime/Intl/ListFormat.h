@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -30,8 +30,8 @@ public:
 
     virtual ~ListFormat() override = default;
 
-    String const& locale() const { return m_locale; }
-    void set_locale(String locale) { m_locale = move(locale); }
+    DeprecatedString const& locale() const { return m_locale; }
+    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
 
     Type type() const { return m_type; }
     void set_type(StringView type);
@@ -44,7 +44,7 @@ public:
 private:
     explicit ListFormat(Object& prototype);
 
-    String m_locale;                                   // [[Locale]]
+    DeprecatedString m_locale;                         // [[Locale]]
     Type m_type { Type::Invalid };                     // [[Type]]
     ::Locale::Style m_style { ::Locale::Style::Long }; // [[Style]]
 };
@@ -52,9 +52,9 @@ private:
 using Placeables = HashMap<StringView, Variant<PatternPartition, Vector<PatternPartition>>>;
 
 Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables);
-Vector<PatternPartition> create_parts_from_list(ListFormat const&, Vector<String> const& list);
-String format_list(ListFormat const&, Vector<String> const& list);
-Array* format_list_to_parts(VM&, ListFormat const&, Vector<String> const& list);
-ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM&, Value iterable);
+Vector<PatternPartition> create_parts_from_list(ListFormat const&, Vector<DeprecatedString> const& list);
+DeprecatedString format_list(ListFormat const&, Vector<DeprecatedString> const& list);
+Array* format_list_to_parts(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
+ThrowCompletionOr<Vector<DeprecatedString>> string_list_from_iterable(VM&, Value iterable);
 
 }

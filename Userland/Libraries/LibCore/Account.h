@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/SecretString.h>
@@ -40,8 +40,8 @@ public:
     bool authenticate(SecretString const& password) const;
     ErrorOr<void> login() const;
 
-    String username() const { return m_username; }
-    String password_hash() const { return m_password_hash; }
+    DeprecatedString username() const { return m_username; }
+    DeprecatedString password_hash() const { return m_password_hash; }
 
     // Setters only affect in-memory copy of password.
     // You must call sync to apply changes.
@@ -60,9 +60,9 @@ public:
 
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
-    String const& gecos() const { return m_gecos; }
-    String const& home_directory() const { return m_home_directory; }
-    String const& shell() const { return m_shell; }
+    DeprecatedString const& gecos() const { return m_gecos; }
+    DeprecatedString const& home_directory() const { return m_home_directory; }
+    DeprecatedString const& shell() const { return m_shell; }
     Vector<gid_t> const& extra_gids() const { return m_extra_gids; }
 
     ErrorOr<void> sync();
@@ -72,19 +72,19 @@ private:
 
     Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids);
 
-    ErrorOr<String> generate_passwd_file() const;
+    ErrorOr<DeprecatedString> generate_passwd_file() const;
 #ifndef AK_OS_BSD_GENERIC
-    ErrorOr<String> generate_shadow_file() const;
+    ErrorOr<DeprecatedString> generate_shadow_file() const;
 #endif
 
-    String m_username;
+    DeprecatedString m_username;
 
-    String m_password_hash;
+    DeprecatedString m_password_hash;
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
-    String m_gecos;
-    String m_home_directory;
-    String m_shell;
+    DeprecatedString m_gecos;
+    DeprecatedString m_home_directory;
+    DeprecatedString m_shell;
     Vector<gid_t> m_extra_gids;
 };
 

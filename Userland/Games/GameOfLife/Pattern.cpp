@@ -6,13 +6,13 @@
  */
 
 #include "Pattern.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGUI/Action.h>
 #include <stdio.h>
 
-Pattern::Pattern(Vector<String> pattern)
+Pattern::Pattern(Vector<DeprecatedString> pattern)
 {
     m_pattern = move(pattern);
 }
@@ -24,7 +24,7 @@ void Pattern::set_action(GUI::Action* action)
 
 void Pattern::rotate_clockwise()
 {
-    Vector<String> rotated;
+    Vector<DeprecatedString> rotated;
     for (size_t i = 0; i < m_pattern.first().length(); i++) {
         StringBuilder builder;
         for (int j = m_pattern.size() - 1; j >= 0; j--) {

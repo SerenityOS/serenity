@@ -73,7 +73,7 @@ void DragOperation::notify_cancelled(Badge<ConnectionToWindowServer>)
         s_current_drag_operation->done(Outcome::Cancelled);
 }
 
-void DragOperation::set_text(String const& text)
+void DragOperation::set_text(DeprecatedString const& text)
 {
     if (!m_mime_data)
         m_mime_data = Core::MimeData::construct();
@@ -86,7 +86,7 @@ void DragOperation::set_bitmap(Gfx::Bitmap const* bitmap)
     if (bitmap)
         m_mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer());
 }
-void DragOperation::set_data(String const& data_type, String const& data)
+void DragOperation::set_data(DeprecatedString const& data_type, DeprecatedString const& data)
 {
     if (!m_mime_data)
         m_mime_data = Core::MimeData::construct();

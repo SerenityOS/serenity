@@ -37,7 +37,7 @@ static Value property_key_to_value(VM& vm, PropertyKey const& property_key)
         return js_string(vm, property_key.as_string());
 
     VERIFY(property_key.is_number());
-    return js_string(vm, String::number(property_key.as_number()));
+    return js_string(vm, DeprecatedString::number(property_key.as_number()));
 }
 
 // 10.5.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof

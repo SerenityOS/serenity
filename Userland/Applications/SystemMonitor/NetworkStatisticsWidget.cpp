@@ -56,15 +56,15 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("Link status", Gfx::TextAlignment::CenterLeft,
-            [](JsonObject const& object) -> String {
+            [](JsonObject const& object) -> DeprecatedString {
                 if (!object.get("link_up"sv).as_bool())
                     return "Down";
 
-                return String::formatted("{} Mb/s {}-duplex", object.get("link_speed"sv).to_i32(),
+                return DeprecatedString::formatted("{} Mb/s {}-duplex", object.get("link_speed"sv).to_i32(),
                     object.get("link_full_duplex"sv).as_bool() ? "full"sv : "half"sv);
             });
         net_adapters_fields.empend("IPv4", Gfx::TextAlignment::CenterLeft,
-            [](JsonObject const& object) -> String {
+            [](JsonObject const& object) -> DeprecatedString {
                 return object.get("ipv4_address"sv).as_string_or(""sv);
             });
         net_adapters_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);

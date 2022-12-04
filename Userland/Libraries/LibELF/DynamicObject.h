@@ -10,8 +10,8 @@
 
 #include <AK/Assertions.h>
 #include <AK/Concepts.h>
+#include <AK/DeprecatedString.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
 #include <LibC/link.h>
@@ -20,7 +20,7 @@ namespace ELF {
 
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    static NonnullRefPtr<DynamicObject> create(String const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> create(DeprecatedString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address);
     static char const* name_for_dtag(ElfW(Sword) d_tag);
 
     ~DynamicObject();
@@ -287,7 +287,7 @@ public:
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
-    String const& filepath() const { return m_filepath; }
+    DeprecatedString const& filepath() const { return m_filepath; }
 
     StringView rpath() const { return m_has_rpath ? symbol_string_table_string(m_rpath_index) : StringView {}; }
     StringView runpath() const { return m_has_runpath ? symbol_string_table_string(m_runpath_index) : StringView {}; }
@@ -338,13 +338,13 @@ public:
     void* symbol_for_name(StringView name);
 
 private:
-    explicit DynamicObject(String const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    explicit DynamicObject(DeprecatedString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     StringView symbol_string_table_string(ElfW(Word)) const;
     char const* raw_symbol_string_table_string(ElfW(Word)) const;
     void parse();
 
-    String m_filepath;
+    DeprecatedString m_filepath;
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;

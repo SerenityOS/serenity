@@ -5,9 +5,9 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGfx/DDSLoader.h>

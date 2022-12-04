@@ -26,7 +26,7 @@ private:
     MainWidget();
 
     void open_url(URL const&);
-    void open_page(String const& path);
+    void open_page(DeprecatedString const& path);
     void open_external(URL const&);
 
     History m_history;

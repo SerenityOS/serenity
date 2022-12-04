@@ -6,8 +6,8 @@
 
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Random.h>
-#include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
@@ -370,7 +370,7 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
     update();
 }
 
-static String set_path = String("/res/icons/chess/sets/");
+static DeprecatedString set_path = DeprecatedString("/res/icons/chess/sets/");
 
 static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
 {
@@ -521,7 +521,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
     update();
 }
 
-String ChessWidget::get_fen() const
+DeprecatedString ChessWidget::get_fen() const
 {
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
@@ -547,10 +547,10 @@ void ChessWidget::import_pgn(Core::File& file)
     bool recursive_annotation = false;
     bool future_expansion = false;
     Chess::Color turn = Chess::Color::White;
-    String movetext;
+    DeprecatedString movetext;
 
     for (size_t j = i; j < lines.size(); j++)
-        movetext = String::formatted("{}{}", movetext, lines.at(i).to_string());
+        movetext = DeprecatedString::formatted("{}{}", movetext, lines.at(i).to_string());
 
     for (auto token : movetext.split(' ')) {
         token = token.trim_whitespace();
@@ -626,16 +626,16 @@ void ChessWidget::export_pgn(Core::File& file) const
     // Tag Pair Section
     file.write("[Event \"Casual Game\"]\n"sv);
     file.write("[Site \"SerenityOS Chess\"]\n"sv);
-    file.write(String::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d"sv)));
+    file.write(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d"sv)));
     file.write("[Round \"1\"]\n"sv);
 
-    String username(getlogin());
-    const String player1 = (!username.is_empty() ? username.view() : "?"sv);
-    const String player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv : "?"sv);
-    file.write(String::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
-    file.write(String::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
+    DeprecatedString username(getlogin());
+    const DeprecatedString player1 = (!username.is_empty() ? username.view() : "?"sv);
+    const DeprecatedString player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv : "?"sv);
+    file.write(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
+    file.write(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
 
-    file.write(String::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
+    file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
     file.write("[WhiteElo \"?\"]\n"sv);
     file.write("[BlackElo \"?\"]\n"sv);
     file.write("[Variant \"Standard\"]\n"sv);
@@ -645,13 +645,13 @@ void ChessWidget::export_pgn(Core::File& file) const
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
-        const String white = m_board.moves().at(i).to_algebraic();
+        const DeprecatedString white = m_board.moves().at(i).to_algebraic();
 
         if (i + 1 < m_board.moves().size()) {
-            const String black = m_board.moves().at(i + 1).to_algebraic();
-            file.write(String::formatted("{}. {} {} ", move_no, white, black));
+            const DeprecatedString black = m_board.moves().at(i + 1).to_algebraic();
+            file.write(DeprecatedString::formatted("{}. {} {} ", move_no, white, black));
         } else {
-            file.write(String::formatted("{}. {} ", move_no, white));
+            file.write(DeprecatedString::formatted("{}. {} ", move_no, white));
         }
     }
 
@@ -688,7 +688,7 @@ int ChessWidget::resign()
 
     set_drag_enabled(false);
     update();
-    const String msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
+    const DeprecatedString msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;

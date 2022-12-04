@@ -12,10 +12,10 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    String domain;
-    String group;
-    String key;
-    String value_to_write;
+    DeprecatedString domain;
+    DeprecatedString group;
+    DeprecatedString key;
+    DeprecatedString value_to_write;
     bool remove = false;
 
     Core::ArgsParser args_parser;

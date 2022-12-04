@@ -19,7 +19,7 @@ Error* Error::create(Realm& realm)
     return realm.heap().allocate<Error>(realm, *realm.intrinsics().error_prototype());
 }
 
-Error* Error::create(Realm& realm, String const& message)
+Error* Error::create(Realm& realm, DeprecatedString const& message)
 {
     auto& vm = realm.vm();
     auto* error = Error::create(realm);
@@ -73,7 +73,7 @@ void Error::populate_stack()
     }
 }
 
-String Error::stack_string() const
+DeprecatedString Error::stack_string() const
 {
     StringBuilder stack_string_builder;
     // Note: We roughly follow V8's formatting
@@ -104,7 +104,7 @@ String Error::stack_string() const
         return realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype()); \
     }                                                                                                 \
                                                                                                       \
-    ClassName* ClassName::create(Realm& realm, String const& message)                                 \
+    ClassName* ClassName::create(Realm& realm, DeprecatedString const& message)                       \
     {                                                                                                 \
         auto& vm = realm.vm();                                                                        \
         auto* error = ClassName::create(realm);                                                       \

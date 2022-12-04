@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Stream.h>
 
@@ -25,29 +25,29 @@ public:
         No,
     };
 
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_lib(String const& lib_name, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_app(String const& app_name, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(String const& app_name, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, AllowWriting = AllowWriting::No);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, int fd);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, NonnullOwnPtr<Core::Stream::File>);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_lib(DeprecatedString const& lib_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_app(DeprecatedString const& app_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(DeprecatedString const& app_name, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, AllowWriting = AllowWriting::No);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, int fd);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, NonnullOwnPtr<Core::Stream::File>);
     ~ConfigFile();
 
-    bool has_group(String const&) const;
-    bool has_key(String const& group, String const& key) const;
+    bool has_group(DeprecatedString const&) const;
+    bool has_key(DeprecatedString const& group, DeprecatedString const& key) const;
 
-    Vector<String> groups() const;
-    Vector<String> keys(String const& group) const;
+    Vector<DeprecatedString> groups() const;
+    Vector<DeprecatedString> keys(DeprecatedString const& group) const;
 
     size_t num_groups() const { return m_groups.size(); }
 
-    String read_entry(String const& group, String const& key, String const& default_value = String()) const;
-    int read_num_entry(String const& group, String const& key, int default_value = 0) const;
-    bool read_bool_entry(String const& group, String const& key, bool default_value = false) const;
+    DeprecatedString read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value = DeprecatedString()) const;
+    int read_num_entry(DeprecatedString const& group, DeprecatedString const& key, int default_value = 0) const;
+    bool read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value = false) const;
 
-    void write_entry(String const& group, String const& key, String const& value);
-    void write_num_entry(String const& group, String const& key, int value);
-    void write_bool_entry(String const& group, String const& key, bool value);
+    void write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value);
+    void write_num_entry(DeprecatedString const& group, DeprecatedString const& key, int value);
+    void write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value);
 
     void dump() const;
 
@@ -55,20 +55,20 @@ public:
 
     ErrorOr<void> sync();
 
-    void add_group(String const& group);
-    void remove_group(String const& group);
-    void remove_entry(String const& group, String const& key);
+    void add_group(DeprecatedString const& group);
+    void remove_group(DeprecatedString const& group);
+    void remove_entry(DeprecatedString const& group, DeprecatedString const& key);
 
-    String const& filename() const { return m_filename; }
+    DeprecatedString const& filename() const { return m_filename; }
 
 private:
-    ConfigFile(String const& filename, OwnPtr<Stream::BufferedFile> open_file);
+    ConfigFile(DeprecatedString const& filename, OwnPtr<Stream::BufferedFile> open_file);
 
     ErrorOr<void> reparse();
 
-    String m_filename;
+    DeprecatedString m_filename;
     OwnPtr<Stream::BufferedFile> m_file;
-    HashMap<String, HashMap<String, String>> m_groups;
+    HashMap<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> m_groups;
     bool m_dirty { false };
 };
 

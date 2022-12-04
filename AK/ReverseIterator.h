@@ -66,7 +66,7 @@ private:
     static constexpr SimpleReverseIterator rbegin(Container& container)
     {
         using RawContainerType = RemoveCV<Container>;
-        if constexpr (IsSame<StringView, RawContainerType> || IsSame<String, RawContainerType>)
+        if constexpr (IsSame<StringView, RawContainerType> || IsSame<DeprecatedString, RawContainerType>)
             return { container, static_cast<int>(container.length()) - 1 };
         else
             return { container, static_cast<int>(container.size()) - 1 };

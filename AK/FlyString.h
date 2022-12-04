@@ -7,7 +7,7 @@
 #pragma once
 
 #include "AK/StringUtils.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace AK {
 
@@ -22,10 +22,10 @@ public:
         : m_impl(move(other.m_impl))
     {
     }
-    FlyString(String const&);
+    FlyString(DeprecatedString const&);
     FlyString(StringView);
     FlyString(char const* string)
-        : FlyString(static_cast<String>(string))
+        : FlyString(static_cast<DeprecatedString>(string))
     {
     }
 
@@ -54,7 +54,7 @@ public:
 
     bool operator==(FlyString const& other) const { return m_impl == other.m_impl; }
 
-    bool operator==(String const&) const;
+    bool operator==(DeprecatedString const&) const;
 
     bool operator==(StringView) const;
 

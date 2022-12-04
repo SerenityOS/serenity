@@ -14,8 +14,8 @@ namespace JS {
 // 2.9 ModuleRequest Records, https://tc39.es/proposal-import-assertions/#sec-modulerequest-record
 struct ModuleRequest {
     struct Assertion {
-        String key;
-        String value;
+        DeprecatedString key;
+        DeprecatedString value;
     };
 
     ModuleRequest() = default;
@@ -27,7 +27,7 @@ struct ModuleRequest {
 
     ModuleRequest(FlyString module_specifier, Vector<Assertion> assertions);
 
-    void add_assertion(String key, String value)
+    void add_assertion(DeprecatedString key, DeprecatedString value)
     {
         assertions.empend(move(key), move(value));
     }

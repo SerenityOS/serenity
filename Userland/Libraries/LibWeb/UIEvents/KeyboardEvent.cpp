@@ -69,8 +69,8 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
 KeyboardEvent* KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     // FIXME: Figure out what these should actually contain.
-    String event_key = key_code_to_string(platform_key);
-    String event_code = "FIXME";
+    DeprecatedString event_key = key_code_to_string(platform_key);
+    DeprecatedString event_code = "FIXME";
 
     auto key_code = determine_key_code(platform_key, code_point);
     KeyboardEventInit event_init {};
@@ -91,7 +91,7 @@ KeyboardEvent* KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlySt
     return KeyboardEvent::create(realm, event_name, event_init);
 }
 
-bool KeyboardEvent::get_modifier_state(String const& key_arg)
+bool KeyboardEvent::get_modifier_state(DeprecatedString const& key_arg)
 {
     if (key_arg == "Alt")
         return m_alt_key;

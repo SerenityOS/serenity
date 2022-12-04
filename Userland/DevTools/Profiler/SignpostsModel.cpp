@@ -26,7 +26,7 @@ int SignpostsModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String SignpostsModel::column_name(int column) const
+DeprecatedString SignpostsModel::column_name(int column) const
 {
     switch (column) {
     case Column::SignpostIndex:

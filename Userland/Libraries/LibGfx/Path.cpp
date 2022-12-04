@@ -177,7 +177,7 @@ void Path::close_all_subpaths()
     }
 }
 
-String Path::to_string() const
+DeprecatedString Path::to_string() const
 {
     StringBuilder builder;
     builder.append("Path { "sv);

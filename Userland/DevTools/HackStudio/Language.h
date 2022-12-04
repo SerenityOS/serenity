@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 
 namespace HackStudio {
 enum class Language {
@@ -24,7 +24,7 @@ enum class Language {
 };
 
 Language language_from_file(LexicalPath const&);
-Language language_from_name(String const&);
-String language_name_from_file(LexicalPath const&);
+Language language_from_name(DeprecatedString const&);
+DeprecatedString language_name_from_file(LexicalPath const&);
 
 }

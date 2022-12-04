@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
 #include <LibCore/Timer.h>
@@ -172,8 +172,8 @@ public:
     virtual bool is_visible_for_timer_purposes() const override;
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
-    String tooltip() const { return m_tooltip; }
-    void set_tooltip(String);
+    DeprecatedString tooltip() const { return m_tooltip; }
+    void set_tooltip(DeprecatedString);
 
     bool is_auto_focusable() const { return m_auto_focusable; }
     void set_auto_focusable(bool auto_focusable) { m_auto_focusable = auto_focusable; }
@@ -294,7 +294,7 @@ public:
     void set_font(Gfx::Font const*);
     void set_font(Gfx::Font const& font) { set_font(&font); }
 
-    void set_font_family(String const&);
+    void set_font_family(DeprecatedString const&);
     void set_font_size(unsigned);
     void set_font_weight(unsigned);
     void set_font_fixed_width(bool);
@@ -335,8 +335,8 @@ public:
     Gfx::Palette palette() const;
     void set_palette(Gfx::Palette const&);
 
-    String title() const;
-    void set_title(String);
+    DeprecatedString title() const;
+    void set_title(DeprecatedString);
 
     Margins const& grabbable_margins() const { return m_grabbable_margins; }
     void set_grabbable_margins(Margins const&);
@@ -354,7 +354,7 @@ public:
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
     bool load_from_gml(StringView);
-    bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
+    bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
 
     // FIXME: remove this when all uses of shrink_to_fit are eliminated
     void set_shrink_to_fit(bool);
@@ -363,7 +363,7 @@ public:
     bool has_pending_drop() const;
 
     // In order for others to be able to call this, it needs to be public.
-    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
+    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
 
 protected:
     Widget();
@@ -438,7 +438,7 @@ private:
     Gfx::ColorRole m_background_role;
     Gfx::ColorRole m_foreground_role;
     NonnullRefPtr<Gfx::Font> m_font;
-    String m_tooltip;
+    DeprecatedString m_tooltip;
 
     UISize m_min_size { SpecialDimension::Shrink };
     UISize m_max_size { SpecialDimension::Grow };
@@ -456,7 +456,7 @@ private:
     bool m_default_font { true };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
-    String m_title { String::empty() };
+    DeprecatedString m_title { DeprecatedString::empty() };
 
     WeakPtr<Widget> m_focus_proxy;
     Vector<WeakPtr<Widget>> m_focus_delegators;

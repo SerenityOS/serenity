@@ -20,7 +20,7 @@ Rule::Rule(Rule::Type type, FlyString name, Vector<ComponentValue> prelude, RefP
 
 Rule::~Rule() = default;
 
-String Rule::to_string() const
+DeprecatedString Rule::to_string() const
 {
     StringBuilder builder;
 

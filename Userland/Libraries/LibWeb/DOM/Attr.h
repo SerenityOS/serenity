@@ -18,7 +18,7 @@ class Attr final : public Node {
     WEB_PLATFORM_OBJECT(Attr, Node);
 
 public:
-    static JS::NonnullGCPtr<Attr> create(Document&, FlyString local_name, String value, Element const* = nullptr);
+    static JS::NonnullGCPtr<Attr> create(Document&, FlyString local_name, DeprecatedString value, Element const* = nullptr);
 
     virtual ~Attr() override = default;
 
@@ -27,10 +27,10 @@ public:
     FlyString const& namespace_uri() const { return m_qualified_name.namespace_(); }
     FlyString const& prefix() const { return m_qualified_name.prefix(); }
     FlyString const& local_name() const { return m_qualified_name.local_name(); }
-    String const& name() const { return m_qualified_name.as_string(); }
+    DeprecatedString const& name() const { return m_qualified_name.as_string(); }
 
-    String const& value() const { return m_value; }
-    void set_value(String value);
+    DeprecatedString const& value() const { return m_value; }
+    void set_value(DeprecatedString value);
 
     Element* owner_element();
     Element const* owner_element() const;
@@ -39,15 +39,15 @@ public:
     // Always returns true: https://dom.spec.whatwg.org/#dom-attr-specified
     constexpr bool specified() const { return true; }
 
-    void handle_attribute_changes(Element&, String const& old_value, String const& new_value);
+    void handle_attribute_changes(Element&, DeprecatedString const& old_value, DeprecatedString const& new_value);
 
 private:
-    Attr(Document&, FlyString local_name, String value, Element const*);
+    Attr(Document&, FlyString local_name, DeprecatedString value, Element const*);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     QualifiedName m_qualified_name;
-    String m_value;
+    DeprecatedString m_value;
     JS::GCPtr<Element> m_owner_element;
 };
 

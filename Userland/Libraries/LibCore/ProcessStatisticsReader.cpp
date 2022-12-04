@@ -14,7 +14,7 @@
 
 namespace Core {
 
-HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
+HashMap<uid_t, DeprecatedString> ProcessStatisticsReader::s_usernames;
 
 Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file, bool include_usernames)
 {
@@ -110,7 +110,7 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(bool include_u
     return get_all(proc_all_file, include_usernames);
 }
 
-String ProcessStatisticsReader::username_from_uid(uid_t uid)
+DeprecatedString ProcessStatisticsReader::username_from_uid(uid_t uid)
 {
     if (s_usernames.is_empty()) {
         setpwent();
@@ -122,6 +122,6 @@ String ProcessStatisticsReader::username_from_uid(uid_t uid)
     auto it = s_usernames.find(uid);
     if (it != s_usernames.end())
         return (*it).value;
-    return String::number(uid);
+    return DeprecatedString::number(uid);
 }
 }

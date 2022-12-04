@@ -25,7 +25,7 @@ public:
 
     virtual ~TextDecoder() override;
 
-    WebIDL::ExceptionOr<String> decode(JS::Handle<JS::Object> const&) const;
+    WebIDL::ExceptionOr<DeprecatedString> decode(JS::Handle<JS::Object> const&) const;
 
     FlyString const& encoding() const { return m_encoding; }
     bool fatal() const { return m_fatal; }

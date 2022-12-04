@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/MathematicalValue.h>
 #include <LibJS/Runtime/Object.h>
@@ -58,11 +58,11 @@ public:
 
     virtual ~NumberFormatBase() override = default;
 
-    String const& locale() const { return m_locale; }
-    void set_locale(String locale) { m_locale = move(locale); }
+    DeprecatedString const& locale() const { return m_locale; }
+    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
 
-    String const& data_locale() const { return m_data_locale; }
-    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
+    DeprecatedString const& data_locale() const { return m_data_locale; }
+    void set_data_locale(DeprecatedString data_locale) { m_data_locale = move(data_locale); }
 
     int min_integer_digits() const { return m_min_integer_digits; }
     void set_min_integer_digits(int min_integer_digits) { m_min_integer_digits = min_integer_digits; }
@@ -102,8 +102,8 @@ protected:
     explicit NumberFormatBase(Object& prototype);
 
 private:
-    String m_locale;                                                              // [[Locale]]
-    String m_data_locale;                                                         // [[DataLocale]]
+    DeprecatedString m_locale;                                                    // [[Locale]]
+    DeprecatedString m_data_locale;                                               // [[DataLocale]]
     int m_min_integer_digits { 0 };                                               // [[MinimumIntegerDigits]]
     Optional<int> m_min_fraction_digits {};                                       // [[MinimumFractionDigits]]
     Optional<int> m_max_fraction_digits {};                                       // [[MaximumFractionDigits]]
@@ -178,16 +178,16 @@ public:
 
     virtual ~NumberFormat() override = default;
 
-    String const& numbering_system() const { return m_numbering_system; }
-    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
+    DeprecatedString const& numbering_system() const { return m_numbering_system; }
+    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
 
     Style style() const { return m_style; }
     StringView style_string() const;
     void set_style(StringView style);
 
     bool has_currency() const { return m_currency.has_value(); }
-    String const& currency() const { return m_currency.value(); }
-    void set_currency(String currency) { m_currency = move(currency); }
+    DeprecatedString const& currency() const { return m_currency.value(); }
+    void set_currency(DeprecatedString currency) { m_currency = move(currency); }
 
     bool has_currency_display() const { return m_currency_display.has_value(); }
     CurrencyDisplay currency_display() const { return *m_currency_display; }
@@ -201,8 +201,8 @@ public:
     void set_currency_sign(StringView set_currency_sign);
 
     bool has_unit() const { return m_unit.has_value(); }
-    String const& unit() const { return m_unit.value(); }
-    void set_unit(String unit) { m_unit = move(unit); }
+    DeprecatedString const& unit() const { return m_unit.value(); }
+    void set_unit(DeprecatedString unit) { m_unit = move(unit); }
 
     bool has_unit_display() const { return m_unit_display.has_value(); }
     ::Locale::Style unit_display() const { return *m_unit_display; }
@@ -238,14 +238,14 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    String m_locale;                                     // [[Locale]]
-    String m_data_locale;                                // [[DataLocale]]
-    String m_numbering_system;                           // [[NumberingSystem]]
+    DeprecatedString m_locale;                           // [[Locale]]
+    DeprecatedString m_data_locale;                      // [[DataLocale]]
+    DeprecatedString m_numbering_system;                 // [[NumberingSystem]]
     Style m_style { Style::Invalid };                    // [[Style]]
-    Optional<String> m_currency {};                      // [[Currency]]
+    Optional<DeprecatedString> m_currency {};            // [[Currency]]
     Optional<CurrencyDisplay> m_currency_display {};     // [[CurrencyDisplay]]
     Optional<CurrencySign> m_currency_sign {};           // [[CurrencySign]]
-    Optional<String> m_unit {};                          // [[Unit]]
+    Optional<DeprecatedString> m_unit {};                // [[Unit]]
     Optional<::Locale::Style> m_unit_display {};         // [[UnitDisplay]]
     UseGrouping m_use_grouping { false };                // [[UseGrouping]]
     Notation m_notation { Notation::Invalid };           // [[Notation]]
@@ -261,7 +261,7 @@ private:
 };
 
 struct FormatResult {
-    String formatted_string;                  // [[FormattedString]]
+    DeprecatedString formatted_string;        // [[FormattedString]]
     MathematicalValue rounded_number { 0.0 }; // [[RoundedNumber]]
 };
 
@@ -278,12 +278,12 @@ enum class RoundingDecision {
 int currency_digits(StringView currency);
 FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, MathematicalValue number);
 Vector<PatternPartition> partition_number_pattern(VM&, NumberFormat&, MathematicalValue number);
-Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat&, MathematicalValue const& number, String formatted_string, int exponent);
-String format_numeric(VM&, NumberFormat&, MathematicalValue number);
+Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat&, MathematicalValue const& number, DeprecatedString formatted_string, int exponent);
+DeprecatedString format_numeric(VM&, NumberFormat&, MathematicalValue number);
 Array* format_numeric_to_parts(VM&, NumberFormat&, MathematicalValue number);
 RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
-Optional<Variant<StringView, String>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);
+Optional<Variant<StringView, DeprecatedString>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat&, int exponent);
 int compute_exponent(NumberFormat&, MathematicalValue number);
 int compute_exponent_for_magnitude(NumberFormat&, int magnitude);
@@ -293,7 +293,7 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 Vector<PatternPartitionWithSource> format_approximately(NumberFormat&, Vector<PatternPartitionWithSource> result);
 Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result);
-ThrowCompletionOr<String> format_numeric_range(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
+ThrowCompletionOr<DeprecatedString> format_numeric_range(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 
 }

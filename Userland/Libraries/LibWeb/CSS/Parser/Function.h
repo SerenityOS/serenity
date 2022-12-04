@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/Forward.h>
@@ -28,7 +28,7 @@ public:
     StringView name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     Function(FlyString name, Vector<ComponentValue>&& values);

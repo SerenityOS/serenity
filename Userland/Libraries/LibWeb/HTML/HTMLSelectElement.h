@@ -56,7 +56,7 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
-    String const& type() const;
+    DeprecatedString const& type() const;
 
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);

@@ -20,14 +20,14 @@ enum class Version {
 };
 
 struct Doctype {
-    String type;
+    DeprecatedString type;
     Vector<MarkupDeclaration> markup_declarations;
     Optional<ExternalID> external_id;
 };
 
 class Document {
 public:
-    explicit Document(NonnullOwnPtr<Node> root, Optional<Doctype> doctype, HashMap<Name, String> processing_instructions, Version version)
+    explicit Document(NonnullOwnPtr<Node> root, Optional<Doctype> doctype, HashMap<Name, DeprecatedString> processing_instructions, Version version)
         : m_root(move(root))
         , m_processing_instructions(move(processing_instructions))
         , m_version(version)
@@ -38,7 +38,7 @@ public:
     Node& root() { return *m_root; }
     Node const& root() const { return *m_root; }
 
-    HashMap<Name, String> const& processing_instructions() const { return m_processing_instructions; }
+    HashMap<Name, DeprecatedString> const& processing_instructions() const { return m_processing_instructions; }
 
     Version version() const { return m_version; }
 
@@ -46,7 +46,7 @@ public:
 
 private:
     NonnullOwnPtr<Node> m_root;
-    HashMap<Name, String> m_processing_instructions;
+    HashMap<Name, DeprecatedString> m_processing_instructions;
     Version m_version;
     Optional<Doctype> m_explicit_doctype;
 };

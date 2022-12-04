@@ -12,7 +12,7 @@
 namespace Web::WebGL {
 
 struct WebGLContextEventInit final : public DOM::EventInit {
-    String status_message { String::empty() };
+    DeprecatedString status_message { DeprecatedString::empty() };
 };
 
 class WebGLContextEvent final : public DOM::Event {
@@ -24,12 +24,12 @@ public:
 
     virtual ~WebGLContextEvent() override;
 
-    String const& status_message() const { return m_status_message; }
+    DeprecatedString const& status_message() const { return m_status_message; }
 
 private:
     WebGLContextEvent(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
 
-    String m_status_message { String::empty() };
+    DeprecatedString m_status_message { DeprecatedString::empty() };
 };
 
 }

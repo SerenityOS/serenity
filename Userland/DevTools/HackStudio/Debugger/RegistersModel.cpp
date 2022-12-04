@@ -112,7 +112,7 @@ int RegistersModel::row_count(const GUI::ModelIndex&) const
     return m_registers.size();
 }
 
-String RegistersModel::column_name(int column) const
+DeprecatedString RegistersModel::column_name(int column) const
 {
     switch (column) {
     case Column::Register:
@@ -140,7 +140,7 @@ GUI::Variant RegistersModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
         if (index.column() == Column::Register)
             return reg.name;
         if (index.column() == Column::Value)
-            return String::formatted("{:p}", reg.value);
+            return DeprecatedString::formatted("{:p}", reg.value);
         return {};
     }
     return {};

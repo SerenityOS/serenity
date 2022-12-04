@@ -17,7 +17,7 @@ RefPtr<Gfx::Bitmap> ConnectionToClipboardServer::get_bitmap()
     if (clipping.mime_type() != "image/x-serenityos")
         return nullptr;
 
-    HashMap<String, String> const& metadata = clipping.metadata().entries();
+    HashMap<DeprecatedString, DeprecatedString> const& metadata = clipping.metadata().entries();
     auto width = metadata.get("width").value_or("0").to_uint();
     if (!width.has_value() || width.value() == 0)
         return nullptr;
@@ -60,12 +60,12 @@ RefPtr<Gfx::Bitmap> ConnectionToClipboardServer::get_bitmap()
 // Copied from LibGUI/Clipboard.cpp
 void ConnectionToClipboardServer::set_bitmap(Gfx::Bitmap const& bitmap)
 {
-    HashMap<String, String> metadata;
-    metadata.set("width", String::number(bitmap.width()));
-    metadata.set("height", String::number(bitmap.height()));
-    metadata.set("scale", String::number(bitmap.scale()));
-    metadata.set("format", String::number((int)bitmap.format()));
-    metadata.set("pitch", String::number(bitmap.pitch()));
+    HashMap<DeprecatedString, DeprecatedString> metadata;
+    metadata.set("width", DeprecatedString::number(bitmap.width()));
+    metadata.set("height", DeprecatedString::number(bitmap.height()));
+    metadata.set("scale", DeprecatedString::number(bitmap.scale()));
+    metadata.set("format", DeprecatedString::number((int)bitmap.format()));
+    metadata.set("pitch", DeprecatedString::number(bitmap.pitch()));
     ReadonlyBytes data { bitmap.scanline(0), bitmap.size_in_bytes() };
     auto buffer_or_error = Core::AnonymousBuffer::create_with_size(bitmap.size_in_bytes());
     VERIFY(!buffer_or_error.is_error());

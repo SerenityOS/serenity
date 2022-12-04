@@ -5,13 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/CSS/Serialize.h>
 
 namespace Web::CSS::Parser {
 
-String Token::to_string() const
+DeprecatedString Token::to_string() const
 {
     StringBuilder builder;
 
@@ -21,15 +21,15 @@ String Token::to_string() const
     case Type::Ident:
         return serialize_an_identifier(ident());
     case Type::Function:
-        return String::formatted("{}(", serialize_an_identifier(function()));
+        return DeprecatedString::formatted("{}(", serialize_an_identifier(function()));
     case Type::AtKeyword:
-        return String::formatted("@{}", serialize_an_identifier(at_keyword()));
+        return DeprecatedString::formatted("@{}", serialize_an_identifier(at_keyword()));
     case Type::Hash: {
         switch (m_hash_type) {
         case HashType::Id:
-            return String::formatted("#{}", serialize_an_identifier(hash_value()));
+            return DeprecatedString::formatted("#{}", serialize_an_identifier(hash_value()));
         case HashType::Unrestricted:
-            return String::formatted("#{}", hash_value());
+            return DeprecatedString::formatted("#{}", hash_value());
         }
         VERIFY_NOT_REACHED();
     }
@@ -44,11 +44,11 @@ String Token::to_string() const
     case Type::Delim:
         return m_value;
     case Type::Number:
-        return String::number(m_number_value.value());
+        return DeprecatedString::number(m_number_value.value());
     case Type::Percentage:
-        return String::formatted("{}%", m_number_value.value());
+        return DeprecatedString::formatted("{}%", m_number_value.value());
     case Type::Dimension:
-        return String::formatted("{}{}", m_number_value.value(), dimension_unit());
+        return DeprecatedString::formatted("{}{}", m_number_value.value(), dimension_unit());
     case Type::Whitespace:
         return " ";
     case Type::CDO:
@@ -79,7 +79,7 @@ String Token::to_string() const
     }
 }
 
-String Token::to_debug_string() const
+DeprecatedString Token::to_debug_string() const
 {
     switch (m_type) {
     case Type::Invalid:
@@ -88,29 +88,29 @@ String Token::to_debug_string() const
     case Type::EndOfFile:
         return "__EOF__";
     case Type::Ident:
-        return String::formatted("Ident: {}", ident());
+        return DeprecatedString::formatted("Ident: {}", ident());
     case Type::Function:
-        return String::formatted("Function: {}", function());
+        return DeprecatedString::formatted("Function: {}", function());
     case Type::AtKeyword:
-        return String::formatted("AtKeyword: {}", at_keyword());
+        return DeprecatedString::formatted("AtKeyword: {}", at_keyword());
     case Type::Hash:
-        return String::formatted("Hash: {} (hash_type: {})", hash_value(), m_hash_type == HashType::Unrestricted ? "Unrestricted" : "Id");
+        return DeprecatedString::formatted("Hash: {} (hash_type: {})", hash_value(), m_hash_type == HashType::Unrestricted ? "Unrestricted" : "Id");
     case Type::String:
-        return String::formatted("String: {}", string());
+        return DeprecatedString::formatted("String: {}", string());
     case Type::BadString:
         return "BadString";
     case Type::Url:
-        return String::formatted("Url: {}", url());
+        return DeprecatedString::formatted("Url: {}", url());
     case Type::BadUrl:
         return "BadUrl";
     case Type::Delim:
-        return String::formatted("Delim: {}", m_value);
+        return DeprecatedString::formatted("Delim: {}", m_value);
     case Type::Number:
-        return String::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
+        return DeprecatedString::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Percentage:
-        return String::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number");
+        return DeprecatedString::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Dimension:
-        return String::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number");
+        return DeprecatedString::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Whitespace:
         return "Whitespace";
     case Type::CDO:
@@ -156,7 +156,7 @@ Token::Type Token::mirror_variant() const
     return Type::Invalid;
 }
 
-String Token::bracket_string() const
+DeprecatedString Token::bracket_string() const
 {
     if (is(Token::Type::OpenCurly)) {
         return "{";
@@ -185,7 +185,7 @@ String Token::bracket_string() const
     return "";
 }
 
-String Token::bracket_mirror_string() const
+DeprecatedString Token::bracket_mirror_string() const
 {
     if (is(Token::Type::OpenCurly)) {
         return "}";

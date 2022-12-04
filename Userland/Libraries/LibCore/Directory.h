@@ -34,7 +34,7 @@ public:
     };
 
     static ErrorOr<Directory> create(LexicalPath path, CreateDirectories, mode_t creation_mode = 0755);
-    static ErrorOr<Directory> create(String path, CreateDirectories, mode_t creation_mode = 0755);
+    static ErrorOr<Directory> create(DeprecatedString path, CreateDirectories, mode_t creation_mode = 0755);
     static ErrorOr<Directory> adopt_fd(int fd, Optional<LexicalPath> path = {});
 
     ErrorOr<NonnullOwnPtr<Stream::File>> open(StringView filename, Stream::OpenMode mode) const;

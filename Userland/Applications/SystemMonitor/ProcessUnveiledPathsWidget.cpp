@@ -35,7 +35,7 @@ void ProcessUnveiledPathsWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    m_model->set_json_path(String::formatted("/proc/{}/unveil", m_pid));
+    m_model->set_json_path(DeprecatedString::formatted("/proc/{}/unveil", m_pid));
 }
 
 }

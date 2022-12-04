@@ -120,7 +120,7 @@ GUI::Widget* WandSelectTool::get_properties_widget()
 
     auto& mode_combo = mode_container.add<GUI::ComboBox>();
     mode_combo.set_only_allow_values_from_model(true);
-    mode_combo.set_model(*GUI::ItemListModel<String>::create(m_merge_mode_names));
+    mode_combo.set_model(*GUI::ItemListModel<DeprecatedString>::create(m_merge_mode_names));
     mode_combo.set_selected_index((int)m_merge_mode);
     mode_combo.on_change = [this](auto&&, GUI::ModelIndex const& index) {
         VERIFY(index.row() >= 0);

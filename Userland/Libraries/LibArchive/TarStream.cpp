@@ -142,12 +142,12 @@ TarOutputStream::TarOutputStream(OutputStream& stream)
 {
 }
 
-void TarOutputStream::add_directory(String const& path, mode_t mode)
+void TarOutputStream::add_directory(DeprecatedString const& path, mode_t mode)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
     header.set_size(0);
-    header.set_filename_and_prefix(String::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
+    header.set_filename_and_prefix(DeprecatedString::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
     header.set_mode(mode);
     header.set_magic(gnu_magic);
@@ -158,7 +158,7 @@ void TarOutputStream::add_directory(String const& path, mode_t mode)
     VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
 }
 
-void TarOutputStream::add_file(String const& path, mode_t mode, ReadonlyBytes bytes)
+void TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -179,7 +179,7 @@ void TarOutputStream::add_file(String const& path, mode_t mode, ReadonlyBytes by
     VERIFY(m_stream.write_or_error(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
 }
 
-void TarOutputStream::add_link(String const& path, mode_t mode, StringView link_name)
+void TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, StringView link_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};

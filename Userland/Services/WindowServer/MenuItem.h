@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
@@ -23,7 +23,7 @@ public:
         Separator,
     };
 
-    MenuItem(Menu&, unsigned identifier, String const& text, String const& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, Gfx::Bitmap const* icon = nullptr);
+    MenuItem(Menu&, unsigned identifier, DeprecatedString const& text, DeprecatedString const& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, Gfx::Bitmap const* icon = nullptr);
     MenuItem(Menu&, Type);
     ~MenuItem() = default;
 
@@ -41,11 +41,11 @@ public:
     bool is_default() const { return m_default; }
     void set_default(bool);
 
-    String text() const { return m_text; }
-    void set_text(String text) { m_text = move(text); }
+    DeprecatedString text() const { return m_text; }
+    void set_text(DeprecatedString text) { m_text = move(text); }
 
-    String shortcut_text() const { return m_shortcut_text; }
-    void set_shortcut_text(String text) { m_shortcut_text = move(text); }
+    DeprecatedString shortcut_text() const { return m_shortcut_text; }
+    void set_shortcut_text(DeprecatedString text) { m_shortcut_text = move(text); }
 
     void set_rect(Gfx::IntRect const& rect) { m_rect = rect; }
     Gfx::IntRect rect() const;
@@ -73,8 +73,8 @@ private:
     bool m_checked { false };
     bool m_default { false };
     unsigned m_identifier { 0 };
-    String m_text;
-    String m_shortcut_text;
+    DeprecatedString m_text;
+    DeprecatedString m_shortcut_text;
     Gfx::IntRect m_rect;
     RefPtr<Gfx::Bitmap> m_icon;
     int m_submenu_id { -1 };

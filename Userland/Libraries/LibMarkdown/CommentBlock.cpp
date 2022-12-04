@@ -10,7 +10,7 @@
 
 namespace Markdown {
 
-String CommentBlock::render_to_html(bool) const
+DeprecatedString CommentBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -22,7 +22,7 @@ String CommentBlock::render_to_html(bool) const
     return builder.build();
 }
 
-String CommentBlock::render_for_terminal(size_t) const
+DeprecatedString CommentBlock::render_for_terminal(size_t) const
 {
     return "";
 }

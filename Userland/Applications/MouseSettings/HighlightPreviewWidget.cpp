@@ -5,7 +5,7 @@
  */
 
 #include "HighlightPreviewWidget.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
@@ -22,7 +22,7 @@ HighlightPreviewWidget::HighlightPreviewWidget(Gfx::Palette const& palette)
 ErrorOr<void> HighlightPreviewWidget::reload_cursor()
 {
     auto cursor_theme = GUI::ConnectionToWindowServer::the().get_cursor_theme();
-    auto theme_path = String::formatted("/res/cursor-themes/{}/{}", cursor_theme, "Config.ini");
+    auto theme_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}", cursor_theme, "Config.ini");
     auto cursor_theme_config = TRY(Core::ConfigFile::open(theme_path));
     auto load_bitmap = [](StringView path, StringView default_path) {
         auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
@@ -31,7 +31,7 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
         return Gfx::Bitmap::try_load_from_file(default_path);
     };
     constexpr auto default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
-    auto cursor_path = String::formatted("/res/cursor-themes/{}/{}",
+    auto cursor_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}",
         cursor_theme, cursor_theme_config->read_entry("Cursor", "Arrow"));
     m_cursor_bitmap = TRY(load_bitmap(cursor_path, default_cursor_path));
     m_cursor_params = Gfx::CursorParams::parse_from_filename(cursor_path, m_cursor_bitmap->rect().center()).constrained(*m_cursor_bitmap);

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 
@@ -82,9 +82,9 @@ ErrorOr<Icon> Icon::try_create_default_icon(StringView name)
 {
     RefPtr<Gfx::Bitmap> bitmap16;
     RefPtr<Gfx::Bitmap> bitmap32;
-    if (auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/16x16/{}.png", name)); !bitmap_or_error.is_error())
+    if (auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(DeprecatedString::formatted("/res/icons/16x16/{}.png", name)); !bitmap_or_error.is_error())
         bitmap16 = bitmap_or_error.release_value();
-    if (auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/32x32/{}.png", name)); !bitmap_or_error.is_error())
+    if (auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(DeprecatedString::formatted("/res/icons/32x32/{}.png", name)); !bitmap_or_error.is_error())
         bitmap32 = bitmap_or_error.release_value();
 
     if (!bitmap16 && !bitmap32) {

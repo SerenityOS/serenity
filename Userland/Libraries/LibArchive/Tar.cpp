@@ -27,7 +27,7 @@ unsigned TarFileHeader::expected_checksum() const
 void TarFileHeader::calculate_checksum()
 {
     memset(m_checksum, ' ', sizeof(m_checksum));
-    VERIFY(String::formatted("{:06o}", expected_checksum()).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
+    VERIFY(DeprecatedString::formatted("{:06o}", expected_checksum()).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
 }
 
 bool TarFileHeader::is_zero_block() const

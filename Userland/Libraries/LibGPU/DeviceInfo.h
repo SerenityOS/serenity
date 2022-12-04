@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace GPU {
 
 struct DeviceInfo final {
-    String vendor_name;
-    String device_name;
+    DeprecatedString vendor_name;
+    DeprecatedString device_name;
     unsigned num_texture_units;
     unsigned num_lights;
     unsigned max_clip_planes;

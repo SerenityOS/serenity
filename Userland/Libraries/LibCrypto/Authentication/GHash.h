@@ -12,7 +12,7 @@
 #include <LibCrypto/Hash/HashFunction.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace Crypto {
@@ -49,7 +49,7 @@ public:
     constexpr static size_t digest_size() { return TagType::Size; }
 
 #ifndef KERNEL
-    String class_name() const
+    DeprecatedString class_name() const
     {
         return "GHash";
     }

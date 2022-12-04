@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/PropertyKey.h>
@@ -127,7 +127,7 @@ public:
     ThrowCompletionOr<Value> get_value(VM&) const;
     ThrowCompletionOr<bool> delete_(VM&);
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
     bool is_valid_reference() const { return m_name.is_valid() || m_is_private; }
 

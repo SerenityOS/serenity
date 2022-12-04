@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibDiff/Hunks.h>
 #include <LibGUI/AbstractScrollableWidget.h>
@@ -18,10 +18,10 @@ class DiffViewer final : public GUI::AbstractScrollableWidget {
 public:
     virtual ~DiffViewer() override = default;
 
-    void set_content(String const& original, String const& diff);
+    void set_content(DeprecatedString const& original, DeprecatedString const& diff);
 
 private:
-    DiffViewer(String const& original, String const& diff);
+    DiffViewer(DeprecatedString const& original, DeprecatedString const& diff);
     DiffViewer();
 
     void setup_properties();
@@ -43,9 +43,9 @@ private:
         Missing,
     };
 
-    void draw_line(GUI::Painter&, String const& line, size_t y_offset, LinePosition, LineType);
+    void draw_line(GUI::Painter&, DeprecatedString const& line, size_t y_offset, LinePosition, LineType);
 
-    static Vector<String> split_to_lines(String const& text);
+    static Vector<DeprecatedString> split_to_lines(DeprecatedString const& text);
 
     static Gfx::Color red_background();
     static Gfx::Color green_background();
@@ -55,7 +55,7 @@ private:
 
     Gfx::IntRect separator_rect() const;
 
-    Vector<String> m_original_lines;
+    Vector<DeprecatedString> m_original_lines;
     Vector<Diff::Hunk> m_hunks;
 };
 }

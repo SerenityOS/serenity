@@ -141,7 +141,7 @@ Optional<Packet> Packet::from_raw_packet(u8 const* raw_data, size_t raw_size)
 
         auto& record = *(DNSRecordWithoutName const*)(&raw_data[offset]);
 
-        String data;
+        DeprecatedString data;
 
         offset += sizeof(DNSRecordWithoutName);
 

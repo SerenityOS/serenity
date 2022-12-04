@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibChess/Chess.h>
 #include <LibCore/Event.h>
 
@@ -44,7 +44,7 @@ public:
     {
     }
 
-    virtual String to_string() const = 0;
+    virtual DeprecatedString to_string() const = 0;
 
     virtual ~Command() = default;
 };
@@ -58,7 +58,7 @@ public:
 
     static UCICommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 };
 
 class DebugCommand : public Command {
@@ -76,7 +76,7 @@ public:
 
     static DebugCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
     Flag flag() const { return m_flag; }
 
@@ -93,12 +93,12 @@ public:
 
     static IsReadyCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 };
 
 class SetOptionCommand : public Command {
 public:
-    explicit SetOptionCommand(StringView name, Optional<String> value = {})
+    explicit SetOptionCommand(StringView name, Optional<DeprecatedString> value = {})
         : Command(Command::Type::SetOption)
         , m_name(name)
         , m_value(value)
@@ -107,19 +107,19 @@ public:
 
     static SetOptionCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
-    String const& name() const { return m_name; }
-    Optional<String> const& value() const { return m_value; }
+    DeprecatedString const& name() const { return m_name; }
+    Optional<DeprecatedString> const& value() const { return m_value; }
 
 private:
-    String m_name;
-    Optional<String> m_value;
+    DeprecatedString m_name;
+    Optional<DeprecatedString> m_value;
 };
 
 class PositionCommand : public Command {
 public:
-    explicit PositionCommand(Optional<String> const& fen, Vector<Chess::Move> const& moves)
+    explicit PositionCommand(Optional<DeprecatedString> const& fen, Vector<Chess::Move> const& moves)
         : Command(Command::Type::Position)
         , m_fen(fen)
         , m_moves(moves)
@@ -128,13 +128,13 @@ public:
 
     static PositionCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
-    Optional<String> const& fen() const { return m_fen; }
+    Optional<DeprecatedString> const& fen() const { return m_fen; }
     Vector<Chess::Move> const& moves() const { return m_moves; }
 
 private:
-    Optional<String> m_fen;
+    Optional<DeprecatedString> m_fen;
     Vector<Chess::Move> m_moves;
 };
 
@@ -147,7 +147,7 @@ public:
 
     static GoCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
     Optional<Vector<Chess::Move>> searchmoves;
     bool ponder { false };
@@ -172,7 +172,7 @@ public:
 
     static StopCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 };
 
 class IdCommand : public Command {
@@ -191,14 +191,14 @@ public:
 
     static IdCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
     Type field_type() const { return m_field_type; }
-    String const& value() const { return m_value; }
+    DeprecatedString const& value() const { return m_value; }
 
 private:
     Type m_field_type;
-    String m_value;
+    DeprecatedString m_value;
 };
 
 class UCIOkCommand : public Command {
@@ -210,7 +210,7 @@ public:
 
     static UCIOkCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 };
 
 class ReadyOkCommand : public Command {
@@ -222,7 +222,7 @@ public:
 
     static ReadyOkCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 };
 
 class BestMoveCommand : public Command {
@@ -235,7 +235,7 @@ public:
 
     static BestMoveCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
     Chess::Move move() const { return m_move; }
 
@@ -252,7 +252,7 @@ public:
 
     static InfoCommand from_string(StringView command);
 
-    virtual String to_string() const override;
+    virtual DeprecatedString to_string() const override;
 
     Optional<int> depth;
     Optional<int> seldepth;

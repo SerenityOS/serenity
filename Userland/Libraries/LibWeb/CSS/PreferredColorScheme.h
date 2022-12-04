@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 
 namespace Web::CSS {
@@ -17,7 +17,7 @@ enum class PreferredColorScheme {
     Light,
 };
 
-PreferredColorScheme preferred_color_scheme_from_string(String const&);
+PreferredColorScheme preferred_color_scheme_from_string(DeprecatedString const&);
 StringView preferred_color_scheme_to_string(PreferredColorScheme);
 
 }

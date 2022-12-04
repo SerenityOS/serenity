@@ -37,7 +37,7 @@ public:
 
 private:
     using ServerPromise = Core::Promise<ErrorOr<void>>;
-    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(String const& socket_path, NonnullRefPtr<ServerPromise> promise);
+    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(DeprecatedString const& socket_path, NonnullRefPtr<ServerPromise> promise);
 
     NonnullRefPtr<Client> m_client;
     Web::WebDriver::LadybirdOptions m_options;

@@ -45,7 +45,7 @@ WebSocketClientSocket::~WebSocketClientSocket() = default;
 WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, String const& url)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, DeprecatedString const& url)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     AK::URL url_record(url);
@@ -112,27 +112,27 @@ WebSocket::ReadyState WebSocket::ready_state() const
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-extensions
-String WebSocket::extensions() const
+DeprecatedString WebSocket::extensions() const
 {
     if (!m_websocket)
-        return String::empty();
+        return DeprecatedString::empty();
     // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
     // FIXME: Change the extensions attribute's value to the extensions in use, if it is not the null value.
-    return String::empty();
+    return DeprecatedString::empty();
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-protocol
-String WebSocket::protocol() const
+DeprecatedString WebSocket::protocol() const
 {
     if (!m_websocket)
-        return String::empty();
+        return DeprecatedString::empty();
     // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
     // FIXME: Change the protocol attribute's value to the subprotocol in use, if it is not the null value.
-    return String::empty();
+    return DeprecatedString::empty();
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-close
-WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> reason)
+WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<DeprecatedString> reason)
 {
     // 1. If code is present, but is neither an integer equal to 1000 nor an integer in the range 3000 to 4999, inclusive, throw an "InvalidAccessError" DOMException.
     if (code.has_value() && *code != 1000 && (*code < 3000 || *code > 4099))
@@ -154,12 +154,12 @@ WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> 
     // -> Otherwise
     // NOTE: All of these are handled by the WebSocket Protocol when calling close()
     // FIXME: LibProtocol does not yet support sending empty Close messages, so we use default values for now
-    m_websocket->close(code.value_or(1000), reason.value_or(String::empty()));
+    m_websocket->close(code.value_or(1000), reason.value_or(DeprecatedString::empty()));
     return {};
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-send
-WebIDL::ExceptionOr<void> WebSocket::send(String const& data)
+WebIDL::ExceptionOr<void> WebSocket::send(DeprecatedString const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
@@ -188,7 +188,7 @@ void WebSocket::on_error()
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
-void WebSocket::on_close(u16 code, String reason, bool was_clean)
+void WebSocket::on_close(u16 code, DeprecatedString reason, bool was_clean)
 {
     // 1. Change the readyState attribute's value to CLOSED. This is handled by the Protocol's WebSocket
     // 2. If [needed], fire an event named error at the WebSocket object. This is handled by the Protocol's WebSocket
@@ -205,7 +205,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     if (m_websocket->ready_state() != WebSocket::ReadyState::Open)
         return;
     if (is_text) {
-        auto text_message = String(ReadonlyBytes(message));
+        auto text_message = DeprecatedString(ReadonlyBytes(message));
         HTML::MessageEventInit event_init;
         event_init.data = JS::js_string(vm(), text_message);
         event_init.origin = url();

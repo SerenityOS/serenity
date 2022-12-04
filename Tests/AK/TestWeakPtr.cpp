@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 

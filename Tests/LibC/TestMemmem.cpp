@@ -37,7 +37,7 @@ TEST_CASE(memmem_search)
         auto expected = test_case.matching_offset >= 0 ? test_case.haystack + test_case.matching_offset : nullptr;
         auto result = memmem(test_case.haystack, test_case.haystack_length, test_case.needle, test_case.needle_length);
         if (result != expected) {
-            FAIL(String::formatted("Test {} FAILED! expected {:p}, got {:p}", i, expected, result));
+            FAIL(DeprecatedString::formatted("Test {} FAILED! expected {:p}, got {:p}", i, expected, result));
         }
         ++i;
     }

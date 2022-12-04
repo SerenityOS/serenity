@@ -153,7 +153,7 @@ ByteBuffer IODevice::read_all()
     return {};
 }
 
-String IODevice::read_line(size_t max_size)
+DeprecatedString IODevice::read_line(size_t max_size)
 {
     if (m_fd < 0)
         return {};
@@ -166,7 +166,7 @@ String IODevice::read_line(size_t max_size)
             dbgln("IODevice::read_line: At EOF but there's more than max_size({}) buffered", max_size);
             return {};
         }
-        auto line = String((char const*)m_buffered_data.data(), m_buffered_data.size(), Chomp);
+        auto line = DeprecatedString((char const*)m_buffered_data.data(), m_buffered_data.size(), Chomp);
         m_buffered_data.clear();
         return line;
     }
@@ -185,7 +185,7 @@ String IODevice::read_line(size_t max_size)
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
             line.resize(line_index);
-            return String::copy(line, Chomp);
+            return DeprecatedString::copy(line, Chomp);
         }
     }
     return {};

@@ -23,7 +23,7 @@ Client& Client::the()
     return *s_the;
 }
 
-Result Client::try_request_file_read_only_approved(GUI::Window* parent_window, String const& path)
+Result Client::try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
@@ -48,7 +48,7 @@ Result Client::try_request_file_read_only_approved(GUI::Window* parent_window, S
     return handle_promise(id);
 }
 
-Result Client::try_request_file(GUI::Window* parent_window, String const& path, Core::OpenMode mode)
+Result Client::try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
@@ -73,7 +73,7 @@ Result Client::try_request_file(GUI::Window* parent_window, String const& path, 
     return handle_promise(id);
 }
 
-Result Client::try_open_file(GUI::Window* parent_window, String const& window_title, StringView path, Core::OpenMode requested_access)
+Result Client::try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
@@ -93,7 +93,7 @@ Result Client::try_open_file(GUI::Window* parent_window, String const& window_ti
     return handle_promise(id);
 }
 
-Result Client::try_save_file(GUI::Window* parent_window, String const& name, String const ext, Core::OpenMode requested_access)
+Result Client::try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
@@ -113,7 +113,7 @@ Result Client::try_save_file(GUI::Window* parent_window, String const& name, Str
     return handle_promise(id);
 }
 
-void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& ipc_file, Optional<String> const& chosen_file)
+void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& ipc_file, Optional<DeprecatedString> const& chosen_file)
 {
     auto potential_data = m_promises.get(request_id);
     VERIFY(potential_data.has_value());
@@ -122,7 +122,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         // We don't want to show an error message for non-existent files since some applications may want
         // to handle it as opening a new, named file.
         if (error != -1 && error != ENOENT)
-            GUI::MessageBox::show_error(request_data.parent_window, String::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
+            GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
         request_data.promise->resolve(Error::from_errno(error));
         return;
     }
@@ -130,19 +130,19 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
     auto file = Core::File::construct();
     auto fd = ipc_file->take_fd();
     if (!file->open(fd, Core::OpenMode::ReadWrite, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
-        GUI::MessageBox::show_error(request_data.parent_window, String::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
+        GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
         request_data.promise->resolve(Error::from_errno(file->error()));
         return;
     }
 
     if (file->is_device()) {
-        GUI::MessageBox::show_error(request_data.parent_window, String::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
+        GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
         request_data.promise->resolve(Error::from_string_literal("Cannot open device files"));
         return;
     }
 
     if (file->is_directory()) {
-        GUI::MessageBox::show_error(request_data.parent_window, String::formatted("Opening \"{}\" failed: Cannot open directory", *chosen_file));
+        GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open directory", *chosen_file));
         request_data.promise->resolve(Error::from_errno(EISDIR));
         return;
     }

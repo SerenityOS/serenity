@@ -35,7 +35,7 @@ protected:
     void flush_received_buffers();
     void register_on_ready_to_read(Function<void()>);
     bool can_read_line() const;
-    String read_line(size_t);
+    DeprecatedString read_line(size_t);
     bool can_read() const;
     ByteBuffer receive(size_t);
     bool write(ReadonlyBytes);
@@ -49,7 +49,7 @@ protected:
     GeminiRequest m_request;
     State m_state { State::InStatus };
     int m_status { -1 };
-    String m_meta;
+    DeprecatedString m_meta;
     Vector<ByteBuffer, 2> m_received_buffers;
     size_t m_received_size { 0 };
     size_t m_buffered_size { 0 };

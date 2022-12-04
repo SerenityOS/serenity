@@ -24,7 +24,7 @@ RefPtr<SQLStatement> SQLStatement::statement_for(int statement_id)
 
 static int s_next_statement_id = 0;
 
-SQLStatement::SQLStatement(DatabaseConnection& connection, String sql)
+SQLStatement::SQLStatement(DatabaseConnection& connection, DeprecatedString sql)
     : Core::Object(&connection)
     , m_statement_id(s_next_statement_id++)
     , m_sql(move(sql))

@@ -4,7 +4,7 @@
 
 endpoint WindowServer
 {
-    create_menu(i32 menu_id, [UTF8] String menu_title) =|
+    create_menu(i32 menu_id, [UTF8] DeprecatedString menu_title) =|
     destroy_menu(i32 menu_id) =|
 
     add_menu(i32 window_id, i32 menu_id) =|
@@ -13,12 +13,12 @@ endpoint WindowServer
         i32 menu_id,
         i32 identifier,
         i32 submenu_id,
-        [UTF8] String text,
+        [UTF8] DeprecatedString text,
         bool enabled,
         bool checkable,
         bool checked,
         bool is_default,
-        [UTF8] String shortcut,
+        [UTF8] DeprecatedString shortcut,
         Gfx::ShareableBitmap icon,
         bool exclusive) =|
 
@@ -28,12 +28,12 @@ endpoint WindowServer
         i32 menu_id,
         i32 identifier,
         i32 submenu_id,
-        [UTF8] String text,
+        [UTF8] DeprecatedString text,
         bool enabled,
         bool checkable,
         bool checked,
         bool is_default,
-        [UTF8] String shortcut,
+        [UTF8] DeprecatedString shortcut,
         Gfx::ShareableBitmap icon) =|
 
     remove_menu_item(i32 menu_id, i32 identifier) =|
@@ -58,14 +58,14 @@ endpoint WindowServer
         Optional<Gfx::IntSize> resize_aspect_ratio,
         i32 type,
         i32 mode,
-        [UTF8] String title,
+        [UTF8] DeprecatedString title,
         i32 parent_window_id,
         Gfx::IntRect launch_origin_rect) =|
 
     destroy_window(i32 window_id) => (Vector<i32> destroyed_window_ids)
 
-    set_window_title(i32 window_id, [UTF8] String title) =|
-    get_window_title(i32 window_id) => ([UTF8] String title)
+    set_window_title(i32 window_id, [UTF8] DeprecatedString title) =|
+    get_window_title(i32 window_id) => ([UTF8] DeprecatedString title)
 
     set_window_progress(i32 window_id, Optional<i32> progress) =|
 
@@ -108,12 +108,12 @@ endpoint WindowServer
 
     set_wallpaper(Gfx::ShareableBitmap wallpaper_bitmap) => (bool success)
 
-    set_background_color(String background_color) =|
-    set_wallpaper_mode(String mode) =|
+    set_background_color(DeprecatedString background_color) =|
+    set_wallpaper_mode(DeprecatedString mode) =|
 
-    set_screen_layout(::WindowServer::ScreenLayout screen_layout, bool save) => (bool success, String error_msg)
+    set_screen_layout(::WindowServer::ScreenLayout screen_layout, bool save) => (bool success, DeprecatedString error_msg)
     get_screen_layout() => (::WindowServer::ScreenLayout screen_layout)
-    save_screen_layout() => (bool success, String error_msg)
+    save_screen_layout() => (bool success, DeprecatedString error_msg)
     show_screen_numbers(bool show) =|
 
     apply_workspace_settings(u32 rows, u32 columns, bool save) => (bool success)
@@ -125,11 +125,11 @@ endpoint WindowServer
     set_window_cursor(i32 window_id, i32 cursor_type) =|
     set_window_custom_cursor(i32 window_id, Gfx::ShareableBitmap cursor) =|
 
-    start_drag([UTF8] String text, HashMap<String,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
+    start_drag([UTF8] DeprecatedString text, HashMap<DeprecatedString,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
     set_accepts_drag(bool accepts) =|
 
-    set_system_theme(String theme_path, [UTF8] String theme_name, bool keep_desktop_background) => (bool success)
-    get_system_theme() => ([UTF8] String theme_name)
+    set_system_theme(DeprecatedString theme_path, [UTF8] DeprecatedString theme_name, bool keep_desktop_background) => (bool success)
+    get_system_theme() => ([UTF8] DeprecatedString theme_name)
     refresh_system_theme() =|
 
     set_system_theme_override(Core::AnonymousBuffer buffer) => (bool success)
@@ -137,8 +137,8 @@ endpoint WindowServer
     clear_system_theme_override() =|
     is_system_theme_overridden() => (bool overridden)
 
-    apply_cursor_theme(String name) =|
-    get_cursor_theme() => (String name)
+    apply_cursor_theme(DeprecatedString name) =|
+    get_cursor_theme() => (DeprecatedString name)
 
     set_cursor_highlight_radius(int radius) =|
     get_cursor_highlight_radius() => (int radius)
@@ -146,7 +146,7 @@ endpoint WindowServer
     set_cursor_highlight_color(Gfx::Color color) =|
     get_cursor_highlight_color() => (Gfx::Color color)
 
-    set_system_fonts(String default_font_query, String fixed_width_font_query, String window_title_font_query) => (bool success)
+    set_system_fonts(DeprecatedString default_font_query, DeprecatedString fixed_width_font_query, DeprecatedString window_title_font_query) => (bool success)
     set_system_effects(Vector<bool> effects, u8 geometry) =|
 
     set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize base_size, Gfx::IntSize size_increment) =|

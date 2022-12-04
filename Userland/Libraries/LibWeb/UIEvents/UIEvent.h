@@ -30,7 +30,7 @@ public:
     int detail() const { return m_detail; }
     virtual u32 which() const { return 0; }
 
-    void init_ui_event(String const& type, bool bubbles, bool cancelable, HTML::Window* view, int detail)
+    void init_ui_event(DeprecatedString const& type, bool bubbles, bool cancelable, HTML::Window* view, int detail)
     {
         init_event(type, bubbles, cancelable);
         m_view = view;

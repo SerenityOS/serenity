@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -111,9 +111,9 @@ struct CalendarPattern {
         callback(time_zone_name, other.time_zone_name, Field::TimeZoneName);
     }
 
-    String skeleton {};
-    String pattern {};
-    Optional<String> pattern12 {};
+    DeprecatedString skeleton {};
+    DeprecatedString pattern {};
+    Optional<DeprecatedString> pattern12 {};
     Optional<HourCycle> hour_cycle {};
 
     // https://unicode.org/reports/tr35/tr35-dates.html#Calendar_Fields
@@ -145,9 +145,9 @@ struct CalendarRangePattern : public CalendarPattern {
     };
 
     Optional<Field> field {};
-    String start_range {};
+    DeprecatedString start_range {};
     StringView separator {};
-    String end_range {};
+    DeprecatedString end_range {};
 };
 
 enum class CalendarFormatType : u8 {
@@ -208,7 +208,7 @@ Optional<WeekendEndRegion> weekend_end_region_from_string(StringView weekend_end
 Optional<Weekday> get_regional_weekend_end(StringView region);
 Optional<Weekday> get_locale_weekend_end(StringView region);
 
-String combine_skeletons(StringView first, StringView second);
+DeprecatedString combine_skeletons(StringView first, StringView second);
 
 Optional<CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar);
 Optional<CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar);
@@ -225,7 +225,7 @@ Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView c
 Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value);
 Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
 
-String format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time);
+DeprecatedString format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time);
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style, TimeZone::InDST in_dst);
 Optional<TimeZoneFormat> get_time_zone_format(StringView locale);
 

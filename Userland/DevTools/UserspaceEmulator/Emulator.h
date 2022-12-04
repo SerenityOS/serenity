@@ -31,9 +31,9 @@ class Emulator {
 public:
     static Emulator& the();
 
-    Emulator(String const& executable_path, Vector<StringView> const& arguments, Vector<String> const& environment);
+    Emulator(DeprecatedString const& executable_path, Vector<StringView> const& arguments, Vector<DeprecatedString> const& environment);
 
-    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, OutputFileStream* profile_stream, NonnullOwnPtrVector<String>* profiler_strings, Vector<int>* profiler_string_id_map)
+    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, OutputFileStream* profile_stream, NonnullOwnPtrVector<DeprecatedString>* profiler_strings, Vector<int>* profiler_string_id_map)
     {
         m_is_profiling = should_dump_profile;
         m_profile_instruction_interval = instruction_interval;
@@ -48,7 +48,7 @@ public:
     }
 
     OutputFileStream& profile_stream() { return *m_profile_stream; }
-    NonnullOwnPtrVector<String>& profiler_strings() { return *m_profiler_strings; }
+    NonnullOwnPtrVector<DeprecatedString>& profiler_strings() { return *m_profiler_strings; }
     Vector<int>& profiler_string_id_map() { return *m_profiler_string_id_map; }
 
     bool is_profiling() const { return m_is_profiling; }
@@ -114,8 +114,8 @@ public:
     }
 
     struct SymbolInfo {
-        String lib_name;
-        String symbol;
+        DeprecatedString lib_name;
+        DeprecatedString symbol;
         Optional<Debug::DebugInfo::SourcePosition> source_position;
     };
 
@@ -124,9 +124,9 @@ public:
     void dump_regions() const;
 
 private:
-    const String m_executable_path;
+    const DeprecatedString m_executable_path;
     Vector<StringView> const m_arguments;
-    Vector<String> const m_environment;
+    Vector<DeprecatedString> const m_environment;
 
     SoftMMU m_mmu;
     NonnullOwnPtr<SoftCPU> m_cpu;
@@ -134,14 +134,14 @@ private:
     OwnPtr<MallocTracer> m_malloc_tracer;
 
     void setup_stack(Vector<ELF::AuxiliaryValue>);
-    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String const& executable_path, int executable_fd) const;
+    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, DeprecatedString const& executable_path, int executable_fd) const;
     void register_signal_handlers();
     void setup_signal_trampoline();
 
     void send_signal(int);
 
     void emit_profile_sample(AK::OutputStream&);
-    void emit_profile_event(AK::OutputStream&, StringView event_name, String const& contents);
+    void emit_profile_event(AK::OutputStream&, StringView event_name, DeprecatedString const& contents);
 
     int virt$accept4(FlatPtr);
     int virt$access(FlatPtr, size_t, int);
@@ -256,8 +256,8 @@ private:
     MmapRegion const* find_text_region(FlatPtr address);
     MmapRegion const* load_library_from_address(FlatPtr address);
     MmapRegion const* first_region_for_object(StringView name);
-    String create_backtrace_line(FlatPtr address);
-    String create_instruction_line(FlatPtr address, X86::Instruction const& insn);
+    DeprecatedString create_backtrace_line(FlatPtr address);
+    DeprecatedString create_instruction_line(FlatPtr address, X86::Instruction const& insn);
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
@@ -292,13 +292,13 @@ private:
         NonnullOwnPtr<ELF::Image> image;
     };
 
-    HashMap<String, CachedELF> m_dynamic_library_cache;
+    HashMap<DeprecatedString, CachedELF> m_dynamic_library_cache;
 
     RangeAllocator m_range_allocator;
 
     OutputFileStream* m_profile_stream { nullptr };
     Vector<int>* m_profiler_string_id_map { nullptr };
-    NonnullOwnPtrVector<String>* m_profiler_strings { nullptr };
+    NonnullOwnPtrVector<DeprecatedString>* m_profiler_strings { nullptr };
 
     bool m_is_profiling { false };
     size_t m_profile_instruction_interval { 0 };

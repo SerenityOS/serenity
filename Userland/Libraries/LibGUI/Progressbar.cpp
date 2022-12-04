@@ -54,7 +54,7 @@ void Progressbar::paint_event(PaintEvent& event)
     painter.add_clip_rect(rect);
     painter.add_clip_rect(event.rect());
 
-    String progress_text;
+    DeprecatedString progress_text;
     if (m_format != Format::NoText) {
         // Then we draw the progress text over the gradient.
         // We draw it twice, once offset (1, 1) for a drop shadow look.

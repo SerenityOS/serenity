@@ -34,7 +34,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     , m_gui_event_loop(Core::EventLoop::current())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image, String()));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, DeprecatedString()));
     m_image->add_client(*this);
     m_image->selection().add_client(*this);
     set_original_rect(m_image->rect());
@@ -61,7 +61,7 @@ ImageEditor::~ImageEditor()
     m_image->remove_client(*this);
 }
 
-void ImageEditor::did_complete_action(String action_text)
+void ImageEditor::did_complete_action(DeprecatedString action_text)
 {
     if (on_modified_change)
         on_modified_change(true);
@@ -105,14 +105,14 @@ bool ImageEditor::redo()
     return true;
 }
 
-void ImageEditor::set_title(String title)
+void ImageEditor::set_title(DeprecatedString title)
 {
     m_title = move(title);
     if (on_title_change)
         on_title_change(m_title);
 }
 
-void ImageEditor::set_path(String path)
+void ImageEditor::set_path(DeprecatedString path)
 {
     m_path = move(path);
     set_title(LexicalPath::title(m_path));
@@ -201,7 +201,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             int const editor_x = content_to_frame_position({ x, 0 }).x();
             painter.draw_line({ editor_x, 0 }, { editor_x, m_ruler_thickness }, ruler_fg_color);
-            painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, String::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
+            painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, DeprecatedString::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
         }
 
         // Vertical ruler
@@ -218,7 +218,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             int const editor_y = content_to_frame_position({ 0, y }).y();
             painter.draw_line({ 0, editor_y }, { m_ruler_thickness, editor_y }, ruler_fg_color);
-            painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, String::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
+            painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, DeprecatedString::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
         }
 
         // Mouse position indicator
@@ -684,7 +684,7 @@ void ImageEditor::save_project()
         return;
     auto result = save_project_to_file(*response.value());
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Could not save {}: {}", path(), result.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", path(), result.error()));
         return;
     }
     undo_stack().set_current_unmodified();
@@ -700,7 +700,7 @@ void ImageEditor::save_project_as()
     auto file = response.value();
     auto result = save_project_to_file(*file);
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Could not save {}: {}", file->filename(), result.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", file->filename(), result.error()));
         return;
     }
     set_path(file->filename());
@@ -710,7 +710,7 @@ void ImageEditor::save_project_as()
         on_modified_change(false);
 }
 
-Result<void, String> ImageEditor::save_project_to_file(Core::File& file) const
+Result<void, DeprecatedString> ImageEditor::save_project_to_file(Core::File& file) const
 {
     StringBuilder builder;
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
@@ -729,7 +729,7 @@ Result<void, String> ImageEditor::save_project_to_file(Core::File& file) const
     MUST(json.finish());
 
     if (!file.write(builder.string_view()))
-        return String { file.error_string() };
+        return DeprecatedString { file.error_string() };
     return {};
 }
 

@@ -19,7 +19,7 @@ public:
     virtual ~BigInt() override = default;
 
     Crypto::SignedBigInteger const& big_integer() const { return m_big_integer; }
-    const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
+    const DeprecatedString to_string() const { return DeprecatedString::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
     explicit BigInt(Crypto::SignedBigInteger);

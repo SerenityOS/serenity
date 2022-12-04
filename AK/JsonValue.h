@@ -11,7 +11,7 @@
 #include <AK/StringBuilder.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace AK {
@@ -58,7 +58,7 @@ public:
     JsonValue(bool);
     JsonValue(char const*);
 #ifndef KERNEL
-    JsonValue(String const&);
+    JsonValue(DeprecatedString const&);
 #endif
     JsonValue(StringView);
     JsonValue(JsonArray const&);
@@ -77,14 +77,14 @@ public:
     void serialize(Builder&) const;
 
 #ifndef KERNEL
-    String as_string_or(String const& alternative) const
+    DeprecatedString as_string_or(DeprecatedString const& alternative) const
     {
         if (is_string())
             return as_string();
         return alternative;
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         if (is_string())
             return as_string();
@@ -157,7 +157,7 @@ public:
     }
 
 #ifndef KERNEL
-    String as_string() const
+    DeprecatedString as_string() const
     {
         VERIFY(is_string());
         return *m_value.as_string;

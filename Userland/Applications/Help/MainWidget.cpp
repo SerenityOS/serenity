@@ -8,7 +8,7 @@
  */
 
 #include "MainWidget.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/URL.h>
 #include <Applications/Help/HelpWindowGML.h>
 #include <LibCore/ArgsParser.h>
@@ -66,7 +66,7 @@ MainWidget::MainWidget()
         }
         auto& search_model = *static_cast<GUI::FilteringProxyModel*>(view_model);
         auto const& mapped_index = search_model.map(index);
-        String path = m_manual_model->page_path(mapped_index);
+        DeprecatedString path = m_manual_model->page_path(mapped_index);
         if (path.is_null()) {
             m_web_view->load_empty_document();
             return;
@@ -79,7 +79,7 @@ MainWidget::MainWidget()
 
     m_browse_view = find_descendant_of_type_named<GUI::TreeView>("browse_view");
     m_browse_view->on_selection_change = [this] {
-        String path = m_manual_model->page_path(m_browse_view->selection().first());
+        DeprecatedString path = m_manual_model->page_path(m_browse_view->selection().first());
         if (path.is_null())
             return;
 
@@ -114,7 +114,7 @@ MainWidget::MainWidget()
                 }
                 auto const section = url.paths()[0];
                 auto const page = url.paths()[1];
-                auto const path = String::formatted("/usr/share/man/man{}/{}.md", section, page);
+                auto const path = DeprecatedString::formatted("/usr/share/man/man{}/{}.md", section, page);
 
                 m_history.push(path);
                 open_url(URL::create_with_file_scheme(path, url.fragment()));
@@ -150,7 +150,7 @@ MainWidget::MainWidget()
     m_go_forward_action->set_enabled(false);
 
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) {
-        String path = "/usr/share/man/man7/Help-index.md";
+        DeprecatedString path = "/usr/share/man/man7/Help-index.md";
         m_history.push(path);
         open_page(path);
     });
@@ -180,7 +180,7 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
     if (!start_page.is_null()) {
         if (section != 0) {
             // > Help [section] [name]
-            String path = String::formatted("/usr/share/man/man{}/{}.md", section, start_page);
+            DeprecatedString path = DeprecatedString::formatted("/usr/share/man/man{}/{}.md", section, start_page);
             m_history.push(path);
             open_page(path);
             set_start_page = true;
@@ -204,7 +204,7 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
                 "8"
             };
             for (auto s : sections) {
-                String path = String::formatted("/usr/share/man/man{}/{}.md", s, start_page);
+                DeprecatedString path = DeprecatedString::formatted("/usr/share/man/man{}/{}.md", s, start_page);
                 if (Core::File::exists(path)) {
                     m_history.push(path);
                     open_page(path);
@@ -246,7 +246,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     auto help_menu = TRY(window.try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [&](auto&) {
-        String path = "/usr/share/man/man1/Help.md";
+        DeprecatedString path = "/usr/share/man/man1/Help.md";
         open_page(path);
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window)));
@@ -282,8 +282,8 @@ void MainWidget::open_url(URL const& url)
             if (browse_view_index.has_value()) {
                 m_browse_view->expand_tree(browse_view_index.value().parent());
 
-                String page_and_section = m_manual_model->page_and_section(browse_view_index.value());
-                window()->set_title(String::formatted("{} - Help", page_and_section));
+                DeprecatedString page_and_section = m_manual_model->page_and_section(browse_view_index.value());
+                window()->set_title(DeprecatedString::formatted("{} - Help", page_and_section));
             } else {
                 window()->set_title("Help");
             }
@@ -294,10 +294,10 @@ void MainWidget::open_url(URL const& url)
 void MainWidget::open_external(URL const& url)
 {
     if (!Desktop::Launcher::open(url))
-        GUI::MessageBox::show(window(), String::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);
 }
 
-void MainWidget::open_page(String const& path)
+void MainWidget::open_page(DeprecatedString const& path)
 {
     m_go_back_action->set_enabled(m_history.can_go_back());
     m_go_forward_action->set_enabled(m_history.can_go_forward());

@@ -29,7 +29,7 @@ public:
 
     virtual void send(ByteBuffer binary_or_text_message, bool is_text) override;
     virtual void send(StringView text_message) override;
-    virtual void close(u16 code = 1005, String reason = {}) override;
+    virtual void close(u16 code = 1005, DeprecatedString reason = {}) override;
 
 private:
     WebSocketClientSocketAdapter(NonnullRefPtr<Protocol::WebSocket>);
@@ -43,7 +43,7 @@ public:
 
     virtual ~WebSocketClientManagerAdapter() override;
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const AK::URL&, String const& origin) override;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const AK::URL&, DeprecatedString const& origin) override;
 
 private:
     WebSocketClientManagerAdapter(NonnullRefPtr<Protocol::WebSocketClient>);

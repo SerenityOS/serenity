@@ -111,7 +111,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
             });
             if constexpr (fill_path_mode == FillPathMode::PlaceOnIntGrid && FILL_PATH_DEBUG) {
                 if ((int)scanline % 10 == 0) {
-                    painter.draw_text(Gfx::Rect<GridCoordinateType>(active_list.last().x - 20, scanline, 20, 10), String::number((int)scanline));
+                    painter.draw_text(Gfx::Rect<GridCoordinateType>(active_list.last().x - 20, scanline, 20, 10), DeprecatedString::number((int)scanline));
                 }
             }
 

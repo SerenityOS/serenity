@@ -43,7 +43,7 @@ public:
 
     bool in_quirks_mode() const;
     DOM::Document const* document() const { return m_document; }
-    AK::URL complete_url(String const&) const;
+    AK::URL complete_url(DeprecatedString const&) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }
     void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
@@ -59,7 +59,7 @@ private:
 
 class Parser {
 public:
-    Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
+    Parser(ParsingContext const&, StringView input, DeprecatedString const& encoding = "utf-8");
     ~Parser() = default;
 
     CSSStyleSheet* parse_as_css_stylesheet(Optional<AK::URL> location);
@@ -353,7 +353,7 @@ private:
 
     struct PropertiesAndCustomProperties {
         Vector<StyleProperty> properties;
-        HashMap<String, StyleProperty> custom_properties;
+        HashMap<DeprecatedString, StyleProperty> custom_properties;
     };
 
     PropertiesAndCustomProperties extract_properties(Vector<DeclarationOrAtRule> const&);

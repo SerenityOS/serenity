@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <errno.h>
 #include <limits.h>
@@ -21,10 +21,10 @@ static constexpr char PATH_LOREM_250[] = "This-is-an-annoyingly-long-name-that-s
 
 static constexpr size_t ITERATION_DEPTH = 17;
 
-static void check_result(char const* what, String const& expected, char const* actual)
+static void check_result(char const* what, DeprecatedString const& expected, char const* actual)
 {
     if (expected != actual)
-        FAIL(String::formatted("Expected {} to be \"{}\" ({} characters)", what, actual, actual ? strlen(actual) : 0));
+        FAIL(DeprecatedString::formatted("Expected {} to be \"{}\" ({} characters)", what, actual, actual ? strlen(actual) : 0));
 }
 
 TEST_CASE(overlong_realpath)
@@ -59,7 +59,7 @@ TEST_CASE(overlong_realpath)
         ret = mkdir(PATH_LOREM_250, S_IRWXU);
         if (ret < 0) {
             perror("mkdir iter");
-            FAIL(String::formatted("Unable to mkdir the overlong path fragment in iteration {}", i));
+            FAIL(DeprecatedString::formatted("Unable to mkdir the overlong path fragment in iteration {}", i));
             return;
         }
         expected.append('/');
@@ -67,7 +67,7 @@ TEST_CASE(overlong_realpath)
         ret = chdir(PATH_LOREM_250);
         if (ret < 0) {
             perror("chdir iter");
-            FAIL(String::formatted("Unable to chdir to the overlong path fragment in iteration {}", i));
+            FAIL(DeprecatedString::formatted("Unable to chdir to the overlong path fragment in iteration {}", i));
             return;
         }
     }

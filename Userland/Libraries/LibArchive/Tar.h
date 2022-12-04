@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <string.h>
 #include <sys/types.h>
@@ -84,7 +84,7 @@ static void set_field(char (&field)[N], TSource&& source)
 template<class TSource, size_t N>
 static void set_octal_field(char (&field)[N], TSource&& source)
 {
-    set_field(field, String::formatted("{:o}", forward<TSource>(source)));
+    set_field(field, DeprecatedString::formatted("{:o}", forward<TSource>(source)));
 }
 
 class [[gnu::packed]] TarFileHeader {

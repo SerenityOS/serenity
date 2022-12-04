@@ -46,8 +46,8 @@ public:
     struct Node {
         ~Node() = default;
 
-        String name;
-        String symlink_target;
+        DeprecatedString name;
+        DeprecatedString symlink_target;
         size_t size { 0 };
         mode_t mode { 0 };
         uid_t uid { 0 };
@@ -70,7 +70,7 @@ public:
         int error() const { return m_error; }
         char const* error_string() const { return strerror(m_error); }
 
-        String full_path() const;
+        DeprecatedString full_path() const;
 
     private:
         friend class FileSystemModel;
@@ -94,21 +94,21 @@ public:
         ModelIndex index(int column) const;
         void traverse_if_needed();
         void reify_if_needed();
-        bool fetch_data(String const& full_path, bool is_root);
+        bool fetch_data(DeprecatedString const& full_path, bool is_root);
 
-        OwnPtr<Node> create_child(String const& child_name);
+        OwnPtr<Node> create_child(DeprecatedString const& child_name);
     };
 
-    static NonnullRefPtr<FileSystemModel> create(String root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static NonnullRefPtr<FileSystemModel> create(DeprecatedString root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
         return adopt_ref(*new FileSystemModel(root_path, mode));
     }
     virtual ~FileSystemModel() override = default;
 
-    String root_path() const { return m_root_path; }
-    void set_root_path(String);
-    String full_path(ModelIndex const&) const;
-    ModelIndex index(String path, int column) const;
+    DeprecatedString root_path() const { return m_root_path; }
+    void set_root_path(DeprecatedString);
+    DeprecatedString full_path(ModelIndex const&) const;
+    ModelIndex index(DeprecatedString path, int column) const;
 
     void update_node_on_selection(ModelIndex const&, bool const);
     ModelIndex m_previously_selected_index {};
@@ -119,18 +119,18 @@ public:
     Function<void()> on_complete;
     Function<void(int error, char const* error_string)> on_directory_change_error;
     Function<void(int error, char const* error_string)> on_rename_error;
-    Function<void(String const& old_name, String const& new_name)> on_rename_successful;
+    Function<void(DeprecatedString const& old_name, DeprecatedString const& new_name)> on_rename_successful;
     Function<void()> on_root_path_removed;
 
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
-    virtual String column_name(int column) const override;
+    virtual DeprecatedString column_name(int column) const override;
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual ModelIndex parent_index(ModelIndex const&) const override;
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "text/uri-list"sv; }
-    virtual bool accepts_drag(ModelIndex const&, Vector<String> const& mime_types) const override;
+    virtual bool accepts_drag(ModelIndex const&, Vector<DeprecatedString> const& mime_types) const override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
     virtual bool is_editable(ModelIndex const&) const override;
     virtual bool is_searchable() const override { return true; }
@@ -138,7 +138,7 @@ public:
     virtual Vector<ModelIndex> matches(StringView, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) override;
     virtual void invalidate() override;
 
-    static String timestamp_string(time_t timestamp)
+    static DeprecatedString timestamp_string(time_t timestamp)
     {
         return Core::DateTime::from_timestamp(timestamp).to_string();
     }
@@ -147,22 +147,22 @@ public:
     void set_should_show_dotfiles(bool);
 
 private:
-    FileSystemModel(String root_path, Mode);
+    FileSystemModel(DeprecatedString root_path, Mode);
 
-    String name_for_uid(uid_t) const;
-    String name_for_gid(gid_t) const;
+    DeprecatedString name_for_uid(uid_t) const;
+    DeprecatedString name_for_gid(gid_t) const;
 
-    Optional<Node const&> node_for_path(String const&) const;
+    Optional<Node const&> node_for_path(DeprecatedString const&) const;
 
-    HashMap<uid_t, String> m_user_names;
-    HashMap<gid_t, String> m_group_names;
+    HashMap<uid_t, DeprecatedString> m_user_names;
+    HashMap<gid_t, DeprecatedString> m_group_names;
 
     bool fetch_thumbnail_for(Node const& node);
     GUI::Icon icon_for(Node const& node) const;
 
     void handle_file_event(Core::FileWatcherEvent const& event);
 
-    String m_root_path;
+    DeprecatedString m_root_path;
     Mode m_mode { Invalid };
     OwnPtr<Node> m_root { nullptr };
 

@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     char const* path;
     bool quiet { false };
-    String output_directory_path;
+    DeprecatedString output_directory_path;
     Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
@@ -88,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(file_filters, "Files or filters in the archive to extract", "files", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    String zip_file_path { path };
+    DeprecatedString zip_file_path { path };
 
     struct stat st = TRY(Core::System::stat(zip_file_path));
 

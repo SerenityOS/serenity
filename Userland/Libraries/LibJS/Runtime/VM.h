@@ -73,9 +73,9 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    Symbol* get_global_symbol(String const& description);
+    Symbol* get_global_symbol(DeprecatedString const& description);
 
-    HashMap<String, PrimitiveString*>& string_cache() { return m_string_cache; }
+    HashMap<DeprecatedString, PrimitiveString*>& string_cache() { return m_string_cache; }
     PrimitiveString& empty_string() { return *m_empty_string; }
     PrimitiveString& single_ascii_character_string(u8 character)
     {
@@ -179,12 +179,12 @@ public:
     template<typename T, typename... Args>
     Completion throw_completion(ErrorType type, Args&&... args)
     {
-        return throw_completion<T>(String::formatted(type.message(), forward<Args>(args)...));
+        return throw_completion<T>(DeprecatedString::formatted(type.message(), forward<Args>(args)...));
     }
 
     Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedVector<Value>> arguments);
 
-    String join_arguments(size_t start_index = 0) const;
+    DeprecatedString join_arguments(size_t start_index = 0) const;
 
     Value get_new_target();
 
@@ -229,7 +229,7 @@ public:
     Function<HashMap<PropertyKey, Value>(SourceTextModule const&)> host_get_import_meta_properties;
     Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
 
-    Function<Vector<String>()> host_get_supported_import_assertions;
+    Function<Vector<DeprecatedString>()> host_get_supported_import_assertions;
 
     void enable_default_host_import_module_dynamically_hook();
 
@@ -253,7 +253,7 @@ private:
     void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
 
-    HashMap<String, PrimitiveString*> m_string_cache;
+    HashMap<DeprecatedString, PrimitiveString*> m_string_cache;
 
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;
@@ -264,7 +264,7 @@ private:
 
     StackInfo m_stack_info;
 
-    HashMap<String, Symbol*> m_global_symbol_map;
+    HashMap<DeprecatedString, Symbol*> m_global_symbol_map;
 
     Vector<Function<ThrowCompletionOr<Value>()>> m_promise_jobs;
 
@@ -275,13 +275,13 @@ private:
 
     struct StoredModule {
         ScriptOrModule referencing_script_or_module;
-        String filename;
-        String type;
+        DeprecatedString filename;
+        DeprecatedString type;
         Handle<Module> module;
         bool has_once_started_linking { false };
     };
 
-    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, String const& filename, String const& type);
+    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, DeprecatedString const& filename, DeprecatedString const& type);
 
     Vector<StoredModule> m_loaded_modules;
 

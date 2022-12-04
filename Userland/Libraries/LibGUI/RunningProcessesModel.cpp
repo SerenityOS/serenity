@@ -45,7 +45,7 @@ int RunningProcessesModel::column_count(const GUI::ModelIndex&) const
     return Column::__Count;
 }
 
-String RunningProcessesModel::column_name(int column_index) const
+DeprecatedString RunningProcessesModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::Icon:

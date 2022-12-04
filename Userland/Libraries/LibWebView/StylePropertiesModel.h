@@ -31,7 +31,7 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual DeprecatedString column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual bool is_searchable() const override { return true; }
     virtual Vector<GUI::ModelIndex> matches(StringView, unsigned flags, GUI::ModelIndex const&) override;
@@ -42,8 +42,8 @@ private:
     JsonObject m_properties;
 
     struct Value {
-        String name;
-        String value;
+        DeprecatedString name;
+        DeprecatedString value;
     };
     Vector<Value> m_values;
 };

@@ -6,10 +6,10 @@
 
 #include "AST.h"
 #include "Shell.h"
+#include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/EventLoop.h>
@@ -108,7 +108,7 @@ namespace Shell::AST {
 
 static inline void print_indented(StringView str, int indent)
 {
-    dbgln("{}{}", String::repeated(' ', indent * 2), str);
+    dbgln("{}{}", DeprecatedString::repeated(' ', indent * 2), str);
 }
 
 static inline Optional<Position> merge_positions(Optional<Position> const& left, Optional<Position> const& right)
@@ -154,7 +154,7 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     return commands;
 }
 
-static String resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullRefPtrVector<Slice> slices)
+static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& input_value, NonnullRefPtrVector<Slice> slices)
 {
     if (slices.is_empty())
         return move(input_value);
@@ -177,7 +177,7 @@ static String resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullR
         for (auto& value : index_values) {
             auto maybe_index = value.to_int();
             if (!maybe_index.has_value()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, String::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
                 return move(input_value);
             }
             ++i;
@@ -188,7 +188,7 @@ static String resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullR
                 index += input_value.length();
 
             if (index < 0 || (size_t)index >= input_value.length()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, String::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, input_value.length()), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, input_value.length()), slice.position());
                 return move(input_value);
             }
             indices.unchecked_append(index);
@@ -204,7 +204,7 @@ static String resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullR
     return move(input_value);
 }
 
-static Vector<String> resolve_slices(RefPtr<Shell> shell, Vector<String>&& values, NonnullRefPtrVector<Slice> slices)
+static Vector<DeprecatedString> resolve_slices(RefPtr<Shell> shell, Vector<DeprecatedString>&& values, NonnullRefPtrVector<Slice> slices)
 {
     if (slices.is_empty())
         return move(values);
@@ -227,7 +227,7 @@ static Vector<String> resolve_slices(RefPtr<Shell> shell, Vector<String>&& value
         for (auto& value : index_values) {
             auto maybe_index = value.to_int();
             if (!maybe_index.has_value()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, String::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
                 return move(values);
             }
             ++i;
@@ -238,13 +238,13 @@ static Vector<String> resolve_slices(RefPtr<Shell> shell, Vector<String>&& value
                 index += values.size();
 
             if (index < 0 || (size_t)index >= values.size()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, String::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, values.size()), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, values.size()), slice.position());
                 return move(values);
             }
             indices.unchecked_append(index);
         }
 
-        Vector<String> result;
+        Vector<DeprecatedString> result;
         result.ensure_capacity(indices.size());
         for (auto& index : indices)
             result.unchecked_append(values[index]);
@@ -315,7 +315,7 @@ Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
 
 void Node::dump(int level) const
 {
-    print_indented(String::formatted("{} at {}:{} (from {}.{} to {}.{})",
+    print_indented(DeprecatedString::formatted("{} at {}:{} (from {}.{} to {}.{})",
                        class_name().characters(),
                        m_position.start_offset,
                        m_position.end_offset,
@@ -380,7 +380,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
             if (!program_name_node)
                 return {};
 
-            String program_name;
+            DeprecatedString program_name;
             if (program_name_node->is_bareword())
                 program_name = static_cast<BarewordLiteral*>(program_name_node.ptr())->text();
             else
@@ -666,7 +666,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
     }
 }
 
-BarewordLiteral::BarewordLiteral(Position position, String text)
+BarewordLiteral::BarewordLiteral(Position position, DeprecatedString text)
     : Node(move(position))
     , m_text(move(text))
 {
@@ -857,7 +857,7 @@ CastToList::CastToList(Position position, RefPtr<Node> inner)
 void CloseFdRedirection::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::formatted("{} -> Close", m_fd), level);
+    print_indented(DeprecatedString::formatted("{} -> Close", m_fd), level);
 }
 
 RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
@@ -887,7 +887,7 @@ CloseFdRedirection::~CloseFdRedirection()
 void CommandLiteral::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::formatted("(Generated command literal: {})", m_command), level + 1);
+    print_indented(DeprecatedString::formatted("(Generated command literal: {})", m_command), level + 1);
 }
 
 RefPtr<Value> CommandLiteral::run(RefPtr<Shell>)
@@ -921,7 +921,7 @@ void Comment::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadat
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(150, 150, 150) }); // Light gray
 }
 
-Comment::Comment(Position position, String text)
+Comment::Comment(Position position, DeprecatedString text)
     : Node(move(position))
     , m_text(move(text))
 {
@@ -1048,7 +1048,7 @@ DynamicEvaluate::~DynamicEvaluate()
 void Fd2FdRedirection::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::formatted("{} -> {}", m_old_fd, m_new_fd), level);
+    print_indented(DeprecatedString::formatted("{} -> {}", m_old_fd, m_new_fd), level);
 }
 
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
@@ -1078,10 +1078,10 @@ Fd2FdRedirection::~Fd2FdRedirection()
 void FunctionDeclaration::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::formatted("(name: {})\n", m_name.name), level + 1);
+    print_indented(DeprecatedString::formatted("(name: {})\n", m_name.name), level + 1);
     print_indented("(argument names)"sv, level + 1);
     for (auto& arg : m_arguments)
-        print_indented(String::formatted("(name: {})\n", arg.name), level + 2);
+        print_indented(DeprecatedString::formatted("(name: {})\n", arg.name), level + 2);
 
     print_indented("(body)"sv, level + 1);
     if (m_block)
@@ -1092,7 +1092,7 @@ void FunctionDeclaration::dump(int level) const
 
 RefPtr<Value> FunctionDeclaration::run(RefPtr<Shell> shell)
 {
-    Vector<String> args;
+    Vector<DeprecatedString> args;
     for (auto& arg : m_arguments)
         args.append(arg.name);
 
@@ -1167,9 +1167,9 @@ void ForLoop::dump(int level) const
 {
     Node::dump(level);
     if (m_variable.has_value())
-        print_indented(String::formatted("iterating with {} in", m_variable->name), level + 1);
+        print_indented(DeprecatedString::formatted("iterating with {} in", m_variable->name), level + 1);
     if (m_index_variable.has_value())
-        print_indented(String::formatted("with index name {} in", m_index_variable->name), level + 1);
+        print_indented(DeprecatedString::formatted("with index name {} in", m_index_variable->name), level + 1);
     if (m_iterated_expression)
         m_iterated_expression->dump(level + 2);
     else
@@ -1237,11 +1237,11 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             RefPtr<Value> block_value;
 
             {
-                auto frame = shell->push_frame(String::formatted("for ({})", this));
+                auto frame = shell->push_frame(DeprecatedString::formatted("for ({})", this));
                 shell->set_local_variable(variable_name, value, true);
 
                 if (index_name.has_value())
-                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(String::number(i)), true);
+                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(DeprecatedString::number(i)), true);
 
                 ++i;
 
@@ -1349,7 +1349,7 @@ void Glob::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata m
     editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
 }
 
-Glob::Glob(Position position, String text)
+Glob::Glob(Position position, DeprecatedString text)
     : Node(move(position))
     , m_text(move(text))
 {
@@ -1365,7 +1365,7 @@ void Heredoc::dump(int level) const
     print_indented("(End Key)"sv, level + 1);
     print_indented(m_end, level + 2);
     print_indented("(Allows Interpolation)"sv, level + 1);
-    print_indented(String::formatted("{}", m_allows_interpolation), level + 2);
+    print_indented(DeprecatedString::formatted("{}", m_allows_interpolation), level + 2);
     print_indented("(Contents)"sv, level + 1);
     if (m_contents)
         m_contents->dump(level + 2);
@@ -1422,7 +1422,7 @@ HitTestResult Heredoc::hit_test_position(size_t offset) const
     return m_contents->hit_test_position(offset);
 }
 
-Heredoc::Heredoc(Position position, String end, bool allow_interpolation, bool deindent)
+Heredoc::Heredoc(Position position, DeprecatedString end, bool allow_interpolation, bool deindent)
     : Node(move(position))
     , m_end(move(end))
     , m_allows_interpolation(allow_interpolation)
@@ -1452,16 +1452,16 @@ void HistoryEvent::dump(int level) const
         print_indented("StartingStringLookup"sv, level + 2);
         break;
     }
-    print_indented(String::formatted("{}({})", m_selector.event.index, m_selector.event.text), level + 3);
+    print_indented(DeprecatedString::formatted("{}({})", m_selector.event.index, m_selector.event.text), level + 3);
 
     print_indented("Word Selector"sv, level + 1);
     auto print_word_selector = [&](HistorySelector::WordSelector const& selector) {
         switch (selector.kind) {
         case HistorySelector::WordSelectorKind::Index:
-            print_indented(String::formatted("Index {}", selector.selector), level + 3);
+            print_indented(DeprecatedString::formatted("Index {}", selector.selector), level + 3);
             break;
         case HistorySelector::WordSelectorKind::Last:
-            print_indented(String::formatted("Last"), level + 3);
+            print_indented(DeprecatedString::formatted("Last"), level + 3);
             break;
         }
     };
@@ -1500,7 +1500,7 @@ RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
         return it_end;
     };
     // First, resolve the event itself.
-    String resolved_history;
+    DeprecatedString resolved_history;
     switch (m_selector.event.kind) {
     case HistorySelector::EventKind::IndexFromStart:
         if (m_selector.event.index >= history.size()) {
@@ -1764,7 +1764,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                 auto entry = entry_result.release_value();
                 auto rc = stream.read_or_error(entry);
                 VERIFY(rc);
-                callback(make_ref_counted<StringValue>(String::copy(entry)));
+                callback(make_ref_counted<StringValue>(DeprecatedString::copy(entry)));
             }
         }
 
@@ -2112,9 +2112,9 @@ Join::~Join()
 void MatchExpr::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::formatted("(expression: {})", m_expr_name.characters()), level + 1);
+    print_indented(DeprecatedString::formatted("(expression: {})", m_expr_name.characters()), level + 1);
     m_matched_expr->dump(level + 2);
-    print_indented(String::formatted("(named: {})", m_expr_name.characters()), level + 1);
+    print_indented(DeprecatedString::formatted("(named: {})", m_expr_name.characters()), level + 1);
     print_indented("(entries)"sv, level + 1);
     for (auto& entry : m_entries) {
         StringBuilder builder;
@@ -2141,7 +2141,7 @@ void MatchExpr::dump(int level) const
             },
             [&](Vector<Regex<ECMA262>> const& options) {
                 for (auto& option : options)
-                    print_indented(String::formatted("(regex: {})", option.pattern_value), level + 3);
+                    print_indented(DeprecatedString::formatted("(regex: {})", option.pattern_value), level + 3);
             });
         print_indented("(execute)"sv, level + 2);
         if (entry.body)
@@ -2194,7 +2194,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         if constexpr (IsSame<RemoveCVReference<decltype(option)>, Regex<ECMA262>>) {
             return option;
         } else {
-            Vector<String> pattern;
+            Vector<DeprecatedString> pattern;
             if (option.is_glob()) {
                 pattern.append(static_cast<const Glob*>(&option)->text());
             } else if (option.is_bareword()) {
@@ -2215,14 +2215,14 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         }
     };
 
-    auto frame = shell->push_frame(String::formatted("match ({})", this));
+    auto frame = shell->push_frame(DeprecatedString::formatted("match ({})", this));
     if (!m_expr_name.is_empty())
         shell->set_local_variable(m_expr_name, value, true);
 
     for (auto& entry : m_entries) {
         auto result = entry.options.visit([&](auto& options) -> Variant<IterationDecision, RefPtr<Value>> {
             for (auto& option : options) {
-                Vector<String> spans;
+                Vector<DeprecatedString> spans;
                 if (list_matches(resolve_pattern(option), spans)) {
                     if (entry.body) {
                         if (entry.match_names.has_value()) {
@@ -2298,7 +2298,7 @@ HitTestResult MatchExpr::hit_test_position(size_t offset) const
     return {};
 }
 
-MatchExpr::MatchExpr(Position position, NonnullRefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries)
+MatchExpr::MatchExpr(Position position, NonnullRefPtr<Node> expr, DeprecatedString name, Optional<Position> as_position, Vector<MatchEntry> entries)
     : Node(move(position))
     , m_matched_expr(move(expr))
     , m_expr_name(move(name))
@@ -2495,7 +2495,7 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
         auto& position = m_path->position();
         auto& path = path_text[0];
         if (!path.starts_with('/'))
-            path = String::formatted("{}/{}", shell.cwd, path);
+            path = DeprecatedString::formatted("{}/{}", shell.cwd, path);
         auto url = URL::create_with_file_scheme(path);
         url.set_host(shell.hostname);
         editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_string()) });
@@ -2573,16 +2573,16 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                         auto end = end_int.value();
                         auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
-                            values.append(make_ref_counted<StringValue>(String::number(value)));
+                            values.append(make_ref_counted<StringValue>(DeprecatedString::number(value)));
                         // Append the range end too, most shells treat this as inclusive.
-                        values.append(make_ref_counted<StringValue>(String::number(end)));
+                        values.append(make_ref_counted<StringValue>(DeprecatedString::number(end)));
                     } else {
                         goto yield_start_end;
                     }
                 }
             } else {
             yield_start_end:;
-                shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, String::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str), position);
+                shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str), position);
                 // We can't really interpolate between the two, so just yield both.
                 values.append(make_ref_counted<StringValue>(move(start_str)));
                 values.append(make_ref_counted<StringValue>(move(end_str)));
@@ -2654,7 +2654,7 @@ void ReadRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::formatted("To {}", m_fd), level + 1);
+    print_indented(DeprecatedString::formatted("To {}", m_fd), level + 1);
 }
 
 RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
@@ -2684,7 +2684,7 @@ void ReadWriteRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::formatted("To/From {}", m_fd), level + 1);
+    print_indented(DeprecatedString::formatted("To/From {}", m_fd), level + 1);
 }
 
 RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
@@ -2927,7 +2927,7 @@ Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& sh
     return shell.complete_variable(m_name, corrected_offset);
 }
 
-SimpleVariable::SimpleVariable(Position position, String name)
+SimpleVariable::SimpleVariable(Position position, DeprecatedString name)
     : VariableNode(move(position))
     , m_name(move(name))
 {
@@ -2941,7 +2941,7 @@ void SpecialVariable::dump(int level) const
 {
     Node::dump(level);
     print_indented("(Name)"sv, level + 1);
-    print_indented(String { &m_name, 1 }, level + 1);
+    print_indented(DeprecatedString { &m_name, 1 }, level + 1);
     print_indented("(Slice)"sv, level + 1);
     if (m_slice)
         m_slice->dump(level + 2);
@@ -3023,7 +3023,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
     if (left.is_empty() || right.is_empty())
         return make_ref_counted<ListValue>({});
 
-    Vector<String> result;
+    Vector<DeprecatedString> result;
     result.ensure_capacity(left.size() * right.size());
 
     StringBuilder builder;
@@ -3154,7 +3154,7 @@ void StringLiteral::highlight_in_editor(Line::Editor& editor, Shell&, HighlightM
     editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
 }
 
-StringLiteral::StringLiteral(Position position, String text, EnclosureType enclosure_type)
+StringLiteral::StringLiteral(Position position, DeprecatedString text, EnclosureType enclosure_type)
     : Node(move(position))
     , m_text(move(text))
     , m_enclosure_type(enclosure_type)
@@ -3224,7 +3224,7 @@ void SyntaxError::dump(int level) const
     print_indented("(Error text)"sv, level + 1);
     print_indented(m_syntax_error_text, level + 2);
     print_indented("(Can be recovered from)"sv, level + 1);
-    print_indented(String::formatted("{}", m_is_continuable), level + 2);
+    print_indented(DeprecatedString::formatted("{}", m_is_continuable), level + 2);
 }
 
 RefPtr<Value> SyntaxError::run(RefPtr<Shell> shell)
@@ -3238,7 +3238,7 @@ void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMet
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Bold });
 }
 
-SyntaxError::SyntaxError(Position position, String error, bool is_continuable)
+SyntaxError::SyntaxError(Position position, DeprecatedString error, bool is_continuable)
     : Node(move(position))
     , m_syntax_error_text(move(error))
     , m_is_continuable(is_continuable)
@@ -3314,7 +3314,7 @@ Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size
     return shell.complete_user(m_username, corrected_offset);
 }
 
-String Tilde::text() const
+DeprecatedString Tilde::text() const
 {
     StringBuilder builder;
     builder.append('~');
@@ -3322,7 +3322,7 @@ String Tilde::text() const
     return builder.to_string();
 }
 
-Tilde::Tilde(Position position, String username)
+Tilde::Tilde(Position position, DeprecatedString username)
     : Node(move(position))
     , m_username(move(username))
 {
@@ -3336,7 +3336,7 @@ void WriteAppendRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::formatted("From {}", m_fd), level + 1);
+    print_indented(DeprecatedString::formatted("From {}", m_fd), level + 1);
 }
 
 RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
@@ -3366,7 +3366,7 @@ void WriteRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::formatted("From {}", m_fd), level + 1);
+    print_indented(DeprecatedString::formatted("From {}", m_fd), level + 1);
 }
 
 RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
@@ -3468,7 +3468,7 @@ Value::~Value()
 {
 }
 
-String Value::resolve_as_string(RefPtr<Shell> shell)
+DeprecatedString Value::resolve_as_string(RefPtr<Shell> shell)
 {
     if (shell)
         shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Conversion to string not allowed");
@@ -3482,7 +3482,7 @@ Vector<AST::Command> Value::resolve_as_commands(RefPtr<Shell> shell)
     return { command };
 }
 
-ListValue::ListValue(Vector<String> values)
+ListValue::ListValue(Vector<DeprecatedString> values)
 {
     if (values.is_empty())
         return;
@@ -3509,9 +3509,9 @@ ListValue::~ListValue()
 {
 }
 
-Vector<String> ListValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    Vector<String> values;
+    Vector<DeprecatedString> values;
     for (auto& value : m_contained_values)
         values.extend(value.resolve_as_list(shell));
 
@@ -3538,7 +3538,7 @@ CommandSequenceValue::~CommandSequenceValue()
 {
 }
 
-Vector<String> CommandSequenceValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> CommandSequenceValue::resolve_as_list(RefPtr<Shell> shell)
 {
     shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Unexpected cast of a command sequence to a list");
     return {};
@@ -3549,7 +3549,7 @@ Vector<Command> CommandSequenceValue::resolve_as_commands(RefPtr<Shell>)
     return m_contained_values;
 }
 
-Vector<String> CommandValue::resolve_as_list(RefPtr<Shell>)
+Vector<DeprecatedString> CommandValue::resolve_as_list(RefPtr<Shell>)
 {
     return m_command.argv;
 }
@@ -3567,25 +3567,25 @@ StringValue::~StringValue()
 {
 }
 
-String StringValue::resolve_as_string(RefPtr<Shell> shell)
+DeprecatedString StringValue::resolve_as_string(RefPtr<Shell> shell)
 {
     if (m_split.is_null())
         return m_string;
     return Value::resolve_as_string(shell);
 }
 
-Vector<String> StringValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> StringValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (is_list()) {
         auto parts = StringView(m_string).split_view(m_split, m_keep_empty ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing);
-        Vector<String> result;
+        Vector<DeprecatedString> result;
         result.ensure_capacity(parts.size());
         for (auto& part : parts)
             result.append(part);
         return resolve_slices(shell, move(result), m_slices);
     }
 
-    return { resolve_slices(shell, String { m_string }, m_slices) };
+    return { resolve_slices(shell, DeprecatedString { m_string }, m_slices) };
 }
 
 NonnullRefPtr<Value> StringValue::resolve_without_cast(RefPtr<Shell> shell)
@@ -3599,10 +3599,10 @@ NonnullRefPtr<Value> StringValue::resolve_without_cast(RefPtr<Shell> shell)
 GlobValue::~GlobValue()
 {
 }
-Vector<String> GlobValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
-        return { resolve_slices(shell, String { m_glob }, m_slices) };
+        return { resolve_slices(shell, DeprecatedString { m_glob }, m_slices) };
 
     auto results = shell->expand_globs(m_glob, shell->cwd);
     if (results.is_empty())
@@ -3614,10 +3614,10 @@ SimpleVariableValue::~SimpleVariableValue()
 {
 }
 
-String SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
+DeprecatedString SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
 {
     if (!shell)
-        return resolve_slices(shell, String {}, m_slices);
+        return resolve_slices(shell, DeprecatedString {}, m_slices);
 
     if (auto value = resolve_without_cast(shell); value != this)
         return value->resolve_as_string(shell);
@@ -3626,10 +3626,10 @@ String SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
     return resolve_slices(shell, env_value, m_slices);
 }
 
-Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
-        return resolve_slices(shell, Vector<String> {}, m_slices);
+        return resolve_slices(shell, Vector<DeprecatedString> {}, m_slices);
 
     if (auto value = resolve_without_cast(shell); value != this)
         return value->resolve_as_list(shell);
@@ -3638,7 +3638,7 @@ Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
     if (env_value == nullptr)
         return { resolve_slices(shell, "", m_slices) };
 
-    return { resolve_slices(shell, String { env_value }, m_slices) };
+    return { resolve_slices(shell, DeprecatedString { env_value }, m_slices) };
 }
 
 NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
@@ -3661,7 +3661,7 @@ SpecialVariableValue::~SpecialVariableValue()
 {
 }
 
-String SpecialVariableValue::resolve_as_string(RefPtr<Shell> shell)
+DeprecatedString SpecialVariableValue::resolve_as_string(RefPtr<Shell> shell)
 {
     if (!shell)
         return {};
@@ -3676,25 +3676,25 @@ String SpecialVariableValue::resolve_as_string(RefPtr<Shell> shell)
     return Value::resolve_as_string(shell);
 }
 
-Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
         return {};
 
     switch (m_name) {
     case '?':
-        return { resolve_slices(shell, String::number(shell->last_return_code.value_or(0)), m_slices) };
+        return { resolve_slices(shell, DeprecatedString::number(shell->last_return_code.value_or(0)), m_slices) };
     case '$':
-        return { resolve_slices(shell, String::number(getpid()), m_slices) };
+        return { resolve_slices(shell, DeprecatedString::number(getpid()), m_slices) };
     case '*':
         if (auto argv = shell->lookup_local_variable("ARGV"sv))
             return resolve_slices(shell, argv->resolve_as_list(shell), m_slices);
-        return resolve_slices(shell, Vector<String> {}, m_slices);
+        return resolve_slices(shell, Vector<DeprecatedString> {}, m_slices);
     case '#':
         if (auto argv = shell->lookup_local_variable("ARGV"sv)) {
             if (argv->is_list()) {
                 auto list_argv = static_cast<AST::ListValue*>(argv.ptr());
-                return { resolve_slices(shell, String::number(list_argv->values().size()), m_slices) };
+                return { resolve_slices(shell, DeprecatedString::number(list_argv->values().size()), m_slices) };
             }
             return { resolve_slices(shell, "1", m_slices) };
         }
@@ -3716,12 +3716,12 @@ TildeValue::~TildeValue()
 {
 }
 
-String TildeValue::resolve_as_string(RefPtr<Shell> shell)
+DeprecatedString TildeValue::resolve_as_string(RefPtr<Shell> shell)
 {
     return resolve_as_list(shell).first();
 }
 
-Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<DeprecatedString> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
     StringBuilder builder;
     builder.append('~');
@@ -3744,7 +3744,7 @@ CloseRedirection::~CloseRedirection()
 
 ErrorOr<NonnullRefPtr<Rewiring>> PathRedirection::apply() const
 {
-    auto check_fd_and_return = [my_fd = this->fd](int fd, String const& path) -> ErrorOr<NonnullRefPtr<Rewiring>> {
+    auto check_fd_and_return = [my_fd = this->fd](int fd, DeprecatedString const& path) -> ErrorOr<NonnullRefPtr<Rewiring>> {
         if (fd < 0) {
             auto error = Error::from_errno(errno);
             dbgln("open() failed for '{}' with {}", path, error);

@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
@@ -28,7 +28,7 @@ static bool flag_beep_on_fail = false;
 static int volatile exit_code = 0;
 static volatile pid_t child_pid = -1;
 
-static String build_header_string(Vector<char const*> const& command, struct timeval const& interval)
+static DeprecatedString build_header_string(Vector<char const*> const& command, struct timeval const& interval)
 {
     StringBuilder builder;
     builder.appendff("Every {}.{}s: \x1b[1m", interval.tv_sec, interval.tv_usec / 100000);
@@ -37,7 +37,7 @@ static String build_header_string(Vector<char const*> const& command, struct tim
     return builder.build();
 }
 
-static String build_header_string(Vector<char const*> const& command, Vector<String> const& filenames)
+static DeprecatedString build_header_string(Vector<char const*> const& command, Vector<DeprecatedString> const& filenames)
 {
     StringBuilder builder;
     builder.appendff("Every time any of {} changes: \x1b[1m", filenames);
@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::signal(SIGINT, handle_signal));
     TRY(Core::System::pledge("stdio proc exec rpath"));
 
-    Vector<String> files_to_watch;
+    Vector<DeprecatedString> files_to_watch;
     Vector<char const*> command;
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
@@ -137,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     command.append(nullptr);
 
-    String header;
+    DeprecatedString header;
 
     auto watch_callback = [&] {
         // Clear the screen, then reset the cursor position to the top left.

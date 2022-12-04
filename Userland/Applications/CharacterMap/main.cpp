@@ -17,7 +17,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 
-static void search_and_print_results(String const& query)
+static void search_and_print_results(DeprecatedString const& query)
 {
     outln("Searching for '{}'", query);
     u32 result_count = 0;
@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    String query;
+    DeprecatedString query;
     Core::ArgsParser args_parser;
     args_parser.add_option(query, "Search character names using this query, and print them as a list.", "search", 's', "query");
     args_parser.parse(arguments);

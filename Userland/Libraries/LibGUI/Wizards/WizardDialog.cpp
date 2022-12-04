@@ -21,7 +21,7 @@ WizardDialog::WizardDialog(Window* parent_window)
     , m_page_stack()
 {
     resize(500, 360);
-    set_title(String::formatted("Sample wizard"));
+    set_title(DeprecatedString::formatted("Sample wizard"));
     set_resizable(false);
 
     if (parent_window)

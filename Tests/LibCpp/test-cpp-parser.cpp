@@ -13,14 +13,14 @@
 
 constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/parser";
 
-static String read_all(String const& path)
+static DeprecatedString read_all(DeprecatedString const& path)
 {
     auto file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     if (!file->read_or_error(content.bytes()))
         VERIFY_NOT_REACHED();
-    return String { content.bytes() };
+    return DeprecatedString { content.bytes() };
 }
 
 TEST_CASE(test_regression)
@@ -36,7 +36,7 @@ TEST_CASE(test_regression)
 
         outln("Checking {}...", path.basename());
 
-        auto ast_file_path = String::formatted("{}.ast", file_path.substring(0, file_path.length() - sizeof(".cpp") + 1));
+        auto ast_file_path = DeprecatedString::formatted("{}.ast", file_path.substring(0, file_path.length() - sizeof(".cpp") + 1));
 
         auto source = read_all(file_path);
         auto target_ast = read_all(ast_file_path);
@@ -72,7 +72,7 @@ TEST_CASE(test_regression)
 
         fclose(input_stream);
 
-        String content { reinterpret_cast<char const*>(buffer.data()), buffer.size() };
+        DeprecatedString content { reinterpret_cast<char const*>(buffer.data()), buffer.size() };
 
         auto equal = content == target_ast;
         EXPECT(equal);

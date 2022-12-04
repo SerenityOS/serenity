@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
@@ -32,15 +32,15 @@ public:
     virtual JS::Value item_value(size_t index) const override;
 
     size_t length() const { return m_token_set.size(); }
-    String const& item(size_t index) const;
+    DeprecatedString const& item(size_t index) const;
     bool contains(StringView token);
-    WebIDL::ExceptionOr<void> add(Vector<String> const& tokens);
-    WebIDL::ExceptionOr<void> remove(Vector<String> const& tokens);
-    WebIDL::ExceptionOr<bool> toggle(String const& token, Optional<bool> force);
-    WebIDL::ExceptionOr<bool> replace(String const& token, String const& new_token);
+    WebIDL::ExceptionOr<void> add(Vector<DeprecatedString> const& tokens);
+    WebIDL::ExceptionOr<void> remove(Vector<DeprecatedString> const& tokens);
+    WebIDL::ExceptionOr<bool> toggle(DeprecatedString const& token, Optional<bool> force);
+    WebIDL::ExceptionOr<bool> replace(DeprecatedString const& token, DeprecatedString const& new_token);
     WebIDL::ExceptionOr<bool> supports(StringView token);
-    String value() const;
-    void set_value(String value);
+    DeprecatedString value() const;
+    void set_value(DeprecatedString value);
 
 private:
     DOMTokenList(Element const& associated_element, FlyString associated_attribute);
@@ -50,7 +50,7 @@ private:
 
     WeakPtr<Element> m_associated_element;
     FlyString m_associated_attribute;
-    Vector<String> m_token_set;
+    Vector<DeprecatedString> m_token_set;
 };
 
 }

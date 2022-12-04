@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto wm_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
-    auto theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", theme_name));
+    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", theme_name));
     VERIFY(theme.is_valid());
     Gfx::set_system_theme(theme);
     auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
@@ -71,9 +71,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     // First check which screens are explicitly configured
     {
-        AK::HashTable<String> fb_devices_configured;
+        AK::HashTable<DeprecatedString> fb_devices_configured;
         WindowServer::ScreenLayout screen_layout;
-        String error_msg;
+        DeprecatedString error_msg;
 
         auto add_unconfigured_display_connector_devices = [&]() -> ErrorOr<void> {
             // Enumerate the /dev/gpu/connectorX devices and try to set up any ones we find that we haven't already used
@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 auto path = di.next_path();
                 if (!path.starts_with("connector"sv))
                     continue;
-                auto full_path = String::formatted("/dev/gpu/{}", path);
+                auto full_path = DeprecatedString::formatted("/dev/gpu/{}", path);
                 if (!Core::File::is_device(full_path))
                     continue;
                 auto display_connector_fd = TRY(Core::System::open(full_path, O_RDWR | O_CLOEXEC));

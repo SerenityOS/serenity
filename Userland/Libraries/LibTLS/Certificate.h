@@ -38,16 +38,16 @@ public:
     Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key {};
     Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key {};
     struct Name {
-        String country;
-        String state;
-        String location;
-        String entity;
-        String subject;
-        String unit;
+        DeprecatedString country;
+        DeprecatedString state;
+        DeprecatedString location;
+        DeprecatedString entity;
+        DeprecatedString subject;
+        DeprecatedString unit;
     } issuer, subject;
     Core::DateTime not_before;
     Core::DateTime not_after;
-    Vector<String> SAN;
+    Vector<DeprecatedString> SAN;
     u8* ocsp { nullptr };
     Crypto::UnsignedBigInteger serial_number;
     ByteBuffer sign_key {};
@@ -65,7 +65,7 @@ public:
 
     bool is_valid() const;
 
-    String subject_identifier_string() const
+    DeprecatedString subject_identifier_string() const
     {
         StringBuilder cert_name;
         if (!subject.country.is_empty()) {
@@ -95,7 +95,7 @@ public:
         return cert_name.build();
     }
 
-    String issuer_identifier_string() const
+    DeprecatedString issuer_identifier_string() const
     {
         StringBuilder cert_name;
         if (!issuer.country.is_empty()) {

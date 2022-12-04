@@ -14,14 +14,14 @@ void spawn_or_show_error(GUI::Window* parent_window, StringView path, Span<Strin
 {
     auto spawn_result = Core::Process::spawn(path, arguments);
     if (spawn_result.is_error())
-        GUI::MessageBox::show_error(parent_window, String::formatted("Failed to spawn {}: {}", path, spawn_result.error()));
+        GUI::MessageBox::show_error(parent_window, DeprecatedString::formatted("Failed to spawn {}: {}", path, spawn_result.error()));
 }
 
 namespace GUI {
 
-void Process::spawn_or_show_error(Window* parent_window, StringView path, Span<String const> arguments)
+void Process::spawn_or_show_error(Window* parent_window, StringView path, Span<DeprecatedString const> arguments)
 {
-    ::spawn_or_show_error<String>(parent_window, path, arguments);
+    ::spawn_or_show_error<DeprecatedString>(parent_window, path, arguments);
 }
 
 void Process::spawn_or_show_error(Window* parent_window, StringView path, Span<StringView const> arguments)

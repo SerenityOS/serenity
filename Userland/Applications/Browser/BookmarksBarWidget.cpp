@@ -74,12 +74,12 @@ private:
         };
     }
 
-    String title() const
+    DeprecatedString title() const
     {
         return m_title_textbox->text();
     }
 
-    String url() const
+    DeprecatedString url() const
     {
         return m_url_textbox->text();
     }
@@ -97,7 +97,7 @@ BookmarksBarWidget& BookmarksBarWidget::the()
     return *s_the;
 }
 
-BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enabled)
+BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, bool enabled)
 {
     s_the = this;
     set_layout<GUI::HorizontalBoxLayout>();
@@ -259,7 +259,7 @@ void BookmarksBarWidget::update_content_size()
     }
 }
 
-bool BookmarksBarWidget::contains_bookmark(String const& url)
+bool BookmarksBarWidget::contains_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
@@ -272,7 +272,7 @@ bool BookmarksBarWidget::contains_bookmark(String const& url)
     return false;
 }
 
-bool BookmarksBarWidget::remove_bookmark(String const& url)
+bool BookmarksBarWidget::remove_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
@@ -292,7 +292,7 @@ bool BookmarksBarWidget::remove_bookmark(String const& url)
     return false;
 }
 
-bool BookmarksBarWidget::add_bookmark(String const& url, String const& title)
+bool BookmarksBarWidget::add_bookmark(DeprecatedString const& url, DeprecatedString const& title)
 {
     Vector<JsonValue> values;
     values.append(title);
@@ -306,7 +306,7 @@ bool BookmarksBarWidget::add_bookmark(String const& url, String const& title)
     return false;
 }
 
-bool BookmarksBarWidget::edit_bookmark(String const& url)
+bool BookmarksBarWidget::edit_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto item_title = model()->index(item_index, 0).data().to_string();

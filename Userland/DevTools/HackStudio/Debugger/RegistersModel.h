@@ -14,7 +14,7 @@
 namespace HackStudio {
 
 struct RegisterData {
-    String name;
+    DeprecatedString name;
     FlatPtr value;
     bool changed { false };
 };
@@ -41,7 +41,7 @@ public:
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual DeprecatedString column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
     PtraceRegisters const& raw_registers() const { return m_raw_registers; }

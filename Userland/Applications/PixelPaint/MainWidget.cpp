@@ -142,7 +142,7 @@ void MainWidget::image_editor_did_update_undo_stack()
 }
 
 // Note: Update these together! v
-static Vector<String> const s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
+static Vector<DeprecatedString> const s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
 static constexpr int s_zoom_level_fit_width = 8;
 static constexpr int s_zoom_level_fit_height = 9;
 static constexpr int s_zoom_level_fit_image = 10;
@@ -216,7 +216,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
                 auto result = editor->image().export_bmp_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
-                    GUI::MessageBox::show_error(&window, String::formatted("Export to BMP failed: {}", result.error()));
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to BMP failed: {}", result.error()));
             }));
 
     m_export_submenu->add_action(
@@ -231,7 +231,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
                 auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
-                    GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to PNG failed: {}", result.error()));
             }));
 
     m_export_submenu->add_action(
@@ -244,7 +244,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                     return;
                 auto result = editor->image().export_qoi_to_file(response.value());
                 if (result.is_error())
-                    GUI::MessageBox::show_error(&window, String::formatted("Export to QOI failed: {}", result.error()));
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to QOI failed: {}", result.error()));
             }));
 
     m_export_submenu->set_icon(g_icon_bag.file_export);
@@ -400,7 +400,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
             auto result = PixelPaint::PaletteWidget::load_palette_file(*response.value());
             if (result.is_error()) {
-                GUI::MessageBox::show_error(&window, String::formatted("Loading color palette failed: {}", result.error()));
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Loading color palette failed: {}", result.error()));
                 return;
             }
 
@@ -414,7 +414,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
             auto result = PixelPaint::PaletteWidget::save_palette_file(m_palette_widget->colors(), *response.value());
             if (result.is_error())
-                GUI::MessageBox::show_error(&window, String::formatted("Writing color palette failed: {}", result.error()));
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Writing color palette failed: {}", result.error()));
         }));
 
     m_view_menu = window.add_menu("&View");
@@ -629,7 +629,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto layer_or_error = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
                 if (layer_or_error.is_error()) {
-                    GUI::MessageBox::show_error(&window, String::formatted("Unable to create layer with size {}", dialog->size()));
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Unable to create layer with size {}", dialog->size()));
                     return;
                 }
                 editor->image().add_layer(layer_or_error.release_value());
@@ -930,8 +930,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_zoom_combobox = toolbar.add<GUI::ComboBox>();
     m_zoom_combobox->set_max_width(75);
-    m_zoom_combobox->set_model(*GUI::ItemListModel<String>::create(s_suggested_zoom_levels));
-    m_zoom_combobox->on_change = [this](String const& value, GUI::ModelIndex const& index) {
+    m_zoom_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(s_suggested_zoom_levels));
+    m_zoom_combobox->on_change = [this](DeprecatedString const& value, GUI::ModelIndex const& index) {
         auto* editor = current_image_editor();
         VERIFY(editor);
 
@@ -995,7 +995,7 @@ void MainWidget::open_image(Core::File& file)
     auto try_load = m_loader.try_load_from_file(file);
 
     if (try_load.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
         return;
     }
 
@@ -1105,7 +1105,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     };
 
     image_editor.on_scale_change = Core::debounce([this](float scale) {
-        m_zoom_combobox->set_text(String::formatted("{}%", roundf(scale * 100)));
+        m_zoom_combobox->set_text(DeprecatedString::formatted("{}%", roundf(scale * 100)));
         current_image_editor()->update_tool_cursor();
     },
         100);

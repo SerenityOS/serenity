@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
@@ -233,7 +233,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    String path {};
+    DeprecatedString path {};
     static bool display_all = false;
     static bool display_elf_header = false;
     static bool display_program_headers = false;
@@ -471,9 +471,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return IterationDecision::Break;
             });
 
-            Vector<String> libraries;
+            Vector<DeprecatedString> libraries;
             object->for_each_needed_library([&libraries](StringView entry) {
-                libraries.append(String::formatted("{}", entry));
+                libraries.append(DeprecatedString::formatted("{}", entry));
             });
 
             auto library_index = 0;

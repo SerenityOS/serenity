@@ -813,7 +813,7 @@ void Widget::set_font(Gfx::Font const* font)
     update();
 }
 
-void Widget::set_font_family(String const& family)
+void Widget::set_font_family(DeprecatedString const& family)
 {
     set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight(), m_font->slope()));
 }
@@ -1048,7 +1048,7 @@ void Widget::set_palette(Palette const& palette)
     update();
 }
 
-void Widget::set_title(String title)
+void Widget::set_title(DeprecatedString title)
 {
     m_title = move(title);
     layout_relevant_change_occurred();
@@ -1057,7 +1057,7 @@ void Widget::set_title(String title)
         parent_widget()->update();
 }
 
-String Widget::title() const
+DeprecatedString Widget::title() const
 {
     return m_title;
 }
@@ -1106,7 +1106,7 @@ Gfx::IntRect Widget::relative_non_grabbable_rect() const
     return rect;
 }
 
-void Widget::set_tooltip(String tooltip)
+void Widget::set_tooltip(DeprecatedString tooltip)
 {
     m_tooltip = move(tooltip);
     if (Application::the()->tooltip_source_widget() == this)
@@ -1147,13 +1147,13 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
 
 bool Widget::load_from_gml(StringView gml_string)
 {
-    return load_from_gml(gml_string, [](String const& class_name) -> RefPtr<Core::Object> {
+    return load_from_gml(gml_string, [](DeprecatedString const& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
         return nullptr;
     });
 }
 
-bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(String const&))
+bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
 {
     auto value = GML::parse_gml(gml_string);
     if (value.is_error()) {
@@ -1164,7 +1164,7 @@ bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregis
     return load_from_gml_ast(value.release_value(), unregistered_child_handler);
 }
 
-bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(String const&))
+bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);

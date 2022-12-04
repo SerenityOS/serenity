@@ -29,7 +29,7 @@ enum class SimpleExceptionType {
 
 struct SimpleException {
     SimpleExceptionType type;
-    String message;
+    DeprecatedString message;
 };
 
 template<typename ValueType>

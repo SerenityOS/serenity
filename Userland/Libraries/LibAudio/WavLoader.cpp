@@ -210,10 +210,10 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         return value;
     };
 
-#define CHECK_OK(category, msg)                                                            \
-    do {                                                                                   \
-        if (!ok)                                                                           \
-            return LoaderError { category, String::formatted("Parsing failed: {}", msg) }; \
+#define CHECK_OK(category, msg)                                                                      \
+    do {                                                                                             \
+        if (!ok)                                                                                     \
+            return LoaderError { category, DeprecatedString::formatted("Parsing failed: {}", msg) }; \
     } while (0)
 
     u32 riff = TRY(read_u32());

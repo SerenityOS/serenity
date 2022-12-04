@@ -55,7 +55,7 @@ public:
         fflush(m_file);
     }
 
-    void print_opcode(String const& system, OpCode& opcode, MatchState& state, size_t recursion = 0, bool newline = true) const
+    void print_opcode(DeprecatedString const& system, OpCode& opcode, MatchState& state, size_t recursion = 0, bool newline = true) const
     {
         out(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}",
             system.characters(),
@@ -63,7 +63,7 @@ public:
             recursion,
             opcode.to_string().characters(),
             opcode.arguments_string().characters(),
-            String::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position));
+            DeprecatedString::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position));
         if (newline)
             outln();
         if (newline && is<OpCode_Compare>(opcode)) {
@@ -119,7 +119,7 @@ public:
     }
 
 private:
-    String m_debug_stripline;
+    DeprecatedString m_debug_stripline;
     FILE* m_file;
 };
 

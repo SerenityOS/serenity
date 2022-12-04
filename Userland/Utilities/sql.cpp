@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -21,7 +21,7 @@
 
 class SQLRepl {
 public:
-    explicit SQLRepl(String const& database_name)
+    explicit SQLRepl(DeprecatedString const& database_name)
         : m_loop()
     {
         m_editor = Line::Editor::construct();
@@ -76,7 +76,7 @@ public:
 
         m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
 
-        m_sql_client->on_connected = [this](int connection_id, String const& connected_to_database) {
+        m_sql_client->on_connected = [this](int connection_id, DeprecatedString const& connected_to_database) {
             outln("Connected to \033[33;1m{}\033[0m", connected_to_database);
             m_current_database = connected_to_database;
             m_pending_database = "";
@@ -93,7 +93,7 @@ public:
             }
         };
 
-        m_sql_client->on_next_result = [](int, Vector<String> const& row) {
+        m_sql_client->on_next_result = [](int, Vector<DeprecatedString> const& row) {
             StringBuilder builder;
             builder.join(", "sv, row);
             outln("{}", builder.build());
@@ -104,12 +104,12 @@ public:
             read_sql();
         };
 
-        m_sql_client->on_connection_error = [this](int, int code, String const& message) {
+        m_sql_client->on_connection_error = [this](int, int code, DeprecatedString const& message) {
             outln("\033[33;1mConnection error:\033[0m {}", message);
             m_loop.quit(code);
         };
 
-        m_sql_client->on_execution_error = [this](int, int, String const& message) {
+        m_sql_client->on_execution_error = [this](int, int, DeprecatedString const& message) {
             outln("\033[33;1mExecution error:\033[0m {}", message);
             read_sql();
         };
@@ -134,7 +134,7 @@ public:
         m_editor->save_history(m_history_path);
     }
 
-    void connect(String const& database_name)
+    void connect(DeprecatedString const& database_name)
     {
         if (m_current_database.is_empty()) {
             m_sql_client->connect(database_name);
@@ -144,13 +144,13 @@ public:
         }
     }
 
-    void source_file(String file_name)
+    void source_file(DeprecatedString file_name)
     {
         m_input_file_chain.append(move(file_name));
         m_quit_when_files_read = false;
     }
 
-    void read_file(String file_name)
+    void read_file(DeprecatedString file_name)
     {
         m_input_file_chain.append(move(file_name));
         m_quit_when_files_read = true;
@@ -162,21 +162,21 @@ public:
     }
 
 private:
-    String m_history_path { String::formatted("{}/.sql-history", Core::StandardPaths::home_directory()) };
+    DeprecatedString m_history_path { DeprecatedString::formatted("{}/.sql-history", Core::StandardPaths::home_directory()) };
     RefPtr<Line::Editor> m_editor { nullptr };
     int m_repl_line_level { 0 };
     bool m_keep_running { true };
-    String m_pending_database {};
-    String m_current_database {};
+    DeprecatedString m_pending_database {};
+    DeprecatedString m_current_database {};
     AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
     int m_connection_id { 0 };
     Core::EventLoop m_loop;
     OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
-    Vector<String> m_input_file_chain {};
+    Vector<DeprecatedString> m_input_file_chain {};
     Array<u8, PAGE_SIZE> m_buffer {};
 
-    Optional<String> get_line()
+    Optional<DeprecatedString> get_line()
     {
         if (!m_input_file && !m_input_file_chain.is_empty()) {
             auto file_name = m_input_file_chain.take_first();
@@ -216,7 +216,7 @@ private:
         return line_result.value();
     }
 
-    String read_next_piece()
+    DeprecatedString read_next_piece()
     {
         StringBuilder piece;
 
@@ -275,7 +275,7 @@ private:
 
     void read_sql()
     {
-        String piece = read_next_piece();
+        DeprecatedString piece = read_next_piece();
 
         // m_keep_running can be set to false when the file we are reading
         // from is exhausted...
@@ -302,7 +302,7 @@ private:
         }
     };
 
-    static String prompt_for_level(int level)
+    static DeprecatedString prompt_for_level(int level)
     {
         static StringBuilder prompt_builder;
         prompt_builder.clear();
@@ -348,11 +348,11 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    String database_name(getlogin());
-    String file_to_source;
-    String file_to_read;
+    DeprecatedString database_name(getlogin());
+    DeprecatedString file_to_source;
+    DeprecatedString file_to_read;
     bool suppress_sqlrc = false;
-    auto sqlrc_path = String::formatted("{}/.sqlrc", Core::StandardPaths::home_directory());
+    auto sqlrc_path = DeprecatedString::formatted("{}/.sqlrc", Core::StandardPaths::home_directory());
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a client for the SerenitySQL database server.");

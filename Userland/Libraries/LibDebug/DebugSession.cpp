@@ -17,7 +17,7 @@
 
 namespace Debug {
 
-DebugSession::DebugSession(pid_t pid, String source_root)
+DebugSession::DebugSession(pid_t pid, DeprecatedString source_root)
     : m_debuggee_pid(pid)
     , m_source_root(source_root)
 
@@ -53,8 +53,8 @@ void DebugSession::for_each_loaded_library(Function<IterationDecision(LoadedLibr
     }
 }
 
-OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
-    String source_root,
+OwnPtr<DebugSession> DebugSession::exec_and_attach(DeprecatedString const& command,
+    DeprecatedString source_root,
     Function<ErrorOr<void>()> setup_child)
 {
     auto pid = fork();
@@ -388,7 +388,7 @@ void DebugSession::detach()
     continue_debuggee();
 }
 
-Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(String const& symbol_name)
+Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(DeprecatedString const& symbol_name)
 {
     Optional<InsertBreakpointAtSymbolResult> result;
     for_each_loaded_library([this, symbol_name, &result](auto& lib) {
@@ -411,7 +411,7 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
     return result;
 }
 
-Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(String const& filename, size_t line_number)
+Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(DeprecatedString const& filename, size_t line_number)
 {
     auto address_and_source_position = get_address_from_source_position(filename, line_number);
     if (!address_and_source_position.has_value())
@@ -430,7 +430,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
 
 void DebugSession::update_loaded_libs()
 {
-    auto file = Core::File::construct(String::formatted("/proc/{}/vm", m_debuggee_pid));
+    auto file = Core::File::construct(DeprecatedString::formatted("/proc/{}/vm", m_debuggee_pid));
     bool rc = file->open(Core::OpenMode::ReadOnly);
     VERIFY(rc);
 
@@ -440,7 +440,7 @@ void DebugSession::update_loaded_libs()
     auto const& vm_entries = json.as_array();
     Regex<PosixExtended> segment_name_re("(.+): ");
 
-    auto get_path_to_object = [&segment_name_re](String const& vm_name) -> Optional<String> {
+    auto get_path_to_object = [&segment_name_re](DeprecatedString const& vm_name) -> Optional<DeprecatedString> {
         if (vm_name == "/usr/lib/Loader.so")
             return vm_name;
         RegexResult result;
@@ -450,7 +450,7 @@ void DebugSession::update_loaded_libs()
         auto lib_name = result.capture_group_matches.at(0).at(0).view.string_view().to_string();
         if (lib_name.starts_with('/'))
             return lib_name;
-        return String::formatted("/usr/lib/{}", lib_name);
+        return DeprecatedString::formatted("/usr/lib/{}", lib_name);
     };
 
     vm_entries.for_each([&](auto& entry) {
@@ -461,7 +461,7 @@ void DebugSession::update_loaded_libs()
         if (!object_path.has_value())
             return IterationDecision::Continue;
 
-        String lib_name = object_path.value();
+        DeprecatedString lib_name = object_path.value();
         if (Core::File::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 

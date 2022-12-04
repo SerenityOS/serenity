@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -33,7 +33,7 @@ public:
     bool is_calculated() const { return m_type == Type::Calculated; }
     NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     float to_degrees() const;
 
     bool operator==(Angle const& other) const

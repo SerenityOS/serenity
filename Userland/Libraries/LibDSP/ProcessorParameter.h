@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FixedPoint.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 
@@ -35,17 +35,17 @@ enum class Logarithmic : bool {
 // Processors have modifiable parameters that should be presented to the UI in a uniform way without requiring the processor itself to implement custom interfaces.
 class ProcessorParameter {
 public:
-    ProcessorParameter(String name, ParameterType type)
+    ProcessorParameter(DeprecatedString name, ParameterType type)
         : m_name(move(name))
         , m_type(type)
     {
     }
 
-    String const& name() const { return m_name; }
+    DeprecatedString const& name() const { return m_name; }
     ParameterType type() const { return m_type; }
 
 private:
-    String const m_name;
+    DeprecatedString const m_name;
     ParameterType const m_type;
 };
 
@@ -59,7 +59,7 @@ template<typename ParameterT>
 class ProcessorParameterSingleValue : public ProcessorParameter {
 
 public:
-    ProcessorParameterSingleValue(String name, ParameterType type, ParameterT initial_value)
+    ProcessorParameterSingleValue(DeprecatedString name, ParameterType type, ParameterT initial_value)
         : ProcessorParameter(move(name), type)
         , m_value(move(initial_value))
     {
@@ -105,7 +105,7 @@ protected:
 
 class ProcessorBooleanParameter final : public Detail::ProcessorParameterSingleValue<bool> {
 public:
-    ProcessorBooleanParameter(String name, bool initial_value)
+    ProcessorBooleanParameter(DeprecatedString name, bool initial_value)
         : Detail::ProcessorParameterSingleValue<bool>(move(name), ParameterType::Boolean, move(initial_value))
     {
     }
@@ -113,7 +113,7 @@ public:
 
 class ProcessorRangeParameter final : public Detail::ProcessorParameterSingleValue<ParameterFixedPoint> {
 public:
-    ProcessorRangeParameter(String name, ParameterFixedPoint min_value, ParameterFixedPoint max_value, ParameterFixedPoint initial_value, Logarithmic logarithmic)
+    ProcessorRangeParameter(DeprecatedString name, ParameterFixedPoint min_value, ParameterFixedPoint max_value, ParameterFixedPoint initial_value, Logarithmic logarithmic)
         : Detail::ProcessorParameterSingleValue<ParameterFixedPoint>(move(name), ParameterType::Range, move(initial_value))
         , m_min_value(move(min_value))
         , m_max_value(move(max_value))
@@ -149,7 +149,7 @@ private:
 template<typename EnumT>
 requires(IsEnum<EnumT>) class ProcessorEnumParameter final : public Detail::ProcessorParameterSingleValue<EnumT> {
 public:
-    ProcessorEnumParameter(String name, EnumT initial_value)
+    ProcessorEnumParameter(DeprecatedString name, EnumT initial_value)
         : Detail::ProcessorParameterSingleValue<EnumT>(move(name), ParameterType::Enum, initial_value)
     {
     }
@@ -185,7 +185,7 @@ struct AK::Formatter<DSP::ProcessorRangeParameter> : AK::StandardFormatter {
         m_width = m_width.value_or(0);
         m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
-        TRY(builder.put_literal(String::formatted("[{} - {}]: {}", value.min_value(), value.max_value(), value.value())));
+        TRY(builder.put_literal(DeprecatedString::formatted("[{} - {}]: {}", value.min_value(), value.max_value(), value.value())));
         return {};
     }
 };

@@ -18,7 +18,7 @@ static FlyString s_html_namespace = "http://www.w3.org/1999/xhtml";
 
 namespace Web {
 
-ErrorOr<String> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const& public_id)
+ErrorOr<DeprecatedString> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const& public_id)
 {
     if (!public_id.has_value())
         return Error::from_string_literal("Refusing to load disallowed external entity");
@@ -46,12 +46,12 @@ XMLDocumentBuilder::XMLDocumentBuilder(DOM::Document& document, XMLScriptingSupp
 {
 }
 
-void XMLDocumentBuilder::set_source(String source)
+void XMLDocumentBuilder::set_source(DeprecatedString source)
 {
     m_document.set_source(move(source));
 }
 
-void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name, String> const& attributes)
+void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name, DeprecatedString> const& attributes)
 {
     if (m_has_error)
         return;
@@ -123,7 +123,7 @@ void XMLDocumentBuilder::element_end(const XML::Name& name)
     m_current_node = m_current_node->parent_node();
 }
 
-void XMLDocumentBuilder::text(String const& data)
+void XMLDocumentBuilder::text(DeprecatedString const& data)
 {
     if (m_has_error)
         return;
@@ -140,7 +140,7 @@ void XMLDocumentBuilder::text(String const& data)
     }
 }
 
-void XMLDocumentBuilder::comment(String const& data)
+void XMLDocumentBuilder::comment(DeprecatedString const& data)
 {
     if (m_has_error)
         return;

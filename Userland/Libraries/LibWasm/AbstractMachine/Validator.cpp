@@ -320,7 +320,7 @@ ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, size_t 
 template<u32 opcode>
 ErrorOr<void, ValidationError> Validator::validate_instruction(Instruction const& instruction, Stack&, bool&)
 {
-    return Errors::invalid(String::formatted("instruction opcode (0x{:x}) (missing validation!)", instruction.opcode().value()));
+    return Errors::invalid(DeprecatedString::formatted("instruction opcode (0x{:x}) (missing validation!)", instruction.opcode().value()));
 }
 
 #define VALIDATE_INSTRUCTION(name) \
@@ -2179,7 +2179,7 @@ ErrorOr<void, ValidationError> Validator::validate(Instruction const& instructio
 #undef M
     default:
         is_constant = false;
-        return Errors::invalid(String::formatted("instruction opcode (0x{:x})", instruction.opcode().value()));
+        return Errors::invalid(DeprecatedString::formatted("instruction opcode (0x{:x})", instruction.opcode().value()));
     }
 }
 
@@ -2256,16 +2256,16 @@ bool Validator::Stack::operator==(Stack const& other) const
     return true;
 }
 
-String Validator::Errors::find_instruction_name(SourceLocation const& location)
+DeprecatedString Validator::Errors::find_instruction_name(SourceLocation const& location)
 {
     auto index = location.function_name().find('<');
     auto end_index = location.function_name().find('>');
     if (!index.has_value() || !end_index.has_value())
-        return String::formatted("{}", location);
+        return DeprecatedString::formatted("{}", location);
 
     auto opcode = location.function_name().substring_view(index.value() + 1, end_index.value() - index.value() - 1).to_uint();
     if (!opcode.has_value())
-        return String::formatted("{}", location);
+        return DeprecatedString::formatted("{}", location);
 
     return instruction_name(OpCode { *opcode });
 }

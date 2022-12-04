@@ -12,11 +12,11 @@
 namespace Wasm {
 
 struct Names {
-    static HashMap<OpCode, String> instruction_names;
-    static HashMap<String, OpCode> instructions_by_name;
+    static HashMap<OpCode, DeprecatedString> instruction_names;
+    static HashMap<DeprecatedString, OpCode> instructions_by_name;
 };
 
-String instruction_name(OpCode const& opcode)
+DeprecatedString instruction_name(OpCode const& opcode)
 {
     return Names::instruction_names.get(opcode).value_or("<unknown>");
 }
@@ -131,13 +131,13 @@ void Printer::print(Wasm::DataSection::Data const& data)
             [this](DataSection::Data::Passive const& value) {
                 print_indent();
                 print("(passive init {}xu8 (", value.init.size());
-                print(String::join(' ', value.init, "{:x}"sv));
+                print(DeprecatedString::join(' ', value.init, "{:x}"sv));
                 print(")\n");
             },
             [this](DataSection::Data::Active const& value) {
                 print_indent();
                 print("(active init {}xu8 (", value.init.size());
-                print(String::join(' ', value.init, "{:x}"sv));
+                print(DeprecatedString::join(' ', value.init, "{:x}"sv));
                 print("\n");
                 {
                     TemporaryChange change { m_indent, m_indent + 1 };
@@ -437,7 +437,7 @@ void Printer::print(Wasm::Instruction const& instruction)
                 TemporaryChange change { m_indent, m_indent + 1 };
                 print(args.block_type);
                 print_indent();
-                print("(else {}) (end {}))", args.else_ip.has_value() ? String::number(args.else_ip->value()) : "(none)", args.end_ip.value());
+                print("(else {}) (end {}))", args.else_ip.has_value() ? DeprecatedString::number(args.else_ip->value()) : "(none)", args.end_ip.value());
             },
             [&](Instruction::TableBranchArgs const& args) {
                 print("(table_branch");
@@ -637,13 +637,13 @@ void Printer::print(Wasm::Value const& value)
     print_indent();
     print("{} ", value.value().visit([&]<typename T>(T const& value) {
         if constexpr (IsSame<Wasm::Reference, T>)
-            return String::formatted(
+            return DeprecatedString::formatted(
                 "addr({})",
                 value.ref().visit(
-                    [](Wasm::Reference::Null const&) { return String("null"); },
-                    [](auto const& ref) { return String::number(ref.address.value()); }));
+                    [](Wasm::Reference::Null const&) { return DeprecatedString("null"); },
+                    [](auto const& ref) { return DeprecatedString::number(ref.address.value()); }));
         else
-            return String::formatted("{}", value);
+            return DeprecatedString::formatted("{}", value);
     }));
     TemporaryChange<size_t> change { m_indent, 0 };
     print(value.type());
@@ -655,12 +655,12 @@ void Printer::print(Wasm::Reference const& value)
     print(
         "addr({})\n",
         value.ref().visit(
-            [](Wasm::Reference::Null const&) { return String("null"); },
-            [](auto const& ref) { return String::number(ref.address.value()); }));
+            [](Wasm::Reference::Null const&) { return DeprecatedString("null"); },
+            [](auto const& ref) { return DeprecatedString::number(ref.address.value()); }));
 }
 }
 
-HashMap<Wasm::OpCode, String> Wasm::Names::instruction_names {
+HashMap<Wasm::OpCode, DeprecatedString> Wasm::Names::instruction_names {
     { Instructions::unreachable, "unreachable" },
     { Instructions::nop, "nop" },
     { Instructions::block, "block" },
@@ -863,4 +863,4 @@ HashMap<Wasm::OpCode, String> Wasm::Names::instruction_names {
     { Instructions::structured_else, "synthetic:else" },
     { Instructions::structured_end, "synthetic:end" },
 };
-HashMap<String, Wasm::OpCode> Wasm::Names::instructions_by_name;
+HashMap<DeprecatedString, Wasm::OpCode> Wasm::Names::instructions_by_name;

@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    String path_buffer;
+    DeprecatedString path_buffer;
     if (path.is_empty()) {
         path_buffer = LexicalPath::basename(target);
         path = path_buffer.view();

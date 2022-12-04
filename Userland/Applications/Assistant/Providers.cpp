@@ -60,7 +60,7 @@ void URLResult::activate() const
     Desktop::Launcher::open(URL::create_with_url_or_path(title()));
 }
 
-void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void AppProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (query.starts_with('=') || query.starts_with('$'))
         return;
@@ -79,7 +79,7 @@ void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<R
     on_complete(move(results));
 }
 
-void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void CalculatorProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (!query.starts_with('='))
         return;
@@ -97,7 +97,7 @@ void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrV
         return;
 
     auto result = completion.release_value();
-    String calculation;
+    DeprecatedString calculation;
     if (!result.is_number()) {
         calculation = "0";
     } else {
@@ -119,7 +119,7 @@ FileProvider::FileProvider()
     build_filesystem_cache();
 }
 
-void FileProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void FileProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     build_filesystem_cache();
 
@@ -159,7 +159,7 @@ void FileProvider::build_filesystem_cache()
 
     (void)Threading::BackgroundAction<int>::construct(
         [this, strong_ref = NonnullRefPtr(*this)](auto&) {
-            String slash = "/";
+            DeprecatedString slash = "/";
             auto timer = Core::ElapsedTimer::start_new();
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
@@ -197,7 +197,7 @@ void FileProvider::build_filesystem_cache()
         });
 }
 
-void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void TerminalProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (!query.starts_with('$'))
         return;
@@ -209,7 +209,7 @@ void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVec
     on_complete(move(results));
 }
 
-void URLProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void URLProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (query.is_empty() || query.starts_with('=') || query.starts_with('$'))
         return;

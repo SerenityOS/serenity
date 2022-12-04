@@ -25,7 +25,7 @@ MonitorWidget::MonitorWidget()
     set_fixed_size(304, 201);
 }
 
-bool MonitorWidget::set_wallpaper(String path)
+bool MonitorWidget::set_wallpaper(DeprecatedString path)
 {
     if (!is_different_to_current_wallpaper_path(path))
         return false;
@@ -63,7 +63,7 @@ StringView MonitorWidget::wallpaper() const
     return m_desktop_wallpaper_path;
 }
 
-void MonitorWidget::set_wallpaper_mode(String mode)
+void MonitorWidget::set_wallpaper_mode(DeprecatedString mode)
 {
     if (m_desktop_wallpaper_mode == mode)
         return;

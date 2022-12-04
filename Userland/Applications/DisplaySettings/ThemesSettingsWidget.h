@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/SettingsWindow.h>
@@ -24,7 +24,7 @@ public:
 
 private:
     Vector<Gfx::SystemThemeMetaData> m_themes;
-    Vector<String> m_theme_names;
+    Vector<DeprecatedString> m_theme_names;
 
     RefPtr<GUI::ComboBox> m_themes_combo;
     RefPtr<ThemePreviewWidget> m_theme_preview;

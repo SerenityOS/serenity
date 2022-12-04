@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibGUI/Model.h>
 
@@ -35,7 +35,7 @@ public:
         : public RefCounted<Node>
         , public Weakable<Node> {
     public:
-        Node(String text, Optional<Icon> icon, Node* parent_node = nullptr)
+        Node(DeprecatedString text, Optional<Icon> icon, Node* parent_node = nullptr)
             : m_text(move(text))
             , m_icon(move(icon))
             , m_parent_node(parent_node)
@@ -45,7 +45,7 @@ public:
         virtual ~Node() = default;
 
         template<typename NodeType = Node, typename... Args>
-        NonnullRefPtr<NodeType> add_node(String text, Optional<Icon> icon, Args&&... args)
+        NonnullRefPtr<NodeType> add_node(DeprecatedString text, Optional<Icon> icon, Args&&... args)
         requires(IsBaseOf<Node, NodeType>)
         {
             auto node = adopt_ref(*new NodeType(move(text), move(icon), this, forward<Args>(args)...));
@@ -53,7 +53,7 @@ public:
             return node;
         }
 
-        String const& text() const { return m_text; }
+        DeprecatedString const& text() const { return m_text; }
         Optional<Icon> const& icon() const { return m_icon; }
 
         Node const* parent_node() const { return m_parent_node; }
@@ -63,7 +63,7 @@ public:
         NonnullRefPtrVector<Node>& child_nodes() { return m_child_nodes; }
 
     private:
-        String m_text;
+        DeprecatedString m_text;
         Optional<Icon> m_icon;
         WeakPtr<Node> m_parent_node;
         NonnullRefPtrVector<Node> m_child_nodes;
@@ -73,7 +73,7 @@ public:
     NonnullRefPtrVector<Node>& nodes() { return m_nodes; }
 
     template<typename NodeType = Node, typename... Args>
-    NonnullRefPtr<NodeType> add_node(String text, Optional<Icon> icon, Args&&... args)
+    NonnullRefPtr<NodeType> add_node(DeprecatedString text, Optional<Icon> icon, Args&&... args)
     requires(IsBaseOf<Node, NodeType>)
     {
         auto node = adopt_ref(*new NodeType(move(text), move(icon), nullptr, forward<Args>(args)...));

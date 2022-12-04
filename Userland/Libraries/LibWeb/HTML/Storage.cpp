@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Storage.h>
 
@@ -31,7 +31,7 @@ size_t Storage::length() const
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-key
-String Storage::key(size_t index)
+DeprecatedString Storage::key(size_t index)
 {
     // 1. If index is greater than or equal to this's map's size, then return null.
     if (index >= m_map.size())
@@ -45,7 +45,7 @@ String Storage::key(size_t index)
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-getitem
-String Storage::get_item(String const& key) const
+DeprecatedString Storage::get_item(DeprecatedString const& key) const
 {
     // 1. If this's map[key] does not exist, then return null.
     auto it = m_map.find(key);
@@ -57,10 +57,10 @@ String Storage::get_item(String const& key) const
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-setitem
-WebIDL::ExceptionOr<void> Storage::set_item(String const& key, String const& value)
+WebIDL::ExceptionOr<void> Storage::set_item(DeprecatedString const& key, DeprecatedString const& value)
 {
     // 1. Let oldValue be null.
-    String old_value;
+    DeprecatedString old_value;
 
     // 2. Let reorder be true.
     bool reorder = true;
@@ -94,7 +94,7 @@ WebIDL::ExceptionOr<void> Storage::set_item(String const& key, String const& val
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-removeitem
-void Storage::remove_item(String const& key)
+void Storage::remove_item(DeprecatedString const& key)
 {
     // 1. If this's map[key] does not exist, then return null.
     // FIXME: Return null?
@@ -133,7 +133,7 @@ void Storage::reorder()
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#concept-storage-broadcast
-void Storage::broadcast(String const& key, String const& old_value, String const& new_value)
+void Storage::broadcast(DeprecatedString const& key, DeprecatedString const& old_value, DeprecatedString const& new_value)
 {
     (void)key;
     (void)old_value;
@@ -141,7 +141,7 @@ void Storage::broadcast(String const& key, String const& old_value, String const
     // FIXME: Implement.
 }
 
-Vector<String> Storage::supported_property_names() const
+Vector<DeprecatedString> Storage::supported_property_names() const
 {
     // The supported property names on a Storage object storage are the result of running get the keys on storage's map.
     return m_map.keys();

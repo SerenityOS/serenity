@@ -16,7 +16,7 @@
 
 namespace JS {
 
-Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(StringView flags)
+Result<regex::RegexOptions<ECMAScriptFlags>, DeprecatedString> regex_flags_from_string(StringView flags)
 {
     bool d = false, g = false, i = false, m = false, s = false, u = false, y = false, v = false;
     auto options = RegExpObject::default_flags;
@@ -25,42 +25,42 @@ Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(Str
         switch (ch) {
         case 'd':
             if (d)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             d = true;
             break;
         case 'g':
             if (g)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             g = true;
             options |= regex::ECMAScriptFlags::Global;
             break;
         case 'i':
             if (i)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             i = true;
             options |= regex::ECMAScriptFlags::Insensitive;
             break;
         case 'm':
             if (m)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             m = true;
             options |= regex::ECMAScriptFlags::Multiline;
             break;
         case 's':
             if (s)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             s = true;
             options |= regex::ECMAScriptFlags::SingleLine;
             break;
         case 'u':
             if (u)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             u = true;
             options |= regex::ECMAScriptFlags::Unicode;
             break;
         case 'y':
             if (y)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             y = true;
             // Now for the more interesting flag, 'sticky' actually unsets 'global', part of which is the default.
             options.reset_flag(regex::ECMAScriptFlags::Global);
@@ -72,22 +72,22 @@ Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(Str
             break;
         case 'v':
             if (v)
-                return String::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
+                return DeprecatedString::formatted(ErrorType::RegExpObjectRepeatedFlag.message(), ch);
             v = true;
             options |= regex::ECMAScriptFlags::UnicodeSets;
             break;
         default:
-            return String::formatted(ErrorType::RegExpObjectBadFlag.message(), ch);
+            return DeprecatedString::formatted(ErrorType::RegExpObjectBadFlag.message(), ch);
         }
     }
 
     return options;
 }
 
-ErrorOr<String, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets)
+ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets)
 {
     if (unicode && unicode_sets)
-        return ParseRegexPatternError { String::formatted(ErrorType::RegExpObjectIncompatibleFlags.message(), 'u', 'v') };
+        return ParseRegexPatternError { DeprecatedString::formatted(ErrorType::RegExpObjectIncompatibleFlags.message(), 'u', 'v') };
 
     auto utf16_pattern = AK::utf8_to_utf16(pattern);
     Utf16View utf16_pattern_view { utf16_pattern };
@@ -115,7 +115,7 @@ ErrorOr<String, ParseRegexPatternError> parse_regex_pattern(StringView pattern, 
     return builder.build();
 }
 
-ThrowCompletionOr<String> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets)
+ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets)
 {
     auto result = parse_regex_pattern(pattern, unicode, unicode_sets);
     if (result.is_error())
@@ -129,7 +129,7 @@ RegExpObject* RegExpObject::create(Realm& realm)
     return realm.heap().allocate<RegExpObject>(realm, *realm.intrinsics().regexp_prototype());
 }
 
-RegExpObject* RegExpObject::create(Realm& realm, Regex<ECMA262> regex, String pattern, String flags)
+RegExpObject* RegExpObject::create(Realm& realm, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags)
 {
     return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), *realm.intrinsics().regexp_prototype());
 }
@@ -139,7 +139,7 @@ RegExpObject::RegExpObject(Object& prototype)
 {
 }
 
-RegExpObject::RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype)
+RegExpObject::RegExpObject(Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags, Object& prototype)
     : Object(prototype)
     , m_pattern(move(pattern))
     , m_flags(move(flags))
@@ -164,13 +164,13 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM
     // 1. If pattern is undefined, let P be the empty String.
     // 2. Else, let P be ? ToString(pattern).
     auto pattern = pattern_value.is_undefined()
-        ? String::empty()
+        ? DeprecatedString::empty()
         : TRY(pattern_value.to_string(vm));
 
     // 3. If flags is undefined, let F be the empty String.
     // 4. Else, let F be ? ToString(flags).
     auto flags = flags_value.is_undefined()
-        ? String::empty()
+        ? DeprecatedString::empty()
         : TRY(flags_value.to_string(vm));
 
     // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
@@ -184,7 +184,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM
         return vm.throw_completion<SyntaxError>(parsed_flags_or_error.release_error());
     auto parsed_flags = parsed_flags_or_error.release_value();
 
-    auto parsed_pattern = String::empty();
+    auto parsed_pattern = DeprecatedString::empty();
     if (!pattern.is_empty()) {
         bool unicode = parsed_flags.has_flag_set(regex::ECMAScriptFlags::Unicode);
         bool unicode_sets = parsed_flags.has_flag_set(regex::ECMAScriptFlags::UnicodeSets);
@@ -225,7 +225,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM
 }
 
 // 22.2.3.2.5 EscapeRegExpPattern ( P, F ), https://tc39.es/ecma262/#sec-escaperegexppattern
-String RegExpObject::escape_regexp_pattern() const
+DeprecatedString RegExpObject::escape_regexp_pattern() const
 {
     // 1. Let S be a String in the form of a Pattern[~UnicodeMode] (Pattern[+UnicodeMode] if F contains "u") equivalent
     //    to P interpreted as UTF-16 encoded Unicode code points (6.1.4), in which certain code points are escaped as

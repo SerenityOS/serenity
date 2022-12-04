@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/HTML/Path2D.h>
 
 namespace Web::HTML {
@@ -18,8 +18,8 @@ public:
 
     virtual void begin_path() = 0;
 
-    virtual void fill(String const& fill_rule) = 0;
-    virtual void fill(Path2D& path, String const& fill_rule) = 0;
+    virtual void fill(DeprecatedString const& fill_rule) = 0;
+    virtual void fill(Path2D& path, DeprecatedString const& fill_rule) = 0;
 
     virtual void stroke() = 0;
     virtual void stroke(Path2D const& path) = 0;

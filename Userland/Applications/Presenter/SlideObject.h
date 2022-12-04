@@ -71,7 +71,7 @@ public:
 
     virtual void paint(Gfx::Painter&, Gfx::FloatSize display_scale) const override;
 
-    void set_font(String font) { m_font = move(font); }
+    void set_font(DeprecatedString font) { m_font = move(font); }
     StringView font() const { return m_font; }
     void set_font_size(int font_size) { m_font_size = font_size; }
     int font_size() const { return m_font_size; }
@@ -79,13 +79,13 @@ public:
     unsigned font_weight() const { return m_font_weight; }
     void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
-    void set_text(String text) { m_text = move(text); }
+    void set_text(DeprecatedString text) { m_text = move(text); }
     StringView text() const { return m_text; }
 
 protected:
-    String m_text;
+    DeprecatedString m_text;
     // The font family, technically speaking.
-    String m_font;
+    DeprecatedString m_font;
     int m_font_size;
     unsigned m_font_weight;
     Gfx::TextAlignment m_text_alignment;
@@ -110,12 +110,12 @@ public:
 
     virtual void paint(Gfx::Painter&, Gfx::FloatSize display_scale) const override;
 
-    void set_image_path(String image_path)
+    void set_image_path(DeprecatedString image_path)
     {
         m_image_path = move(image_path);
         auto result = reload_image();
         if (result.is_error())
-            GUI::MessageBox::show_error(m_window, String::formatted("Loading image {} failed: {}", m_image_path, result.error()));
+            GUI::MessageBox::show_error(m_window, DeprecatedString::formatted("Loading image {} failed: {}", m_image_path, result.error()));
     }
     StringView image_path() const { return m_image_path; }
     void set_scaling(ImageScaling scaling) { m_scaling = scaling; }
@@ -124,7 +124,7 @@ public:
     Gfx::Painter::ScalingMode scaling_mode() const { return m_scaling_mode; }
 
 protected:
-    String m_image_path;
+    DeprecatedString m_image_path;
     ImageScaling m_scaling { ImageScaling::FitSmallest };
     Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::SmoothPixels };
 

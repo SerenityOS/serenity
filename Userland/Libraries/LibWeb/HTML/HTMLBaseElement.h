@@ -16,14 +16,14 @@ class HTMLBaseElement final : public HTMLElement {
 public:
     virtual ~HTMLBaseElement() override;
 
-    String href() const;
-    void set_href(String const& href);
+    DeprecatedString href() const;
+    void set_href(DeprecatedString const& href);
 
     AK::URL const& frozen_base_url() const { return m_frozen_base_url; }
 
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-    virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
 
 private:
     HTMLBaseElement(DOM::Document&, DOM::QualifiedName);

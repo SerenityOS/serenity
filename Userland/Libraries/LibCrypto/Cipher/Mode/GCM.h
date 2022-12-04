@@ -15,7 +15,7 @@
 #include <LibCrypto/Verification.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace Crypto {
@@ -45,7 +45,7 @@ public:
     }
 
 #ifndef KERNEL
-    virtual String class_name() const override
+    virtual DeprecatedString class_name() const override
     {
         StringBuilder builder;
         builder.append(this->cipher().class_name());

@@ -44,7 +44,7 @@ Emulator& Emulator::the()
     return *s_the;
 }
 
-Emulator::Emulator(String const& executable_path, Vector<StringView> const& arguments, Vector<String> const& environment)
+Emulator::Emulator(DeprecatedString const& executable_path, Vector<StringView> const& arguments, Vector<DeprecatedString> const& environment)
     : m_executable_path(executable_path)
     , m_arguments(arguments)
     , m_environment(environment)
@@ -72,7 +72,7 @@ Emulator::Emulator(String const& executable_path, Vector<StringView> const& argu
     setup_signal_trampoline();
 }
 
-Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String const& executable_path, int executable_fd) const
+Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, DeprecatedString const& executable_path, int executable_fd) const
 {
     // FIXME: This is not fully compatible with the auxiliary vector the kernel generates, this is just the bare
     //        minimum to get the loader going.
@@ -229,7 +229,7 @@ int Emulator::exec()
 
     size_t instructions_until_next_profile_dump = profile_instruction_interval();
     if (is_profiling() && m_loader_text_size.has_value())
-        emit_profile_event(profile_stream(), "mmap"sv, String::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
+        emit_profile_event(profile_stream(), "mmap"sv, DeprecatedString::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
 
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
@@ -421,13 +421,13 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
     if (!region)
         return {};
 
-    String lib_name = region->lib_name();
+    DeprecatedString lib_name = region->lib_name();
     if (lib_name.is_null())
         return {};
 
-    String lib_path = lib_name;
+    DeprecatedString lib_path = lib_name;
     if (Core::File::looks_like_shared_library(lib_name))
-        lib_path = String::formatted("/usr/lib/{}", lib_path);
+        lib_path = DeprecatedString::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
         auto file_or_error = Core::MappedFile::map(lib_path);
@@ -465,7 +465,7 @@ Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
     VERIFY(first_region);
     auto lib_path = lib_name;
     if (Core::File::looks_like_shared_library(lib_name)) {
-        lib_path = String::formatted("/usr/lib/{}", lib_name);
+        lib_path = DeprecatedString::formatted("/usr/lib/{}", lib_name);
     }
 
     auto it = m_dynamic_library_cache.find(lib_path);
@@ -476,18 +476,18 @@ Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
     return { { lib_name, symbol, source_position } };
 }
 
-String Emulator::create_backtrace_line(FlatPtr address)
+DeprecatedString Emulator::create_backtrace_line(FlatPtr address)
 {
     auto maybe_symbol = symbol_at(address);
     if (!maybe_symbol.has_value()) {
-        return String::formatted("=={}==    {:p}", getpid(), address);
+        return DeprecatedString::formatted("=={}==    {:p}", getpid(), address);
     }
     if (!maybe_symbol->source_position.has_value()) {
-        return String::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
+        return DeprecatedString::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
     }
 
     auto const& source_position = maybe_symbol->source_position.value();
-    return String::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
+    return DeprecatedString::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
 }
 
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
@@ -515,7 +515,7 @@ void Emulator::emit_profile_sample(AK::OutputStream& output)
     output.write_or_error(builder.string_view().bytes());
 }
 
-void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, String const& contents)
+void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, DeprecatedString const& contents)
 {
     StringBuilder builder;
     timeval tv {};
@@ -525,13 +525,13 @@ void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_nam
     output.write_or_error(builder.string_view().bytes());
 }
 
-String Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
+DeprecatedString Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
 {
     auto symbol = symbol_at(address);
     if (!symbol.has_value() || !symbol->source_position.has_value())
-        return String::formatted("{:p}: {}", address, insn.to_string(address));
+        return DeprecatedString::formatted("{:p}: {}", address, insn.to_string(address));
 
-    return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
+    return DeprecatedString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum, siginfo_t* signal_info, void* context)

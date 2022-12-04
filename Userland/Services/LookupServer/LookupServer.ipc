@@ -2,6 +2,6 @@
 endpoint LookupServer
 {
     // Keep these definitions synchronized with gethostbyname and gethostbyaddr in netdb.cpp
-    lookup_name(String name) => (int code, Vector<String> addresses)
-    lookup_address(String address) => (int code, String name)
+    lookup_name(DeprecatedString name) => (int code, Vector<DeprecatedString> addresses)
+    lookup_address(DeprecatedString address) => (int code, DeprecatedString name)
 }

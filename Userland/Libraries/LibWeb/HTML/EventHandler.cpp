@@ -9,7 +9,7 @@
 
 namespace Web::HTML {
 
-EventHandler::EventHandler(String s)
+EventHandler::EventHandler(DeprecatedString s)
     : value(move(s))
 {
 }

@@ -128,7 +128,7 @@ void Request::did_progress(Badge<RequestClient>, Optional<u32> total_size, u32 d
         on_progress(total_size, downloaded_size);
 }
 
-void Request::did_receive_headers(Badge<RequestClient>, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)
+void Request::did_receive_headers(Badge<RequestClient>, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)
 {
     if (on_headers_received)
         on_headers_received(response_headers, response_code);

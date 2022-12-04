@@ -31,13 +31,13 @@ private:
     // ^DOM::Element
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-    virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
     virtual i32 default_tab_index_value() const override;
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
     void process_the_iframe_attributes(bool initial_insertion = false);
 
-    void load_src(String const&);
+    void load_src(DeprecatedString const&);
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#current-navigation-was-lazy-loaded
     bool m_current_navigation_was_lazy_loaded { false };

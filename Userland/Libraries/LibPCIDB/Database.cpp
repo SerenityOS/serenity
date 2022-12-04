@@ -12,7 +12,7 @@
 
 namespace PCIDB {
 
-RefPtr<Database> Database::open(String const& filename)
+RefPtr<Database> Database::open(DeprecatedString const& filename)
 {
     auto file_or_error = Core::MappedFile::map(filename);
     if (file_or_error.is_error())

@@ -39,7 +39,7 @@ private:
     Optional<State> m_async_generator_state;               // [[AsyncGeneratorState]]
     ExecutionContextVariant m_async_generator_context;     // [[AsyncGeneratorContext]]
     Vector<AsyncGeneratorRequest> m_async_generator_queue; // [[AsyncGeneratorQueue]]
-    Optional<String> m_generator_brand;                    // [[GeneratorBrand]]
+    Optional<DeprecatedString> m_generator_brand;          // [[GeneratorBrand]]
 };
 
 }

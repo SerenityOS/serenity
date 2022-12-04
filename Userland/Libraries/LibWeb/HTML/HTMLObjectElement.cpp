@@ -24,7 +24,7 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLObjectElement::~HTMLObjectElement() = default;
 
-void HTMLObjectElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLObjectElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     BrowsingContextContainer::parse_attribute(name, value);
 
@@ -33,7 +33,7 @@ void HTMLObjectElement::parse_attribute(FlyString const& name, String const& val
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-object-data
-String HTMLObjectElement::data() const
+DeprecatedString HTMLObjectElement::data() const
 {
     auto data = attribute(HTML::AttributeNames::data);
     return document().parse_url(data).to_string();
@@ -134,7 +134,7 @@ void HTMLObjectElement::resource_did_load()
     // 4.8. Determine the resource type, as follows:
 
     // 1. Let the resource type be unknown.
-    Optional<String> resource_type;
+    Optional<DeprecatedString> resource_type;
 
     // FIXME: 2. If the user agent is configured to strictly obey Content-Type headers for this resource, and the resource has associated Content-Type metadata, then let the resource type be the type specified in the resource's Content-Type metadata, and jump to the step below labeled handler.
     // FIXME: 3. If there is a type attribute present on the object element, and that attribute's value is not a type that the user agent supports, but it is a type that a plugin supports, then let the resource type be the type specified in that type attribute, and jump to the step below labeled handler.
@@ -167,7 +167,7 @@ void HTMLObjectElement::resource_did_load()
     }
     // * Otherwise, if the resource does not have associated Content-Type metadata
     else {
-        Optional<String> tentative_type;
+        Optional<DeprecatedString> tentative_type;
 
         // 1. If there is a type attribute present on the object element, then let the tentative type be the type specified in that type attribute.
         //    Otherwise, let tentative type be the computed type of the resource.
@@ -203,7 +203,7 @@ static bool is_xml_mime_type(StringView resource_type)
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:plugin-11
-void HTMLObjectElement::run_object_representation_handler_steps(Optional<String> resource_type)
+void HTMLObjectElement::run_object_representation_handler_steps(Optional<DeprecatedString> resource_type)
 {
     // 4.9. Handler: Handle the content as given by the first of the following cases that matches:
 

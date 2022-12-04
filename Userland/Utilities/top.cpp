@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
@@ -47,8 +47,8 @@ struct ThreadData {
     gid_t gid;
     pid_t ppid;
     unsigned nfds;
-    String name;
-    String tty;
+    DeprecatedString name;
+    DeprecatedString tty;
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
@@ -63,8 +63,8 @@ struct ThreadData {
     unsigned cpu_percent_decimal { 0 };
 
     u32 priority;
-    String username;
-    String state;
+    DeprecatedString username;
+    DeprecatedString state;
 };
 
 struct PidAndTid {

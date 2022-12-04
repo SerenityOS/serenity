@@ -69,7 +69,7 @@ bool HTMLLinkElement::has_loaded_icon() const
     return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
 }
 
-void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLLinkElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     // 4.6.7 Link types - https://html.spec.whatwg.org/multipage/links.html#linkTypes
     if (name == HTML::AttributeNames::rel) {

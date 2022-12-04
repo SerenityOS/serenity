@@ -38,7 +38,7 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
     });
 }
 
-void HTMLBodyElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLBodyElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name.equals_ignoring_case("link"sv)) {

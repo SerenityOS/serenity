@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Model.h>
@@ -64,7 +64,7 @@ public:
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(GUI::ModelIndex const&) const override;
     virtual int column_count(GUI::ModelIndex const&) const override;
-    virtual String column_name(int column) const override;
+    virtual DeprecatedString column_name(int column) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual GUI::ModelIndex index(int row, int column, GUI::ModelIndex const& parent = {}) const override;
     virtual GUI::ModelIndex parent_index(GUI::ModelIndex const&) const override;
@@ -104,14 +104,14 @@ private:
         u64 time_user { 0 };
         u64 time_kernel { 0 };
         bool kernel { false };
-        String executable { "" };
-        String name { "" };
-        String command { "" };
+        DeprecatedString executable { "" };
+        DeprecatedString name { "" };
+        DeprecatedString command { "" };
         uid_t uid { 0 };
-        String state { "" };
-        String user { "" };
-        String pledge { "" };
-        String veil { "" };
+        DeprecatedString state { "" };
+        DeprecatedString user { "" };
+        DeprecatedString pledge { "" };
+        DeprecatedString veil { "" };
         u32 cpu { 0 };
         u32 priority { 0 };
         size_t amount_virtual { 0 };

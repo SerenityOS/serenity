@@ -78,7 +78,7 @@ public:
     WebIDL::ExceptionOr<void> insert_node(JS::NonnullGCPtr<Node>);
     WebIDL::ExceptionOr<void> surround_contents(JS::NonnullGCPtr<Node> new_parent);
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
     static HashTable<Range*>& live_ranges();
 

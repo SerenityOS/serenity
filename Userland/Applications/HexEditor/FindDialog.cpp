@@ -6,8 +6,8 @@
 
 #include "FindDialog.h"
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Hex.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
@@ -31,7 +31,7 @@ static constexpr Array<Option, 2> options = {
     }
 };
 
-GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
+GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, DeprecatedString& out_text, ByteBuffer& out_buffer, bool& find_all)
 {
     auto dialog = FindDialog::construct();
 
@@ -67,13 +67,13 @@ GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out
     return result;
 }
 
-Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId opt)
+Result<ByteBuffer, DeprecatedString> FindDialog::process_input(DeprecatedString text_value, OptionId opt)
 {
     dbgln("process_input opt={}", (int)opt);
     switch (opt) {
     case OPTION_ASCII_STRING: {
         if (text_value.is_empty())
-            return String("Input is empty");
+            return DeprecatedString("Input is empty");
 
         return text_value.to_byte_buffer();
     }
@@ -81,7 +81,7 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     case OPTION_HEX_VALUE: {
         auto decoded = decode_hex(text_value.replace(" "sv, ""sv, ReplaceMode::All));
         if (decoded.is_error())
-            return String::formatted("Input is invalid: {}", decoded.error().string_literal());
+            return DeprecatedString::formatted("Input is invalid: {}", decoded.error().string_literal());
 
         return decoded.value();
     }

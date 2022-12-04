@@ -84,7 +84,7 @@ public:
     {
     }
 
-    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error, String error_message)
+    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error, DeprecatedString error_message)
         : m_command(command)
         , m_error(error)
         , m_error_message(move(error_message))
@@ -102,7 +102,7 @@ public:
 
     SQLCommand command() const { return m_command; }
     SQLErrorCode error() const { return m_error; }
-    String error_string() const;
+    DeprecatedString error_string() const;
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return m_error != SQLErrorCode::NoError; }
@@ -122,7 +122,7 @@ private:
     SQLCommand m_command { SQLCommand::Unknown };
 
     SQLErrorCode m_error { SQLErrorCode::NoError };
-    Optional<String> m_error_message {};
+    Optional<DeprecatedString> m_error_message {};
 };
 
 template<typename ValueType>

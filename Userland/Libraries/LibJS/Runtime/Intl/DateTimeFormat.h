@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -43,17 +43,17 @@ public:
 
     virtual ~DateTimeFormat() override = default;
 
-    String const& locale() const { return m_locale; }
-    void set_locale(String locale) { m_locale = move(locale); }
+    DeprecatedString const& locale() const { return m_locale; }
+    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
 
-    String const& data_locale() const { return m_data_locale; }
-    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
+    DeprecatedString const& data_locale() const { return m_data_locale; }
+    void set_data_locale(DeprecatedString data_locale) { m_data_locale = move(data_locale); }
 
-    String const& calendar() const { return m_calendar; }
-    void set_calendar(String calendar) { m_calendar = move(calendar); }
+    DeprecatedString const& calendar() const { return m_calendar; }
+    void set_calendar(DeprecatedString calendar) { m_calendar = move(calendar); }
 
-    String const& numbering_system() const { return m_numbering_system; }
-    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
+    DeprecatedString const& numbering_system() const { return m_numbering_system; }
+    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
 
     bool has_hour_cycle() const { return m_hour_cycle.has_value(); }
     ::Locale::HourCycle hour_cycle() const { return *m_hour_cycle; }
@@ -61,8 +61,8 @@ public:
     void set_hour_cycle(::Locale::HourCycle hour_cycle) { m_hour_cycle = hour_cycle; }
     void clear_hour_cycle() { m_hour_cycle.clear(); }
 
-    String const& time_zone() const { return m_time_zone; }
-    void set_time_zone(String time_zone) { m_time_zone = move(time_zone); }
+    DeprecatedString const& time_zone() const { return m_time_zone; }
+    void set_time_zone(DeprecatedString time_zone) { m_time_zone = move(time_zone); }
 
     bool has_date_style() const { return m_date_style.has_value(); }
     Style date_style() const { return *m_date_style; };
@@ -74,8 +74,8 @@ public:
     StringView time_style_string() const { return style_to_string(*m_time_style); };
     void set_time_style(StringView style) { m_time_style = style_from_string(style); };
 
-    String const& pattern() const { return Patterns::pattern; };
-    void set_pattern(String pattern) { Patterns::pattern = move(pattern); }
+    DeprecatedString const& pattern() const { return Patterns::pattern; };
+    void set_pattern(DeprecatedString pattern) { Patterns::pattern = move(pattern); }
 
     Span<::Locale::CalendarRangePattern const> range_patterns() const { return m_range_patterns.span(); };
     void set_range_patterns(Vector<::Locale::CalendarRangePattern> range_patterns) { m_range_patterns = move(range_patterns); }
@@ -134,17 +134,17 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    String m_locale;                                         // [[Locale]]
-    String m_calendar;                                       // [[Calendar]]
-    String m_numbering_system;                               // [[NumberingSystem]]
+    DeprecatedString m_locale;                               // [[Locale]]
+    DeprecatedString m_calendar;                             // [[Calendar]]
+    DeprecatedString m_numbering_system;                     // [[NumberingSystem]]
     Optional<::Locale::HourCycle> m_hour_cycle;              // [[HourCycle]]
-    String m_time_zone;                                      // [[TimeZone]]
+    DeprecatedString m_time_zone;                            // [[TimeZone]]
     Optional<Style> m_date_style;                            // [[DateStyle]]
     Optional<Style> m_time_style;                            // [[TimeStyle]]
     Vector<::Locale::CalendarRangePattern> m_range_patterns; // [[RangePatterns]]
     NativeFunction* m_bound_format { nullptr };              // [[BoundFormat]]
 
-    String m_data_locale;
+    DeprecatedString m_data_locale;
 };
 
 enum class OptionRequired {
@@ -186,10 +186,10 @@ Optional<::Locale::CalendarPattern> basic_format_matcher(::Locale::CalendarPatte
 Optional<::Locale::CalendarPattern> best_fit_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM&, DateTimeFormat&, Vector<PatternPartition> pattern_parts, double time, ::Locale::CalendarPattern const* range_format_options);
 ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM&, DateTimeFormat&, double time);
-ThrowCompletionOr<String> format_date_time(VM&, DateTimeFormat&, double time);
+ThrowCompletionOr<DeprecatedString> format_date_time(VM&, DateTimeFormat&, double time);
 ThrowCompletionOr<Array*> format_date_time_to_parts(VM&, DateTimeFormat&, double time);
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(VM&, DateTimeFormat&, double start, double end);
-ThrowCompletionOr<String> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
+ThrowCompletionOr<DeprecatedString> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<LocalTime> to_local_time(VM&, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone);
 

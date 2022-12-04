@@ -18,7 +18,7 @@ ShellComprehensionEngine::ShellComprehensionEngine(FileDB const& filedb)
 {
 }
 
-ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_or_create_document_data(String const& file)
+ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_or_create_document_data(DeprecatedString const& file)
 {
     auto absolute_path = filedb().to_absolute_path(file);
     if (!m_documents.contains(absolute_path)) {
@@ -27,7 +27,7 @@ ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_or_c
     return get_document_data(absolute_path);
 }
 
-ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_document_data(String const& file) const
+ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_document_data(DeprecatedString const& file) const
 {
     auto absolute_path = filedb().to_absolute_path(file);
     auto document_data = m_documents.get(absolute_path);
@@ -35,7 +35,7 @@ ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_docu
     return *document_data.value();
 }
 
-OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(String const& file)
+OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(DeprecatedString const& file)
 {
     auto document = filedb().get_or_read_from_filesystem(file);
     if (!document.has_value())
@@ -50,19 +50,19 @@ OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_
     return document_data;
 }
 
-void ShellComprehensionEngine::set_document_data(String const& file, OwnPtr<DocumentData>&& data)
+void ShellComprehensionEngine::set_document_data(DeprecatedString const& file, OwnPtr<DocumentData>&& data)
 {
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-ShellComprehensionEngine::DocumentData::DocumentData(String&& _text, String _filename)
+ShellComprehensionEngine::DocumentData::DocumentData(DeprecatedString&& _text, DeprecatedString _filename)
     : filename(move(_filename))
     , text(move(_text))
     , node(parse())
 {
 }
 
-Vector<String> const& ShellComprehensionEngine::DocumentData::sourced_paths() const
+Vector<DeprecatedString> const& ShellComprehensionEngine::DocumentData::sourced_paths() const
 {
     if (all_sourced_paths.has_value())
         return all_sourced_paths.value();
@@ -88,12 +88,12 @@ Vector<String> const& ShellComprehensionEngine::DocumentData::sourced_paths() co
             ::Shell::AST::NodeVisitor::visit(node);
         }
 
-        HashTable<String> sourced_files;
+        HashTable<DeprecatedString> sourced_files;
     } visitor;
 
     node->visit(visitor);
 
-    Vector<String> sourced_paths;
+    Vector<DeprecatedString> sourced_paths;
     for (auto& entry : visitor.sourced_files)
         sourced_paths.append(move(entry));
 
@@ -133,7 +133,7 @@ size_t ShellComprehensionEngine::resolve(ShellComprehensionEngine::DocumentData 
     return offset;
 }
 
-Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get_suggestions(String const& file, const GUI::TextPosition& position)
+Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get_suggestions(DeprecatedString const& file, const GUI::TextPosition& position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "ShellComprehensionEngine position {}:{}", position.line(), position.column());
 
@@ -154,17 +154,17 @@ Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get
     return entries;
 }
 
-void ShellComprehensionEngine::on_edit(String const& file)
+void ShellComprehensionEngine::on_edit(DeprecatedString const& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-void ShellComprehensionEngine::file_opened([[maybe_unused]] String const& file)
+void ShellComprehensionEngine::file_opened([[maybe_unused]] DeprecatedString const& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position)
+Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_declaration_of(DeprecatedString const& filename, const GUI::TextPosition& identifier_position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
     auto const& document = get_or_create_document_data(filename);
@@ -195,7 +195,7 @@ Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_decl
 void ShellComprehensionEngine::update_declared_symbols(DocumentData const& document)
 {
     struct Visitor : public ::Shell::AST::NodeVisitor {
-        explicit Visitor(String const& filename)
+        explicit Visitor(DeprecatedString const& filename)
             : filename(filename)
         {
         }
@@ -207,7 +207,7 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
                 if (!literal)
                     continue;
 
-                String name;
+                DeprecatedString name;
                 if (literal->is_bareword())
                     name = static_ptr_cast<::Shell::AST::BarewordLiteral>(literal)->text();
 
@@ -225,7 +225,7 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
             declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, CodeComprehension::DeclarationType::Function, {} });
         }
 
-        String const& filename;
+        DeprecatedString const& filename;
         Vector<CodeComprehension::Declaration> declarations;
     } visitor { document.filename };
 

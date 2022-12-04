@@ -31,7 +31,7 @@ struct MatchingRule {
 
 class PropertyDependencyNode : public RefCounted<PropertyDependencyNode> {
 public:
-    static NonnullRefPtr<PropertyDependencyNode> create(String name)
+    static NonnullRefPtr<PropertyDependencyNode> create(DeprecatedString name)
     {
         return adopt_ref(*new PropertyDependencyNode(move(name)));
     }
@@ -40,9 +40,9 @@ public:
     bool has_cycles();
 
 private:
-    explicit PropertyDependencyNode(String name);
+    explicit PropertyDependencyNode(DeprecatedString name);
 
-    String m_name;
+    DeprecatedString m_name;
     NonnullRefPtrVector<PropertyDependencyNode> m_children;
     bool m_marked { false };
 };
@@ -118,7 +118,7 @@ private:
     OwnPtr<RuleCache> m_rule_cache;
 
     class FontLoader;
-    HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
+    HashMap<DeprecatedString, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
 };
 
 }

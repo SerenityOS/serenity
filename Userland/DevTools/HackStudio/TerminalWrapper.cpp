@@ -6,7 +6,7 @@
  */
 
 #include "TerminalWrapper.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -24,7 +24,7 @@
 
 namespace HackStudio {
 
-ErrorOr<void> TerminalWrapper::run_command(String const& command, Optional<String> working_directory, WaitForExit wait_for_exit, Optional<StringView> failure_message)
+ErrorOr<void> TerminalWrapper::run_command(DeprecatedString const& command, Optional<DeprecatedString> working_directory, WaitForExit wait_for_exit, Optional<StringView> failure_message)
 {
     if (m_pid != -1) {
         GUI::MessageBox::show(window(),
@@ -92,11 +92,11 @@ ErrorOr<int> TerminalWrapper::setup_master_pseudoterminal(WaitForChildOnExit wai
             int wstatus = result.release_value().status;
 
             if (WIFEXITED(wstatus)) {
-                m_terminal_widget->inject_string(String::formatted("\033[{};1m(Command exited with code {})\033[0m\r\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
+                m_terminal_widget->inject_string(DeprecatedString::formatted("\033[{};1m(Command exited with code {})\033[0m\r\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
             } else if (WIFSTOPPED(wstatus)) {
                 m_terminal_widget->inject_string("\033[34;1m(Command stopped!)\033[0m\r\n"sv);
             } else if (WIFSIGNALED(wstatus)) {
-                m_terminal_widget->inject_string(String::formatted("\033[34;1m(Command signaled with {}!)\033[0m\r\n", strsignal(WTERMSIG(wstatus))));
+                m_terminal_widget->inject_string(DeprecatedString::formatted("\033[34;1m(Command signaled with {}!)\033[0m\r\n", strsignal(WTERMSIG(wstatus))));
             }
 
             m_child_exit_status = WEXITSTATUS(wstatus);

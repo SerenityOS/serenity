@@ -16,7 +16,7 @@ void History::push(StringView history_item)
     m_current_history_item++;
 }
 
-String History::current()
+DeprecatedString History::current()
 {
     if (m_current_history_item == -1)
         return {};

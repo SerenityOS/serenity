@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/String.h>
 #include <LibCore/Object.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Result.h>
@@ -25,19 +25,19 @@ public:
 
     static RefPtr<SQLStatement> statement_for(int statement_id);
     int statement_id() const { return m_statement_id; }
-    String const& sql() const { return m_sql; }
+    DeprecatedString const& sql() const { return m_sql; }
     DatabaseConnection* connection() { return dynamic_cast<DatabaseConnection*>(parent()); }
     void execute();
 
 private:
-    SQLStatement(DatabaseConnection&, String sql);
+    SQLStatement(DatabaseConnection&, DeprecatedString sql);
     SQL::ResultOr<void> parse();
     bool should_send_result_rows() const;
     void next();
     void report_error(SQL::Result);
 
     int m_statement_id;
-    String m_sql;
+    DeprecatedString m_sql;
     size_t m_index { 0 };
     RefPtr<SQL::AST::Statement> m_statement { nullptr };
     Optional<SQL::ResultSet> m_result {};

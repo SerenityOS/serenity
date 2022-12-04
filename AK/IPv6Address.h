@@ -16,7 +16,7 @@
 #    include <AK/Error.h>
 #    include <Kernel/KString.h>
 #else
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
@@ -51,7 +51,7 @@ public:
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
 #else
-    String to_string() const
+    DeprecatedString to_string() const
 #endif
     {
         if (is_zero()) {
@@ -69,7 +69,7 @@ public:
 #ifdef KERNEL
             return Kernel::KString::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
 #else
-            return String::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
+            return DeprecatedString::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
 #endif
         }
 
@@ -289,10 +289,10 @@ struct Formatter<IPv6Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>
 };
 #else
 template<>
-struct Formatter<IPv6Address> : Formatter<String> {
+struct Formatter<IPv6Address> : Formatter<DeprecatedString> {
     ErrorOr<void> format(FormatBuilder& builder, IPv6Address const& value)
     {
-        return Formatter<String>::format(builder, value.to_string());
+        return Formatter<DeprecatedString>::format(builder, value.to_string());
     }
 };
 #endif

@@ -158,7 +158,7 @@ JS::NonnullGCPtr<Response> Response::error(JS::VM& vm)
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-redirect
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, String const& url, u16 status)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, DeprecatedString const& url, u16 status)
 {
     auto& realm = *vm.current_realm();
 
@@ -226,11 +226,11 @@ Bindings::ResponseType Response::type() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-url
-String Response::url() const
+DeprecatedString Response::url() const
 {
     // The url getter steps are to return the empty string if this’s response’s URL is null; otherwise this’s response’s URL, serialized with exclude fragment set to true.
     return !m_response->url().has_value()
-        ? String::empty()
+        ? DeprecatedString::empty()
         : m_response->url()->serialize(AK::URL::ExcludeFragment::Yes);
 }
 
@@ -256,10 +256,10 @@ bool Response::ok() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-statustext
-String Response::status_text() const
+DeprecatedString Response::status_text() const
 {
     // The statusText getter steps are to return this’s response’s status message.
-    return String::copy(m_response->status_message());
+    return DeprecatedString::copy(m_response->status_message());
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-headers

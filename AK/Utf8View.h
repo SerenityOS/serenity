@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -60,7 +60,7 @@ public:
 
     Utf8View() = default;
 
-    explicit Utf8View(String& string)
+    explicit Utf8View(DeprecatedString& string)
         : m_string(string.view())
     {
     }
@@ -72,7 +72,7 @@ public:
 
     ~Utf8View() = default;
 
-    explicit Utf8View(String&&) = delete;
+    explicit Utf8View(DeprecatedString&&) = delete;
 
     StringView as_string() const { return m_string; }
 

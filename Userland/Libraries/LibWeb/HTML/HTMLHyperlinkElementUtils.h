@@ -16,55 +16,55 @@ class HTMLHyperlinkElementUtils {
 public:
     virtual ~HTMLHyperlinkElementUtils();
 
-    String origin() const;
+    DeprecatedString origin() const;
 
-    String href() const;
-    void set_href(String);
+    DeprecatedString href() const;
+    void set_href(DeprecatedString);
 
-    String protocol() const;
-    void set_protocol(String);
+    DeprecatedString protocol() const;
+    void set_protocol(DeprecatedString);
 
-    String username() const;
-    void set_username(String);
+    DeprecatedString username() const;
+    void set_username(DeprecatedString);
 
-    String password() const;
-    void set_password(String);
+    DeprecatedString password() const;
+    void set_password(DeprecatedString);
 
-    String host() const;
-    void set_host(String);
+    DeprecatedString host() const;
+    void set_host(DeprecatedString);
 
-    String hostname() const;
-    void set_hostname(String);
+    DeprecatedString hostname() const;
+    void set_hostname(DeprecatedString);
 
-    String port() const;
-    void set_port(String);
+    DeprecatedString port() const;
+    void set_port(DeprecatedString);
 
-    String pathname() const;
-    void set_pathname(String);
+    DeprecatedString pathname() const;
+    void set_pathname(DeprecatedString);
 
-    String search() const;
-    void set_search(String);
+    DeprecatedString search() const;
+    void set_search(DeprecatedString);
 
-    String hash() const;
-    void set_hash(String);
+    DeprecatedString hash() const;
+    void set_hash(DeprecatedString);
 
 protected:
     virtual DOM::Document& hyperlink_element_utils_document() = 0;
-    virtual String hyperlink_element_utils_href() const = 0;
-    virtual void set_hyperlink_element_utils_href(String) = 0;
+    virtual DeprecatedString hyperlink_element_utils_href() const = 0;
+    virtual void set_hyperlink_element_utils_href(DeprecatedString) = 0;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
     virtual bool hyperlink_element_utils_is_connected() const = 0;
-    virtual String hyperlink_element_utils_target() const = 0;
+    virtual DeprecatedString hyperlink_element_utils_target() const = 0;
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();
-    void follow_the_hyperlink(Optional<String> hyperlink_suffix);
+    void follow_the_hyperlink(Optional<DeprecatedString> hyperlink_suffix);
 
 private:
     void reinitialize_url() const;
     void update_href();
     bool cannot_navigate() const;
-    String get_an_elements_target() const;
+    DeprecatedString get_an_elements_target() const;
     bool get_an_elements_noopener(StringView target) const;
 
     Optional<AK::URL> m_url;

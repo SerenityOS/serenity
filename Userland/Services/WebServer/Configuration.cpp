@@ -10,7 +10,7 @@ namespace WebServer {
 
 static Configuration* s_configuration = nullptr;
 
-Configuration::Configuration(String root_path)
+Configuration::Configuration(DeprecatedString root_path)
     : m_root_path(move(root_path))
 {
     VERIFY(!s_configuration);

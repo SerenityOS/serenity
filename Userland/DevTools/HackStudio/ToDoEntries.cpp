@@ -14,7 +14,7 @@ ToDoEntries& HackStudio::ToDoEntries::the()
     return s_instance;
 }
 
-void ToDoEntries::set_entries(String const& filename, Vector<CodeComprehension::TodoEntry> const&& entries)
+void ToDoEntries::set_entries(DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry> const&& entries)
 {
     m_document_to_entries.set(filename, move(entries));
     if (on_update)

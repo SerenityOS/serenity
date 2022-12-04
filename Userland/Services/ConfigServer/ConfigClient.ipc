@@ -1,9 +1,9 @@
 endpoint ConfigClient
 {
-    notify_changed_string_value(String domain, String group, String key, String value) =|
-    notify_changed_i32_value(String domain, String group, String key, i32 value) =|
-    notify_changed_bool_value(String domain, String group, String key, bool value) =|
-    notify_removed_key(String domain, String group, String key) =|
-    notify_removed_group(String domain, String group) =|
-    notify_added_group(String domain, String group) =|
+    notify_changed_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, DeprecatedString value) =|
+    notify_changed_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, i32 value) =|
+    notify_changed_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, bool value) =|
+    notify_removed_key(DeprecatedString domain, DeprecatedString group, DeprecatedString key) =|
+    notify_removed_group(DeprecatedString domain, DeprecatedString group) =|
+    notify_added_group(DeprecatedString domain, DeprecatedString group) =|
 }

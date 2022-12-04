@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -14,7 +14,7 @@
 namespace Web::Infra {
 
 // https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
-String strip_and_collapse_whitespace(StringView string)
+DeprecatedString strip_and_collapse_whitespace(StringView string)
 {
     // Replace any sequence of one or more consecutive code points that are ASCII whitespace in the string with a single U+0020 SPACE code point.
     StringBuilder builder;

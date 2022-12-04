@@ -19,14 +19,14 @@ ProcessorParameterWidget::ProcessorParameterWidget(DSP::ProcessorParameter& raw_
     switch (raw_parameter.type()) {
     case DSP::ParameterType::Range: {
         auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
-        m_value_label = add<GUI::Label>(String::number(static_cast<double>(parameter.value())));
+        m_value_label = add<GUI::Label>(DeprecatedString::number(static_cast<double>(parameter.value())));
         m_parameter_modifier = add<ProcessorParameterSlider>(Orientation::Vertical, parameter, m_value_label);
         break;
     }
     case DSP::ParameterType::Enum: {
         // FIXME: We shouldn't do that, but the only user is the synth right now.
         auto& parameter = static_cast<DSP::ProcessorEnumParameter<DSP::Synthesizers::Waveform>&>(raw_parameter);
-        auto enum_strings = Vector<String> { "Sine", "Triangle", "Square", "Saw", "Noise" };
+        auto enum_strings = Vector<DeprecatedString> { "Sine", "Triangle", "Square", "Saw", "Noise" };
         m_parameter_modifier = add<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>>(parameter, move(enum_strings));
         break;
     }

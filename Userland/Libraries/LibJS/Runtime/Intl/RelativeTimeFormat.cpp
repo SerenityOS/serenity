@@ -222,7 +222,7 @@ Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView 
 }
 
 // 17.5.4 FormatRelativeTime ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTime
-ThrowCompletionOr<String> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<DeprecatedString> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
     // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
     auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));

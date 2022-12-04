@@ -23,7 +23,7 @@ int main(int argc, char** argv, char** env)
 {
     Vector<StringView> arguments;
     bool pause_on_startup { false };
-    String profile_dump_path;
+    DeprecatedString profile_dump_path;
     FILE* profile_output_file { nullptr };
     bool enable_roi_mode { false };
     bool dump_profile { false };
@@ -45,7 +45,7 @@ int main(int argc, char** argv, char** env)
     if (dump_profile && profile_instruction_interval == 0)
         profile_instruction_interval = 128;
 
-    String executable_path;
+    DeprecatedString executable_path;
     if (arguments[0].contains("/"sv))
         executable_path = Core::File::real_path_for(arguments[0]);
     else
@@ -56,10 +56,10 @@ int main(int argc, char** argv, char** env)
     }
 
     if (dump_profile && profile_dump_path.is_empty())
-        profile_dump_path = String::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
+        profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
     OwnPtr<OutputFileStream> profile_stream;
-    OwnPtr<NonnullOwnPtrVector<String>> profile_strings;
+    OwnPtr<NonnullOwnPtrVector<DeprecatedString>> profile_strings;
     OwnPtr<Vector<int>> profile_string_id_map;
 
     if (dump_profile) {
@@ -70,20 +70,20 @@ int main(int argc, char** argv, char** env)
             return 1;
         }
         profile_stream = make<OutputFileStream>(profile_output_file);
-        profile_strings = make<NonnullOwnPtrVector<String>>();
+        profile_strings = make<NonnullOwnPtrVector<DeprecatedString>>();
         profile_string_id_map = make<Vector<int>>();
 
         profile_stream->write_or_error(R"({"events":[)"sv.bytes());
         timeval tv {};
         gettimeofday(&tv, nullptr);
         profile_stream->write_or_error(
-            String::formatted(
+            DeprecatedString::formatted(
                 R"~({{"type": "process_create", "parent_pid": 1, "executable": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": []}})~",
                 executable_path, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000)
                 .bytes());
     }
 
-    Vector<String> environment;
+    Vector<DeprecatedString> environment;
     for (int i = 0; env[i]; ++i) {
         environment.append(env[i]);
     }
@@ -119,8 +119,8 @@ int main(int argc, char** argv, char** env)
         emulator.profile_stream().write_or_error("], \"strings\": ["sv.bytes());
         if (emulator.profiler_strings().size()) {
             for (size_t i = 0; i < emulator.profiler_strings().size() - 1; ++i)
-                emulator.profile_stream().write_or_error(String::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes());
-            emulator.profile_stream().write_or_error(String::formatted("\"{}\"", emulator.profiler_strings().last()).bytes());
+                emulator.profile_stream().write_or_error(DeprecatedString::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes());
+            emulator.profile_stream().write_or_error(DeprecatedString::formatted("\"{}\"", emulator.profiler_strings().last()).bytes());
         }
         emulator.profile_stream().write_or_error("]}"sv.bytes());
     }

@@ -56,7 +56,7 @@ public:
     void remove_widget(Widget&);
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> try_add_tab(String title, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> try_add_tab(DeprecatedString title, Args&&... args)
     {
         auto t = TRY(T::try_create(forward<Args>(args)...));
         t->set_title(move(title));
@@ -65,7 +65,7 @@ public:
     }
 
     template<class T, class... Args>
-    T& add_tab(String title, Args&&... args)
+    T& add_tab(DeprecatedString title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
         t->set_title(move(title));
@@ -136,7 +136,7 @@ private:
 
     struct TabData {
         int width(Gfx::Font const&) const;
-        String title;
+        DeprecatedString title;
         RefPtr<Gfx::Bitmap> icon;
         Widget* widget { nullptr };
     };

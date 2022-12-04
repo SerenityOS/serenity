@@ -18,7 +18,7 @@
 
 namespace JS {
 
-String MarkupGenerator::html_from_source(StringView source)
+DeprecatedString MarkupGenerator::html_from_source(StringView source)
 {
     StringBuilder builder;
     auto lexer = Lexer(source);
@@ -29,14 +29,14 @@ String MarkupGenerator::html_from_source(StringView source)
     return builder.to_string();
 }
 
-String MarkupGenerator::html_from_value(Value value)
+DeprecatedString MarkupGenerator::html_from_value(Value value)
 {
     StringBuilder output_html;
     value_to_html(value, output_html);
     return output_html.to_string();
 }
 
-String MarkupGenerator::html_from_error(Error const& object, bool in_promise)
+DeprecatedString MarkupGenerator::html_from_error(Error const& object, bool in_promise)
 {
     StringBuilder output_html;
     error_to_html(object, output_html, in_promise);
@@ -110,7 +110,7 @@ void MarkupGenerator::object_to_html(Object const& object, StringBuilder& html_o
         if (!first)
             html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
         first = false;
-        html_output.append(wrap_string_in_style(String::number(entry.index()), StyleType::Number));
+        html_output.append(wrap_string_in_style(DeprecatedString::number(entry.index()), StyleType::Number));
         html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
         // FIXME: Exception check
         value_to_html(object.get(entry.index()).release_value(), html_output, seen_objects);
@@ -121,7 +121,7 @@ void MarkupGenerator::object_to_html(Object const& object, StringBuilder& html_o
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
-        html_output.append(wrap_string_in_style(String::formatted("\"{}\"", escape_html_entities(it.key.to_display_string())), StyleType::String));
+        html_output.append(wrap_string_in_style(DeprecatedString::formatted("\"{}\"", escape_html_entities(it.key.to_display_string())), StyleType::String));
         html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
         value_to_html(object.get_direct(it.value.offset), html_output, seen_objects);
         if (index != object.shape().property_count() - 1)
@@ -151,7 +151,7 @@ void MarkupGenerator::trace_to_html(TracebackFrame const& traceback_frame, Strin
         return last_slash_index.has_value() ? filename.substring_view(*last_slash_index + 1) : filename;
     };
     auto filename = escape_html_entities(get_filename_from_path(traceback_frame.source_range.filename()));
-    auto trace = String::formatted("at {} ({}:{}:{})", function_name, filename, line, column);
+    auto trace = DeprecatedString::formatted("at {} ({}:{}:{})", function_name, filename, line, column);
 
     html_output.appendff("&nbsp;&nbsp;{}<br>", trace);
 }
@@ -163,7 +163,7 @@ void MarkupGenerator::error_to_html(Error const& error, StringBuilder& html_outp
     auto message = error.get_without_side_effects(vm.names.message).value_or(js_undefined());
     auto name_string = name.to_string_without_side_effects();
     auto message_string = message.to_string_without_side_effects();
-    auto uncaught_message = String::formatted("Uncaught {}[{}]: ", in_promise ? "(in promise) " : "", name_string);
+    auto uncaught_message = DeprecatedString::formatted("Uncaught {}[{}]: ", in_promise ? "(in promise) " : "", name_string);
 
     html_output.append(wrap_string_in_style(uncaught_message, StyleType::Invalid));
     html_output.appendff("{}<br>", message_string.is_empty() ? "\"\"" : escape_html_entities(message_string));
@@ -174,7 +174,7 @@ void MarkupGenerator::error_to_html(Error const& error, StringBuilder& html_outp
     }
 }
 
-String MarkupGenerator::style_from_style_type(StyleType type)
+DeprecatedString MarkupGenerator::style_from_style_type(StyleType type)
 {
     switch (type) {
     case StyleType::Invalid:
@@ -233,14 +233,14 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     }
 }
 
-String MarkupGenerator::open_style_type(StyleType type)
+DeprecatedString MarkupGenerator::open_style_type(StyleType type)
 {
-    return String::formatted("<span style=\"{}\">", style_from_style_type(type));
+    return DeprecatedString::formatted("<span style=\"{}\">", style_from_style_type(type));
 }
 
-String MarkupGenerator::wrap_string_in_style(String source, StyleType type)
+DeprecatedString MarkupGenerator::wrap_string_in_style(DeprecatedString source, StyleType type)
 {
-    return String::formatted("<span style=\"{}\">{}</span>", style_from_style_type(type), escape_html_entities(source));
+    return DeprecatedString::formatted("<span style=\"{}\">{}</span>", style_from_style_type(type), escape_html_entities(source));
 }
 
 }

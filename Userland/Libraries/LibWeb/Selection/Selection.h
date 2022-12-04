@@ -31,7 +31,7 @@ public:
     unsigned focus_offset() const;
     bool is_collapsed() const;
     unsigned range_count() const;
-    String type() const;
+    DeprecatedString type() const;
     WebIDL::ExceptionOr<JS::GCPtr<DOM::Range>> get_range_at(unsigned index);
     void add_range(JS::NonnullGCPtr<DOM::Range>);
     WebIDL::ExceptionOr<void> remove_range(JS::NonnullGCPtr<DOM::Range>);
@@ -48,7 +48,7 @@ public:
     delete_from_document();
     bool contains_node(JS::NonnullGCPtr<DOM::Node>, bool allow_partial_containment) const;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     Selection(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);

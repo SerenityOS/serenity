@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
@@ -22,22 +22,22 @@ class CharacterData
 public:
     virtual ~CharacterData() override = default;
 
-    String const& data() const { return m_data; }
-    void set_data(String);
+    DeprecatedString const& data() const { return m_data; }
+    void set_data(DeprecatedString);
 
     unsigned length() const { return m_data.length(); }
 
-    WebIDL::ExceptionOr<String> substring_data(size_t offset, size_t count) const;
-    WebIDL::ExceptionOr<void> append_data(String const&);
-    WebIDL::ExceptionOr<void> insert_data(size_t offset, String const&);
+    WebIDL::ExceptionOr<DeprecatedString> substring_data(size_t offset, size_t count) const;
+    WebIDL::ExceptionOr<void> append_data(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> insert_data(size_t offset, DeprecatedString const&);
     WebIDL::ExceptionOr<void> delete_data(size_t offset, size_t count);
-    WebIDL::ExceptionOr<void> replace_data(size_t offset, size_t count, String const&);
+    WebIDL::ExceptionOr<void> replace_data(size_t offset, size_t count, DeprecatedString const&);
 
 protected:
-    CharacterData(Document&, NodeType, String const&);
+    CharacterData(Document&, NodeType, DeprecatedString const&);
 
 private:
-    String m_data;
+    DeprecatedString m_data;
 };
 
 }

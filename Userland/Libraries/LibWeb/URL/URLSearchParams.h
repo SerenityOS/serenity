@@ -13,10 +13,10 @@
 namespace Web::URL {
 
 struct QueryParam {
-    String name;
-    String value;
+    DeprecatedString name;
+    DeprecatedString value;
 };
-String url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
+DeprecatedString url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
 Vector<QueryParam> url_decode(StringView);
 
 class URLSearchParams : public Bindings::PlatformObject {
@@ -24,22 +24,22 @@ class URLSearchParams : public Bindings::PlatformObject {
 
 public:
     static JS::NonnullGCPtr<URLSearchParams> create(JS::Realm&, Vector<QueryParam> list);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> construct_impl(JS::Realm&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> construct_impl(JS::Realm&, Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>, DeprecatedString> const& init);
 
     virtual ~URLSearchParams() override;
 
-    void append(String const& name, String const& value);
-    void delete_(String const& name);
-    String get(String const& name);
-    Vector<String> get_all(String const& name);
-    bool has(String const& name);
-    void set(String const& name, String const& value);
+    void append(DeprecatedString const& name, DeprecatedString const& value);
+    void delete_(DeprecatedString const& name);
+    DeprecatedString get(DeprecatedString const& name);
+    Vector<DeprecatedString> get_all(DeprecatedString const& name);
+    bool has(DeprecatedString const& name);
+    void set(DeprecatedString const& name, DeprecatedString const& value);
 
     void sort();
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
-    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, String const&)>;
+    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(DeprecatedString const&, DeprecatedString const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
 
 private:

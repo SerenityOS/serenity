@@ -24,8 +24,8 @@ public:
     void set_color(Color, AllowCallback = AllowCallback::Yes);
     Color color() { return m_color; }
 
-    void set_color_picker_title(String title) { m_color_picker_title = move(title); }
-    String color_picker_title() { return m_color_picker_title; }
+    void set_color_picker_title(DeprecatedString title) { m_color_picker_title = move(title); }
+    DeprecatedString color_picker_title() { return m_color_picker_title; }
 
     Function<void()> on_change;
 
@@ -42,7 +42,7 @@ private:
     void set_color_internal(Color, AllowCallback, bool change_text);
 
     Color m_color;
-    String m_color_picker_title { "Select color" };
+    DeprecatedString m_color_picker_title { "Select color" };
     bool m_color_has_alpha_channel { true };
     bool m_may_be_color_rect_click { false };
 };

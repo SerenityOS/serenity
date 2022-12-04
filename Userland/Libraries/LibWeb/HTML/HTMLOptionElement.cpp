@@ -25,7 +25,7 @@ HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLOptionElement::~HTMLOptionElement() = default;
 
-void HTMLOptionElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLOptionElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -59,7 +59,7 @@ void HTMLOptionElement::set_selected(bool selected)
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
-String HTMLOptionElement::value() const
+DeprecatedString HTMLOptionElement::value() const
 {
     // The value of an option element is the value of the value content attribute, if there is one.
     if (auto value_attr = get_attribute(HTML::AttributeNames::value); !value_attr.is_null())
@@ -70,7 +70,7 @@ String HTMLOptionElement::value() const
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
-void HTMLOptionElement::set_value(String value)
+void HTMLOptionElement::set_value(DeprecatedString value)
 {
     MUST(set_attribute(HTML::AttributeNames::value, value));
 }
@@ -88,7 +88,7 @@ static void concatenate_descendants_text_content(DOM::Node const* node, StringBu
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
-String HTMLOptionElement::text() const
+DeprecatedString HTMLOptionElement::text() const
 {
     StringBuilder builder;
 
@@ -104,7 +104,7 @@ String HTMLOptionElement::text() const
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
-void HTMLOptionElement::set_text(String text)
+void HTMLOptionElement::set_text(DeprecatedString text)
 {
     string_replace_all(text);
 }

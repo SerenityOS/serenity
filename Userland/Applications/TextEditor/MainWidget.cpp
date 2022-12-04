@@ -127,7 +127,7 @@ MainWidget::MainWidget()
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
             GUI::MessageBox::show(window(),
-                String::formatted("Not found: \"{}\"", needle),
+                DeprecatedString::formatted("Not found: \"{}\"", needle),
                 "Not found"sv,
                 GUI::MessageBox::Type::Information);
         }
@@ -152,7 +152,7 @@ MainWidget::MainWidget()
             }
         } else {
             GUI::MessageBox::show(window(),
-                String::formatted("Not found: \"{}\"", needle),
+                DeprecatedString::formatted("Not found: \"{}\"", needle),
                 "Not found"sv,
                 GUI::MessageBox::Type::Information);
         }
@@ -339,7 +339,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
             if (!Desktop::Launcher::open(url)) {
                 GUI::MessageBox::show(
                     window(),
-                    String::formatted("The link to '{}' could not be opened.", url),
+                    DeprecatedString::formatted("The link to '{}' could not be opened.", url),
                     "Failed to open link"sv,
                     GUI::MessageBox::Type::Error);
             }
@@ -722,7 +722,7 @@ bool MainWidget::read_file(Core::File& file)
     return true;
 }
 
-void MainWidget::open_nonexistent_file(String const& path)
+void MainWidget::open_nonexistent_file(DeprecatedString const& path)
 {
     m_editor->set_text({});
     set_path(path);
@@ -847,11 +847,11 @@ void MainWidget::update_statusbar()
 
     StringBuilder builder;
     if (m_editor->has_selection()) {
-        String selected_text = m_editor->selected_text();
+        DeprecatedString selected_text = m_editor->selected_text();
         auto word_count = m_editor->number_of_selected_words();
         builder.appendff("{} {} ({} {}) selected", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     } else {
-        String text = m_editor->text();
+        DeprecatedString text = m_editor->text();
         auto word_count = m_editor->number_of_words();
         builder.appendff("{} {} ({} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
@@ -861,7 +861,7 @@ void MainWidget::update_statusbar()
         auto language = m_editor->syntax_highlighter()->language();
         m_statusbar->set_text(1, m_editor->syntax_highlighter()->language_string(language));
     }
-    m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
 }
 
 void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessageIfNoResults show_message)
@@ -878,7 +878,7 @@ void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessa
 
     if (!result.is_valid() && show_message == ShowMessageIfNoResults::Yes) {
         GUI::MessageBox::show(window(),
-            String::formatted("Not found: \"{}\"", needle),
+            DeprecatedString::formatted("Not found: \"{}\"", needle),
             "Not found"sv,
             GUI::MessageBox::Type::Information);
     }

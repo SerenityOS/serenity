@@ -10,7 +10,7 @@
 
 namespace Browser {
 
-void StorageModel::set_items(OrderedHashMap<String, String> map)
+void StorageModel::set_items(OrderedHashMap<DeprecatedString, DeprecatedString> map)
 {
     begin_insert_rows({}, m_local_storage_entries.size(), m_local_storage_entries.size());
     m_local_storage_entries = map;
@@ -35,7 +35,7 @@ int StorageModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-String StorageModel::column_name(int column) const
+DeprecatedString StorageModel::column_name(int column) const
 {
     switch (column) {
     case Column::Key:
@@ -85,7 +85,7 @@ TriState StorageModel::data_matches(GUI::ModelIndex const& index, GUI::Variant c
     auto const& local_storage_key = keys[index.row()];
     auto const& local_storage_value = m_local_storage_entries.get(local_storage_key).value_or({});
 
-    auto haystack = String::formatted("{} {}", local_storage_key, local_storage_value);
+    auto haystack = DeprecatedString::formatted("{} {}", local_storage_key, local_storage_value);
     if (fuzzy_match(needle, haystack).score > 0)
         return TriState::True;
     return TriState::False;

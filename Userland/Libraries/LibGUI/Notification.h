@@ -21,15 +21,15 @@ class Notification : public Core::Object {
 public:
     virtual ~Notification() override;
 
-    String const& text() const { return m_text; }
-    void set_text(String const& text)
+    DeprecatedString const& text() const { return m_text; }
+    void set_text(DeprecatedString const& text)
     {
         m_text_dirty = true;
         m_text = text;
     }
 
-    String const& title() const { return m_title; }
-    void set_title(String const& title)
+    DeprecatedString const& title() const { return m_title; }
+    void set_title(DeprecatedString const& title)
     {
         m_title_dirty = true;
         m_title = title;
@@ -53,9 +53,9 @@ private:
 
     void connection_closed();
 
-    String m_title;
+    DeprecatedString m_title;
     bool m_title_dirty;
-    String m_text;
+    DeprecatedString m_text;
     bool m_text_dirty;
     RefPtr<Gfx::Bitmap> m_icon;
     bool m_icon_dirty;

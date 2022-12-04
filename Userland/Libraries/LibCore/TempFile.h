@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Noncopyable.h>
-#include <AK/String.h>
 
 namespace Core {
 
@@ -24,14 +24,14 @@ public:
     static NonnullOwnPtr<TempFile> create(Type = Type::File);
     ~TempFile();
 
-    String path() const { return m_path; }
+    DeprecatedString path() const { return m_path; }
 
 private:
     TempFile(Type);
-    static String create_temp(Type);
+    static DeprecatedString create_temp(Type);
 
     Type m_type { Type::File };
-    String m_path;
+    DeprecatedString m_path;
 };
 
 }

@@ -10,41 +10,41 @@
 
 TEST_CASE(basic)
 {
-    Tuple<int, String> value { 1, "foo" };
+    Tuple<int, DeprecatedString> value { 1, "foo" };
     EXPECT_EQ(value.get<int>(), 1);
-    EXPECT_EQ(value.get<String>(), "foo");
+    EXPECT_EQ(value.get<DeprecatedString>(), "foo");
     EXPECT_EQ(value.get<0>(), 1);
     EXPECT_EQ(value.get<1>(), "foo");
 
     // Move assignment
     value = { 2, "bar" };
     EXPECT_EQ(value.get<int>(), 2);
-    EXPECT_EQ(value.get<String>(), "bar");
+    EXPECT_EQ(value.get<DeprecatedString>(), "bar");
     EXPECT_EQ(value.get<0>(), 2);
     EXPECT_EQ(value.get<1>(), "bar");
 
     // Copy ctor
     auto other_value { value };
     EXPECT_EQ(other_value.get<int>(), 2);
-    EXPECT_EQ(other_value.get<String>(), "bar");
+    EXPECT_EQ(other_value.get<DeprecatedString>(), "bar");
     EXPECT_EQ(other_value.get<0>(), 2);
     EXPECT_EQ(other_value.get<1>(), "bar");
 
     // Move ctor
     auto moved_to_value { move(value) };
     EXPECT_EQ(moved_to_value.get<int>(), 2);
-    EXPECT_EQ(moved_to_value.get<String>(), "bar");
+    EXPECT_EQ(moved_to_value.get<DeprecatedString>(), "bar");
     EXPECT_EQ(moved_to_value.get<0>(), 2);
     EXPECT_EQ(moved_to_value.get<1>(), "bar");
 
     // Copy assignment
     value = moved_to_value;
     EXPECT_EQ(moved_to_value.get<int>(), 2);
-    EXPECT_EQ(moved_to_value.get<String>(), "bar");
+    EXPECT_EQ(moved_to_value.get<DeprecatedString>(), "bar");
     EXPECT_EQ(moved_to_value.get<0>(), 2);
     EXPECT_EQ(moved_to_value.get<1>(), "bar");
     EXPECT_EQ(value.get<int>(), 2);
-    EXPECT_EQ(value.get<String>(), "bar");
+    EXPECT_EQ(value.get<DeprecatedString>(), "bar");
     EXPECT_EQ(value.get<0>(), 2);
     EXPECT_EQ(value.get<1>(), "bar");
 }
@@ -68,12 +68,12 @@ TEST_CASE(no_copy)
 
 TEST_CASE(apply)
 {
-    Tuple<int, int, String> args { 1, 2, "foo" };
+    Tuple<int, int, DeprecatedString> args { 1, 2, "foo" };
 
     // With copy
     {
         bool was_called = false;
-        args.apply_as_args([&](int a, int b, String c) {
+        args.apply_as_args([&](int a, int b, DeprecatedString c) {
             was_called = true;
             EXPECT_EQ(a, 1);
             EXPECT_EQ(b, 2);
@@ -85,7 +85,7 @@ TEST_CASE(apply)
     // With reference
     {
         bool was_called = false;
-        args.apply_as_args([&](int& a, int& b, String& c) {
+        args.apply_as_args([&](int& a, int& b, DeprecatedString& c) {
             was_called = true;
             EXPECT_EQ(a, 1);
             EXPECT_EQ(b, 2);
@@ -98,7 +98,7 @@ TEST_CASE(apply)
     {
         bool was_called = false;
         auto const& args_ref = args;
-        args_ref.apply_as_args([&](int const& a, int const& b, String const& c) {
+        args_ref.apply_as_args([&](int const& a, int const& b, DeprecatedString const& c) {
             was_called = true;
             EXPECT_EQ(a, 1);
             EXPECT_EQ(b, 2);

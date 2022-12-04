@@ -48,7 +48,7 @@ public:
         VERIFY(index >= 0);
         if constexpr (NumericLimits<T>::max() >= NumericLimits<u32>::max()) {
             if (index >= NumericLimits<u32>::max()) {
-                m_string = String::number(index);
+                m_string = DeprecatedString::number(index);
                 m_type = Type::String;
                 m_string_may_be_number = false;
                 return;
@@ -65,7 +65,7 @@ public:
     {
     }
 
-    PropertyKey(String const& string)
+    PropertyKey(DeprecatedString const& string)
         : m_type(Type::String)
         , m_string(FlyString(string))
     {
@@ -164,13 +164,13 @@ public:
         return m_symbol;
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         VERIFY(is_valid());
         VERIFY(!is_symbol());
         if (is_string())
             return as_string();
-        return String::number(as_number());
+        return DeprecatedString::number(as_number());
     }
 
     StringOrSymbol to_string_or_symbol() const

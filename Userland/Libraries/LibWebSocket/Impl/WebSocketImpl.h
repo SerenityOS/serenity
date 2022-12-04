@@ -9,8 +9,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <LibWebSocket/ConnectionInfo.h>
 
 namespace WebSocket {
@@ -21,7 +21,7 @@ public:
 
     virtual void connect(ConnectionInfo const&) = 0;
     virtual bool can_read_line() = 0;
-    virtual ErrorOr<String> read_line(size_t) = 0;
+    virtual ErrorOr<DeprecatedString> read_line(size_t) = 0;
     virtual ErrorOr<ByteBuffer> read(int max_size) = 0;
     virtual bool send(ReadonlyBytes) = 0;
     virtual bool eof() = 0;

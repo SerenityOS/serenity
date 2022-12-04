@@ -52,7 +52,7 @@ public:
         return (m_type == Type::Length && !m_length.is_auto()) || is_percentage();
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     bool operator==(GridSize const& other) const
     {
         return m_type == other.type()
@@ -78,7 +78,7 @@ public:
     GridSize min_grid_size() const& { return m_min_grid_size; }
     GridSize max_grid_size() const& { return m_max_grid_size; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     bool operator==(GridMinMax const& other) const
     {
         return m_min_grid_size == other.min_grid_size()
@@ -92,15 +92,15 @@ private:
 
 class GridTrackSizeList {
 public:
-    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names);
+    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<DeprecatedString>> line_names);
     GridTrackSizeList();
 
     static GridTrackSizeList make_auto();
 
     Vector<CSS::ExplicitGridTrack> track_list() const { return m_track_list; }
-    Vector<Vector<String>> line_names() const { return m_line_names; }
+    Vector<Vector<DeprecatedString>> line_names() const { return m_line_names; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     bool operator==(GridTrackSizeList const& other) const
     {
         return m_line_names == other.line_names() && m_track_list == other.track_list();
@@ -108,7 +108,7 @@ public:
 
 private:
     Vector<CSS::ExplicitGridTrack> m_track_list;
-    Vector<Vector<String>> m_line_names;
+    Vector<Vector<DeprecatedString>> m_line_names;
 };
 
 class GridRepeat {
@@ -133,7 +133,7 @@ public:
     GridTrackSizeList grid_track_size_list() const& { return m_grid_track_size_list; }
     Type type() const& { return m_type; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     bool operator==(GridRepeat const& other) const
     {
         if (m_type != other.type())
@@ -183,7 +183,7 @@ public:
 
     Type type() const { return m_type; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     bool operator==(ExplicitGridTrack const& other) const
     {
         if (is_repeat() && other.is_repeat())

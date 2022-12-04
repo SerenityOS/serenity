@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static ErrorOr<int> pid_of(String const& process_name, bool single_shot, bool omit_pid, pid_t pid)
+static ErrorOr<int> pid_of(DeprecatedString const& process_name, bool single_shot, bool omit_pid, pid_t pid)
 {
     bool displayed_at_least_one = false;
 

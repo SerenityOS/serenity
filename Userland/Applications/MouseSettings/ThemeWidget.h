@@ -25,11 +25,11 @@ public:
     virtual int row_count(const GUI::ModelIndex&) const override { return m_cursors.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
-    virtual String column_name(int column_index) const override;
+    virtual DeprecatedString column_name(int column_index) const override;
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
     virtual void invalidate() override;
 
-    void change_theme(String const& name)
+    void change_theme(DeprecatedString const& name)
     {
         m_theme_name = name;
         invalidate();
@@ -40,13 +40,13 @@ private:
 
     struct Cursor {
         RefPtr<Gfx::Bitmap> bitmap;
-        String path;
-        String name;
+        DeprecatedString path;
+        DeprecatedString name;
         Gfx::CursorParams params;
     };
 
     Vector<Cursor> m_cursors;
-    String m_theme_name;
+    DeprecatedString m_theme_name;
 };
 
 class ThemeModel final : public GUI::Model {
@@ -59,7 +59,7 @@ public:
     virtual void invalidate() override;
 
 private:
-    Vector<String> m_themes;
+    Vector<DeprecatedString> m_themes;
 };
 
 class ThemeWidget final : public GUI::SettingsWindow::Tab {

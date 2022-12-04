@@ -84,7 +84,7 @@ void DateTime::set_time(int year, int month, int day, int hour, int minute, int 
     m_second = tm.tm_sec;
 }
 
-String DateTime::to_string(StringView format) const
+DeprecatedString DateTime::to_string(StringView format) const
 {
     struct tm tm;
     localtime_r(&m_timestamp, &tm);
@@ -120,7 +120,7 @@ String DateTime::to_string(StringView format) const
             builder.append(format[i]);
         } else {
             if (++i == format_len)
-                return String();
+                return DeprecatedString();
 
             switch (format[i]) {
             case 'a':
@@ -276,7 +276,7 @@ String DateTime::to_string(StringView format) const
     return builder.build();
 }
 
-Optional<DateTime> DateTime::parse(StringView format, String const& string)
+Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& string)
 {
     unsigned format_pos = 0;
     unsigned string_pos = 0;

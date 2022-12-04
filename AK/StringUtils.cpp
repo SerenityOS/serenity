@@ -15,8 +15,8 @@
 #include <AK/Vector.h>
 
 #ifndef KERNEL
+#    include <AK/DeprecatedString.h>
 #    include <AK/FloatingPointStringConversions.h>
-#    include <AK/String.h>
 #endif
 
 namespace AK {
@@ -450,7 +450,7 @@ Optional<size_t> find_any_of(StringView haystack, StringView needles, SearchDire
 }
 
 #ifndef KERNEL
-String to_snakecase(StringView str)
+DeprecatedString to_snakecase(StringView str)
 {
     auto should_insert_underscore = [&](auto i, auto current_char) {
         if (i == 0)
@@ -476,7 +476,7 @@ String to_snakecase(StringView str)
     return builder.to_string();
 }
 
-String to_titlecase(StringView str)
+DeprecatedString to_titlecase(StringView str)
 {
     StringBuilder builder;
     bool next_is_upper = true;
@@ -492,7 +492,7 @@ String to_titlecase(StringView str)
     return builder.to_string();
 }
 
-String invert_case(StringView str)
+DeprecatedString invert_case(StringView str)
 {
     StringBuilder builder(str.length());
 
@@ -506,7 +506,7 @@ String invert_case(StringView str)
     return builder.to_string();
 }
 
-String replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)
+DeprecatedString replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)
 {
     if (str.is_empty())
         return str;

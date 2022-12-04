@@ -50,7 +50,7 @@ static ErrorOr<void> teardown_tty(bool switch_buffer)
     return {};
 }
 
-static Vector<StringView> wrap_line(String const& string, size_t width)
+static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width)
 {
     auto const result = Line::Editor::actual_rendered_string_metrics(string, {}, width);
 
@@ -265,7 +265,7 @@ public:
         if (line[size - 1] == '\n')
             --size;
 
-        m_lines.append(String(line, size));
+        m_lines.append(DeprecatedString(line, size));
         return true;
     }
 
@@ -437,7 +437,7 @@ private:
     }
 
     // FIXME: Don't save scrollback when emulating more.
-    Vector<String> m_lines;
+    Vector<DeprecatedString> m_lines;
 
     size_t m_line { 0 };
     size_t m_subline { 0 };
@@ -452,20 +452,20 @@ private:
     size_t m_width { 0 };
     size_t m_height { 0 };
 
-    String m_filename;
-    String m_prompt;
+    DeprecatedString m_filename;
+    DeprecatedString m_prompt;
 };
 
 /// Return the next key sequence, or nothing if a signal is received while waiting
 /// to read the next sequence.
-static Optional<String> get_key_sequence()
+static Optional<DeprecatedString> get_key_sequence()
 {
     // We need a buffer to handle ansi sequences.
     char buff[8];
 
     ssize_t n = read(STDOUT_FILENO, buff, sizeof(buff));
     if (n > 0) {
-        return String(buff, n);
+        return DeprecatedString(buff, n);
     } else {
         return {};
     }
@@ -494,8 +494,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath tty sigaction"));
 
     // FIXME: Make these into StringViews once we stop using fopen below.
-    String filename = "-";
-    String prompt = "?f%f :.(line %l)?e (END):.";
+    DeprecatedString filename = "-";
+    DeprecatedString prompt = "?f%f :.(line %l)?e (END):.";
     bool dont_switch_buffer = false;
     bool quit_at_eof = false;
     bool emulate_more = false;
@@ -512,7 +512,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     FILE* file;
-    if (String("-") == filename) {
+    if (DeprecatedString("-") == filename) {
         file = stdin;
     } else if ((file = fopen(filename.characters(), "r")) == nullptr) {
         perror("fopen");
@@ -545,7 +545,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pager.init();
 
     StringBuilder modifier_buffer = StringBuilder(10);
-    for (Optional<String> sequence_value;; sequence_value = get_key_sequence()) {
+    for (Optional<DeprecatedString> sequence_value;; sequence_value = get_key_sequence()) {
         if (g_resized) {
             g_resized = false;
             pager.resize();

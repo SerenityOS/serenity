@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -24,12 +24,12 @@ void serialize_a_local(StringBuilder&, StringView path);
 void serialize_unicode_ranges(StringBuilder&, Vector<UnicodeRange> const& unicode_ranges);
 void serialize_a_srgb_value(StringBuilder&, Color color);
 
-String escape_a_character(u32 character);
-String escape_a_character_as_code_point(u32 character);
-String serialize_an_identifier(StringView ident);
-String serialize_a_string(StringView string);
-String serialize_a_url(StringView url);
-String serialize_a_srgb_value(Color color);
+DeprecatedString escape_a_character(u32 character);
+DeprecatedString escape_a_character_as_code_point(u32 character);
+DeprecatedString serialize_an_identifier(StringView ident);
+DeprecatedString serialize_a_string(StringView string);
+DeprecatedString serialize_a_url(StringView url);
+DeprecatedString serialize_a_srgb_value(Color color);
 
 template<typename T, typename SerializeItem>
 void serialize_a_comma_separated_list(StringBuilder& builder, Vector<T> const& items, SerializeItem serialize_item)

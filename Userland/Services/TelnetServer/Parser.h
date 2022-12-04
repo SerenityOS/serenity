@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -31,7 +31,7 @@ protected:
         Error,
     };
 
-    void write(String const& str);
+    void write(DeprecatedString const& str);
 
 private:
     State m_state { State::Free };

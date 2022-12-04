@@ -138,7 +138,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request header");
 
     TRY(target.visit(
-        [&](String const& hostname) -> ErrorOr<void> {
+        [&](DeprecatedString const& hostname) -> ErrorOr<void> {
             u8 address_data[2];
             address_data[0] = to_underlying(AddressType::DomainName);
             address_data[1] = hostname.length();
@@ -312,7 +312,7 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(HostOrIPV4 co
         [&](u32 ipv4) {
             return Core::Stream::TCPSocket::connect({ IPv4Address(ipv4), static_cast<u16>(server_port) });
         },
-        [&](String const& hostname) {
+        [&](DeprecatedString const& hostname) {
             return Core::Stream::TCPSocket::connect(hostname, static_cast<u16>(server_port));
         }));
 

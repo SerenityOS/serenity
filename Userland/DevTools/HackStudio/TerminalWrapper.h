@@ -21,7 +21,7 @@ public:
         No,
         Yes
     };
-    ErrorOr<void> run_command(String const&, Optional<String> working_directory = {}, WaitForExit = WaitForExit::No, Optional<StringView> failure_message = {});
+    ErrorOr<void> run_command(DeprecatedString const&, Optional<DeprecatedString> working_directory = {}, WaitForExit = WaitForExit::No, Optional<StringView> failure_message = {});
     ErrorOr<void> kill_running_command();
     void clear_including_history();
 

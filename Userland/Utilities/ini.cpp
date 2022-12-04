@@ -15,9 +15,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     StringView path;
-    String group;
-    String key;
-    String value_to_write;
+    DeprecatedString group;
+    DeprecatedString key;
+    DeprecatedString value_to_write;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to INI file", "path");

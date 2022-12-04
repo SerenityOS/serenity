@@ -65,9 +65,9 @@ private:
 
     size_t m_length { 0 };
     unsigned m_score { 0 };
-    String m_score_text;
+    DeprecatedString m_score_text;
     unsigned m_high_score { 0 };
-    String m_high_score_text;
+    DeprecatedString m_high_score_text;
     bool m_is_new_high_score { false };
 
     NonnullRefPtrVector<Gfx::Bitmap> m_food_bitmaps;

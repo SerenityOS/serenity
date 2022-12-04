@@ -30,7 +30,7 @@ void WebSocket::send(StringView text_message)
     send(ByteBuffer::copy(text_message.bytes()).release_value_but_fixme_should_propagate_errors(), true);
 }
 
-void WebSocket::close(u16 code, String reason)
+void WebSocket::close(u16 code, DeprecatedString reason)
 {
     m_client->close({}, *this, code, move(reason));
 }
@@ -53,7 +53,7 @@ void WebSocket::did_error(Badge<WebSocketClient>, i32 error_code)
         on_error((WebSocket::Error)error_code);
 }
 
-void WebSocket::did_close(Badge<WebSocketClient>, u16 code, String reason, bool was_clean)
+void WebSocket::did_close(Badge<WebSocketClient>, u16 code, DeprecatedString reason, bool was_clean)
 {
     if (on_close)
         on_close(code, move(reason), was_clean);

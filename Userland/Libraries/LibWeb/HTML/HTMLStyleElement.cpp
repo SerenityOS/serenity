@@ -77,7 +77,7 @@ static void add_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& s
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, String location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
+static void create_a_css_style_sheet(DOM::Document& document, DeprecatedString type, DOM::Element* owner_node, DeprecatedString media, DeprecatedString title, bool alternate, bool origin_clean, DeprecatedString location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
     // FIXME: We receive `sheet` from the caller already. This is weird.
@@ -144,7 +144,7 @@ void HTMLStyleElement::update_a_style_block()
         "text/css"sv,
         this,
         attribute(HTML::AttributeNames::media),
-        in_a_document_tree() ? attribute(HTML::AttributeNames::title) : String::empty(),
+        in_a_document_tree() ? attribute(HTML::AttributeNames::title) : DeprecatedString::empty(),
         false,
         true,
         {},

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -24,7 +24,7 @@ public:
     Resolution(int value, Type type);
     Resolution(float value, Type type);
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     float to_dots_per_pixel() const;
 
     bool operator==(Resolution const& other) const

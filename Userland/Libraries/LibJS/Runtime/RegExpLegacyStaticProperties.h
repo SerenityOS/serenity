@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Utf16String.h>
 

@@ -16,7 +16,7 @@ struct BytecodeInterpreter : public Interpreter {
     virtual void interpret(Configuration&) override;
     virtual ~BytecodeInterpreter() override = default;
     virtual bool did_trap() const override { return m_trap.has_value(); }
-    virtual String trap_reason() const override { return m_trap.value().reason; }
+    virtual DeprecatedString trap_reason() const override { return m_trap.value().reason; }
     virtual void clear_trap() override { m_trap.clear(); }
 
     struct CallFrameHandle {

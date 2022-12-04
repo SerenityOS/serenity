@@ -28,7 +28,7 @@ public:
 private:
     CSSFontFaceRule(JS::Realm&, FontFace&&);
 
-    virtual String serialized() const override;
+    virtual DeprecatedString serialized() const override;
 
     FontFace m_font_face;
 };

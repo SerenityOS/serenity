@@ -18,7 +18,7 @@ public:
 
     virtual ~XMLSerializer() override;
 
-    WebIDL::ExceptionOr<String> serialize_to_string(JS::NonnullGCPtr<DOM::Node> root);
+    WebIDL::ExceptionOr<DeprecatedString> serialize_to_string(JS::NonnullGCPtr<DOM::Node> root);
 
 private:
     explicit XMLSerializer(JS::Realm&);
@@ -29,6 +29,6 @@ enum class RequireWellFormed {
     Yes,
 };
 
-WebIDL::ExceptionOr<String> serialize_node_to_xml_string(JS::NonnullGCPtr<DOM::Node> root, RequireWellFormed require_well_formed);
+WebIDL::ExceptionOr<DeprecatedString> serialize_node_to_xml_string(JS::NonnullGCPtr<DOM::Node> root, RequireWellFormed require_well_formed);
 
 }

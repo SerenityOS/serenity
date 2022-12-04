@@ -39,7 +39,7 @@ ModelIndex FileSystemModel::Node::index(int column) const
     VERIFY_NOT_REACHED();
 }
 
-bool FileSystemModel::Node::fetch_data(String const& full_path, bool is_root)
+bool FileSystemModel::Node::fetch_data(DeprecatedString const& full_path, bool is_root)
 {
     struct stat st;
     int rc;
@@ -104,7 +104,7 @@ void FileSystemModel::Node::traverse_if_needed()
         return;
     }
 
-    Vector<String> child_names;
+    Vector<DeprecatedString> child_names;
     while (di.has_next()) {
         child_names.append(di.next_path());
     }
@@ -145,9 +145,9 @@ void FileSystemModel::Node::traverse_if_needed()
     }
 }
 
-OwnPtr<FileSystemModel::Node> FileSystemModel::Node::create_child(String const& child_name)
+OwnPtr<FileSystemModel::Node> FileSystemModel::Node::create_child(DeprecatedString const& child_name)
 {
-    String child_path = LexicalPath::join(full_path(), child_name).string();
+    DeprecatedString child_path = LexicalPath::join(full_path(), child_name).string();
     auto child = adopt_own(*new Node(m_model));
 
     bool ok = child->fetch_data(child_path, false);
@@ -180,9 +180,9 @@ bool FileSystemModel::Node::is_symlink_to_directory() const
     return S_ISDIR(st.st_mode);
 }
 
-String FileSystemModel::Node::full_path() const
+DeprecatedString FileSystemModel::Node::full_path() const
 {
-    Vector<String, 32> lineage;
+    Vector<DeprecatedString, 32> lineage;
     for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
         lineage.append(ancestor->name);
     }
@@ -197,7 +197,7 @@ String FileSystemModel::Node::full_path() const
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-ModelIndex FileSystemModel::index(String path, int column) const
+ModelIndex FileSystemModel::index(DeprecatedString path, int column) const
 {
     auto node = node_for_path(move(path));
     if (node.has_value())
@@ -206,9 +206,9 @@ ModelIndex FileSystemModel::index(String path, int column) const
     return {};
 }
 
-Optional<FileSystemModel::Node const&> FileSystemModel::node_for_path(String const& path) const
+Optional<FileSystemModel::Node const&> FileSystemModel::node_for_path(DeprecatedString const& path) const
 {
-    String resolved_path;
+    DeprecatedString resolved_path;
     if (path == m_root_path)
         resolved_path = "/";
     else if (!m_root_path.is_empty() && path.starts_with(m_root_path))
@@ -241,14 +241,14 @@ Optional<FileSystemModel::Node const&> FileSystemModel::node_for_path(String con
     return {};
 }
 
-String FileSystemModel::full_path(ModelIndex const& index) const
+DeprecatedString FileSystemModel::full_path(ModelIndex const& index) const
 {
     auto& node = this->node(index);
     const_cast<Node&>(node).reify_if_needed();
     return node.full_path();
 }
 
-FileSystemModel::FileSystemModel(String root_path, Mode mode)
+FileSystemModel::FileSystemModel(DeprecatedString root_path, Mode mode)
     : m_root_path(LexicalPath::canonicalized_path(move(root_path)))
     , m_mode(mode)
 {
@@ -276,23 +276,23 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
     invalidate();
 }
 
-String FileSystemModel::name_for_uid(uid_t uid) const
+DeprecatedString FileSystemModel::name_for_uid(uid_t uid) const
 {
     auto it = m_user_names.find(uid);
     if (it == m_user_names.end())
-        return String::number(uid);
+        return DeprecatedString::number(uid);
     return (*it).value;
 }
 
-String FileSystemModel::name_for_gid(gid_t gid) const
+DeprecatedString FileSystemModel::name_for_gid(gid_t gid) const
 {
     auto it = m_group_names.find(gid);
     if (it == m_group_names.end())
-        return String::number(gid);
+        return DeprecatedString::number(gid);
     return (*it).value;
 }
 
-static String permission_string(mode_t mode)
+static DeprecatedString permission_string(mode_t mode)
 {
     StringBuilder builder;
     if (S_ISDIR(mode))
@@ -341,7 +341,7 @@ void FileSystemModel::update_node_on_selection(ModelIndex const& index, bool con
     node.set_selected(selected);
 }
 
-void FileSystemModel::set_root_path(String root_path)
+void FileSystemModel::set_root_path(DeprecatedString root_path)
 {
     if (root_path.is_null())
         m_root_path = {};
@@ -629,7 +629,7 @@ Icon FileSystemModel::icon_for(Node const& node) const
     return FileIconProvider::icon_for_path(node.full_path(), node.mode);
 }
 
-static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
+static HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
@@ -702,7 +702,7 @@ int FileSystemModel::column_count(ModelIndex const&) const
     return Column::__Count;
 }
 
-String FileSystemModel::column_name(int column) const
+DeprecatedString FileSystemModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
@@ -727,7 +727,7 @@ String FileSystemModel::column_name(int column) const
     VERIFY_NOT_REACHED();
 }
 
-bool FileSystemModel::accepts_drag(ModelIndex const& index, Vector<String> const& mime_types) const
+bool FileSystemModel::accepts_drag(ModelIndex const& index, Vector<DeprecatedString> const& mime_types) const
 {
     if (!mime_types.contains_slow("text/uri-list"))
         return false;
@@ -761,7 +761,7 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
     VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
     auto dirname = LexicalPath::dirname(node.full_path());
-    auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());
+    auto new_full_path = DeprecatedString::formatted("{}/{}", dirname, data.to_string());
     int rc = rename(node.full_path().characters(), new_full_path.characters());
     if (rc < 0) {
         if (on_rename_error)

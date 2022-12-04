@@ -23,13 +23,13 @@ public:
     int client_id() const { return m_client_id; }
     RefPtr<SQL::Database> database() { return m_database; }
     void disconnect();
-    int prepare_statement(String const& sql);
+    int prepare_statement(DeprecatedString const& sql);
 
 private:
-    DatabaseConnection(String database_name, int client_id);
+    DatabaseConnection(DeprecatedString database_name, int client_id);
 
     RefPtr<SQL::Database> m_database { nullptr };
-    String m_database_name;
+    DeprecatedString m_database_name;
     int m_connection_id;
     int m_client_id;
     bool m_accept_statements { false };

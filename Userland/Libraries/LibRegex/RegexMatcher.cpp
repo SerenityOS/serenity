@@ -6,7 +6,7 @@
 
 #include <AK/BumpAllocator.h>
 #include <AK/Debug.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibRegex/RegexMatcher.h>
 #include <LibRegex/RegexParser.h>
@@ -31,7 +31,7 @@ regex::Parser::Result Regex<Parser>::parse_pattern(StringView pattern, typename 
 }
 
 template<class Parser>
-Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+Regex<Parser>::Regex(DeprecatedString pattern, typename ParserTraits<Parser>::OptionsType regex_options)
     : pattern_value(move(pattern))
 {
     regex::Lexer lexer(pattern_value);
@@ -45,7 +45,7 @@ Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType 
 }
 
 template<class Parser>
-Regex<Parser>::Regex(regex::Parser::Result parse_result, String pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+Regex<Parser>::Regex(regex::Parser::Result parse_result, DeprecatedString pattern, typename ParserTraits<Parser>::OptionsType regex_options)
     : pattern_value(move(pattern))
     , parser_result(move(parse_result))
 {
@@ -87,7 +87,7 @@ typename ParserTraits<Parser>::OptionsType Regex<Parser>::options() const
 }
 
 template<class Parser>
-String Regex<Parser>::error_string(Optional<String> message) const
+DeprecatedString Regex<Parser>::error_string(Optional<DeprecatedString> message) const
 {
     StringBuilder eb;
     eb.append("Error during parsing of regular expression:\n"sv);

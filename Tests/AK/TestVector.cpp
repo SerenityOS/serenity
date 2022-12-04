@@ -7,9 +7,9 @@
 #include "AK/ReverseIterator.h"
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct)
@@ -38,19 +38,19 @@ TEST_CASE(ints)
 
 TEST_CASE(strings)
 {
-    Vector<String> strings;
+    Vector<DeprecatedString> strings;
     strings.append("ABC");
     strings.append("DEF");
 
     int loop_counter = 0;
-    for (String const& string : strings) {
+    for (DeprecatedString const& string : strings) {
         EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;
     }
 
     loop_counter = 0;
-    for (auto& string : (const_cast<Vector<String> const&>(strings))) {
+    for (auto& string : (const_cast<Vector<DeprecatedString> const&>(strings))) {
         EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;
@@ -60,7 +60,7 @@ TEST_CASE(strings)
 
 TEST_CASE(strings_insert_ordered)
 {
-    Vector<String> strings;
+    Vector<DeprecatedString> strings;
     strings.append("abc");
     strings.append("def");
     strings.append("ghi");
@@ -163,12 +163,12 @@ TEST_CASE(vector_compare)
     EXPECT_EQ(ints.size(), 1000u);
     EXPECT_EQ(ints, same_ints);
 
-    Vector<String> strings;
-    Vector<String> same_strings;
+    Vector<DeprecatedString> strings;
+    Vector<DeprecatedString> same_strings;
 
     for (int i = 0; i < 1000; ++i) {
-        strings.append(String::number(i));
-        same_strings.append(String::number(i));
+        strings.append(DeprecatedString::number(i));
+        same_strings.append(DeprecatedString::number(i));
     }
 
     EXPECT_EQ(strings.size(), 1000u);
@@ -178,9 +178,9 @@ TEST_CASE(vector_compare)
 TEST_CASE(grow_past_inline_capacity)
 {
     auto make_vector = [] {
-        Vector<String, 16> strings;
+        Vector<DeprecatedString, 16> strings;
         for (int i = 0; i < 32; ++i) {
-            strings.append(String::number(i));
+            strings.append(DeprecatedString::number(i));
         }
         return strings;
     };
@@ -286,7 +286,7 @@ TEST_CASE(remove_all_matching)
 TEST_CASE(nonnullownptrvector)
 {
     struct Object {
-        String string;
+        DeprecatedString string;
     };
     NonnullOwnPtrVector<Object> objects;
 

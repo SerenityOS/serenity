@@ -15,7 +15,7 @@ class StringIterator final : public Object {
     JS_OBJECT(StringIterator, Object);
 
 public:
-    static StringIterator* create(Realm&, String string);
+    static StringIterator* create(Realm&, DeprecatedString string);
 
     virtual ~StringIterator() override = default;
 
@@ -23,11 +23,11 @@ public:
     bool done() const { return m_done; }
 
 private:
-    explicit StringIterator(String string, Object& prototype);
+    explicit StringIterator(DeprecatedString string, Object& prototype);
 
     friend class StringIteratorPrototype;
 
-    String m_string;
+    DeprecatedString m_string;
     Utf8CodePointIterator m_iterator;
     bool m_done { false };
 };

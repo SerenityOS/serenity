@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView archive_file;
     bool dereference;
     StringView directory;
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');
@@ -89,16 +89,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto tar_stream = TRY(Archive::TarInputStream::construct(move(input_stream)));
 
-        HashMap<String, String> global_overrides;
-        HashMap<String, String> local_overrides;
+        HashMap<DeprecatedString, DeprecatedString> global_overrides;
+        HashMap<DeprecatedString, DeprecatedString> local_overrides;
 
-        auto get_override = [&](StringView key) -> Optional<String> {
-            Optional<String> maybe_local = local_overrides.get(key);
+        auto get_override = [&](StringView key) -> Optional<DeprecatedString> {
+            Optional<DeprecatedString> maybe_local = local_overrides.get(key);
 
             if (maybe_local.has_value())
                 return maybe_local;
 
-            Optional<String> maybe_global = global_overrides.get(key);
+            Optional<DeprecatedString> maybe_global = global_overrides.get(key);
 
             if (maybe_global.has_value())
                 return maybe_global;
@@ -162,13 +162,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             LexicalPath path = LexicalPath(header.filename());
             if (!header.prefix().is_empty())
                 path = path.prepend(header.prefix());
-            String filename = get_override("path"sv).value_or(path.string());
+            DeprecatedString filename = get_override("path"sv).value_or(path.string());
 
             if (list || verbose)
                 outln("{}", filename);
 
             if (extract) {
-                String absolute_path = Core::File::absolute_path(filename);
+                DeprecatedString absolute_path = Core::File::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 
@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         OutputStream& gzip_output_stream = gzip_stream;
         Archive::TarOutputStream tar_stream((gzip) ? gzip_output_stream : file_output_stream);
 
-        auto add_file = [&](String path) -> ErrorOr<void> {
+        auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
             auto file = Core::File::construct(path);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 warnln("Failed to open {}: {}", path, file->error_string());
@@ -255,7 +255,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        auto add_link = [&](String path) -> ErrorOr<void> {
+        auto add_link = [&](DeprecatedString path) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
@@ -266,7 +266,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        auto add_directory = [&](String path, auto handle_directory) -> ErrorOr<void> {
+        auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);

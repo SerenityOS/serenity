@@ -105,7 +105,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
     auto* variable = static_cast<Debug::DebugInfo::VariableInfo const*>(index.internal_data());
     if (does_variable_support_writing(variable)) {
         context_menu->add_action(GUI::Action::create("Change value", [&](auto&) {
-            String value;
+            DeprecatedString value;
             if (GUI::InputBox::show(window(), value, "Enter new value:"sv, "Set variable value"sv) == GUI::InputBox::ExecResult::OK) {
                 auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
                 model.set_variable_value(index, value, window());

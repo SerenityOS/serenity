@@ -83,7 +83,7 @@ public:
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index);
 
 protected:
-    Module(Realm&, String filename, Script::HostDefined* host_defined = nullptr);
+    Module(Realm&, DeprecatedString filename, Script::HostDefined* host_defined = nullptr);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -106,7 +106,7 @@ private:
     Script::HostDefined* m_host_defined { nullptr }; // [[HostDefined]]
 
     // Needed for potential lookups of modules.
-    String m_filename;
+    DeprecatedString m_filename;
 };
 
 }

@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 
 namespace HackStudio {
@@ -17,5 +17,5 @@ enum class BreakpointChange {
     Removed,
 };
 
-using BreakpointChangeCallback = Function<void(String const& file, size_t line, BreakpointChange)>;
+using BreakpointChangeCallback = Function<void(DeprecatedString const& file, size_t line, BreakpointChange)>;
 }

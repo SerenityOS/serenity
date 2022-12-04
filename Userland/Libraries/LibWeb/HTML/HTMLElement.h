@@ -26,16 +26,16 @@ class HTMLElement
 public:
     virtual ~HTMLElement() override;
 
-    String title() const { return attribute(HTML::AttributeNames::title); }
+    DeprecatedString title() const { return attribute(HTML::AttributeNames::title); }
 
-    String dir() const;
-    void set_dir(String const&);
+    DeprecatedString dir() const;
+    void set_dir(DeprecatedString const&);
 
     virtual bool is_editable() const final;
-    String content_editable() const;
-    WebIDL::ExceptionOr<void> set_content_editable(String const&);
+    DeprecatedString content_editable() const;
+    WebIDL::ExceptionOr<void> set_content_editable(DeprecatedString const&);
 
-    String inner_text();
+    DeprecatedString inner_text();
     void set_inner_text(StringView);
 
     int offset_top() const;
@@ -64,7 +64,7 @@ protected:
 
     virtual void initialize(JS::Realm&) override;
 
-    virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

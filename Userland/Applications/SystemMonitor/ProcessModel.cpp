@@ -71,7 +71,7 @@ int ProcessModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String ProcessModel::column_name(int column) const
+DeprecatedString ProcessModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
@@ -288,12 +288,12 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::PurgeableNonvolatile:
             return human_readable_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
-            return String::formatted("{:.2}", thread.current_state.cpu_percent);
+            return DeprecatedString::formatted("{:.2}", thread.current_state.cpu_percent);
         case Column::Processor:
             return thread.current_state.cpu;
         case Column::Name:
             if (thread.current_state.kernel)
-                return String::formatted("{} (*)", thread.current_state.name);
+                return DeprecatedString::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
         case Column::Command:
             return thread.current_state.command;
@@ -408,16 +408,16 @@ Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned fla
     return found_indices;
 }
 
-static ErrorOr<String> try_read_command_line(pid_t pid)
+static ErrorOr<DeprecatedString> try_read_command_line(pid_t pid)
 {
-    auto file = TRY(Core::Stream::File::open(String::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read));
     auto data = TRY(file->read_all());
     auto json = TRY(JsonValue::from_string(StringView { data.bytes() }));
     auto array = json.as_array().values();
-    return String::join(" "sv, array);
+    return DeprecatedString::join(" "sv, array);
 }
 
-static String read_command_line(pid_t pid)
+static DeprecatedString read_command_line(pid_t pid)
 {
     auto string_or_error = try_read_command_line(pid);
     if (string_or_error.is_error()) {

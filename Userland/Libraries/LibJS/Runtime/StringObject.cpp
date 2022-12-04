@@ -138,14 +138,14 @@ ThrowCompletionOr<MarkedVector<Value>> StringObject::internal_own_property_keys(
     // 5. For each integer i starting with 0 such that i < len, in ascending order, do
     for (size_t i = 0; i < length; ++i) {
         // a. Add ! ToString(𝔽(i)) as the last element of keys.
-        keys.append(js_string(vm, String::number(i)));
+        keys.append(js_string(vm, DeprecatedString::number(i)));
     }
 
     // 6. For each own property key P of O such that P is an array index and ! ToIntegerOrInfinity(P) ≥ len, in ascending numeric index order, do
     for (auto& entry : indexed_properties()) {
         if (entry.index() >= length) {
             // a. Add P as the last element of keys.
-            keys.append(js_string(vm, String::number(entry.index())));
+            keys.append(js_string(vm, DeprecatedString::number(entry.index())));
         }
     }
 

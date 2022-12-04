@@ -30,7 +30,7 @@ Session::~Session()
         warnln("Failed to stop session {}: {}", m_id, error.error());
 }
 
-ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& socket_path, NonnullRefPtr<ServerPromise> promise)
+ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(DeprecatedString const& socket_path, NonnullRefPtr<ServerPromise> promise)
 {
     dbgln("Listening for WebDriver connection on {}", socket_path);
 
@@ -61,7 +61,7 @@ ErrorOr<void> Session::start()
 {
     auto promise = TRY(ServerPromise::try_create());
 
-    auto web_content_socket_path = String::formatted("/tmp/webdriver/session_{}_{}", getpid(), m_id);
+    auto web_content_socket_path = DeprecatedString::formatted("/tmp/webdriver/session_{}_{}", getpid(), m_id);
     auto web_content_server = TRY(create_server(web_content_socket_path, promise));
 
     if (m_options.headless) {

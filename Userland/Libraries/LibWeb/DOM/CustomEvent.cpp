@@ -37,7 +37,7 @@ void CustomEvent::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-customevent-initcustomevent
-void CustomEvent::init_custom_event(String const& type, bool bubbles, bool cancelable, JS::Value detail)
+void CustomEvent::init_custom_event(DeprecatedString const& type, bool bubbles, bool cancelable, JS::Value detail)
 {
     // 1. If this’s dispatch flag is set, then return.
     if (dispatched())

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
-#include <AK/String.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Icon.h>
 
@@ -23,7 +23,7 @@ public:
     template<typename Func>
     void for_each_declared_symbol(Func);
 
-    void set_declared_symbols(String const& filename, Vector<CodeComprehension::Declaration> const&);
+    void set_declared_symbols(DeprecatedString const& filename, Vector<CodeComprehension::Declaration> const&);
 
     static Optional<GUI::Icon> get_icon_for(CodeComprehension::DeclarationType);
 
@@ -31,7 +31,7 @@ public:
 
 private:
     ProjectDeclarations() = default;
-    HashMap<String, Vector<CodeComprehension::Declaration>> m_document_to_declarations;
+    HashMap<DeprecatedString, Vector<CodeComprehension::Declaration>> m_document_to_declarations;
 };
 
 template<typename Func>

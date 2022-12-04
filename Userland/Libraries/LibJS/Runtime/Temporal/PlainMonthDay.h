@@ -42,6 +42,6 @@ struct ISOMonthDay {
 
 ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(VM&, Value item, Object const* options = nullptr);
 ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(VM&, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject const* new_target = nullptr);
-ThrowCompletionOr<String> temporal_month_day_to_string(VM&, PlainMonthDay&, StringView show_calendar);
+ThrowCompletionOr<DeprecatedString> temporal_month_day_to_string(VM&, PlainMonthDay&, StringView show_calendar);
 
 }

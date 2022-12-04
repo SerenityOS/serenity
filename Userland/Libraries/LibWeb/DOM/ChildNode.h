@@ -16,7 +16,7 @@ template<typename NodeType>
 class ChildNode {
 public:
     // https://dom.spec.whatwg.org/#dom-childnode-before
-    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -46,7 +46,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-after
-    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -70,7 +70,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-replacewith
-    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -117,7 +117,7 @@ protected:
     ChildNode() = default;
 
 private:
-    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, String>> const& nodes) const
+    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes) const
     {
         auto* node = static_cast<NodeType const*>(this);
 
@@ -142,7 +142,7 @@ private:
         return nullptr;
     }
 
-    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, String>> const& nodes) const
+    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes) const
     {
         auto* node = static_cast<NodeType const*>(this);
 

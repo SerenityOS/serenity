@@ -316,9 +316,9 @@ Label Generator::perform_needed_unwinds_for_labelled_continue_and_return_target_
     VERIFY_NOT_REACHED();
 }
 
-String CodeGenerationError::to_string()
+DeprecatedString CodeGenerationError::to_string()
 {
-    return String::formatted("CodeGenerationError in {}: {}", failing_node ? failing_node->class_name() : "<unknown node>", reason_literal);
+    return DeprecatedString::formatted("CodeGenerationError in {}: {}", failing_node ? failing_node->class_name() : "<unknown node>", reason_literal);
 }
 
 }

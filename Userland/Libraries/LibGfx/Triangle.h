@@ -49,7 +49,7 @@ public:
         return true;
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     T m_determinant { 0 };

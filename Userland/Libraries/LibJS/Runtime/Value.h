@@ -11,11 +11,11 @@
 #include <AK/Assertions.h>
 #include <AK/BitCast.h>
 #include <AK/Concepts.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
@@ -368,7 +368,7 @@ public:
 
     u64 encoded() const { return m_value.encoded; }
 
-    ThrowCompletionOr<String> to_string(VM&) const;
+    ThrowCompletionOr<DeprecatedString> to_string(VM&) const;
     ThrowCompletionOr<Utf16String> to_utf16_string(VM&) const;
     ThrowCompletionOr<PrimitiveString*> to_primitive_string(VM&);
     ThrowCompletionOr<Value> to_primitive(VM&, PreferredType preferred_type = PreferredType::Default) const;
@@ -395,7 +395,7 @@ public:
     ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
     ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
 
-    String to_string_without_side_effects() const;
+    DeprecatedString to_string_without_side_effects() const;
 
     Value value_or(Value fallback) const
     {
@@ -404,7 +404,7 @@ public:
         return *this;
     }
 
-    String typeof() const;
+    DeprecatedString typeof() const;
 
     bool operator==(Value const&) const;
 
@@ -568,7 +568,7 @@ enum class NumberToStringMode {
     WithExponent,
     WithoutExponent,
 };
-String number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
+DeprecatedString number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 Optional<Value> string_to_number(StringView);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }

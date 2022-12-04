@@ -169,7 +169,7 @@ Optional<Weekday> get_locale_weekend_end(StringView locale)
     return find_regional_values_for_locale(locale, get_regional_weekend_end);
 }
 
-String combine_skeletons(StringView first, StringView second)
+DeprecatedString combine_skeletons(StringView first, StringView second)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
     constexpr auto field_order = Array {
@@ -241,7 +241,7 @@ Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol_for_ho
 Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle, TimeZone::InDST) { return {}; }
 Optional<TimeZoneFormat> __attribute__((weak)) get_time_zone_format(StringView) { return {}; }
 
-static Optional<String> format_time_zone_offset(StringView locale, CalendarPatternStyle style, i64 offset_seconds)
+static Optional<DeprecatedString> format_time_zone_offset(StringView locale, CalendarPatternStyle style, i64 offset_seconds)
 {
     auto formats = get_time_zone_format(locale);
     if (!formats.has_value())
@@ -295,7 +295,7 @@ static Optional<String> format_time_zone_offset(StringView locale, CalendarPatte
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology
-String format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
+DeprecatedString format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
 {
     auto offset = TimeZone::get_time_zone_offset(time_zone, time);
     if (!offset.has_value())

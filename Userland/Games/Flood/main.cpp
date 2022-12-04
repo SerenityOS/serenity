@@ -42,10 +42,10 @@ static ErrorOr<Vector<Color>> get_color_scheme_from_string(StringView name)
         "White"sv
     };
 
-    auto const path = String::formatted("/res/terminal-colors/{}.ini", name);
+    auto const path = DeprecatedString::formatted("/res/terminal-colors/{}.ini", name);
     auto color_config_or_error = Core::ConfigFile::open(path);
     if (color_config_or_error.is_error()) {
-        return Error::from_string_view(String::formatted("Unable to read color scheme file '{}': {}", path, color_config_or_error.error()));
+        return Error::from_string_view(DeprecatedString::formatted("Unable to read color scheme file '{}': {}", path, color_config_or_error.error()));
     }
     auto const color_config = color_config_or_error.release_value();
     Vector<Color> colors;
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     size_t board_rows = Config::read_i32("Flood"sv, ""sv, "board_rows"sv, 16);
     size_t board_columns = Config::read_i32("Flood"sv, ""sv, "board_columns"sv, 16);
-    String color_scheme = Config::read_string("Flood"sv, ""sv, "color_scheme"sv, "Default"sv);
+    DeprecatedString color_scheme = Config::read_string("Flood"sv, ""sv, "color_scheme"sv, "Default"sv);
 
     Config::write_i32("Flood"sv, ""sv, "board_rows"sv, board_rows);
     Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
@@ -155,7 +155,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto update = [&]() {
         board_widget->update();
-        statusbar->set_text(String::formatted("Moves remaining: {}", ai_moves - moves_made));
+        statusbar->set_text(DeprecatedString::formatted("Moves remaining: {}", ai_moves - moves_made));
     };
 
     update();
@@ -198,12 +198,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             board_widget->board()->update_values();
             update();
             if (board_widget->board()->is_flooded()) {
-                String dialog_text("You have tied with the AI."sv);
+                DeprecatedString dialog_text("You have tied with the AI."sv);
                 auto dialog_title("Congratulations!"sv);
                 if (ai_moves - moves_made == 1)
                     dialog_text = "You defeated the AI by 1 move."sv;
                 else if (ai_moves - moves_made > 1)
-                    dialog_text = String::formatted("You defeated the AI by {} moves.", ai_moves - moves_made);
+                    dialog_text = DeprecatedString::formatted("You defeated the AI by {} moves.", ai_moves - moves_made);
                 else
                     dialog_title = "Game over!"sv;
                 GUI::MessageBox::show(window,

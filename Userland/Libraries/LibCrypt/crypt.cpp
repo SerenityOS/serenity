@@ -40,7 +40,7 @@ char* crypt_r(char const* key, char const* salt, struct crypt_data* data)
     size_t salt_len = min(strcspn(salt_value, "$"), crypt_salt_max);
     size_t header_len = salt_len + 3;
 
-    bool fits = String(salt, header_len).copy_characters_to_buffer(data->result, sizeof(data->result));
+    bool fits = DeprecatedString(salt, header_len).copy_characters_to_buffer(data->result, sizeof(data->result));
     if (!fits) {
         errno = EINVAL;
         return nullptr;

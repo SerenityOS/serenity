@@ -41,12 +41,12 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<HexEditor> m_editor;
-    String m_path;
-    String m_name;
-    String m_extension;
+    DeprecatedString m_path;
+    DeprecatedString m_name;
+    DeprecatedString m_extension;
 
     int m_goto_history { 0 };
-    String m_search_text;
+    DeprecatedString m_search_text;
     ByteBuffer m_search_buffer;
     int last_found_index() const { return m_last_found_index == -1 ? 0 : m_last_found_index; }
     int m_last_found_index { -1 };

@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 
 namespace IPC {
 
@@ -16,7 +16,7 @@ class Dictionary {
 public:
     Dictionary() = default;
 
-    Dictionary(HashMap<String, String> const& initial_entries)
+    Dictionary(HashMap<DeprecatedString, DeprecatedString> const& initial_entries)
         : m_entries(initial_entries)
     {
     }
@@ -24,7 +24,7 @@ public:
     bool is_empty() const { return m_entries.is_empty(); }
     size_t size() const { return m_entries.size(); }
 
-    void add(String key, String value)
+    void add(DeprecatedString key, DeprecatedString value)
     {
         m_entries.set(move(key), move(value));
     }
@@ -37,10 +37,10 @@ public:
         }
     }
 
-    HashMap<String, String> const& entries() const { return m_entries; }
+    HashMap<DeprecatedString, DeprecatedString> const& entries() const { return m_entries; }
 
 private:
-    HashMap<String, String> m_entries;
+    HashMap<DeprecatedString, DeprecatedString> m_entries;
 };
 
 }

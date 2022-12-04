@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
@@ -30,17 +30,17 @@ struct DuOption {
     bool apparent_size = false;
     i64 threshold = 0;
     TimeType time_type = TimeType::NotUsed;
-    Vector<String> excluded_patterns;
+    Vector<DeprecatedString> excluded_patterns;
     u64 block_size = 1024;
     size_t max_depth = SIZE_MAX;
 };
 
-static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option);
-static ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
+static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option);
+static ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<String> files;
+    Vector<DeprecatedString> files;
     DuOption du_option;
 
     TRY(parse_args(arguments, files, du_option));
@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option)
+ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option)
 {
     bool summarize = false;
     StringView pattern;
@@ -117,7 +117,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
         auto file = TRY(Core::Stream::File::open(exclude_from, Core::Stream::OpenMode::Read));
         auto const buff = TRY(file->read_all());
         if (!buff.is_empty()) {
-            String patterns = String::copy(buff, Chomp);
+            DeprecatedString patterns = DeprecatedString::copy(buff, Chomp);
             du_option.excluded_patterns.extend(patterns.split('\n'));
         }
     }
@@ -133,7 +133,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     return {};
 }
 
-ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
+ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
 {
     u64 size = 0;
     struct stat path_stat = TRY(Core::System::lstat(path));

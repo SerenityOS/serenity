@@ -21,25 +21,25 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
     case CSS::ListStyleType::Disc:
         break;
     case CSS::ListStyleType::Decimal:
-        m_text = String::formatted("{}.", m_index);
+        m_text = DeprecatedString::formatted("{}.", m_index);
         break;
     case CSS::ListStyleType::DecimalLeadingZero:
         // This is weird, but in accordance to spec.
-        m_text = m_index < 10 ? String::formatted("0{}.", m_index) : String::formatted("{}.", m_index);
+        m_text = m_index < 10 ? DeprecatedString::formatted("0{}.", m_index) : DeprecatedString::formatted("{}.", m_index);
         break;
     case CSS::ListStyleType::LowerAlpha:
     case CSS::ListStyleType::LowerLatin:
-        m_text = String::bijective_base_from(m_index - 1).to_lowercase();
+        m_text = DeprecatedString::bijective_base_from(m_index - 1).to_lowercase();
         break;
     case CSS::ListStyleType::UpperAlpha:
     case CSS::ListStyleType::UpperLatin:
-        m_text = String::bijective_base_from(m_index - 1);
+        m_text = DeprecatedString::bijective_base_from(m_index - 1);
         break;
     case CSS::ListStyleType::LowerRoman:
-        m_text = String::roman_number_from(m_index).to_lowercase();
+        m_text = DeprecatedString::roman_number_from(m_index).to_lowercase();
         break;
     case CSS::ListStyleType::UpperRoman:
-        m_text = String::roman_number_from(m_index);
+        m_text = DeprecatedString::roman_number_from(m_index);
         break;
     case CSS::ListStyleType::None:
         break;

@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/JsonObject.h>
 #include <AK/Result.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
@@ -31,11 +31,11 @@
 #    include <sys/prctl.h>
 #endif
 
-static String s_current_test = "";
+static DeprecatedString s_current_test = "";
 static bool s_use_bytecode = false;
 static bool s_enable_bytecode_optimizations = false;
 static bool s_parse_only = false;
-static String s_harness_file_directory;
+static DeprecatedString s_harness_file_directory;
 static bool s_automatic_harness_detection_mode = false;
 
 enum class NegativePhase {
@@ -47,9 +47,9 @@ enum class NegativePhase {
 
 struct TestError {
     NegativePhase phase { NegativePhase::ParseOrEarly };
-    String type;
-    String details;
-    String harness_file;
+    DeprecatedString type;
+    DeprecatedString details;
+    DeprecatedString harness_file;
 };
 
 using ScriptOrModuleProgram = Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::SourceTextModule>>;
@@ -93,7 +93,7 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
 
         auto unit_result = JS::Bytecode::Generator::generate(program_node);
         if (unit_result.is_error()) {
-            result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), String::formatted("TODO({})", unit_result.error().to_string())));
+            result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), DeprecatedString::formatted("TODO({})", unit_result.error().to_string())));
         } else {
             auto unit = unit_result.release_value();
             auto optimization_level = s_enable_bytecode_optimizations ? JS::Bytecode::Interpreter::OptimizationLevel::Optimize : JS::Bytecode::Interpreter::OptimizationLevel::Default;
@@ -133,18 +133,18 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
     return {};
 }
 
-static HashMap<String, String> s_cached_harness_files;
+static HashMap<DeprecatedString, DeprecatedString> s_cached_harness_files;
 
 static Result<StringView, TestError> read_harness_file(StringView harness_file)
 {
     auto cache = s_cached_harness_files.find(harness_file);
     if (cache == s_cached_harness_files.end()) {
-        auto file_or_error = Core::Stream::File::open(String::formatted("{}{}", s_harness_file_directory, harness_file), Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}{}", s_harness_file_directory, harness_file), Core::Stream::OpenMode::Read);
         if (file_or_error.is_error()) {
             return TestError {
                 NegativePhase::Harness,
                 "filesystem",
-                String::formatted("Could not open file: {}", harness_file),
+                DeprecatedString::formatted("Could not open file: {}", harness_file),
                 harness_file
             };
         }
@@ -154,7 +154,7 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
             return TestError {
                 NegativePhase::Harness,
                 "filesystem",
-                String::formatted("Could not read file: {}", harness_file),
+                DeprecatedString::formatted("Could not read file: {}", harness_file),
                 harness_file
             };
         }
@@ -264,14 +264,14 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
     return run_with_interpreter(program_or_error.value());
 }
 
-static Result<TestMetadata, String> extract_metadata(StringView source)
+static Result<TestMetadata, DeprecatedString> extract_metadata(StringView source)
 {
     auto lines = source.lines();
 
     TestMetadata metadata;
 
     bool parsing_negative = false;
-    String failed_message;
+    DeprecatedString failed_message;
 
     auto parse_list = [&](StringView line) {
         auto start = line.find('[');
@@ -282,7 +282,7 @@ static Result<TestMetadata, String> extract_metadata(StringView source)
 
         auto end = line.find_last(']');
         if (!end.has_value() || end.value() <= start.value()) {
-            failed_message = String::formatted("Can't parse list in '{}'", line);
+            failed_message = DeprecatedString::formatted("Can't parse list in '{}'", line);
             return items;
         }
 
@@ -295,7 +295,7 @@ static Result<TestMetadata, String> extract_metadata(StringView source)
     auto second_word = [&](StringView line) {
         auto separator = line.find(' ');
         if (!separator.has_value() || separator.value() >= (line.length() - 1u)) {
-            failed_message = String::formatted("Can't parse value after space in '{}'", line);
+            failed_message = DeprecatedString::formatted("Can't parse value after space in '{}'", line);
             return ""sv;
         }
         return line.substring_view(separator.value() + 1);
@@ -349,7 +349,7 @@ static Result<TestMetadata, String> extract_metadata(StringView source)
                     metadata.phase = NegativePhase::Runtime;
                 } else {
                     has_phase = false;
-                    failed_message = String::formatted("Unknown negative phase: {}", phase);
+                    failed_message = DeprecatedString::formatted("Unknown negative phase: {}", phase);
                     break;
                 }
             } else if (line.starts_with("type:"sv)) {
@@ -372,7 +372,7 @@ static Result<TestMetadata, String> extract_metadata(StringView source)
             auto flags = parse_list(line);
 
             if (flags.is_empty()) {
-                failed_message = String::formatted("Failed to find flags in '{}'", line);
+                failed_message = DeprecatedString::formatted("Failed to find flags in '{}'", line);
                 break;
             }
 
@@ -408,7 +408,7 @@ static Result<TestMetadata, String> extract_metadata(StringView source)
     }
 
     if (failed_message.is_empty())
-        failed_message = String::formatted("Never reached end of comment '---*/'");
+        failed_message = DeprecatedString::formatted("Never reached end of comment '---*/'");
 
     return failed_message;
 }
@@ -522,7 +522,7 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
     return error.phase == metadata.phase && error.type == metadata.type;
 }
 
-static bool extract_harness_directory(String const& test_file_path)
+static bool extract_harness_directory(DeprecatedString const& test_file_path)
 {
     auto test_directory_index = test_file_path.find("test/"sv);
     if (!test_directory_index.has_value()) {
@@ -530,7 +530,7 @@ static bool extract_harness_directory(String const& test_file_path)
         return false;
     }
 
-    s_harness_file_directory = String::formatted("{}harness/", test_file_path.substring_view(0, test_directory_index.value()));
+    s_harness_file_directory = DeprecatedString::formatted("{}harness/", test_file_path.substring_view(0, test_directory_index.value()));
     return true;
 }
 
@@ -568,7 +568,7 @@ extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertio
 extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
 #    endif
 {
-    auto full_message = String::formatted("{}:{}: {}: Assertion `{}' failed.", file, line, function, assertion);
+    auto full_message = DeprecatedString::formatted("{}:{}: {}: Assertion `{}' failed.", file, line, function, assertion);
     handle_failed_assert(full_message.characters());
 }
 #endif
@@ -605,7 +605,7 @@ int main(int argc, char** argv)
     if (s_harness_file_directory.is_empty()) {
         s_automatic_harness_detection_mode = true;
     } else if (!s_harness_file_directory.ends_with('/')) {
-        s_harness_file_directory = String::formatted("{}/", s_harness_file_directory);
+        s_harness_file_directory = DeprecatedString::formatted("{}/", s_harness_file_directory);
     }
 
     if (timeout <= 0) {
@@ -658,10 +658,10 @@ int main(int argc, char** argv)
     auto collect_output = [&] {
         fflush(stdout);
         auto nread = read(stdout_pipe[0], buffer, BUFFER_SIZE);
-        String value;
+        DeprecatedString value;
 
         if (nread > 0) {
-            value = String { buffer, static_cast<size_t>(nread) };
+            value = DeprecatedString { buffer, static_cast<size_t>(nread) };
             while (nread > 0) {
                 nread = read(stdout_pipe[0], buffer, BUFFER_SIZE);
             }
@@ -714,7 +714,7 @@ int main(int argc, char** argv)
 
         count++;
 
-        String source_with_strict;
+        DeprecatedString source_with_strict;
         static StringView use_strict = "'use strict';\n"sv;
         static size_t strict_length = use_strict.length();
 
@@ -761,7 +761,7 @@ int main(int argc, char** argv)
             auto result = run_test(original_contents, path, metadata);
             DISARM_TIMER();
 
-            String first_output = collect_output();
+            DeprecatedString first_output = collect_output();
             if (!first_output.is_null())
                 result_object.set("output", first_output);
 
@@ -784,7 +784,7 @@ int main(int argc, char** argv)
             auto result = run_test(with_strict, path, metadata);
             DISARM_TIMER();
 
-            String first_output = collect_output();
+            DeprecatedString first_output = collect_output();
             if (!first_output.is_null())
                 result_object.set("strict_output", first_output);
 

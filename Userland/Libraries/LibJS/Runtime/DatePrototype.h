@@ -73,9 +73,9 @@ private:
 };
 
 ThrowCompletionOr<double> this_time_value(VM&, Value value);
-String time_string(double time);
-String date_string(double time);
-String time_zone_string(double time);
-String to_date_string(double time);
+DeprecatedString time_string(double time);
+DeprecatedString date_string(double time);
+DeprecatedString time_zone_string(double time);
+DeprecatedString to_date_string(double time);
 
 }

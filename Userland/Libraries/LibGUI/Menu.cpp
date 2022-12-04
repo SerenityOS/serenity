@@ -32,7 +32,7 @@ Menu* Menu::from_menu_id(int menu_id)
     return (*it).value;
 }
 
-Menu::Menu(String name)
+Menu::Menu(DeprecatedString name)
     : m_name(move(name))
 {
 }
@@ -72,7 +72,7 @@ void Menu::remove_all_actions()
     m_items.clear();
 }
 
-ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(String name)
+ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(DeprecatedString name)
 {
     // NOTE: We grow the vector first, to get allocation failure handled immediately.
     TRY(m_items.try_ensure_capacity(m_items.size() + 1));
@@ -87,7 +87,7 @@ ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(String name)
     return submenu;
 }
 
-Menu& Menu::add_submenu(String name)
+Menu& Menu::add_submenu(DeprecatedString name)
 {
     auto menu = MUST(try_add_submenu(move(name)));
     return menu;
@@ -197,7 +197,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         break;
     case MenuItem::Type::Action: {
         auto& action = *item.action();
-        auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
+        auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : DeprecatedString();
         bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
         bool is_default = (m_current_default_action.ptr() == &action);
         auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();

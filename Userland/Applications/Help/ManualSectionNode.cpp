@@ -6,14 +6,14 @@
 
 #include "ManualSectionNode.h"
 #include "ManualPageNode.h"
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <LibCore/DirIterator.h>
 
-String ManualSectionNode::path() const
+DeprecatedString ManualSectionNode::path() const
 {
-    return String::formatted("/usr/share/man/man{}", m_section);
+    return DeprecatedString::formatted("/usr/share/man/man{}", m_section);
 }
 
 void ManualSectionNode::reify_if_needed() const
@@ -24,7 +24,7 @@ void ManualSectionNode::reify_if_needed() const
 
     Core::DirIterator dir_iter { path(), Core::DirIterator::Flags::SkipDots };
 
-    Vector<String> page_names;
+    Vector<DeprecatedString> page_names;
     while (dir_iter.has_next()) {
         LexicalPath lexical_path(dir_iter.next_path());
         if (lexical_path.extension() != "md")

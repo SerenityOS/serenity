@@ -54,7 +54,7 @@ public:
     {
     }
 
-    virtual void config_bool_did_change(String const& domain, String const& group, String const& key, bool value) override
+    virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override
     {
         VERIFY(domain == "Terminal");
 
@@ -68,7 +68,7 @@ public:
         }
     }
 
-    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override
+    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override
     {
         VERIFY(domain == "Terminal");
 
@@ -98,7 +98,7 @@ public:
         }
     }
 
-    virtual void config_i32_did_change(String const& domain, String const& group, String const& key, i32 value) override
+    virtual void config_i32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value) override
     {
         VERIFY(domain == "Terminal");
 
@@ -115,7 +115,7 @@ private:
     VT::TerminalWidget& m_parent_terminal;
 };
 
-static void utmp_update(String const& tty, pid_t pid, bool create)
+static void utmp_update(DeprecatedString const& tty, pid_t pid, bool create)
 {
     int utmpupdate_pid = fork();
     if (utmpupdate_pid < 0) {
@@ -146,9 +146,9 @@ static void utmp_update(String const& tty, pid_t pid, bool create)
     }
 }
 
-static ErrorOr<void> run_command(String command, bool keep_open)
+static ErrorOr<void> run_command(DeprecatedString command, bool keep_open)
 {
-    String shell = "/bin/Shell";
+    DeprecatedString shell = "/bin/Shell";
     auto* pw = getpwuid(getuid());
     if (pw && pw->pw_shell) {
         shell = pw->pw_shell;
@@ -361,7 +361,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto shell_child_process_count = [&] {
-        Core::DirIterator iterator(String::formatted("/proc/{}/children", shell_pid), Core::DirIterator::Flags::SkipParentAndBaseDir);
+        Core::DirIterator iterator(DeprecatedString::formatted("/proc/{}/children", shell_pid), Core::DirIterator::Flags::SkipParentAndBaseDir);
         int background_process_count = 0;
         while (iterator.has_next()) {
             ++background_process_count;
@@ -373,13 +373,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto check_terminal_quit = [&]() -> GUI::Dialog::ExecResult {
         if (!should_confirm_close)
             return GUI::MessageBox::ExecResult::OK;
-        Optional<String> close_message;
+        Optional<DeprecatedString> close_message;
         if (tty_has_foreground_process()) {
             close_message = "There is still a process running in this terminal. Closing the terminal will kill it.";
         } else {
             auto child_process_count = shell_child_process_count();
             if (child_process_count > 1)
-                close_message = String::formatted("There are {} background processes running in this terminal. Closing the terminal may kill them.", child_process_count);
+                close_message = DeprecatedString::formatted("There are {} background processes running in this terminal. Closing the terminal may kill them.", child_process_count);
             else if (child_process_count == 1)
                 close_message = "There is a background process running in this terminal. Closing the terminal may kill it.";
         }

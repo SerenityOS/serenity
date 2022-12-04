@@ -37,7 +37,7 @@ static void update_notification_window_locations(Gfx::IntRect const& screen_rect
     }
 }
 
-NotificationWindow::NotificationWindow(i32 client_id, String const& text, String const& title, Gfx::ShareableBitmap const& icon)
+NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& text, DeprecatedString const& title, Gfx::ShareableBitmap const& icon)
 {
     m_id = client_id;
     s_windows.set(m_id, this);
@@ -129,14 +129,14 @@ void NotificationWindow::leave_event(Core::Event&)
     update_notification_window_locations(GUI::Desktop::the().rect());
 }
 
-void NotificationWindow::set_text(String const& value)
+void NotificationWindow::set_text(DeprecatedString const& value)
 {
     m_text_label->set_text(value);
     if (m_hovering)
         resize_to_fit_text();
 }
 
-void NotificationWindow::set_title(String const& value)
+void NotificationWindow::set_title(DeprecatedString const& value)
 {
     m_title_label->set_text(value);
 }

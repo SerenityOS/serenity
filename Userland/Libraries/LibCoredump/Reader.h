@@ -47,8 +47,8 @@ public:
     void for_each_memory_region_info(Func func) const;
 
     struct LibraryInfo {
-        String name;
-        String path;
+        DeprecatedString name;
+        DeprecatedString path;
         FlatPtr base_address { 0 };
     };
 
@@ -64,21 +64,21 @@ public:
     Optional<MemoryRegionInfo> region_containing(FlatPtr address) const;
 
     struct LibraryData {
-        String name;
+        DeprecatedString name;
         FlatPtr base_address { 0 };
         NonnullRefPtr<Core::MappedFile> file;
         ELF::Image lib_elf;
     };
     LibraryData const* library_containing(FlatPtr address) const;
 
-    String resolve_object_path(StringView object_name) const;
+    DeprecatedString resolve_object_path(StringView object_name) const;
 
     int process_pid() const;
     u8 process_termination_signal() const;
-    String process_executable_path() const;
-    Vector<String> process_arguments() const;
-    Vector<String> process_environment() const;
-    HashMap<String, String> metadata() const;
+    DeprecatedString process_executable_path() const;
+    Vector<DeprecatedString> process_arguments() const;
+    Vector<DeprecatedString> process_environment() const;
+    HashMap<DeprecatedString, DeprecatedString> metadata() const;
 
 private:
     explicit Reader(ReadonlyBytes);

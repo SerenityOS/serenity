@@ -31,11 +31,11 @@ class Backtrace {
 public:
     struct Entry {
         FlatPtr eip;
-        String object_name;
-        String function_name;
+        DeprecatedString object_name;
+        DeprecatedString function_name;
         Debug::DebugInfo::SourcePositionWithInlines source_position_with_inlines;
 
-        String to_string(bool color = false) const;
+        DeprecatedString to_string(bool color = false) const;
     };
 
     Backtrace(Reader const&, const ELF::Core::ThreadInfo&, Function<void(size_t, size_t)> on_progress = {});
@@ -51,7 +51,7 @@ private:
     bool m_skip_loader_so { false };
     ELF::Core::ThreadInfo m_thread_info;
     Vector<Entry> m_entries;
-    HashMap<String, NonnullOwnPtr<ELFObjectInfo>> m_debug_info_cache;
+    HashMap<DeprecatedString, NonnullOwnPtr<ELFObjectInfo>> m_debug_info_cache;
 };
 
 }

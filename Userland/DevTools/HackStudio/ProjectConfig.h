@@ -16,16 +16,16 @@ namespace HackStudio {
 
 class ProjectConfig {
 public:
-    static ErrorOr<NonnullOwnPtr<ProjectConfig>> try_load_project_config(String path);
+    static ErrorOr<NonnullOwnPtr<ProjectConfig>> try_load_project_config(DeprecatedString path);
     static NonnullOwnPtr<ProjectConfig> create_empty();
 
     ProjectConfig(JsonObject);
 
-    Optional<String> build_command() const { return read_key("build_command"); }
-    Optional<String> run_command() const { return read_key("run_command"); }
+    Optional<DeprecatedString> build_command() const { return read_key("build_command"); }
+    Optional<DeprecatedString> run_command() const { return read_key("run_command"); }
 
 private:
-    Optional<String> read_key(String key_name) const;
+    Optional<DeprecatedString> read_key(DeprecatedString key_name) const;
 
     JsonObject m_config;
 };

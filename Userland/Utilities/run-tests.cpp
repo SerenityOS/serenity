@@ -33,11 +33,11 @@ struct FileResult {
     pid_t child_pid { 0 };
 };
 
-String g_currently_running_test;
+DeprecatedString g_currently_running_test;
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
+    TestRunner(DeprecatedString test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
         : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
         , m_exclude_regex(move(exclude_regex))
         , m_config(move(config))
@@ -54,28 +54,28 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(String const& test_path, size_t current_text_index, size_t num_tests) override;
-    virtual Vector<String> get_test_paths() const override;
-    virtual Vector<String> const* get_failed_test_names() const override { return &m_failed_test_names; }
+    virtual void do_run_single_test(DeprecatedString const& test_path, size_t current_text_index, size_t num_tests) override;
+    virtual Vector<DeprecatedString> get_test_paths() const override;
+    virtual Vector<DeprecatedString> const* get_failed_test_names() const override { return &m_failed_test_names; }
 
-    virtual FileResult run_test_file(String const& test_path);
+    virtual FileResult run_test_file(DeprecatedString const& test_path);
 
     bool should_skip_test(LexicalPath const& test_path);
 
     Regex<PosixExtended> m_exclude_regex;
     NonnullRefPtr<Core::ConfigFile> m_config;
-    Vector<String> m_skip_directories;
-    Vector<String> m_skip_files;
-    Vector<String> m_failed_test_names;
+    Vector<DeprecatedString> m_skip_directories;
+    Vector<DeprecatedString> m_skip_files;
+    Vector<DeprecatedString> m_failed_test_names;
     Regex<PosixExtended> m_skip_regex;
     bool m_run_skipped_tests { false };
     bool m_print_all_output { false };
 };
 
-Vector<String> TestRunner::get_test_paths() const
+Vector<DeprecatedString> TestRunner::get_test_paths() const
 {
-    Vector<String> paths;
-    Test::iterate_directory_recursively(m_test_root, [&](String const& file_path) {
+    Vector<DeprecatedString> paths;
+    Test::iterate_directory_recursively(m_test_root, [&](DeprecatedString const& file_path) {
         if (access(file_path.characters(), R_OK | X_OK) != 0)
             return;
         auto result = m_exclude_regex.match(file_path, PosixFlags::Global);
@@ -91,11 +91,11 @@ bool TestRunner::should_skip_test(LexicalPath const& test_path)
     if (m_run_skipped_tests)
         return false;
 
-    for (String const& dir : m_skip_directories) {
+    for (DeprecatedString const& dir : m_skip_directories) {
         if (test_path.dirname().contains(dir))
             return true;
     }
-    for (String const& file : m_skip_files) {
+    for (DeprecatedString const& file : m_skip_files) {
         if (test_path.basename().contains(file))
             return true;
     }
@@ -106,7 +106,7 @@ bool TestRunner::should_skip_test(LexicalPath const& test_path)
     return false;
 }
 
-void TestRunner::do_run_single_test(String const& test_path, size_t current_test_index, size_t num_tests)
+void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t current_test_index, size_t num_tests)
 {
     g_currently_running_test = test_path;
     auto test_relative_path = LexicalPath::relative_path(test_path, m_test_root);
@@ -141,7 +141,7 @@ void TestRunner::do_run_single_test(String const& test_path, size_t current_test
         out("{}", test_result.result == Test::Result::Fail ? " FAIL  " : "CRASHED");
         print_modifiers({ Test::CLEAR });
         if (test_result.result == Test::Result::Crashed) {
-            auto pid_search_string = String::formatted("_{}_", test_result.child_pid);
+            auto pid_search_string = DeprecatedString::formatted("_{}_", test_result.child_pid);
             Core::DirIterator iterator("/tmp/coredump"sv);
             if (!iterator.has_error()) {
                 while (iterator.has_next()) {
@@ -225,7 +225,7 @@ void TestRunner::do_run_single_test(String const& test_path, size_t current_test
     close(test_result.stdout_err_fd);
 }
 
-FileResult TestRunner::run_test_file(String const& test_path)
+FileResult TestRunner::run_test_file(DeprecatedString const& test_path)
 {
     double start_time = get_time_in_ms();
 
@@ -241,8 +241,8 @@ FileResult TestRunner::run_test_file(String const& test_path)
     int child_out_err_file = mkstemp(child_out_err_path);
     VERIFY(child_out_err_file >= 0);
 
-    String dirname = path_for_test.dirname();
-    String basename = path_for_test.basename();
+    DeprecatedString dirname = path_for_test.dirname();
+    DeprecatedString basename = path_for_test.basename();
 
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDOUT_FILENO);
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO);
@@ -316,9 +316,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool run_benchmarks = false;
     bool run_skipped_tests = false;
     char const* specified_test_root = nullptr;
-    String test_glob;
-    String exclude_pattern;
-    String config_file;
+    DeprecatedString test_glob;
+    DeprecatedString exclude_pattern;
+    DeprecatedString config_file;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(Core::ArgsParser::Option {
@@ -346,7 +346,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    test_glob = String::formatted("*{}*", test_glob);
+    test_glob = DeprecatedString::formatted("*{}*", test_glob);
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
         AK::set_debug_enabled(false);
@@ -358,10 +358,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!run_benchmarks)
         TRY(Core::System::setenv("TESTS_ONLY"sv, "1"sv, true));
 
-    String test_root;
+    DeprecatedString test_root;
 
     if (specified_test_root) {
-        test_root = String { specified_test_root };
+        test_root = DeprecatedString { specified_test_root };
     } else {
         test_root = "/usr/Tests";
     }

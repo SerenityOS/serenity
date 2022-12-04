@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 
 TEST_CASE(construct)
 {
@@ -19,7 +19,7 @@ TEST_CASE(construct)
 
 TEST_CASE(construct_from_initializer_list)
 {
-    HashMap<int, String> number_to_string {
+    HashMap<int, DeprecatedString> number_to_string {
         { 1, "One" },
         { 2, "Two" },
         { 3, "Three" },
@@ -30,7 +30,7 @@ TEST_CASE(construct_from_initializer_list)
 
 TEST_CASE(populate)
 {
-    HashMap<int, String> number_to_string;
+    HashMap<int, DeprecatedString> number_to_string;
     number_to_string.set(1, "One");
     number_to_string.set(2, "Two");
     number_to_string.set(3, "Three");
@@ -41,7 +41,7 @@ TEST_CASE(populate)
 
 TEST_CASE(range_loop)
 {
-    HashMap<int, String> number_to_string;
+    HashMap<int, DeprecatedString> number_to_string;
     EXPECT_EQ(number_to_string.set(1, "One"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(number_to_string.set(2, "Two"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(number_to_string.set(3, "Three"), AK::HashSetResult::InsertedNewEntry);
@@ -56,7 +56,7 @@ TEST_CASE(range_loop)
 
 TEST_CASE(map_remove)
 {
-    HashMap<int, String> number_to_string;
+    HashMap<int, DeprecatedString> number_to_string;
     EXPECT_EQ(number_to_string.set(1, "One"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(number_to_string.set(2, "Two"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(number_to_string.set(3, "Three"), AK::HashSetResult::InsertedNewEntry);
@@ -73,7 +73,7 @@ TEST_CASE(map_remove)
 
 TEST_CASE(remove_all_matching)
 {
-    HashMap<int, String> map;
+    HashMap<int, DeprecatedString> map;
 
     map.set(1, "One");
     map.set(2, "Two");
@@ -82,27 +82,27 @@ TEST_CASE(remove_all_matching)
 
     EXPECT_EQ(map.size(), 4u);
 
-    EXPECT_EQ(map.remove_all_matching([&](int key, String const& value) { return key == 1 || value == "Two"; }), true);
+    EXPECT_EQ(map.remove_all_matching([&](int key, DeprecatedString const& value) { return key == 1 || value == "Two"; }), true);
     EXPECT_EQ(map.size(), 2u);
 
-    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return false; }), false);
+    EXPECT_EQ(map.remove_all_matching([&](int, DeprecatedString const&) { return false; }), false);
     EXPECT_EQ(map.size(), 2u);
 
     EXPECT(map.contains(3));
     EXPECT(map.contains(4));
 
-    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return true; }), true);
-    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return false; }), false);
+    EXPECT_EQ(map.remove_all_matching([&](int, DeprecatedString const&) { return true; }), true);
+    EXPECT_EQ(map.remove_all_matching([&](int, DeprecatedString const&) { return false; }), false);
 
     EXPECT(map.is_empty());
 
-    EXPECT_EQ(map.remove_all_matching([&](int, String const&) { return true; }), false);
+    EXPECT_EQ(map.remove_all_matching([&](int, DeprecatedString const&) { return true; }), false);
 }
 
 TEST_CASE(case_insensitive)
 {
-    HashMap<String, int, CaseInsensitiveStringTraits> casemap;
-    EXPECT_EQ(String("nickserv").to_lowercase(), String("NickServ").to_lowercase());
+    HashMap<DeprecatedString, int, CaseInsensitiveStringTraits> casemap;
+    EXPECT_EQ(DeprecatedString("nickserv").to_lowercase(), DeprecatedString("NickServ").to_lowercase());
     EXPECT_EQ(casemap.set("nickserv", 3), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(casemap.set("NickServ", 3), AK::HashSetResult::ReplacedExistingEntry);
     EXPECT_EQ(casemap.size(), 1u);
@@ -111,11 +111,11 @@ TEST_CASE(case_insensitive)
 TEST_CASE(hashmap_of_nonnullownptr_get)
 {
     struct Object {
-        Object(String const& s)
+        Object(DeprecatedString const& s)
             : string(s)
         {
         }
-        String string;
+        DeprecatedString string;
     };
 
     HashMap<int, NonnullOwnPtr<Object>> objects;
@@ -142,16 +142,16 @@ TEST_CASE(hashmap_of_nonnullownptr_get)
 
 TEST_CASE(many_strings)
 {
-    HashMap<String, int> strings;
+    HashMap<DeprecatedString, int> strings;
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i), i), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(DeprecatedString::number(i), i), AK::HashSetResult::InsertedNewEntry);
     }
     EXPECT_EQ(strings.size(), 999u);
     for (auto& it : strings) {
         EXPECT_EQ(it.key.to_int().value(), it.value);
     }
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.remove(String::number(i)), true);
+        EXPECT_EQ(strings.remove(DeprecatedString::number(i)), true);
     }
     EXPECT_EQ(strings.is_empty(), true);
 }
@@ -204,7 +204,7 @@ TEST_CASE(basic_contains)
 
 TEST_CASE(in_place_rehashing_ordered_loop_bug)
 {
-    OrderedHashMap<String, String> map;
+    OrderedHashMap<DeprecatedString, DeprecatedString> map;
     map.set("yt.innertube::nextId", "");
     map.set("yt.innertube::requests", "");
     map.remove("yt.innertube::nextId");

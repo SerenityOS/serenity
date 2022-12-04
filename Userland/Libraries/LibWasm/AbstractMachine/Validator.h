@@ -30,13 +30,13 @@ struct Context {
 };
 
 struct ValidationError : public Error {
-    ValidationError(String error)
+    ValidationError(DeprecatedString error)
         : Error(Error::from_string_view(error))
         , error_string(move(error))
     {
     }
 
-    String error_string;
+    DeprecatedString error_string;
 };
 
 class Validator {
@@ -255,27 +255,27 @@ private:
     }
 
     struct Errors {
-        static ValidationError invalid(StringView name) { return String::formatted("Invalid {}", name); }
+        static ValidationError invalid(StringView name) { return DeprecatedString::formatted("Invalid {}", name); }
 
         template<typename Expected, typename Given>
         static ValidationError invalid(StringView name, Expected expected, Given given, SourceLocation location = SourceLocation::current())
         {
             if constexpr (WASM_VALIDATOR_DEBUG)
-                return String::formatted("Invalid {} in {}, expected {} but got {}", name, find_instruction_name(location), expected, given);
+                return DeprecatedString::formatted("Invalid {} in {}, expected {} but got {}", name, find_instruction_name(location), expected, given);
             else
-                return String::formatted("Invalid {}, expected {} but got {}", name, expected, given);
+                return DeprecatedString::formatted("Invalid {}, expected {} but got {}", name, expected, given);
         }
 
         template<typename... Args>
         static ValidationError non_conforming_types(StringView name, Args... args)
         {
-            return String::formatted("Non-conforming types for {}: {}", name, Vector { args... });
+            return DeprecatedString::formatted("Non-conforming types for {}: {}", name, Vector { args... });
         }
 
-        static ValidationError duplicate_export_name(StringView name) { return String::formatted("Duplicate exported name '{}'", name); }
+        static ValidationError duplicate_export_name(StringView name) { return DeprecatedString::formatted("Duplicate exported name '{}'", name); }
 
         template<typename T, typename U, typename V>
-        static ValidationError out_of_bounds(StringView name, V value, T min, U max) { return String::formatted("Value {} for {} is out of bounds ({},{})", value, name, min, max); }
+        static ValidationError out_of_bounds(StringView name, V value, T min, U max) { return DeprecatedString::formatted("Value {} for {} is out of bounds ({},{})", value, name, min, max); }
 
         template<typename... Expected>
         static ValidationError invalid_stack_state(Stack const& stack, Tuple<Expected...> expected, SourceLocation location = SourceLocation::current())
@@ -310,7 +310,7 @@ private:
         }
 
     private:
-        static String find_instruction_name(SourceLocation const&);
+        static DeprecatedString find_instruction_name(SourceLocation const&);
     };
 
     enum class ChildScopeKind {

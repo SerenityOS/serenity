@@ -38,14 +38,14 @@ private:
     ModuleCallback m_on_complete;
 };
 
-String module_type_from_module_request(JS::ModuleRequest const&);
-WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, String const& specifier);
-WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const&);
-Optional<AK::URL> resolve_url_like_module_specifier(String const& specifier, AK::URL const& base_url);
+DeprecatedString module_type_from_module_request(JS::ModuleRequest const&);
+WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, DeprecatedString const& specifier);
+WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const&);
+Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& specifier, AK::URL const& base_url);
 
 void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete);
 void fetch_external_module_script_graph(AK::URL const&, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete);
-void fetch_inline_module_script_graph(String const& filename, String const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete);
+void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete);
 
 void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, ModuleCallback callback);
 void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete);

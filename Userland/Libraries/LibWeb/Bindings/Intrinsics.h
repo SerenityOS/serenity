@@ -25,10 +25,10 @@ public:
     {
     }
 
-    JS::Object& cached_web_prototype(String const& class_name);
+    JS::Object& cached_web_prototype(DeprecatedString const& class_name);
 
     template<typename T>
-    JS::Object& ensure_web_prototype(String const& class_name)
+    JS::Object& ensure_web_prototype(DeprecatedString const& class_name)
     {
         auto it = m_prototypes.find(class_name);
         if (it != m_prototypes.end())
@@ -40,7 +40,7 @@ public:
     }
 
     template<typename T>
-    JS::NativeFunction& ensure_web_constructor(String const& class_name)
+    JS::NativeFunction& ensure_web_constructor(DeprecatedString const& class_name)
     {
         auto it = m_constructors.find(class_name);
         if (it != m_constructors.end())
@@ -54,8 +54,8 @@ public:
 private:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    HashMap<String, JS::Object*> m_prototypes;
-    HashMap<String, JS::NativeFunction*> m_constructors;
+    HashMap<DeprecatedString, JS::Object*> m_prototypes;
+    HashMap<DeprecatedString, JS::NativeFunction*> m_constructors;
 
     JS::NonnullGCPtr<JS::Realm> m_realm;
 };
@@ -66,18 +66,18 @@ private:
 }
 
 template<typename T>
-[[nodiscard]] JS::Object& ensure_web_prototype(JS::Realm& realm, String const& class_name)
+[[nodiscard]] JS::Object& ensure_web_prototype(JS::Realm& realm, DeprecatedString const& class_name)
 {
     return host_defined_intrinsics(realm).ensure_web_prototype<T>(class_name);
 }
 
 template<typename T>
-[[nodiscard]] JS::NativeFunction& ensure_web_constructor(JS::Realm& realm, String const& class_name)
+[[nodiscard]] JS::NativeFunction& ensure_web_constructor(JS::Realm& realm, DeprecatedString const& class_name)
 {
     return host_defined_intrinsics(realm).ensure_web_constructor<T>(class_name);
 }
 
-[[nodiscard]] inline JS::Object& cached_web_prototype(JS::Realm& realm, String const& class_name)
+[[nodiscard]] inline JS::Object& cached_web_prototype(JS::Realm& realm, DeprecatedString const& class_name)
 {
     return host_defined_intrinsics(realm).cached_web_prototype(class_name);
 }

@@ -14,10 +14,10 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    String default_listen_address = "0.0.0.0";
+    DeprecatedString default_listen_address = "0.0.0.0";
     u16 default_port = 8000;
 
-    String listen_address = default_listen_address;
+    DeprecatedString listen_address = default_listen_address;
     int port = default_port;
 
     Core::ArgsParser args_parser;

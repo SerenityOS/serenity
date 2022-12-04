@@ -7,8 +7,8 @@
 #pragma once
 
 #include "WindowIdentifier.h"
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <LibGUI/Button.h>
 #include <LibGfx/Rect.h>
 
@@ -27,8 +27,8 @@ public:
 
     WindowIdentifier const& identifier() const { return m_identifier; }
 
-    String title() const { return m_title; }
-    void set_title(String const& title) { m_title = title; }
+    DeprecatedString title() const { return m_title; }
+    void set_title(DeprecatedString const& title) { m_title = title; }
 
     Gfx::IntRect rect() const { return m_rect; }
     void set_rect(Gfx::IntRect const& rect) { m_rect = rect; }
@@ -68,7 +68,7 @@ public:
 
 private:
     WindowIdentifier m_identifier;
-    String m_title;
+    DeprecatedString m_title;
     Gfx::IntRect m_rect;
     RefPtr<GUI::Button> m_button;
     RefPtr<Gfx::Bitmap> m_icon;

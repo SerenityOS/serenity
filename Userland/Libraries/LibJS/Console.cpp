@@ -135,7 +135,7 @@ ThrowCompletionOr<Value> Console::count()
     }
 
     // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and ToString(map[label]).
-    String concat = String::formatted("{}: {}", label, map.get(label).value());
+    DeprecatedString concat = DeprecatedString::formatted("{}: {}", label, map.get(label).value());
 
     // 5. Perform Logger("count", « concat »).
     MarkedVector<Value> concat_as_vector { vm.heap() };
@@ -164,7 +164,7 @@ ThrowCompletionOr<Value> Console::count_reset()
     else {
         // 1. Let message be a string without any formatting specifiers indicating generically
         //    that the given label does not have an associated count.
-        auto message = String::formatted("\"{}\" doesn't have a count", label);
+        auto message = DeprecatedString::formatted("\"{}\" doesn't have a count", label);
         // 2. Perform Logger("countReset", « message »);
         MarkedVector<Value> message_as_vector { vm.heap() };
         message_as_vector.append(js_string(vm, message));
@@ -212,7 +212,7 @@ ThrowCompletionOr<Value> Console::assert_()
         // 3. Otherwise:
         else {
             // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = js_string(vm, String::formatted("{}: {}", message->string(), first.to_string(vm).value()));
+            auto concat = js_string(vm, DeprecatedString::formatted("{}: {}", message->string(), first.to_string(vm).value()));
             // 2. Set data[0] to concat.
             data[0] = concat;
         }
@@ -231,7 +231,7 @@ ThrowCompletionOr<Value> Console::group()
     Group group;
 
     // 2. If data is not empty, let groupLabel be the result of Formatter(data).
-    String group_label;
+    DeprecatedString group_label;
     auto data = vm_arguments();
     if (!data.is_empty()) {
         auto formatted_data = TRY(m_client->formatter(data));
@@ -265,7 +265,7 @@ ThrowCompletionOr<Value> Console::group_collapsed()
     Group group;
 
     // 2. If data is not empty, let groupLabel be the result of Formatter(data).
-    String group_label;
+    DeprecatedString group_label;
     auto data = vm_arguments();
     if (!data.is_empty()) {
         auto formatted_data = TRY(m_client->formatter(data));
@@ -319,7 +319,7 @@ ThrowCompletionOr<Value> Console::time()
     if (m_timer_table.contains(label)) {
         if (m_client) {
             MarkedVector<Value> timer_already_exists_warning_message_as_vector { vm.heap() };
-            timer_already_exists_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' already exists.", label)));
+            timer_already_exists_warning_message_as_vector.append(js_string(vm, DeprecatedString::formatted("Timer '{}' already exists.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_already_exists_warning_message_as_vector)));
         }
         return js_undefined();
@@ -347,7 +347,7 @@ ThrowCompletionOr<Value> Console::time_log()
     if (maybe_start_time == m_timer_table.end()) {
         if (m_client) {
             MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { vm.heap() };
-            timer_does_not_exist_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' does not exist.", label)));
+            timer_does_not_exist_warning_message_as_vector.append(js_string(vm, DeprecatedString::formatted("Timer '{}' does not exist.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_does_not_exist_warning_message_as_vector)));
         }
         return js_undefined();
@@ -358,7 +358,7 @@ ThrowCompletionOr<Value> Console::time_log()
     auto duration = TRY(format_time_since(start_time));
 
     // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
-    auto concat = String::formatted("{}: {}", label, duration);
+    auto concat = DeprecatedString::formatted("{}: {}", label, duration);
 
     // 5. Prepend concat to data.
     MarkedVector<Value> data { vm.heap() };
@@ -390,7 +390,7 @@ ThrowCompletionOr<Value> Console::time_end()
     if (maybe_start_time == m_timer_table.end()) {
         if (m_client) {
             MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { vm.heap() };
-            timer_does_not_exist_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' does not exist.", label)));
+            timer_does_not_exist_warning_message_as_vector.append(js_string(vm, DeprecatedString::formatted("Timer '{}' does not exist.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_does_not_exist_warning_message_as_vector)));
         }
         return js_undefined();
@@ -404,7 +404,7 @@ ThrowCompletionOr<Value> Console::time_end()
     auto duration = TRY(format_time_since(start_time));
 
     // 5. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
-    auto concat = String::formatted("{}: {}", label, duration);
+    auto concat = DeprecatedString::formatted("{}: {}", label, duration);
 
     // 6. Perform Printer("timeEnd", « concat »).
     if (m_client) {
@@ -427,7 +427,7 @@ MarkedVector<Value> Console::vm_arguments()
     return arguments;
 }
 
-void Console::output_debug_message(LogLevel log_level, String const& output) const
+void Console::output_debug_message(LogLevel log_level, DeprecatedString const& output) const
 {
     switch (log_level) {
     case Console::LogLevel::Debug:
@@ -457,7 +457,7 @@ void Console::report_exception(JS::Error const& exception, bool in_promise) cons
         m_client->report_exception(exception, in_promise);
 }
 
-ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> const& values)
+ThrowCompletionOr<DeprecatedString> Console::value_vector_to_string(MarkedVector<Value> const& values)
 {
     auto& vm = realm().vm();
     StringBuilder builder;
@@ -469,7 +469,7 @@ ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> co
     return builder.to_string();
 }
 
-ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
+ThrowCompletionOr<DeprecatedString> Console::format_time_since(Core::ElapsedTimer timer)
 {
     auto& vm = realm().vm();
 

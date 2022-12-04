@@ -24,12 +24,12 @@ static int read_event(int fd)
     return rc;
 }
 
-static String get_event_name()
+static DeprecatedString get_event_name()
 {
     if (event->name_length == 0)
-        return String();
+        return DeprecatedString();
 
-    return String { event->name, event->name_length - 1 };
+    return DeprecatedString { event->name, event->name_length - 1 };
 }
 
 TEST_CASE(inode_watcher_metadata_modified_event)

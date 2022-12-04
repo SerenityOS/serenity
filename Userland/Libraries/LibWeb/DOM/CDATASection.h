@@ -21,7 +21,7 @@ public:
     virtual FlyString node_name() const override { return "#cdata-section"; }
 
 private:
-    CDATASection(Document&, String const&);
+    CDATASection(Document&, DeprecatedString const&);
 };
 
 template<>

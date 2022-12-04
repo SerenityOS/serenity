@@ -43,7 +43,7 @@ private:
     NonnullRefPtr<Program> m_parse_node; // [[ECMAScriptCode]]
 
     // Needed for potential lookups of modules.
-    String m_filename;
+    DeprecatedString m_filename;
     HostDefined* m_host_defined { nullptr }; // [[HostDefined]]
 };
 

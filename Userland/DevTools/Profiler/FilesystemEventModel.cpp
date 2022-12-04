@@ -22,7 +22,7 @@ FileEventModel::~FileEventModel()
 {
 }
 
-FileEventNode& FileEventNode::find_or_create_node(String const& searched_path)
+FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& searched_path)
 {
     // TODO: Optimize this function.
 
@@ -61,7 +61,7 @@ FileEventNode& FileEventNode::find_or_create_node(String const& searched_path)
     }
 }
 
-FileEventNode& FileEventNode::create_recursively(String new_path)
+FileEventNode& FileEventNode::create_recursively(DeprecatedString new_path)
 {
     auto const lex_path = LexicalPath(new_path);
     auto parts = lex_path.parts();
@@ -142,7 +142,7 @@ int FileEventModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String FileEventModel::column_name(int column) const
+DeprecatedString FileEventModel::column_name(int column) const
 {
     switch (column) {
     case Column::Path:

@@ -48,7 +48,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
     layout()->set_margins({ 8, 0, 0 });
     layout()->set_spacing(3);
 
-    auto build_widgets_for_label = [this](String const& description) -> RefPtr<GUI::Label> {
+    auto build_widgets_for_label = [this](DeprecatedString const& description) -> RefPtr<GUI::Label> {
         auto& container = add<GUI::Widget>();
         container.set_layout<GUI::HorizontalBoxLayout>();
         container.set_fixed_size(275, 12);
@@ -75,7 +75,7 @@ void MemoryStatsWidget::set_graph_widget(GraphWidget& graph)
     m_graph = &graph;
 }
 
-void MemoryStatsWidget::set_graph_widget_via_name(String name)
+void MemoryStatsWidget::set_graph_widget_via_name(DeprecatedString name)
 {
     m_graph_widget_name = move(name);
     if (!m_graph_widget_name.is_null()) {
@@ -91,7 +91,7 @@ void MemoryStatsWidget::set_graph_widget_via_name(String name)
     }
 }
 
-String MemoryStatsWidget::graph_widget_name()
+DeprecatedString MemoryStatsWidget::graph_widget_name()
 {
     if (m_graph)
         return m_graph->name();
@@ -128,12 +128,12 @@ void MemoryStatsWidget::refresh()
     u64 physical_pages_in_use = physical_allocated;
     u64 total_userphysical_and_swappable_pages = physical_allocated + physical_committed + physical_uncommitted;
 
-    m_kmalloc_space_label->set_text(String::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)));
-    m_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))));
-    m_physical_pages_committed_label->set_text(String::formatted("{}", human_readable_size(page_count_to_bytes(physical_committed))));
-    m_kmalloc_count_label->set_text(String::formatted("{}", kmalloc_call_count));
-    m_kfree_count_label->set_text(String::formatted("{}", kfree_call_count));
-    m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count));
+    m_kmalloc_space_label->set_text(DeprecatedString::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)));
+    m_physical_pages_label->set_text(DeprecatedString::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))));
+    m_physical_pages_committed_label->set_text(DeprecatedString::formatted("{}", human_readable_size(page_count_to_bytes(physical_committed))));
+    m_kmalloc_count_label->set_text(DeprecatedString::formatted("{}", kmalloc_call_count));
+    m_kfree_count_label->set_text(DeprecatedString::formatted("{}", kfree_call_count));
+    m_kmalloc_difference_label->set_text(DeprecatedString::formatted("{:+}", kmalloc_call_count - kfree_call_count));
 
     // Because the initialization order of us and the graph is unknown, we might get a couple of updates where the graph widget lookup fails.
     // Therefore, we can retry indefinitely. (Should not be too much of a performance hit, as we don't update that often.)

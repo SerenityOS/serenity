@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::supports)
             return JS::Value(true);
 
         // Otherwise, If conditionText, wrapped in parentheses and then parsed and evaluated as a <supports-condition>, would return true, return true.
-        if (auto supports = parse_css_supports({}, String::formatted("({})", supports_text)); supports && supports->matches())
+        if (auto supports = parse_css_supports({}, DeprecatedString::formatted("({})", supports_text)); supports && supports->matches())
             return JS::Value(true);
 
         // Otherwise, return false.

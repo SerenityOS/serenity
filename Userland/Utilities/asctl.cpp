@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     audio_client->async_pause_playback();
 
-    String command = String::empty();
+    DeprecatedString command = DeprecatedString::empty();
     Vector<StringView> command_arguments;
     bool human_mode = false;
 

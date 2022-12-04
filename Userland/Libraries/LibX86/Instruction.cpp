@@ -1290,92 +1290,92 @@ StringView Instruction::reg64_name() const
     return register_name(static_cast<RegisterIndex64>(register_index()));
 }
 
-String MemoryOrRegisterReference::to_string_o8(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_o8(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg8());
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_o16(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_o16(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg16());
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_o32(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_o32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg32());
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_o64(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_o64(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg64());
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu_reg() const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu_reg() const
 {
     VERIFY(is_register());
     return register_name(reg_fpu());
 }
 
-String MemoryOrRegisterReference::to_string_fpu_mem(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu_mem(Instruction const& insn) const
 {
     VERIFY(!is_register());
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu_ax16() const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu_ax16() const
 {
     VERIFY(is_register());
     return register_name(reg16());
 }
 
-String MemoryOrRegisterReference::to_string_fpu16(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu16(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
-    return String::formatted("word ptr [{}]", to_string(insn));
+    return DeprecatedString::formatted("word ptr [{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu32(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
-    return String::formatted("dword ptr [{}]", to_string(insn));
+    return DeprecatedString::formatted("dword ptr [{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu64(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu64(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg_fpu());
-    return String::formatted("qword ptr [{}]", to_string(insn));
+    return DeprecatedString::formatted("qword ptr [{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string_fpu80(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_fpu80(Instruction const& insn) const
 {
     VERIFY(!is_register());
-    return String::formatted("tbyte ptr [{}]", to_string(insn));
+    return DeprecatedString::formatted("tbyte ptr [{}]", to_string(insn));
 }
-String MemoryOrRegisterReference::to_string_mm(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_mm(Instruction const& insn) const
 {
     if (is_register())
         return register_name(static_cast<MMXRegisterIndex>(m_register_index));
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
-String MemoryOrRegisterReference::to_string_xmm(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string_xmm(Instruction const& insn) const
 {
     if (is_register())
         return register_name(static_cast<XMMRegisterIndex>(m_register_index));
-    return String::formatted("[{}]", to_string(insn));
+    return DeprecatedString::formatted("[{}]", to_string(insn));
 }
 
-String MemoryOrRegisterReference::to_string(Instruction const& insn) const
+DeprecatedString MemoryOrRegisterReference::to_string(Instruction const& insn) const
 {
     switch (insn.address_size()) {
     case AddressSize::Size64:
@@ -1388,9 +1388,9 @@ String MemoryOrRegisterReference::to_string(Instruction const& insn) const
     VERIFY_NOT_REACHED();
 }
 
-String MemoryOrRegisterReference::to_string_a16() const
+DeprecatedString MemoryOrRegisterReference::to_string_a16() const
 {
-    String base;
+    DeprecatedString base;
     bool hasDisplacement = false;
 
     switch (rm()) {
@@ -1417,7 +1417,7 @@ String MemoryOrRegisterReference::to_string_a16() const
         break;
     case 6:
         if (mod() == 0)
-            base = String::formatted("{:#04x}", m_displacement16);
+            base = DeprecatedString::formatted("{:#04x}", m_displacement16);
         else
             base = "bp";
         break;
@@ -1432,14 +1432,14 @@ String MemoryOrRegisterReference::to_string_a16() const
     if (!hasDisplacement)
         return base;
 
-    return String::formatted("{}{:+#x}", base, (i16)m_displacement16);
+    return DeprecatedString::formatted("{}{:+#x}", base, (i16)m_displacement16);
 }
 
-String MemoryOrRegisterReference::sib_to_string(ProcessorMode mode) const
+DeprecatedString MemoryOrRegisterReference::sib_to_string(ProcessorMode mode) const
 {
-    String scale;
-    String index;
-    String base;
+    DeprecatedString scale;
+    DeprecatedString index;
+    DeprecatedString base;
     switch (m_sib_scale) {
     case 0:;
         break;
@@ -1479,7 +1479,7 @@ String MemoryOrRegisterReference::sib_to_string(ProcessorMode mode) const
     return builder.to_string();
 }
 
-String MemoryOrRegisterReference::to_string_a64() const
+DeprecatedString MemoryOrRegisterReference::to_string_a64() const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex64>(m_register_index));
@@ -1496,7 +1496,7 @@ String MemoryOrRegisterReference::to_string_a64() const
     if (m_has_sib && m_sib_base == 5)
         has_displacement = true;
 
-    String base;
+    DeprecatedString base;
     switch (m_rm) {
     case 5:
         if (mod() == 0)
@@ -1514,10 +1514,10 @@ String MemoryOrRegisterReference::to_string_a64() const
     if (!has_displacement)
         return base;
 
-    return String::formatted("{}{:+#x}", base, (i32)m_displacement32);
+    return DeprecatedString::formatted("{}{:+#x}", base, (i32)m_displacement32);
 }
 
-String MemoryOrRegisterReference::to_string_a32() const
+DeprecatedString MemoryOrRegisterReference::to_string_a32() const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex32>(m_register_index));
@@ -1531,11 +1531,11 @@ String MemoryOrRegisterReference::to_string_a32() const
     if (m_has_sib && m_sib_base == 5)
         has_displacement = true;
 
-    String base;
+    DeprecatedString base;
     switch (m_rm) {
     case 5:
         if (mod() == 0)
-            base = String::formatted("{:x}", m_displacement32);
+            base = DeprecatedString::formatted("{:x}", m_displacement32);
         else
             base = "ebp";
         break;
@@ -1549,27 +1549,27 @@ String MemoryOrRegisterReference::to_string_a32() const
     if (!has_displacement)
         return base;
 
-    return String::formatted("{}{:+#x}", base, (i32)m_displacement32);
+    return DeprecatedString::formatted("{}{:+#x}", base, (i32)m_displacement32);
 }
 
-static String relative_address(u32 origin, bool x32, i8 imm)
+static DeprecatedString relative_address(u32 origin, bool x32, i8 imm)
 {
     if (x32)
-        return String::formatted("{:x}", origin + imm);
+        return DeprecatedString::formatted("{:x}", origin + imm);
     u16 w = origin & 0xffff;
-    return String::formatted("{:x}", w + imm);
+    return DeprecatedString::formatted("{:x}", w + imm);
 }
 
-static String relative_address(u32 origin, bool x32, i32 imm)
+static DeprecatedString relative_address(u32 origin, bool x32, i32 imm)
 {
     if (x32)
-        return String::formatted("{:x}", origin + imm);
+        return DeprecatedString::formatted("{:x}", origin + imm);
     u16 w = origin & 0xffff;
     i16 si = imm;
-    return String::formatted("{:x}", w + si);
+    return DeprecatedString::formatted("{:x}", w + si);
 }
 
-String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
+DeprecatedString Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
 {
     StringBuilder builder;
     if (has_segment_prefix())
@@ -1616,7 +1616,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         return;
     }
 
-    String mnemonic = String(m_descriptor->mnemonic).to_lowercase();
+    DeprecatedString mnemonic = DeprecatedString(m_descriptor->mnemonic).to_lowercase();
 
     auto append_mnemonic = [&] { builder.append(mnemonic); };
 
@@ -2475,12 +2475,12 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case MultibyteWithSlash:
     case __BeginFormatsWithRMByte:
     case __EndFormatsWithRMByte:
-        builder.append(String::formatted("(!{})", mnemonic));
+        builder.append(DeprecatedString::formatted("(!{})", mnemonic));
         break;
     }
 }
 
-String Instruction::mnemonic() const
+DeprecatedString Instruction::mnemonic() const
 {
     if (!m_descriptor) {
         VERIFY_NOT_REACHED();

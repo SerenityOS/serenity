@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -19,7 +19,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static ErrorOr<pid_t> pipe_to_pager(String const& command)
+static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
 {
     char const* argv[] = { "sh", "-c", command.characters(), nullptr };
 
@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto make_path = [name](StringView section) {
-        return String::formatted("/usr/share/man/man{}/{}.md", section, name);
+        return DeprecatedString::formatted("/usr/share/man/man{}/{}.md", section, name);
     };
     if (section.is_empty()) {
         constexpr StringView sections[] = {
@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             "8"sv
         };
         for (auto s : sections) {
-            String path = make_path(s);
+            DeprecatedString path = make_path(s);
             if (access(path.characters(), R_OK) == 0) {
                 section = s;
                 break;
@@ -101,11 +101,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(1);
     }
 
-    String pager_command;
+    DeprecatedString pager_command;
     if (!pager.is_empty())
         pager_command = pager;
     else
-        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly), StringView(section).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly));
+        pager_command = DeprecatedString::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly), StringView(section).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly));
     pid_t pager_pid = TRY(pipe_to_pager(pager_command));
 
     auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
@@ -114,11 +114,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     dbgln("Loading man page from {}", filename);
     auto buffer = TRY(file->read_all());
-    auto source = String::copy(buffer);
+    auto source = DeprecatedString::copy(buffer);
 
-    const String title("SerenityOS manual");
+    const DeprecatedString title("SerenityOS manual");
 
-    int spaces = view_width / 2 - String(name).length() - String(section).length() - title.length() / 2 - 4;
+    int spaces = view_width / 2 - DeprecatedString(name).length() - DeprecatedString(section).length() - title.length() / 2 - 4;
     if (spaces < 0)
         spaces = 0;
     out("{}({})", name, section);
@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto document = Markdown::Document::parse(source);
     VERIFY(document);
 
-    String rendered = document->render_for_terminal(view_width);
+    DeprecatedString rendered = document->render_for_terminal(view_width);
     outln("{}", rendered);
 
     // FIXME: Remove this wait, it shouldn't be necessary but Shell does not

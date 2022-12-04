@@ -15,7 +15,7 @@ ProjectConfig::ProjectConfig(JsonObject config)
 {
 }
 
-ErrorOr<NonnullOwnPtr<ProjectConfig>> ProjectConfig::try_load_project_config(String path)
+ErrorOr<NonnullOwnPtr<ProjectConfig>> ProjectConfig::try_load_project_config(DeprecatedString path)
 {
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
     auto file_contents = file->read_all();
@@ -34,7 +34,7 @@ NonnullOwnPtr<ProjectConfig> ProjectConfig::create_empty()
     return adopt_own(*new ProjectConfig(empty));
 }
 
-Optional<String> ProjectConfig::read_key(String key_name) const
+Optional<DeprecatedString> ProjectConfig::read_key(DeprecatedString key_name) const
 {
     auto const& value = m_config.get(key_name);
     if (!value.is_string())

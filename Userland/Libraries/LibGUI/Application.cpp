@@ -24,7 +24,7 @@ class Application::TooltipWindow final : public Window {
     C_OBJECT(TooltipWindow);
 
 public:
-    void set_tooltip(String const& tooltip)
+    void set_tooltip(DeprecatedString const& tooltip)
     {
         m_label->set_text(Gfx::parse_ampersand_string(tooltip));
         int tooltip_width = m_label->effective_min_size().width().as_int() + 10;
@@ -89,7 +89,7 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
         m_dnd_debugging_enabled = true;
 
     for (int i = 1; i < argc; i++) {
-        String arg(argv[i]);
+        DeprecatedString arg(argv[i]);
         m_args.append(move(arg));
     }
 
@@ -145,7 +145,7 @@ Action* Application::action_for_shortcut(Shortcut const& shortcut) const
     return (*it).value;
 }
 
-void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widget)
+void Application::show_tooltip(DeprecatedString tooltip, Widget const* tooltip_source_widget)
 {
     if (!Desktop::the().system_effects().tooltips())
         return;
@@ -166,7 +166,7 @@ void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widg
     }
 }
 
-void Application::show_tooltip_immediately(String tooltip, Widget const* tooltip_source_widget)
+void Application::show_tooltip_immediately(DeprecatedString tooltip, Widget const* tooltip_source_widget)
 {
     if (!Desktop::the().system_effects().tooltips())
         return;
@@ -276,7 +276,7 @@ void Application::set_pending_drop_widget(Widget* widget)
         m_pending_drop_widget->update();
 }
 
-void Application::set_drag_hovered_widget_impl(Widget* widget, Gfx::IntPoint const& position, Vector<String> mime_types)
+void Application::set_drag_hovered_widget_impl(Widget* widget, Gfx::IntPoint const& position, Vector<DeprecatedString> mime_types)
 {
     if (widget == m_drag_hovered_widget)
         return;

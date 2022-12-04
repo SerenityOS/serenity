@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibChess/Chess.h>
@@ -13,7 +13,7 @@
 
 namespace Chess {
 
-String char_for_piece(Chess::Type type)
+DeprecatedString char_for_piece(Chess::Type type)
 {
     switch (type) {
     case Type::Knight:
@@ -34,7 +34,7 @@ String char_for_piece(Chess::Type type)
 
 Chess::Type piece_for_char_promotion(StringView str)
 {
-    String string = String(str).to_lowercase();
+    DeprecatedString string = DeprecatedString(str).to_lowercase();
     if (string == "")
         return Type::None;
     if (string == "n")
@@ -77,7 +77,7 @@ Square::Square(StringView name)
     }
 }
 
-String Square::to_algebraic() const
+DeprecatedString Square::to_algebraic() const
 {
     StringBuilder builder;
     builder.append(file + 'a');
@@ -92,7 +92,7 @@ Move::Move(StringView long_algebraic)
 {
 }
 
-String Move::to_long_algebraic() const
+DeprecatedString Move::to_long_algebraic() const
 {
     StringBuilder builder;
     builder.append(from.to_algebraic());
@@ -103,7 +103,7 @@ String Move::to_long_algebraic() const
 
 Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& board)
 {
-    String move_string = algebraic;
+    DeprecatedString move_string = algebraic;
     Move move({ 50, 50 }, { 50, 50 });
 
     if (move_string.contains('-')) {
@@ -176,7 +176,7 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& b
     return move;
 }
 
-String Move::to_algebraic() const
+DeprecatedString Move::to_algebraic() const
 {
     if (piece.type == Type::King && from.file == 4) {
         if (to.file == 2)
@@ -269,7 +269,7 @@ Board Board::clone_without_history() const
     return result;
 }
 
-String Board::to_fen() const
+DeprecatedString Board::to_fen() const
 {
     StringBuilder builder;
 
@@ -283,17 +283,17 @@ String Board::to_fen() const
                 continue;
             }
             if (empty > 0) {
-                builder.append(String::number(empty));
+                builder.append(DeprecatedString::number(empty));
                 empty = 0;
             }
-            String piece = char_for_piece(p.type);
+            DeprecatedString piece = char_for_piece(p.type);
             if (piece == "")
                 piece = "P";
 
             builder.append(p.color == Color::Black ? piece.to_lowercase() : piece);
         }
         if (empty > 0) {
-            builder.append(String::number(empty));
+            builder.append(DeprecatedString::number(empty));
             empty = 0;
         }
         if (rank < 7)
@@ -327,11 +327,11 @@ String Board::to_fen() const
     builder.append(' ');
 
     // 5. Halfmove clock
-    builder.append(String::number(min(m_moves_since_capture, m_moves_since_pawn_advance)));
+    builder.append(DeprecatedString::number(min(m_moves_since_capture, m_moves_since_pawn_advance)));
     builder.append(' ');
 
     // 6. Fullmove number
-    builder.append(String::number(1 + m_moves.size() / 2));
+    builder.append(DeprecatedString::number(1 + m_moves.size() / 2));
 
     return builder.to_string();
 }
@@ -886,7 +886,7 @@ void Board::set_resigned(Chess::Color c)
     m_resigned = c;
 }
 
-String Board::result_to_string(Result result, Color turn)
+DeprecatedString Board::result_to_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
@@ -915,7 +915,7 @@ String Board::result_to_string(Result result, Color turn)
     }
 }
 
-String Board::result_to_points(Result result, Color turn)
+DeprecatedString Board::result_to_points(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:

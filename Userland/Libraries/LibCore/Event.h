@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/DeferredInvocationContext.h>

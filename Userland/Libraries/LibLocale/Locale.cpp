@@ -393,7 +393,7 @@ static Optional<Extension> parse_extension(GenericLexer& lexer)
     return {};
 }
 
-static Vector<String> parse_private_use_extensions(GenericLexer& lexer)
+static Vector<DeprecatedString> parse_private_use_extensions(GenericLexer& lexer)
 {
     // https://unicode.org/reports/tr35/#pu_extensions
     //
@@ -404,8 +404,8 @@ static Vector<String> parse_private_use_extensions(GenericLexer& lexer)
     if (!header.has_value())
         return {};
 
-    auto parse_values = [&]() -> Vector<String> {
-        Vector<String> extensions;
+    auto parse_values = [&]() -> Vector<DeprecatedString> {
+        Vector<DeprecatedString> extensions;
 
         while (true) {
             auto segment = consume_next_segment(lexer);
@@ -473,7 +473,7 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     return locale_id;
 }
 
-static void perform_hard_coded_key_value_substitutions(StringView key, String& value)
+static void perform_hard_coded_key_value_substitutions(StringView key, DeprecatedString& value)
 {
     // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/calendar.xml
@@ -538,7 +538,7 @@ static void perform_hard_coded_key_value_substitutions(StringView key, String& v
     }
 }
 
-void canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true)
+void canonicalize_unicode_extension_values(StringView key, DeprecatedString& value, bool remove_true)
 {
     value = value.to_lowercase();
     perform_hard_coded_key_value_substitutions(key, value);
@@ -665,12 +665,12 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
         extension = extension.to_lowercase();
 }
 
-Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
+Optional<DeprecatedString> canonicalize_unicode_locale_id(LocaleID& locale_id)
 {
     // https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
     StringBuilder builder;
 
-    auto append_sep_and_string = [&](Optional<String> const& string) {
+    auto append_sep_and_string = [&](Optional<DeprecatedString> const& string) {
         if (!string.has_value() || string->is_empty())
             return;
         builder.appendff("-{}", *string);
@@ -730,9 +730,9 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     return builder.build();
 }
 
-String const& default_locale()
+DeprecatedString const& default_locale()
 {
-    static String locale = "en"sv;
+    static DeprecatedString locale = "en"sv;
     return locale;
 }
 
@@ -804,7 +804,7 @@ Optional<StringView> __attribute__((weak)) get_locale_short_date_field_mapping(S
 Optional<StringView> __attribute__((weak)) get_locale_narrow_date_field_mapping(StringView, StringView) { return {}; }
 
 // https://www.unicode.org/reports/tr35/tr35-39/tr35-general.html#Display_Name_Elements
-Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id)
+Optional<DeprecatedString> format_locale_for_display(StringView locale, LocaleID locale_id)
 {
     auto language_id = move(locale_id.language_id);
     VERIFY(language_id.language.has_value());
@@ -822,7 +822,7 @@ Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id
     if (language_id.region.has_value())
         region = get_locale_territory_mapping(locale, *language_id.region).value_or(*language_id.region);
 
-    Optional<String> secondary_tag;
+    Optional<DeprecatedString> secondary_tag;
 
     if (script.has_value() && region.has_value())
         secondary_tag = patterns->locale_separator.replace("{0}"sv, *script, ReplaceMode::FirstOnly).replace("{1}"sv, *region, ReplaceMode::FirstOnly);
@@ -872,7 +872,7 @@ Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
 
     // 4. Then for trial in {languagemax, languagemax_regionmax, languagemax_scriptmax}:
     //    If AddLikelySubtags(trial) = max, then return trial + variants.
-    auto run_trial = [&](Optional<String> language, Optional<String> script, Optional<String> region) -> Optional<LanguageID> {
+    auto run_trial = [&](Optional<DeprecatedString> language, Optional<DeprecatedString> script, Optional<DeprecatedString> region) -> Optional<LanguageID> {
         LanguageID trial { .language = move(language), .script = move(script), .region = move(region) };
 
         if (add_likely_subtags(trial) == maximized)
@@ -891,9 +891,9 @@ Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
     return return_language_and_variants(maximized.release_value(), move(variants));
 }
 
-Optional<String> __attribute__((weak)) resolve_most_likely_territory(LanguageID const&) { return {}; }
+Optional<DeprecatedString> __attribute__((weak)) resolve_most_likely_territory(LanguageID const&) { return {}; }
 
-String resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias)
+DeprecatedString resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias)
 {
     auto aliases = territory_alias.split_view(' ');
 
@@ -906,11 +906,11 @@ String resolve_most_likely_territory_alias(LanguageID const& language_id, String
     return aliases[0].to_string();
 }
 
-String LanguageID::to_string() const
+DeprecatedString LanguageID::to_string() const
 {
     StringBuilder builder;
 
-    auto append_segment = [&](Optional<String> const& segment) {
+    auto append_segment = [&](Optional<DeprecatedString> const& segment) {
         if (!segment.has_value())
             return;
         if (!builder.is_empty())
@@ -927,11 +927,11 @@ String LanguageID::to_string() const
     return builder.build();
 }
 
-String LocaleID::to_string() const
+DeprecatedString LocaleID::to_string() const
 {
     StringBuilder builder;
 
-    auto append_segment = [&](Optional<String> const& segment) {
+    auto append_segment = [&](Optional<DeprecatedString> const& segment) {
         if (!segment.has_value() || segment->is_empty())
             return;
         if (!builder.is_empty())

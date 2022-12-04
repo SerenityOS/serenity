@@ -46,7 +46,7 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> encode_hex(const ReadonlyBytes input)
     return Kernel::KString::try_create(output.string_view());
 }
 #else
-String encode_hex(const ReadonlyBytes input)
+DeprecatedString encode_hex(const ReadonlyBytes input)
 {
     StringBuilder output(input.size() * 2);
 

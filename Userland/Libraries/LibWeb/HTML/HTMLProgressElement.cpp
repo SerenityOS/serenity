@@ -67,7 +67,7 @@ void HTMLProgressElement::set_value(double value)
     if (value < 0)
         return;
 
-    MUST(set_attribute(HTML::AttributeNames::value, String::number(value)));
+    MUST(set_attribute(HTML::AttributeNames::value, DeprecatedString::number(value)));
     progress_position_updated();
 }
 
@@ -93,7 +93,7 @@ void HTMLProgressElement::set_max(double value)
     if (value <= 0)
         return;
 
-    MUST(set_attribute(HTML::AttributeNames::max, String::number(value)));
+    MUST(set_attribute(HTML::AttributeNames::max, DeprecatedString::number(value)));
     progress_position_updated();
 }
 

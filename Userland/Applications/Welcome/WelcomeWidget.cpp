@@ -25,7 +25,7 @@ WelcomeWidget::WelcomeWidget()
     load_from_gml(welcome_window_gml);
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
-    m_web_view->load(URL::create_with_file_scheme(String::formatted("{}/README.md", Core::StandardPaths::home_directory())));
+    m_web_view->load(URL::create_with_file_scheme(DeprecatedString::formatted("{}/README.md", Core::StandardPaths::home_directory())));
 
     m_tip_label = find_descendant_of_type_named<GUI::Label>("tip_label");
     m_tip_frame = find_descendant_of_type_named<GUI::Frame>("tip_frame");
@@ -69,7 +69,7 @@ WelcomeWidget::WelcomeWidget()
     };
 
     if (auto result = open_and_parse_tips_file(); result.is_error()) {
-        auto error = String::formatted("Opening \"{}/tips.txt\" failed: {}", Core::StandardPaths::documents_directory(), result.error());
+        auto error = DeprecatedString::formatted("Opening \"{}/tips.txt\" failed: {}", Core::StandardPaths::documents_directory(), result.error());
         m_tip_label->set_text(error);
         warnln(error);
     }
@@ -79,7 +79,7 @@ WelcomeWidget::WelcomeWidget()
 
 ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
 {
-    auto path = String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory());
+    auto path = DeprecatedString::formatted("{}/tips.txt", Core::StandardPaths::documents_directory());
     auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> buffer;

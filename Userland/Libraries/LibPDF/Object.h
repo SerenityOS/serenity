@@ -75,7 +75,7 @@ public:
     }
 
     virtual char const* type_name() const = 0;
-    virtual String to_string(int indent) const = 0;
+    virtual DeprecatedString to_string(int indent) const = 0;
 
 protected:
 #define ENUMERATE_TYPE(_, name)    \

@@ -117,7 +117,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             result.avoid_committing_to_single_suggestion = true;
             m_last_shown_suggestion_display_length = 0;
             m_last_shown_suggestion_was_complete = false;
-            m_last_shown_suggestion = String::empty();
+            m_last_shown_suggestion = DeprecatedString::empty();
             return result;
         }
 
@@ -169,7 +169,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             }
             result.new_completion_mode = CompletionMode::ShowSuggestions;
             m_last_shown_suggestion_was_complete = false;
-            m_last_shown_suggestion = String::empty();
+            m_last_shown_suggestion = DeprecatedString::empty();
         } else {
             result.insert.append(suggestion.text_view.substring_view(suggestion.invariant_offset, suggestion.text_view.length() - suggestion.invariant_offset));
             // Add in the trivia of the last selected suggestion.

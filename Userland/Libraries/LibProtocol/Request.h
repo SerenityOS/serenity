@@ -8,11 +8,11 @@
 
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/FileStream.h>
 #include <AK/Function.h>
 #include <AK/MemoryStream.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Stream.h>
@@ -25,8 +25,8 @@ class RequestClient;
 class Request : public RefCounted<Request> {
 public:
     struct CertificateAndKey {
-        String certificate;
-        String key;
+        DeprecatedString certificate;
+        DeprecatedString key;
     };
 
     static NonnullRefPtr<Request> create_from_id(Badge<RequestClient>, RequestClient& client, i32 request_id)
@@ -46,15 +46,15 @@ public:
     void set_should_buffer_all_input(bool);
 
     /// Note: Must be set before `set_should_buffer_all_input(true)`.
-    Function<void(bool success, u32 total_size, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
+    Function<void(bool success, u32 total_size, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
     Function<void(bool success, u32 total_size)> on_finish;
     Function<void(Optional<u32> total_size, u32 downloaded_size)> on_progress;
-    Function<void(HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)> on_headers_received;
+    Function<void(HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<CertificateAndKey()> on_certificate_requested;
 
     void did_finish(Badge<RequestClient>, bool success, u32 total_size);
     void did_progress(Badge<RequestClient>, Optional<u32> total_size, u32 downloaded_size);
-    void did_receive_headers(Badge<RequestClient>, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code);
+    void did_receive_headers(Badge<RequestClient>, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code);
     void did_request_certificates(Badge<RequestClient>);
 
     RefPtr<Core::Notifier>& write_notifier(Badge<RequestClient>) { return m_write_notifier; }
@@ -73,7 +73,7 @@ private:
 
     struct InternalBufferedData {
         DuplexMemoryStream payload_stream;
-        HashMap<String, String, CaseInsensitiveStringTraits> response_headers;
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
         Optional<u32> response_code;
     };
 

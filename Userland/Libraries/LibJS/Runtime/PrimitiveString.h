@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -26,7 +26,7 @@ public:
 
     bool is_empty() const;
 
-    String const& string() const;
+    DeprecatedString const& string() const;
     bool has_utf8_string() const { return m_has_utf8_string; }
 
     Utf16String const& utf16_string() const;
@@ -37,7 +37,7 @@ public:
 
 private:
     explicit PrimitiveString(PrimitiveString&, PrimitiveString&);
-    explicit PrimitiveString(String);
+    explicit PrimitiveString(DeprecatedString);
     explicit PrimitiveString(Utf16String);
 
     virtual void visit_edges(Cell::Visitor&) override;
@@ -51,7 +51,7 @@ private:
     mutable PrimitiveString* m_lhs { nullptr };
     mutable PrimitiveString* m_rhs { nullptr };
 
-    mutable String m_utf8_string;
+    mutable DeprecatedString m_utf8_string;
 
     mutable Utf16String m_utf16_string;
 };
@@ -62,8 +62,8 @@ PrimitiveString* js_string(VM&, Utf16View const&);
 PrimitiveString* js_string(Heap&, Utf16String);
 PrimitiveString* js_string(VM&, Utf16String);
 
-PrimitiveString* js_string(Heap&, String);
-PrimitiveString* js_string(VM&, String);
+PrimitiveString* js_string(Heap&, DeprecatedString);
+PrimitiveString* js_string(VM&, DeprecatedString);
 
 PrimitiveString* js_rope_string(VM&, PrimitiveString&, PrimitiveString&);
 

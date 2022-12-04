@@ -79,14 +79,14 @@ PDFErrorOr<void> DocumentParser::parse_header()
 
     char major_ver = m_reader.read();
     if (major_ver != '1' && major_ver != '2')
-        return error(String::formatted("Unknown major version \"{}\"", major_ver));
+        return error(DeprecatedString::formatted("Unknown major version \"{}\"", major_ver));
 
     if (m_reader.read() != '.')
         return error("Malformed PDF version");
 
     char minor_ver = m_reader.read();
     if (minor_ver < '0' || minor_ver > '7')
-        return error(String::formatted("Unknown minor version \"{}\"", minor_ver));
+        return error(DeprecatedString::formatted("Unknown minor version \"{}\"", minor_ver));
 
     m_reader.consume_eol();
 
@@ -435,12 +435,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
         auto object_count = object_count_value.get<int>();
 
         for (int i = 0; i < object_count; i++) {
-            auto offset_string = String(m_reader.bytes().slice(m_reader.offset(), 10));
+            auto offset_string = DeprecatedString(m_reader.bytes().slice(m_reader.offset(), 10));
             m_reader.move_by(10);
             if (!m_reader.consume(' '))
                 return error("Malformed xref entry");
 
-            auto generation_string = String(m_reader.bytes().slice(m_reader.offset(), 5));
+            auto generation_string = DeprecatedString(m_reader.bytes().slice(m_reader.offset(), 5));
             m_reader.move_by(5);
             if (!m_reader.consume(' '))
                 return error("Malformed xref entry");
@@ -701,7 +701,7 @@ PDFErrorOr<RefPtr<DictObject>> DocumentParser::conditionally_parse_page_tree_nod
     auto dict_value = TRY(parse_object_with_index(object_index));
     auto dict_object = dict_value.get<NonnullRefPtr<Object>>();
     if (!dict_object->is<DictObject>())
-        return error(String::formatted("Invalid page tree with xref index {}", object_index));
+        return error(DeprecatedString::formatted("Invalid page tree with xref index {}", object_index));
 
     auto dict = dict_object->cast<DictObject>();
     if (!dict->contains_any_of(CommonNames::Type, CommonNames::Parent, CommonNames::Kids, CommonNames::Count))

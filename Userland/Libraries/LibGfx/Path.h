@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
@@ -245,7 +245,7 @@ public:
 
     Path copy_transformed(AffineTransform const&) const;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     void invalidate_split_lines()

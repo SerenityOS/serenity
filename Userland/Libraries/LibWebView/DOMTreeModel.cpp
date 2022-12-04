@@ -95,7 +95,7 @@ int DOMTreeModel::column_count(const GUI::ModelIndex&) const
     return 1;
 }
 
-static String with_whitespace_collapsed(StringView string)
+static DeprecatedString with_whitespace_collapsed(StringView string)
 {
     StringBuilder builder;
     for (size_t i = 0; i < string.length(); ++i) {
@@ -153,7 +153,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         if (type == "text")
             return with_whitespace_collapsed(node.get("text"sv).as_string());
         if (type == "comment"sv)
-            return String::formatted("<!--{}-->", node.get("data"sv).as_string());
+            return DeprecatedString::formatted("<!--{}-->", node.get("data"sv).as_string());
         if (type != "element")
             return node_name;
 

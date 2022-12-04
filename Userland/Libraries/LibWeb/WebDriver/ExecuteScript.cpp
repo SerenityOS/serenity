@@ -204,7 +204,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> clone_an_object(JS::Realm& re
 }
 
 // https://w3c.github.io/webdriver/#dfn-execute-a-function-body
-static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page, String const& body, JS::MarkedVector<JS::Value> parameters)
+static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page, DeprecatedString const& body, JS::MarkedVector<JS::Value> parameters)
 {
     // FIXME: If at any point during the algorithm a user prompt appears, immediately return Completion { [[Type]]: normal, [[Value]]: null, [[Target]]: empty }, but continue to run the other steps of this algorithm in parallel.
 
@@ -221,7 +221,7 @@ static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page,
     auto& realm = window.realm();
 
     bool contains_direct_call_to_eval = false;
-    auto source_text = String::formatted("function() {{ {} }}", body);
+    auto source_text = DeprecatedString::formatted("function() {{ {} }}", body);
     auto parser = JS::Parser { JS::Lexer { source_text } };
     auto function_expression = parser.parse_function_node<JS::FunctionExpression>();
 
@@ -266,7 +266,7 @@ static JS::ThrowCompletionOr<JS::Value> execute_a_function_body(Web::Page& page,
     return completion;
 }
 
-ExecuteScriptResultSerialized execute_script(Web::Page& page, String const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
+ExecuteScriptResultSerialized execute_script(Web::Page& page, DeprecatedString const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
 {
     // FIXME: Use timeout.
     (void)timeout;
@@ -307,7 +307,7 @@ ExecuteScriptResultSerialized execute_script(Web::Page& page, String const& body
     return { result.type, json_value_or_error.release_value() };
 }
 
-ExecuteScriptResultSerialized execute_async_script(Web::Page& page, String const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
+ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedString const& body, JS::MarkedVector<JS::Value> arguments, Optional<u64> const& timeout)
 {
     auto* window = page.top_level_browsing_context().active_window();
     auto& realm = window->realm();

@@ -5,12 +5,12 @@
  */
 
 #include "Format.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 
 namespace Diff {
-String generate_only_additions(String const& text)
+DeprecatedString generate_only_additions(DeprecatedString const& text)
 {
     auto lines = text.split('\n', SplitBehavior::KeepEmpty);
     StringBuilder builder;

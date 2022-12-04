@@ -15,7 +15,7 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, String text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
     : Dialog(parent_window)
     , m_text_value(move(text_value))
     , m_prompt(prompt)
@@ -25,7 +25,7 @@ InputBox::InputBox(Window* parent_window, String text_value, StringView prompt, 
     build(input_type);
 }
 
-Dialog::ExecResult InputBox::show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
 {
     auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder, input_type);
     box->set_resizable(false);
@@ -36,7 +36,7 @@ Dialog::ExecResult InputBox::show(Window* parent_window, String& text_value, Str
     return result;
 }
 
-void InputBox::set_text_value(String text_value)
+void InputBox::set_text_value(DeprecatedString text_value)
 {
     m_text_editor->set_text(move(text_value));
 }

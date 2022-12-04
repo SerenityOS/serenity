@@ -30,7 +30,7 @@ void KeymapStatusWindow::wm_event(GUI::WMEvent& event)
     }
 }
 
-void KeymapStatusWindow::set_keymap_text(String const& keymap)
+void KeymapStatusWindow::set_keymap_text(DeprecatedString const& keymap)
 {
     m_status_widget->set_current_keymap(keymap);
 }

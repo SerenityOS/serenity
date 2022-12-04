@@ -136,7 +136,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     if constexpr (JS_BYTECODE_DEBUG) {
         for (size_t i = 0; i < registers().size(); ++i) {
-            String value_string;
+            DeprecatedString value_string;
             if (registers()[i].is_empty())
                 value_string = "(empty)";
             else

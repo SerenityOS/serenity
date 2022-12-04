@@ -103,7 +103,7 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
         else if (name.is_one_of("browserName"sv, "browser_version"sv, "platformName"sv)) {
             // If value is not a string return an error with error code invalid argument. Otherwise, let deserialized be set to value.
             if (!value.is_string())
-                return Error::from_code(ErrorCode::InvalidArgument, String::formatted("Capability {} must be a string", name));
+                return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Capability {} must be a string", name));
             deserialized = value;
         }
 
@@ -149,7 +149,7 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
         // -> The remote end is an endpoint node
         else {
             // Return an error with error code invalid argument.
-            return Error::from_code(ErrorCode::InvalidArgument, String::formatted("Unrecognized capability: {}", name));
+            return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Unrecognized capability: {}", name));
         }
 
         // d. If deserialized is not null, set a property on result with name name and value deserialized.
@@ -192,7 +192,7 @@ static ErrorOr<JsonObject, Error> merge_capabilities(JsonObject const& primary, 
 
         // d. If primary value is not undefined, return an error with error code invalid argument.
         if (primary_value != nullptr)
-            return Error::from_code(ErrorCode::InvalidArgument, String::formatted("Unable to merge capability {}", name));
+            return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Unable to merge capability {}", name));
 
         // e. Set a property on result with name name and value value.
         result.set(name, value);

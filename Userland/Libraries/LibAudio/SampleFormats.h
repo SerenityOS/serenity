@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Types.h>
 
 namespace Audio {
@@ -23,5 +23,5 @@ enum class PcmSampleFormat : u8 {
 
 // Most of the read code only cares about how many bits to read or write
 u16 pcm_bits_per_sample(PcmSampleFormat format);
-String sample_format_name(PcmSampleFormat format);
+DeprecatedString sample_format_name(PcmSampleFormat format);
 }

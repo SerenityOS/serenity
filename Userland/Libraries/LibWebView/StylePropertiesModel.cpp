@@ -30,7 +30,7 @@ int StylePropertiesModel::row_count(GUI::ModelIndex const&) const
     return m_values.size();
 }
 
-String StylePropertiesModel::column_name(int column_index) const
+DeprecatedString StylePropertiesModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::PropertyName:

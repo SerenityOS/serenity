@@ -23,7 +23,7 @@ public:
 private:
     HTMLFrameSetElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void parse_attribute(FlyString const&, String const&) override;
+    virtual void parse_attribute(FlyString const&, DeprecatedString const&) override;
 
 private:
     // ^HTML::GlobalEventHandlers

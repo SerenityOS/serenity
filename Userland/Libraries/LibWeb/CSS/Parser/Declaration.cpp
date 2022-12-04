@@ -19,7 +19,7 @@ Declaration::Declaration(FlyString name, Vector<ComponentValue> values, Importan
 
 Declaration::~Declaration() = default;
 
-String Declaration::to_string() const
+DeprecatedString Declaration::to_string() const
 {
     StringBuilder builder;
 

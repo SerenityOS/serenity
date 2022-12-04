@@ -27,7 +27,7 @@ private:
     ErrorOr<void> load_settings();
 
     SystemEffects m_system_effects;
-    Vector<String> m_geometry_list;
+    Vector<DeprecatedString> m_geometry_list;
     RefPtr<ComboBox> m_geometry_combobox;
 };
 

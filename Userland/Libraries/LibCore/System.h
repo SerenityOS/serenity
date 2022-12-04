@@ -110,10 +110,10 @@ ErrorOr<void> kill(pid_t, int signal);
 ErrorOr<void> killpg(int pgrp, int signal);
 ErrorOr<int> dup(int source_fd);
 ErrorOr<int> dup2(int source_fd, int destination_fd);
-ErrorOr<String> ptsname(int fd);
-ErrorOr<String> gethostname();
+ErrorOr<DeprecatedString> ptsname(int fd);
+ErrorOr<DeprecatedString> gethostname();
 ErrorOr<void> sethostname(StringView);
-ErrorOr<String> getcwd();
+ErrorOr<DeprecatedString> getcwd();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
 ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
@@ -204,7 +204,7 @@ ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
 ErrorOr<void> unlockpt(int fildes);
 ErrorOr<void> access(StringView pathname, int mode);
-ErrorOr<String> readlink(StringView pathname);
+ErrorOr<DeprecatedString> readlink(StringView pathname);
 
 #ifdef AK_OS_SERENITY
 ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length);

@@ -57,7 +57,7 @@ struct Destination {
 struct OutlineItem final : public RefCounted<OutlineItem> {
     RefPtr<OutlineItem> parent;
     NonnullRefPtrVector<OutlineItem> children;
-    String title;
+    DeprecatedString title;
     i32 count { 0 };
     Destination dest;
     Gfx::Color color { Color::NamedColor::Black }; // 'C' in the PDF spec
@@ -66,7 +66,7 @@ struct OutlineItem final : public RefCounted<OutlineItem> {
 
     OutlineItem() = default;
 
-    String to_string(int indent) const;
+    DeprecatedString to_string(int indent) const;
 };
 
 struct OutlineDict final : public RefCounted<OutlineDict> {

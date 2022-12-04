@@ -21,11 +21,11 @@ public:
 private:
     MailSettingsWidget();
 
-    String m_server;
-    String m_port;
+    DeprecatedString m_server;
+    DeprecatedString m_port;
     bool m_tls { false };
-    String m_email;
-    Vector<String> m_common_ports;
+    DeprecatedString m_email;
+    Vector<DeprecatedString> m_common_ports;
 
     RefPtr<GUI::TextBox> m_server_inputbox;
     RefPtr<GUI::ComboBox> m_port_combobox;

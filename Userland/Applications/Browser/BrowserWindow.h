@@ -55,8 +55,8 @@ private:
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
     void set_window_title_for_tab(Tab const&);
 
-    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
-    virtual void config_bool_did_change(String const& domain, String const& group, String const& key, bool value) override;
+    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
+    virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
 
     virtual void event(Core::Event&) override;
 

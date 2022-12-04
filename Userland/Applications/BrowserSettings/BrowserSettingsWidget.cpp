@@ -12,16 +12,16 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 
-static String default_homepage_url = "file:///res/html/misc/welcome.html";
-static String default_new_tab_url = "file:///res/html/misc/new-tab.html";
-static String default_search_engine = "";
-static String default_color_scheme = "auto";
+static DeprecatedString default_homepage_url = "file:///res/html/misc/welcome.html";
+static DeprecatedString default_new_tab_url = "file:///res/html/misc/new-tab.html";
+static DeprecatedString default_search_engine = "";
+static DeprecatedString default_color_scheme = "auto";
 static bool default_show_bookmarks_bar = true;
 static bool default_auto_close_download_windows = false;
 
 struct ColorScheme {
-    String title;
-    String setting_value;
+    DeprecatedString title;
+    DeprecatedString setting_value;
 };
 
 class ColorSchemeModel final : public GUI::Model {
@@ -96,7 +96,7 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     Vector<GUI::JsonArrayModel::FieldSpec> search_engine_fields;
     search_engine_fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
     search_engine_fields.empend("url_format", "Url format", Gfx::TextAlignment::CenterLeft);
-    auto search_engines_model = GUI::JsonArrayModel::create(String::formatted("{}/SearchEngines.json", Core::StandardPaths::config_directory()), move(search_engine_fields));
+    auto search_engines_model = GUI::JsonArrayModel::create(DeprecatedString::formatted("{}/SearchEngines.json", Core::StandardPaths::config_directory()), move(search_engine_fields));
     search_engines_model->invalidate();
     Vector<JsonValue> custom_search_engine;
     custom_search_engine.append("Custom...");
@@ -105,7 +105,7 @@ BrowserSettingsWidget::BrowserSettingsWidget()
 
     m_search_engine_combobox->set_model(move(search_engines_model));
     m_search_engine_combobox->set_only_allow_values_from_model(true);
-    m_search_engine_combobox->on_change = [this](AK::String const&, GUI::ModelIndex const& cursor_index) {
+    m_search_engine_combobox->on_change = [this](AK::DeprecatedString const&, GUI::ModelIndex const& cursor_index) {
         auto url_format = m_search_engine_combobox->model()->index(cursor_index.row(), 1).data().to_string();
         m_is_custom_search_engine = url_format.is_empty();
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);

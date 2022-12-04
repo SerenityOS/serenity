@@ -37,12 +37,12 @@ public:
     void set_mode_displayable();
     void set_mode_non_displayable();
     void set_debug_mode(bool);
-    void set_filename(String const&);
-    String const& filename() const { return m_filename; }
-    String const& filename_title() const { return m_filename_title; }
+    void set_filename(DeprecatedString const&);
+    DeprecatedString const& filename() const { return m_filename; }
+    DeprecatedString const& filename_title() const { return m_filename_title; }
 
-    Optional<String> const& project_root() const { return m_project_root; }
-    void set_project_root(String const& project_root);
+    Optional<DeprecatedString> const& project_root() const { return m_project_root; }
+    void set_project_root(DeprecatedString const& project_root);
 
     GitRepo const* git_repo() const { return m_git_repo; }
 
@@ -59,11 +59,11 @@ private:
 
     void update_title();
 
-    String m_filename;
-    String m_filename_title;
+    DeprecatedString m_filename;
+    DeprecatedString m_filename_title;
     RefPtr<Editor> m_editor;
 
-    Optional<String> m_project_root;
+    Optional<DeprecatedString> m_project_root;
     RefPtr<GitRepo> m_git_repo;
     Vector<Diff::Hunk> m_hunks;
 };

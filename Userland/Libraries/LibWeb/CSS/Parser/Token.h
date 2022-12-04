@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/Number.h>
 
@@ -142,11 +142,11 @@ public:
     }
 
     Type mirror_variant() const;
-    String bracket_string() const;
-    String bracket_mirror_string() const;
+    DeprecatedString bracket_string() const;
+    DeprecatedString bracket_mirror_string() const;
 
-    String to_string() const;
-    String to_debug_string() const;
+    DeprecatedString to_string() const;
+    DeprecatedString to_debug_string() const;
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }

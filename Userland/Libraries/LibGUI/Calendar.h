@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Frame.h>
@@ -45,7 +45,7 @@ public:
     unsigned view_year() const { return m_view_year; }
     unsigned view_month() const { return m_view_month; }
 
-    String formatted_date(Format format = LongMonthYear);
+    DeprecatedString formatted_date(Format format = LongMonthYear);
 
     Mode mode() const { return m_mode; }
     void toggle_mode();
@@ -71,8 +71,8 @@ public:
         m_unadjusted_tile_size.set_height(height);
     }
 
-    virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
-    virtual void config_i32_did_change(String const&, String const&, String const&, i32 value) override;
+    virtual void config_string_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
+    virtual void config_i32_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, i32 value) override;
 
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;
@@ -82,7 +82,7 @@ private:
     Calendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
     virtual ~Calendar() override = default;
 
-    static size_t day_of_week_index(String const&);
+    static size_t day_of_week_index(DeprecatedString const&);
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -105,14 +105,14 @@ private:
     bool is_day_in_weekend(DayOfWeek);
 
     struct Day {
-        String name;
+        DeprecatedString name;
         int width { 0 };
         int height { 16 };
     };
     Vector<Day> m_days;
 
     struct MonthTile {
-        String name;
+        DeprecatedString name;
         Gfx::IntRect rect;
         int width { 0 };
         int height { 0 };

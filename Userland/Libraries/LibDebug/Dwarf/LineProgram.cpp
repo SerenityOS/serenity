@@ -6,8 +6,8 @@
 
 #include "LineProgram.h"
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 
@@ -74,7 +74,7 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
         }
     } else {
         while (m_stream.peek_or_error()) {
-            String path;
+            DeprecatedString path;
             m_stream >> path;
             dbgln_if(DWARF_DEBUG, "path: {}", path);
             PathEntry entry;

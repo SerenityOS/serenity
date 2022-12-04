@@ -36,7 +36,7 @@ public:
     static ExecResult show_error(Window* parent_window, StringView text);
     static ExecResult ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
 
-    void set_text(String text);
+    void set_text(DeprecatedString text);
 
 private:
     explicit MessageBox(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
@@ -48,7 +48,7 @@ private:
     void build();
     RefPtr<Gfx::Bitmap> icon() const;
 
-    String m_text;
+    DeprecatedString m_text;
     Type m_type { Type::None };
     InputType m_input_type { InputType::OK };
 

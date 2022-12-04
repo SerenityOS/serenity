@@ -34,7 +34,7 @@ public:
 private:
     NonnullRefPtr<IODevice> m_device;
     bool m_is_end { false };
-    String m_buffer;
+    DeprecatedString m_buffer;
 };
 
 class LineRange {
@@ -89,7 +89,7 @@ public:
 
     ByteBuffer read(size_t max_size);
     ByteBuffer read_all();
-    String read_line(size_t max_size = 16384);
+    DeprecatedString read_line(size_t max_size = 16384);
 
     bool write(u8 const*, int size);
     bool write(StringView);

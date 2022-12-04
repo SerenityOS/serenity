@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/VimEditingEngine.h>

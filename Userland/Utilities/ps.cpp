@@ -12,7 +12,7 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
-static ErrorOr<String> determine_tty_pseudo_name()
+static ErrorOr<DeprecatedString> determine_tty_pseudo_name()
 {
     struct stat tty_stat;
     if (fstat(STDIN_FILENO, &tty_stat) < 0) {
@@ -25,11 +25,11 @@ static ErrorOr<String> determine_tty_pseudo_name()
     int tty_device_minor = minor(tty_stat.st_rdev);
 
     if (tty_device_major == 201) {
-        return String::formatted("pts:{}", tty_device_minor);
+        return DeprecatedString::formatted("pts:{}", tty_device_minor);
     }
 
     if (tty_device_major == 4) {
-        return String::formatted("tty:{}", tty_device_minor);
+        return DeprecatedString::formatted("tty:{}", tty_device_minor);
     }
     return "n/a";
 }
@@ -51,15 +51,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        String title;
+        DeprecatedString title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        String buffer;
+        DeprecatedString buffer;
     };
 
     bool every_process_flag = false;
     bool full_format_flag = false;
-    String pid_list;
+    DeprecatedString pid_list;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'e');
@@ -132,10 +132,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         quick_sort(processes, [](auto& a, auto& b) { return a.pid < b.pid; });
     }
 
-    Vector<Vector<String>> rows;
+    Vector<Vector<DeprecatedString>> rows;
     TRY(rows.try_ensure_capacity(1 + processes.size()));
 
-    Vector<String> header;
+    Vector<DeprecatedString> header;
     TRY(header.try_ensure_capacity(columns.size()));
     for (auto& column : columns)
         header.unchecked_append(column.title);
@@ -148,7 +148,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto* state = process.threads.is_empty() ? "Zombie" : process.threads.first().state.characters();
 
-        Vector<String> row;
+        Vector<DeprecatedString> row;
         TRY(row.try_resize(columns.size()));
 
         if (tty == "")
@@ -157,13 +157,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (uid_column != -1)
             row[uid_column] = process.username;
         if (pid_column != -1)
-            row[pid_column] = String::number(process.pid);
+            row[pid_column] = DeprecatedString::number(process.pid);
         if (ppid_column != -1)
-            row[ppid_column] = String::number(process.ppid);
+            row[ppid_column] = DeprecatedString::number(process.ppid);
         if (pgid_column != -1)
-            row[pgid_column] = String::number(process.pgid);
+            row[pgid_column] = DeprecatedString::number(process.pgid);
         if (sid_column != -1)
-            row[sid_column] = String::number(process.sid);
+            row[sid_column] = DeprecatedString::number(process.sid);
         if (tty_column != -1)
             row[tty_column] = tty;
         if (state_column != -1)

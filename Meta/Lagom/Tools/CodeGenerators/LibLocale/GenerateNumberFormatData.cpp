@@ -8,6 +8,7 @@
 #include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Find.h>
 #include <AK/Format.h>
 #include <AK/HashFunctions.h>
@@ -18,7 +19,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Traits.h>
 #include <AK/Utf8View.h>
@@ -220,7 +220,7 @@ struct AK::Traits<Unit> : public GenericTraits<Unit> {
 
 struct LocaleData {
     Vector<size_t> number_systems;
-    HashMap<String, size_t> units {};
+    HashMap<DeprecatedString, size_t> units {};
     u8 minimum_grouping_digits { 0 };
 };
 
@@ -232,14 +232,14 @@ struct CLDR {
     UniqueStorage<NumberSystem> unique_systems;
     UniqueStorage<Unit> unique_units;
 
-    HashMap<String, Array<u32, 10>> number_system_digits;
-    Vector<String> number_systems;
+    HashMap<DeprecatedString, Array<u32, 10>> number_system_digits;
+    Vector<DeprecatedString> number_systems;
 
-    HashMap<String, LocaleData> locales;
+    HashMap<DeprecatedString, LocaleData> locales;
     size_t max_identifier_count { 0 };
 };
 
-static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, CLDR& cldr)
+static ErrorOr<void> parse_number_system_digits(DeprecatedString core_supplemental_path, CLDR& cldr)
 {
     LexicalPath number_systems_path(move(core_supplemental_path));
     number_systems_path = number_systems_path.append("numberingSystems.json"sv);
@@ -271,7 +271,7 @@ static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, C
     return {};
 }
 
-static String parse_identifiers(String pattern, StringView replacement, CLDR& cldr, NumberFormat& format)
+static DeprecatedString parse_identifiers(DeprecatedString pattern, StringView replacement, CLDR& cldr, NumberFormat& format)
 {
     static constexpr Utf8View whitespace { "\u0020\u00a0\u200f"sv };
 
@@ -317,7 +317,7 @@ static String parse_identifiers(String pattern, StringView replacement, CLDR& cl
             cldr.max_identifier_count = max(cldr.max_identifier_count, format.identifier_indices.size());
         }
 
-        pattern = String::formatted("{}{{{}:{}}}{}",
+        pattern = DeprecatedString::formatted("{}{{{}:{}}}{}",
             *start_index > 0 ? pattern.substring_view(0, *start_index) : ""sv,
             replacement,
             replacement_index,
@@ -325,13 +325,13 @@ static String parse_identifiers(String pattern, StringView replacement, CLDR& cl
     }
 }
 
-static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
+static void parse_number_pattern(Vector<DeprecatedString> patterns, CLDR& cldr, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
 {
     // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
     // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
     VERIFY((patterns.size() == 1) || (patterns.size() == 2));
 
-    auto replace_patterns = [&](String pattern) {
+    auto replace_patterns = [&](DeprecatedString pattern) {
         static HashMap<StringView, StringView> replacements = {
             { "{0}"sv, "{number}"sv },
             { "{1}"sv, "{currency}"sv },
@@ -345,7 +345,7 @@ static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberForm
         for (auto const& replacement : replacements)
             pattern = pattern.replace(replacement.key, replacement.value, ReplaceMode::All);
 
-        if (auto start_number_index = pattern.find_any_of("#0"sv, String::SearchDirection::Forward); start_number_index.has_value()) {
+        if (auto start_number_index = pattern.find_any_of("#0"sv, DeprecatedString::SearchDirection::Forward); start_number_index.has_value()) {
             auto end_number_index = *start_number_index + 1;
 
             for (; end_number_index < pattern.length(); ++end_number_index) {
@@ -372,7 +372,7 @@ static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberForm
                 }
             }
 
-            pattern = String::formatted("{}{{number}}{}",
+            pattern = DeprecatedString::formatted("{}{{number}}{}",
                 *start_number_index > 0 ? pattern.substring_view(0, *start_number_index) : ""sv,
                 pattern.substring_view(end_number_index));
 
@@ -389,19 +389,19 @@ static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberForm
     };
 
     auto zero_format = replace_patterns(move(patterns[0]));
-    format.positive_format_index = cldr.unique_strings.ensure(String::formatted("{{plusSign}}{}", zero_format));
+    format.positive_format_index = cldr.unique_strings.ensure(DeprecatedString::formatted("{{plusSign}}{}", zero_format));
 
     if (patterns.size() == 2) {
         auto negative_format = replace_patterns(move(patterns[1]));
         format.negative_format_index = cldr.unique_strings.ensure(move(negative_format));
     } else {
-        format.negative_format_index = cldr.unique_strings.ensure(String::formatted("{{minusSign}}{}", zero_format));
+        format.negative_format_index = cldr.unique_strings.ensure(DeprecatedString::formatted("{{minusSign}}{}", zero_format));
     }
 
     format.zero_format_index = cldr.unique_strings.ensure(move(zero_format));
 }
 
-static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberFormatType type, size_t& format_index, NumberSystem* number_system_for_groupings = nullptr)
+static void parse_number_pattern(Vector<DeprecatedString> patterns, CLDR& cldr, NumberFormatType type, size_t& format_index, NumberSystem* number_system_for_groupings = nullptr)
 {
     NumberFormat format {};
     parse_number_pattern(move(patterns), cldr, type, format, number_system_for_groupings);
@@ -409,7 +409,7 @@ static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberForm
     format_index = cldr.unique_formats.ensure(move(format));
 }
 
-static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
@@ -522,7 +522,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
 
             // The range separator does not appear in the symbols list, we have to extract it from
             // the range pattern.
-            auto misc_patterns_key = String::formatted("{}{}", misc_patterns_prefix, system);
+            auto misc_patterns_key = DeprecatedString::formatted("{}{}", misc_patterns_prefix, system);
             auto misc_patterns = locale_numbers_object.as_object().get(misc_patterns_key);
             auto range_separator = misc_patterns.as_object().get("range"sv).as_string();
 
@@ -594,7 +594,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
     return {};
 }
 
-static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_units(DeprecatedString locale_units_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath units_path(move(locale_units_path));
     units_path = units_path.append("units.json"sv);
@@ -607,7 +607,7 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
     auto const& short_object = locale_units_object.as_object().get("short"sv);
     auto const& narrow_object = locale_units_object.as_object().get("narrow"sv);
 
-    HashMap<String, Unit> units;
+    HashMap<DeprecatedString, Unit> units;
 
     auto ensure_unit = [&](auto const& unit) -> Unit& {
         return units.ensure(unit, [&]() {
@@ -697,7 +697,7 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, String units_path, CLDR& cldr)
+static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedString numbers_path, DeprecatedString units_path, CLDR& cldr)
 {
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
     auto units_iterator = TRY(path_to_dir_iterator(move(units_path)));
@@ -708,7 +708,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, St
 
     TRY(parse_number_system_digits(core_supplemental_path.string(), cldr));
 
-    auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
+    auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
@@ -740,7 +740,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, St
     return {};
 }
 
-static String format_identifier(StringView, String identifier)
+static DeprecatedString format_identifier(StringView, DeprecatedString identifier)
 {
     return identifier.to_titlecase();
 }
@@ -776,7 +776,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
     generator.set("number_format_index_type"sv, cldr.unique_formats.type_that_fits());
     generator.set("number_format_list_index_type"sv, cldr.unique_format_lists.type_that_fits());
     generator.set("numeric_symbol_list_index_type"sv, cldr.unique_symbols.type_that_fits());
-    generator.set("identifier_count", String::number(cldr.max_identifier_count));
+    generator.set("identifier_count", DeprecatedString::number(cldr.max_identifier_count));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -860,22 +860,22 @@ struct Unit {
     auto locales = cldr.locales.keys();
     quick_sort(locales);
 
-    generator.set("size", String::number(locales.size()));
+    generator.set("size", DeprecatedString::number(locales.size()));
     generator.append(R"~~~(
 static constexpr Array<u8, @size@> s_minimum_grouping_digits { { )~~~");
 
     bool first = true;
     for (auto const& locale : locales) {
         generator.append(first ? " "sv : ", "sv);
-        generator.append(String::number(cldr.locales.find(locale)->value.minimum_grouping_digits));
+        generator.append(DeprecatedString::number(cldr.locales.find(locale)->value.minimum_grouping_digits));
         first = false;
     }
     generator.append(" } };\n");
 
-    auto append_map = [&](String name, auto type, auto const& map) {
+    auto append_map = [&](DeprecatedString name, auto type, auto const& map) {
         generator.set("name", name);
         generator.set("type", type);
-        generator.set("size", String::number(map.size()));
+        generator.set("size", DeprecatedString::number(map.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {)~~~");
@@ -884,9 +884,9 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         for (auto const& item : map) {
             generator.append(first ? " "sv : ", "sv);
             if constexpr (requires { item.value; })
-                generator.append(String::number(item.value));
+                generator.append(DeprecatedString::number(item.value));
             else
-                generator.append(String::number(item));
+                generator.append(DeprecatedString::number(item));
             first = false;
         }
 

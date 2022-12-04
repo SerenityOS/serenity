@@ -8,9 +8,9 @@
 
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibIPC/Forward.h>
@@ -22,8 +22,8 @@ class WebSocketClient;
 class WebSocket : public RefCounted<WebSocket> {
 public:
     struct CertificateAndKey {
-        String certificate;
-        String key;
+        DeprecatedString certificate;
+        DeprecatedString key;
     };
 
     struct Message {
@@ -55,18 +55,18 @@ public:
 
     void send(ByteBuffer binary_or_text_message, bool is_text);
     void send(StringView text_message);
-    void close(u16 code = 1005, String reason = {});
+    void close(u16 code = 1005, DeprecatedString reason = {});
 
     Function<void()> on_open;
     Function<void(Message)> on_message;
     Function<void(Error)> on_error;
-    Function<void(u16 code, String reason, bool was_clean)> on_close;
+    Function<void(u16 code, DeprecatedString reason, bool was_clean)> on_close;
     Function<CertificateAndKey()> on_certificate_requested;
 
     void did_open(Badge<WebSocketClient>);
     void did_receive(Badge<WebSocketClient>, ByteBuffer, bool);
     void did_error(Badge<WebSocketClient>, i32);
-    void did_close(Badge<WebSocketClient>, u16, String, bool);
+    void did_close(Badge<WebSocketClient>, u16, DeprecatedString, bool);
     void did_request_certificates(Badge<WebSocketClient>);
 
 private:

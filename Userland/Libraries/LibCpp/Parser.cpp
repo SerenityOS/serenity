@@ -11,11 +11,11 @@
 #include <AK/ScopeLogger.h>
 #include <LibCpp/Lexer.h>
 
-#define LOG_SCOPE() ScopeLogger<CPP_DEBUG> logger(String::formatted("'{}' - {} ({})", peek().text(), peek().type_as_string(), m_state.token_index))
+#define LOG_SCOPE() ScopeLogger<CPP_DEBUG> logger(DeprecatedString::formatted("'{}' - {} ({})", peek().text(), peek().type_as_string(), m_state.token_index))
 
 namespace Cpp {
 
-Parser::Parser(Vector<Token> tokens, String const& filename)
+Parser::Parser(Vector<Token> tokens, DeprecatedString const& filename)
     : m_filename(filename)
     , m_tokens(move(tokens))
 {
@@ -579,7 +579,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         return func;
     }
     default: {
-        error(String::formatted("unexpected operator for expression. operator: {}", peek().to_string()));
+        error(DeprecatedString::formatted("unexpected operator for expression. operator: {}", peek().to_string()));
         auto token = consume();
         return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
     }
@@ -820,7 +820,7 @@ Token Parser::consume(Token::Type type)
 {
     auto token = consume();
     if (token.type() != type)
-        error(String::formatted("expected {} at {}:{}, found: {}", Token::type_to_string(type), token.start().line, token.start().column, Token::type_to_string(token.type())));
+        error(DeprecatedString::formatted("expected {} at {}:{}, found: {}", Token::type_to_string(type), token.start().line, token.start().column, Token::type_to_string(token.type())));
     return token;
 }
 
@@ -869,12 +869,12 @@ StringView Parser::text_of_token(Cpp::Token const& token) const
     return token.text();
 }
 
-String Parser::text_of_node(ASTNode const& node) const
+DeprecatedString Parser::text_of_node(ASTNode const& node) const
 {
     return text_in_range(node.start(), node.end());
 }
 
-String Parser::text_in_range(Position start, Position end) const
+DeprecatedString Parser::text_in_range(Position start, Position end) const
 {
     StringBuilder builder;
     for (auto token : tokens_in_range(start, end)) {
@@ -906,11 +906,11 @@ void Parser::error(StringView message)
 
     if (message.is_null() || message.is_empty())
         message = "<empty>"sv;
-    String formatted_message;
+    DeprecatedString formatted_message;
     if (m_state.token_index >= m_tokens.size()) {
-        formatted_message = String::formatted("C++ Parsed error on EOF.{}", message);
+        formatted_message = DeprecatedString::formatted("C++ Parsed error on EOF.{}", message);
     } else {
-        formatted_message = String::formatted("C++ Parser error: {}. token: {} ({}:{})",
+        formatted_message = DeprecatedString::formatted("C++ Parser error: {}. token: {} ({}:{})",
             message,
             m_state.token_index < m_tokens.size() ? text_of_token(m_tokens[m_state.token_index]) : "EOF"sv,
             m_tokens[m_state.token_index].start().line,
@@ -1106,21 +1106,21 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
     return enum_decl;
 }
 
-Token Parser::consume_keyword(String const& keyword)
+Token Parser::consume_keyword(DeprecatedString const& keyword)
 {
     auto token = consume();
     if (token.type() != Token::Type::Keyword) {
-        error(String::formatted("unexpected token: {}, expected Keyword", token.to_string()));
+        error(DeprecatedString::formatted("unexpected token: {}, expected Keyword", token.to_string()));
         return token;
     }
     if (text_of_token(token) != keyword) {
-        error(String::formatted("unexpected keyword: {}, expected {}", text_of_token(token), keyword));
+        error(DeprecatedString::formatted("unexpected keyword: {}, expected {}", text_of_token(token), keyword));
         return token;
     }
     return token;
 }
 
-bool Parser::match_keyword(String const& keyword)
+bool Parser::match_keyword(DeprecatedString const& keyword)
 {
     auto token = peek();
     if (token.type() != Token::Type::Keyword) {
@@ -1232,7 +1232,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
 
     if (!match_name()) {
         named_type->set_end(position());
-        error(String::formatted("expected name instead of: {}", peek().text()));
+        error(DeprecatedString::formatted("expected name instead of: {}", peek().text()));
         return named_type;
     }
     named_type->set_name(parse_name(*named_type));

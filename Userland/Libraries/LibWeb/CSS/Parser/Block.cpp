@@ -17,7 +17,7 @@ Block::Block(Token token, Vector<ComponentValue>&& values)
 
 Block::~Block() = default;
 
-String Block::to_string() const
+DeprecatedString Block::to_string() const
 {
     StringBuilder builder;
 

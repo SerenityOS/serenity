@@ -37,7 +37,7 @@ void TextNode::compute_text_for_rendering(bool collapse)
     auto& data = dom_node().data();
 
     if (dom_node().is_password_input()) {
-        m_text_for_rendering = String::repeated('*', data.length());
+        m_text_for_rendering = DeprecatedString::repeated('*', data.length());
         return;
     }
 
@@ -49,7 +49,7 @@ void TextNode::compute_text_for_rendering(bool collapse)
     // NOTE: A couple fast returns to avoid unnecessarily allocating a StringBuilder.
     if (data.length() == 1) {
         if (is_ascii_space(data[0])) {
-            static String s_single_space_string = " ";
+            static DeprecatedString s_single_space_string = " ";
             m_text_for_rendering = s_single_space_string;
         } else {
             m_text_for_rendering = data;

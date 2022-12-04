@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
 #include <LibCore/MimeData.h>
@@ -114,7 +114,7 @@ public:
     int wheel_raw_delta_y() const { return m_wheel_raw_delta_y; }
     bool is_drag() const { return m_drag; }
 
-    Vector<String> mime_types() const
+    Vector<DeprecatedString> mime_types() const
     {
         if (!m_mime_data)
             return {};

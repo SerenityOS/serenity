@@ -5,10 +5,10 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <AK/Utf8View.h>
@@ -36,8 +36,8 @@
 #include <unistd.h>
 
 struct FileMetadata {
-    String name;
-    String path;
+    DeprecatedString name;
+    DeprecatedString path;
     struct stat stat {
     };
 };
@@ -70,8 +70,8 @@ static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
 static bool output_is_terminal = false;
 
-static HashMap<uid_t, String> users;
-static HashMap<gid_t, String> groups;
+static HashMap<uid_t, DeprecatedString> users;
+static HashMap<gid_t, DeprecatedString> groups;
 
 static bool is_a_tty = false;
 
@@ -147,7 +147,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         FileMetadata metadata;
         metadata.name = path;
 
-        int rc = lstat(String(path).characters(), &metadata.stat);
+        int rc = lstat(DeprecatedString(path).characters(), &metadata.stat);
         if (rc < 0) {
             perror("lstat");
             continue;
@@ -172,7 +172,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             while (di.has_next()) {
-                String directory = di.next_full_path();
+                DeprecatedString directory = di.next_full_path();
                 if (Core::File::is_directory(directory) && !Core::File::is_link(directory)) {
                     ++subdirs;
                     FileMetadata new_file;
@@ -219,9 +219,9 @@ static int print_escaped(StringView name)
     return printed;
 }
 
-static String& hostname()
+static DeprecatedString& hostname()
 {
-    static String s_hostname;
+    static DeprecatedString s_hostname;
     if (s_hostname.is_null()) {
         char buffer[HOST_NAME_MAX];
         if (gethostname(buffer, sizeof(buffer)) == 0)
@@ -232,7 +232,7 @@ static String& hostname()
     return s_hostname;
 }
 
-static size_t print_name(const struct stat& st, String const& name, char const* path_for_link_resolution, char const* path_for_hyperlink)
+static size_t print_name(const struct stat& st, DeprecatedString const& name, char const* path_for_link_resolution, char const* path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
         auto full_path = Core::File::real_path_for(path_for_hyperlink);
@@ -297,10 +297,10 @@ static size_t print_name(const struct stat& st, String const& name, char const* 
     return nprinted;
 }
 
-static bool print_filesystem_object(String const& path, String const& name, const struct stat& st)
+static bool print_filesystem_object(DeprecatedString const& path, DeprecatedString const& name, const struct stat& st)
 {
     if (flag_show_inode)
-        printf("%s ", String::formatted("{}", st.st_ino).characters());
+        printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
 
     if (S_ISDIR(st.st_mode))
         printf("d");
@@ -447,7 +447,7 @@ static bool print_filesystem_object_short(char const* path, char const* name, si
     }
 
     if (flag_show_inode)
-        printf("%s ", String::formatted("{}", st.st_ino).characters());
+        printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
 
     *nprinted = print_name(st, name, nullptr, path);
     return true;

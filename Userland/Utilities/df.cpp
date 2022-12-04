@@ -16,13 +16,13 @@
 static bool flag_human_readable = false;
 
 struct FileSystem {
-    String fs;
+    DeprecatedString fs;
     size_t total_block_count { 0 };
     size_t free_block_count { 0 };
     size_t total_inode_count { 0 };
     size_t free_inode_count { 0 };
     size_t block_size { 0 };
-    String mount_point;
+    DeprecatedString mount_point;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

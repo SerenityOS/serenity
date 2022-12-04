@@ -33,7 +33,7 @@ int RemoteObjectPropertyModel::row_count(const GUI::ModelIndex& index) const
     }
 }
 
-String RemoteObjectPropertyModel::column_name(int column) const
+DeprecatedString RemoteObjectPropertyModel::column_name(int column) const
 {
     switch (column) {
     case Column::Name:
@@ -57,9 +57,9 @@ GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::
         case Column::Value: {
             auto data = path->resolve(m_object.json);
             if (data.is_array())
-                return String::formatted("<Array with {} element{}", data.as_array().size(), data.as_array().size() == 1 ? ">" : "s>");
+                return DeprecatedString::formatted("<Array with {} element{}", data.as_array().size(), data.as_array().size() == 1 ? ">" : "s>");
             if (data.is_object())
-                return String::formatted("<Object with {} entr{}", data.as_object().size(), data.as_object().size() == 1 ? "y>" : "ies>");
+                return DeprecatedString::formatted("<Object with {} entr{}", data.as_object().size(), data.as_object().size() == 1 ? "y>" : "ies>");
             return data;
         }
         }
@@ -90,7 +90,7 @@ GUI::ModelIndex RemoteObjectPropertyModel::index(int row, int column, const GUI:
         path->extend(parent_path);
         int row_index = n;
         if (value.is_object()) {
-            String property_name;
+            DeprecatedString property_name;
             auto& object = value.as_object();
             object.for_each_member([&](auto& name, auto&) {
                 if (row_index > 0) {

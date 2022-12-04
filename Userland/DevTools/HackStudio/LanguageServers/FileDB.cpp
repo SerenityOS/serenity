@@ -12,7 +12,7 @@
 
 namespace LanguageServers {
 
-RefPtr<const GUI::TextDocument> FileDB::get_document(String const& filename) const
+RefPtr<const GUI::TextDocument> FileDB::get_document(DeprecatedString const& filename) const
 {
     auto absolute_path = to_absolute_path(filename);
     auto document_optional = m_open_files.get(absolute_path);
@@ -22,7 +22,7 @@ RefPtr<const GUI::TextDocument> FileDB::get_document(String const& filename) con
     return *document_optional.value();
 }
 
-RefPtr<GUI::TextDocument> FileDB::get_document(String const& filename)
+RefPtr<GUI::TextDocument> FileDB::get_document(DeprecatedString const& filename)
 {
     auto document = reinterpret_cast<FileDB const*>(this)->get_document(filename);
     if (document.is_null())
@@ -30,7 +30,7 @@ RefPtr<GUI::TextDocument> FileDB::get_document(String const& filename)
     return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
-Optional<String> FileDB::get_or_read_from_filesystem(StringView filename) const
+Optional<DeprecatedString> FileDB::get_or_read_from_filesystem(StringView filename) const
 {
     auto absolute_path = to_absolute_path(filename);
     auto document = get_document(absolute_path);
@@ -43,12 +43,12 @@ Optional<String> FileDB::get_or_read_from_filesystem(StringView filename) const
     return {};
 }
 
-bool FileDB::is_open(String const& filename) const
+bool FileDB::is_open(DeprecatedString const& filename) const
 {
     return m_open_files.contains(to_absolute_path(filename));
 }
 
-bool FileDB::add(String const& filename, int fd)
+bool FileDB::add(DeprecatedString const& filename, int fd)
 {
     auto document = create_from_fd(fd);
     if (!document)
@@ -58,17 +58,17 @@ bool FileDB::add(String const& filename, int fd)
     return true;
 }
 
-String FileDB::to_absolute_path(String const& filename) const
+DeprecatedString FileDB::to_absolute_path(DeprecatedString const& filename) const
 {
     if (LexicalPath { filename }.is_absolute()) {
         return filename;
     }
     if (m_project_root.is_null())
         return filename;
-    return LexicalPath { String::formatted("{}/{}", m_project_root, filename) }.string();
+    return LexicalPath { DeprecatedString::formatted("{}/{}", m_project_root, filename) }.string();
 }
 
-RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(String const& filename) const
+RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(DeprecatedString const& filename) const
 {
     auto file = Core::File::open(to_absolute_path(filename), Core::OpenMode::ReadOnly);
     if (file.is_error()) {
@@ -116,7 +116,7 @@ RefPtr<GUI::TextDocument> FileDB::create_from_file(Core::File& file) const
     return document;
 }
 
-void FileDB::on_file_edit_insert_text(String const& filename, String const& inserted_text, size_t start_line, size_t start_column)
+void FileDB::on_file_edit_insert_text(DeprecatedString const& filename, DeprecatedString const& inserted_text, size_t start_line, size_t start_column)
 {
     VERIFY(is_open(filename));
     auto document = get_document(filename);
@@ -127,7 +127,7 @@ void FileDB::on_file_edit_insert_text(String const& filename, String const& inse
     dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
 }
 
-void FileDB::on_file_edit_remove_text(String const& filename, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
+void FileDB::on_file_edit_remove_text(DeprecatedString const& filename, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
 {
     // TODO: If file is not open - need to get its contents
     // Otherwise- somehow verify that respawned language server is synced with all file contents
@@ -144,7 +144,7 @@ void FileDB::on_file_edit_remove_text(String const& filename, size_t start_line,
     dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
 }
 
-RefPtr<GUI::TextDocument> FileDB::create_with_content(String const& content)
+RefPtr<GUI::TextDocument> FileDB::create_with_content(DeprecatedString const& content)
 {
     StringView content_view(content);
     auto document = GUI::TextDocument::create(&s_default_document_client);
@@ -152,7 +152,7 @@ RefPtr<GUI::TextDocument> FileDB::create_with_content(String const& content)
     return document;
 }
 
-bool FileDB::add(String const& filename, String const& content)
+bool FileDB::add(DeprecatedString const& filename, DeprecatedString const& content)
 {
     auto document = create_with_content(content);
     if (!document) {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 
 namespace Diff {
@@ -28,10 +28,10 @@ struct HunkLocation {
 struct Hunk {
     size_t original_start_line { 0 };
     size_t target_start_line { 0 };
-    Vector<String> removed_lines;
-    Vector<String> added_lines;
+    Vector<DeprecatedString> removed_lines;
+    Vector<DeprecatedString> added_lines;
 };
 
-Vector<Hunk> parse_hunks(String const& diff);
-HunkLocation parse_hunk_location(String const& location_line);
+Vector<Hunk> parse_hunks(DeprecatedString const& diff);
+HunkLocation parse_hunk_location(DeprecatedString const& location_line);
 };

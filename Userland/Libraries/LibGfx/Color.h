@@ -352,8 +352,8 @@ public:
         return m_value == other.m_value;
     }
 
-    String to_string() const;
-    String to_string_without_alpha() const;
+    DeprecatedString to_string() const;
+    DeprecatedString to_string_without_alpha() const;
     static Optional<Color> from_string(StringView);
 
     constexpr HSV to_hsv() const

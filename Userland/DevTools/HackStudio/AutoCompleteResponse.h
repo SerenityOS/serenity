@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Types.h>
 #include <LibCpp/Parser.h>
 #include <LibGUI/AutocompleteProvider.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 
@@ -116,7 +116,7 @@ public:
         }
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.

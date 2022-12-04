@@ -42,7 +42,7 @@ public:
 
     JS::NonnullGCPtr<WorkerLocation> location() const;
     JS::NonnullGCPtr<WorkerNavigator> navigator() const;
-    WebIDL::ExceptionOr<void> import_scripts(Vector<String> urls);
+    WebIDL::ExceptionOr<void> import_scripts(Vector<DeprecatedString> urls);
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
@@ -54,11 +54,11 @@ public:
     // Following methods are from the WindowOrWorkerGlobalScope mixin
     // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
 
-    String origin() const;
+    DeprecatedString origin() const;
     bool is_secure_context() const;
     bool cross_origin_isolated() const;
-    WebIDL::ExceptionOr<String> btoa(String const& data) const;
-    WebIDL::ExceptionOr<String> atob(String const& data) const;
+    WebIDL::ExceptionOr<DeprecatedString> btoa(DeprecatedString const& data) const;
+    WebIDL::ExceptionOr<DeprecatedString> atob(DeprecatedString const& data) const;
 
     // Non-IDL public methods
 

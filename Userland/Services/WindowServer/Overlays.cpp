@@ -171,7 +171,7 @@ void ScreenNumberOverlay::pick_font()
     auto screen_number_content_rect_size = calculate_content_rect_for_screen(Screen::main()).size();
     auto& font_database = Gfx::FontDatabase::the();
     auto& default_font = WindowManager::the().font();
-    String best_font_name;
+    DeprecatedString best_font_name;
     int best_font_size = -1;
     font_database.for_each_font([&](Gfx::Font const& font) {
         // TODO: instead of picking *any* font we should probably compare font.name()
@@ -213,7 +213,7 @@ Gfx::Font const& ScreenNumberOverlay::font()
 
 void ScreenNumberOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
-    painter.draw_text({ {}, rect().size() }, String::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text({ {}, rect().size() }, DeprecatedString::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
 }
 
 Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& screen)
@@ -239,7 +239,7 @@ void WindowGeometryOverlay::update_rect()
         if (!window->size_increment().is_null()) {
             int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
             int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
-            m_label = String::formatted("{} ({}x{})", window->rect(), width_steps, height_steps);
+            m_label = DeprecatedString::formatted("{} ({}x{})", window->rect(), width_steps, height_steps);
         } else {
             m_label = window->rect().to_string();
         }
@@ -273,7 +273,7 @@ void WindowGeometryOverlay::window_rect_changed()
     invalidate_content();
 }
 
-DndOverlay::DndOverlay(String const& text, Gfx::Bitmap const* bitmap)
+DndOverlay::DndOverlay(DeprecatedString const& text, Gfx::Bitmap const* bitmap)
     : m_bitmap(bitmap)
     , m_text(text)
 {

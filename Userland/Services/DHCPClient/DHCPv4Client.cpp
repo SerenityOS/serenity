@@ -18,14 +18,14 @@
 #include <LibCore/Timer.h>
 #include <stdio.h>
 
-static u8 mac_part(Vector<String> const& parts, size_t index)
+static u8 mac_part(Vector<DeprecatedString> const& parts, size_t index)
 {
     auto result = AK::StringUtils::convert_to_uint_from_hex(parts.at(index));
     VERIFY(result.has_value());
     return result.value();
 }
 
-static MACAddress mac_from_string(String const& str)
+static MACAddress mac_from_string(DeprecatedString const& str)
 {
     auto chunks = str.split(':');
     VERIFY(chunks.size() == 6); // should we...worry about this?
@@ -117,7 +117,7 @@ static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4
     }
 }
 
-DHCPv4Client::DHCPv4Client(Vector<String> interfaces_with_dhcp_enabled)
+DHCPv4Client::DHCPv4Client(Vector<DeprecatedString> interfaces_with_dhcp_enabled)
     : m_interfaces_with_dhcp_enabled(move(interfaces_with_dhcp_enabled))
 {
     m_server = Core::UDPServer::construct(this);

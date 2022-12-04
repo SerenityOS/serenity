@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RecursionDecision.h>
-#include <AK/String.h>
 #include <LibMarkdown/Forward.h>
 
 namespace Markdown {
@@ -71,7 +71,7 @@ public:
 
     class TextNode : public Node {
     public:
-        String text;
+        DeprecatedString text;
         bool collapsible;
 
         TextNode(StringView text)
@@ -96,11 +96,11 @@ public:
     public:
         bool is_image;
         NonnullOwnPtr<Node> text;
-        String href;
+        DeprecatedString href;
         Optional<int> image_width;
         Optional<int> image_height;
 
-        LinkNode(bool is_image, NonnullOwnPtr<Node> text, String href, Optional<int> image_width, Optional<int> image_height)
+        LinkNode(bool is_image, NonnullOwnPtr<Node> text, DeprecatedString href, Optional<int> image_width, Optional<int> image_height)
             : is_image(is_image)
             , text(move(text))
             , href(move(href))
@@ -146,15 +146,15 @@ public:
 
     size_t terminal_length() const;
 
-    String render_to_html() const;
-    String render_for_terminal() const;
+    DeprecatedString render_to_html() const;
+    DeprecatedString render_for_terminal() const;
     RecursionDecision walk(Visitor&) const;
 
     static Text parse(StringView);
 
 private:
     struct Token {
-        String data;
+        DeprecatedString data;
         // Flanking basically means that a delimiter run has a non-whitespace,
         // non-punctuation character on the corresponding side. For a more exact
         // definition, see the CommonMark spec.

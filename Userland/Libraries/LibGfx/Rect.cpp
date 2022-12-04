@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Rect.h>
@@ -15,15 +15,15 @@
 namespace Gfx {
 
 template<>
-String IntRect::to_string() const
+DeprecatedString IntRect::to_string() const
 {
-    return String::formatted("[{},{} {}x{}]", x(), y(), width(), height());
+    return DeprecatedString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 template<>
-String FloatRect::to_string() const
+DeprecatedString FloatRect::to_string() const
 {
-    return String::formatted("[{},{} {}x{}]", x(), y(), width(), height());
+    return DeprecatedString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 }

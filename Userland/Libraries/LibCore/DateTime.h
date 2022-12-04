@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <LibIPC/Forward.h>
 #include <time.h>
@@ -31,12 +31,12 @@ public:
     bool is_leap_year() const;
 
     void set_time(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
-    String to_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
+    DeprecatedString to_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
 
     static DateTime create(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
-    static Optional<DateTime> parse(StringView format, String const& string);
+    static Optional<DateTime> parse(StringView format, DeprecatedString const& string);
 
     bool operator<(DateTime const& other) const { return m_timestamp < other.m_timestamp; }
 

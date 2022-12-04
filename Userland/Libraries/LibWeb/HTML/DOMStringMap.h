@@ -21,12 +21,12 @@ public:
 
     virtual ~DOMStringMap() override;
 
-    String determine_value_of_named_property(String const&) const;
+    DeprecatedString determine_value_of_named_property(DeprecatedString const&) const;
 
-    WebIDL::ExceptionOr<void> set_value_of_new_named_property(String const&, String const&);
-    WebIDL::ExceptionOr<void> set_value_of_existing_named_property(String const&, String const&);
+    WebIDL::ExceptionOr<void> set_value_of_new_named_property(DeprecatedString const&, DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_value_of_existing_named_property(DeprecatedString const&, DeprecatedString const&);
 
-    bool delete_existing_named_property(String const&);
+    bool delete_existing_named_property(DeprecatedString const&);
 
 private:
     explicit DOMStringMap(DOM::Element&);
@@ -35,11 +35,11 @@ private:
 
     // ^LegacyPlatformObject
     virtual JS::Value named_item_value(FlyString const&) const override;
-    virtual Vector<String> supported_property_names() const override;
+    virtual Vector<DeprecatedString> supported_property_names() const override;
 
     struct NameValuePair {
-        String name;
-        String value;
+        DeprecatedString name;
+        DeprecatedString value;
     };
 
     Vector<NameValuePair> get_name_value_pairs() const;

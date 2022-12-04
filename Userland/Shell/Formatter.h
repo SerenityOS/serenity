@@ -7,8 +7,8 @@
 #pragma once
 
 #include "NodeVisitor.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -41,7 +41,7 @@ public:
     {
     }
 
-    String format();
+    DeprecatedString format();
     size_t cursor() const { return m_output_cursor; }
 
 private:
@@ -97,7 +97,7 @@ private:
 
     ALWAYS_INLINE void with_added_indent(int indent, Function<void()>);
     ALWAYS_INLINE void in_new_block(Function<void()>);
-    ALWAYS_INLINE String in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
+    ALWAYS_INLINE DeprecatedString in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
 
     StringBuilder& current_builder() { return m_builders.last(); }
 
@@ -123,7 +123,7 @@ private:
     const AST::Node* m_last_visited_node { nullptr };
 
     StringView m_trivia;
-    Vector<String> m_heredocs_to_append_after_sequence;
+    Vector<DeprecatedString> m_heredocs_to_append_after_sequence;
 };
 
 }

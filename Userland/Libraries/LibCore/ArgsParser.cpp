@@ -77,7 +77,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     }
     long_options.append({ 0, 0, 0, 0 });
 
-    String short_options = short_options_builder.build();
+    DeprecatedString short_options = short_options_builder.build();
 
     while (true) {
         int c = getopt_long(argc, argv, short_options.characters(), long_options.data(), nullptr);
@@ -426,7 +426,7 @@ void ArgsParser::add_option(char const*& value, char const* help_string, char co
     add_option(move(option));
 }
 
-void ArgsParser::add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+void ArgsParser::add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -570,7 +570,7 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
     add_option(move(option));
 }
 
-void ArgsParser::add_option(Vector<String>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+void ArgsParser::add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Optional,
@@ -579,7 +579,7 @@ void ArgsParser::add_option(Vector<String>& values, char const* help_string, cha
         short_name,
         value_name,
         [&values](char const* s) {
-            String value = s;
+            DeprecatedString value = s;
             values.append(value);
             return true;
         },
@@ -609,7 +609,7 @@ void ArgsParser::add_positional_argument(char const*& value, char const* help_st
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(String& value, char const* help_string, char const* name, Required required)
+void ArgsParser::add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -702,7 +702,7 @@ void ArgsParser::add_positional_argument(Vector<char const*>& values, char const
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(Vector<String>& values, char const* help_string, char const* name, Required required)
+void ArgsParser::add_positional_argument(Vector<DeprecatedString>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -813,7 +813,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
 
     auto write_completion = [&](auto format, auto& option, auto has_invariant, auto... args) {
         JsonObject object;
-        object.set("completion", String::formatted(StringView { format, strlen(format) }, args...));
+        object.set("completion", DeprecatedString::formatted(StringView { format, strlen(format) }, args...));
         object.set("static_offset", 0);
         object.set("invariant_offset", has_invariant ? option_to_complete.length() : 0u);
         object.set("display_trivia", option.help_string);

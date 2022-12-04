@@ -7,9 +7,9 @@
 #pragma once
 
 #include "SlideObject.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
 #include <LibGfx/Forward.h>
 
 // A single slide of a presentation.
@@ -24,8 +24,8 @@ public:
     void paint(Gfx::Painter&, unsigned current_frame, Gfx::FloatSize display_scale) const;
 
 private:
-    Slide(NonnullRefPtrVector<SlideObject> slide_objects, String title);
+    Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title);
 
     NonnullRefPtrVector<SlideObject> m_slide_objects;
-    String m_title;
+    DeprecatedString m_title;
 };

@@ -124,5 +124,5 @@ private:
     bool m_just_set_clip { false };
     void read_n(void* dest, size_t n);
     static Message* initialize_headers(u8* data, size_t additional_data_size, MessageType type);
-    static Optional<ClipboardType> mime_type_to_clipboard_type(String const& mime);
+    static Optional<ClipboardType> mime_type_to_clipboard_type(DeprecatedString const& mime);
 };

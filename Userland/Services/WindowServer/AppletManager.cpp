@@ -14,7 +14,7 @@
 namespace WindowServer {
 
 static AppletManager* s_the;
-Vector<String> order_vector;
+Vector<DeprecatedString> order_vector;
 
 AppletManager::AppletManager()
 {

@@ -18,7 +18,7 @@ PluralRules::PluralRules(Object& prototype)
 }
 
 // 16.5.1 GetOperands ( s ), https://tc39.es/ecma402/#sec-getoperands
-::Locale::PluralOperands get_operands(String const& string)
+::Locale::PluralOperands get_operands(DeprecatedString const& string)
 {
     // 1.Let n be ! ToNumber(s).
     auto number = string.to_double(AK::TrimWhitespace::Yes).release_value();

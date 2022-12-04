@@ -1,7 +1,7 @@
 endpoint SQLServer
 {
-    connect(String name) => (int connection_id)
-    prepare_statement(int connection_id, String statement) => (int statement_id)
+    connect(DeprecatedString name) => (int connection_id)
+    prepare_statement(int connection_id, DeprecatedString statement) => (int statement_id)
     execute_statement(int statement_id) =|
     disconnect(int connection_id) =|
 }

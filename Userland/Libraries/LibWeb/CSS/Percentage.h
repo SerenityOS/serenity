@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Variant.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Frequency.h>
@@ -31,9 +31,9 @@ public:
     float value() const { return m_value; }
     float as_fraction() const { return m_value * 0.01f; }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
-        return String::formatted("{}%", m_value);
+        return DeprecatedString::formatted("{}%", m_value);
     }
 
     bool operator==(Percentage const& other) const { return m_value == other.m_value; }
@@ -128,7 +128,7 @@ public:
             });
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         if (is_percentage())
             return m_value.template get<Percentage>().to_string();

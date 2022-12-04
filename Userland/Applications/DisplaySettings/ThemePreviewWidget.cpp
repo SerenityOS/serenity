@@ -19,7 +19,7 @@ ThemePreviewWidget::ThemePreviewWidget(Gfx::Palette const& palette)
     set_fixed_size(304, 201);
 }
 
-void ThemePreviewWidget::set_theme(String path)
+void ThemePreviewWidget::set_theme(DeprecatedString path)
 {
     set_theme_from_file(*Core::File::open(path, Core::OpenMode::ReadOnly).release_value_but_fixme_should_propagate_errors());
 }

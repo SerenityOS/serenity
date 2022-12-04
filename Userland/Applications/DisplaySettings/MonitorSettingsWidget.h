@@ -45,10 +45,10 @@ private:
     size_t m_selected_screen_index { 0 };
 
     WindowServer::ScreenLayout m_screen_layout;
-    Vector<String> m_screens;
+    Vector<DeprecatedString> m_screens;
     Vector<Optional<EDID::Parser>> m_screen_edids;
     Vector<Gfx::IntSize> m_resolutions;
-    Vector<String> m_resolution_strings;
+    Vector<DeprecatedString> m_resolution_strings;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::ComboBox> m_screen_combo;

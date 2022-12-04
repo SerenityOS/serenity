@@ -9,14 +9,14 @@
 
 endpoint WebContentServer
 {
-    connect_to_webdriver(String webdriver_ipc_path) =|
+    connect_to_webdriver(DeprecatedString webdriver_ipc_path) =|
 
     update_system_theme(Core::AnonymousBuffer theme_buffer) =|
-    update_system_fonts(String default_font_query, String fixed_width_font_query, String window_title_font_query) =|
+    update_system_fonts(DeprecatedString default_font_query, DeprecatedString fixed_width_font_query, DeprecatedString window_title_font_query) =|
     update_screen_rects(Vector<Gfx::IntRect> rects, u32 main_screen_index) =|
 
     load_url(URL url) =|
-    load_html(String html, URL url) =|
+    load_html(DeprecatedString html, URL url) =|
 
     add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap bitmap) =|
     remove_backing_store(i32 backing_store_id) =|
@@ -33,25 +33,25 @@ endpoint WebContentServer
     key_down(i32 key, unsigned modifiers, u32 code_point) =|
     key_up(i32 key, unsigned modifiers, u32 code_point) =|
 
-    debug_request(String request, String argument) =|
+    debug_request(DeprecatedString request, DeprecatedString argument) =|
     get_source() =|
     inspect_dom_tree() =|
-    inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) => (bool has_style, String specified_style, String computed_style, String custom_properties, String node_box_sizing)
+    inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) => (bool has_style, DeprecatedString specified_style, DeprecatedString computed_style, DeprecatedString custom_properties, DeprecatedString node_box_sizing)
     get_hovered_node_id() => (i32 node_id)
-    js_console_input(String js_source) =|
+    js_console_input(DeprecatedString js_source) =|
     js_console_request_messages(i32 start_index) =|
 
     take_document_screenshot() => (Gfx::ShareableBitmap data)
 
-    run_javascript(String js_source) =|
+    run_javascript(DeprecatedString js_source) =|
 
-    dump_layout_tree() => (String dump)
+    dump_layout_tree() => (DeprecatedString dump)
 
-    get_selected_text() => (String selection)
+    get_selected_text() => (DeprecatedString selection)
     select_all() =|
 
-    set_content_filters(Vector<String> filters) =|
-    set_proxy_mappings(Vector<String> proxies, HashMap<String,size_t> mappings) =|
+    set_content_filters(Vector<DeprecatedString> filters) =|
+    set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString,size_t> mappings) =|
     set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
     set_has_focus(bool has_focus) =|
     set_is_scripting_enabled(bool is_scripting_enabled) =|
@@ -59,8 +59,8 @@ endpoint WebContentServer
     set_window_position(Gfx::IntPoint position) =|
     set_window_size(Gfx::IntSize size) =|
 
-    get_local_storage_entries() => (OrderedHashMap<String,String> entries)
-    get_session_storage_entries() => (OrderedHashMap<String,String> entries)
+    get_local_storage_entries() => (OrderedHashMap<DeprecatedString,DeprecatedString> entries)
+    get_session_storage_entries() => (OrderedHashMap<DeprecatedString,DeprecatedString> entries)
 
     handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
 
@@ -68,5 +68,5 @@ endpoint WebContentServer
 
     alert_closed() =|
     confirm_closed(bool accepted) =|
-    prompt_closed(String response) =|
+    prompt_closed(DeprecatedString response) =|
 }

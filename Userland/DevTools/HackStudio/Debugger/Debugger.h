@@ -26,18 +26,18 @@ public:
     };
 
     static void initialize(
-        String source_root,
+        DeprecatedString source_root,
         Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
     static bool is_initialized();
 
-    void on_breakpoint_change(String const& file, size_t line, BreakpointChange change_type);
-    bool set_execution_position(String const& file, size_t line);
+    void on_breakpoint_change(DeprecatedString const& file, size_t line, BreakpointChange change_type);
+    bool set_execution_position(DeprecatedString const& file, size_t line);
 
-    void set_executable_path(String const& path) { m_executable_path = path; }
-    void set_source_root(String const& source_root) { m_source_root = source_root; }
+    void set_executable_path(DeprecatedString const& path) { m_executable_path = path; }
+    void set_source_root(DeprecatedString const& source_root) { m_source_root = source_root; }
 
     Debug::DebugSession* session() { return m_debug_session.ptr(); }
 
@@ -90,12 +90,12 @@ private:
     };
 
     explicit Debugger(
-        String source_root,
+        DeprecatedString source_root,
         Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
-    Debug::DebugInfo::SourcePosition create_source_position(String const& file, size_t line);
+    Debug::DebugInfo::SourcePosition create_source_position(DeprecatedString const& file, size_t line);
 
     void start();
     int debugger_loop();
@@ -107,7 +107,7 @@ private:
     void insert_temporary_breakpoint_at_return_address(PtraceRegisters const&);
 
     OwnPtr<Debug::DebugSession> m_debug_session;
-    String m_source_root;
+    DeprecatedString m_source_root;
     DebuggingState m_state;
 
     pthread_mutex_t m_ui_action_mutex {};
@@ -116,7 +116,7 @@ private:
 
     Vector<Debug::DebugInfo::SourcePosition> m_breakpoints;
 
-    String m_executable_path;
+    DeprecatedString m_executable_path;
 
     Function<HasControlPassedToUser(PtraceRegisters const&)> m_on_stopped_callback;
     Function<void()> m_on_continue_callback;

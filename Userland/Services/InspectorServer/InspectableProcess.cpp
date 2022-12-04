@@ -34,7 +34,7 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::Stream::Lo
     };
 }
 
-String InspectableProcess::wait_for_response()
+DeprecatedString InspectableProcess::wait_for_response()
 {
     if (m_socket->is_eof()) {
         dbgln("InspectableProcess disconnected: PID {}", m_pid);
@@ -70,7 +70,7 @@ String InspectableProcess::wait_for_response()
     VERIFY(data_buffer.size() == length);
     dbgln("Got data size {} and read that many bytes", length);
 
-    return String::copy(data_buffer);
+    return DeprecatedString::copy(data_buffer);
 }
 
 void InspectableProcess::send_request(JsonObject const& request)

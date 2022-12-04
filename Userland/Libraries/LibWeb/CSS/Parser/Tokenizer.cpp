@@ -195,10 +195,10 @@ static inline bool is_E(u32 code_point)
     return code_point == 0x45;
 }
 
-Tokenizer::Tokenizer(StringView input, String const& encoding)
+Tokenizer::Tokenizer(StringView input, DeprecatedString const& encoding)
 {
     // https://www.w3.org/TR/css-syntax-3/#css-filter-code-points
-    auto filter_code_points = [](StringView input, auto const& encoding) -> String {
+    auto filter_code_points = [](StringView input, auto const& encoding) -> DeprecatedString {
         auto* decoder = TextCodec::decoder_for(encoding);
         VERIFY(decoder);
 
@@ -352,7 +352,7 @@ Token Tokenizer::create_eof_token()
     return create_new_token(Token::Type::EndOfFile);
 }
 
-Token Tokenizer::create_value_token(Token::Type type, String value)
+Token Tokenizer::create_value_token(Token::Type type, DeprecatedString value)
 {
     Token token;
     token.m_type = type;
@@ -576,7 +576,7 @@ float Tokenizer::convert_a_string_to_a_number(StringView string)
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-name
-String Tokenizer::consume_an_ident_sequence()
+DeprecatedString Tokenizer::consume_an_ident_sequence()
 {
     // This section describes how to consume an ident sequence from a stream of code points.
     // It returns a string containing the largest name that can be formed from adjacent

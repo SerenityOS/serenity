@@ -28,8 +28,8 @@ private:
 
     pid_t m_pid { 0 };
 
-    String m_window_title;
-    String m_button_label;
+    DeprecatedString m_window_title;
+    DeprecatedString m_button_label;
     RefPtr<Gfx::Bitmap> m_window_icon;
     RefPtr<TableView> m_table_view;
     RefPtr<RunningProcessesModel> m_process_model;

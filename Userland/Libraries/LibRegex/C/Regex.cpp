@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Variant.h>
 #include <LibRegex/Regex.h>
@@ -23,7 +23,7 @@ struct internal_regex_t {
     Optional<Variant<NonnullOwnPtr<Regex<PosixExtended>>, NonnullOwnPtr<Regex<PosixBasic>>>> re;
     size_t re_pat_errpos;
     ReError re_pat_err;
-    String re_pat;
+    DeprecatedString re_pat;
 };
 
 static internal_regex_t* impl_from(regex_t* re)
@@ -55,7 +55,7 @@ int regcomp(regex_t* reg, char const* pattern, int cflags)
 
     preg->cflags = cflags;
 
-    String pattern_str(pattern);
+    DeprecatedString pattern_str(pattern);
     if (is_extended)
         preg->re = make<Regex<PosixExtended>>(pattern_str, PosixOptions {} | (PosixFlags)cflags | PosixFlags::SkipTrimEmptyMatches);
     else
@@ -152,9 +152,9 @@ int regexec(regex_t const* reg, char const* string, size_t nmatch, regmatch_t pm
     return REG_NOMATCH;
 }
 
-inline static String get_error(ReError errcode)
+inline static DeprecatedString get_error(ReError errcode)
 {
-    String error;
+    DeprecatedString error;
     switch ((ReError)errcode) {
     case REG_NOERR:
         error = "No error";
@@ -211,7 +211,7 @@ inline static String get_error(ReError errcode)
 
 size_t regerror(int errcode, regex_t const* reg, char* errbuf, size_t errbuf_size)
 {
-    String error;
+    DeprecatedString error;
     auto const* preg = impl_from(reg);
 
     if (!preg)

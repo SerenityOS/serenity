@@ -166,7 +166,7 @@ void twalk_action(void const* node, VISIT order, int depth)
     // Special case: End signaled by tester.
     if (depth == TWALK_CHECK_END) {
         if (tests[count].depth != TWALK_END_MARKER) {
-            FAIL(String::formatted("Expected action (node={:#x}, order={}, depth={}), but twalk ended early.",
+            FAIL(DeprecatedString::formatted("Expected action (node={:#x}, order={}, depth={}), but twalk ended early.",
                 tests[count].node, U8(tests[count].order), tests[count].depth));
         }
         return;
@@ -174,7 +174,7 @@ void twalk_action(void const* node, VISIT order, int depth)
 
     // Special case: End marker reached.
     if (tests[count].depth == TWALK_END_MARKER) {
-        FAIL(String::formatted("Expected end, but twalk sent another action (node={:#x}, order={}, depth={}).",
+        FAIL(DeprecatedString::formatted("Expected end, but twalk sent another action (node={:#x}, order={}, depth={}).",
             node, U8(order), depth));
         return;
     }

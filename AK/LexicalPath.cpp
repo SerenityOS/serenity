@@ -14,7 +14,7 @@ namespace AK {
 
 char s_single_dot = '.';
 
-LexicalPath::LexicalPath(String path)
+LexicalPath::LexicalPath(DeprecatedString path)
     : m_string(canonicalized_path(move(path)))
 {
     if (m_string.is_empty()) {
@@ -58,9 +58,9 @@ LexicalPath::LexicalPath(String path)
     }
 }
 
-Vector<String> LexicalPath::parts() const
+Vector<DeprecatedString> LexicalPath::parts() const
 {
-    Vector<String> vector;
+    Vector<DeprecatedString> vector;
     vector.ensure_capacity(m_parts.size());
     for (auto& part : m_parts)
         vector.unchecked_append(part);
@@ -72,7 +72,7 @@ bool LexicalPath::has_extension(StringView extension) const
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
 
-String LexicalPath::canonicalized_path(String path)
+DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
 {
     if (path.is_null())
         return {};
@@ -88,7 +88,7 @@ String LexicalPath::canonicalized_path(String path)
     auto is_absolute = path[0] == '/';
     auto parts = path.split_view('/');
     size_t approximate_canonical_length = 0;
-    Vector<String> canonical_parts;
+    Vector<DeprecatedString> canonical_parts;
 
     for (auto& part : parts) {
         if (part == ".")
@@ -121,7 +121,7 @@ String LexicalPath::canonicalized_path(String path)
     return builder.to_string();
 }
 
-String LexicalPath::absolute_path(String dir_path, String target)
+DeprecatedString LexicalPath::absolute_path(DeprecatedString dir_path, DeprecatedString target)
 {
     if (LexicalPath(target).is_absolute()) {
         return LexicalPath::canonicalized_path(target);
@@ -129,10 +129,10 @@ String LexicalPath::absolute_path(String dir_path, String target)
     return LexicalPath::canonicalized_path(join(dir_path, target).string());
 }
 
-String LexicalPath::relative_path(StringView a_path, StringView a_prefix)
+DeprecatedString LexicalPath::relative_path(StringView a_path, StringView a_prefix)
 {
     if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
-        // FIXME: This should probably VERIFY or return an Optional<String>.
+        // FIXME: This should probably VERIFY or return an Optional<DeprecatedString>.
         return ""sv;
     }
 

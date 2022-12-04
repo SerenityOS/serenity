@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <LibCore/Object.h>
 #include <pthread.h>
 
@@ -33,7 +33,7 @@ public:
     template<typename T = void>
     Result<T, ThreadError> join();
 
-    String thread_name() const { return m_thread_name; }
+    DeprecatedString thread_name() const { return m_thread_name; }
     pthread_t tid() const { return m_tid; }
     bool is_started() const { return m_started; }
 
@@ -41,7 +41,7 @@ private:
     explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
     Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
-    String m_thread_name;
+    DeprecatedString m_thread_name;
     bool m_detached { false };
     bool m_started { false };
 };

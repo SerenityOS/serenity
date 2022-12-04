@@ -30,18 +30,18 @@ void CSSMediaRule::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_media);
 }
 
-String CSSMediaRule::condition_text() const
+DeprecatedString CSSMediaRule::condition_text() const
 {
     return m_media.media_text();
 }
 
-void CSSMediaRule::set_condition_text(String text)
+void CSSMediaRule::set_condition_text(DeprecatedString text)
 {
     m_media.set_media_text(text);
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule
-String CSSMediaRule::serialized() const
+DeprecatedString CSSMediaRule::serialized() const
 {
     // The result of concatenating the following:
     StringBuilder builder;

@@ -30,7 +30,7 @@ public:
     int row_count(GUI::ModelIndex const&) const override { return m_symbols.size(); };
     bool is_column_sortable(int) const override { return false; }
 
-    String column_name(int column) const override
+    DeprecatedString column_name(int column) const override
     {
         switch (column) {
         case Column::Address:
@@ -49,7 +49,7 @@ public:
         auto& symbol = m_symbols[model_index.row()];
         switch (model_index.column()) {
         case Column::Address:
-            return String::formatted("{:p}", symbol.address);
+            return DeprecatedString::formatted("{:p}", symbol.address);
         case Column::Object:
             return symbol.object;
         case Column::Symbol:

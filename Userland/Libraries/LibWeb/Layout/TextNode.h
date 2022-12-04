@@ -23,7 +23,7 @@ public:
 
     const DOM::Text& dom_node() const { return static_cast<const DOM::Text&>(*Node::dom_node()); }
 
-    String const& text_for_rendering() const { return m_text_for_rendering; }
+    DeprecatedString const& text_for_rendering() const { return m_text_for_rendering; }
 
     struct Chunk {
         Utf8View view;
@@ -55,7 +55,7 @@ public:
 private:
     virtual bool is_text_node() const final { return true; }
 
-    String m_text_for_rendering;
+    DeprecatedString m_text_for_rendering;
 };
 
 template<>

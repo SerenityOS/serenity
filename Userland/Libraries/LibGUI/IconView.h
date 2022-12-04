@@ -70,7 +70,7 @@ private:
         Gfx::IntRect icon_rect;
         int icon_offset_y;
         int text_offset_y;
-        String text;
+        DeprecatedString text;
         Vector<StringView> wrapped_text_lines;
         ModelIndex index;
         bool valid { false };

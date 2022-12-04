@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         keep_input_files = true;
 
     for (auto const& input_filename : filenames) {
-        String output_filename;
+        DeprecatedString output_filename;
         if (decompress) {
             if (!input_filename.ends_with(".gz"sv)) {
                 warnln("unknown suffix for: {}, skipping", input_filename);
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             output_filename = input_filename.substring_view(0, input_filename.length() - ".gz"sv.length());
         } else {
-            output_filename = String::formatted("{}.gz", input_filename);
+            output_filename = DeprecatedString::formatted("{}.gz", input_filename);
         }
 
         // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)

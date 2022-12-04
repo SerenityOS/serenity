@@ -9,7 +9,7 @@
 
 namespace Core {
 
-HashMap<String, int> s_overtaken_sockets {};
+HashMap<DeprecatedString, int> s_overtaken_sockets {};
 bool s_overtaken_sockets_parsed { false };
 
 static void parse_sockets_from_system_server()
@@ -34,7 +34,7 @@ static void parse_sockets_from_system_server()
     unsetenv(socket_takeover);
 }
 
-ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_server(String const& socket_path)
+ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_server(DeprecatedString const& socket_path)
 {
     if (!s_overtaken_sockets_parsed)
         parse_sockets_from_system_server();

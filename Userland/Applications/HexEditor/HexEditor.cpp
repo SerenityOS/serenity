@@ -590,7 +590,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         };
 
         bool is_current_line = (m_position / bytes_per_row()) == i;
-        auto line = String::formatted("{:#08X}", i * bytes_per_row());
+        auto line = DeprecatedString::formatted("{:#08X}", i * bytes_per_row());
         painter.draw_text(
             side_offset_rect,
             line,
@@ -625,7 +625,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             const u8 cell_value = m_document->get(byte_position).value;
-            auto line = String::formatted("{:02X}", cell_value);
+            auto line = DeprecatedString::formatted("{:02X}", cell_value);
 
             Gfx::Color background_color = palette().color(background_role());
             Gfx::Color text_color = [&]() -> Gfx::Color {
@@ -690,7 +690,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             painter.fill_rect(text_background_rect, background_color);
-            painter.draw_text(text_display_rect, String::formatted("{:c}", isprint(cell_value) ? cell_value : '.'), Gfx::TextAlignment::TopLeft, text_color);
+            painter.draw_text(text_display_rect, DeprecatedString::formatted("{:c}", isprint(cell_value) ? cell_value : '.'), Gfx::TextAlignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Text) {
                 if (byte_position == m_position && m_cursor_blink_active) {
@@ -768,7 +768,7 @@ Vector<Match> HexEditor::find_all(ByteBuffer& needle, size_t start)
                 }
             }
             if (found) {
-                matches.append({ i, String::formatted("{}", StringView { needle }.to_string().characters()) });
+                matches.append({ i, DeprecatedString::formatted("{}", StringView { needle }.to_string().characters()) });
                 i += needle.size() - 1;
             }
         }

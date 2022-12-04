@@ -59,7 +59,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
     return {};
 }
 
-void KeymapStatusWidget::set_current_keymap(String const& keymap, ClearBackground clear_background)
+void KeymapStatusWidget::set_current_keymap(DeprecatedString const& keymap, ClearBackground clear_background)
 {
     if (clear_background == ClearBackground::Yes) {
         GUI::Painter painter(*this);

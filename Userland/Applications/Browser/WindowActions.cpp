@@ -60,12 +60,12 @@ WindowActions::WindowActions(GUI::Window& window)
 
     for (auto i = 0; i <= 7; ++i) {
         m_tab_actions.append(GUI::Action::create(
-            String::formatted("Tab {}", i + 1), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
+            DeprecatedString::formatted("Tab {}", i + 1), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
                 if (on_tabs[i])
                     on_tabs[i]();
             },
             &window));
-        m_tab_actions.last().set_status_tip(String::formatted("Switch to tab {}", i + 1));
+        m_tab_actions.last().set_status_tip(DeprecatedString::formatted("Switch to tab {}", i + 1));
     }
     m_tab_actions.append(GUI::Action::create(
         "Last tab", { Mod_Ctrl, Key_9 }, [this](auto&) {

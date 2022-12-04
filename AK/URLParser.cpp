@@ -6,9 +6,9 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/SourceLocation.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/URLParser.h>
@@ -30,7 +30,7 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Validation error! {}", location);
 }
 
-static Optional<String> parse_opaque_host(StringView input)
+static Optional<DeprecatedString> parse_opaque_host(StringView input)
 {
     auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters_excluding_percent) {
@@ -44,7 +44,7 @@ static Optional<String> parse_opaque_host(StringView input)
     return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
 }
 
-static Optional<String> parse_ipv4_address(StringView input)
+static Optional<DeprecatedString> parse_ipv4_address(StringView input)
 {
     // FIXME: Implement the correct IPv4 parser as specified by https://url.spec.whatwg.org/#concept-ipv4-parser.
     return input;
@@ -52,7 +52,7 @@ static Optional<String> parse_ipv4_address(StringView input)
 
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<String> parse_host(StringView input, bool is_not_special = false)
+static Optional<DeprecatedString> parse_host(StringView input, bool is_not_special = false)
 {
     if (input.starts_with('[')) {
         if (!input.ends_with(']')) {
@@ -117,7 +117,7 @@ constexpr bool is_double_dot_path_segment(StringView input)
 }
 
 // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
-static String percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false)
+static DeprecatedString percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false)
 {
     // NOTE: This is written somewhat ad-hoc since we don't yet implement the Encoding spec.
 
@@ -241,7 +241,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
     if (start_index >= end_index)
         return {};
 
-    String processed_input = raw_input.substring_view(start_index, end_index - start_index);
+    DeprecatedString processed_input = raw_input.substring_view(start_index, end_index - start_index);
 
     // NOTE: This replaces all tab and newline characters with nothing.
     if (processed_input.contains("\t"sv) || processed_input.contains("\n"sv)) {

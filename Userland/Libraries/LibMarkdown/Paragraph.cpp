@@ -10,7 +10,7 @@
 
 namespace Markdown {
 
-String Paragraph::render_to_html(bool tight) const
+DeprecatedString Paragraph::render_to_html(bool tight) const
 {
     StringBuilder builder;
 
@@ -27,7 +27,7 @@ String Paragraph::render_to_html(bool tight) const
     return builder.build();
 }
 
-String Paragraph::render_for_terminal(size_t) const
+DeprecatedString Paragraph::render_for_terminal(size_t) const
 {
     StringBuilder builder;
     builder.append("  "sv);

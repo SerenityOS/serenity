@@ -24,7 +24,7 @@ public:
 
     virtual ~TextEncoder() override;
 
-    JS::Uint8Array* encode(String const& input) const;
+    JS::Uint8Array* encode(DeprecatedString const& input) const;
 
     static FlyString const& encoding();
 

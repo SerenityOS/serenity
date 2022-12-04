@@ -27,7 +27,7 @@ public:
 
     AK::URL const& url() const { return m_url; }
     // FIXME: This should return only the specified part of the url. eg, "stuff/foo.css", not "https://example.com/stuff/foo.css".
-    String href() const { return m_url.to_string(); }
+    DeprecatedString href() const { return m_url.to_string(); }
 
     bool has_import_result() const { return !m_style_sheet; }
     CSSStyleSheet* loaded_style_sheet() { return m_style_sheet; }
@@ -42,7 +42,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual String serialized() const override;
+    virtual DeprecatedString serialized() const override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;

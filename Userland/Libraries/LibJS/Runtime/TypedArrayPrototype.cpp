@@ -87,7 +87,7 @@ static ThrowCompletionOr<TypedArrayBase*> validate_typed_array_from_this(VM& vm)
     return typed_array;
 }
 
-static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, String const& name)
+static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, DeprecatedString const& name)
 {
     if (vm.argument_count() < 1)
         return vm.throw_completion<TypeError>(ErrorType::TypedArrayPrototypeOneArg, name);
@@ -97,7 +97,7 @@ static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, String cons
     return &callback.as_function();
 }
 
-static ThrowCompletionOr<void> for_each_item(VM& vm, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item(VM& vm, DeprecatedString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
@@ -119,7 +119,7 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, String const& name, Functio
     return {};
 }
 
-static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, DeprecatedString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
@@ -751,7 +751,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 
     // 4. If separator is undefined, let sep be ",".
     // 5. Else, let sep be ? ToString(separator).
-    String separator = ",";
+    DeprecatedString separator = ",";
     if (!vm.argument(0).is_undefined())
         separator = TRY(vm.argument(0).to_string(vm));
 

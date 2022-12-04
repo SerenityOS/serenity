@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGemini/Document.h>
 
 namespace Gemini {
 
-String Document::render_to_html() const
+DeprecatedString Document::render_to_html() const
 {
     StringBuilder html_builder;
     html_builder.append("<!DOCTYPE html>\n<html>\n"sv);

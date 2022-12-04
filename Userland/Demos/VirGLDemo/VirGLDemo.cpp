@@ -6,7 +6,7 @@
  */
 
 #include <AK/Array.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <Kernel/API/VirGL.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Rect.h>
@@ -23,7 +23,7 @@ public:
             Device,
             Virtual,
         } mode;
-        Optional<String> device;
+        Optional<DeprecatedString> device;
         Gfx::IntPoint location;
         Gfx::IntSize resolution;
         int scale_factor;
@@ -55,11 +55,11 @@ public:
     Vector<Screen> screens;
     unsigned main_screen_index { 0 };
 
-    bool is_valid(String* error_msg = nullptr) const;
+    bool is_valid(DeprecatedString* error_msg = nullptr) const;
     bool normalize();
-    bool load_config(Core::ConfigFile const& config_file, String* error_msg = nullptr);
+    bool load_config(Core::ConfigFile const& config_file, DeprecatedString* error_msg = nullptr);
     bool save_config(Core::ConfigFile& config_file, bool sync = true) const;
-    bool try_auto_add_display_connector(String const&);
+    bool try_auto_add_display_connector(DeprecatedString const&);
 
     // TODO: spaceship operator
     bool operator!=(ScreenLayout const& other) const;

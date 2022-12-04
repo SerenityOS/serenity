@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -53,11 +53,11 @@ public:
         Function<bool(char const*)> accept_value;
         OptionHideMode hide_mode { OptionHideMode::None };
 
-        String name_for_display() const
+        DeprecatedString name_for_display() const
         {
             if (long_name)
-                return String::formatted("--{}", long_name);
-            return String::formatted("-{:c}", short_name);
+                return DeprecatedString::formatted("--{}", long_name);
+            return DeprecatedString::formatted("-{:c}", short_name);
         }
     };
 
@@ -87,7 +87,7 @@ public:
     void add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     template<typename Integral>
     void add_option(Integral& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None)
@@ -98,17 +98,17 @@ public:
     void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
     // Note: This option is being used when we expect the user to use the same option
     // multiple times (e.g. "program --option=example --option=anotherexample ...").
-    void add_option(Vector<String>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(String& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(int& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<char const*>& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<String>& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(Vector<DeprecatedString>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:

@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Object.h>
@@ -36,7 +36,7 @@ public:
         set<NonnullRefPtr<Object>>(*refptr);
     }
 
-    [[nodiscard]] String to_string(int indent = 0) const;
+    [[nodiscard]] DeprecatedString to_string(int indent = 0) const;
 
     [[nodiscard]] ALWAYS_INLINE bool has_number() const { return has<int>() || has<float>(); }
 

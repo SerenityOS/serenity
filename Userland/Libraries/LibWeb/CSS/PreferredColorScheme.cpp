@@ -8,7 +8,7 @@
 
 namespace Web::CSS {
 
-PreferredColorScheme preferred_color_scheme_from_string(String const& value)
+PreferredColorScheme preferred_color_scheme_from_string(DeprecatedString const& value)
 {
     if (value.equals_ignoring_case("light"sv))
         return PreferredColorScheme::Light;

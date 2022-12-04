@@ -30,12 +30,12 @@ public:
     virtual ~ViewWidget() override = default;
 
     Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
-    String const& path() const { return m_path; }
+    DeprecatedString const& path() const { return m_path; }
     void set_toolbar_height(int height) { m_toolbar_height = height; }
     int toolbar_height() { return m_toolbar_height; }
     bool scaled_for_first_image() { return m_scaled_for_first_image; }
     void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
-    void set_path(String const& path);
+    void set_path(DeprecatedString const& path);
     void resize_window();
     void set_scaling_mode(Gfx::Painter::ScalingMode);
 
@@ -46,7 +46,7 @@ public:
     void flip(Gfx::Orientation);
     void rotate(Gfx::RotationDirection);
     void navigate(Directions);
-    void load_from_file(String const&);
+    void load_from_file(DeprecatedString const&);
 
     Function<void()> on_doubleclick;
     Function<void(const GUI::DropEvent&)> on_drop;
@@ -63,9 +63,9 @@ private:
 
     void set_bitmap(Gfx::Bitmap const* bitmap);
     void animate();
-    Vector<String> load_files_from_directory(String const& path) const;
+    Vector<DeprecatedString> load_files_from_directory(DeprecatedString const& path) const;
 
-    String m_path;
+    DeprecatedString m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
     Optional<ImageDecoderClient::DecodedImage> m_decoded_image;
 
@@ -75,7 +75,7 @@ private:
 
     int m_toolbar_height { 28 };
     bool m_scaled_for_first_image { false };
-    Vector<String> m_files_in_same_dir;
+    Vector<DeprecatedString> m_files_in_same_dir;
     Optional<size_t> m_current_index;
     Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::NearestNeighbor };
 };

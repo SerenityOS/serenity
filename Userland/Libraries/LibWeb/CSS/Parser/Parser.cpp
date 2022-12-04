@@ -77,12 +77,12 @@ bool ParsingContext::in_quirks_mode() const
 }
 
 // https://www.w3.org/TR/css-values-4/#relative-urls
-AK::URL ParsingContext::complete_url(String const& addr) const
+AK::URL ParsingContext::complete_url(DeprecatedString const& addr) const
 {
     return m_url.complete_url(addr);
 }
 
-Parser::Parser(ParsingContext const& context, StringView input, String const& encoding)
+Parser::Parser(ParsingContext const& context, StringView input, DeprecatedString const& encoding)
     : m_context(context)
     , m_tokenizer(input, encoding)
     , m_tokens(m_tokenizer.parse())
@@ -3382,7 +3382,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
         // Integers like `+34` get serialized as `34`, so manually include the `+` sign.
         if (component_value.is(Token::Type::Number) && component_value.token().number().is_integer_with_explicit_sign()) {
             auto int_value = component_value.token().number().integer_value();
-            return String::formatted("{:+}", int_value);
+            return DeprecatedString::formatted("{:+}", int_value);
         }
 
         return component_value.to_string();
@@ -3879,7 +3879,7 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
             return color;
 
     } else if (component_value.is(Token::Type::Hash)) {
-        auto color = Color::from_string(String::formatted("#{}", component_value.token().hash_value()));
+        auto color = Color::from_string(DeprecatedString::formatted("#{}", component_value.token().hash_value()));
         if (color.has_value())
             return color;
         return {};
@@ -3898,7 +3898,7 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
 
         // 1. Let cv be the component value.
         auto const& cv = component_value;
-        String serialization;
+        DeprecatedString serialization;
         // 2. If cv is a <number-token> or a <dimension-token>, follow these substeps:
         if (cv.is(Token::Type::Number) || cv.is(Token::Type::Dimension)) {
             // 1. If cv’s type flag is not "integer", return an error.
@@ -3947,7 +3947,7 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
         }
 
         // 6. Return the concatenation of "#" (U+0023) and serialization.
-        String concatenation = String::formatted("#{}", serialization);
+        DeprecatedString concatenation = DeprecatedString::formatted("#{}", serialization);
         return Color::from_string(concatenation);
     }
 
@@ -5228,7 +5228,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     //     font-family: my cool     font\!, serif;
     //     font-family: "my cool font!", serif;
     NonnullRefPtrVector<StyleValue> font_families;
-    Vector<String> current_name_parts;
+    Vector<DeprecatedString> current_name_parts;
     for (size_t i = start_index; i < component_values.size(); ++i) {
         auto const& part = component_values[i];
 
@@ -5266,7 +5266,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
         if (part.is(Token::Type::Comma)) {
             if (current_name_parts.is_empty())
                 return nullptr;
-            font_families.append(StringStyleValue::create(String::join(' ', current_name_parts)));
+            font_families.append(StringStyleValue::create(DeprecatedString::join(' ', current_name_parts)));
             current_name_parts.clear();
             // Can't have a trailing comma
             if (i + 1 == component_values.size())
@@ -5276,7 +5276,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(StringStyleValue::create(String::join(' ', current_name_parts)));
+        font_families.append(StringStyleValue::create(DeprecatedString::join(' ', current_name_parts)));
         current_name_parts.clear();
     }
 
@@ -5303,7 +5303,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         if (declaration.name().equals_ignoring_case("font-family"sv)) {
             // FIXME: This is very similar to, but different from, the logic in parse_font_family_value().
             //        Ideally they could share code.
-            Vector<String> font_family_parts;
+            Vector<DeprecatedString> font_family_parts;
             bool had_syntax_error = false;
             for (size_t i = 0; i < declaration.values().size(); ++i) {
                 auto const& part = declaration.values()[i];
@@ -5341,7 +5341,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             if (had_syntax_error || font_family_parts.is_empty())
                 continue;
 
-            font_family = String::join(' ', font_family_parts);
+            font_family = DeprecatedString::join(' ', font_family_parts);
             continue;
         }
         if (declaration.name().equals_ignoring_case("src"sv)) {
@@ -6014,11 +6014,11 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
         return {};
 
     Vector<CSS::ExplicitGridTrack> repeat_params;
-    Vector<Vector<String>> line_names_list;
+    Vector<Vector<DeprecatedString>> line_names_list;
     auto last_object_was_line_names = false;
     while (part_two_tokens.has_next_token()) {
         auto token = part_two_tokens.next_token();
-        Vector<String> line_names;
+        Vector<DeprecatedString> line_names;
         if (token.is_block()) {
             if (last_object_was_line_names)
                 return {};
@@ -6112,7 +6112,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
 {
     Vector<CSS::ExplicitGridTrack> track_list;
-    Vector<Vector<String>> line_names_list;
+    Vector<Vector<DeprecatedString>> line_names_list;
     auto last_object_was_line_names = false;
     TokenStream tokens { component_values };
     while (tokens.has_next_token()) {
@@ -6121,7 +6121,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             if (last_object_was_line_names)
                 return GridTrackSizeStyleValue::make_auto();
             last_object_was_line_names = true;
-            Vector<String> line_names;
+            Vector<DeprecatedString> line_names;
             if (!token.block().is_square())
                 return GridTrackSizeStyleValue::make_auto();
             TokenStream block_tokens { token.block().values() };
@@ -6196,7 +6196,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
 
     auto span_value = false;
     auto span_or_position_value = 0;
-    String line_name_value;
+    DeprecatedString line_name_value;
     while (true) {
         if (is_auto(current_token))
             return {};

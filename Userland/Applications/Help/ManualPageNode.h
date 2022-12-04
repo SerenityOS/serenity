@@ -22,12 +22,12 @@ public:
 
     virtual NonnullOwnPtrVector<ManualNode>& children() const override;
     virtual ManualNode const* parent() const override;
-    virtual String name() const override { return m_page; };
+    virtual DeprecatedString name() const override { return m_page; };
     virtual bool is_page() const override { return true; }
 
-    String path() const;
+    DeprecatedString path() const;
 
 private:
     ManualSectionNode const& m_section;
-    String m_page;
+    DeprecatedString m_page;
 };

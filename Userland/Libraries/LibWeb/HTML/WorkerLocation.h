@@ -19,15 +19,15 @@ public:
 
     virtual ~WorkerLocation() override;
 
-    String href() const;
-    String origin() const;
-    String protocol() const;
-    String host() const;
-    String hostname() const;
-    String port() const;
-    String pathname() const;
-    String search() const;
-    String hash() const;
+    DeprecatedString href() const;
+    DeprecatedString origin() const;
+    DeprecatedString protocol() const;
+    DeprecatedString host() const;
+    DeprecatedString hostname() const;
+    DeprecatedString port() const;
+    DeprecatedString pathname() const;
+    DeprecatedString search() const;
+    DeprecatedString hash() const;
 
 private:
     explicit WorkerLocation(WorkerGlobalScope&);

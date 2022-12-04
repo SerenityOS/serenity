@@ -9,10 +9,10 @@
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 
 namespace Test {
 
@@ -20,7 +20,7 @@ using TestFunction = Function<void()>;
 
 class TestCase : public RefCounted<TestCase> {
 public:
-    TestCase(String const& name, TestFunction&& fn, bool is_benchmark)
+    TestCase(DeprecatedString const& name, TestFunction&& fn, bool is_benchmark)
         : m_name(name)
         , m_function(move(fn))
         , m_is_benchmark(is_benchmark)
@@ -28,11 +28,11 @@ public:
     }
 
     bool is_benchmark() const { return m_is_benchmark; }
-    String const& name() const { return m_name; }
+    DeprecatedString const& name() const { return m_name; }
     TestFunction const& func() const { return m_function; }
 
 private:
-    String m_name;
+    DeprecatedString m_name;
     TestFunction m_function;
     bool m_is_benchmark;
 };

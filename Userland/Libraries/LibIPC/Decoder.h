@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Try.h>
 #include <LibCore/SharedCircularQueue.h>
 #include <LibCore/Stream.h>
@@ -47,7 +47,7 @@ public:
     ErrorOr<void> decode(i64&);
     ErrorOr<void> decode(float&);
     ErrorOr<void> decode(double&);
-    ErrorOr<void> decode(String&);
+    ErrorOr<void> decode(DeprecatedString&);
     ErrorOr<void> decode(ByteBuffer&);
     ErrorOr<void> decode(JsonValue&);
     ErrorOr<void> decode(URL&);

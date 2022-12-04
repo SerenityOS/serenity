@@ -18,11 +18,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    String host;
+    DeprecatedString host;
     int port;
     bool tls { false };
 
-    String username;
+    DeprecatedString username;
     Core::SecretString password;
 
     bool interactive_password;
@@ -125,7 +125,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 .first()
                 .get<IMAP::FetchResponseData>()
                 .body_data()
-                .find_if([](Tuple<IMAP::FetchCommand::DataItem, Optional<String>>& data) {
+                .find_if([](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
                     const auto data_item = data.get<0>();
                     return data_item.section.has_value() && data_item.section->type == IMAP::FetchCommand::DataItem::SectionType::HeaderFields;
                 })

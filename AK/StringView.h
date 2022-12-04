@@ -42,13 +42,13 @@ public:
 
     StringView(ByteBuffer const&);
 #ifndef KERNEL
-    StringView(String const&);
+    StringView(DeprecatedString const&);
     StringView(FlyString const&);
 #endif
 
     explicit StringView(ByteBuffer&&) = delete;
 #ifndef KERNEL
-    explicit StringView(String&&) = delete;
+    explicit StringView(DeprecatedString&&) = delete;
     explicit StringView(FlyString&&) = delete;
 #endif
 
@@ -97,9 +97,9 @@ public:
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
 #ifndef KERNEL
-    [[nodiscard]] String to_lowercase_string() const;
-    [[nodiscard]] String to_uppercase_string() const;
-    [[nodiscard]] String to_titlecase_string() const;
+    [[nodiscard]] DeprecatedString to_lowercase_string() const;
+    [[nodiscard]] DeprecatedString to_uppercase_string() const;
+    [[nodiscard]] DeprecatedString to_titlecase_string() const;
 #endif
 
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const
@@ -246,7 +246,7 @@ public:
     }
 
 #ifndef KERNEL
-    bool operator==(String const&) const;
+    bool operator==(DeprecatedString const&) const;
 #endif
 
     [[nodiscard]] constexpr int compare(StringView other) const
@@ -288,7 +288,7 @@ public:
     constexpr bool operator>=(StringView other) const { return compare(other) >= 0; }
 
 #ifndef KERNEL
-    [[nodiscard]] String to_string() const;
+    [[nodiscard]] DeprecatedString to_string() const;
 #endif
 
     [[nodiscard]] bool is_whitespace() const
@@ -297,7 +297,7 @@ public:
     }
 
 #ifndef KERNEL
-    [[nodiscard]] String replace(StringView needle, StringView replacement, ReplaceMode) const;
+    [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode) const;
 #endif
     [[nodiscard]] size_t count(StringView needle) const
     {
@@ -323,7 +323,7 @@ public:
     }
 
 private:
-    friend class String;
+    friend class DeprecatedString;
     char const* m_characters { nullptr };
     size_t m_length { 0 };
 };

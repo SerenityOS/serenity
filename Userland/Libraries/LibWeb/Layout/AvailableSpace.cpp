@@ -29,11 +29,11 @@ AvailableSize AvailableSize::make_max_content()
     return AvailableSize { Type::MaxContent, INFINITY };
 }
 
-String AvailableSize::to_string() const
+DeprecatedString AvailableSize::to_string() const
 {
     switch (m_type) {
     case Type::Definite:
-        return String::formatted("definite({})", m_value);
+        return DeprecatedString::formatted("definite({})", m_value);
     case Type::Indefinite:
         return "indefinite";
     case Type::MinContent:
@@ -44,9 +44,9 @@ String AvailableSize::to_string() const
     VERIFY_NOT_REACHED();
 }
 
-String AvailableSpace::to_string() const
+DeprecatedString AvailableSpace::to_string() const
 {
-    return String::formatted("{} x {}", width, height);
+    return DeprecatedString::formatted("{} x {}", width, height);
 }
 
 AvailableSize::AvailableSize(Type type, float value)

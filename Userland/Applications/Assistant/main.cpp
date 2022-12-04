@@ -6,10 +6,10 @@
  */
 
 #include "Providers.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <AK/Try.h>
 #include <LibCore/LockFile.h>
 #include <LibCore/System.h>
@@ -38,7 +38,7 @@ struct AppState {
     size_t visible_result_count { 0 };
 
     Threading::Mutex lock;
-    String last_query;
+    DeprecatedString last_query;
 };
 
 class ResultRow final : public GUI::Button {
@@ -87,7 +87,7 @@ public:
 
     Function<void(NonnullRefPtrVector<Result>)> on_new_results;
 
-    void search(String const& query)
+    void search(DeprecatedString const& query)
     {
         for (auto& provider : m_providers) {
             provider.query(query, [=, this](auto results) {
@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    void did_receive_results(String const& query, NonnullRefPtrVector<Result> const& results)
+    void did_receive_results(DeprecatedString const& query, NonnullRefPtrVector<Result> const& results)
     {
         {
             Threading::MutexLocker db_locker(m_mutex);
@@ -135,7 +135,7 @@ private:
     NonnullRefPtrVector<Provider> m_providers;
 
     Threading::Mutex m_mutex;
-    HashMap<String, NonnullRefPtrVector<Result>> m_result_cache;
+    HashMap<DeprecatedString, NonnullRefPtrVector<Result>> m_result_cache;
 };
 
 }

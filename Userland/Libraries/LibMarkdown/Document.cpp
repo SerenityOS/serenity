@@ -12,7 +12,7 @@
 
 namespace Markdown {
 
-String Document::render_to_html(StringView extra_head_contents) const
+DeprecatedString Document::render_to_html(StringView extra_head_contents) const
 {
     StringBuilder builder;
     builder.append(R"~~~(<!DOCTYPE html>
@@ -38,12 +38,12 @@ String Document::render_to_html(StringView extra_head_contents) const
     return builder.build();
 }
 
-String Document::render_to_inline_html() const
+DeprecatedString Document::render_to_inline_html() const
 {
     return m_container->render_to_html();
 }
 
-String Document::render_for_terminal(size_t view_width) const
+DeprecatedString Document::render_for_terminal(size_t view_width) const
 {
     return m_container->render_for_terminal(view_width);
 }

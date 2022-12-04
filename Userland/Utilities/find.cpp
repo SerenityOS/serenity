@@ -580,8 +580,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         paths.append(LexicalPath("."));
 
     for (auto& path : paths) {
-        String dirname = path.dirname();
-        String basename = path.basename();
+        DeprecatedString dirname = path.dirname();
+        DeprecatedString basename = path.basename();
 
         int dirfd = TRY(Core::System::open(dirname, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
 

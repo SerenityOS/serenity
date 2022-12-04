@@ -93,7 +93,7 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
 }
 
 // 13.5.2 CreatePartsFromList ( listFormat, list ), https://tc39.es/ecma402/#sec-createpartsfromlist
-Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<String> const& list)
+Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     auto list_patterns = ::Locale::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style());
     if (!list_patterns.has_value())
@@ -182,7 +182,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
 }
 
 // 13.5.3 FormatList ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlist
-String format_list(ListFormat const& list_format, Vector<String> const& list)
+DeprecatedString format_list(ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
     auto parts = create_parts_from_list(list_format, list);
@@ -201,7 +201,7 @@ String format_list(ListFormat const& list_format, Vector<String> const& list)
 }
 
 // 13.5.4 FormatListToParts ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlisttoparts
-Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<String> const& list)
+Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     auto& realm = *vm.current_realm();
 
@@ -237,19 +237,19 @@ Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<String
 }
 
 // 13.5.5 StringListFromIterable ( iterable ), https://tc39.es/ecma402/#sec-createstringlistfromiterable
-ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM& vm, Value iterable)
+ThrowCompletionOr<Vector<DeprecatedString>> string_list_from_iterable(VM& vm, Value iterable)
 {
     // 1. If iterable is undefined, then
     if (iterable.is_undefined()) {
         // a. Return a new empty List.
-        return Vector<String> {};
+        return Vector<DeprecatedString> {};
     }
 
     // 2. Let iteratorRecord be ? GetIterator(iterable).
     auto iterator_record = TRY(get_iterator(vm, iterable));
 
     // 3. Let list be a new empty List.
-    Vector<String> list;
+    Vector<DeprecatedString> list;
 
     // 4. Let next be true.
     Object* next = nullptr;

@@ -151,7 +151,7 @@ public:
     [[nodiscard]] static Optional<UIDimension> construct_from_json_value(AK::JsonValue const value)
     {
         if (value.is_string()) {
-            String value_literal = value.as_string();
+            DeprecatedString value_literal = value.as_string();
             if (value_literal == "shrink")
                 return UIDimension { SpecialDimension::Shrink };
             else if (value_literal == "grow")

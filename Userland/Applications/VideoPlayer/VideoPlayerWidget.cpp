@@ -176,7 +176,7 @@ void VideoPlayerWidget::on_decoding_error(Video::DecoderError const& error)
         break;
     }
 
-    GUI::MessageBox::show(&m_window, String::formatted(text_format, error.string_literal()), "Video Player encountered an error"sv);
+    GUI::MessageBox::show(&m_window, DeprecatedString::formatted(text_format, error.string_literal()), "Video Player encountered an error"sv);
 }
 
 void VideoPlayerWidget::update_seek_slider_max()
@@ -290,7 +290,7 @@ void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     // File menu
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
+        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
         if (path.has_value())
             open_file(path.value());
     }));

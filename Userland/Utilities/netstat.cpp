@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Stream.h>
@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     uid_t current_uid = getuid();
 
-    HashMap<pid_t, String> programs;
+    HashMap<pid_t, DeprecatedString> programs;
 
     if (flag_program) {
         auto processes = Core::ProcessStatisticsReader::get_all();
@@ -73,10 +73,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        String title;
+        DeprecatedString title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        String buffer;
+        DeprecatedString buffer;
     };
 
     Vector<Column> columns;
@@ -114,22 +114,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    auto get_formatted_address = [&](String const& address, String const& port) {
+    auto get_formatted_address = [&](DeprecatedString const& address, DeprecatedString const& port) {
         if (flag_wide)
-            return String::formatted("{}:{}", address, port);
+            return DeprecatedString::formatted("{}:{}", address, port);
 
         if ((address.length() + port.length()) <= max_formatted_address_length)
-            return String::formatted("{}:{}", address, port);
+            return DeprecatedString::formatted("{}:{}", address, port);
 
-        return String::formatted("{}:{}", address.substring_view(0, max_formatted_address_length - port.length()), port);
+        return DeprecatedString::formatted("{}:{}", address.substring_view(0, max_formatted_address_length - port.length()), port);
     };
 
     auto get_formatted_program = [&](pid_t pid) {
         if (pid == -1)
-            return String("-");
+            return DeprecatedString("-");
 
         auto program = programs.get(pid);
-        return String::formatted("{}/{}", pid, program.value());
+        return DeprecatedString::formatted("{}/{}", pid, program.value());
     };
 
     if (!has_protocol_flag || flag_tcp || flag_udp) {

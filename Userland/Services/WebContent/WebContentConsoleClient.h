@@ -20,7 +20,7 @@ class WebContentConsoleClient final : public JS::ConsoleClient {
 public:
     WebContentConsoleClient(JS::Console&, JS::Realm&, ConnectionFromClient&);
 
-    void handle_input(String const& js_source);
+    void handle_input(DeprecatedString const& js_source);
     void send_messages(i32 start_index);
     void report_exception(JS::Error const&, bool) override;
 
@@ -40,8 +40,8 @@ private:
     JS::Handle<ConsoleGlobalObject> m_console_global_object;
 
     void clear_output();
-    void print_html(String const& line);
-    void begin_group(String const& label, bool start_expanded);
+    void print_html(DeprecatedString const& line);
+    void begin_group(DeprecatedString const& label, bool start_expanded);
     virtual void end_group() override;
 
     struct ConsoleOutput {
@@ -53,7 +53,7 @@ private:
             EndGroup,
         };
         Type type;
-        String data;
+        DeprecatedString data;
     };
     Vector<ConsoleOutput> m_message_log;
 

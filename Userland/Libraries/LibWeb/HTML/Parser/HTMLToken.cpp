@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-String HTMLToken::to_string() const
+DeprecatedString HTMLToken::to_string() const
 {
     StringBuilder builder;
 

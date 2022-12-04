@@ -7,13 +7,13 @@
 
 #include <AK/Bitmap.h>
 #include <AK/Checked.h>
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
@@ -498,7 +498,7 @@ Bitmap::~Bitmap()
     delete[] m_palette;
 }
 
-void Bitmap::set_mmap_name([[maybe_unused]] String const& name)
+void Bitmap::set_mmap_name([[maybe_unused]] DeprecatedString const& name)
 {
     VERIFY(m_needs_munmap);
 #ifdef AK_OS_SERENITY
@@ -571,7 +571,7 @@ ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSiz
     int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
 #ifdef AK_OS_SERENITY
     map_flags |= MAP_PURGEABLE;
-    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::formatted("GraphicsBitmap [{}]", size).characters());
+    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, DeprecatedString::formatted("GraphicsBitmap [{}]", size).characters());
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, -1, 0);
 #endif

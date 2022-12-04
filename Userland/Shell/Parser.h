@@ -7,9 +7,9 @@
 #pragma once
 
 #include "AST.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 
@@ -53,7 +53,7 @@ private:
     };
 
     struct HeredocInitiationRecord {
-        String end;
+        DeprecatedString end;
         RefPtr<AST::Heredoc> node;
         bool interpolate { false };
         bool deindent { false };

@@ -31,7 +31,7 @@
 #include <unistd.h>
 
 RefPtr<JS::VM> g_vm;
-Vector<String> g_repl_statements;
+Vector<DeprecatedString> g_repl_statements;
 JS::Handle<JS::Value> g_last_value = JS::make_handle(JS::js_undefined());
 
 class ReplObject final : public JS::GlobalObject {
@@ -80,7 +80,7 @@ static bool s_print_last_result = false;
 static bool s_strip_ansi = false;
 static bool s_disable_source_location_hints = false;
 static RefPtr<Line::Editor> s_editor;
-static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
+static DeprecatedString s_history_path = DeprecatedString::formatted("{}/.js-history", Core::StandardPaths::home_directory());
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
@@ -101,7 +101,7 @@ static ErrorOr<void> print(JS::Value value, PrintTarget target = PrintTarget::St
     return print(value, *stream);
 }
 
-static String prompt_for_level(int level)
+static DeprecatedString prompt_for_level(int level)
 {
     static StringBuilder prompt_builder;
     prompt_builder.clear();
@@ -113,7 +113,7 @@ static String prompt_for_level(int level)
     return prompt_builder.build();
 }
 
-static String read_next_piece()
+static DeprecatedString read_next_piece()
 {
     StringBuilder piece;
 
@@ -185,7 +185,7 @@ static String read_next_piece()
     return piece.to_string();
 }
 
-static bool write_to_file(String const& path)
+static bool write_to_file(DeprecatedString const& path)
 {
     int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     for (size_t i = 0; i < g_repl_statements.size(); i++) {
@@ -348,7 +348,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
     auto filename = TRY(vm.argument(0).to_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
-        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file_or_error.release_value()));
     auto* object = JS::Object::create(realm, realm.intrinsics().object_prototype());
@@ -368,11 +368,11 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
     auto filename = TRY(vm.argument(0).to_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
-        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
     auto file_contents_or_error = file_or_error.value()->read_all();
     if (file_contents_or_error.is_error())
-        return vm.throw_completion<JS::Error>(String::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error()));
+        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error()));
 
     auto json = JsonValue::from_string(file_contents_or_error.value());
     if (json.is_error())
@@ -419,7 +419,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
     if (!vm.argument_count())
         return JS::Value(false);
-    String save_path = vm.argument(0).to_string_without_side_effects();
+    DeprecatedString save_path = vm.argument(0).to_string_without_side_effects();
     if (write_to_file(save_path)) {
         return JS::Value(true);
     }
@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(String::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
 
     outln();
 
@@ -491,7 +491,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(String::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
 
     outln();
 
@@ -501,7 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 static ErrorOr<void> repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
-        String piece = read_next_piece();
+        DeprecatedString piece = read_next_piece();
         if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
 
@@ -540,7 +540,7 @@ public:
     // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments arguments) override
     {
-        String indent = String::repeated("  "sv, m_group_stack_depth);
+        DeprecatedString indent = DeprecatedString::repeated("  "sv, m_group_stack_depth);
 
         if (log_level == JS::Console::LogLevel::Trace) {
             auto trace = arguments.get<JS::Console::Trace>();
@@ -562,7 +562,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+        auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
 #ifdef AK_OS_SERENITY
         m_console.output_debug_message(log_level, output);
 #endif
@@ -807,7 +807,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     if (key.view().starts_with(property_pattern)) {
                         Line::CompletionSuggestion completion { key, Line::CompletionSuggestion::ForSearch };
                         if (!results.contains_slow(completion)) { // hide duplicates
-                            results.append(String(key));
+                            results.append(DeprecatedString(key));
                             results.last().invariant_offset = property_pattern.length();
                         }
                     }

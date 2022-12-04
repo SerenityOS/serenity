@@ -182,7 +182,7 @@ private:
     Color m_col;
 };
 
-ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
+ColorPicker::ColorPicker(Color color, Window* parent_window, DeprecatedString title)
     : Dialog(parent_window)
     , m_color(color)
 {

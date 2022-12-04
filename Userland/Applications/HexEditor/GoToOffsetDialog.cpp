@@ -5,7 +5,7 @@
  */
 
 #include "GoToOffsetDialog.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <Applications/HexEditor/GoToOffsetDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -27,7 +27,7 @@ GUI::Dialog::ExecResult GoToOffsetDialog::show(GUI::Window* parent_window, int& 
         dialog->set_icon(parent_window->icon());
 
     if (history_offset)
-        dialog->m_text_editor->set_text(String::formatted("{}", history_offset));
+        dialog->m_text_editor->set_text(DeprecatedString::formatted("{}", history_offset));
 
     auto result = dialog->exec();
 
@@ -50,9 +50,9 @@ int GoToOffsetDialog::process_input()
     int offset;
     auto type = m_offset_type_box->text().trim_whitespace();
     if (type == "Decimal") {
-        offset = String::formatted("{}", input_offset).to_int().value_or(0);
+        offset = DeprecatedString::formatted("{}", input_offset).to_int().value_or(0);
     } else if (type == "Hexadecimal") {
-        offset = strtol(String::formatted("{}", input_offset).characters(), nullptr, 16);
+        offset = strtol(DeprecatedString::formatted("{}", input_offset).characters(), nullptr, 16);
     } else {
         VERIFY_NOT_REACHED();
     }
@@ -84,8 +84,8 @@ int GoToOffsetDialog::calculate_new_offset(int input_offset)
 void GoToOffsetDialog::update_statusbar()
 {
     auto new_offset = calculate_new_offset(process_input());
-    m_statusbar->set_text(0, String::formatted("HEX: {:#08X}", new_offset));
-    m_statusbar->set_text(1, String::formatted("DEC: {}", new_offset));
+    m_statusbar->set_text(0, DeprecatedString::formatted("HEX: {:#08X}", new_offset));
+    m_statusbar->set_text(1, DeprecatedString::formatted("DEC: {}", new_offset));
 }
 
 GoToOffsetDialog::GoToOffsetDialog()
@@ -108,14 +108,14 @@ GoToOffsetDialog::GoToOffsetDialog()
 
     m_offset_type.append("Decimal");
     m_offset_type.append("Hexadecimal");
-    m_offset_type_box->set_model(GUI::ItemListModel<String>::create(m_offset_type));
+    m_offset_type_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_offset_type));
     m_offset_type_box->set_selected_index(0);
     m_offset_type_box->set_only_allow_values_from_model(true);
 
     m_offset_from.append("Start");
     m_offset_from.append("Here");
     m_offset_from.append("End");
-    m_offset_from_box->set_model(GUI::ItemListModel<String>::create(m_offset_from));
+    m_offset_from_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_offset_from));
     m_offset_from_box->set_selected_index(0);
     m_offset_from_box->set_only_allow_values_from_model(true);
 

@@ -23,14 +23,14 @@ static ByteBuffer operator""_b(char const* string, size_t length)
 }
 
 Vector<Certificate> load_certificates();
-String locate_ca_certs_file();
+DeprecatedString locate_ca_certs_file();
 
-String locate_ca_certs_file()
+DeprecatedString locate_ca_certs_file()
 {
     if (Core::File::exists(ca_certs_file)) {
         return ca_certs_file;
     }
-    auto on_target_path = String("/etc/ca_certs.ini");
+    auto on_target_path = DeprecatedString("/etc/ca_certs.ini");
     if (Core::File::exists(on_target_path)) {
         return on_target_path;
     }

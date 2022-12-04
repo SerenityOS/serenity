@@ -119,7 +119,7 @@ u32 Selector::specificity() const
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-simple-selector
-String Selector::SimpleSelector::serialize() const
+DeprecatedString Selector::SimpleSelector::serialize() const
 {
     StringBuilder s;
     switch (type) {
@@ -279,7 +279,7 @@ String Selector::SimpleSelector::serialize() const
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-selector
-String Selector::serialize() const
+DeprecatedString Selector::serialize() const
 {
     StringBuilder s;
 
@@ -337,7 +337,7 @@ String Selector::serialize() const
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-group-of-selectors
-String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors)
+DeprecatedString serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors)
 {
     // To serialize a group of selectors serialize each selector in the group of selectors and then serialize a comma-separated list of these serializations.
     StringBuilder builder;

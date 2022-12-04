@@ -91,7 +91,7 @@ NonnullRefPtr<CreateSchema> Parser::parse_create_schema_statement()
         is_error_if_exists = false;
     }
 
-    String schema_name = consume(TokenType::Identifier).value();
+    DeprecatedString schema_name = consume(TokenType::Identifier).value();
     return create_ast_node<CreateSchema>(move(schema_name), is_error_if_exists);
 }
 
@@ -112,8 +112,8 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
         is_error_if_table_exists = false;
     }
 
-    String schema_name;
-    String table_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
     if (consume_if(TokenType::As)) {
@@ -135,8 +135,8 @@ NonnullRefPtr<AlterTable> Parser::parse_alter_table_statement()
     consume(TokenType::Alter);
     consume(TokenType::Table);
 
-    String schema_name;
-    String table_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
     if (consume_if(TokenType::Add)) {
@@ -177,8 +177,8 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
         is_error_if_table_does_not_exist = false;
     }
 
-    String schema_name;
-    String table_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
@@ -201,15 +201,15 @@ NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
     auto conflict_resolution = parse_conflict_resolution();
     consume(TokenType::Into);
 
-    String schema_name;
-    String table_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
-    String alias;
+    DeprecatedString alias;
     if (consume_if(TokenType::As))
         alias = consume(TokenType::Identifier).value();
 
-    Vector<String> column_names;
+    Vector<DeprecatedString> column_names;
     if (match(TokenType::ParenOpen))
         parse_comma_separated_list(true, [&]() { column_names.append(consume(TokenType::Identifier).value()); });
 
@@ -260,7 +260,7 @@ NonnullRefPtr<Update> Parser::parse_update_statement(RefPtr<CommonTableExpressio
 
     Vector<Update::UpdateColumns> update_columns;
     parse_comma_separated_list(false, [&]() {
-        Vector<String> column_names;
+        Vector<DeprecatedString> column_names;
         if (match(TokenType::ParenOpen)) {
             parse_comma_separated_list(true, [&]() { column_names.append(consume(TokenType::Identifier).value()); });
         } else {
@@ -391,7 +391,7 @@ RefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_list()
 NonnullRefPtr<Expression> Parser::parse_expression()
 {
     if (++m_parser_state.m_current_expression_depth > Limits::maximum_expression_tree_depth) {
-        syntax_error(String::formatted("Exceeded maximum expression tree depth of {}", Limits::maximum_expression_tree_depth));
+        syntax_error(DeprecatedString::formatted("Exceeded maximum expression tree depth of {}", Limits::maximum_expression_tree_depth));
         return create_ast_node<ErrorExpression>();
     }
 
@@ -528,23 +528,23 @@ RefPtr<Expression> Parser::parse_literal_value_expression()
     return {};
 }
 
-RefPtr<Expression> Parser::parse_column_name_expression(String with_parsed_identifier, bool with_parsed_period)
+RefPtr<Expression> Parser::parse_column_name_expression(DeprecatedString with_parsed_identifier, bool with_parsed_period)
 {
     if (with_parsed_identifier.is_null() && !match(TokenType::Identifier))
         return {};
 
-    String first_identifier;
+    DeprecatedString first_identifier;
     if (with_parsed_identifier.is_null())
         first_identifier = consume(TokenType::Identifier).value();
     else
         first_identifier = move(with_parsed_identifier);
 
-    String schema_name;
-    String table_name;
-    String column_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
+    DeprecatedString column_name;
 
     if (with_parsed_period || consume_if(TokenType::Period)) {
-        String second_identifier = consume(TokenType::Identifier).value();
+        DeprecatedString second_identifier = consume(TokenType::Identifier).value();
 
         if (consume_if(TokenType::Period)) {
             schema_name = move(first_identifier);
@@ -726,7 +726,7 @@ RefPtr<Expression> Parser::parse_collate_expression(NonnullRefPtr<Expression> ex
         return {};
 
     consume();
-    String collation_name = consume(TokenType::Identifier).value();
+    DeprecatedString collation_name = consume(TokenType::Identifier).value();
 
     return create_ast_node<CollateExpression>(move(expression), move(collation_name));
 }
@@ -843,8 +843,8 @@ RefPtr<Expression> Parser::parse_in_expression(NonnullRefPtr<Expression> express
         return create_ast_node<InChainedExpression>(move(expression), move(chain), invert_expression);
     }
 
-    String schema_name;
-    String table_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
     if (match(TokenType::ParenOpen)) {
@@ -912,7 +912,7 @@ NonnullRefPtr<CommonTableExpression> Parser::parse_common_table_expression()
     // https://sqlite.org/syntax/common-table-expression.html
     auto table_name = consume(TokenType::Identifier).value();
 
-    Vector<String> column_names;
+    Vector<DeprecatedString> column_names;
     if (match(TokenType::ParenOpen))
         parse_comma_separated_list(true, [&]() { column_names.append(consume(TokenType::Identifier).value()); });
 
@@ -927,11 +927,11 @@ NonnullRefPtr<CommonTableExpression> Parser::parse_common_table_expression()
 NonnullRefPtr<QualifiedTableName> Parser::parse_qualified_table_name()
 {
     // https://sqlite.org/syntax/qualified-table-name.html
-    String schema_name;
-    String table_name;
+    DeprecatedString schema_name;
+    DeprecatedString table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
-    String alias;
+    DeprecatedString alias;
     if (consume_if(TokenType::As))
         alias = consume(TokenType::Identifier).value();
 
@@ -955,7 +955,7 @@ NonnullRefPtr<ReturningClause> Parser::parse_returning_clause()
     parse_comma_separated_list(false, [&]() {
         auto expression = parse_expression();
 
-        String column_alias;
+        DeprecatedString column_alias;
         if (consume_if(TokenType::As) || match(TokenType::Identifier))
             column_alias = consume(TokenType::Identifier).value();
 
@@ -974,7 +974,7 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
     // If we match an identifier now, we don't know whether it is a table-name of the form "table-name.*", or if it is the start of a
     // column-name-expression, until we try to parse the asterisk. So if we consume an identifier and a period, but don't find an
     // asterisk, hold onto that information to form a column-name-expression later.
-    String table_name;
+    DeprecatedString table_name;
     bool parsed_period = false;
 
     if (match(TokenType::Identifier)) {
@@ -988,7 +988,7 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
         ? parse_expression()
         : static_cast<NonnullRefPtr<Expression>>(*parse_column_name_expression(move(table_name), parsed_period));
 
-    String column_alias;
+    DeprecatedString column_alias;
     if (consume_if(TokenType::As) || match(TokenType::Identifier))
         column_alias = consume(TokenType::Identifier).value();
 
@@ -998,17 +998,17 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
 NonnullRefPtr<TableOrSubquery> Parser::parse_table_or_subquery()
 {
     if (++m_parser_state.m_current_subquery_depth > Limits::maximum_subquery_depth)
-        syntax_error(String::formatted("Exceeded maximum subquery depth of {}", Limits::maximum_subquery_depth));
+        syntax_error(DeprecatedString::formatted("Exceeded maximum subquery depth of {}", Limits::maximum_subquery_depth));
 
     ScopeGuard guard([&]() { --m_parser_state.m_current_subquery_depth; });
 
     // https://sqlite.org/syntax/table-or-subquery.html
     if (match(TokenType::Identifier)) {
-        String schema_name;
-        String table_name;
+        DeprecatedString schema_name;
+        DeprecatedString table_name;
         parse_schema_and_table_name(schema_name, table_name);
 
-        String table_alias;
+        DeprecatedString table_alias;
         if (consume_if(TokenType::As) || match(TokenType::Identifier))
             table_alias = consume(TokenType::Identifier).value();
 
@@ -1028,7 +1028,7 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
     // https://sqlite.org/syntax/ordering-term.html
     auto expression = parse_expression();
 
-    String collation_name;
+    DeprecatedString collation_name;
     if (is<CollateExpression>(*expression)) {
         auto const& collate = static_cast<CollateExpression const&>(*expression);
         collation_name = collate.collation_name();
@@ -1053,9 +1053,9 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
     return create_ast_node<OrderingTerm>(move(expression), move(collation_name), order, nulls);
 }
 
-void Parser::parse_schema_and_table_name(String& schema_name, String& table_name)
+void Parser::parse_schema_and_table_name(DeprecatedString& schema_name, DeprecatedString& table_name)
 {
-    String schema_or_table_name = consume(TokenType::Identifier).value();
+    DeprecatedString schema_or_table_name = consume(TokenType::Identifier).value();
 
     if (consume_if(TokenType::Period)) {
         schema_name = move(schema_or_table_name);
@@ -1117,10 +1117,10 @@ bool Parser::match(TokenType type) const
 
 void Parser::expected(StringView what)
 {
-    syntax_error(String::formatted("Unexpected token {}, expected {}", m_parser_state.m_token.name(), what));
+    syntax_error(DeprecatedString::formatted("Unexpected token {}, expected {}", m_parser_state.m_token.name(), what));
 }
 
-void Parser::syntax_error(String message)
+void Parser::syntax_error(DeprecatedString message)
 {
     m_parser_state.m_errors.append({ move(message), position() });
 }

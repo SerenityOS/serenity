@@ -43,7 +43,7 @@ JS::NonnullGCPtr<Response> Response::aborted_network_error(JS::VM& vm)
     return response;
 }
 
-JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, String message)
+JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, DeprecatedString message)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Creating network error response with message: {}", message);
     auto response = Response::create(vm);
@@ -93,7 +93,7 @@ Optional<AK::URL const&> Response::url() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-location-url
-ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& request_fragment) const
+ErrorOr<Optional<AK::URL>> Response::location_url(Optional<DeprecatedString> const& request_fragment) const
 {
     // The location URL of a response response, given null or an ASCII string requestFragment, is the value returned by the following steps. They return null, failure, or a URL.
 

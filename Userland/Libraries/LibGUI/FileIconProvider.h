@@ -14,9 +14,9 @@ namespace GUI {
 
 class FileIconProvider {
 public:
-    static Icon icon_for_path(String const&, mode_t);
-    static Icon icon_for_path(String const&);
-    static Icon icon_for_executable(String const&);
+    static Icon icon_for_path(DeprecatedString const&, mode_t);
+    static Icon icon_for_path(DeprecatedString const&);
+    static Icon icon_for_executable(DeprecatedString const&);
 
     static Icon filetype_image_icon();
     static Icon directory_icon();

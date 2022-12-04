@@ -90,8 +90,8 @@ public:
 
     void update_views(Badge<TextDocumentLine>);
 
-    String text() const;
-    String text_in_range(TextRange const&) const;
+    DeprecatedString text() const;
+    DeprecatedString text_in_range(TextRange const&) const;
 
     Vector<TextRange> find_all(StringView needle, bool regmatch = false, bool match_case = true);
 
@@ -156,7 +156,7 @@ private:
     size_t m_regex_result_match_capture_group_index { 0 };
 
     bool m_regex_needs_update { true };
-    String m_regex_needle;
+    DeprecatedString m_regex_needle;
 };
 
 class TextDocumentLine {
@@ -164,7 +164,7 @@ public:
     explicit TextDocumentLine(TextDocument&);
     explicit TextDocumentLine(TextDocument&, StringView);
 
-    String to_utf8() const;
+    DeprecatedString to_utf8() const;
 
     Utf32View view() const { return { code_points(), length() }; }
     u32 const* code_points() const { return m_text.data(); }
@@ -216,52 +216,52 @@ protected:
 
 class InsertTextCommand : public TextDocumentUndoCommand {
 public:
-    InsertTextCommand(TextDocument&, String const&, TextPosition const&);
+    InsertTextCommand(TextDocument&, DeprecatedString const&, TextPosition const&);
     virtual ~InsertTextCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) override;
     virtual void undo() override;
     virtual void redo() override;
     virtual bool merge_with(GUI::Command const&) override;
-    virtual String action_text() const override;
-    String const& text() const { return m_text; }
+    virtual DeprecatedString action_text() const override;
+    DeprecatedString const& text() const { return m_text; }
     TextRange const& range() const { return m_range; }
 
 private:
-    String m_text;
+    DeprecatedString m_text;
     TextRange m_range;
 };
 
 class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
-    RemoveTextCommand(TextDocument&, String const&, TextRange const&);
+    RemoveTextCommand(TextDocument&, DeprecatedString const&, TextRange const&);
     virtual ~RemoveTextCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
     TextRange const& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
-    virtual String action_text() const override;
+    virtual DeprecatedString action_text() const override;
 
 private:
-    String m_text;
+    DeprecatedString m_text;
     TextRange m_range;
 };
 
 class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:
-    ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range, String const& action_text);
+    ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text);
     virtual ~ReplaceAllTextCommand() = default;
     void redo() override;
     void undo() override;
     bool merge_with(GUI::Command const&) override;
-    String action_text() const override;
-    String const& text() const { return m_text; }
+    DeprecatedString action_text() const override;
+    DeprecatedString const& text() const { return m_text; }
     TextRange const& range() const { return m_range; }
 
 private:
-    String m_text;
+    DeprecatedString m_text;
     GUI::TextRange m_range;
-    String m_action_text;
+    DeprecatedString m_action_text;
 };
 
 class IndentSelection : public TextDocumentUndoCommand {

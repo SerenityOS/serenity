@@ -14,12 +14,12 @@ namespace HackStudio {
 
 class GitFilesModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<GitFilesModel> create(Vector<String>&& files);
+    static NonnullRefPtr<GitFilesModel> create(Vector<DeprecatedString>&& files);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_files.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
 
-    virtual String column_name(int) const override
+    virtual DeprecatedString column_name(int) const override
     {
         return "";
     }
@@ -29,7 +29,7 @@ public:
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 
 private:
-    explicit GitFilesModel(Vector<String>&& files);
-    Vector<String> m_files;
+    explicit GitFilesModel(Vector<DeprecatedString>&& files);
+    Vector<DeprecatedString> m_files;
 };
 }

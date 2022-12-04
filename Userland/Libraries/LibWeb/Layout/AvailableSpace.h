@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
-#include <AK/String.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Layout {
@@ -44,7 +44,7 @@ public:
         return m_value;
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     AvailableSize(Type type, float);
@@ -64,7 +64,7 @@ public:
     AvailableSize width;
     AvailableSize height;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 };
 
 }

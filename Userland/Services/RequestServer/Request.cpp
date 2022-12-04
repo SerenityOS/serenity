@@ -24,13 +24,13 @@ void Request::stop()
     m_client.did_finish_request({}, *this, false);
 }
 
-void Request::set_response_headers(HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers)
+void Request::set_response_headers(HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers)
 {
     m_response_headers = response_headers;
     m_client.did_receive_headers({}, *this);
 }
 
-void Request::set_certificate(String, String)
+void Request::set_certificate(DeprecatedString, DeprecatedString)
 {
 }
 

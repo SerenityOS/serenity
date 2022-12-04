@@ -26,9 +26,9 @@ public:
 
     virtual ~Game() override = default;
 
-    void setup(String player_name, int hand_number = 0);
+    void setup(DeprecatedString player_name, int hand_number = 0);
 
-    Function<void(String const&)> on_status_change;
+    Function<void(DeprecatedString const&)> on_status_change;
 
 private:
     Game();
@@ -41,7 +41,7 @@ private:
 
     void play_card(Player& player, size_t card_index);
     bool are_hearts_broken() const;
-    bool is_valid_play(Player& player, Card& card, String* explanation = nullptr) const;
+    bool is_valid_play(Player& player, Card& card, DeprecatedString* explanation = nullptr) const;
     void let_player_play_card();
     void continue_game_after_delay(int interval_ms = 750);
     void advance_game();

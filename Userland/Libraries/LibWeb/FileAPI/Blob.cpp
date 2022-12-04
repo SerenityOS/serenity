@@ -14,13 +14,13 @@
 
 namespace Web::FileAPI {
 
-JS::NonnullGCPtr<Blob> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, String type)
+JS::NonnullGCPtr<Blob> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
 {
     return JS::NonnullGCPtr(*realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)));
 }
 
 // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
-ErrorOr<String> convert_line_endings_to_native(String const& string)
+ErrorOr<DeprecatedString> convert_line_endings_to_native(DeprecatedString const& string)
 {
     // 1. Let native line ending be be the code point U+000A LF.
     auto native_line_ending = "\n"sv;
@@ -76,7 +76,7 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
     for (auto const& blob_part : blob_parts) {
         TRY(blob_part.visit(
             // 1. If element is a USVString, run the following sub-steps:
-            [&](String const& string) -> ErrorOr<void> {
+            [&](DeprecatedString const& string) -> ErrorOr<void> {
                 // 1. Let s be element.
                 auto s = string;
 
@@ -84,7 +84,7 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
                 if (options.has_value() && options->endings == Bindings::EndingType::Native)
                     s = TRY(convert_line_endings_to_native(s));
 
-                // NOTE: The AK::String is always UTF-8.
+                // NOTE: The AK::DeprecatedString is always UTF-8.
                 // 3. Append the result of UTF-8 encoding s to bytes.
                 return bytes.try_append(s.to_byte_buffer());
             },
@@ -117,7 +117,7 @@ Blob::Blob(JS::Realm& realm)
     set_prototype(&Bindings::cached_web_prototype(realm, "Blob"));
 }
 
-Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, String type)
+Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
     : PlatformObject(realm)
     , m_byte_buffer(move(byte_buffer))
     , m_type(move(type))
@@ -147,7 +147,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optio
         byte_buffer = TRY_OR_RETURN_OOM(realm, process_blob_parts(blob_parts.value(), options));
     }
 
-    auto type = String::empty();
+    auto type = DeprecatedString::empty();
     // 3. If the type member of the options argument is not the empty string, run the following sub-steps:
     if (options.has_value() && !options->type.is_empty()) {
         // 1. If the type member is provided and is not the empty string, let t be set to the type dictionary member.
@@ -173,7 +173,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::construct_impl(JS::Realm& real
 }
 
 // https://w3c.github.io/FileAPI/#dfn-slice
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<DeprecatedString> const& content_type)
 {
     // 1. The optional start parameter is a value for the start point of a slice() call, and must be treated as a byte-order position, with the zeroth position representing the first byte.
     //    User agents must process slice() with start normalized according to the following:
@@ -212,7 +212,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
 
     // 3. The optional contentType parameter is used to set the ASCII-encoded string in lower case representing the media type of the Blob.
     //    User agents must process the slice() with contentType normalized according to the following:
-    String relative_content_type;
+    DeprecatedString relative_content_type;
     if (!content_type.has_value()) {
         // a. If the contentType parameter is not provided, let relativeContentType be set to the empty string.
         relative_content_type = "";
@@ -245,7 +245,7 @@ JS::Promise* Blob::text()
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader
     auto* promise = JS::Promise::create(realm());
-    auto* result = JS::js_string(vm(), String { m_byte_buffer.bytes() });
+    auto* result = JS::js_string(vm(), DeprecatedString { m_byte_buffer.bytes() });
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
     promise->fulfill(result);

@@ -17,7 +17,7 @@ REGISTER_WIDGET(GUI, ValueSlider)
 
 namespace GUI {
 
-ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
+ValueSlider::ValueSlider(Gfx::Orientation orientation, DeprecatedString suffix)
     : AbstractSlider(orientation)
     , m_suffix(move(suffix))
 {
@@ -32,7 +32,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     m_textbox->set_font_size(8);
 
     m_textbox->on_change = [&]() {
-        String value = m_textbox->text();
+        DeprecatedString value = m_textbox->text();
         if (value.ends_with(m_suffix, AK::CaseSensitivity::CaseInsensitive))
             value = value.substring_view(0, value.length() - m_suffix.length());
         auto integer_value = value.to_int();
@@ -68,9 +68,9 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     };
 }
 
-String ValueSlider::formatted_value() const
+DeprecatedString ValueSlider::formatted_value() const
 {
-    return String::formatted("{:2}{}", value(), m_suffix);
+    return DeprecatedString::formatted("{:2}{}", value(), m_suffix);
 }
 
 void ValueSlider::paint_event(PaintEvent& event)

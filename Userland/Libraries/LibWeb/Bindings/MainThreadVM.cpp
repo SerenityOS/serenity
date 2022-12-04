@@ -318,7 +318,7 @@ JS::VM& main_thread_vm()
         // FIXME: Implement 8.1.5.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
 
         // 8.1.5.5.4 HostGetSupportedImportAssertions(), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetsupportedimportassertions
-        vm->host_get_supported_import_assertions = []() -> Vector<String> {
+        vm->host_get_supported_import_assertions = []() -> Vector<DeprecatedString> {
             // 1. Return « "type" ».
             return { "type"sv };
         };

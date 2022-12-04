@@ -55,7 +55,7 @@ Locale::Locale(::Locale::LocaleID const& locale_id, Object& prototype)
 }
 
 // 1.1.1 CreateArrayFromListOrRestricted ( list , restricted )
-static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<String> restricted)
+static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<DeprecatedString> restricted)
 {
     auto& realm = *vm.current_realm();
 
@@ -75,7 +75,7 @@ static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> li
 Array* calendars_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Calendar]].
-    Optional<String> restricted = locale_object.has_calendar() ? locale_object.calendar() : Optional<String> {};
+    Optional<DeprecatedString> restricted = locale_object.has_calendar() ? locale_object.calendar() : Optional<DeprecatedString> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -94,7 +94,7 @@ Array* calendars_of_locale(VM& vm, Locale const& locale_object)
 Array* collations_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Collation]].
-    Optional<String> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<String> {};
+    Optional<DeprecatedString> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<DeprecatedString> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -113,7 +113,7 @@ Array* collations_of_locale(VM& vm, Locale const& locale_object)
 Array* hour_cycles_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[HourCycle]].
-    Optional<String> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<String> {};
+    Optional<DeprecatedString> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<DeprecatedString> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -132,7 +132,7 @@ Array* hour_cycles_of_locale(VM& vm, Locale const& locale_object)
 Array* numbering_systems_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[NumberingSystem]].
-    Optional<String> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<String> {};
+    Optional<DeprecatedString> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<DeprecatedString> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();

@@ -7,9 +7,9 @@
 #include "ExportDialog.h"
 #include "Spreadsheet.h"
 #include "Workbook.h"
+#include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
@@ -35,7 +35,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 {
     m_headers.extend(m_data.take_first());
 
-    auto temp_template = String::formatted("{}/spreadsheet-csv-export.{}.XXXXXX", Core::StandardPaths::tempfile_directory(), getpid());
+    auto temp_template = DeprecatedString::formatted("{}/spreadsheet-csv-export.{}.XXXXXX", Core::StandardPaths::tempfile_directory(), getpid());
     auto temp_path = ByteBuffer::create_uninitialized(temp_template.length() + 1).release_value_but_fixme_should_propagate_errors();
     auto buf = reinterpret_cast<char*>(temp_path.data());
     auto copy_ok = temp_template.copy_characters_to_buffer(buf, temp_path.size());
@@ -74,7 +74,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 
     m_data_preview_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
-    m_quote_escape_combo_box->set_model(GUI::ItemListModel<String>::create(m_quote_escape_items));
+    m_quote_escape_combo_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_quote_escape_items));
 
     // By default, use commas, double quotes with repeat, disable headers, and quote only the fields that require quoting.
     m_delimiter_comma_radio->set_checked(true);
@@ -106,8 +106,8 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 
 auto CSVExportDialogPage::make_writer() -> Optional<XSV>
 {
-    String delimiter;
-    String quote;
+    DeprecatedString delimiter;
+    DeprecatedString quote;
     Writer::WriterTraits::QuoteEscape quote_escape;
 
     // Delimiter
@@ -156,7 +156,7 @@ auto CSVExportDialogPage::make_writer() -> Optional<XSV>
     };
 
     auto behaviors = Writer::default_behaviors();
-    Vector<String> empty_headers;
+    Vector<DeprecatedString> empty_headers;
     auto* headers = &empty_headers;
 
     if (should_export_headers) {
@@ -213,7 +213,7 @@ void CSVExportDialogPage::update_preview()
     m_data_preview_text_editor->update();
 }
 
-Result<void, String> CSVExportDialogPage::move_into(String const& target)
+Result<void, DeprecatedString> CSVExportDialogPage::move_into(DeprecatedString const& target)
 {
     auto& source = m_temp_output_file_path;
 
@@ -232,26 +232,26 @@ Result<void, String> CSVExportDialogPage::move_into(String const& target)
             Core::File::AddDuplicateFileMarker::No);
 
         if (result.is_error())
-            return String::formatted("{}", static_cast<Error const&>(result.error()));
+            return DeprecatedString::formatted("{}", static_cast<Error const&>(result.error()));
 
         return {};
     }
 
     perror("rename");
-    return String { strerror(saved_errno) };
+    return DeprecatedString { strerror(saved_errno) };
 }
 
-Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
+Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
     wizard->set_title("File Export Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
-    auto export_xsv = [&]() -> Result<void, String> {
+    auto export_xsv = [&]() -> Result<void, DeprecatedString> {
         // FIXME: Prompt for the user to select a specific sheet to export
         //        For now, export the first sheet (if available)
         if (!workbook.has_sheets())
-            return String { "The workbook has no sheets to export!" };
+            return DeprecatedString { "The workbook has no sheets to export!" };
 
         CSVExportDialogPage page { workbook.sheets().first() };
         wizard->replace_page(page.page());
@@ -260,18 +260,18 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
         if (result == GUI::Dialog::ExecResult::OK) {
             auto& writer = page.writer();
             if (!writer.has_value())
-                return String { "CSV Export failed" };
+                return DeprecatedString { "CSV Export failed" };
             if (writer->has_error())
-                return String::formatted("CSV Export failed: {}", writer->error_string());
+                return DeprecatedString::formatted("CSV Export failed: {}", writer->error_string());
 
             // No error, move the temp file to the expected location
             return page.move_into(file.filename());
         } else {
-            return String { "CSV Export was cancelled" };
+            return DeprecatedString { "CSV Export was cancelled" };
         }
     };
 
-    auto export_worksheet = [&]() -> Result<void, String> {
+    auto export_worksheet = [&]() -> Result<void, DeprecatedString> {
         JsonArray array;
         for (auto& sheet : workbook.sheets())
             array.append(sheet.to_json());
@@ -299,23 +299,23 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
     } else {
         auto page = GUI::WizardPage::construct(
             "Export File Format",
-            String::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(file.filename())));
+            DeprecatedString::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(file.filename())));
 
         page->on_next_page = [] { return nullptr; };
 
         page->body_widget().load_from_gml(select_format_page_gml);
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
-        Vector<String> supported_formats {
+        Vector<DeprecatedString> supported_formats {
             "CSV (text/csv)",
             "Spreadsheet Worksheet",
         };
-        format_combo_box->set_model(GUI::ItemListModel<String>::create(supported_formats));
+        format_combo_box->set_model(GUI::ItemListModel<DeprecatedString>::create(supported_formats));
 
         wizard->push_page(page);
 
         if (wizard->exec() != GUI::Dialog::ExecResult::OK)
-            return String { "Export was cancelled" };
+            return DeprecatedString { "Export was cancelled" };
 
         if (format_combo_box->selected_index() == 0)
             return export_xsv();

@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     off_t size = 0;
 
     if (!resize.is_empty()) {
-        String str = resize;
+        DeprecatedString str = resize;
 
         switch (str[0]) {
         case '+':

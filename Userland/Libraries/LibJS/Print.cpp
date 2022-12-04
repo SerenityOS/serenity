@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -65,10 +65,10 @@
 namespace {
 ErrorOr<void> print_value(JS::PrintContext&, JS::Value value, HashTable<JS::Object*>& seen_objects);
 
-String strip_ansi(StringView format_string)
+DeprecatedString strip_ansi(StringView format_string)
 {
     if (format_string.is_empty())
-        return String::empty();
+        return DeprecatedString::empty();
 
     StringBuilder builder;
     size_t i;
@@ -88,11 +88,11 @@ String strip_ansi(StringView format_string)
 template<typename... Args>
 ErrorOr<void> js_out(JS::PrintContext& print_context, CheckedFormatString<Args...> format_string, Args const&... args)
 {
-    String formatted;
+    DeprecatedString formatted;
     if (print_context.strip_ansi)
-        formatted = String::formatted(strip_ansi(format_string.view()), args...);
+        formatted = DeprecatedString::formatted(strip_ansi(format_string.view()), args...);
     else
-        formatted = String::formatted(format_string.view(), args...);
+        formatted = DeprecatedString::formatted(format_string.view(), args...);
 
     auto bytes = formatted.bytes();
     while (!bytes.is_empty())

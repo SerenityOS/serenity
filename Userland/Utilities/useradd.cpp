@@ -7,8 +7,8 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Random.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -35,10 +35,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int uid = 0;
     int gid = USERS_GID;
     bool create_home_dir = false;
-    String password = "";
-    String shell = DEFAULT_SHELL;
-    String gecos = "";
-    String username;
+    DeprecatedString password = "";
+    DeprecatedString shell = DEFAULT_SHELL;
+    DeprecatedString gecos = "";
+    DeprecatedString username;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
@@ -107,9 +107,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    String home;
+    DeprecatedString home;
     if (!home_path)
-        home = String::formatted("/home/{}", username);
+        home = DeprecatedString::formatted("/home/{}", username);
     else
         home = home_path;
 

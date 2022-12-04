@@ -21,7 +21,7 @@ static bool flag_print_uid = false;
 static bool flag_print_gid = false;
 static bool flag_print_name = false;
 static bool flag_print_gid_all = false;
-static String user_str;
+static DeprecatedString user_str;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

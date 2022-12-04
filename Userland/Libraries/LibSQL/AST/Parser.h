@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/AST/Lexer.h>
@@ -23,12 +23,12 @@ constexpr size_t maximum_subquery_depth = 100;
 
 class Parser {
     struct Error {
-        String message;
+        DeprecatedString message;
         SourcePosition position;
 
-        String to_string() const
+        DeprecatedString to_string() const
         {
-            return String::formatted("{} (line: {}, column: {})", message, position.line, position.column);
+            return DeprecatedString::formatted("{} (line: {}, column: {})", message, position.line, position.column);
         }
     };
 
@@ -71,7 +71,7 @@ private:
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
     bool match_secondary_expression() const;
     RefPtr<Expression> parse_literal_value_expression();
-    RefPtr<Expression> parse_column_name_expression(String with_parsed_identifier = {}, bool with_parsed_period = false);
+    RefPtr<Expression> parse_column_name_expression(DeprecatedString with_parsed_identifier = {}, bool with_parsed_period = false);
     RefPtr<Expression> parse_unary_operator_expression();
     RefPtr<Expression> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);
     RefPtr<Expression> parse_chained_expression();
@@ -94,7 +94,7 @@ private:
     NonnullRefPtr<ResultColumn> parse_result_column();
     NonnullRefPtr<TableOrSubquery> parse_table_or_subquery();
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
-    void parse_schema_and_table_name(String& schema_name, String& table_name);
+    void parse_schema_and_table_name(DeprecatedString& schema_name, DeprecatedString& table_name);
     ConflictResolution parse_conflict_resolution();
 
     template<typename ParseCallback>
@@ -122,7 +122,7 @@ private:
     bool match(TokenType type) const;
 
     void expected(StringView what);
-    void syntax_error(String message);
+    void syntax_error(DeprecatedString message);
 
     SourcePosition position() const;
 

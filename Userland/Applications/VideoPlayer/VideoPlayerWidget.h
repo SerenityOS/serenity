@@ -53,7 +53,7 @@ private:
 
     GUI::Window& m_window;
 
-    String m_path;
+    DeprecatedString m_path;
 
     RefPtr<VideoFrameWidget> m_video_display;
     RefPtr<GUI::HorizontalSlider> m_seek_slider;

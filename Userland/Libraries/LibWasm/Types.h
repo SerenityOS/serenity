@@ -8,11 +8,11 @@
 
 #include <AK/Badge.h>
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibWasm/Constants.h>
 #include <LibWasm/Forward.h>
@@ -43,7 +43,7 @@ enum class ParseError {
     NotImplemented,
 };
 
-String parse_error_to_string(ParseError);
+DeprecatedString parse_error_to_string(ParseError);
 
 template<typename T>
 using ParseResult = Result<T, ParseError>;
@@ -190,7 +190,7 @@ public:
 
     static ParseResult<ValueType> parse(InputStream& stream);
 
-    static String kind_name(Kind kind)
+    static DeprecatedString kind_name(Kind kind)
     {
         switch (kind) {
         case I32:
@@ -467,7 +467,7 @@ class CustomSection {
 public:
     static constexpr u8 section_id = 0;
 
-    CustomSection(String name, ByteBuffer contents)
+    CustomSection(DeprecatedString name, ByteBuffer contents)
         : m_name(move(name))
         , m_contents(move(contents))
     {
@@ -479,7 +479,7 @@ public:
     static ParseResult<CustomSection> parse(InputStream& stream);
 
 private:
-    String m_name;
+    DeprecatedString m_name;
     ByteBuffer m_contents;
 };
 
@@ -505,7 +505,7 @@ public:
     class Import {
     public:
         using ImportDesc = Variant<TypeIndex, TableType, MemoryType, GlobalType, FunctionType>;
-        Import(String module, String name, ImportDesc description)
+        Import(DeprecatedString module, DeprecatedString name, ImportDesc description)
             : m_module(move(module))
             , m_name(move(name))
             , m_description(move(description))
@@ -528,8 +528,8 @@ public:
             return Import { module.release_value(), name.release_value(), result.release_value() };
         };
 
-        String m_module;
-        String m_name;
+        DeprecatedString m_module;
+        DeprecatedString m_name;
         ImportDesc m_description;
     };
 
@@ -690,7 +690,7 @@ private:
 public:
     class Export {
     public:
-        explicit Export(String name, ExportDesc description)
+        explicit Export(DeprecatedString name, ExportDesc description)
             : m_name(move(name))
             , m_description(move(description))
         {
@@ -702,7 +702,7 @@ public:
         static ParseResult<Export> parse(InputStream& stream);
 
     private:
-        String m_name;
+        DeprecatedString m_name;
         ExportDesc m_description;
     };
 
@@ -1042,7 +1042,7 @@ public:
     void set_validation_status(ValidationStatus status, Badge<Validator>) { set_validation_status(status); }
     ValidationStatus validation_status() const { return m_validation_status; }
     StringView validation_error() const { return *m_validation_error; }
-    void set_validation_error(String error) { m_validation_error = move(error); }
+    void set_validation_error(DeprecatedString error) { m_validation_error = move(error); }
 
     static ParseResult<Module> parse(InputStream& stream);
 
@@ -1053,6 +1053,6 @@ private:
     Vector<AnySection> m_sections;
     Vector<Function> m_functions;
     ValidationStatus m_validation_status { ValidationStatus::Unchecked };
-    Optional<String> m_validation_error;
+    Optional<DeprecatedString> m_validation_error;
 };
 }

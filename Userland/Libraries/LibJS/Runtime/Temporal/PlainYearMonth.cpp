@@ -201,7 +201,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_ye
 }
 
 // 9.5.6 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
-ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
+ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
 {
     // 1. Assert: Type(yearMonth) is Object.
     // 2. Assert: yearMonth has an [[InitializedTemporalYearMonth]] internal slot.
@@ -209,7 +209,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
     // 3. Let year be ! PadISOYear(yearMonth.[[ISOYear]]).
     // 4. Let month be ToZeroPaddedDecimalString(yearMonth.[[ISOMonth]], 2).
     // 5. Let result be the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and month.
-    auto result = String::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
+    auto result = DeprecatedString::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
     auto calendar_id = TRY(Value(&year_month.calendar()).to_string(vm));
@@ -218,7 +218,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
     if (show_calendar.is_one_of("always"sv, "critical"sv) || calendar_id != "iso8601") {
         // a. Let day be ToZeroPaddedDecimalString(yearMonth.[[ISODay]], 2).
         // b. Set result to the string-concatenation of result, the code unit 0x002D (HYPHEN-MINUS), and day.
-        result = String::formatted("{}-{:02}", result, year_month.iso_day());
+        result = DeprecatedString::formatted("{}-{:02}", result, year_month.iso_day());
     }
 
     // 8. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
@@ -226,7 +226,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
 
     // 9. Set result to the string-concatenation of result and calendarString.
     // 10. Return result.
-    return String::formatted("{}{}", result, calendar_string);
+    return DeprecatedString::formatted("{}{}", result, calendar_string);
 }
 
 // 9.5.7 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth

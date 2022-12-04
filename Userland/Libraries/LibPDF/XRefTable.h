@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibPDF/Error.h>
 
@@ -124,7 +124,7 @@ struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, PDF::XRefEntry const& entry)
     {
         return Formatter<StringView>::format(builder,
-            String::formatted("XRefEntry {{ offset={} generation={} used={} }}",
+            DeprecatedString::formatted("XRefEntry {{ offset={} generation={} used={} }}",
                 entry.byte_offset,
                 entry.generation_number,
                 entry.in_use));

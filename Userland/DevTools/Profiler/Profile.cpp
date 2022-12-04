@@ -257,7 +257,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     if (!strings_value || !strings_value->is_array())
         return Error::from_string_literal("Malformed profile (strings is not an array)");
 
-    HashMap<FlatPtr, String> profile_strings;
+    HashMap<FlatPtr, DeprecatedString> profile_strings;
     for (FlatPtr string_id = 0; string_id < strings_value->as_array().size(); ++string_id) {
         auto const& value = strings_value->as_array().at(string_id);
         profile_strings.set(string_id, value.to_string());
@@ -302,7 +302,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         } else if (type_string == "signpost"sv) {
             auto string_id = perf_event.get("arg1"sv).to_number<FlatPtr>();
             event.data = Event::SignpostData {
-                .string = profile_strings.get(string_id).value_or(String::formatted("Signpost #{}", string_id)),
+                .string = profile_strings.get(string_id).value_or(DeprecatedString::formatted("Signpost #{}", string_id)),
                 .arg = perf_event.get("arg2"sv).to_number<FlatPtr>(),
             };
         } else if (type_string == "mmap"sv) {
@@ -411,13 +411,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             auto ptr = frame.to_number<u64>();
             u32 offset = 0;
             FlyString object_name;
-            String symbol;
+            DeprecatedString symbol;
 
             if (maybe_kernel_base.has_value() && ptr >= maybe_kernel_base.value()) {
                 if (g_kernel_debuginfo_object.has_value()) {
                     symbol = g_kernel_debuginfo_object->elf.symbolicate(ptr - maybe_kernel_base.value(), &offset);
                 } else {
-                    symbol = String::formatted("?? <{:p}>", ptr);
+                    symbol = DeprecatedString::formatted("?? <{:p}>", ptr);
                 }
             } else {
                 auto it = current_processes.find(event.pid);
@@ -429,7 +429,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                     object_name = library->name;
                     symbol = library->symbolicate(ptr, &offset);
                 } else {
-                    symbol = String::formatted("?? <{:p}>", ptr);
+                    symbol = DeprecatedString::formatted("?? <{:p}>", ptr);
                 }
             }
 
@@ -610,7 +610,7 @@ ProfileNode::ProfileNode(Process const& process)
 {
 }
 
-ProfileNode::ProfileNode(Process const& process, FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+ProfileNode::ProfileNode(Process const& process, FlyString const& object_name, DeprecatedString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     : m_process(process)
     , m_symbol(move(symbol))
     , m_pid(pid)
@@ -618,7 +618,7 @@ ProfileNode::ProfileNode(Process const& process, FlyString const& object_name, S
     , m_offset(offset)
     , m_timestamp(timestamp)
 {
-    String object;
+    DeprecatedString object;
     if (object_name.ends_with(": .text"sv)) {
         object = object_name.view().substring_view(0, object_name.length() - 7);
     } else {

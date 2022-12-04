@@ -100,7 +100,7 @@ ErrorOr<ByteBuffer> decode_base64(StringView input)
     return ByteBuffer::copy(output);
 }
 
-String encode_base64(ReadonlyBytes input)
+DeprecatedString encode_base64(ReadonlyBytes input)
 {
     StringBuilder output(calculate_base64_encoded_length(input));
 

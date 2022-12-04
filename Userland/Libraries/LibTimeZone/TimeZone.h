@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -29,7 +29,7 @@ struct Offset {
 };
 
 struct NamedOffset : public Offset {
-    String name;
+    DeprecatedString name;
 };
 
 struct Coordinate {

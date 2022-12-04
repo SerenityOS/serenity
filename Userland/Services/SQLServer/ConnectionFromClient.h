@@ -27,8 +27,8 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
-    virtual Messages::SQLServer::ConnectResponse connect(String const&) override;
-    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(int, String const&) override;
+    virtual Messages::SQLServer::ConnectResponse connect(DeprecatedString const&) override;
+    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(int, DeprecatedString const&) override;
     virtual void execute_statement(int) override;
     virtual void disconnect(int) override;
 };

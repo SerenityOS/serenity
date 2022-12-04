@@ -6,7 +6,7 @@
  */
 
 #include "EscalatorWindow.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto executable_path = Core::File::resolve_executable_from_environment(command[0]);
     if (!executable_path.has_value()) {
-        GUI::MessageBox::show_error(nullptr, String::formatted("Could not execute command {}: Command not found.", command[0]));
+        GUI::MessageBox::show_error(nullptr, DeprecatedString::formatted("Could not execute command {}: Command not found.", command[0]));
         return 127;
     }
 

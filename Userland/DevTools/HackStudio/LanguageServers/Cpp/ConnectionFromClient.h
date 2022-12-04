@@ -19,10 +19,10 @@ private:
         : LanguageServers::ConnectionFromClient(move(socket))
     {
         m_autocomplete_engine = adopt_own(*new CodeComprehension::Cpp::CppComprehensionEngine(m_filedb));
-        m_autocomplete_engine->set_declarations_of_document_callback = [this](String const& filename, Vector<CodeComprehension::Declaration>&& declarations) {
+        m_autocomplete_engine->set_declarations_of_document_callback = [this](DeprecatedString const& filename, Vector<CodeComprehension::Declaration>&& declarations) {
             async_declarations_in_document(filename, move(declarations));
         };
-        m_autocomplete_engine->set_todo_entries_of_document_callback = [this](String const& filename, Vector<CodeComprehension::TodoEntry>&& todo_entries) {
+        m_autocomplete_engine->set_todo_entries_of_document_callback = [this](DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry>&& todo_entries) {
             async_todo_entries_in_document(filename, move(todo_entries));
         };
     }

@@ -12,8 +12,8 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#erroreventinit
 struct ErrorEventInit : public DOM::EventInit {
-    String message { "" };
-    String filename { "" }; // FIXME: This should be a USVString.
+    DeprecatedString message { "" };
+    DeprecatedString filename { "" }; // FIXME: This should be a USVString.
     u32 lineno { 0 };
     u32 colno { 0 };
     JS::Value error { JS::js_null() };
@@ -30,10 +30,10 @@ public:
     virtual ~ErrorEvent() override;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#dom-errorevent-message
-    String const& message() const { return m_message; }
+    DeprecatedString const& message() const { return m_message; }
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#dom-errorevent-filename
-    String const& filename() const { return m_filename; }
+    DeprecatedString const& filename() const { return m_filename; }
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#dom-errorevent-lineno
     u32 lineno() const { return m_lineno; }
@@ -49,8 +49,8 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    String m_message { "" };
-    String m_filename { "" }; // FIXME: This should be a USVString.
+    DeprecatedString m_message { "" };
+    DeprecatedString m_filename { "" }; // FIXME: This should be a USVString.
     u32 m_lineno { 0 };
     u32 m_colno { 0 };
     JS::Value m_error;

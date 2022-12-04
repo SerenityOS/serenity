@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/String.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibLine/Style.h>
@@ -26,12 +26,12 @@ public:
     static constexpr ForSearchTag ForSearch {};
 
     // Intentionally not explicit. (To allow suggesting bare strings)
-    CompletionSuggestion(String const& completion)
+    CompletionSuggestion(DeprecatedString const& completion)
         : CompletionSuggestion(completion, ""sv, {})
     {
     }
 
-    CompletionSuggestion(String const& completion, ForSearchTag)
+    CompletionSuggestion(DeprecatedString const& completion, ForSearchTag)
         : text_string(completion)
     {
     }
@@ -61,8 +61,8 @@ public:
     Utf32View text_view;
     Utf32View trivia_view;
     Utf32View display_trivia_view;
-    String text_string;
-    String display_trivia_string;
+    DeprecatedString text_string;
+    DeprecatedString display_trivia_string;
     bool is_valid { false };
 };
 
@@ -120,7 +120,7 @@ public:
 
     void reset()
     {
-        m_last_shown_suggestion = String::empty();
+        m_last_shown_suggestion = DeprecatedString::empty();
         m_last_shown_suggestion_display_length = 0;
         m_suggestions.clear();
         m_last_displayed_suggestion_index = 0;
@@ -133,7 +133,7 @@ private:
     }
 
     Vector<CompletionSuggestion> m_suggestions;
-    CompletionSuggestion m_last_shown_suggestion { String::empty() };
+    CompletionSuggestion m_last_shown_suggestion { DeprecatedString::empty() };
     size_t m_last_shown_suggestion_display_length { 0 };
     bool m_last_shown_suggestion_was_complete { false };
     mutable size_t m_next_suggestion_index { 0 };

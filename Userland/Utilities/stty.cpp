@@ -8,10 +8,10 @@
 #define __USE_MISC
 #define TTYDEFCHARS
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
@@ -536,7 +536,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    String device_file;
+    DeprecatedString device_file;
     bool stty_readable = false;
     bool all_settings = false;
 

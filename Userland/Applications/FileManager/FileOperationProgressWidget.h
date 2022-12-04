@@ -29,7 +29,7 @@ private:
 
     void close_pipe();
 
-    String estimate_time(off_t bytes_done, off_t total_byte_count);
+    DeprecatedString estimate_time(off_t bytes_done, off_t total_byte_count);
     Core::ElapsedTimer m_elapsed_timer;
 
     FileOperation m_operation;

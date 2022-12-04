@@ -26,10 +26,10 @@ public:
     Optional<u32> status_code() const { return m_status_code; }
     Optional<u32> total_size() const { return m_total_size; }
     size_t downloaded_size() const { return m_downloaded_size; }
-    HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers() const { return m_response_headers; }
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers() const { return m_response_headers; }
 
     void stop();
-    virtual void set_certificate(String, String);
+    virtual void set_certificate(DeprecatedString, DeprecatedString);
 
     // FIXME: Want Badge<Protocol>, but can't make one from HttpProtocol, etc.
     void set_request_fd(int fd) { m_request_fd = fd; }
@@ -39,7 +39,7 @@ public:
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void set_status_code(u32 status_code) { m_status_code = status_code; }
     void did_request_certificates();
-    void set_response_headers(HashMap<String, String, CaseInsensitiveStringTraits> const&);
+    void set_response_headers(HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const&);
     void set_downloaded_size(size_t size) { m_downloaded_size = size; }
     Core::Stream::File const& output_stream() const { return *m_output_stream; }
 
@@ -54,7 +54,7 @@ private:
     Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };
     NonnullOwnPtr<Core::Stream::File> m_output_stream;
-    HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
 };
 
 }

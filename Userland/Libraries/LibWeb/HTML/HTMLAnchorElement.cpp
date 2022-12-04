@@ -21,7 +21,7 @@ HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
 
-void HTMLAnchorElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLAnchorElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -29,12 +29,12 @@ void HTMLAnchorElement::parse_attribute(FlyString const& name, String const& val
     }
 }
 
-String HTMLAnchorElement::hyperlink_element_utils_href() const
+DeprecatedString HTMLAnchorElement::hyperlink_element_utils_href() const
 {
     return attribute(HTML::AttributeNames::href);
 }
 
-void HTMLAnchorElement::set_hyperlink_element_utils_href(String href)
+void HTMLAnchorElement::set_hyperlink_element_utils_href(DeprecatedString href)
 {
     MUST(set_attribute(HTML::AttributeNames::href, move(href)));
 }
@@ -48,7 +48,7 @@ void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)
         return;
 
     // 2. Let hyperlinkSuffix be null.
-    Optional<String> hyperlink_suffix {};
+    Optional<DeprecatedString> hyperlink_suffix {};
 
     // FIXME: 3. If event's target is an img with an ismap attribute
     //        specified, then:

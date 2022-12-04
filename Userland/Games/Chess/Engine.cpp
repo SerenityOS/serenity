@@ -36,7 +36,7 @@ Engine::Engine(StringView command)
     posix_spawn_file_actions_adddup2(&file_actions, wpipefds[0], STDIN_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, rpipefds[1], STDOUT_FILENO);
 
-    String cstr(command);
+    DeprecatedString cstr(command);
     char const* argv[] = { cstr.characters(), nullptr };
     if (posix_spawnp(&m_pid, cstr.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
         perror("posix_spawnp");

@@ -71,7 +71,7 @@ void Breadcrumbbar::clear_segments()
     m_selected_segment = {};
 }
 
-void Breadcrumbbar::append_segment(String text, Gfx::Bitmap const* icon, String data, String tooltip)
+void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* icon, DeprecatedString data, DeprecatedString tooltip)
 {
     auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::Coolbar);
@@ -128,7 +128,7 @@ void Breadcrumbbar::remove_end_segments(size_t start_segment_index)
         m_selected_segment = {};
 }
 
-Optional<size_t> Breadcrumbbar::find_segment_with_data(String const& data)
+Optional<size_t> Breadcrumbbar::find_segment_with_data(DeprecatedString const& data)
 {
     for (size_t i = 0; i < segment_count(); ++i) {
         if (segment_data(i) == data)

@@ -20,7 +20,7 @@ namespace Web::Fetch {
 // https://fetch.spec.whatwg.org/#responseinit
 struct ResponseInit {
     u16 status;
-    String status_text;
+    DeprecatedString status_text;
     Optional<HeadersInit> headers;
 };
 
@@ -45,14 +45,14 @@ public:
 
     // JS API functions
     [[nodiscard]] static JS::NonnullGCPtr<Response> error(JS::VM&);
-    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, String const& url, u16 status);
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, DeprecatedString const& url, u16 status);
     [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
     [[nodiscard]] Bindings::ResponseType type() const;
-    [[nodiscard]] String url() const;
+    [[nodiscard]] DeprecatedString url() const;
     [[nodiscard]] bool redirected() const;
     [[nodiscard]] u16 status() const;
     [[nodiscard]] bool ok() const;
-    [[nodiscard]] String status_text() const;
+    [[nodiscard]] DeprecatedString status_text() const;
     [[nodiscard]] JS::NonnullGCPtr<Headers> headers() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone() const;
 

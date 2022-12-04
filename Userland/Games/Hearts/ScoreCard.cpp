@@ -70,7 +70,7 @@ void ScoreCard::paint_event(GUI::PaintEvent& event)
             text_color);
         for (int score_index = 0; score_index < (int)player.scores.size(); score_index++) {
             auto text_rect = cell_rect(player_index, 1 + score_index);
-            auto score_text = String::formatted("{}", player.scores[score_index]);
+            auto score_text = DeprecatedString::formatted("{}", player.scores[score_index]);
             auto score_text_width = font.width(score_text);
             if (score_index != (int)player.scores.size() - 1) {
                 painter.draw_line(

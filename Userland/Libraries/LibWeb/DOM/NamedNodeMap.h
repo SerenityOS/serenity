@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
 #include <LibWeb/Forward.h>
@@ -25,7 +25,7 @@ public:
     ~NamedNodeMap() = default;
 
     virtual bool is_supported_property_index(u32 index) const override;
-    virtual Vector<String> supported_property_names() const override;
+    virtual Vector<DeprecatedString> supported_property_names() const override;
     virtual JS::Value item_value(size_t index) const override;
     virtual JS::Value named_item_value(FlyString const& name) const override;
 

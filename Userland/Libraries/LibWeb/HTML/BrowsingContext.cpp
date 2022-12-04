@@ -392,7 +392,7 @@ void BrowsingContext::scroll_to(Gfx::IntPoint const& position)
         m_page->client().page_did_request_scroll_to(position);
 }
 
-void BrowsingContext::scroll_to_anchor(String const& fragment)
+void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
 {
     JS::GCPtr<DOM::Document> document = active_document();
     if (!document)
@@ -468,7 +468,7 @@ void BrowsingContext::set_cursor_position(DOM::Position position)
     reset_cursor_blink_cycle();
 }
 
-String BrowsingContext::selected_text() const
+DeprecatedString BrowsingContext::selected_text() const
 {
     StringBuilder builder;
     if (!active_document())
@@ -901,8 +901,8 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     bool exceptions_enabled,
     HistoryHandlingBehavior history_handling,
     Optional<PolicyContainer> history_policy_container,
-    String navigation_type,
-    Optional<String> navigation_id,
+    DeprecatedString navigation_type,
+    Optional<DeprecatedString> navigation_id,
     Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
 {
     // 1. If resource is a URL, then set resource to a new request whose URL is resource.
@@ -1019,7 +1019,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-WebIDL::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
+WebIDL::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, DeprecatedString navigation_id)
 {
     // 1. If historyHandling is not "replace",
     if (history_handling != HistoryHandlingBehavior::Replace) {

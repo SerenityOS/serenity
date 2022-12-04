@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <AK/String.h>
 #include <LibCore/Stream.h>
 #include <LibMarkdown/Document.h>
 #include <LibTest/TestCase.h>
@@ -24,20 +24,20 @@ TEST_SETUP
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     if (!file->read_or_error(content.bytes()))
         VERIFY_NOT_REACHED();
-    String test_data { content.bytes() };
+    DeprecatedString test_data { content.bytes() };
 
     auto tests = JsonParser(test_data).parse().value().as_array();
     for (size_t i = 0; i < tests.size(); ++i) {
         auto testcase = tests[i].as_object();
 
-        auto name = String::formatted("{}_ex{}_{}..{}",
+        auto name = DeprecatedString::formatted("{}_ex{}_{}..{}",
             testcase.get("section"sv),
             testcase.get("example"sv),
             testcase.get("start_line"sv),
             testcase.get("end_line"sv));
 
-        String markdown = testcase.get("markdown"sv).as_string();
-        String html = testcase.get("html"sv).as_string();
+        DeprecatedString markdown = testcase.get("markdown"sv).as_string();
+        DeprecatedString html = testcase.get("html"sv).as_string();
 
         Test::TestSuite::the().add_case(adopt_ref(*new Test::TestCase(
             name, [markdown, html]() {

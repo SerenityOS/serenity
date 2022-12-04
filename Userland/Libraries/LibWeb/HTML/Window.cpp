@@ -6,8 +6,8 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
-#include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
@@ -157,10 +157,10 @@ static StringView normalize_feature_name(StringView name)
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-window-open-features-tokenize
-static OrderedHashMap<String, String> tokenize_open_features(StringView features)
+static OrderedHashMap<DeprecatedString, DeprecatedString> tokenize_open_features(StringView features)
 {
     // 1. Let tokenizedFeatures be a new ordered map.
-    OrderedHashMap<String, String> tokenized_features;
+    OrderedHashMap<DeprecatedString, DeprecatedString> tokenized_features;
 
     // 2. Let position point at the first code point of features.
     GenericLexer lexer(features);
@@ -173,10 +173,10 @@ static OrderedHashMap<String, String> tokenize_open_features(StringView features
     // 3. While position is not past the end of features:
     while (!lexer.is_eof()) {
         // 1. Let name be the empty string.
-        String name;
+        DeprecatedString name;
 
         // 2. Let value be the empty string.
-        String value;
+        DeprecatedString value;
 
         // 3. Collect a sequence of code points that are feature separators from features given position. This skips past leading separators before the name.
         lexer.ignore_while(is_feature_separator);
@@ -237,7 +237,7 @@ static bool parse_boolean_feature(StringView value)
 }
 
 //  https://html.spec.whatwg.org/multipage/window-object.html#popup-window-is-requested
-static bool check_if_a_popup_window_is_requested(OrderedHashMap<String, String> const& tokenized_features)
+static bool check_if_a_popup_window_is_requested(OrderedHashMap<DeprecatedString, DeprecatedString> const& tokenized_features)
 {
     // 1. If tokenizedFeatures is empty, then return false.
     if (tokenized_features.is_empty())
@@ -424,20 +424,20 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView u
     return target_browsing_context->window_proxy();
 }
 
-void Window::alert_impl(String const& message)
+void Window::alert_impl(DeprecatedString const& message)
 {
     if (auto* page = this->page())
         page->did_request_alert(message);
 }
 
-bool Window::confirm_impl(String const& message)
+bool Window::confirm_impl(DeprecatedString const& message)
 {
     if (auto* page = this->page())
         return page->did_request_confirm(message);
     return false;
 }
 
-String Window::prompt_impl(String const& message, String const& default_)
+DeprecatedString Window::prompt_impl(DeprecatedString const& message, DeprecatedString const& default_)
 {
     if (auto* page = this->page())
         return page->did_request_prompt(message, default_);
@@ -508,7 +508,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
                     HTML::report_exception(result, realm());
             },
             // 3. Otherwise:
-            [&](String const& source) {
+            [&](DeprecatedString const& source) {
                 // 1. Assert: handler is a string.
                 // FIXME: 2. Perform HostEnsureCanCompileStrings(callerRealm, calleeRealm). If this throws an exception, catch it, report the exception, and abort these steps.
 
@@ -596,7 +596,7 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
-void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String url)
+void Window::did_call_location_replace(Badge<Bindings::LocationObject>, DeprecatedString url)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -645,7 +645,7 @@ CSS::CSSStyleDeclaration* Window::get_computed_style_impl(DOM::Element& element)
     return CSS::ResolvedCSSStyleDeclaration::create(element);
 }
 
-JS::NonnullGCPtr<CSS::MediaQueryList> Window::match_media_impl(String media)
+JS::NonnullGCPtr<CSS::MediaQueryList> Window::match_media_impl(DeprecatedString media)
 {
     auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), media));
     associated_document().add_media_query_list(*media_query_list);
@@ -903,7 +903,7 @@ WindowProxy* Window::parent()
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
-WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, String const&)
+WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, DeprecatedString const&)
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
@@ -924,17 +924,17 @@ WebIDL::ExceptionOr<JS::Value> Window::structured_clone_impl(JS::VM& vm, JS::Val
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-name
-String Window::name() const
+DeprecatedString Window::name() const
 {
     // 1. If this's browsing context is null, then return the empty string.
     if (!browsing_context())
-        return String::empty();
+        return DeprecatedString::empty();
     // 2. Return this's browsing context's name.
     return browsing_context()->name();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-name
-void Window::set_name(String const& name)
+void Window::set_name(DeprecatedString const& name)
 {
     // 1. If this's browsing context is null, then return.
     if (!browsing_context())
@@ -1200,17 +1200,17 @@ JS_DEFINE_NATIVE_FUNCTION(Window::open)
     auto* impl = TRY(impl_from(vm));
 
     // optional USVString url = ""
-    String url = "";
+    DeprecatedString url = "";
     if (!vm.argument(0).is_undefined())
         url = TRY(vm.argument(0).to_string(vm));
 
     // optional DOMString target = "_blank"
-    String target = "_blank";
+    DeprecatedString target = "_blank";
     if (!vm.argument(1).is_undefined())
         target = TRY(vm.argument(1).to_string(vm));
 
     // optional [LegacyNullToEmptyString] DOMString features = "")
-    String features = "";
+    DeprecatedString features = "";
     if (!vm.argument(2).is_nullish())
         features = TRY(vm.argument(2).to_string(vm));
 
@@ -1224,7 +1224,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::alert)
     //       for historical reasons. The practical impact of this is that alert(undefined) is
     //       treated as alert("undefined"), but alert() is treated as alert("").
     auto* impl = TRY(impl_from(vm));
-    String message = "";
+    DeprecatedString message = "";
     if (vm.argument_count())
         message = TRY(vm.argument(0).to_string(vm));
     impl->alert_impl(message);
@@ -1234,7 +1234,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::alert)
 JS_DEFINE_NATIVE_FUNCTION(Window::confirm)
 {
     auto* impl = TRY(impl_from(vm));
-    String message = "";
+    DeprecatedString message = "";
     if (!vm.argument(0).is_undefined())
         message = TRY(vm.argument(0).to_string(vm));
     return JS::Value(impl->confirm_impl(message));
@@ -1243,8 +1243,8 @@ JS_DEFINE_NATIVE_FUNCTION(Window::confirm)
 JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
 {
     auto* impl = TRY(impl_from(vm));
-    String message = "";
-    String default_ = "";
+    DeprecatedString message = "";
+    DeprecatedString default_ = "";
     if (!vm.argument(0).is_undefined())
         message = TRY(vm.argument(0).to_string(vm));
     if (!vm.argument(1).is_undefined())
@@ -1692,7 +1692,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
     auto viewport_rect = page.top_level_browsing_context().viewport_rect();
     auto x_value = JS::Value(viewport_rect.x());
     auto y_value = JS::Value(viewport_rect.y());
-    String behavior_string = "auto";
+    DeprecatedString behavior_string = "auto";
 
     if (vm.argument_count() == 1) {
         auto* options = TRY(vm.argument(0).to_object(vm));

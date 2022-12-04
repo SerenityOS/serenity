@@ -21,7 +21,7 @@
 
 namespace Unicode {
 
-Optional<String> __attribute__((weak)) code_point_display_name(u32) { return {}; }
+Optional<DeprecatedString> __attribute__((weak)) code_point_display_name(u32) { return {}; }
 Optional<StringView> __attribute__((weak)) code_point_block_display_name(u32) { return {}; }
 Optional<StringView> __attribute__((weak)) code_point_abbreviation(u32) { return {}; }
 u32 __attribute__((weak)) canonical_combining_class(u32) { return {}; }
@@ -221,7 +221,7 @@ u32 __attribute__((weak)) to_unicode_uppercase(u32 code_point)
     return to_ascii_uppercase(code_point);
 }
 
-String to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
+DeprecatedString to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
     Utf8View view { string };
@@ -250,7 +250,7 @@ String to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<St
 #endif
 }
 
-String to_unicode_uppercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
+DeprecatedString to_unicode_uppercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
     Utf8View view { string };

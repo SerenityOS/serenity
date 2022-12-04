@@ -137,14 +137,14 @@ public:
         m_stop_immediate_propagation = true;
     }
 
-    void init_event(String const&, bool, bool);
+    void init_event(DeprecatedString const&, bool, bool);
 
     void set_time_stamp(double time_stamp) { m_time_stamp = time_stamp; }
 
     Vector<JS::Handle<EventTarget>> composed_path() const;
 
 protected:
-    void initialize_event(String const&, bool, bool);
+    void initialize_event(DeprecatedString const&, bool, bool);
     virtual void visit_edges(Visitor&) override;
 
 private:

@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/JsonValue.h>
-#include <AK/String.h>
 
 namespace Web::WebDriver {
 
@@ -47,11 +47,11 @@ enum class ErrorCode {
 // https://w3c.github.io/webdriver/#errors
 struct Error {
     unsigned http_status;
-    String error;
-    String message;
+    DeprecatedString error;
+    DeprecatedString message;
     Optional<JsonValue> data;
 
-    static Error from_code(ErrorCode, String message, Optional<JsonValue> data = {});
+    static Error from_code(ErrorCode, DeprecatedString message, Optional<JsonValue> data = {});
 };
 
 }
@@ -60,6 +60,6 @@ template<>
 struct AK::Formatter<Web::WebDriver::Error> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::WebDriver::Error const& error)
     {
-        return Formatter<StringView>::format(builder, String::formatted("Error {}, {}: {}", error.http_status, error.error, error.message));
+        return Formatter<StringView>::format(builder, DeprecatedString::formatted("Error {}, {}: {}", error.http_status, error.error, error.message));
     }
 };

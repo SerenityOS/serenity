@@ -1,6 +1,7 @@
 set(AK_SOURCES
     Assertions.cpp
     Base64.cpp
+    DeprecatedString.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp
     Format.cpp
@@ -14,7 +15,6 @@ set(AK_SOURCES
     LexicalPath.cpp
     Random.cpp
     StackInfo.cpp
-    String.cpp
     StringBuilder.cpp
     StringFloatingPointConversions.cpp
     StringImpl.cpp

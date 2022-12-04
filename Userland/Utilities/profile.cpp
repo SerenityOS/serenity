@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(Core::ArgsParser::Option {
         Core::ArgsParser::OptionArgumentMode::Required,
         "Enable tracking specific event type", nullptr, 't', "event_type",
-        [&](String event_type) {
+        [&](DeprecatedString event_type) {
             seen_event_type_arg = true;
             if (event_type == "sample")
                 event_mask |= PERF_EVENT_SAMPLE;

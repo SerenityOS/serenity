@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
@@ -60,7 +60,7 @@ public:
 class Tokenizer {
 
 public:
-    explicit Tokenizer(StringView input, String const& encoding);
+    explicit Tokenizer(StringView input, DeprecatedString const& encoding);
 
     [[nodiscard]] Vector<Token> parse();
 
@@ -76,7 +76,7 @@ private:
     [[nodiscard]] U32Triplet start_of_input_stream_triplet();
 
     [[nodiscard]] static Token create_new_token(Token::Type);
-    [[nodiscard]] static Token create_value_token(Token::Type, String value);
+    [[nodiscard]] static Token create_value_token(Token::Type, DeprecatedString value);
     [[nodiscard]] static Token create_value_token(Token::Type, u32 value);
     [[nodiscard]] Token consume_a_token();
     [[nodiscard]] Token consume_string_token(u32 ending_code_point);
@@ -84,7 +84,7 @@ private:
     [[nodiscard]] Token consume_an_ident_like_token();
     [[nodiscard]] Number consume_a_number();
     [[nodiscard]] float convert_a_string_to_a_number(StringView);
-    [[nodiscard]] String consume_an_ident_sequence();
+    [[nodiscard]] DeprecatedString consume_an_ident_sequence();
     [[nodiscard]] u32 consume_escaped_code_point();
     [[nodiscard]] Token consume_a_url_token();
     void consume_the_remnants_of_a_bad_url();
@@ -95,7 +95,7 @@ private:
     [[nodiscard]] static bool would_start_an_ident_sequence(U32Triplet);
     [[nodiscard]] static bool would_start_a_number(U32Triplet);
 
-    String m_decoded_input;
+    DeprecatedString m_decoded_input;
     Utf8View m_utf8_view;
     AK::Utf8CodePointIterator m_utf8_iterator;
     AK::Utf8CodePointIterator m_prev_utf8_iterator;

@@ -12,7 +12,7 @@ AccountHolder::AccountHolder()
     m_mailbox_tree_model = MailboxTreeModel::create(*this);
 }
 
-void AccountHolder::add_account_with_name_and_mailboxes(String name, Vector<IMAP::ListItem> const& mailboxes)
+void AccountHolder::add_account_with_name_and_mailboxes(DeprecatedString name, Vector<IMAP::ListItem> const& mailboxes)
 {
     auto account = AccountNode::create(move(name));
 

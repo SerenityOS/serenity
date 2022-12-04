@@ -73,7 +73,7 @@ int DisassemblyModel::row_count(const GUI::ModelIndex&) const
     return m_instructions.size();
 }
 
-String DisassemblyModel::column_name(int column) const
+DeprecatedString DisassemblyModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:
@@ -94,7 +94,7 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)
-            return String::formatted("{:p}", insn.address);
+            return DeprecatedString::formatted("{:p}", insn.address);
         if (index.column() == Column::InstructionBytes) {
             StringBuilder builder;
             for (auto ch : insn.bytes)

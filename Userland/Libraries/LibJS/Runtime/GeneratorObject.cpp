@@ -53,7 +53,7 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
 }
 
 // 27.5.3.2 GeneratorValidate ( generator, generatorBrand ), https://tc39.es/ecma262/#sec-generatorvalidate
-ThrowCompletionOr<GeneratorObject::GeneratorState> GeneratorObject::validate(VM& vm, Optional<String> const& generator_brand)
+ThrowCompletionOr<GeneratorObject::GeneratorState> GeneratorObject::validate(VM& vm, Optional<DeprecatedString> const& generator_brand)
 {
     // 1. Perform ? RequireInternalSlot(generator, [[GeneratorState]]).
     // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
@@ -152,7 +152,7 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
 }
 
 // 27.5.3.3 GeneratorResume ( generator, value, generatorBrand ), https://tc39.es/ecma262/#sec-generatorresume
-ThrowCompletionOr<Value> GeneratorObject::resume(VM& vm, Value value, Optional<String> generator_brand)
+ThrowCompletionOr<Value> GeneratorObject::resume(VM& vm, Value value, Optional<DeprecatedString> generator_brand)
 {
     // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
     auto state = TRY(validate(vm, generator_brand));
@@ -191,7 +191,7 @@ ThrowCompletionOr<Value> GeneratorObject::resume(VM& vm, Value value, Optional<S
 }
 
 // 27.5.3.4 GeneratorResumeAbrupt ( generator, abruptCompletion, generatorBrand ), https://tc39.es/ecma262/#sec-generatorresumeabrupt
-ThrowCompletionOr<Value> GeneratorObject::resume_abrupt(JS::VM& vm, JS::Completion abrupt_completion, Optional<AK::String> generator_brand)
+ThrowCompletionOr<Value> GeneratorObject::resume_abrupt(JS::VM& vm, JS::Completion abrupt_completion, Optional<AK::DeprecatedString> generator_brand)
 {
     // Not part of the spec, but the spec assumes abruptCompletion.[[Value]] is not empty.
     VERIFY(abrupt_completion.value().has_value());

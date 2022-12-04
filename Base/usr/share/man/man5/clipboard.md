@@ -5,17 +5,17 @@ clipboard - Data formats specific to Clipboard and drag & drop
 ## Clipboard
 
 The clipboard feature works through the Clipboard server, which generally acts as a global storage or three things:
-- a `String` mime type,
+- a `DeprecatedString` mime type,
 - a (potentially large) block of data, shared as an anonymous file,
-- a `HashMap<String, String>` of arbitrary metadata, depending on the mime type.
+- a `HashMap<DeprecatedString, DeprecatedString>` of arbitrary metadata, depending on the mime type.
 
 See also [`Userland/Libraries/LibGUI/Clipboard.h`](../../../../../Userland/Libraries/LibGUI/Clipboard.h).
 
 ## Drag & drop
 
 In contrast to the clipboard, the drag & drop feature works through WindowServer, and a bouquet of data is transmitted:
-- a `[UTF8] String` to be displayed while dragging,
-- a `HashMap<String, ByteBuffer>` map that contains arbitrary data for a variety of possible mime types,
+- a `[UTF8] DeprecatedString` to be displayed while dragging,
+- a `HashMap<DeprecatedString, ByteBuffer>` map that contains arbitrary data for a variety of possible mime types,
 - a `Gfx::ShareableBitmap` to be displayed while dragging
 
 Drag & drop is most prominently supported by File Manager, Spreadsheet, and Terminal.

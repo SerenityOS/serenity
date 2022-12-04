@@ -8,9 +8,9 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
@@ -19,7 +19,7 @@
 
 namespace {
 
-using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Statement>, String>;
+using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Statement>, DeprecatedString>;
 
 ParseResult parse(StringView sql)
 {
@@ -392,7 +392,7 @@ TEST_CASE(update)
     EXPECT(parse("UPDATE OR table_name SET column_name=4;"sv).is_error());
     EXPECT(parse("UPDATE OR foo table_name SET column_name=4;"sv).is_error());
 
-    auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<String>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
+    auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<DeprecatedString>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
         auto result = parse(sql);
         EXPECT(!result.is_error());
 
@@ -439,7 +439,7 @@ TEST_CASE(update)
         }
     };
 
-    Vector<Vector<String>> update_columns { { "COLUMN_NAME" } };
+    Vector<Vector<DeprecatedString>> update_columns { { "COLUMN_NAME" } };
     validate("UPDATE OR ABORT table_name SET column_name=1;"sv, SQL::AST::ConflictResolution::Abort, {}, "TABLE_NAME"sv, {}, update_columns, false, false, {});
     validate("UPDATE OR FAIL table_name SET column_name=1;"sv, SQL::AST::ConflictResolution::Fail, {}, "TABLE_NAME"sv, {}, update_columns, false, false, {});
     validate("UPDATE OR IGNORE table_name SET column_name=1;"sv, SQL::AST::ConflictResolution::Ignore, {}, "TABLE_NAME"sv, {}, update_columns, false, false, {});
@@ -567,7 +567,7 @@ TEST_CASE(select)
     };
 
     struct Ordering {
-        String collation_name;
+        DeprecatedString collation_name;
         SQL::Order order;
         SQL::Nulls nulls;
     };
@@ -747,9 +747,9 @@ TEST_CASE(common_table_expression)
 
 TEST_CASE(nested_subquery_limit)
 {
-    auto subquery = String::formatted("{:(^{}}table_name{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
-    EXPECT(!parse(String::formatted("SELECT * FROM {};"sv, subquery)).is_error());
-    EXPECT(parse(String::formatted("SELECT * FROM ({});"sv, subquery)).is_error());
+    auto subquery = DeprecatedString::formatted("{:(^{}}table_name{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
+    EXPECT(!parse(DeprecatedString::formatted("SELECT * FROM {};"sv, subquery)).is_error());
+    EXPECT(parse(DeprecatedString::formatted("SELECT * FROM ({});"sv, subquery)).is_error());
 }
 
 TEST_CASE(describe_table)

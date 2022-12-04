@@ -88,16 +88,16 @@
     } __testjs_flag_hook_##flag;
 
 #define TEST_ROOT(path) \
-    String Test::JS::g_test_root_fragment = path
+    DeprecatedString Test::JS::g_test_root_fragment = path
 
-#define TESTJS_RUN_FILE_FUNCTION(...)                                                                              \
-    struct __TestJS_run_file {                                                                                     \
-        __TestJS_run_file()                                                                                        \
-        {                                                                                                          \
-            ::Test::JS::g_run_file = hook;                                                                         \
-        }                                                                                                          \
-        static ::Test::JS::IntermediateRunFileResult hook(String const&, JS::Interpreter&, JS::ExecutionContext&); \
-    } __testjs_common_run_file {};                                                                                 \
+#define TESTJS_RUN_FILE_FUNCTION(...)                                                                                        \
+    struct __TestJS_run_file {                                                                                               \
+        __TestJS_run_file()                                                                                                  \
+        {                                                                                                                    \
+            ::Test::JS::g_run_file = hook;                                                                                   \
+        }                                                                                                                    \
+        static ::Test::JS::IntermediateRunFileResult hook(DeprecatedString const&, JS::Interpreter&, JS::ExecutionContext&); \
+    } __testjs_common_run_file {};                                                                                           \
     ::Test::JS::IntermediateRunFileResult __TestJS_run_file::hook(__VA_ARGS__)
 
 #define TESTJS_CREATE_INTERPRETER_HOOK(...)               \
@@ -128,34 +128,34 @@ static constexpr auto TOP_LEVEL_TEST_NAME = "__$$TOP_LEVEL$$__";
 extern RefPtr<JS::VM> g_vm;
 extern bool g_collect_on_every_allocation;
 extern bool g_run_bytecode;
-extern String g_currently_running_test;
+extern DeprecatedString g_currently_running_test;
 struct FunctionWithLength {
     JS::ThrowCompletionOr<JS::Value> (*function)(JS::VM&);
     size_t length { 0 };
 };
-extern HashMap<String, FunctionWithLength> s_exposed_global_functions;
-extern String g_test_root_fragment;
-extern String g_test_root;
+extern HashMap<DeprecatedString, FunctionWithLength> s_exposed_global_functions;
+extern DeprecatedString g_test_root_fragment;
+extern DeprecatedString g_test_root;
 extern int g_test_argc;
 extern char** g_test_argv;
 extern Function<void()> g_main_hook;
 extern Function<NonnullOwnPtr<JS::Interpreter>()> g_create_interpreter_hook;
-extern HashMap<bool*, Tuple<String, String, char>> g_extra_args;
+extern HashMap<bool*, Tuple<DeprecatedString, DeprecatedString, char>> g_extra_args;
 
 struct ParserError {
     JS::ParserError error;
-    String hint;
+    DeprecatedString hint;
 };
 
 struct JSFileResult {
-    String name;
+    DeprecatedString name;
     Optional<ParserError> error {};
     double time_taken { 0 };
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
     Test::Result most_severe_test_result { Test::Result::Pass };
     Vector<Test::Suite> suites {};
-    Vector<String> logged_messages {};
+    Vector<DeprecatedString> logged_messages {};
 };
 
 enum class RunFileHookResult {
@@ -164,11 +164,11 @@ enum class RunFileHookResult {
 };
 
 using IntermediateRunFileResult = AK::Result<JSFileResult, RunFileHookResult>;
-extern IntermediateRunFileResult (*g_run_file)(String const&, JS::Interpreter&, JS::ExecutionContext&);
+extern IntermediateRunFileResult (*g_run_file)(DeprecatedString const&, JS::Interpreter&, JS::ExecutionContext&);
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, String common_path, bool print_times, bool print_progress, bool print_json, bool detailed_json)
+    TestRunner(DeprecatedString test_root, DeprecatedString common_path, bool print_times, bool print_progress, bool print_json, bool detailed_json)
         : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json, detailed_json)
         , m_common_path(move(common_path))
     {
@@ -178,12 +178,12 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(String const& test_path, size_t, size_t) override;
-    virtual Vector<String> get_test_paths() const override;
-    virtual JSFileResult run_file_test(String const& test_path);
+    virtual void do_run_single_test(DeprecatedString const& test_path, size_t, size_t) override;
+    virtual Vector<DeprecatedString> get_test_paths() const override;
+    virtual JSFileResult run_file_test(DeprecatedString const& test_path);
     void print_file_result(JSFileResult const& file_result) const;
 
-    String m_common_path;
+    DeprecatedString m_common_path;
 };
 
 class TestRunnerGlobalObject final : public JS::GlobalObject {
@@ -265,7 +265,7 @@ inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
     return JsonValue::from_string(json_string);
 }
 
-inline void TestRunner::do_run_single_test(String const& test_path, size_t, size_t)
+inline void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t, size_t)
 {
     auto file_result = run_file_test(test_path);
     if (!m_print_json)
@@ -275,10 +275,10 @@ inline void TestRunner::do_run_single_test(String const& test_path, size_t, size
         ensure_suites().extend(file_result.suites);
 }
 
-inline Vector<String> TestRunner::get_test_paths() const
+inline Vector<DeprecatedString> TestRunner::get_test_paths() const
 {
-    Vector<String> paths;
-    iterate_directory_recursively(m_test_root, [&](String const& file_path) {
+    Vector<DeprecatedString> paths;
+    iterate_directory_recursively(m_test_root, [&](DeprecatedString const& file_path) {
         if (!file_path.ends_with(".js"sv))
             return;
         if (!file_path.ends_with("test-common.js"sv))
@@ -288,7 +288,7 @@ inline Vector<String> TestRunner::get_test_paths() const
     return paths;
 }
 
-inline JSFileResult TestRunner::run_file_test(String const& test_path)
+inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
 {
     g_currently_running_test = test_path;
 
@@ -411,12 +411,12 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
         file_result.logged_messages.append(message.to_string_without_side_effects());
     }
 
-    test_json.value().as_object().for_each_member([&](String const& suite_name, JsonValue const& suite_value) {
+    test_json.value().as_object().for_each_member([&](DeprecatedString const& suite_name, JsonValue const& suite_value) {
         Test::Suite suite { test_path, suite_name };
 
         VERIFY(suite_value.is_object());
 
-        suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
+        suite_value.as_object().for_each_member([&](const DeprecatedString& test_name, const JsonValue& test_value) {
             Test::Case test { test_name, Test::Result::Fail, "", 0 };
 
             VERIFY(test_value.is_object());

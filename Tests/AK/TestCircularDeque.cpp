@@ -7,8 +7,8 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/CircularDeque.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 
 TEST_CASE(enqueue_begin)
 {
@@ -37,9 +37,9 @@ TEST_CASE(enqueue_begin)
 
 TEST_CASE(enqueue_begin_being_moved_from)
 {
-    CircularDeque<String, 2> strings;
+    CircularDeque<DeprecatedString, 2> strings;
 
-    String str { "test" };
+    DeprecatedString str { "test" };
     strings.enqueue_begin(move(str));
     EXPECT(str.is_null());
 }

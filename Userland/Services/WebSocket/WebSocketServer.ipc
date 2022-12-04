@@ -3,10 +3,10 @@
 endpoint WebSocketServer
 {
     // Connection API
-    connect(URL url, String origin, Vector<String> protocols, Vector<String> extensions, IPC::Dictionary additional_request_headers) => (i32 connection_id)
+    connect(URL url, DeprecatedString origin, Vector<DeprecatedString> protocols, Vector<DeprecatedString> extensions, IPC::Dictionary additional_request_headers) => (i32 connection_id)
     ready_state(i32 connection_id) => (u32 ready_state)
     send(i32 connection_id, bool is_text, ByteBuffer data) =|
-    close(i32 connection_id, u16 code, String reason) =|
+    close(i32 connection_id, u16 code, DeprecatedString reason) =|
 
-    set_certificate(i32 connection_id, String certificate, String key) => (bool success)
+    set_certificate(i32 connection_id, DeprecatedString certificate, DeprecatedString key) => (bool success)
 }

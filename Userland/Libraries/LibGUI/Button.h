@@ -29,7 +29,7 @@ public:
     virtual ~Button() override;
 
     void set_icon(RefPtr<Gfx::Bitmap>);
-    void set_icon_from_path(String const&);
+    void set_icon_from_path(DeprecatedString const&);
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
@@ -69,7 +69,7 @@ public:
     virtual Optional<UISize> calculated_min_size() const override;
 
 protected:
-    explicit Button(String text = {});
+    explicit Button(DeprecatedString text = {});
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
@@ -92,7 +92,7 @@ class DialogButton final : public Button {
 
 public:
     virtual ~DialogButton() override {};
-    explicit DialogButton(String text = {})
+    explicit DialogButton(DeprecatedString text = {})
         : Button(move(text))
     {
         set_fixed_width(80);

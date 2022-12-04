@@ -23,7 +23,7 @@ public:
     JS::NonnullGCPtr<SubtleCrypto> subtle() const;
 
     WebIDL::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
-    String random_uuid() const;
+    DeprecatedString random_uuid() const;
 
 protected:
     virtual void visit_edges(Cell::Visitor&) override;

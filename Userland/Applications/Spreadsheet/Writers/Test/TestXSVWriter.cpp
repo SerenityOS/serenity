@@ -55,7 +55,7 @@ TEST_CASE(can_write_with_header)
 
 TEST_CASE(can_write_with_different_behaviors)
 {
-    Vector<Vector<String>> data = {
+    Vector<Vector<DeprecatedString>> data = {
         { "Well", "Hello\"", "Friends" },
         { "We\"ll", "Hello,", "   Friends" },
     };

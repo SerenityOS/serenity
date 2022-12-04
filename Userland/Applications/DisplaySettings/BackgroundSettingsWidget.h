@@ -32,7 +32,7 @@ private:
     void create_frame();
     void load_current_settings();
 
-    Vector<String> m_modes;
+    Vector<DeprecatedString> m_modes;
 
     bool& m_background_settings_changed;
 

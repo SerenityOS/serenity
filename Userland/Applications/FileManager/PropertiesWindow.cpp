@@ -26,7 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 
-PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Window* parent_window)
+PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_rename, Window* parent_window)
     : Window(parent_window)
 {
     auto lexical_path = LexicalPath(path);
@@ -67,8 +67,8 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
         return;
     }
 
-    String owner_name;
-    String group_name;
+    DeprecatedString owner_name;
+    DeprecatedString group_name;
 
     if (auto* pw = getpwuid(st.st_uid)) {
         owner_name = pw->pw_name;
@@ -116,10 +116,10 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     size->set_text(human_readable_size_long(st.st_size));
 
     auto owner = general_tab.find_descendant_of_type_named<GUI::Label>("owner");
-    owner->set_text(String::formatted("{} ({})", owner_name, st.st_uid));
+    owner->set_text(DeprecatedString::formatted("{} ({})", owner_name, st.st_uid));
 
     auto group = general_tab.find_descendant_of_type_named<GUI::Label>("group");
-    group->set_text(String::formatted("{} ({})", group_name, st.st_gid));
+    group->set_text(DeprecatedString::formatted("{} ({})", group_name, st.st_gid));
 
     auto created_at = general_tab.find_descendant_of_type_named<GUI::Label>("created_at");
     created_at->set_text(GUI::FileSystemModel::timestamp_string(st.st_ctime));
@@ -167,7 +167,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
 void PropertiesWindow::update()
 {
     m_icon->set_bitmap(GUI::FileIconProvider::icon_for_path(make_full_path(m_name), m_mode).bitmap_for_size(32));
-    set_title(String::formatted("{} - Properties", m_name));
+    set_title(DeprecatedString::formatted("{} - Properties", m_name));
 }
 
 void PropertiesWindow::permission_changed(mode_t mask, bool set)
@@ -182,24 +182,24 @@ void PropertiesWindow::permission_changed(mode_t mask, bool set)
     m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
 }
 
-String PropertiesWindow::make_full_path(String const& name)
+DeprecatedString PropertiesWindow::make_full_path(DeprecatedString const& name)
 {
-    return String::formatted("{}/{}", m_parent_path, name);
+    return DeprecatedString::formatted("{}/{}", m_parent_path, name);
 }
 
 bool PropertiesWindow::apply_changes()
 {
     if (m_name_dirty) {
-        String new_name = m_name_box->text();
-        String new_file = make_full_path(new_name).characters();
+        DeprecatedString new_name = m_name_box->text();
+        DeprecatedString new_file = make_full_path(new_name).characters();
 
         if (Core::File::exists(new_file)) {
-            GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, DeprecatedString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
         if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GUI::MessageBox::show(this, String::formatted("Could not rename file: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, DeprecatedString::formatted("Could not rename file: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -210,7 +210,7 @@ bool PropertiesWindow::apply_changes()
 
     if (m_permissions_dirty) {
         if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GUI::MessageBox::show(this, String::formatted("Could not update permissions: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, DeprecatedString::formatted("Could not update permissions: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -249,7 +249,7 @@ void PropertiesWindow::setup_permission_checkboxes(GUI::CheckBox& box_read, GUI:
     box_execute.set_enabled(can_edit_checkboxes);
 }
 
-GUI::Button& PropertiesWindow::make_button(String text, GUI::Widget& parent)
+GUI::Button& PropertiesWindow::make_button(DeprecatedString text, GUI::Widget& parent)
 {
     auto& button = parent.add<GUI::Button>(text);
     button.set_fixed_size(70, 22);

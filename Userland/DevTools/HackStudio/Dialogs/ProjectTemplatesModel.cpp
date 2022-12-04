@@ -53,7 +53,7 @@ int ProjectTemplatesModel::column_count(const GUI::ModelIndex&) const
     return Column::__Count;
 }
 
-String ProjectTemplatesModel::column_name(int column) const
+DeprecatedString ProjectTemplatesModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:

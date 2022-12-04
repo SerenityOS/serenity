@@ -9,9 +9,9 @@
 #include "Cell.h"
 #include "Forward.h"
 #include "Readers/XSV.h"
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -24,7 +24,7 @@ namespace Spreadsheet {
 
 class CellChange {
 public:
-    CellChange(Cell&, String const&);
+    CellChange(Cell&, DeprecatedString const&);
 
     auto& cell() { return m_cell; }
     auto& previous_data() { return m_previous_data; }
@@ -32,8 +32,8 @@ public:
 
 private:
     Cell& m_cell;
-    String m_previous_data;
-    String m_new_data;
+    DeprecatedString m_previous_data;
+    DeprecatedString m_new_data;
 };
 
 class Sheet : public Core::Object {
@@ -47,7 +47,7 @@ public:
 
     Optional<Position> parse_cell_name(StringView) const;
     Optional<size_t> column_index(StringView column_name) const;
-    Optional<String> column_arithmetic(StringView column_name, int offset);
+    Optional<DeprecatedString> column_arithmetic(StringView column_name, int offset);
 
     Cell* from_url(const URL&);
     Cell const* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
@@ -60,10 +60,10 @@ public:
     JsonObject to_json() const;
     static RefPtr<Sheet> from_json(JsonObject const&, Workbook&);
 
-    Vector<Vector<String>> to_xsv() const;
+    Vector<Vector<DeprecatedString>> to_xsv() const;
     static RefPtr<Sheet> from_xsv(Reader::XSV const&, Workbook&);
 
-    String const& name() const { return m_name; }
+    DeprecatedString const& name() const { return m_name; }
     void set_name(StringView name) { m_name = name; }
 
     JsonObject gather_documentation() const;
@@ -85,17 +85,17 @@ public:
         if (auto cell = at(position))
             return *cell;
 
-        m_cells.set(position, make<Cell>(String::empty(), position, *this));
+        m_cells.set(position, make<Cell>(DeprecatedString::empty(), position, *this));
         return *at(position);
     }
 
     size_t add_row();
-    String add_column();
+    DeprecatedString add_column();
 
     size_t row_count() const { return m_rows; }
     size_t column_count() const { return m_columns.size(); }
-    Vector<String> const& columns() const { return m_columns; }
-    String const& column(size_t index)
+    Vector<DeprecatedString> const& columns() const { return m_columns; }
+    DeprecatedString const& column(size_t index)
     {
         for (size_t i = column_count(); i < index; ++i)
             add_column();
@@ -103,7 +103,7 @@ public:
         VERIFY(column_count() > index);
         return m_columns[index];
     }
-    String const& column(size_t index) const
+    DeprecatedString const& column(size_t index) const
     {
         VERIFY(column_count() > index);
         return m_columns[index];
@@ -142,14 +142,14 @@ public:
 
     bool columns_are_standard() const;
 
-    String generate_inline_documentation_for(StringView function, size_t argument_index);
+    DeprecatedString generate_inline_documentation_for(StringView function, size_t argument_index);
 
 private:
     explicit Sheet(Workbook&);
     explicit Sheet(StringView name, Workbook&);
 
-    String m_name;
-    Vector<String> m_columns;
+    DeprecatedString m_name;
+    Vector<DeprecatedString> m_columns;
     size_t m_rows { 0 };
     HashMap<Position, NonnullOwnPtr<Cell>> m_cells;
     HashTable<Position> m_selected_cells;

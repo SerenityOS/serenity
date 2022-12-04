@@ -8,10 +8,10 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/IterationDecision.h>
 #include <AK/Stream.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <string.h>
 
@@ -225,7 +225,7 @@ struct [[gnu::packed]] LocalFileHeader {
 };
 
 struct ZipMember {
-    String name;
+    DeprecatedString name;
     ReadonlyBytes compressed_data; // TODO: maybe the decompression/compression should be handled by LibArchive instead of the user?
     ZipCompressionMethod compression_method;
     u32 uncompressed_size;

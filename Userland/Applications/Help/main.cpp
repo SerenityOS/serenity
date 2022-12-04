@@ -17,7 +17,7 @@
 
 using namespace Help;
 
-static String parse_input(StringView input)
+static DeprecatedString parse_input(StringView input)
 {
     AK::URL url(input);
     if (url.is_valid())
@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    String start_page;
+    DeprecatedString start_page;
     u32 section = 0;
 
     Core::ArgsParser args_parser;

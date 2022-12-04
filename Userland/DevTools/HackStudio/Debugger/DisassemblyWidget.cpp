@@ -73,7 +73,7 @@ void DisassemblyWidget::show_disassembly()
     m_unavailable_disassembly_widget->set_visible(false);
 }
 
-void DisassemblyWidget::hide_disassembly(String const& reason)
+void DisassemblyWidget::hide_disassembly(DeprecatedString const& reason)
 {
     m_top_container->set_visible(false);
     m_disassembly_view->set_visible(false);

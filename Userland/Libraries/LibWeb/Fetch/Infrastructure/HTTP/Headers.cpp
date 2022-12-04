@@ -86,7 +86,7 @@ ErrorOr<Optional<ByteBuffer>> HeaderList::get(ReadonlyBytes name) const
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-get-decode-split
-ErrorOr<Optional<Vector<String>>> HeaderList::get_decode_and_split(ReadonlyBytes name) const
+ErrorOr<Optional<Vector<DeprecatedString>>> HeaderList::get_decode_and_split(ReadonlyBytes name) const
 {
     // To get, decode, and split a header name name from header list list, run these steps:
 
@@ -95,7 +95,7 @@ ErrorOr<Optional<Vector<String>>> HeaderList::get_decode_and_split(ReadonlyBytes
 
     // 2. If initialValue is null, then return null.
     if (!initial_value.has_value())
-        return Optional<Vector<String>> {};
+        return Optional<Vector<DeprecatedString>> {};
 
     // 3. Let input be the result of isomorphic decoding initialValue.
     auto input = StringView { *initial_value };
@@ -104,7 +104,7 @@ ErrorOr<Optional<Vector<String>>> HeaderList::get_decode_and_split(ReadonlyBytes
     auto lexer = GenericLexer { input };
 
     // 5. Let values be a list of strings, initially empty.
-    Vector<String> values;
+    Vector<DeprecatedString> values;
 
     // 6. Let value be the empty string.
     StringBuilder value_builder;
@@ -273,10 +273,10 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
 {
     // 1. Let charset be null.
-    Optional<String> charset;
+    Optional<DeprecatedString> charset;
 
     // 2. Let essence be null.
-    Optional<String> essence;
+    Optional<DeprecatedString> essence;
 
     // 3. Let mimeType be null.
     Optional<MimeSniff::MimeType> mime_type;

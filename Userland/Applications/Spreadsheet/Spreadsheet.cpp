@@ -114,9 +114,9 @@ static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, 
     return value;
 }
 
-String Sheet::add_column()
+DeprecatedString Sheet::add_column()
 {
-    auto next_column = String::bijective_base_from(m_columns.size());
+    auto next_column = DeprecatedString::bijective_base_from(m_columns.size());
     m_columns.append(next_column);
     return next_column;
 }
@@ -229,7 +229,7 @@ Optional<size_t> Sheet::column_index(StringView column_name) const
     return index;
 }
 
-Optional<String> Sheet::column_arithmetic(StringView column_name, int offset)
+Optional<DeprecatedString> Sheet::column_arithmetic(StringView column_name, int offset)
 {
     auto maybe_index = column_index(column_name);
     if (!maybe_index.has_value())
@@ -270,7 +270,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     }
 
     // FIXME: Figure out a way to do this cross-process.
-    VERIFY(url.path() == String::formatted("/{}", getpid()));
+    VERIFY(url.path() == DeprecatedString::formatted("/{}", getpid()));
 
     return parse_cell_name(url.fragment());
 }
@@ -518,7 +518,7 @@ Position Sheet::written_data_bounds(Optional<size_t> column_index) const
 bool Sheet::columns_are_standard() const
 {
     for (size_t i = 0; i < m_columns.size(); ++i) {
-        if (m_columns[i] != String::bijective_base_from(i))
+        if (m_columns[i] != DeprecatedString::bijective_base_from(i))
             return false;
     }
 
@@ -605,9 +605,9 @@ JsonObject Sheet::to_json() const
     return object;
 }
 
-Vector<Vector<String>> Sheet::to_xsv() const
+Vector<Vector<DeprecatedString>> Sheet::to_xsv() const
 {
-    Vector<Vector<String>> data;
+    Vector<Vector<DeprecatedString>> data;
 
     auto bottom_right = written_data_bounds();
 
@@ -615,7 +615,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
     size_t column_count = m_columns.size();
     if (columns_are_standard()) {
         column_count = bottom_right.column + 1;
-        Vector<String> cols;
+        Vector<DeprecatedString> cols;
         for (size_t i = 0; i < column_count; ++i)
             cols.append(m_columns[i]);
         data.append(move(cols));
@@ -624,7 +624,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
     }
 
     for (size_t i = 0; i <= bottom_right.row; ++i) {
-        Vector<String> row;
+        Vector<DeprecatedString> row;
         row.resize(column_count);
         for (size_t j = 0; j < column_count; ++j) {
             auto cell = at({ j, i });
@@ -652,7 +652,7 @@ RefPtr<Sheet> Sheet::from_xsv(Reader::XSV const& xsv, Workbook& workbook)
     } else {
         sheet->m_columns.ensure_capacity(cols.size());
         for (size_t i = 0; i < cols.size(); ++i)
-            sheet->m_columns.append(String::bijective_base_from(i));
+            sheet->m_columns.append(DeprecatedString::bijective_base_from(i));
     }
     for (size_t i = 0; i < max(rows, Sheet::default_row_count); ++i)
         sheet->add_row();
@@ -712,7 +712,7 @@ JsonObject Sheet::gather_documentation() const
     return m_cached_documentation.value();
 }
 
-String Sheet::generate_inline_documentation_for(StringView function, size_t argument_index)
+DeprecatedString Sheet::generate_inline_documentation_for(StringView function, size_t argument_index)
 {
     if (!m_cached_documentation.has_value())
         gather_documentation();
@@ -720,13 +720,13 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
     auto& docs = m_cached_documentation.value();
     auto entry = docs.get(function);
     if (entry.is_null() || !entry.is_object())
-        return String::formatted("{}(...???{})", function, argument_index);
+        return DeprecatedString::formatted("{}(...???{})", function, argument_index);
 
     auto& entry_object = entry.as_object();
     size_t argc = entry_object.get("argc"sv).to_int(0);
     auto argnames_value = entry_object.get("argnames"sv);
     if (!argnames_value.is_array())
-        return String::formatted("{}(...{}???{})", function, argc, argument_index);
+        return DeprecatedString::formatted("{}(...{}???{})", function, argc, argument_index);
     auto& argnames = argnames_value.as_array();
     StringBuilder builder;
     builder.appendff("{}(", function);
@@ -748,9 +748,9 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
     return builder.build();
 }
 
-String Position::to_cell_identifier(Sheet const& sheet) const
+DeprecatedString Position::to_cell_identifier(Sheet const& sheet) const
 {
-    return String::formatted("{}{}", sheet.column(column), row);
+    return DeprecatedString::formatted("{}{}", sheet.column(column), row);
 }
 
 URL Position::to_url(Sheet const& sheet) const
@@ -758,12 +758,12 @@ URL Position::to_url(Sheet const& sheet) const
     URL url;
     url.set_scheme("spreadsheet");
     url.set_host("cell");
-    url.set_paths({ String::number(getpid()) });
+    url.set_paths({ DeprecatedString::number(getpid()) });
     url.set_fragment(to_cell_identifier(sheet));
     return url;
 }
 
-CellChange::CellChange(Cell& cell, String const& previous_data)
+CellChange::CellChange(Cell& cell, DeprecatedString const& previous_data)
     : m_cell(cell)
     , m_previous_data(previous_data)
 {

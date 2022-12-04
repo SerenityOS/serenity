@@ -72,7 +72,7 @@ int ProfileModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String ProfileModel::column_name(int column) const
+DeprecatedString ProfileModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
@@ -117,7 +117,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
                 * 100.f
                 / static_cast<float>(m_profile.filtered_event_indices().size())
                 * percent_digits_rounding);
-            return String::formatted(
+            return DeprecatedString::formatted(
                 "{}.{:02}",
                 percentage_full_precision / percent_digits_rounding,
                 percentage_full_precision % percent_digits_rounding);
@@ -136,7 +136,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             return node->object_name();
         if (index.column() == Column::StackFrame) {
             if (node->is_root()) {
-                return String::formatted("{} ({})", node->process().basename, node->process().pid);
+                return DeprecatedString::formatted("{} ({})", node->process().basename, node->process().pid);
             }
             return node->symbol();
         }
@@ -146,7 +146,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             auto const* library = node->process().library_metadata.library_containing(node->address());
             if (!library)
                 return "";
-            return String::formatted("{:p} (offset {:p})", node->address(), node->address() - library->base);
+            return DeprecatedString::formatted("{:p} (offset {:p})", node->address(), node->address() - library->base);
         }
         return {};
     }

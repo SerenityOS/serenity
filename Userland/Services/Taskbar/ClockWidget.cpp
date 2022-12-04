@@ -155,7 +155,7 @@ ClockWidget::ClockWidget()
     };
 }
 
-void ClockWidget::update_format(String const& format)
+void ClockWidget::update_format(DeprecatedString const& format)
 {
     m_time_format = format;
     m_time_width = font().width(Core::DateTime::create(122, 2, 22, 22, 22, 22).to_string(format));

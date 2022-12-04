@@ -212,7 +212,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 29. Let timeZone be ? Get(options, "timeZone").
     auto time_zone_value = TRY(options->get(vm.names.timeZone));
-    String time_zone;
+    DeprecatedString time_zone;
 
     // 30. If timeZone is undefined, then
     if (time_zone_value.is_undefined()) {
@@ -345,7 +345,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         }
     });
 
-    String pattern;
+    DeprecatedString pattern;
     Vector<::Locale::CalendarRangePattern> range_patterns;
 
     // 45. If dateTimeFormat.[[Hour]] is undefined, then

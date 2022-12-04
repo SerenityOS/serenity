@@ -34,10 +34,10 @@ static constexpr auto APP_NAME = "Space Analyzer"sv;
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
-    TreeNode(String name)
+    TreeNode(DeprecatedString name)
         : m_name(move(name)) {};
 
-    virtual String name() const override { return m_name; }
+    virtual DeprecatedString name() const override { return m_name; }
     virtual i64 area() const override { return m_area; }
     virtual size_t num_children() const override
     {
@@ -55,13 +55,13 @@ struct TreeNode : public SpaceAnalyzer::TreeMapNode {
         }
     }
 
-    String m_name;
+    DeprecatedString m_name;
     i64 m_area { 0 };
     OwnPtr<Vector<TreeNode>> m_children;
 };
 
 struct Tree : public SpaceAnalyzer::TreeMap {
-    Tree(String root_name)
+    Tree(DeprecatedString root_name)
         : m_root(move(root_name)) {};
     virtual ~Tree() {};
     TreeNode m_root;
@@ -72,8 +72,8 @@ struct Tree : public SpaceAnalyzer::TreeMap {
 };
 
 struct MountInfo {
-    String mount_point;
-    String source;
+    DeprecatedString mount_point;
+    DeprecatedString source;
 };
 
 static void fill_mounts(Vector<MountInfo>& output)
@@ -97,12 +97,12 @@ static void fill_mounts(Vector<MountInfo>& output)
     });
 }
 
-static MountInfo* find_mount_for_path(String path, Vector<MountInfo>& mounts)
+static MountInfo* find_mount_for_path(DeprecatedString path, Vector<MountInfo>& mounts)
 {
     MountInfo* result = nullptr;
     size_t length = 0;
     for (auto& mount_info : mounts) {
-        String& mount_point = mount_info.mount_point;
+        DeprecatedString& mount_point = mount_info.mount_point;
         if (path.starts_with(mount_point)) {
             if (!result || mount_point.length() > length) {
                 result = &mount_info;
@@ -153,17 +153,17 @@ static NonnullRefPtr<GUI::Window> create_progress_window()
 
 static void update_progress_label(GUI::Label& progresslabel, size_t files_encountered_count)
 {
-    auto text = String::formatted("{} files...", files_encountered_count);
+    auto text = DeprecatedString::formatted("{} files...", files_encountered_count);
     progresslabel.set_text(text);
 
     Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
 }
 
 struct QueueEntry {
-    QueueEntry(String path, TreeNode* node)
+    QueueEntry(DeprecatedString path, TreeNode* node)
         : path(move(path))
         , node(node) {};
-    String path;
+    DeprecatedString path;
     TreeNode* node { nullptr };
 };
 
@@ -208,7 +208,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
                 if (!(files_encountered_count % FILES_ENCOUNTERED_UPDATE_STEP_SIZE))
                     update_progress_label(progresslabel, files_encountered_count);
 
-                String& name = child.m_name;
+                DeprecatedString& name = child.m_name;
                 int name_len = name.length();
                 builder.append(name);
                 struct stat st;
@@ -263,7 +263,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
             builder.append({ error, strlen(error) });
             builder.append(" ("sv);
             int value = error_accumulator.get(key).value();
-            builder.append(String::number(value));
+            builder.append(DeprecatedString::number(value));
             if (value == 1) {
                 builder.append(" time"sv);
             } else {
@@ -279,7 +279,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     treemapwidget.set_tree(tree);
 }
 
-static bool is_removable(String const& absolute_path)
+static bool is_removable(DeprecatedString const& absolute_path)
 {
     VERIFY(!absolute_path.is_empty());
     int access_result = access(LexicalPath::dirname(absolute_path).characters(), W_OK);
@@ -288,7 +288,7 @@ static bool is_removable(String const& absolute_path)
     return access_result == 0;
 }
 
-static String get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& treemapwidget, bool include_last_node = true)
+static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& treemapwidget, bool include_last_node = true)
 {
     StringBuilder path_builder;
     for (size_t k = 0; k < treemapwidget.path_size() - (include_last_node ? 0 : 1); k++) {
@@ -348,7 +348,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(treemapwidget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
-        String selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
+        DeprecatedString selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
         bool try_again = true;
         while (try_again) {
             try_again = false;
@@ -356,7 +356,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto deletion_result = Core::File::remove(selected_node_path, Core::File::RecursionMode::Allowed, true);
             if (deletion_result.is_error()) {
                 auto retry_message_result = GUI::MessageBox::show(window,
-                    String::formatted("Failed to delete \"{}\": {}. Retry?",
+                    DeprecatedString::formatted("Failed to delete \"{}\": {}. Retry?",
                         deletion_result.error().file,
                         static_cast<Error const&>(deletion_result.error())),
                     "Deletion failed"sv,
@@ -367,7 +367,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             } else {
                 GUI::MessageBox::show(window,
-                    String::formatted("Successfully deleted \"{}\".", selected_node_path),
+                    DeprecatedString::formatted("Successfully deleted \"{}\".", selected_node_path),
                     "Deletion completed"sv,
                     GUI::MessageBox::Type::Information,
                     GUI::MessageBox::InputType::OK);
@@ -413,7 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         breadcrumbbar.set_selected_segment(treemapwidget.viewpoint());
     };
     treemapwidget.on_context_menu_request = [&](const GUI::ContextMenuEvent& event) {
-        String selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
+        DeprecatedString selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
         if (selected_node_path.is_empty())
             return;
         delete_action->set_enabled(is_removable(selected_node_path));

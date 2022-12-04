@@ -128,7 +128,7 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_inverted()
     return *m_card_back_inverted;
 }
 
-void CardPainter::set_background_image_path(String path)
+void CardPainter::set_background_image_path(DeprecatedString path)
 {
     if (m_background_image_path == path)
         return;

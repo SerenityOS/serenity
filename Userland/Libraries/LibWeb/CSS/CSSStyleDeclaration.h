@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/CSS/StyleValue.h>
@@ -22,7 +22,7 @@ struct StyleProperty {
     Important important { Important::No };
     CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue> value;
-    String custom_name {};
+    DeprecatedString custom_name {};
 };
 
 class CSSStyleDeclaration : public Bindings::PlatformObject {
@@ -32,23 +32,23 @@ public:
     virtual ~CSSStyleDeclaration() = default;
 
     virtual size_t length() const = 0;
-    virtual String item(size_t index) const = 0;
+    virtual DeprecatedString item(size_t index) const = 0;
 
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
 
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority = ""sv) = 0;
-    virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) = 0;
+    virtual WebIDL::ExceptionOr<DeprecatedString> remove_property(PropertyID) = 0;
 
     WebIDL::ExceptionOr<void> set_property(StringView property_name, StringView css_text, StringView priority);
-    WebIDL::ExceptionOr<String> remove_property(StringView property_name);
+    WebIDL::ExceptionOr<DeprecatedString> remove_property(StringView property_name);
 
-    String get_property_value(StringView property) const;
-    String get_property_priority(StringView property) const;
+    DeprecatedString get_property_value(StringView property) const;
+    DeprecatedString get_property_priority(StringView property) const;
 
-    String css_text() const;
+    DeprecatedString css_text() const;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) = 0;
 
-    virtual String serialized() const = 0;
+    virtual DeprecatedString serialized() const = 0;
 
     virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver) const override;
@@ -63,46 +63,46 @@ class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
     friend class ElementInlineCSSStyleDeclaration;
 
 public:
-    static PropertyOwningCSSStyleDeclaration* create(JS::Realm&, Vector<StyleProperty>, HashMap<String, StyleProperty> custom_properties);
+    static PropertyOwningCSSStyleDeclaration* create(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
     virtual size_t length() const override;
-    virtual String item(size_t index) const override;
+    virtual DeprecatedString item(size_t index) const override;
 
     virtual Optional<StyleProperty> property(PropertyID) const override;
 
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority) override;
-    virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) override;
+    virtual WebIDL::ExceptionOr<DeprecatedString> remove_property(PropertyID) override;
 
     Vector<StyleProperty> const& properties() const { return m_properties; }
-    HashMap<String, StyleProperty> const& custom_properties() const { return m_custom_properties; }
-    Optional<StyleProperty> custom_property(String const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    HashMap<DeprecatedString, StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    Optional<StyleProperty> custom_property(DeprecatedString const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
-    virtual String serialized() const final override;
+    virtual DeprecatedString serialized() const final override;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 protected:
-    PropertyOwningCSSStyleDeclaration(JS::Realm&, Vector<StyleProperty>, HashMap<String, StyleProperty>);
+    PropertyOwningCSSStyleDeclaration(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty>);
 
     virtual void update_style_attribute() { }
 
     void empty_the_declarations();
-    void set_the_declarations(Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
+    void set_the_declarations(Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
 private:
     bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue>, Important);
 
     Vector<StyleProperty> m_properties;
-    HashMap<String, StyleProperty> m_custom_properties;
+    HashMap<DeprecatedString, StyleProperty> m_custom_properties;
 };
 
 class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDeclaration {
     WEB_PLATFORM_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
 
 public:
-    static ElementInlineCSSStyleDeclaration* create(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
+    static ElementInlineCSSStyleDeclaration* create(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
@@ -114,7 +114,7 @@ public:
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 private:
-    ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
+    ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

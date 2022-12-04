@@ -29,13 +29,13 @@ enum class StatisticDisplay : u8 {
     __Count
 };
 
-static String format_seconds(uint64_t seconds_elapsed)
+static DeprecatedString format_seconds(uint64_t seconds_elapsed)
 {
     uint64_t hours = seconds_elapsed / 3600;
     uint64_t minutes = (seconds_elapsed / 60) % 60;
     uint64_t seconds = seconds_elapsed % 60;
 
-    return String::formatted("{:02}:{:02}:{:02}", hours, minutes, seconds);
+    return DeprecatedString::formatted("{:02}:{:02}:{:02}", hours, minutes, seconds);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -126,10 +126,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto reset_statistic_status = [&]() {
         switch (statistic_display) {
         case StatisticDisplay::HighScore:
-            statusbar.set_text(1, String::formatted("High Score: {}", high_score()));
+            statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
             break;
         case StatisticDisplay::BestTime:
-            statusbar.set_text(1, String::formatted("Best Time: {}", format_seconds(best_time())));
+            statusbar.set_text(1, DeprecatedString::formatted("Best Time: {}", format_seconds(best_time())));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -152,7 +152,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     game.on_score_update = [&](uint32_t score) {
-        statusbar.set_text(0, String::formatted("Score: {}", score));
+        statusbar.set_text(0, DeprecatedString::formatted("Score: {}", score));
     };
 
     uint64_t seconds_elapsed = 0;
@@ -160,7 +160,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto timer = Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
 
-        statusbar.set_text(2, String::formatted("Time: {}", format_seconds(seconds_elapsed)));
+        statusbar.set_text(2, DeprecatedString::formatted("Time: {}", format_seconds(seconds_elapsed)));
     });
 
     game.on_game_start = [&]() {

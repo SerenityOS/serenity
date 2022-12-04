@@ -27,7 +27,7 @@ private:
         : IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }
-    virtual void clipboard_data_changed(String const&) override
+    virtual void clipboard_data_changed(DeprecatedString const&) override
     {
         on_data_changed();
     }

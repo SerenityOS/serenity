@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/DeprecatedString.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibWeb/DOM/EventTarget.h>
@@ -108,14 +108,14 @@ public:
 
     virtual FlyString node_name() const = 0;
 
-    String base_uri() const;
+    DeprecatedString base_uri() const;
 
-    String descendant_text_content() const;
-    String text_content() const;
-    void set_text_content(String const&);
+    DeprecatedString descendant_text_content() const;
+    DeprecatedString text_content() const;
+    void set_text_content(DeprecatedString const&);
 
-    String node_value() const;
-    void set_node_value(String const&);
+    DeprecatedString node_value() const;
+    void set_node_value(DeprecatedString const&);
 
     Document& document() { return *m_document; }
     Document const& document() const { return *m_document; }
@@ -126,7 +126,7 @@ public:
     const HTML::HTMLElement* enclosing_html_element() const;
     const HTML::HTMLElement* enclosing_html_element_with_attribute(FlyString const&) const;
 
-    String child_text_content() const;
+    DeprecatedString child_text_content() const;
 
     Node& root();
     Node const& root() const
@@ -200,10 +200,10 @@ public:
     i32 id() const { return m_id; }
     static Node* from_id(i32 node_id);
 
-    WebIDL::ExceptionOr<String> serialize_fragment(DOMParsing::RequireWellFormed) const;
+    WebIDL::ExceptionOr<DeprecatedString> serialize_fragment(DOMParsing::RequireWellFormed) const;
 
     void replace_all(JS::GCPtr<Node>);
-    void string_replace_all(String const&);
+    void string_replace_all(DeprecatedString const&);
 
     bool is_same_node(Node const*) const;
     bool is_equal_node(Node const*) const;
@@ -212,7 +212,7 @@ public:
 
     bool is_uninteresting_whitespace_node() const;
 
-    String debug_description() const;
+    DeprecatedString debug_description() const;
 
     size_t length() const;
 
@@ -221,7 +221,7 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
-    void queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+    void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>

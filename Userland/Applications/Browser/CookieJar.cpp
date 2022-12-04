@@ -16,7 +16,7 @@
 
 namespace Browser {
 
-String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
+DeprecatedString CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
 {
     purge_expired_cookies();
 
@@ -134,7 +134,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL const& url)
     return cookies;
 }
 
-Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, String const& name)
+Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, DeprecatedString const& name)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -150,7 +150,7 @@ Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, String
     return {};
 }
 
-Optional<String> CookieJar::canonicalize_domain(const URL& url)
+Optional<DeprecatedString> CookieJar::canonicalize_domain(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.2
     if (!url.is_valid())
@@ -160,7 +160,7 @@ Optional<String> CookieJar::canonicalize_domain(const URL& url)
     return url.host().to_lowercase();
 }
 
-bool CookieJar::domain_matches(String const& string, String const& domain_string)
+bool CookieJar::domain_matches(DeprecatedString const& string, DeprecatedString const& domain_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.3
 
@@ -184,7 +184,7 @@ bool CookieJar::domain_matches(String const& string, String const& domain_string
     return true;
 }
 
-bool CookieJar::path_matches(String const& request_path, String const& cookie_path)
+bool CookieJar::path_matches(DeprecatedString const& request_path, DeprecatedString const& cookie_path)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.4
 
@@ -207,12 +207,12 @@ bool CookieJar::path_matches(String const& request_path, String const& cookie_pa
     return false;
 }
 
-String CookieJar::default_path(const URL& url)
+DeprecatedString CookieJar::default_path(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.4
 
     // 1. Let uri-path be the path portion of the request-uri if such a portion exists (and empty otherwise).
-    String uri_path = url.path();
+    DeprecatedString uri_path = url.path();
 
     // 2. If the uri-path is empty or if the first character of the uri-path is not a %x2F ("/") character, output %x2F ("/") and skip the remaining steps.
     if (uri_path.is_empty() || (uri_path[0] != '/'))
@@ -229,7 +229,7 @@ String CookieJar::default_path(const URL& url)
     return uri_path.substring(0, last_separator);
 }
 
-void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
+void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, DeprecatedString canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
@@ -315,7 +315,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     m_cookies.set(key, move(cookie));
 }
 
-Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, String const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
+Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, DeprecatedString const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.4
 

@@ -26,10 +26,10 @@ public:
     virtual EventTarget* get_parent(Event const&) override;
 
     // NOTE: This is intended for the JS bindings.
-    String mode() const { return m_closed ? "closed" : "open"; }
+    DeprecatedString mode() const { return m_closed ? "closed" : "open"; }
 
-    WebIDL::ExceptionOr<String> inner_html() const;
-    WebIDL::ExceptionOr<void> set_inner_html(String const&);
+    WebIDL::ExceptionOr<DeprecatedString> inner_html() const;
+    WebIDL::ExceptionOr<void> set_inner_html(DeprecatedString const&);
 
 private:
     ShadowRoot(Document&, Element&);

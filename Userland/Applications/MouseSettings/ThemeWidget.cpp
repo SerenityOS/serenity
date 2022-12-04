@@ -15,7 +15,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
-String MouseCursorModel::column_name(int column_index) const
+DeprecatedString MouseCursorModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::Bitmap:
@@ -50,7 +50,7 @@ void MouseCursorModel::invalidate()
         return;
 
     m_cursors.clear();
-    Core::DirIterator iterator(String::formatted("/res/cursor-themes/{}", m_theme_name), Core::DirIterator::Flags::SkipDots);
+    Core::DirIterator iterator(DeprecatedString::formatted("/res/cursor-themes/{}", m_theme_name), Core::DirIterator::Flags::SkipDots);
 
     while (iterator.has_next()) {
         auto path = iterator.next_full_path();
@@ -90,7 +90,7 @@ void ThemeModel::invalidate()
 
     while (iterator.has_next()) {
         auto path = iterator.next_path();
-        if (access(String::formatted("/res/cursor-themes/{}/Config.ini", path).characters(), R_OK) == 0)
+        if (access(DeprecatedString::formatted("/res/cursor-themes/{}/Config.ini", path).characters(), R_OK) == 0)
             m_themes.append(path);
     }
     Model::invalidate();
@@ -119,7 +119,7 @@ ThemeWidget::ThemeWidget()
     m_mouse_cursor_model->change_theme(theme_name);
 
     m_theme_name_box = find_descendant_of_type_named<GUI::ComboBox>("theme_name_box");
-    m_theme_name_box->on_change = [this](String const& value, GUI::ModelIndex const&) {
+    m_theme_name_box->on_change = [this](DeprecatedString const& value, GUI::ModelIndex const&) {
         m_mouse_cursor_model->change_theme(value);
         set_modified(true);
     };

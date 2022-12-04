@@ -1,6 +1,6 @@
 # String Formatting
 
-Many places in Serenity allow you to format strings, similar to `printf()`, for example `String::formatted()`
+Many places in Serenity allow you to format strings, similar to `printf()`, for example `DeprecatedString::formatted()`
 , `StringBuilder::appendff()`, or `dbgln()`. These are checked at compile time to ensure the format string matches the
 number of parameters. The syntax is largely based on
 the [C++ `std::formatter` syntax](https://en.cppreference.com/w/cpp/utility/format/formatter#Standard_format_specification)
@@ -10,27 +10,27 @@ For basic usage, any occurrences of `{}` in the format string are replaced with 
 form, in order:
 
 ```c++
-String::formatted("Well, {} my {} friends!", "hello", 42) == "Well, hello my 42 friends!";
+DeprecatedString::formatted("Well, {} my {} friends!", "hello", 42) == "Well, hello my 42 friends!";
 ```
 
 If you want to include a literal `{` in the output, use `{{`:
 
 ```c++
-String::formatted("{{ {}", "hello") == "{ hello";
+DeprecatedString::formatted("{{ {}", "hello") == "{ hello";
 ```
 
 You can refer to the arguments by index, if you want to repeat one or change the order:
 
 ```c++
-String::formatted("{2}{0}{1}", "a", "b", "c") == "cab";
+DeprecatedString::formatted("{2}{0}{1}", "a", "b", "c") == "cab";
 ```
 
 To control how the arguments are formatted, add colon after the optional index, and then add format specifier
 characters:
 
 ```c++
-String::formatted("{:.4}", "cool dude") == "cool";
-String::formatted("{0:.4}", "cool dude") == "cool";
+DeprecatedString::formatted("{:.4}", "cool dude") == "cool";
+DeprecatedString::formatted("{0:.4}", "cool dude") == "cool";
 ```
 
 ## Format specifiers
@@ -135,6 +135,6 @@ type cannot be formatted. For example:
 
 ```c++
 // B has a Formatter defined, but A does not.
-String::formatted("{}", FormatIfSupported { A {} }) == "?";
-String::formatted("{}", FormatIfSupported { B {} }) == "B";
+DeprecatedString::formatted("{}", FormatIfSupported { A {} }) == "?";
+DeprecatedString::formatted("{}", FormatIfSupported { B {} }) == "B";
 ```

@@ -90,7 +90,7 @@ void ConnectionFromClient::notify_about_new_screen_rects()
     async_screen_rects_changed(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns());
 }
 
-void ConnectionFromClient::create_menu(i32 menu_id, String const& menu_title)
+void ConnectionFromClient::create_menu(i32 menu_id, DeprecatedString const& menu_title)
 {
     auto menu = Menu::construct(this, menu_id, menu_title);
     m_menus.set(menu_id, move(menu));
@@ -127,8 +127,8 @@ void ConnectionFromClient::add_menu(i32 window_id, i32 menu_id)
 }
 
 void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submenu_id,
-    String const& text, bool enabled, bool checkable, bool checked, bool is_default,
-    String const& shortcut, Gfx::ShareableBitmap const& icon, bool exclusive)
+    DeprecatedString const& text, bool enabled, bool checkable, bool checked, bool is_default,
+    DeprecatedString const& shortcut, Gfx::ShareableBitmap const& icon, bool exclusive)
 {
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
@@ -172,8 +172,8 @@ void ConnectionFromClient::dismiss_menu(i32 menu_id)
 }
 
 void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unused]] i32 submenu_id,
-    String const& text, bool enabled, bool checkable, bool checked, bool is_default,
-    String const& shortcut, Gfx::ShareableBitmap const& icon)
+    DeprecatedString const& text, bool enabled, bool checkable, bool checked, bool is_default,
+    DeprecatedString const& shortcut, Gfx::ShareableBitmap const& icon)
 {
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
@@ -315,12 +315,12 @@ Messages::WindowServer::SetWallpaperResponse ConnectionFromClient::set_wallpaper
     return Compositor::the().set_wallpaper(bitmap.bitmap());
 }
 
-void ConnectionFromClient::set_background_color(String const& background_color)
+void ConnectionFromClient::set_background_color(DeprecatedString const& background_color)
 {
     Compositor::the().set_background_color(background_color);
 }
 
-void ConnectionFromClient::set_wallpaper_mode(String const& mode)
+void ConnectionFromClient::set_wallpaper_mode(DeprecatedString const& mode)
 {
     Compositor::the().set_wallpaper_mode(mode);
 }
@@ -332,7 +332,7 @@ Messages::WindowServer::GetWallpaperResponse ConnectionFromClient::get_wallpaper
 
 Messages::WindowServer::SetScreenLayoutResponse ConnectionFromClient::set_screen_layout(ScreenLayout const& screen_layout, bool save)
 {
-    String error_msg;
+    DeprecatedString error_msg;
     bool success = WindowManager::the().set_screen_layout(ScreenLayout(screen_layout), save, error_msg);
     return { success, move(error_msg) };
 }
@@ -344,7 +344,7 @@ Messages::WindowServer::GetScreenLayoutResponse ConnectionFromClient::get_screen
 
 Messages::WindowServer::SaveScreenLayoutResponse ConnectionFromClient::save_screen_layout()
 {
-    String error_msg;
+    DeprecatedString error_msg;
     bool success = WindowManager::the().save_screen_layout(error_msg);
     return { success, move(error_msg) };
 }
@@ -374,7 +374,7 @@ void ConnectionFromClient::show_screen_numbers(bool show)
         Compositor::the().decrement_show_screen_number({});
 }
 
-void ConnectionFromClient::set_window_title(i32 window_id, String const& title)
+void ConnectionFromClient::set_window_title(i32 window_id, DeprecatedString const& title)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -466,7 +466,7 @@ Messages::WindowServer::SetWindowRectResponse ConnectionFromClient::set_window_r
         return nullptr;
     }
     if (rect.width() > INT16_MAX || rect.height() > INT16_MAX) {
-        did_misbehave(String::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds INT16_MAX", rect.width(), rect.height()).characters());
+        did_misbehave(DeprecatedString::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds INT16_MAX", rect.width(), rect.height()).characters());
         return nullptr;
     }
 
@@ -590,7 +590,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
     bool fullscreen, bool frameless, bool forced_shadow, float opacity,
     float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
     Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
-    String const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
+    DeprecatedString const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
 {
     Window* parent_window = nullptr;
     if (parent_window_id) {
@@ -846,7 +846,7 @@ void ConnectionFromClient::start_window_resize(i32 window_id, i32 resize_directi
     WindowManager::the().start_window_resize(window, ScreenInput::the().cursor_location(), MouseButton::Primary, (ResizeDirection)resize_direction);
 }
 
-Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(String const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
+Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(DeprecatedString const& text, HashMap<DeprecatedString, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
 {
     auto& wm = WindowManager::the();
     if (wm.dnd_client() || !(wm.last_processed_buttons() & MouseButton::Primary))
@@ -863,7 +863,7 @@ void ConnectionFromClient::set_accepts_drag(bool accepts)
     wm.set_accepts_drag(accepts);
 }
 
-Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(String const& theme_path, String const& theme_name, bool keep_desktop_background)
+Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(DeprecatedString const& theme_path, DeprecatedString const& theme_name, bool keep_desktop_background)
 {
     bool success = WindowManager::the().update_theme(theme_path, theme_name, keep_desktop_background);
     return success;
@@ -897,7 +897,7 @@ Messages::WindowServer::IsSystemThemeOverriddenResponse ConnectionFromClient::is
     return WindowManager::the().is_theme_overridden();
 }
 
-void ConnectionFromClient::apply_cursor_theme(String const& name)
+void ConnectionFromClient::apply_cursor_theme(DeprecatedString const& name)
 {
     WindowManager::the().apply_cursor_theme(name);
 }
@@ -929,7 +929,7 @@ Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_
     return name;
 }
 
-Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(String const& default_font_query, String const& fixed_width_font_query, String const& window_title_font_query)
+Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
 {
     if (!Gfx::FontDatabase::the().get_by_name(default_font_query)
         || !Gfx::FontDatabase::the().get_by_name(fixed_width_font_query)) {

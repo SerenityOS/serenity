@@ -37,7 +37,7 @@ public:
         return *m_declaration;
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     DeclarationType m_type;

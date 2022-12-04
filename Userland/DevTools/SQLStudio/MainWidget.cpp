@@ -55,7 +55,7 @@ MainWidget::MainWidget()
             return;
         auto save_attempt = editor->save();
         if (save_attempt.is_error())
-            GUI::MessageBox::show_error(window(), String::formatted("Failed to save\n{}", save_attempt.release_error()));
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save\n{}", save_attempt.release_error()));
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -66,7 +66,7 @@ MainWidget::MainWidget()
             return;
         auto save_attempt = editor->save_as();
         if (save_attempt.is_error())
-            GUI::MessageBox::show_error(window(), String::formatted("Failed to save\n{}", save_attempt.release_error()));
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save\n{}", save_attempt.release_error()));
     });
 
     m_save_all_action = GUI::Action::create("Save All", { Mod_Ctrl | Mod_Alt, Key_S }, [this](auto&) {
@@ -88,7 +88,7 @@ MainWidget::MainWidget()
             return IterationDecision::Break;
         });
         if (error.is_error())
-            GUI::MessageBox::show_error(window(), String::formatted("Failed to save all files\n{}", error.release_error()));
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save all files\n{}", error.release_error()));
         m_tab_widget->set_active_widget(current_active_widget);
     });
 
@@ -177,7 +177,7 @@ MainWidget::MainWidget()
             return;
         auto close_attempt = editor->attempt_to_close();
         if (close_attempt.is_error()) {
-            GUI::MessageBox::show_error(window(), String::formatted("Failed to save before closing\n{}", close_attempt.release_error()));
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save before closing\n{}", close_attempt.release_error()));
             return;
         }
         if (close_attempt.release_value()) {
@@ -217,7 +217,7 @@ MainWidget::MainWidget()
     m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
         read_next_sql_statement_of_editor();
     };
-    m_sql_client->on_next_result = [this](int, Vector<String> const& row) {
+    m_sql_client->on_next_result = [this](int, Vector<DeprecatedString> const& row) {
         m_results.append(row);
     };
     m_sql_client->on_results_exhausted = [this](int, int) {
@@ -227,7 +227,7 @@ MainWidget::MainWidget()
             return;
         Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
         for (size_t i = 0; i < m_results[0].size(); i++)
-            query_result_fields.empend(String::formatted("column_{}", i + 1), String::formatted("Column {}", i + 1), Gfx::TextAlignment::CenterLeft);
+            query_result_fields.empend(DeprecatedString::formatted("column_{}", i + 1), DeprecatedString::formatted("Column {}", i + 1), Gfx::TextAlignment::CenterLeft);
         auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
         m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));
         for (auto& result_row : m_results) {
@@ -273,7 +273,7 @@ void MainWidget::initialize_menu(GUI::Window* window)
 
 void MainWidget::open_new_script()
 {
-    auto new_script_name = String::formatted("New Script - {}", m_new_script_counter);
+    auto new_script_name = DeprecatedString::formatted("New Script - {}", m_new_script_counter);
     ++m_new_script_counter;
 
     auto& editor = m_tab_widget->add_tab<ScriptEditor>(new_script_name);
@@ -291,7 +291,7 @@ void MainWidget::open_script_from_file(LexicalPath const& file_path)
     auto& editor = m_tab_widget->add_tab<ScriptEditor>(file_path.title());
     auto maybe_error = editor.open_script_from_file(file_path);
     if (maybe_error.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to open {}\n{}", file_path, maybe_error.release_error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, maybe_error.release_error()));
         return;
     }
 
@@ -344,7 +344,7 @@ void MainWidget::update_title()
 {
     auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
     if (editor) {
-        window()->set_title(String::formatted("{} - SQL Studio", editor->name()));
+        window()->set_title(DeprecatedString::formatted("{} - SQL Studio", editor->name()));
     } else {
         window()->set_title("SQL Studio");
     }
@@ -368,14 +368,14 @@ void MainWidget::update_statusbar(ScriptEditor* editor)
     if (editor->has_selection()) {
         auto character_count = editor->selected_text().length();
         auto word_count = editor->number_of_selected_words();
-        m_statusbar->set_text(1, String::formatted("{} {} ({} {}) selected", character_count, character_count == 1 ? "character" : "characters", word_count, word_count == 1 ? "word" : "words"));
+        m_statusbar->set_text(1, DeprecatedString::formatted("{} {} ({} {}) selected", character_count, character_count == 1 ? "character" : "characters", word_count, word_count == 1 ? "word" : "words"));
     } else {
         auto character_count = editor->text().length();
         auto word_count = editor->number_of_words();
-        m_statusbar->set_text(1, String::formatted("{} {} ({} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count == 1 ? "word" : "words"));
+        m_statusbar->set_text(1, DeprecatedString::formatted("{} {} ({} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count == 1 ? "word" : "words"));
     }
 
-    m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", editor->cursor().line() + 1, editor->cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", editor->cursor().line() + 1, editor->cursor().column()));
 }
 
 void MainWidget::update_editor_actions(ScriptEditor* editor)
@@ -428,7 +428,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
     }
 }
 
-String MainWidget::read_next_sql_statement_of_editor()
+DeprecatedString MainWidget::read_next_sql_statement_of_editor()
 {
     StringBuilder piece;
     do {
@@ -484,13 +484,13 @@ String MainWidget::read_next_sql_statement_of_editor()
     return piece.to_string();
 }
 
-Optional<String> MainWidget::read_next_line_of_editor()
+Optional<DeprecatedString> MainWidget::read_next_line_of_editor()
 {
     auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
     if (!editor)
         return {};
     if (m_current_line_for_parsing < editor->document().line_count()) {
-        String result = editor->document().line(m_current_line_for_parsing).to_utf8();
+        DeprecatedString result = editor->document().line(m_current_line_for_parsing).to_utf8();
         m_current_line_for_parsing++;
         return result;
     } else {

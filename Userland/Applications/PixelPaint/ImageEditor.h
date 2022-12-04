@@ -43,17 +43,17 @@ public:
     void set_active_tool(Tool*);
     void update_tool_cursor();
 
-    void did_complete_action(String action_text);
+    void did_complete_action(DeprecatedString action_text);
     bool undo();
     bool redo();
 
     auto& undo_stack() { return m_undo_stack; }
 
-    String const& path() const { return m_path; }
-    void set_path(String);
+    DeprecatedString const& path() const { return m_path; }
+    void set_path(DeprecatedString);
 
-    String const& title() const { return m_title; }
-    void set_title(String);
+    DeprecatedString const& title() const { return m_title; }
+    void set_title(DeprecatedString);
 
     void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
     void remove_guide(Guide const& guide)
@@ -82,7 +82,7 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
-    Function<void(String const&)> on_title_change;
+    Function<void(DeprecatedString const&)> on_title_change;
 
     Function<void(Gfx::IntPoint const&)> on_image_mouse_position_change;
 
@@ -144,7 +144,7 @@ private:
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
-    Result<void, String> save_project_to_file(Core::File&) const;
+    Result<void, DeprecatedString> save_project_to_file(Core::File&) const;
 
     int calculate_ruler_step_size() const;
     Gfx::IntRect mouse_indicator_rect_x() const;
@@ -156,8 +156,8 @@ private:
     RefPtr<Layer> m_active_layer;
     GUI::UndoStack m_undo_stack;
 
-    String m_path;
-    String m_title;
+    DeprecatedString m_path;
+    DeprecatedString m_title;
 
     NonnullRefPtrVector<Guide> m_guides;
     bool m_show_guides { true };

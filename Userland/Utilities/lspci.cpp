@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Hex.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
@@ -29,11 +29,11 @@ static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {
     // FIXME: Propagate errors.
     return AK::StringUtils::convert_to_uint_from_hex(
-        String(MUST(buf.slice(2, buf.size() - 2)).bytes()))
+        DeprecatedString(MUST(buf.slice(2, buf.size() - 2)).bytes()))
         .release_value();
 }
 
-static u32 convert_sysfs_value_to_uint(String const& value)
+static u32 convert_sysfs_value_to_uint(DeprecatedString const& value)
 {
     if (auto result = AK::StringUtils::convert_to_uint_from_hex(value); result.has_value())
         return result.release_value();
@@ -88,31 +88,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         VERIFY(function_parts.size() == 2);
         auto function = convert_sysfs_value_to_uint(function_parts[1]);
 
-        auto vendor_id_filename = String::formatted("/sys/bus/pci/{}/vendor", dir);
+        auto vendor_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/vendor", dir);
         auto vendor_id_file = Core::Stream::File::open(vendor_id_filename, Core::Stream::OpenMode::Read);
         if (vendor_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", vendor_id_filename, vendor_id_file.error());
             continue;
         }
-        auto device_id_filename = String::formatted("/sys/bus/pci/{}/device_id", dir);
+        auto device_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/device_id", dir);
         auto device_id_file = Core::Stream::File::open(device_id_filename, Core::Stream::OpenMode::Read);
         if (device_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", device_id_filename, device_id_file.error());
             continue;
         }
-        auto class_id_filename = String::formatted("/sys/bus/pci/{}/class", dir);
+        auto class_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/class", dir);
         auto class_id_file = Core::Stream::File::open(class_id_filename, Core::Stream::OpenMode::Read);
         if (class_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", class_id_filename, class_id_file.error());
             continue;
         }
-        auto subclass_id_filename = String::formatted("/sys/bus/pci/{}/subclass", dir);
+        auto subclass_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/subclass", dir);
         auto subclass_id_file = Core::Stream::File::open(subclass_id_filename, Core::Stream::OpenMode::Read);
         if (subclass_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", subclass_id_filename, subclass_id_file.error());
             continue;
         }
-        auto revision_id_filename = String::formatted("/sys/bus/pci/{}/revision", dir);
+        auto revision_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/revision", dir);
         auto revision_id_file = Core::Stream::File::open(revision_id_filename, Core::Stream::OpenMode::Read);
         if (revision_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", revision_id_filename, revision_id_file.error());
@@ -154,9 +154,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         u32 subclass_id = read_hex_string_from_bytebuffer(subclass_id_contents.value());
 
-        String vendor_name;
-        String device_name;
-        String class_name;
+        DeprecatedString vendor_name;
+        DeprecatedString device_name;
+        DeprecatedString class_name;
 
         if (db) {
             vendor_name = db->get_vendor(vendor_id);
@@ -165,18 +165,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (vendor_name.is_empty())
-            vendor_name = String::formatted("{:04x}", vendor_id);
+            vendor_name = DeprecatedString::formatted("{:04x}", vendor_id);
         if (device_name.is_empty())
-            device_name = String::formatted("{:04x}", device_id);
+            device_name = DeprecatedString::formatted("{:04x}", device_id);
         if (class_name.is_empty())
-            class_name = String::formatted("{:02x}{:02x}", class_id, subclass_id);
+            class_name = DeprecatedString::formatted("{:02x}{:02x}", class_id, subclass_id);
 
         outln(format, domain, bus, device, function, class_name, vendor_name, device_name, revision_id);
 
         if (!flag_verbose)
             continue;
         for (size_t bar_index = 0; bar_index <= 5; bar_index++) {
-            auto bar_value_filename = String::formatted("/sys/bus/pci/{}/bar{}", dir, bar_index);
+            auto bar_value_filename = DeprecatedString::formatted("/sys/bus/pci/{}/bar{}", dir, bar_index);
             auto bar_value_file = Core::Stream::File::open(bar_value_filename, Core::Stream::OpenMode::Read);
             if (bar_value_file.is_error()) {
                 dbgln("Error: Could not open {}: {}", bar_value_filename, bar_value_file.error());

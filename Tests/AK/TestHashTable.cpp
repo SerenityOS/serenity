@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/String.h>
 
 TEST_CASE(construct)
 {
@@ -44,7 +44,7 @@ TEST_CASE(move_is_not_swap)
 
 TEST_CASE(populate)
 {
-    HashTable<String> strings;
+    HashTable<DeprecatedString> strings;
     strings.set("One");
     strings.set("Two");
     strings.set("Three");
@@ -55,7 +55,7 @@ TEST_CASE(populate)
 
 TEST_CASE(range_loop)
 {
-    HashTable<String> strings;
+    HashTable<DeprecatedString> strings;
     EXPECT_EQ(strings.set("One"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(strings.set("Two"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(strings.set("Three"), AK::HashSetResult::InsertedNewEntry);
@@ -70,7 +70,7 @@ TEST_CASE(range_loop)
 
 TEST_CASE(table_remove)
 {
-    HashTable<String> strings;
+    HashTable<DeprecatedString> strings;
     EXPECT_EQ(strings.set("One"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(strings.set("Two"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(strings.set("Three"), AK::HashSetResult::InsertedNewEntry);
@@ -113,8 +113,8 @@ TEST_CASE(remove_all_matching)
 
 TEST_CASE(case_insensitive)
 {
-    HashTable<String, CaseInsensitiveStringTraits> casetable;
-    EXPECT_EQ(String("nickserv").to_lowercase(), String("NickServ").to_lowercase());
+    HashTable<DeprecatedString, CaseInsensitiveStringTraits> casetable;
+    EXPECT_EQ(DeprecatedString("nickserv").to_lowercase(), DeprecatedString("NickServ").to_lowercase());
     EXPECT_EQ(casetable.set("nickserv"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(casetable.set("NickServ"), AK::HashSetResult::ReplacedExistingEntry);
     EXPECT_EQ(casetable.size(), 1u);
@@ -122,33 +122,33 @@ TEST_CASE(case_insensitive)
 
 TEST_CASE(many_strings)
 {
-    HashTable<String> strings;
+    HashTable<DeprecatedString> strings;
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(DeprecatedString::number(i)), AK::HashSetResult::InsertedNewEntry);
     }
     EXPECT_EQ(strings.size(), 999u);
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.remove(String::number(i)), true);
+        EXPECT_EQ(strings.remove(DeprecatedString::number(i)), true);
     }
     EXPECT_EQ(strings.is_empty(), true);
 }
 
 TEST_CASE(many_collisions)
 {
-    struct StringCollisionTraits : public GenericTraits<String> {
-        static unsigned hash(String const&) { return 0; }
+    struct StringCollisionTraits : public GenericTraits<DeprecatedString> {
+        static unsigned hash(DeprecatedString const&) { return 0; }
     };
 
-    HashTable<String, StringCollisionTraits> strings;
+    HashTable<DeprecatedString, StringCollisionTraits> strings;
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(DeprecatedString::number(i)), AK::HashSetResult::InsertedNewEntry);
     }
 
     EXPECT_EQ(strings.set("foo"), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(strings.size(), 1000u);
 
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.remove(String::number(i)), true);
+        EXPECT_EQ(strings.remove(DeprecatedString::number(i)), true);
     }
 
     // FIXME: Doing this with an "EXPECT_NOT_EQ" would be cleaner.
@@ -157,24 +157,24 @@ TEST_CASE(many_collisions)
 
 TEST_CASE(space_reuse)
 {
-    struct StringCollisionTraits : public GenericTraits<String> {
-        static unsigned hash(String const&) { return 0; }
+    struct StringCollisionTraits : public GenericTraits<DeprecatedString> {
+        static unsigned hash(DeprecatedString const&) { return 0; }
     };
 
-    HashTable<String, StringCollisionTraits> strings;
+    HashTable<DeprecatedString, StringCollisionTraits> strings;
 
     // Add a few items to allow it to do initial resizing.
     EXPECT_EQ(strings.set("0"), AK::HashSetResult::InsertedNewEntry);
     for (int i = 1; i < 5; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
-        EXPECT_EQ(strings.remove(String::number(i - 1)), true);
+        EXPECT_EQ(strings.set(DeprecatedString::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.remove(DeprecatedString::number(i - 1)), true);
     }
 
     auto capacity = strings.capacity();
 
     for (int i = 5; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
-        EXPECT_EQ(strings.remove(String::number(i - 1)), true);
+        EXPECT_EQ(strings.set(DeprecatedString::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.remove(DeprecatedString::number(i - 1)), true);
     }
 
     EXPECT_EQ(strings.capacity(), capacity);
@@ -300,7 +300,7 @@ BENCHMARK_CASE(benchmark_thrashing)
 
 TEST_CASE(reinsertion)
 {
-    OrderedHashTable<String> map;
+    OrderedHashTable<DeprecatedString> map;
     map.set("ytidb::LAST_RESULT_ENTRY_KEY");
     map.set("__sak");
     map.remove("__sak");

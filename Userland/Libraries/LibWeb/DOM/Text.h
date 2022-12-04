@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/String.h>
 #include <LibWeb/DOM/CharacterData.h>
 
 namespace Web::DOM {
@@ -18,7 +18,7 @@ class Text : public CharacterData {
 public:
     virtual ~Text() override = default;
 
-    static JS::NonnullGCPtr<Text> construct_impl(JS::Realm& realm, String const& data);
+    static JS::NonnullGCPtr<Text> construct_impl(JS::Realm& realm, DeprecatedString const& data);
 
     // ^Node
     virtual FlyString node_name() const override { return "#text"; }
@@ -35,8 +35,8 @@ public:
     void set_is_password_input(Badge<HTML::HTMLInputElement>, bool b) { m_is_password_input = b; }
 
 protected:
-    Text(Document&, String const&);
-    Text(Document&, NodeType, String const&);
+    Text(Document&, DeprecatedString const&);
+    Text(Document&, NodeType, DeprecatedString const&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
-#include <AK/String.h>
 #include <LibCpp/Parser.h>
 
 namespace HackStudio {
@@ -20,7 +20,7 @@ class ToDoEntries {
 public:
     static ToDoEntries& the();
 
-    void set_entries(String const& filename, Vector<CodeComprehension::TodoEntry> const&& entries);
+    void set_entries(DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry> const&& entries);
 
     Vector<CodeComprehension::TodoEntry> get_entries();
 
@@ -30,7 +30,7 @@ public:
 
 private:
     ToDoEntries() = default;
-    HashMap<String, Vector<CodeComprehension::TodoEntry>> m_document_to_entries;
+    HashMap<DeprecatedString, Vector<CodeComprehension::TodoEntry>> m_document_to_entries;
 };
 
 }

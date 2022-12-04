@@ -16,7 +16,7 @@
 
 namespace Markdown {
 
-String ContainerBlock::render_to_html(bool tight) const
+DeprecatedString ContainerBlock::render_to_html(bool tight) const
 {
     StringBuilder builder;
 
@@ -39,7 +39,7 @@ String ContainerBlock::render_to_html(bool tight) const
     return builder.build();
 }
 
-String ContainerBlock::render_for_terminal(size_t view_width) const
+DeprecatedString ContainerBlock::render_for_terminal(size_t view_width) const
 {
     StringBuilder builder;
 

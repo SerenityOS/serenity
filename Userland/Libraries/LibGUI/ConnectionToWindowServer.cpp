@@ -57,7 +57,7 @@ ConnectionToWindowServer::ConnectionToWindowServer(NonnullOwnPtr<Core::Stream::L
     m_client_id = message->client_id();
 }
 
-void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, String const&, Vector<bool> const&, i32)
+void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Vector<bool> const&, i32)
 {
     // NOTE: This message is handled in the constructor.
 }
@@ -73,7 +73,7 @@ void ConnectionToWindowServer::update_system_theme(Core::AnonymousBuffer const& 
     Application::the()->dispatch_event(*make<ThemeChangeEvent>());
 }
 
-void ConnectionToWindowServer::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query, String const& window_title_font_query)
+void ConnectionToWindowServer::update_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
@@ -259,7 +259,7 @@ void ConnectionToWindowServer::mouse_up(i32 window_id, Gfx::IntPoint const& mous
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
 }
 
-void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<String> const& mime_types)
+void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<DeprecatedString> const& mime_types)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         if (is_drag)
@@ -349,7 +349,7 @@ void ConnectionToWindowServer::applet_area_rect_changed(Gfx::IntRect const& rect
     });
 }
 
-void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint const& mouse_position, String const& text, HashMap<String, ByteBuffer> const& mime_data)
+void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint const& mouse_position, DeprecatedString const& text, HashMap<DeprecatedString, ByteBuffer> const& mime_data)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         auto mime_data_obj = Core::MimeData::construct(mime_data);

@@ -6,28 +6,28 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <cstring>
 
 TEST_CASE(construct_empty)
 {
-    EXPECT(String().is_null());
-    EXPECT(String().is_empty());
-    EXPECT(!String().characters());
+    EXPECT(DeprecatedString().is_null());
+    EXPECT(DeprecatedString().is_empty());
+    EXPECT(!DeprecatedString().characters());
 
-    EXPECT(!String("").is_null());
-    EXPECT(String("").is_empty());
-    EXPECT(String("").characters() != nullptr);
+    EXPECT(!DeprecatedString("").is_null());
+    EXPECT(DeprecatedString("").is_empty());
+    EXPECT(DeprecatedString("").characters() != nullptr);
 
-    EXPECT(String("").impl() == String::empty().impl());
+    EXPECT(DeprecatedString("").impl() == DeprecatedString::empty().impl());
 }
 
 TEST_CASE(construct_contents)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     EXPECT(!test_string.is_empty());
     EXPECT(!test_string.is_null());
     EXPECT_EQ(test_string.length(), 6u);
@@ -42,45 +42,45 @@ TEST_CASE(construct_contents)
 
 TEST_CASE(equal)
 {
-    EXPECT_NE(String::empty(), String {});
+    EXPECT_NE(DeprecatedString::empty(), DeprecatedString {});
 }
 
 TEST_CASE(compare)
 {
-    EXPECT("a"sv < String("b"));
-    EXPECT(!("a"sv > String("b")));
-    EXPECT("b"sv > String("a"));
-    EXPECT(!("b"sv < String("b")));
-    EXPECT("a"sv >= String("a"));
-    EXPECT(!("a"sv >= String("b")));
-    EXPECT("a"sv <= String("a"));
-    EXPECT(!("b"sv <= String("a")));
+    EXPECT("a"sv < DeprecatedString("b"));
+    EXPECT(!("a"sv > DeprecatedString("b")));
+    EXPECT("b"sv > DeprecatedString("a"));
+    EXPECT(!("b"sv < DeprecatedString("b")));
+    EXPECT("a"sv >= DeprecatedString("a"));
+    EXPECT(!("a"sv >= DeprecatedString("b")));
+    EXPECT("a"sv <= DeprecatedString("a"));
+    EXPECT(!("b"sv <= DeprecatedString("a")));
 
-    EXPECT(String("a") > String());
-    EXPECT(!(String() > String("a")));
-    EXPECT(String() < String("a"));
-    EXPECT(!(String("a") < String()));
-    EXPECT(String("a") >= String());
-    EXPECT(!(String() >= String("a")));
-    EXPECT(String() <= String("a"));
-    EXPECT(!(String("a") <= String()));
+    EXPECT(DeprecatedString("a") > DeprecatedString());
+    EXPECT(!(DeprecatedString() > DeprecatedString("a")));
+    EXPECT(DeprecatedString() < DeprecatedString("a"));
+    EXPECT(!(DeprecatedString("a") < DeprecatedString()));
+    EXPECT(DeprecatedString("a") >= DeprecatedString());
+    EXPECT(!(DeprecatedString() >= DeprecatedString("a")));
+    EXPECT(DeprecatedString() <= DeprecatedString("a"));
+    EXPECT(!(DeprecatedString("a") <= DeprecatedString()));
 
-    EXPECT(!(String() > String()));
-    EXPECT(!(String() < String()));
-    EXPECT(String() >= String());
-    EXPECT(String() <= String());
+    EXPECT(!(DeprecatedString() > DeprecatedString()));
+    EXPECT(!(DeprecatedString() < DeprecatedString()));
+    EXPECT(DeprecatedString() >= DeprecatedString());
+    EXPECT(DeprecatedString() <= DeprecatedString());
 }
 
 TEST_CASE(index_access)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     EXPECT_EQ(test_string[0], 'A');
     EXPECT_EQ(test_string[1], 'B');
 }
 
 TEST_CASE(starts_with)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     EXPECT(test_string.starts_with("AB"sv));
     EXPECT(test_string.starts_with('A'));
     EXPECT(!test_string.starts_with('B'));
@@ -92,7 +92,7 @@ TEST_CASE(starts_with)
 
 TEST_CASE(ends_with)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     EXPECT(test_string.ends_with("EF"sv));
     EXPECT(test_string.ends_with('F'));
     EXPECT(!test_string.ends_with('E'));
@@ -104,7 +104,7 @@ TEST_CASE(ends_with)
 
 TEST_CASE(copy_string)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     auto test_string_copy = test_string;
     EXPECT_EQ(test_string, test_string_copy);
     EXPECT_EQ(test_string.characters(), test_string_copy.characters());
@@ -112,7 +112,7 @@ TEST_CASE(copy_string)
 
 TEST_CASE(move_string)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     auto test_string_copy = test_string;
     auto test_string_move = move(test_string_copy);
     EXPECT_EQ(test_string, test_string_move);
@@ -121,25 +121,25 @@ TEST_CASE(move_string)
 
 TEST_CASE(repeated)
 {
-    EXPECT_EQ(String::repeated('x', 0), "");
-    EXPECT_EQ(String::repeated('x', 1), "x");
-    EXPECT_EQ(String::repeated('x', 2), "xx");
+    EXPECT_EQ(DeprecatedString::repeated('x', 0), "");
+    EXPECT_EQ(DeprecatedString::repeated('x', 1), "x");
+    EXPECT_EQ(DeprecatedString::repeated('x', 2), "xx");
 }
 
 TEST_CASE(to_int)
 {
-    EXPECT_EQ(String("123").to_int().value(), 123);
-    EXPECT_EQ(String("-123").to_int().value(), -123);
+    EXPECT_EQ(DeprecatedString("123").to_int().value(), 123);
+    EXPECT_EQ(DeprecatedString("-123").to_int().value(), -123);
 }
 
 TEST_CASE(to_lowercase)
 {
-    EXPECT(String("ABC").to_lowercase() == "abc");
+    EXPECT(DeprecatedString("ABC").to_lowercase() == "abc");
 }
 
 TEST_CASE(to_uppercase)
 {
-    EXPECT(String("AbC").to_uppercase() == "ABC");
+    EXPECT(DeprecatedString("AbC").to_uppercase() == "ABC");
 }
 
 TEST_CASE(flystring)
@@ -151,7 +151,7 @@ TEST_CASE(flystring)
     }
 
     {
-        String a = "foo";
+        DeprecatedString a = "foo";
         FlyString b = a;
         StringBuilder builder;
         builder.append('f');
@@ -164,7 +164,7 @@ TEST_CASE(flystring)
 
 TEST_CASE(replace)
 {
-    String test_string = "Well, hello Friends!";
+    DeprecatedString test_string = "Well, hello Friends!";
 
     test_string = test_string.replace("Friends"sv, "Testers"sv, ReplaceMode::FirstOnly);
     EXPECT(test_string == "Well, hello Testers!");
@@ -175,7 +175,7 @@ TEST_CASE(replace)
     test_string = test_string.replace("!"sv, " :^)"sv, ReplaceMode::FirstOnly);
     EXPECT(test_string == "We're, he'reo Testers :^)");
 
-    test_string = String("111._.111._.111");
+    test_string = DeprecatedString("111._.111._.111");
     test_string = test_string.replace("111"sv, "|||"sv, ReplaceMode::All);
     EXPECT(test_string == "|||._.|||._.|||");
 
@@ -185,7 +185,7 @@ TEST_CASE(replace)
 
 TEST_CASE(count)
 {
-    String test_string = "Well, hello Friends!";
+    DeprecatedString test_string = "Well, hello Friends!";
     u32 count = test_string.count("Friends"sv);
     EXPECT(count == 1);
 
@@ -195,7 +195,7 @@ TEST_CASE(count)
     count = test_string.count("!"sv);
     EXPECT(count == 1);
 
-    test_string = String("111._.111._.111");
+    test_string = DeprecatedString("111._.111._.111");
     count = test_string.count("111"sv);
     EXPECT(count == 3);
 
@@ -205,7 +205,7 @@ TEST_CASE(count)
 
 TEST_CASE(substring)
 {
-    String test = "abcdef";
+    DeprecatedString test = "abcdef";
     EXPECT_EQ(test.substring(0, 6), test);
     EXPECT_EQ(test.substring(0, 3), "abc");
     EXPECT_EQ(test.substring(3, 3), "def");
@@ -215,7 +215,7 @@ TEST_CASE(substring)
 
 TEST_CASE(split)
 {
-    String test = "foo bar baz";
+    DeprecatedString test = "foo bar baz";
     auto parts = test.split(' ');
     EXPECT_EQ(parts.size(), 3u);
     EXPECT_EQ(parts[0], "foo");
@@ -259,7 +259,7 @@ TEST_CASE(builder_zero_initial_capacity)
 
 TEST_CASE(find)
 {
-    String a = "foobarbar";
+    DeprecatedString a = "foobarbar";
     EXPECT_EQ(a.find("bar"sv), Optional<size_t> { 3 });
     EXPECT_EQ(a.find("baz"sv), Optional<size_t> {});
     EXPECT_EQ(a.find("bar"sv, 4), Optional<size_t> { 6 });
@@ -275,7 +275,7 @@ TEST_CASE(find)
 
 TEST_CASE(find_with_empty_needle)
 {
-    String string = "";
+    DeprecatedString string = "";
     EXPECT_EQ(string.find(""sv), 0u);
     EXPECT_EQ(string.find_all(""sv), (Vector<size_t> { 0u }));
 
@@ -286,30 +286,30 @@ TEST_CASE(find_with_empty_needle)
 
 TEST_CASE(bijective_base)
 {
-    EXPECT_EQ(String::bijective_base_from(0), "A");
-    EXPECT_EQ(String::bijective_base_from(25), "Z");
-    EXPECT_EQ(String::bijective_base_from(26), "AA");
-    EXPECT_EQ(String::bijective_base_from(52), "BA");
-    EXPECT_EQ(String::bijective_base_from(704), "ABC");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(0), "A");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(25), "Z");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(26), "AA");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(52), "BA");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(704), "ABC");
 }
 
 TEST_CASE(roman_numerals)
 {
-    auto zero = String::roman_number_from(0);
+    auto zero = DeprecatedString::roman_number_from(0);
     EXPECT_EQ(zero, "");
 
-    auto one = String::roman_number_from(1);
+    auto one = DeprecatedString::roman_number_from(1);
     EXPECT_EQ(one, "I");
 
-    auto nine = String::roman_number_from(9);
+    auto nine = DeprecatedString::roman_number_from(9);
     EXPECT_EQ(nine, "IX");
 
-    auto fourty_eight = String::roman_number_from(48);
+    auto fourty_eight = DeprecatedString::roman_number_from(48);
     EXPECT_EQ(fourty_eight, "XLVIII");
 
-    auto one_thousand_nine_hundred_ninety_eight = String::roman_number_from(1998);
+    auto one_thousand_nine_hundred_ninety_eight = DeprecatedString::roman_number_from(1998);
     EXPECT_EQ(one_thousand_nine_hundred_ninety_eight, "MCMXCVIII");
 
-    auto four_thousand = String::roman_number_from(4000);
+    auto four_thousand = DeprecatedString::roman_number_from(4000);
     EXPECT_EQ(four_thousand, "4000");
 }

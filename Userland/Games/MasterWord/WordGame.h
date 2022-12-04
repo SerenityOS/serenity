@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Rect.h>
@@ -24,7 +24,7 @@ public:
     void set_max_guesses(size_t max_guesses);
     Gfx::IntSize game_size() const;
 
-    Optional<String> random_word(size_t length);
+    Optional<DeprecatedString> random_word(size_t length);
     size_t shortest_word();
     size_t longest_word();
     bool is_checking_guesses() const;
@@ -67,13 +67,13 @@ private:
     };
 
     struct Guess {
-        AK::String text;
+        AK::DeprecatedString text;
         AK::Vector<LetterState> letter_states;
     };
 
     AK::Vector<Guess> m_guesses;
-    AK::String m_current_guess;
-    AK::String m_current_word;
+    AK::DeprecatedString m_current_guess;
+    AK::DeprecatedString m_current_word;
 
-    HashMap<size_t, AK::Vector<String>> m_words;
+    HashMap<size_t, AK::Vector<DeprecatedString>> m_words;
 };

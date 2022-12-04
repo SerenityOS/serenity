@@ -11,7 +11,7 @@
 
 namespace TextEditor {
 
-FileArgument::FileArgument(String file_argument)
+FileArgument::FileArgument(DeprecatedString file_argument)
 {
     m_line = {};
     m_column = {};

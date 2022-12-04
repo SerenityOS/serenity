@@ -54,7 +54,7 @@ private:
                 m_last_idle = idle;
                 float cpu = total_diff > 0 ? (float)(total_diff - idle_diff) / (float)total_diff : 0;
                 m_history.enqueue(cpu);
-                m_tooltip = String::formatted("CPU usage: {:.1}%", 100 * cpu);
+                m_tooltip = DeprecatedString::formatted("CPU usage: {:.1}%", 100 * cpu);
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = "Unable to determine CPU usage"sv;
@@ -67,7 +67,7 @@ private:
                 double total_memory = allocated + available;
                 double memory = (double)allocated / total_memory;
                 m_history.enqueue(memory);
-                m_tooltip = String::formatted("Memory: {} MiB of {:.1} MiB in use", allocated / MiB, total_memory / MiB);
+                m_tooltip = DeprecatedString::formatted("Memory: {} MiB of {:.1} MiB in use", allocated / MiB, total_memory / MiB);
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = "Unable to determine memory usage"sv;
@@ -98,7 +98,7 @@ private:
                     }
                 }
                 m_history.enqueue(static_cast<float>(recent_tx) / static_cast<float>(m_current_scale));
-                m_tooltip = String::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0);
+                m_tooltip = DeprecatedString::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0);
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = "Unable to determine network usage"sv;
@@ -230,7 +230,7 @@ private:
     u64 m_last_total { 0 };
     static constexpr u64 const scale_unit = 8000;
     u64 m_current_scale { scale_unit };
-    String m_tooltip;
+    DeprecatedString m_tooltip;
     OwnPtr<Core::Stream::File> m_proc_stat;
     OwnPtr<Core::Stream::File> m_proc_mem;
     OwnPtr<Core::Stream::File> m_proc_net;

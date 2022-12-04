@@ -183,9 +183,9 @@ void Editor::paint_event(GUI::PaintEvent& event)
     }
 }
 
-static HashMap<String, String>& man_paths()
+static HashMap<DeprecatedString, DeprecatedString>& man_paths()
 {
-    static HashMap<String, String> paths;
+    static HashMap<DeprecatedString, DeprecatedString> paths;
     if (paths.is_empty()) {
         auto json = Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv);
         AK::JsonParser parser(json);
@@ -214,7 +214,7 @@ static HashMap<String, String>& man_paths()
     return paths;
 }
 
-void Editor::show_documentation_tooltip_if_available(String const& hovered_token, Gfx::IntPoint const& screen_location)
+void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hovered_token, Gfx::IntPoint const& screen_location)
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
@@ -406,11 +406,11 @@ void Editor::leave_event(Core::Event& event)
     GUI::TextEditor::leave_event(event);
 }
 
-static HashMap<String, String>& include_paths()
+static HashMap<DeprecatedString, DeprecatedString>& include_paths()
 {
-    static HashMap<String, String> paths;
+    static HashMap<DeprecatedString, DeprecatedString> paths;
 
-    auto add_directory = [](String base, Optional<String> recursive, auto handle_directory) -> void {
+    auto add_directory = [](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
         Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = it.next_full_path();
@@ -434,7 +434,7 @@ static HashMap<String, String>& include_paths()
     return paths;
 }
 
-void Editor::navigate_to_include_if_available(String path)
+void Editor::navigate_to_include_if_available(DeprecatedString path)
 {
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
@@ -609,7 +609,7 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     if (!m_language_client)
         return;
 
-    m_language_client->on_declaration_found = [](String const& file, size_t line, size_t column) {
+    m_language_client->on_declaration_found = [](DeprecatedString const& file, size_t line, size_t column) {
         HackStudio::open_file(file, line, column);
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
@@ -713,7 +713,7 @@ void Editor::handle_function_parameters_hint_request()
     if (!m_language_client)
         return;
 
-    m_language_client->on_function_parameters_hint_result = [this](Vector<String> const& params, size_t argument_index) {
+    m_language_client->on_function_parameters_hint_result = [this](Vector<DeprecatedString> const& params, size_t argument_index) {
         dbgln("on_function_parameters_hint_result");
 
         StringBuilder html;

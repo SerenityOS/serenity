@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <dirent.h>
 #include <string.h>
 
@@ -20,7 +20,7 @@ public:
         SkipParentAndBaseDir = 0x2,
     };
 
-    explicit DirIterator(String path, Flags = Flags::NoFlags);
+    explicit DirIterator(DeprecatedString path, Flags = Flags::NoFlags);
     ~DirIterator();
 
     DirIterator(DirIterator&&);
@@ -30,15 +30,15 @@ public:
     int error() const { return m_error; }
     char const* error_string() const { return strerror(m_error); }
     bool has_next();
-    String next_path();
-    String next_full_path();
+    DeprecatedString next_path();
+    DeprecatedString next_full_path();
     int fd() const;
 
 private:
     DIR* m_dir = nullptr;
     int m_error = 0;
-    String m_next;
-    String m_path;
+    DeprecatedString m_next;
+    DeprecatedString m_path;
     int m_flags;
 
     bool advance_next();

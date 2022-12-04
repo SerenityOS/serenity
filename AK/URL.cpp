@@ -27,7 +27,7 @@ URL::URL(StringView string)
     }
 }
 
-String URL::path() const
+DeprecatedString URL::path() const
 {
     if (cannot_be_a_base_url())
         return paths()[0];
@@ -39,7 +39,7 @@ String URL::path() const
     return builder.to_string();
 }
 
-URL URL::complete_url(String const& string) const
+URL URL::complete_url(DeprecatedString const& string) const
 {
     if (!is_valid())
         return {};
@@ -47,25 +47,25 @@ URL URL::complete_url(String const& string) const
     return URLParser::parse(string, this);
 }
 
-void URL::set_scheme(String scheme)
+void URL::set_scheme(DeprecatedString scheme)
 {
     m_scheme = move(scheme);
     m_valid = compute_validity();
 }
 
-void URL::set_username(String username)
+void URL::set_username(DeprecatedString username)
 {
     m_username = move(username);
     m_valid = compute_validity();
 }
 
-void URL::set_password(String password)
+void URL::set_password(DeprecatedString password)
 {
     m_password = move(password);
     m_valid = compute_validity();
 }
 
-void URL::set_host(String host)
+void URL::set_host(DeprecatedString host)
 {
     m_host = move(host);
     m_valid = compute_validity();
@@ -81,18 +81,18 @@ void URL::set_port(Optional<u16> port)
     m_valid = compute_validity();
 }
 
-void URL::set_paths(Vector<String> paths)
+void URL::set_paths(Vector<DeprecatedString> paths)
 {
     m_paths = move(paths);
     m_valid = compute_validity();
 }
 
-void URL::set_query(String query)
+void URL::set_query(DeprecatedString query)
 {
     m_query = move(query);
 }
 
-void URL::set_fragment(String fragment)
+void URL::set_fragment(DeprecatedString fragment)
 {
     m_fragment = move(fragment);
 }
@@ -159,7 +159,7 @@ u16 URL::default_port_for_scheme(StringView scheme)
     return 0;
 }
 
-URL URL::create_with_file_scheme(String const& path, String const& fragment, String const& hostname)
+URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment, DeprecatedString const& hostname)
 {
     LexicalPath lexical_path(path);
     if (!lexical_path.is_absolute())
@@ -169,7 +169,7 @@ URL URL::create_with_file_scheme(String const& path, String const& fragment, Str
     url.set_scheme("file");
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
-    url.set_host(hostname.is_null() || hostname == "localhost" ? String::empty() : hostname);
+    url.set_host(hostname.is_null() || hostname == "localhost" ? DeprecatedString::empty() : hostname);
     url.set_paths(lexical_path.parts());
     // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
     if (path.ends_with('/'))
@@ -178,7 +178,7 @@ URL URL::create_with_file_scheme(String const& path, String const& fragment, Str
     return url;
 }
 
-URL URL::create_with_help_scheme(String const& path, String const& fragment, String const& hostname)
+URL URL::create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment, DeprecatedString const& hostname)
 {
     LexicalPath lexical_path(path);
 
@@ -186,7 +186,7 @@ URL URL::create_with_help_scheme(String const& path, String const& fragment, Str
     url.set_scheme("help");
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
-    url.set_host(hostname.is_null() || hostname == "localhost" ? String::empty() : hostname);
+    url.set_host(hostname.is_null() || hostname == "localhost" ? DeprecatedString::empty() : hostname);
     url.set_paths(lexical_path.parts());
     // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
     if (path.ends_with('/'))
@@ -195,13 +195,13 @@ URL URL::create_with_help_scheme(String const& path, String const& fragment, Str
     return url;
 }
 
-URL URL::create_with_url_or_path(String const& url_or_path)
+URL URL::create_with_url_or_path(DeprecatedString const& url_or_path)
 {
     URL url = url_or_path;
     if (url.is_valid())
         return url;
 
-    String path = LexicalPath::canonicalized_path(url_or_path);
+    DeprecatedString path = LexicalPath::canonicalized_path(url_or_path);
     return URL::create_with_file_scheme(path);
 }
 
@@ -211,7 +211,7 @@ bool URL::is_special_scheme(StringView scheme)
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
 
-String URL::serialize_data_url() const
+DeprecatedString URL::serialize_data_url() const
 {
     VERIFY(m_scheme == "data");
     VERIFY(!m_data_mime_type.is_null());
@@ -230,7 +230,7 @@ String URL::serialize_data_url() const
 }
 
 // https://url.spec.whatwg.org/#concept-url-serializer
-String URL::serialize(ExcludeFragment exclude_fragment) const
+DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
 {
     if (m_scheme == "data")
         return serialize_data_url();
@@ -283,7 +283,7 @@ String URL::serialize(ExcludeFragment exclude_fragment) const
 // NOTE: This does e.g. not display credentials.
 // FIXME: Parts of the URL other than the host should have their sequences of percent-encoded bytes replaced with code points
 //        resulting from percent-decoding those sequences converted to bytes, unless that renders those sequences invisible.
-String URL::serialize_for_display() const
+DeprecatedString URL::serialize_for_display() const
 {
     VERIFY(m_valid);
     if (m_scheme == "data")
@@ -325,7 +325,7 @@ String URL::serialize_for_display() const
 
 // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
 // https://url.spec.whatwg.org/#concept-url-origin
-String URL::serialize_origin() const
+DeprecatedString URL::serialize_origin() const
 {
     VERIFY(m_valid);
 
@@ -360,7 +360,7 @@ bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
     return serialize(exclude_fragments) == other.serialize(exclude_fragments);
 }
 
-String URL::basename() const
+DeprecatedString URL::basename() const
 {
     if (!m_valid)
         return {};
@@ -420,7 +420,7 @@ void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_p
         builder.append_code_point(code_point);
 }
 
-String URL::percent_encode(StringView input, URL::PercentEncodeSet set, SpaceAsPlus space_as_plus)
+DeprecatedString URL::percent_encode(StringView input, URL::PercentEncodeSet set, SpaceAsPlus space_as_plus)
 {
     StringBuilder builder;
     for (auto code_point : Utf8View(input)) {
@@ -432,7 +432,7 @@ String URL::percent_encode(StringView input, URL::PercentEncodeSet set, SpaceAsP
     return builder.to_string();
 }
 
-String URL::percent_decode(StringView input)
+DeprecatedString URL::percent_decode(StringView input)
 {
     if (!input.contains('%'))
         return input;

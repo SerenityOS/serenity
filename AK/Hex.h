@@ -13,7 +13,7 @@
 #ifdef KERNEL
 #    include <Kernel/KString.h>
 #else
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace AK {
@@ -34,7 +34,7 @@ ErrorOr<ByteBuffer> decode_hex(StringView);
 #ifdef KERNEL
 ErrorOr<NonnullOwnPtr<Kernel::KString>> encode_hex(ReadonlyBytes);
 #else
-String encode_hex(ReadonlyBytes);
+DeprecatedString encode_hex(ReadonlyBytes);
 #endif
 
 }

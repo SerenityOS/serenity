@@ -67,7 +67,7 @@ void TextBox::add_current_text_to_history()
     m_saved_input = {};
 }
 
-void TextBox::add_input_to_history(String input)
+void TextBox::add_input_to_history(DeprecatedString input)
 {
     m_history.append(move(input));
     m_history_index++;

@@ -13,7 +13,7 @@
 #include <LibVT/XtermColors.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace VT {
@@ -37,8 +37,8 @@ struct Attribute {
     Color background_color { default_background_color };
 
 #ifndef KERNEL
-    String href;
-    String href_id;
+    DeprecatedString href;
+    DeprecatedString href_id;
 #endif
 
     enum class Flags : u8 {

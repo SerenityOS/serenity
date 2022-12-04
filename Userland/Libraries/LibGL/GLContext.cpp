@@ -947,7 +947,7 @@ void GLContext::build_extension_string()
     if (m_device_info.max_texture_lod_bias > 0.f)
         extensions.append("GL_EXT_texture_lod_bias"sv);
 
-    m_extensions = String::join(' ', extensions);
+    m_extensions = DeprecatedString::join(' ', extensions);
 }
 
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap& bitmap)

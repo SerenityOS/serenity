@@ -103,7 +103,7 @@ private:
         m_connected = connected;
     }
 
-    String get_adapter_info()
+    DeprecatedString get_adapter_info()
     {
         StringBuilder adapter_info;
 
@@ -154,7 +154,7 @@ private:
         return adapter_info.to_string();
     }
 
-    String m_adapter_info;
+    DeprecatedString m_adapter_info;
     bool m_connected = false;
     bool m_notifications = true;
     NonnullRefPtr<Gfx::Bitmap> m_connected_icon;

@@ -102,23 +102,23 @@ void Statusbar::update_segment(size_t index)
     }
 }
 
-String Statusbar::text(size_t index) const
+DeprecatedString Statusbar::text(size_t index) const
 {
     return m_segments.at(index).text();
 }
 
-void Statusbar::set_text(String text)
+void Statusbar::set_text(DeprecatedString text)
 {
     set_text(0, move(text));
 }
 
-void Statusbar::set_text(size_t index, String text)
+void Statusbar::set_text(size_t index, DeprecatedString text)
 {
     m_segments.at(index).m_restored_text = move(text);
     update_segment(index);
 }
 
-void Statusbar::set_override_text(String override_text)
+void Statusbar::set_override_text(DeprecatedString override_text)
 {
     m_segments.at(0).m_override_text = move(override_text);
     update_segment(0);

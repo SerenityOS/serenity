@@ -92,7 +92,7 @@ public:
         return Column::__Count;
     }
 
-    virtual String column_name(int) const override { return {}; }
+    virtual DeprecatedString column_name(int) const override { return {}; }
 
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& = ModelIndex()) const override
     {
@@ -141,20 +141,20 @@ public:
         if (needle.is_empty())
             return TriState::True;
 
-        auto haystack = String::formatted("{} {}", menu_name(index), action_text(index));
+        auto haystack = DeprecatedString::formatted("{} {}", menu_name(index), action_text(index));
         if (fuzzy_match(needle, haystack).score > 0)
             return TriState::True;
         return TriState::False;
     }
 
-    static String action_text(ModelIndex const& index)
+    static DeprecatedString action_text(ModelIndex const& index)
     {
         auto& action = *static_cast<GUI::Action*>(index.internal_data());
 
         return Gfx::parse_ampersand_string(action.text());
     }
 
-    static String menu_name(ModelIndex const& index)
+    static DeprecatedString menu_name(ModelIndex const& index)
     {
         auto& action = *static_cast<GUI::Action*>(index.internal_data());
         if (action.menu_items().is_empty())

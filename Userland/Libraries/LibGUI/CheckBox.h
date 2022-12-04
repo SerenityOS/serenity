@@ -30,7 +30,7 @@ public:
     void set_checkbox_position(CheckBoxPosition value) { m_checkbox_position = value; }
 
 protected:
-    explicit CheckBox(String = {});
+    explicit CheckBox(DeprecatedString = {});
 
 private:
     void size_to_fit();

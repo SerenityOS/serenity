@@ -6,7 +6,7 @@
 
 #include "SpiceAgent.h"
 #include "ConnectionToClipboardServer.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibC/memory.h>
 #include <LibC/unistd.h>
 #include <LibGfx/BMPLoader.h>
@@ -41,7 +41,7 @@ SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
     send_message(buffer);
 }
 
-Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(String const& mime)
+Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(DeprecatedString const& mime)
 {
     if (mime == "text/plain")
         return ClipboardType::Text;

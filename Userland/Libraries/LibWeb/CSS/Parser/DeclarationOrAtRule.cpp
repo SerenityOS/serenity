@@ -24,7 +24,7 @@ DeclarationOrAtRule::DeclarationOrAtRule(Declaration declaration)
 
 DeclarationOrAtRule::~DeclarationOrAtRule() = default;
 
-String DeclarationOrAtRule::to_string() const
+DeprecatedString DeclarationOrAtRule::to_string() const
 {
     StringBuilder builder;
     switch (m_type) {

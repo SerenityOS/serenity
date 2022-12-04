@@ -24,11 +24,11 @@ public:
 
     LoadedLibrary const* library_at(FlatPtr address) const;
     struct SymbolicationResult {
-        String library_name;
-        String symbol;
+        DeprecatedString library_name;
+        DeprecatedString symbol;
     };
     Optional<SymbolicationResult> symbolicate(FlatPtr address) const;
-    Optional<DebugInfo::SourcePositionAndAddress> get_address_from_source_position(String const& file, size_t line) const;
+    Optional<DebugInfo::SourcePositionAndAddress> get_address_from_source_position(DeprecatedString const& file, size_t line) const;
     Optional<DebugInfo::SourcePosition> get_source_position(FlatPtr address) const;
 
 protected:

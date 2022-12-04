@@ -16,8 +16,8 @@ class MallocTracer;
 
 class MmapRegion final : public Region {
 public:
-    static NonnullOwnPtr<MmapRegion> create_anonymous(u32 base, u32 size, u32 prot, String name);
-    static NonnullOwnPtr<MmapRegion> create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, String name);
+    static NonnullOwnPtr<MmapRegion> create_anonymous(u32 base, u32 size, u32 prot, DeprecatedString name);
+    static NonnullOwnPtr<MmapRegion> create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, DeprecatedString name);
     virtual ~MmapRegion() override;
 
     virtual ValueWithShadow<u8> read8(u32 offset) override;
@@ -51,8 +51,8 @@ public:
     MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
     void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
 
-    String const& name() const { return m_name; }
-    String lib_name() const
+    DeprecatedString const& name() const { return m_name; }
+    DeprecatedString lib_name() const
     {
         if (m_name.contains("Loader.so"sv))
             return "Loader.so";
@@ -61,7 +61,7 @@ public:
             return {};
         return m_name.substring(0, *maybe_separator);
     }
-    void set_name(String name);
+    void set_name(DeprecatedString name);
 
 private:
     MmapRegion(u32 base, u32 size, int prot, u8* data, u8* shadow_data);
@@ -72,7 +72,7 @@ private:
     bool m_malloc { false };
 
     OwnPtr<MallocRegionMetadata> m_malloc_metadata;
-    String m_name;
+    DeprecatedString m_name;
 };
 
 template<>

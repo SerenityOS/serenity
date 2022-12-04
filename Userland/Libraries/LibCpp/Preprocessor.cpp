@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 namespace Cpp {
-Preprocessor::Preprocessor(String const& filename, StringView program)
+Preprocessor::Preprocessor(DeprecatedString const& filename, StringView program)
     : m_filename(filename)
     , m_program(program)
 {
@@ -362,7 +362,7 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
     return definition;
 }
 
-String Preprocessor::remove_escaped_newlines(StringView value)
+DeprecatedString Preprocessor::remove_escaped_newlines(StringView value)
 {
     static constexpr auto escaped_newline = "\\\n"sv;
     AK::StringBuilder processed_value;
@@ -374,7 +374,7 @@ String Preprocessor::remove_escaped_newlines(StringView value)
     return processed_value.to_string();
 }
 
-String Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
+DeprecatedString Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
 {
     if (macro_call.arguments.size() != definition.parameters.size()) {
         dbgln("mismatch in # of arguments for macro call: {}", macro_call.name.text());

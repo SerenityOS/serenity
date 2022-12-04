@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -22,8 +22,8 @@ struct Range {
 };
 
 struct StateTransition {
-    Optional<String> new_state;
-    Optional<String> action;
+    Optional<DeprecatedString> new_state;
+    Optional<DeprecatedString> action;
 };
 
 struct MatchedAction {
@@ -32,18 +32,18 @@ struct MatchedAction {
 };
 
 struct State {
-    String name;
+    DeprecatedString name;
     Vector<MatchedAction> actions;
-    Optional<String> entry_action;
-    Optional<String> exit_action;
+    Optional<DeprecatedString> entry_action;
+    Optional<DeprecatedString> exit_action;
 };
 
 struct StateMachine {
-    String name;
-    String initial_state;
+    DeprecatedString name;
+    DeprecatedString initial_state;
     Vector<State> states;
     Optional<State> anywhere;
-    Optional<String> namespaces;
+    Optional<DeprecatedString> namespaces;
 };
 
 static OwnPtr<StateMachine>
@@ -232,9 +232,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-HashTable<String> actions(StateMachine const& machine)
+HashTable<DeprecatedString> actions(StateMachine const& machine)
 {
-    HashTable<String> table;
+    HashTable<DeprecatedString> table;
 
     auto do_state = [&](State const& state) {
         if (state.entry_action.has_value())
@@ -296,7 +296,7 @@ void output_header(StateMachine const& machine, SourceGenerator& generator)
 {
     generator.set("class_name", machine.name);
     generator.set("initial_state", machine.initial_state);
-    generator.set("state_count", String::number(machine.states.size() + 1));
+    generator.set("state_count", DeprecatedString::number(machine.states.size() + 1));
 
     generator.append(R"~~~(
 #pragma once
