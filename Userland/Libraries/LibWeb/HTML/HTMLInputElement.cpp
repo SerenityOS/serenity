@@ -483,6 +483,66 @@ static bool is_valid_simple_color(DeprecatedString const& value)
     return true;
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-month-string
+static bool is_valid_month_string(DeprecatedString const& value)
+{
+    // A string is a valid month string representing a year year and month month if it consists of the following components in the given order:
+
+    // 1. Four or more ASCII digits, representing year, where year > 0
+    // 2. A U+002D HYPHEN-MINUS character (-)
+    // 3. Two ASCII digits, representing the month month, in the range 1 ≤ month ≤ 12
+
+    auto parts = value.split('-');
+    if (parts.size() != 2)
+        return false;
+
+    if (parts[0].length() < 4)
+        return false;
+    for (auto digit : parts[0])
+        if (!is_ascii_digit(digit))
+            return false;
+
+    if (parts[1].length() != 2)
+        return false;
+
+    if (!is_ascii_digit(parts[1][0]))
+        return false;
+    if (!is_ascii_digit(parts[1][1]))
+        return false;
+
+    auto month = (parse_ascii_digit(parts[1][0]) * 10) + parse_ascii_digit(parts[1][1]);
+    return month >= 1 && month <= 12;
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-date-string
+static bool is_valid_date_string(DeprecatedString const& value)
+{
+    // A string is a valid date string representing a year year, month month, and day day if it consists of the following components in the given order:
+
+    // 1. A valid month string, representing year and month
+    // 2. A U+002D HYPHEN-MINUS character (-)
+    // 3. Two ASCII digits, representing day, in the range 1 ≤ day ≤ maxday where maxday is the number of days in the month month and year year
+    auto parts = value.split('-');
+    if (parts.size() != 3)
+        return false;
+
+    if (!is_valid_month_string(DeprecatedString::formatted("{}-{}", parts[0], parts[1])))
+        return false;
+
+    if (parts[2].length() != 2)
+        return false;
+
+    i64 year = 0;
+    for (auto d : parts[0]) {
+        year *= 10;
+        year += parse_ascii_digit(d);
+    }
+    auto month = (parse_ascii_digit(parts[1][0]) * 10) + parse_ascii_digit(parts[1][1]);
+    i64 day = (parse_ascii_digit(parts[2][0]) * 10) + parse_ascii_digit(parts[2][1]);
+
+    return day >= 1 && day <= AK::days_in_month(year, month);
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
 DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString value) const
 {
@@ -524,6 +584,10 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         // 6. Skip ASCII whitespace within input given position.
         auto maybe_double = value.to_double(TrimWhitespace::Yes);
         if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
+            return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Date) {
+        // https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date):value-sanitization-algorithm
+        if (!is_valid_date_string(value))
             return "";
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
