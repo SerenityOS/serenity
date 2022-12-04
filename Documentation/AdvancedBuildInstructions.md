@@ -199,12 +199,12 @@ Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kern
 
 SerenityOS can also be built with the [Clang](https://en.wikipedia.org/wiki/Clang) compiler instead of GCC. This is
 useful for stopping us from relying on compiler-specific behavior, and the built-in static analyzer helps us catch more
-bugs.  Code compiled with both of these toolchains works identically in most cases, with the limitation that ports
+bugs. Code compiled with both of these toolchains works identically in most cases, with the limitation that ports
 can't be built with Clang yet.
 
-To build the Clang-based toolchain, run `BuildClang.sh` from the `Toolchain` directory. The script defaults to building
-the tooling needed for 32-bit SerenityOS, but the `ARCH=x86_64` environment variable can be set to build the 64-bit
-toolchain.
+To build the Clang-based toolchain, run `BuildClang.sh` from the `Toolchain` directory. The script will build a Clang
+toolchain that is capable of building applications for the build host and serenity, 
+for all supported architecutres (i686, x86_64 and aarch64).
 
 **Warning:** While the build script is running, your computer may slow down extremely or even lock up for short
 intervals.  This generally happens if you have more CPU cores than free RAM in gigabytes. To fix this, limit the number
@@ -212,12 +212,22 @@ of parallel compile tasks be setting the `MAKEJOBS` environment variable to a nu
 
 Once the build script finishes, you can use it to compile SerenityOS. Either set the `SERENITY_TOOLCHAIN` build
 option to `Clang` as shown [above](#cmake-build-options), or pass `Clang` as the TOOLCHAIN option to
-`Meta/serenity.sh`, for example: `Meta/serenity.sh run i686 Clang`.
+`Meta/serenity.sh`, for example: `Meta/serenity.sh run x86_64 Clang`.
+
+Building the clang-based toolchain also builds libTooling-based tools such as clang-format, clang-tidy and (optionally)
+clangd that are aware of SerenityOS as a valid target. These tools will be installed into ``Toolchain/Local/clang/bin`` by
+the script. Pointing your editor's plugins to the custom-built clang tools and a ``compile_commands.json`` from a clang build
+of Serenity can enable richer error reporting than the tools that are installed for the build host.
+
+To enable building clangd as part of the clang toolchain, set ``CLANG_ENABLE_CLANGD`` to ON in
+``Toolchain/CMake/LLVMConfig.cmake`` before running BuildClang.sh. If you already built the clang toolchain and would like to
+enable the custom clangd build, change the CMake cache variable ``CLANG_ENABLE_CLANGD`` to ON in ``Toolchain/Build/clang/llvm``  
+and re-install with ``cd Toolchain/Build/clang/llvm && cmake ../../../Tarballs/llvm-project-$LLVM_VERSION.src/llvm -DCLANG_ENABLE_CLANGD=ON && ninja install/strip``, where $LLVM_VERSION should be tab-completable in your shell.
 
 ## Clang-format updates
 
-There are 3 options to acquire an updated clang-format tool:
-1) If you have a Debian-based (apt-based) distribution, refer to [SelfHostedRunners.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/SelfHostedRunners.md) document to learn more about using the LLVM apt repositories to install the latest clang-format tool.
-2) Compile using `Toolchain/BuildClang.sh` as being pointed above use the compiled `Toolchain/Local/clang/bin/clang-format` binary.
-3) Compile LLVM from source as pointed [here](https://llvm.org/docs/GettingStarted.html#compiling-the-llvm-suite-source-code).
-    
+Some OS distributions don't ship bleeding-edge clang-format binaries. Below are 3 options to acquire an updated clang-format tool, in order of preference:
+
+1) If you have a Debian-based (apt-based) distribution, use the [LLVM apt repositories](https://apt.llvm.org) to install the latest release of clang-format.
+2) Compile the SerenityOS-patched LLVM from source using ``Toolchain/BuildClang.sh`` as described above and use the compiled ``Toolchain/Local/clang/bin/clang-format`` binary in your editor and terminal. The meta-lint-ci pre-commit hook will automatically pick up the Toolchain clang-format binary.
+3) Compile LLVM from source as described in the LLVM documentation [here](https://llvm.org/docs/GettingStarted.html#compiling-the-llvm-suite-source-code).
