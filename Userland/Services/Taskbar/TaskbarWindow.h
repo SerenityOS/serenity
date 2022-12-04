@@ -26,14 +26,14 @@ public:
     static int taskbar_height() { return 27; }
     static int taskbar_icon_size() { return 16; }
 
-    virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
+    virtual void config_string_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
     virtual void add_system_menu(NonnullRefPtr<GUI::Menu> system_menu);
 
 private:
     explicit TaskbarWindow();
     static void show_desktop_button_clicked(unsigned);
     static void toggle_show_desktop();
-    void set_quick_launch_button_data(GUI::Button&, String const&, NonnullRefPtr<Desktop::AppFile>);
+    void set_quick_launch_button_data(GUI::Button&, DeprecatedString const&, NonnullRefPtr<Desktop::AppFile>);
     void on_screen_rects_change(Vector<Gfx::IntRect, 4> const&, size_t);
     NonnullRefPtr<GUI::Button> create_button(WindowIdentifier const&);
     void add_window_button(::Window&, WindowIdentifier const&);

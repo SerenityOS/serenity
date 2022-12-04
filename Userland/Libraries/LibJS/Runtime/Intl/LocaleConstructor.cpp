@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -17,21 +17,21 @@
 namespace JS::Intl {
 
 struct LocaleAndKeys {
-    String locale;
-    Optional<String> ca;
-    Optional<String> co;
-    Optional<String> hc;
-    Optional<String> kf;
-    Optional<String> kn;
-    Optional<String> nu;
+    DeprecatedString locale;
+    Optional<DeprecatedString> ca;
+    Optional<DeprecatedString> co;
+    Optional<DeprecatedString> hc;
+    Optional<DeprecatedString> kf;
+    Optional<DeprecatedString> kn;
+    Optional<DeprecatedString> nu;
 };
 
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
-static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
+static ThrowCompletionOr<Optional<DeprecatedString>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
 {
     auto option = TRY(get_option(vm, options, property, OptionType::String, values, Empty {}));
     if (option.is_undefined())
-        return Optional<String> {};
+        return Optional<DeprecatedString> {};
 
     if (validator && !validator(option.as_string().string()))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
@@ -40,7 +40,7 @@ static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object cons
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag
-static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Object const& options)
+static ThrowCompletionOr<DeprecatedString> apply_options_to_tag(VM& vm, StringView tag, Object const& options)
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: Type(options) is Object.
@@ -112,7 +112,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     auto locale_id = ::Locale::parse_unicode_locale_id(tag);
     VERIFY(locale_id.has_value());
 
-    Vector<String> attributes;
+    Vector<DeprecatedString> attributes;
     Vector<::Locale::Keyword> keywords;
 
     // 3. If tag contains a substring that is a Unicode locale extension sequence, then
@@ -134,7 +134,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     //     a. Let attributes be a new empty List.
     //     b. Let keywords be a new empty List.
 
-    auto field_from_key = [](LocaleAndKeys& value, StringView key) -> Optional<String>& {
+    auto field_from_key = [](LocaleAndKeys& value, StringView key) -> Optional<DeprecatedString>& {
         if (key == "ca"sv)
             return value.ca;
         if (key == "co"sv)
@@ -156,7 +156,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     // 6. For each element key of relevantExtensionKeys, do
     for (auto const& key : relevant_extension_keys) {
         // a. Let value be undefined.
-        Optional<String> value {};
+        Optional<DeprecatedString> value {};
 
         ::Locale::Keyword* entry = nullptr;
         // b. If keywords contains an element whose [[Key]] is the same as key, then
@@ -260,7 +260,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
     auto* locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &Intrinsics::intl_locale_prototype));
 
-    String tag;
+    DeprecatedString tag;
 
     // 7. If Type(tag) is not String or Object, throw a TypeError exception.
     if (!tag_value.is_string() && !tag_value.is_object())

@@ -22,7 +22,7 @@ class Font : public Gfx::VectorFont {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
-    static ErrorOr<NonnullRefPtr<Font>> try_load_from_file(String path, unsigned index = 0);
+    static ErrorOr<NonnullRefPtr<Font>> try_load_from_file(DeprecatedString path, unsigned index = 0);
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(ReadonlyBytes bytes, unsigned index = 0);
 
     virtual Gfx::ScaledFontMetrics metrics(float x_scale, float y_scale) const override;
@@ -32,8 +32,8 @@ public:
     virtual u32 glyph_count() const override;
     virtual u16 units_per_em() const override;
     virtual u32 glyph_id_for_code_point(u32 code_point) const override { return m_cmap.glyph_id_for_code_point(code_point); }
-    virtual String family() const override;
-    virtual String variant() const override;
+    virtual DeprecatedString family() const override;
+    virtual DeprecatedString variant() const override;
     virtual u16 weight() const override;
     virtual u8 slope() const override;
     virtual bool is_fixed_width() const override;

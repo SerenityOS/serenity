@@ -147,7 +147,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
     return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
-BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
+BitmapFont::BitmapFont(DeprecatedString name, DeprecatedString family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
     : m_name(move(name))
     , m_family(move(family))
     , m_range_mask_size(range_mask_size)
@@ -222,15 +222,15 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::load_from_memory(u8 const* data)
         glyph_count += 256 * popcount(range_mask[i]);
     u8* rows = range_mask + header.range_mask_size;
     u8* widths = (u8*)(rows) + glyph_count * bytes_per_glyph;
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(DeprecatedString(header.name), DeprecatedString(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
+RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)
 {
     return MUST(try_load_from_file(move(path)));
 }
 
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(String const& path)
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedString const& path)
 {
     auto file = TRY(Core::MappedFile::map(path));
     auto font = TRY(load_from_memory((u8 const*)file->data()));
@@ -238,7 +238,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(String const& 
     return font;
 }
 
-ErrorOr<void> BitmapFont::write_to_file(String const& path)
+ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
 {
     FontFileHeader header;
     memset(&header, 0, sizeof(FontFileHeader));
@@ -364,12 +364,12 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
     return longest_width;
 }
 
-String BitmapFont::qualified_name() const
+DeprecatedString BitmapFont::qualified_name() const
 {
-    return String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope());
+    return DeprecatedString::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope());
 }
 
-String BitmapFont::variant() const
+DeprecatedString BitmapFont::variant() const
 {
     StringBuilder builder;
     builder.append(weight_to_name(weight()));

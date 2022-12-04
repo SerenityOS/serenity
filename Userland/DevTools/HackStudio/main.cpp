@@ -32,7 +32,7 @@ static WeakPtr<HackStudioWidget> s_hack_studio_widget;
 static bool make_is_available();
 static void notify_make_not_available();
 static void update_path_environment_variable();
-static Optional<String> last_opened_project_path();
+static Optional<DeprecatedString> last_opened_project_path();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto hack_studio_widget = TRY(window->try_set_main_widget<HackStudioWidget>(project_path));
     s_hack_studio_widget = hack_studio_widget;
 
-    window->set_title(String::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
+    window->set_title(DeprecatedString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
 
     hack_studio_widget->initialize_menubar(*window);
 
@@ -132,7 +132,7 @@ static void update_path_environment_variable()
     setenv("PATH", path.to_string().characters(), true);
 }
 
-static Optional<String> last_opened_project_path()
+static Optional<DeprecatedString> last_opened_project_path()
 {
     auto projects = HackStudioWidget::read_recent_projects();
     if (projects.size() == 0)
@@ -151,12 +151,12 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(String const& filename)
+void open_file(DeprecatedString const& filename)
 {
     s_hack_studio_widget->open_file(filename);
 }
 
-void open_file(String const& filename, size_t line, size_t column)
+void open_file(DeprecatedString const& filename, size_t line, size_t column)
 {
     s_hack_studio_widget->open_file(filename, line, column);
 }
@@ -173,7 +173,7 @@ Project& project()
     return s_hack_studio_widget->project();
 }
 
-String currently_open_file()
+DeprecatedString currently_open_file()
 {
     if (!s_hack_studio_widget)
         return {};

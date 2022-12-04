@@ -30,7 +30,7 @@ public:
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    void init_custom_event(String const& type, bool bubbles, bool cancelable, JS::Value detail);
+    void init_custom_event(DeprecatedString const& type, bool bubbles, bool cancelable, JS::Value detail);
 
 private:
     CustomEvent(JS::Realm&, FlyString const& event_name, CustomEventInit const& event_init);

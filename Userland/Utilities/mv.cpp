@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool no_clobber = false;
     bool verbose = false;
 
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force", "force", 'f');
@@ -61,11 +61,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     umask(my_umask);
 
     for (auto& old_path : paths) {
-        String combined_new_path;
+        DeprecatedString combined_new_path;
         auto new_path = original_new_path;
         if (S_ISDIR(st.st_mode)) {
             auto old_basename = LexicalPath::basename(old_path);
-            combined_new_path = String::formatted("{}/{}", original_new_path, old_basename);
+            combined_new_path = DeprecatedString::formatted("{}/{}", original_new_path, old_basename);
             new_path = combined_new_path.characters();
         }
 

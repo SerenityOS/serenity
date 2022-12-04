@@ -21,5 +21,5 @@ private:
 
     size_t m_board_rows;
     size_t m_board_columns;
-    String m_color_scheme;
+    DeprecatedString m_color_scheme;
 };

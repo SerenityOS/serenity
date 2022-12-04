@@ -232,7 +232,7 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 }
 
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, DeprecatedString const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
 {
     // 1. Let style be ? GetOption(options, unit, "string", stylesList, undefined).
     auto style_value = TRY(get_option(vm, options, unit, OptionType::String, styles_list, Empty {}));
@@ -240,7 +240,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
     // 2. Let displayDefault be "always".
     auto display_default = "always"sv;
 
-    String style;
+    DeprecatedString style;
 
     // 3. If style is undefined, then
     if (style_value.is_undefined()) {
@@ -276,7 +276,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
     }
 
     // 4. Let displayField be the string-concatenation of unit and "Display".
-    auto display_field = String::formatted("{}Display", unit);
+    auto display_field = DeprecatedString::formatted("{}Display", unit);
 
     // 5. Let display be ? GetOption(options, displayField, "string", « "auto", "always" », displayDefault).
     auto display = TRY(get_option(vm, options, display_field, OptionType::String, { "auto"sv, "always"sv }, display_default));
@@ -510,17 +510,17 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right
-    Vector<String> string_result;
+    Vector<DeprecatedString> string_result;
     bool merge = false;
     for (size_t i = 0; i < result.size(); ++i) {
         auto const& part = result[i];
         if (part.type == "literal") {
-            string_result.last() = String::formatted("{}{}", string_result.last(), part.value);
+            string_result.last() = DeprecatedString::formatted("{}{}", string_result.last(), part.value);
             merge = true;
             continue;
         }
         if (merge) {
-            string_result.last() = String::formatted("{}{}", string_result.last(), part.value);
+            string_result.last() = DeprecatedString::formatted("{}{}", string_result.last(), part.value);
             merge = false;
             continue;
         }

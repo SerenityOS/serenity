@@ -19,7 +19,7 @@ class HTMLBodyElement final
 public:
     virtual ~HTMLBodyElement() override;
 
-    virtual void parse_attribute(FlyString const&, String const&) override;
+    virtual void parse_attribute(FlyString const&, DeprecatedString const&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
 private:

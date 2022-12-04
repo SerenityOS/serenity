@@ -68,9 +68,9 @@ public:
     Executable const& current_executable() { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
     size_t pc() const { return m_pc ? m_pc->offset() : 0; }
-    String debug_position()
+    DeprecatedString debug_position()
     {
-        return String::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
+        return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
     }
 
     enum class OptimizationLevel {

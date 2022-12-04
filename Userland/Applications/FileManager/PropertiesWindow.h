@@ -22,11 +22,11 @@ public:
     virtual ~PropertiesWindow() override = default;
 
 private:
-    PropertiesWindow(String const& path, bool disable_rename, Window* parent = nullptr);
+    PropertiesWindow(DeprecatedString const& path, bool disable_rename, Window* parent = nullptr);
 
     struct PropertyValuePair {
-        String property;
-        String value;
+        DeprecatedString property;
+        DeprecatedString value;
         Optional<URL> link = {};
     };
 
@@ -36,7 +36,7 @@ private:
         mode_t execute;
     };
 
-    static String const get_description(mode_t const mode)
+    static DeprecatedString const get_description(mode_t const mode)
     {
         if (S_ISREG(mode))
             return "File";
@@ -58,19 +58,19 @@ private:
         return "Unknown";
     }
 
-    GUI::Button& make_button(String, GUI::Widget& parent);
+    GUI::Button& make_button(DeprecatedString, GUI::Widget& parent);
     void setup_permission_checkboxes(GUI::CheckBox& box_read, GUI::CheckBox& box_write, GUI::CheckBox& box_execute, PermissionMasks masks, mode_t mode);
     void permission_changed(mode_t mask, bool set);
     bool apply_changes();
     void update();
-    String make_full_path(String const& name);
+    DeprecatedString make_full_path(DeprecatedString const& name);
 
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::TextBox> m_name_box;
     RefPtr<GUI::ImageWidget> m_icon;
-    String m_name;
-    String m_parent_path;
-    String m_path;
+    DeprecatedString m_name;
+    DeprecatedString m_parent_path;
+    DeprecatedString m_path;
     mode_t m_mode { 0 };
     mode_t m_old_mode { 0 };
     bool m_permissions_dirty { false };

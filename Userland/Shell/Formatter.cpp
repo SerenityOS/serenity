@@ -13,14 +13,14 @@
 
 namespace Shell {
 
-String Formatter::format()
+DeprecatedString Formatter::format()
 {
     auto node = m_root_node ? m_root_node : Parser(m_source).parse();
     if (m_cursor >= 0)
         m_output_cursor = m_cursor;
 
     if (!node)
-        return String();
+        return DeprecatedString();
 
     if (node->is_syntax_error())
         return m_source;
@@ -66,7 +66,7 @@ void Formatter::in_new_block(Function<void()> callback)
     current_builder().append('}');
 }
 
-String Formatter::in_new_builder(Function<void()> callback, StringBuilder new_builder)
+DeprecatedString Formatter::in_new_builder(Function<void()> callback, StringBuilder new_builder)
 {
     m_builders.append(move(new_builder));
     callback();

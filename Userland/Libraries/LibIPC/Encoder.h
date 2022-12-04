@@ -43,7 +43,7 @@ public:
     Encoder& operator<<(double);
     Encoder& operator<<(char const*);
     Encoder& operator<<(StringView);
-    Encoder& operator<<(String const&);
+    Encoder& operator<<(DeprecatedString const&);
     Encoder& operator<<(ByteBuffer const&);
     Encoder& operator<<(JsonValue const&);
     Encoder& operator<<(URL const&);

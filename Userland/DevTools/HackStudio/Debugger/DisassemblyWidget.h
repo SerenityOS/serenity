@@ -21,18 +21,18 @@ class UnavailableDisassemblyWidget final : public GUI::Frame {
 public:
     virtual ~UnavailableDisassemblyWidget() override { }
 
-    String const& reason() const { return m_reason; }
-    void set_reason(String const& text) { m_reason = text; }
+    DeprecatedString const& reason() const { return m_reason; }
+    void set_reason(DeprecatedString const& text) { m_reason = text; }
 
 private:
-    UnavailableDisassemblyWidget(String const& reason)
+    UnavailableDisassemblyWidget(DeprecatedString const& reason)
         : m_reason(reason)
     {
     }
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
-    String m_reason;
+    DeprecatedString m_reason;
 };
 
 class DisassemblyWidget final : public GUI::Widget {
@@ -47,7 +47,7 @@ private:
     DisassemblyWidget();
 
     void show_disassembly();
-    void hide_disassembly(String const&);
+    void hide_disassembly(DeprecatedString const&);
 
     RefPtr<GUI::Widget> m_top_container;
     RefPtr<GUI::TableView> m_disassembly_view;

@@ -37,14 +37,14 @@ class UnregisteredWidget final : public GUI::Widget {
     C_OBJECT(UnregisteredWidget);
 
 private:
-    UnregisteredWidget(String const& class_name);
+    UnregisteredWidget(DeprecatedString const& class_name);
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
-    String m_text;
+    DeprecatedString m_text;
 };
 
-UnregisteredWidget::UnregisteredWidget(String const& class_name)
+UnregisteredWidget::UnregisteredWidget(DeprecatedString const& class_name)
 {
     StringBuilder builder;
     builder.append(class_name);
@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     editor->set_automatic_indentation_enabled(true);
     editor->set_ruler_visible(true);
 
-    String file_path;
+    DeprecatedString file_path;
     auto update_title = [&] {
         StringBuilder builder;
         if (file_path.is_empty())
@@ -121,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     editor->on_change = [&] {
         preview->remove_all_children();
-        preview->load_from_gml(editor->text(), [](const String& class_name) -> RefPtr<Core::Object> {
+        preview->load_from_gml(editor->text(), [](const DeprecatedString& class_name) -> RefPtr<Core::Object> {
             return UnregisteredWidget::construct(class_name);
         });
     };
@@ -212,7 +212,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             GUI::MessageBox::show(
                 window,
-                String::formatted("GML could not be formatted: {}", formatted_gml_or_error.error()),
+                DeprecatedString::formatted("GML could not be formatted: {}", formatted_gml_or_error.error()),
                 "Error"sv,
                 GUI::MessageBox::Type::Error);
         }
@@ -286,7 +286,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    if (String(path).is_empty()) {
+    if (DeprecatedString(path).is_empty()) {
         editor->set_text(R"~~~(@GUI::Frame {
     layout: @GUI::VerticalBoxLayout {
     }

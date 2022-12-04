@@ -22,8 +22,8 @@ public:
 
     void set_graph_widget(GraphWidget& graph);
 
-    void set_graph_widget_via_name(String name);
-    String graph_widget_name();
+    void set_graph_widget_via_name(DeprecatedString name);
+    DeprecatedString graph_widget_name();
 
     void refresh();
 
@@ -33,7 +33,7 @@ private:
 
     GraphWidget* m_graph;
     // Is null if we have a valid graph
-    String m_graph_widget_name {};
+    DeprecatedString m_graph_widget_name {};
     RefPtr<GUI::Label> m_physical_pages_label;
     RefPtr<GUI::Label> m_physical_pages_committed_label;
     RefPtr<GUI::Label> m_kmalloc_space_label;

@@ -37,11 +37,11 @@ public:
         Closed = 3,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> construct_impl(JS::Realm&, String const& url);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> construct_impl(JS::Realm&, DeprecatedString const& url);
 
     virtual ~WebSocket() override;
 
-    String url() const { return m_url.to_string(); }
+    DeprecatedString url() const { return m_url.to_string(); }
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
@@ -51,20 +51,20 @@ public:
 #undef __ENUMERATE
 
     ReadyState ready_state() const;
-    String extensions() const;
-    String protocol() const;
+    DeprecatedString extensions() const;
+    DeprecatedString protocol() const;
 
-    String const& binary_type() { return m_binary_type; };
-    void set_binary_type(String const& type) { m_binary_type = type; };
+    DeprecatedString const& binary_type() { return m_binary_type; };
+    void set_binary_type(DeprecatedString const& type) { m_binary_type = type; };
 
-    WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
-    WebIDL::ExceptionOr<void> send(String const& data);
+    WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<DeprecatedString> reason);
+    WebIDL::ExceptionOr<void> send(DeprecatedString const& data);
 
 private:
     void on_open();
     void on_message(ByteBuffer message, bool is_text);
     void on_error();
-    void on_close(u16 code, String reason, bool was_clean);
+    void on_close(u16 code, DeprecatedString reason, bool was_clean);
 
     WebSocket(HTML::Window&, AK::URL&);
 
@@ -73,7 +73,7 @@ private:
     JS::NonnullGCPtr<HTML::Window> m_window;
 
     AK::URL m_url;
-    String m_binary_type { "blob" };
+    DeprecatedString m_binary_type { "blob" };
     RefPtr<WebSocketClientSocket> m_websocket;
 };
 
@@ -82,8 +82,8 @@ public:
     virtual ~WebSocketClientSocket();
 
     struct CertificateAndKey {
-        String certificate;
-        String key;
+        DeprecatedString certificate;
+        DeprecatedString key;
     };
 
     struct Message {
@@ -101,12 +101,12 @@ public:
 
     virtual void send(ByteBuffer binary_or_text_message, bool is_text) = 0;
     virtual void send(StringView text_message) = 0;
-    virtual void close(u16 code = 1005, String reason = {}) = 0;
+    virtual void close(u16 code = 1005, DeprecatedString reason = {}) = 0;
 
     Function<void()> on_open;
     Function<void(Message)> on_message;
     Function<void(Error)> on_error;
-    Function<void(u16 code, String reason, bool was_clean)> on_close;
+    Function<void(u16 code, DeprecatedString reason, bool was_clean)> on_close;
     Function<CertificateAndKey()> on_certificate_requested;
 
 protected:
@@ -119,7 +119,7 @@ public:
     static void initialize(RefPtr<WebSocketClientManager>);
     static WebSocketClientManager& the();
 
-    virtual RefPtr<WebSocketClientSocket> connect(AK::URL const&, String const& origin) = 0;
+    virtual RefPtr<WebSocketClientSocket> connect(AK::URL const&, DeprecatedString const& origin) = 0;
 
 protected:
     explicit WebSocketClientManager();

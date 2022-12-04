@@ -40,11 +40,11 @@ Time Time::percentage_of(Percentage const& percentage) const
     return Time { percentage.as_fraction() * m_value, m_type };
 }
 
-String Time::to_string() const
+DeprecatedString Time::to_string() const
 {
     if (is_calculated())
         return m_calculated_style->to_string();
-    return String::formatted("{}{}", m_value, unit_name());
+    return DeprecatedString::formatted("{}{}", m_value, unit_name());
 }
 
 float Time::to_seconds() const

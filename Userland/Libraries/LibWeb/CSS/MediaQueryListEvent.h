@@ -11,7 +11,7 @@
 namespace Web::CSS {
 
 struct MediaQueryListEventInit : public DOM::EventInit {
-    String media { "" };
+    DeprecatedString media { "" };
     bool matches { false };
 };
 
@@ -23,13 +23,13 @@ public:
 
     virtual ~MediaQueryListEvent() override;
 
-    String const& media() const { return m_media; }
+    DeprecatedString const& media() const { return m_media; }
     bool matches() const { return m_matches; }
 
 private:
     MediaQueryListEvent(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
 
-    String m_media;
+    DeprecatedString m_media;
     bool m_matches;
 };
 }

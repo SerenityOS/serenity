@@ -153,9 +153,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_follow_url = false;
     char const* data = nullptr;
     StringView proxy_spec;
-    String method = "GET";
+    DeprecatedString method = "GET";
     StringView method_override;
-    HashMap<String, String, CaseInsensitiveStringTraits> request_headers;
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> request_headers;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
@@ -253,7 +253,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             should_save_stream_data = true;
 
             if (!following_url && save_at_provided_name) {
-                String output_name;
+                DeprecatedString output_name;
                 if (auto content_disposition = response_headers.get("Content-Disposition"); content_disposition.has_value()) {
                     auto& value = content_disposition.value();
                     ContentDispositionParser parser(value);
@@ -272,7 +272,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     do {
                         output_name = url.host();
                         if (i > -1)
-                            output_name = String::formatted("{}.{}", output_name, i);
+                            output_name = DeprecatedString::formatted("{}.{}", output_name, i);
                         ++i;
                     } while (Core::File::exists(output_name));
                 }

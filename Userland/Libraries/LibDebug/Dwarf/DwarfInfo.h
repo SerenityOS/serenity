@@ -9,11 +9,11 @@
 #include "AttributeValue.h"
 #include "DwarfTypes.h"
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibELF/Image.h>
 

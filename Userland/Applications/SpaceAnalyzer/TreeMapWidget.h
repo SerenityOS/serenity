@@ -12,7 +12,7 @@
 namespace SpaceAnalyzer {
 
 struct TreeMapNode {
-    virtual String name() const = 0;
+    virtual DeprecatedString name() const = 0;
     virtual i64 area() const = 0;
     virtual size_t num_children() const = 0;
     virtual TreeMapNode const& child_at(size_t i) const = 0;

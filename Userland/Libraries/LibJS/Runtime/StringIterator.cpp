@@ -10,12 +10,12 @@
 
 namespace JS {
 
-StringIterator* StringIterator::create(Realm& realm, String string)
+StringIterator* StringIterator::create(Realm& realm, DeprecatedString string)
 {
     return realm.heap().allocate<StringIterator>(realm, move(string), *realm.intrinsics().string_iterator_prototype());
 }
 
-StringIterator::StringIterator(String string, Object& prototype)
+StringIterator::StringIterator(DeprecatedString string, Object& prototype)
     : Object(prototype)
     , m_string(move(string))
     , m_iterator(Utf8View(m_string).begin())

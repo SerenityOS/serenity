@@ -20,10 +20,10 @@ NonnullOwnPtr<M3UParser> M3UParser::from_file(StringView path)
     auto file_result = Core::Stream::File::open(path, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
     auto contents = file_result->read_all().release_value_but_fixme_should_propagate_errors();
     auto use_utf8 = path.ends_with(".m3u8"sv, CaseSensitivity::CaseInsensitive);
-    return from_memory(String { contents, NoChomp }, use_utf8);
+    return from_memory(DeprecatedString { contents, NoChomp }, use_utf8);
 }
 
-NonnullOwnPtr<M3UParser> M3UParser::from_memory(String const& m3u_contents, bool utf8)
+NonnullOwnPtr<M3UParser> M3UParser::from_memory(DeprecatedString const& m3u_contents, bool utf8)
 {
     auto parser = make<M3UParser>();
     VERIFY(!m3u_contents.is_null() && !m3u_contents.is_empty() && !m3u_contents.is_whitespace());

@@ -17,12 +17,12 @@ class PasswordInputDialog : public Dialog {
 public:
     virtual ~PasswordInputDialog() override = default;
 
-    static ExecResult show(Window* parent_window, String& text_value, String title, String server, String username);
+    static ExecResult show(Window* parent_window, DeprecatedString& text_value, DeprecatedString title, DeprecatedString server, DeprecatedString username);
 
 private:
-    explicit PasswordInputDialog(Window* parent_window, String title, String server, String username);
+    explicit PasswordInputDialog(Window* parent_window, DeprecatedString title, DeprecatedString server, DeprecatedString username);
 
-    String m_password;
+    DeprecatedString m_password;
 };
 
 }

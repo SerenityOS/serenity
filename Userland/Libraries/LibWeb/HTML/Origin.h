@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Web::HTML {
 
 class Origin {
 public:
     Origin() = default;
-    Origin(String const& scheme, String const& host, u16 port)
+    Origin(DeprecatedString const& scheme, DeprecatedString const& host, u16 port)
         : m_scheme(scheme)
         , m_host(host)
         , m_port(port)
@@ -24,8 +24,8 @@ public:
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
     bool is_opaque() const { return m_scheme.is_null() && m_host.is_null() && m_port == 0; }
 
-    String const& scheme() const { return m_scheme; }
-    String const& host() const { return m_host; }
+    DeprecatedString const& scheme() const { return m_scheme; }
+    DeprecatedString const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
     // https://html.spec.whatwg.org/multipage/origin.html#same-origin
@@ -67,7 +67,7 @@ public:
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
-    String serialize() const
+    DeprecatedString serialize() const
     {
         // 1. If origin is an opaque origin, then return "null"
         if (is_opaque())
@@ -86,18 +86,18 @@ public:
         // 5. If origin's port is non-null, append a U+003A COLON character (:), and origin's port, serialized, to result.
         if (port() != 0) {
             result.append(':');
-            result.append(String::number(port()));
+            result.append(DeprecatedString::number(port()));
         }
         // 6. Return result
         return result.to_string();
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain
-    Optional<String> effective_domain() const
+    Optional<DeprecatedString> effective_domain() const
     {
         // 1. If origin is an opaque origin, then return null.
         if (is_opaque())
-            return Optional<String> {};
+            return Optional<DeprecatedString> {};
 
         // FIXME: 2. If origin's domain is non-null, then return origin's domain.
 
@@ -108,8 +108,8 @@ public:
     bool operator==(Origin const& other) const { return is_same_origin(other); }
 
 private:
-    String m_scheme;
-    String m_host;
+    DeprecatedString m_scheme;
+    DeprecatedString m_host;
     u16 m_port { 0 };
 };
 

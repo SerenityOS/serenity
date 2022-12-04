@@ -17,12 +17,12 @@ NumericCell::NumericCell()
 {
 }
 
-JS::ThrowCompletionOr<String> NumericCell::display(Cell& cell, CellTypeMetadata const& metadata) const
+JS::ThrowCompletionOr<DeprecatedString> NumericCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
-    return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
+    return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<DeprecatedString> {
         auto& vm = cell.sheet().global_object().vm();
         auto value = TRY(js_value(cell, metadata));
-        String string;
+        DeprecatedString string;
         if (metadata.format.is_empty())
             string = TRY(value.to_string(vm));
         else
@@ -43,7 +43,7 @@ JS::ThrowCompletionOr<JS::Value> NumericCell::js_value(Cell& cell, CellTypeMetad
     });
 }
 
-String NumericCell::metadata_hint(MetadataName metadata) const
+DeprecatedString NumericCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Format)
         return "Format string as accepted by `printf', all numeric formats refer to the same value (the cell's value)";

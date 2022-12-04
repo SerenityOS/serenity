@@ -47,7 +47,7 @@ public:
     {
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
     bool is_ident() const { return m_value.has<ValueID>(); }
     bool is_length() const { return m_value.has<Length>(); }
@@ -146,7 +146,7 @@ public:
     }
 
     bool evaluate(HTML::Window const&) const;
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     enum class Type {
@@ -202,7 +202,7 @@ struct MediaCondition {
     static NonnullOwnPtr<MediaCondition> from_or_list(NonnullOwnPtrVector<MediaCondition>&&);
 
     MatchResult evaluate(HTML::Window const&) const;
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     MediaCondition() = default;
@@ -241,7 +241,7 @@ public:
 
     bool matches() const { return m_matches; }
     bool evaluate(HTML::Window const&);
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     MediaQuery() = default;
@@ -255,7 +255,7 @@ private:
     bool m_matches { false };
 };
 
-String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
+DeprecatedString serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
 
 bool is_media_feature_name(StringView name);
 

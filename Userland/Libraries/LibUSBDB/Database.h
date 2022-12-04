@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/MappedFile.h>
 
@@ -52,7 +52,7 @@ struct Class {
 
 class Database : public RefCounted<Database> {
 public:
-    static RefPtr<Database> open(String const& filename);
+    static RefPtr<Database> open(DeprecatedString const& filename);
     static RefPtr<Database> open() { return open("/res/usb.ids"); };
 
     const StringView get_vendor(u16 vendor_id) const;

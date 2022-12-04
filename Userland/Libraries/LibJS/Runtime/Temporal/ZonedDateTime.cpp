@@ -130,7 +130,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 
     Object* calendar = nullptr;
     Object* time_zone = nullptr;
-    Optional<String> offset_string;
+    Optional<DeprecatedString> offset_string;
     ISODateTime result;
 
     // 5. If Type(item) is Object, then
@@ -284,7 +284,7 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(VM& vm, BigInt
 }
 
 // 6.5.4 TemporalZonedDateTimeToString ( zonedDateTime, precision, showCalendar, showTimeZone, showOffset [ , increment, unit, roundingMode ] ), https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring
-ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
+ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
 {
     // 1. If increment is not present, set increment to 1.
     if (!increment.has_value())
@@ -316,12 +316,12 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
     // 9. Let dateTimeString be ? TemporalDateTimeToString(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], isoCalendar, precision, "never").
     auto date_time_string = TRY(temporal_date_time_to_string(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
 
-    String offset_string;
+    DeprecatedString offset_string;
 
     // 10. If showOffset is "never", then
     if (show_offset == "never"sv) {
         // a. Let offsetString be the empty String.
-        offset_string = String::empty();
+        offset_string = DeprecatedString::empty();
     }
     // 11. Else,
     else {
@@ -332,12 +332,12 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
         offset_string = format_iso_time_zone_offset_string(offset_ns);
     }
 
-    String time_zone_string;
+    DeprecatedString time_zone_string;
 
     // 12. If showTimeZone is "never", then
     if (show_time_zone == "never"sv) {
         // a. Let timeZoneString be the empty String.
-        time_zone_string = String::empty();
+        time_zone_string = DeprecatedString::empty();
     }
     // 13. Else,
     else {
@@ -348,14 +348,14 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
         auto flag = show_time_zone == "critical"sv ? "!"sv : ""sv;
 
         // c. Let timeZoneString be the string-concatenation of the code unit 0x005B (LEFT SQUARE BRACKET), flag, timeZoneID, and the code unit 0x005D (RIGHT SQUARE BRACKET).
-        time_zone_string = String::formatted("[{}{}]", flag, time_zone_id);
+        time_zone_string = DeprecatedString::formatted("[{}{}]", flag, time_zone_id);
     }
 
     // 14. Let calendarString be ? MaybeFormatCalendarAnnotation(zonedDateTime.[[Calendar]], showCalendar).
     auto calendar_string = TRY(maybe_format_calendar_annotation(vm, &zoned_date_time.calendar(), show_calendar));
 
     // 15. Return the string-concatenation of dateTimeString, offsetString, timeZoneString, and calendarString.
-    return String::formatted("{}{}{}{}", date_time_string, offset_string, time_zone_string, calendar_string);
+    return DeprecatedString::formatted("{}{}{}{}", date_time_string, offset_string, time_zone_string, calendar_string);
 }
 
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime

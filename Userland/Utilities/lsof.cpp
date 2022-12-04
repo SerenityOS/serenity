@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
@@ -21,10 +21,10 @@
 struct OpenFile {
     int fd;
     int pid;
-    String type;
-    String name;
-    String state;
-    String full_name;
+    DeprecatedString type;
+    DeprecatedString name;
+    DeprecatedString state;
+    DeprecatedString full_name;
 };
 
 static bool parse_name(StringView name, OpenFile& file)
@@ -65,7 +65,7 @@ static bool parse_name(StringView name, OpenFile& file)
 
 static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 {
-    auto file = Core::Stream::File::open(String::formatted("/proc/{}/fds", pid), Core::Stream::OpenMode::Read);
+    auto file = Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/fds", pid), Core::Stream::OpenMode::Read);
     if (file.is_error()) {
         outln("lsof: PID {}: {}", pid, file.error());
         return Vector<OpenFile>();
@@ -89,7 +89,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
         open_file.pid = pid;
         open_file.fd = object.as_object().get("fd"sv).to_int();
 
-        String name = object.as_object().get("absolute_path"sv).to_string();
+        DeprecatedString name = object.as_object().get("absolute_path"sv).to_string();
         VERIFY(parse_name(name, open_file));
         open_file.full_name = name;
 
@@ -135,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     {
         // try convert UID to int
-        auto arg = String(arg_uid).to_int();
+        auto arg = DeprecatedString(arg_uid).to_int();
         if (arg.has_value())
             arg_uid_int = arg.value();
     }

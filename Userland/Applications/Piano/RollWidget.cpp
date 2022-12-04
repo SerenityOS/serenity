@@ -161,7 +161,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
         note_name_rect.translate_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);
         if (note % notes_per_octave == 0)
-            painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
+            painter.draw_text(note_name_rect, DeprecatedString::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
     }
 
     int x = m_roll_width * (static_cast<double>(m_track_manager.transport()->time()) / roll_length);

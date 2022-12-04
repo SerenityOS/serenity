@@ -27,7 +27,7 @@ namespace Web::HTML {
 class IdleCallback;
 
 // https://html.spec.whatwg.org/#timerhandler
-using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, String>;
+using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, DeprecatedString>;
 
 class Window final
     : public DOM::EventTarget
@@ -62,9 +62,9 @@ public:
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
 
     WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open_impl(StringView url, StringView target, StringView features);
-    void alert_impl(String const&);
-    bool confirm_impl(String const&);
-    String prompt_impl(String const&, String const&);
+    void alert_impl(DeprecatedString const&);
+    bool confirm_impl(DeprecatedString const&);
+    DeprecatedString prompt_impl(DeprecatedString const&, DeprecatedString const&);
     i32 request_animation_frame_impl(WebIDL::CallbackType& js_callback);
     void cancel_animation_frame_impl(i32);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
@@ -81,7 +81,7 @@ public:
 
     void did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
-    void did_call_location_replace(Badge<Bindings::LocationObject>, String url);
+    void did_call_location_replace(Badge<Bindings::LocationObject>, DeprecatedString url);
 
     void deallocate_timer_id(Badge<Timer>, i32);
 
@@ -96,7 +96,7 @@ public:
     void set_current_event(DOM::Event* event);
 
     CSS::CSSStyleDeclaration* get_computed_style_impl(DOM::Element&) const;
-    JS::NonnullGCPtr<CSS::MediaQueryList> match_media_impl(String);
+    JS::NonnullGCPtr<CSS::MediaQueryList> match_media_impl(DeprecatedString);
     Optional<CSS::MediaFeatureValue> query_media_feature(CSS::MediaFeatureID) const;
 
     float scroll_x() const;
@@ -118,11 +118,11 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     WindowProxy* parent();
 
-    WebIDL::ExceptionOr<void> post_message_impl(JS::Value, String const& target_origin);
+    WebIDL::ExceptionOr<void> post_message_impl(JS::Value, DeprecatedString const& target_origin);
     WebIDL::ExceptionOr<JS::Value> structured_clone_impl(JS::VM& vm, JS::Value);
 
-    String name() const;
-    void set_name(String const&);
+    DeprecatedString name() const;
+    void set_name(DeprecatedString const&);
 
     void start_an_idle_period();
 

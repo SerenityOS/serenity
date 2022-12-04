@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -185,8 +185,8 @@ public:
     [[nodiscard]] ReservedClientType& reserved_client() { return m_reserved_client; }
     void set_reserved_client(ReservedClientType reserved_client) { m_reserved_client = move(reserved_client); }
 
-    [[nodiscard]] String const& replaces_client_id() const { return m_replaces_client_id; }
-    void set_replaces_client_id(String replaces_client_id) { m_replaces_client_id = move(replaces_client_id); }
+    [[nodiscard]] DeprecatedString const& replaces_client_id() const { return m_replaces_client_id; }
+    void set_replaces_client_id(DeprecatedString replaces_client_id) { m_replaces_client_id = move(replaces_client_id); }
 
     [[nodiscard]] WindowType const& window() const { return m_window; }
     void set_window(WindowType window) { m_window = move(window); }
@@ -233,11 +233,11 @@ public:
     [[nodiscard]] RedirectMode redirect_mode() const { return m_redirect_mode; }
     void set_redirect_mode(RedirectMode redirect_mode) { m_redirect_mode = redirect_mode; }
 
-    [[nodiscard]] String const& integrity_metadata() const { return m_integrity_metadata; }
-    void set_integrity_metadata(String integrity_metadata) { m_integrity_metadata = move(integrity_metadata); }
+    [[nodiscard]] DeprecatedString const& integrity_metadata() const { return m_integrity_metadata; }
+    void set_integrity_metadata(DeprecatedString integrity_metadata) { m_integrity_metadata = move(integrity_metadata); }
 
-    [[nodiscard]] String const& cryptographic_nonce_metadata() const { return m_cryptographic_nonce_metadata; }
-    void set_cryptographic_nonce_metadata(String cryptographic_nonce_metadata) { m_cryptographic_nonce_metadata = move(cryptographic_nonce_metadata); }
+    [[nodiscard]] DeprecatedString const& cryptographic_nonce_metadata() const { return m_cryptographic_nonce_metadata; }
+    void set_cryptographic_nonce_metadata(DeprecatedString cryptographic_nonce_metadata) { m_cryptographic_nonce_metadata = move(cryptographic_nonce_metadata); }
 
     [[nodiscard]] Optional<ParserMetadata> const& parser_metadata() const { return m_parser_metadata; }
     void set_parser_metadata(Optional<ParserMetadata> parser_metadata) { m_parser_metadata = move(parser_metadata); }
@@ -293,7 +293,7 @@ public:
 
     [[nodiscard]] bool has_redirect_tainted_origin() const;
 
-    [[nodiscard]] String serialize_origin() const;
+    [[nodiscard]] DeprecatedString serialize_origin() const;
     [[nodiscard]] ErrorOr<ByteBuffer> byte_serialize_origin() const;
 
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> clone(JS::VM&) const;
@@ -351,7 +351,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-request-replaces-client-id
     // A request has an associated replaces client id (a string). Unless stated otherwise it is the empty string.
-    String m_replaces_client_id { String::empty() };
+    DeprecatedString m_replaces_client_id { DeprecatedString::empty() };
 
     // https://fetch.spec.whatwg.org/#concept-request-window
     // A request has an associated window ("no-window", "client", or an environment settings object whose global object
@@ -443,12 +443,12 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-request-integrity-metadata
     // A request has associated integrity metadata (a string). Unless stated otherwise, it is the empty string.
-    String m_integrity_metadata { String::empty() };
+    DeprecatedString m_integrity_metadata { DeprecatedString::empty() };
 
     // https://fetch.spec.whatwg.org/#concept-request-nonce-metadata
     // A request has associated cryptographic nonce metadata (a string). Unless stated otherwise, it is the empty
     // string.
-    String m_cryptographic_nonce_metadata { String::empty() };
+    DeprecatedString m_cryptographic_nonce_metadata { DeprecatedString::empty() };
 
     // https://fetch.spec.whatwg.org/#concept-request-parser-metadata
     // A request has associated parser metadata which is the empty string, "parser-inserted", or

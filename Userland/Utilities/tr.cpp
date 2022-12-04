@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
@@ -27,7 +27,7 @@ static ErrorOr<void> generate_character_class(Function<int(int)> oracle, StringB
     return {};
 }
 
-static ErrorOr<String> build_set(StringView specification)
+static ErrorOr<DeprecatedString> build_set(StringView specification)
 {
     StringBuilder out;
     GenericLexer lexer(specification);

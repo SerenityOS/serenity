@@ -38,7 +38,7 @@ public:
         return {};
     }
 
-    String key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
+    DeprecatedString key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
 
     void set_from(JsonObject const& object)
     {
@@ -55,7 +55,7 @@ private:
     {
     }
 
-    Vector<String> m_keys;
+    Vector<DeprecatedString> m_keys;
 };
 
 RefPtr<HelpWindow> HelpWindow::s_the { nullptr };
@@ -86,7 +86,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto entry = LexicalPath::basename(url.path());
             auto doc_option = m_docs.get(entry);
             if (!doc_option.is_object()) {
-                GUI::MessageBox::show_error(this, String::formatted("No documentation entry found for '{}'", url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No documentation entry found for '{}'", url.path()));
                 return;
             }
             auto& doc = doc_option.as_object();
@@ -94,13 +94,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
             auto* example_data_ptr = doc.get_ptr("example_data"sv);
             if (!example_data_ptr || !example_data_ptr->is_object()) {
-                GUI::MessageBox::show_error(this, String::formatted("No example data found for '{}'", url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No example data found for '{}'", url.path()));
                 return;
             }
             auto& example_data = example_data_ptr->as_object();
 
             if (!example_data.has_object(name)) {
-                GUI::MessageBox::show_error(this, String::formatted("Example '{}' not found for '{}'", name, url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Example '{}' not found for '{}'", name, url.path()));
                 return;
             }
             auto& value = example_data.get(name);
@@ -108,13 +108,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto window = GUI::Window::construct(this);
             window->resize(size());
             window->set_icon(icon());
-            window->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry));
+            window->set_title(DeprecatedString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
             auto& widget = window->set_main_widget<SpreadsheetWidget>(window, NonnullRefPtrVector<Sheet> {}, false);
             auto sheet = Sheet::from_json(value.as_object(), widget.workbook());
             if (!sheet) {
-                GUI::MessageBox::show_error(this, String::formatted("Corrupted example '{}' in '{}'", name, url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, url.path()));
                 return;
             }
 
@@ -137,7 +137,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     };
 }
 
-String HelpWindow::render(StringView key)
+DeprecatedString HelpWindow::render(StringView key)
 {
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get(key).as_object();

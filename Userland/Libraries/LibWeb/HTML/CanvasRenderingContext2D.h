@@ -65,11 +65,11 @@ public:
     virtual void stroke() override;
     virtual void stroke(Path2D const& path) override;
 
-    virtual void fill_text(String const&, float x, float y, Optional<double> max_width) override;
-    virtual void stroke_text(String const&, float x, float y, Optional<double> max_width) override;
+    virtual void fill_text(DeprecatedString const&, float x, float y, Optional<double> max_width) override;
+    virtual void stroke_text(DeprecatedString const&, float x, float y, Optional<double> max_width) override;
 
-    virtual void fill(String const& fill_rule) override;
-    virtual void fill(Path2D& path, String const& fill_rule) override;
+    virtual void fill(DeprecatedString const& fill_rule) override;
+    virtual void fill(Path2D& path, DeprecatedString const& fill_rule) override;
 
     virtual JS::GCPtr<ImageData> create_image_data(int width, int height) const override;
     virtual WebIDL::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
@@ -79,7 +79,7 @@ public:
 
     JS::NonnullGCPtr<HTMLCanvasElement> canvas_for_binding() const;
 
-    virtual JS::NonnullGCPtr<TextMetrics> measure_text(String const& text) override;
+    virtual JS::NonnullGCPtr<TextMetrics> measure_text(DeprecatedString const& text) override;
 
     virtual void clip() override;
 
@@ -100,7 +100,7 @@ private:
     };
 
     void did_draw(Gfx::FloatRect const&);
-    PreparedText prepare_text(String const& text, float max_width = INFINITY);
+    PreparedText prepare_text(DeprecatedString const& text, float max_width = INFINITY);
 
     Gfx::Painter* painter();
     Optional<Gfx::AntiAliasingPainter> antialiased_painter();
@@ -109,7 +109,7 @@ private:
     HTMLCanvasElement const& canvas_element() const;
 
     void stroke_internal(Gfx::Path const&);
-    void fill_internal(Gfx::Path&, String const& fill_rule);
+    void fill_internal(Gfx::Path&, DeprecatedString const& fill_rule);
 
     JS::NonnullGCPtr<HTMLCanvasElement> m_element;
     OwnPtr<Gfx::Painter> m_painter;

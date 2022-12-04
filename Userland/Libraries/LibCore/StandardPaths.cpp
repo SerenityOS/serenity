@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/StandardPaths.h>
 #include <pwd.h>
@@ -14,18 +14,18 @@
 
 namespace Core {
 
-String StandardPaths::home_directory()
+DeprecatedString StandardPaths::home_directory()
 {
     if (auto* home_env = getenv("HOME"))
         return LexicalPath::canonicalized_path(home_env);
 
     auto* pwd = getpwuid(getuid());
-    String path = pwd ? pwd->pw_dir : "/";
+    DeprecatedString path = pwd ? pwd->pw_dir : "/";
     endpwent();
     return LexicalPath::canonicalized_path(path);
 }
 
-String StandardPaths::desktop_directory()
+DeprecatedString StandardPaths::desktop_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
@@ -33,7 +33,7 @@ String StandardPaths::desktop_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-String StandardPaths::documents_directory()
+DeprecatedString StandardPaths::documents_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
@@ -41,7 +41,7 @@ String StandardPaths::documents_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-String StandardPaths::downloads_directory()
+DeprecatedString StandardPaths::downloads_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
@@ -49,7 +49,7 @@ String StandardPaths::downloads_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-String StandardPaths::config_directory()
+DeprecatedString StandardPaths::config_directory()
 {
     StringBuilder builder;
     builder.append(home_directory());
@@ -57,7 +57,7 @@ String StandardPaths::config_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-String StandardPaths::tempfile_directory()
+DeprecatedString StandardPaths::tempfile_directory()
 {
     return "/tmp";
 }

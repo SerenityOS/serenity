@@ -24,33 +24,33 @@ public:
     CodeComprehensionEngine(FileDB const& filedb, bool store_all_declarations = false);
     virtual ~CodeComprehensionEngine() = default;
 
-    virtual Vector<AutocompleteResultEntry> get_suggestions(String const& file, GUI::TextPosition const& autocomplete_position) = 0;
+    virtual Vector<AutocompleteResultEntry> get_suggestions(DeprecatedString const& file, GUI::TextPosition const& autocomplete_position) = 0;
 
     // TODO: In the future we can pass the range that was edited and only re-parse what we have to.
-    virtual void on_edit([[maybe_unused]] String const& file) {};
-    virtual void file_opened([[maybe_unused]] String const& file) {};
+    virtual void on_edit([[maybe_unused]] DeprecatedString const& file) {};
+    virtual void file_opened([[maybe_unused]] DeprecatedString const& file) {};
 
-    virtual Optional<ProjectLocation> find_declaration_of(String const&, GUI::TextPosition const&) { return {}; }
+    virtual Optional<ProjectLocation> find_declaration_of(DeprecatedString const&, GUI::TextPosition const&) { return {}; }
 
     struct FunctionParamsHint {
-        Vector<String> params;
+        Vector<DeprecatedString> params;
         size_t current_index { 0 };
     };
-    virtual Optional<FunctionParamsHint> get_function_params_hint(String const&, GUI::TextPosition const&) { return {}; }
+    virtual Optional<FunctionParamsHint> get_function_params_hint(DeprecatedString const&, GUI::TextPosition const&) { return {}; }
 
-    virtual Vector<TokenInfo> get_tokens_info(String const&) { return {}; }
+    virtual Vector<TokenInfo> get_tokens_info(DeprecatedString const&) { return {}; }
 
-    Function<void(String const&, Vector<Declaration>&&)> set_declarations_of_document_callback;
-    Function<void(String const&, Vector<TodoEntry>&&)> set_todo_entries_of_document_callback;
+    Function<void(DeprecatedString const&, Vector<Declaration>&&)> set_declarations_of_document_callback;
+    Function<void(DeprecatedString const&, Vector<TodoEntry>&&)> set_todo_entries_of_document_callback;
 
 protected:
     FileDB const& filedb() const { return m_filedb; }
-    void set_declarations_of_document(String const&, Vector<Declaration>&&);
-    void set_todo_entries_of_document(String const&, Vector<TodoEntry>&&);
-    HashMap<String, Vector<Declaration>> const& all_declarations() const { return m_all_declarations; }
+    void set_declarations_of_document(DeprecatedString const&, Vector<Declaration>&&);
+    void set_todo_entries_of_document(DeprecatedString const&, Vector<TodoEntry>&&);
+    HashMap<DeprecatedString, Vector<Declaration>> const& all_declarations() const { return m_all_declarations; }
 
 private:
-    HashMap<String, Vector<Declaration>> m_all_declarations;
+    HashMap<DeprecatedString, Vector<Declaration>> m_all_declarations;
     FileDB const& m_filedb;
     bool m_store_all_declarations { false };
 };

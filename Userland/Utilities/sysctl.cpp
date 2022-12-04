@@ -12,9 +12,9 @@
 
 static bool s_set_variable = false;
 
-static String get_variable(StringView name)
+static DeprecatedString get_variable(StringView name)
 {
-    auto path = String::formatted("/sys/kernel/variables/{}", name);
+    auto path = DeprecatedString::formatted("/sys/kernel/variables/{}", name);
     auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());
@@ -42,7 +42,7 @@ static bool write_variable(StringView name, StringView value)
     auto old_value = get_variable(name);
     if (old_value.is_null())
         return false;
-    auto path = String::formatted("/sys/kernel/variables/{}", name);
+    auto path = DeprecatedString::formatted("/sys/kernel/variables/{}", name);
     auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Write);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());

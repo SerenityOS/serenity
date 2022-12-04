@@ -10,7 +10,7 @@
 #include <AK/StringBuilder.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #    include <AK/Utf16View.h>
 #endif
 
@@ -129,7 +129,7 @@ StringView GenericLexer::consume_quoted_string(char escape_char)
 }
 
 #ifndef KERNEL
-String GenericLexer::consume_and_unescape_string(char escape_char)
+DeprecatedString GenericLexer::consume_and_unescape_string(char escape_char)
 {
     auto view = consume_quoted_string(escape_char);
     if (view.is_null())

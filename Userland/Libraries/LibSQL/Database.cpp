@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 
 #include <LibSQL/BTree.h>
 #include <LibSQL/Database.h>
@@ -18,7 +18,7 @@
 
 namespace SQL {
 
-Database::Database(String name)
+Database::Database(DeprecatedString name)
     : m_heap(Heap::construct(move(name)))
     , m_serializer(m_heap)
 {
@@ -92,14 +92,14 @@ ResultOr<void> Database::add_schema(SchemaDef const& schema)
     return {};
 }
 
-Key Database::get_schema_key(String const& schema_name)
+Key Database::get_schema_key(DeprecatedString const& schema_name)
 {
     auto key = SchemaDef::make_key();
     key["schema_name"] = schema_name;
     return key;
 }
 
-ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(String const& schema)
+ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(DeprecatedString const& schema)
 {
     VERIFY(is_open());
 
@@ -135,14 +135,14 @@ ResultOr<void> Database::add_table(TableDef& table)
     return {};
 }
 
-Key Database::get_table_key(String const& schema_name, String const& table_name)
+Key Database::get_table_key(DeprecatedString const& schema_name, DeprecatedString const& table_name)
 {
     auto key = TableDef::make_key(get_schema_key(schema_name));
     key["table_name"] = table_name;
     return key;
 }
 
-ResultOr<NonnullRefPtr<TableDef>> Database::get_table(String const& schema, String const& name)
+ResultOr<NonnullRefPtr<TableDef>> Database::get_table(DeprecatedString const& schema, DeprecatedString const& name)
 {
     VERIFY(is_open());
 
@@ -156,7 +156,7 @@ ResultOr<NonnullRefPtr<TableDef>> Database::get_table(String const& schema, Stri
 
     auto table_iterator = m_tables->find(key);
     if (table_iterator.is_end() || (*table_iterator != key))
-        return Result { SQLCommand::Unknown, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, name) };
+        return Result { SQLCommand::Unknown, SQLErrorCode::TableDoesNotExist, DeprecatedString::formatted("{}.{}", schema_name, name) };
 
     auto schema_def = TRY(get_schema(schema));
     auto table_def = TableDef::construct(schema_def, name);

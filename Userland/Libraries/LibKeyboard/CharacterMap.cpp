@@ -12,14 +12,14 @@
 
 namespace Keyboard {
 
-ErrorOr<CharacterMap> CharacterMap::load_from_file(String const& map_name)
+ErrorOr<CharacterMap> CharacterMap::load_from_file(DeprecatedString const& map_name)
 {
     auto result = TRY(CharacterMapFile::load_from_file(map_name));
 
     return CharacterMap(map_name, result);
 }
 
-CharacterMap::CharacterMap(String const& map_name, CharacterMapData const& map_data)
+CharacterMap::CharacterMap(DeprecatedString const& map_name, CharacterMapData const& map_data)
     : m_character_map_data(map_data)
     , m_character_map_name(map_name)
 {
@@ -41,7 +41,7 @@ ErrorOr<CharacterMap> CharacterMap::fetch_system_map()
     return CharacterMap { keymap_name, map_data };
 }
 
-String const& CharacterMap::character_map_name() const
+DeprecatedString const& CharacterMap::character_map_name() const
 {
     return m_character_map_name;
 }

@@ -7,21 +7,21 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace TextEditor {
 
 class FileArgument final {
 public:
-    explicit FileArgument(String);
+    explicit FileArgument(DeprecatedString);
     ~FileArgument() = default;
 
-    String filename() { return m_filename; }
+    DeprecatedString filename() { return m_filename; }
     Optional<size_t> line() { return m_line; }
     Optional<size_t> column() { return m_column; }
 
 private:
-    String m_filename;
+    DeprecatedString m_filename;
     Optional<size_t> m_line;
     Optional<size_t> m_column;
 };

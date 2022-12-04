@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
@@ -86,8 +86,8 @@ public:
 
     void make_window_manager(unsigned event_mask);
 
-    String title() const;
-    void set_title(String);
+    DeprecatedString title() const;
+    void set_title(DeprecatedString);
 
     enum class CloseRequestDecision {
         StayOpen,
@@ -220,8 +220,8 @@ public:
 
     void did_disable_focused_widget(Badge<Widget>);
 
-    Menu& add_menu(String name);
-    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
+    Menu& add_menu(DeprecatedString name);
+    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(DeprecatedString name);
     ErrorOr<void> try_add_menu(NonnullRefPtr<Menu> menu);
     void flash_menubar_menu_for(MenuItem const&);
 
@@ -295,7 +295,7 @@ private:
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
     Gfx::IntSize m_minimum_size_when_windowless { 0, 0 };
-    String m_title_when_windowless;
+    DeprecatedString m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;

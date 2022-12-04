@@ -10,13 +10,13 @@
 
 namespace Web::DOM {
 
-Comment::Comment(Document& document, String const& data)
+Comment::Comment(Document& document, DeprecatedString const& data)
     : CharacterData(document, NodeType::COMMENT_NODE, data)
 {
 }
 
 // https://dom.spec.whatwg.org/#dom-comment-comment
-JS::NonnullGCPtr<Comment> Comment::construct_impl(JS::Realm& realm, String const& data)
+JS::NonnullGCPtr<Comment> Comment::construct_impl(JS::Realm& realm, DeprecatedString const& data)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     return *realm.heap().allocate<Comment>(realm, window.associated_document(), data);

@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        String ifname = value_adapter;
+        DeprecatedString ifname = value_adapter;
 
         if (!value_ipv4.is_empty()) {
             auto address = IPv4Address::from_string(value_ipv4);

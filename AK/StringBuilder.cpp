@@ -14,7 +14,7 @@
 #include <AK/Utf32View.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #    include <AK/Utf16View.h>
 #endif
 
@@ -104,14 +104,14 @@ ByteBuffer StringBuilder::to_byte_buffer() const
 }
 
 #ifndef KERNEL
-String StringBuilder::to_string() const
+DeprecatedString StringBuilder::to_string() const
 {
     if (is_empty())
-        return String::empty();
-    return String((char const*)data(), length());
+        return DeprecatedString::empty();
+    return DeprecatedString((char const*)data(), length());
 }
 
-String StringBuilder::build() const
+DeprecatedString StringBuilder::build() const
 {
     return to_string();
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/File.h>
 #include <unistd.h>
 
@@ -27,10 +27,10 @@ struct ThreadStatistics {
     unsigned ipv4_socket_write_bytes;
     unsigned file_read_bytes;
     unsigned file_write_bytes;
-    String state;
+    DeprecatedString state;
     u32 cpu;
     u32 priority;
-    String name;
+    DeprecatedString name;
 };
 
 struct ProcessStatistics {
@@ -45,11 +45,11 @@ struct ProcessStatistics {
     pid_t ppid;
     unsigned nfds;
     bool kernel;
-    String name;
-    String executable;
-    String tty;
-    String pledge;
-    String veil;
+    DeprecatedString name;
+    DeprecatedString executable;
+    DeprecatedString tty;
+    DeprecatedString pledge;
+    DeprecatedString veil;
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
@@ -61,7 +61,7 @@ struct ProcessStatistics {
     Vector<Core::ThreadStatistics> threads;
 
     // synthetic
-    String username;
+    DeprecatedString username;
 };
 
 struct AllProcessesStatistics {
@@ -76,8 +76,8 @@ public:
     static Optional<AllProcessesStatistics> get_all(bool include_usernames = true);
 
 private:
-    static String username_from_uid(uid_t);
-    static HashMap<uid_t, String> s_usernames;
+    static DeprecatedString username_from_uid(uid_t);
+    static HashMap<uid_t, DeprecatedString> s_usernames;
 };
 
 }

@@ -157,7 +157,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         // 16. Return undefined.
         return js_undefined();
     });
-    resolve_function->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+    resolve_function->define_direct_property(vm.names.name, js_string(vm, DeprecatedString::empty()), Attribute::Configurable);
 
     // 7. Let stepsReject be the algorithm steps defined in Promise Reject Functions.
     // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
@@ -189,7 +189,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         // 8. Return undefined.
         return js_undefined();
     });
-    reject_function->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+    reject_function->define_direct_property(vm.names.name, js_string(vm, DeprecatedString::empty()), Attribute::Configurable);
 
     // 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
     return { *resolve_function, *reject_function };

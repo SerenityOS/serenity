@@ -22,11 +22,11 @@ class KeymapStatusWidget : public GUI::Label {
 
     virtual void mousedown_event(GUI::MouseEvent& event) override;
 
-    void set_current_keymap(String const& keymap, ClearBackground clear_background = ClearBackground::Yes);
+    void set_current_keymap(DeprecatedString const& keymap, ClearBackground clear_background = ClearBackground::Yes);
 
 private:
     RefPtr<GUI::Menu> m_context_menu;
-    String m_current_keymap;
+    DeprecatedString m_current_keymap;
 
     ErrorOr<void> refresh_menu();
 

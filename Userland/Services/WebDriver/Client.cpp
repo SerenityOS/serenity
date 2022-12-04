@@ -155,7 +155,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     auto session = make<Session>(session_id, *this, move(options));
 
     if (auto start_result = session->start(); start_result.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, String::formatted("Failed to start session: {}", start_result.error().string_literal()));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, DeprecatedString::formatted("Failed to start session: {}", start_result.error().string_literal()));
 
     auto& web_content_connection = session->web_content_connection();
 
@@ -176,7 +176,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     JsonObject body;
     // "sessionId"
     //     session id
-    body.set("sessionId", String::number(session_id));
+    body.set("sessionId", DeprecatedString::number(session_id));
     // "capabilities"
     //     capabilities
     body.set("capabilities", move(capabilities));

@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio unix"));
 
-    String name_or_ip {};
+    DeprecatedString name_or_ip {};
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Convert between domain name and IPv4 address.");
     args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name");

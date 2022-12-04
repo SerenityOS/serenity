@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <spawn.h>
 
 namespace Core {
@@ -17,11 +17,11 @@ namespace Core {
 
 struct CommandResult {
     int exit_code { 0 };
-    String output;
-    String error;
+    DeprecatedString output;
+    DeprecatedString error;
 };
 
-ErrorOr<CommandResult> command(String const& program, Vector<String> const& arguments, Optional<LexicalPath> chdir);
-ErrorOr<CommandResult> command(String const& command_string, Optional<LexicalPath> chdir);
+ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<DeprecatedString> const& arguments, Optional<LexicalPath> chdir);
+ErrorOr<CommandResult> command(DeprecatedString const& command_string, Optional<LexicalPath> chdir);
 
 }

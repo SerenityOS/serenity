@@ -123,16 +123,16 @@ private:
 
 class ImageUndoCommand : public GUI::Command {
 public:
-    ImageUndoCommand(Image&, String action_text);
+    ImageUndoCommand(Image&, DeprecatedString action_text);
 
     virtual void undo() override;
     virtual void redo() override;
-    virtual String action_text() const override { return m_action_text; }
+    virtual DeprecatedString action_text() const override { return m_action_text; }
 
 private:
     RefPtr<Image> m_snapshot;
     Image& m_image;
-    String m_action_text;
+    DeprecatedString m_action_text;
 };
 
 }

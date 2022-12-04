@@ -16,7 +16,7 @@ public:
     ~InspectableProcess() = default;
 
     void send_request(JsonObject const& request);
-    String wait_for_response();
+    DeprecatedString wait_for_response();
 
     static InspectableProcess* from_pid(pid_t);
 

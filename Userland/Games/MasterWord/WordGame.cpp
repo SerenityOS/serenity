@@ -36,7 +36,7 @@ void WordGame::reset()
     if (maybe_word.has_value())
         m_current_word = maybe_word.value();
     else {
-        GUI::MessageBox::show(window(), String::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord"sv);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord"sv);
         if (m_num_letters != 5) {
             m_num_letters = 5;
             reset();
@@ -47,7 +47,7 @@ void WordGame::reset()
 
 void WordGame::pick_font()
 {
-    String best_font_name;
+    DeprecatedString best_font_name;
     auto best_font_size = -1;
     auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](Gfx::Font const& font) {
@@ -74,7 +74,7 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
 {
     // If we can still add a letter and the key was alpha
     if (m_current_guess.length() < m_num_letters && is_ascii_alpha(event.code_point())) {
-        m_current_guess = String::formatted("{}{}", m_current_guess, event.text().to_uppercase());
+        m_current_guess = DeprecatedString::formatted("{}{}", m_current_guess, event.text().to_uppercase());
         m_last_word_not_in_dictionary = false;
     }
     // If backspace pressed and already have some letters entered
@@ -93,7 +93,7 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
                 GUI::MessageBox::show(window(), "You win!"sv, "MasterWord"sv);
                 reset();
             } else if (m_guesses.size() == m_max_guesses) {
-                GUI::MessageBox::show(window(), String::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
                 reset();
             }
         } else {
@@ -180,7 +180,7 @@ void WordGame::read_words()
     }
 }
 
-Optional<String> WordGame::random_word(size_t length)
+Optional<DeprecatedString> WordGame::random_word(size_t length)
 {
     auto words_for_length = m_words.get(length);
     if (words_for_length.has_value()) {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Web::CSS {
 
@@ -71,7 +71,7 @@ inline MatchResult evaluate_or(Collection& collection, Evaluate evaluate)
 // https://www.w3.org/TR/mediaqueries-4/#typedef-general-enclosed
 class GeneralEnclosed {
 public:
-    GeneralEnclosed(String serialized_contents)
+    GeneralEnclosed(DeprecatedString serialized_contents)
         : m_serialized_contents(move(serialized_contents))
     {
     }
@@ -80,6 +80,6 @@ public:
     StringView to_string() const { return m_serialized_contents.view(); }
 
 private:
-    String m_serialized_contents;
+    DeprecatedString m_serialized_contents;
 };
 }

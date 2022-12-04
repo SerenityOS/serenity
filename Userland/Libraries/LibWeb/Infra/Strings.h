@@ -11,7 +11,7 @@
 
 namespace Web::Infra {
 
-String strip_and_collapse_whitespace(StringView string);
+DeprecatedString strip_and_collapse_whitespace(StringView string);
 bool is_code_unit_prefix(StringView potential_prefix, StringView input);
 
 }

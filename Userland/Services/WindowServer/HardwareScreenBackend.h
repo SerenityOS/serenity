@@ -8,9 +8,9 @@
 
 #include "ScreenBackend.h"
 #include "ScreenLayout.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <sys/ioctl_numbers.h>
 
 namespace WindowServer {
@@ -18,7 +18,7 @@ class HardwareScreenBackend : public ScreenBackend {
 public:
     virtual ~HardwareScreenBackend();
 
-    explicit HardwareScreenBackend(String device);
+    explicit HardwareScreenBackend(DeprecatedString device);
 
     virtual ErrorOr<void> open() override;
 
@@ -36,7 +36,7 @@ public:
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) override;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() override;
 
-    String m_device {};
+    DeprecatedString m_device {};
     int m_display_connector_fd { -1 };
 
     Gfx::ARGB32* scanline(int buffer_index, int y) const

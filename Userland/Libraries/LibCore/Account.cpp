@@ -27,7 +27,7 @@
 
 namespace Core {
 
-static String get_salt()
+static DeprecatedString get_salt()
 {
     char random_data[12];
     fill_with_random(random_data, sizeof(random_data));
@@ -223,7 +223,7 @@ Account::Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids)
 {
 }
 
-ErrorOr<String> Account::generate_passwd_file() const
+ErrorOr<DeprecatedString> Account::generate_passwd_file() const
 {
     StringBuilder builder;
 
@@ -256,7 +256,7 @@ ErrorOr<String> Account::generate_passwd_file() const
 }
 
 #ifndef AK_OS_BSD_GENERIC
-ErrorOr<String> Account::generate_shadow_file() const
+ErrorOr<DeprecatedString> Account::generate_shadow_file() const
 {
     StringBuilder builder;
 
@@ -268,24 +268,24 @@ ErrorOr<String> Account::generate_shadow_file() const
         if (p->sp_namp == m_username) {
             builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
                 m_username, m_password_hash,
-                (p->sp_lstchg == -1) ? "" : String::formatted("{}", p->sp_lstchg),
-                (p->sp_min == -1) ? "" : String::formatted("{}", p->sp_min),
-                (p->sp_max == -1) ? "" : String::formatted("{}", p->sp_max),
-                (p->sp_warn == -1) ? "" : String::formatted("{}", p->sp_warn),
-                (p->sp_inact == -1) ? "" : String::formatted("{}", p->sp_inact),
-                (p->sp_expire == -1) ? "" : String::formatted("{}", p->sp_expire),
-                (p->sp_flag == 0) ? "" : String::formatted("{}", p->sp_flag));
+                (p->sp_lstchg == -1) ? "" : DeprecatedString::formatted("{}", p->sp_lstchg),
+                (p->sp_min == -1) ? "" : DeprecatedString::formatted("{}", p->sp_min),
+                (p->sp_max == -1) ? "" : DeprecatedString::formatted("{}", p->sp_max),
+                (p->sp_warn == -1) ? "" : DeprecatedString::formatted("{}", p->sp_warn),
+                (p->sp_inact == -1) ? "" : DeprecatedString::formatted("{}", p->sp_inact),
+                (p->sp_expire == -1) ? "" : DeprecatedString::formatted("{}", p->sp_expire),
+                (p->sp_flag == 0) ? "" : DeprecatedString::formatted("{}", p->sp_flag));
 
         } else {
             builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
                 p->sp_namp, p->sp_pwdp,
-                (p->sp_lstchg == -1) ? "" : String::formatted("{}", p->sp_lstchg),
-                (p->sp_min == -1) ? "" : String::formatted("{}", p->sp_min),
-                (p->sp_max == -1) ? "" : String::formatted("{}", p->sp_max),
-                (p->sp_warn == -1) ? "" : String::formatted("{}", p->sp_warn),
-                (p->sp_inact == -1) ? "" : String::formatted("{}", p->sp_inact),
-                (p->sp_expire == -1) ? "" : String::formatted("{}", p->sp_expire),
-                (p->sp_flag == 0) ? "" : String::formatted("{}", p->sp_flag));
+                (p->sp_lstchg == -1) ? "" : DeprecatedString::formatted("{}", p->sp_lstchg),
+                (p->sp_min == -1) ? "" : DeprecatedString::formatted("{}", p->sp_min),
+                (p->sp_max == -1) ? "" : DeprecatedString::formatted("{}", p->sp_max),
+                (p->sp_warn == -1) ? "" : DeprecatedString::formatted("{}", p->sp_warn),
+                (p->sp_inact == -1) ? "" : DeprecatedString::formatted("{}", p->sp_inact),
+                (p->sp_expire == -1) ? "" : DeprecatedString::formatted("{}", p->sp_expire),
+                (p->sp_flag == 0) ? "" : DeprecatedString::formatted("{}", p->sp_flag));
         }
     }
     endspent();

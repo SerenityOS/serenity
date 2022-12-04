@@ -19,7 +19,7 @@ HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName q
 HTMLMediaElement::~HTMLMediaElement() = default;
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype
-Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(String const& type) const
+Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(DeprecatedString const& type) const
 {
     // The canPlayType(type) method must:
     // - return the empty string if type is a type that the user agent knows it cannot render or is the type "application/octet-stream"

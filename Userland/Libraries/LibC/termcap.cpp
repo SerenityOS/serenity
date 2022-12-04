@@ -5,8 +5,8 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <assert.h>
 #include <string.h>
@@ -27,13 +27,13 @@ int __attribute__((weak)) tgetent([[maybe_unused]] char* bp, [[maybe_unused]] ch
     return 1;
 }
 
-static HashMap<String, char const*>* caps = nullptr;
+static HashMap<DeprecatedString, char const*>* caps = nullptr;
 
 static void ensure_caps()
 {
     if (caps)
         return;
-    caps = new HashMap<String, char const*>;
+    caps = new HashMap<DeprecatedString, char const*>;
     caps->set("DC", "\033[%p1%dP");
     caps->set("IC", "\033[%p1%d@");
     caps->set("ce", "\033[K");
@@ -114,7 +114,7 @@ int __attribute__((weak)) tgetnum(char const* id)
 static Vector<char> s_tgoto_buffer;
 char* __attribute__((weak)) tgoto([[maybe_unused]] char const* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
-    auto cap_str = StringView { cap, strlen(cap) }.replace("%p1%d"sv, String::number(col), ReplaceMode::FirstOnly).replace("%p2%d"sv, String::number(row), ReplaceMode::FirstOnly);
+    auto cap_str = StringView { cap, strlen(cap) }.replace("%p1%d"sv, DeprecatedString::number(col), ReplaceMode::FirstOnly).replace("%p2%d"sv, DeprecatedString::number(row), ReplaceMode::FirstOnly);
 
     s_tgoto_buffer.clear_with_capacity();
     s_tgoto_buffer.ensure_capacity(cap_str.length());

@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 
-    Optional<String> path = {};
+    Optional<DeprecatedString> path = {};
 
     if (!file_to_edit.is_empty())
         path = Core::File::absolute_path(file_to_edit);
@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             [&window, &path, &main_widget]() {
                 auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path.value());
                 if (response.is_error())
-                    GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", path.value(), response.error()));
+                    GUI::MessageBox::show_error(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", path.value(), response.error()));
                 else
                     main_widget->load_from_file(response.release_value());
             });

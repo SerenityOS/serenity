@@ -158,7 +158,7 @@ static Vector<JS::Handle<DOM::Node>> focus_chain(DOM::Node* subject)
 
 // https://html.spec.whatwg.org/multipage/interaction.html#focusing-steps
 // FIXME: This should accept more types.
-void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_target, [[maybe_unused]] Optional<String> focus_trigger)
+void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_target, [[maybe_unused]] Optional<DeprecatedString> focus_trigger)
 {
     // FIXME: 1. If new focus target is not a focusable area, then set new focus target
     //           to the result of getting the focusable area for new focus target,

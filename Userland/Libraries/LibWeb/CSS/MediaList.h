@@ -23,12 +23,12 @@ public:
     static MediaList* create(JS::Realm&, NonnullRefPtrVector<MediaQuery>&& media);
     ~MediaList() = default;
 
-    String media_text() const;
-    void set_media_text(String const&);
+    DeprecatedString media_text() const;
+    void set_media_text(DeprecatedString const&);
     size_t length() const { return m_media.size(); }
-    String item(u32 index) const;
-    void append_medium(String);
-    void delete_medium(String);
+    DeprecatedString item(u32 index) const;
+    void append_medium(DeprecatedString);
+    void delete_medium(DeprecatedString);
 
     virtual bool is_supported_property_index(u32 index) const override;
     virtual JS::Value item_value(size_t index) const override;

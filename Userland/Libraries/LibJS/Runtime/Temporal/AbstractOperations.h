@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
@@ -57,14 +57,14 @@ struct TemporalInstant {
     u16 millisecond;
     u16 microsecond;
     u16 nanosecond;
-    Optional<String> time_zone_offset;
+    Optional<DeprecatedString> time_zone_offset;
 };
 
 struct TemporalDate {
     i32 year;
     u8 month;
     u8 day;
-    Optional<String> calendar;
+    Optional<DeprecatedString> calendar;
 };
 
 struct TemporalTime {
@@ -74,27 +74,27 @@ struct TemporalTime {
     u16 millisecond;
     u16 microsecond;
     u16 nanosecond;
-    Optional<String> calendar = {};
+    Optional<DeprecatedString> calendar = {};
 };
 
 struct TemporalTimeZone {
     bool z;
-    Optional<String> offset_string;
-    Optional<String> name;
+    Optional<DeprecatedString> offset_string;
+    Optional<DeprecatedString> name;
 };
 
 struct TemporalYearMonth {
     i32 year;
     u8 month;
     u8 day;
-    Optional<String> calendar = {};
+    Optional<DeprecatedString> calendar = {};
 };
 
 struct TemporalMonthDay {
     Optional<i32> year;
     u8 month;
     u8 day;
-    Optional<String> calendar = {};
+    Optional<DeprecatedString> calendar = {};
 };
 
 struct ISODateTime {
@@ -108,19 +108,19 @@ struct ISODateTime {
     u16 microsecond;
     u16 nanosecond;
     TemporalTimeZone time_zone { .z = false, .offset_string = {}, .name = {} };
-    Optional<String> calendar = {};
+    Optional<DeprecatedString> calendar = {};
 };
 
 struct SecondsStringPrecision {
     Variant<StringView, u8> precision;
-    String unit;
+    DeprecatedString unit;
     u32 increment;
 };
 
 struct DifferenceSettings {
-    String smallest_unit;
-    String largest_unit;
-    String rounding_mode;
+    DeprecatedString smallest_unit;
+    DeprecatedString largest_unit;
+    DeprecatedString rounding_mode;
     u64 rounding_increment;
     Object& options;
 };
@@ -135,24 +135,24 @@ using TemporalUnitDefault = Variant<TemporalUnitRequired, Optional<StringView>>;
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(VM&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(VM&, Value options);
 ThrowCompletionOr<Value> get_option(VM&, Object const& options, PropertyKey const& property, OptionType type, Span<StringView const> values, OptionDefault const&);
-ThrowCompletionOr<String> to_temporal_overflow(VM&, Object const* options);
-ThrowCompletionOr<String> to_temporal_disambiguation(VM&, Object const* options);
-ThrowCompletionOr<String> to_temporal_rounding_mode(VM&, Object const& normalized_options, String const& fallback);
-StringView negate_temporal_rounding_mode(String const& rounding_mode);
-ThrowCompletionOr<String> to_temporal_offset(VM&, Object const* options, String const& fallback);
-ThrowCompletionOr<String> to_calendar_name_option(VM&, Object const& normalized_options);
-ThrowCompletionOr<String> to_time_zone_name_option(VM&, Object const& normalized_options);
-ThrowCompletionOr<String> to_show_offset_option(VM&, Object const& normalized_options);
+ThrowCompletionOr<DeprecatedString> to_temporal_overflow(VM&, Object const* options);
+ThrowCompletionOr<DeprecatedString> to_temporal_disambiguation(VM&, Object const* options);
+ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM&, Object const& normalized_options, DeprecatedString const& fallback);
+StringView negate_temporal_rounding_mode(DeprecatedString const& rounding_mode);
+ThrowCompletionOr<DeprecatedString> to_temporal_offset(VM&, Object const* options, DeprecatedString const& fallback);
+ThrowCompletionOr<DeprecatedString> to_calendar_name_option(VM&, Object const& normalized_options);
+ThrowCompletionOr<DeprecatedString> to_time_zone_name_option(VM&, Object const& normalized_options);
+ThrowCompletionOr<DeprecatedString> to_show_offset_option(VM&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(VM&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM&, Object const& normalized_options, StringView smallest_unit);
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM&, Object const& normalized_options);
-ThrowCompletionOr<Optional<String>> get_temporal_unit(VM&, Object const& normalized_options, PropertyKey const&, UnitGroup, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values = {});
+ThrowCompletionOr<Optional<DeprecatedString>> get_temporal_unit(VM&, Object const& normalized_options, PropertyKey const&, UnitGroup, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values = {});
 ThrowCompletionOr<Value> to_relative_temporal_object(VM&, Object const& options);
 StringView larger_of_two_temporal_units(StringView, StringView);
-ThrowCompletionOr<Object*> merge_largest_unit_option(VM&, Object const& options, String largest_unit);
+ThrowCompletionOr<Object*> merge_largest_unit_option(VM&, Object const& options, DeprecatedString largest_unit);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(VM&, Object&);
-String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
+DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double sign(double);
 double sign(Crypto::SignedBigInteger const&);
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative);
@@ -163,19 +163,19 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
 Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, StringView iso_string);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, ParseResult const& parse_result);
-ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM&, String const& iso_string);
-ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM&, String const& iso_string);
-ThrowCompletionOr<String> parse_temporal_calendar_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM&, String const& iso_string);
-ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM&, String const& iso_string);
-ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM&, String const& iso_string);
-ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM&, String const& iso_string);
+ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM&, DeprecatedString const& iso_string);
 ThrowCompletionOr<double> to_positive_integer(VM&, Value argument);
-ThrowCompletionOr<Object*> prepare_temporal_fields(VM&, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields);
+ThrowCompletionOr<Object*> prepare_temporal_fields(VM&, Object const& fields, Vector<DeprecatedString> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields);
 ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM&, DifferenceOperation, Value options_value, UnitGroup unit_group, Vector<StringView> const& disallowed_units, TemporalUnitDefault const& fallback_smallest_unit, StringView smallest_largest_default_unit);
 
 template<size_t Size>

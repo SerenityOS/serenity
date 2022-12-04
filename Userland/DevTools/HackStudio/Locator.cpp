@@ -21,13 +21,13 @@ namespace HackStudio {
 class LocatorSuggestionModel final : public GUI::Model {
 public:
     struct Suggestion {
-        static Suggestion create_filename(String const& filename);
+        static Suggestion create_filename(DeprecatedString const& filename);
         static Suggestion create_symbol_declaration(CodeComprehension::Declaration const&);
 
         bool is_filename() const { return as_filename.has_value(); }
         bool is_symbol_declaration() const { return as_symbol_declaration.has_value(); }
 
-        Optional<String> as_filename;
+        Optional<DeprecatedString> as_filename;
         Optional<CodeComprehension::Declaration> as_symbol_declaration;
     };
 
@@ -62,7 +62,7 @@ public:
             if (index.column() == Column::Name) {
                 if (suggestion.as_symbol_declaration.value().scope.is_null())
                     return suggestion.as_symbol_declaration.value().name;
-                return String::formatted("{}::{}", suggestion.as_symbol_declaration.value().scope, suggestion.as_symbol_declaration.value().name);
+                return DeprecatedString::formatted("{}::{}", suggestion.as_symbol_declaration.value().scope, suggestion.as_symbol_declaration.value().name);
             }
             if (index.column() == Column::Filename)
                 return suggestion.as_symbol_declaration.value().position.file;
@@ -82,7 +82,7 @@ private:
     Vector<Suggestion> m_suggestions;
 };
 
-LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_filename(String const& filename)
+LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_filename(DeprecatedString const& filename)
 {
     LocatorSuggestionModel::Suggestion s;
     s.as_filename = filename;

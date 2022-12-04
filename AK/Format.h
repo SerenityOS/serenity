@@ -427,7 +427,7 @@ struct Formatter<unsigned char[Size]> : Formatter<StringView> {
     }
 };
 template<>
-struct Formatter<String> : Formatter<StringView> {
+struct Formatter<DeprecatedString> : Formatter<StringView> {
 };
 template<>
 struct Formatter<FlyString> : Formatter<StringView> {

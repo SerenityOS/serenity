@@ -21,7 +21,7 @@ ScriptEditor::ScriptEditor()
     set_ruler_visible(true);
 }
 
-void ScriptEditor::new_script_with_temp_name(String name)
+void ScriptEditor::new_script_with_temp_name(DeprecatedString name)
 {
     set_name(name);
 }

@@ -169,7 +169,7 @@ private:
         painter.blit({}, audio_bitmap, audio_bitmap.rect());
 
         if (m_show_percent) {
-            auto volume_text = m_audio_muted ? "mute" : String::formatted("{}%", m_audio_volume);
+            auto volume_text = m_audio_muted ? "mute" : DeprecatedString::formatted("{}%", m_audio_volume);
             painter.draw_text({ 16, 3, 24, 16 }, volume_text, Gfx::FontDatabase::default_fixed_width_font(), Gfx::TextAlignment::TopLeft, palette().window_text());
         }
     }

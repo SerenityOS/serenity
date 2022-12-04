@@ -15,7 +15,7 @@ namespace IPC {
 template<typename ConnectionFromClientType>
 class MultiServer {
 public:
-    static ErrorOr<NonnullOwnPtr<MultiServer>> try_create(Optional<String> socket_path = {})
+    static ErrorOr<NonnullOwnPtr<MultiServer>> try_create(Optional<DeprecatedString> socket_path = {})
     {
         auto server = TRY(Core::LocalServer::try_create());
         TRY(server->take_over_from_system_server(socket_path.value_or({})));

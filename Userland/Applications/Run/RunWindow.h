@@ -24,15 +24,15 @@ private:
     RunWindow();
 
     void do_run();
-    bool run_as_command(String const& run_input);
-    bool run_via_launch(String const& run_input);
+    bool run_as_command(DeprecatedString const& run_input);
+    bool run_via_launch(DeprecatedString const& run_input);
 
-    String history_file_path();
+    DeprecatedString history_file_path();
     ErrorOr<void> load_history();
     ErrorOr<void> save_history();
 
-    Vector<String> m_path_history;
-    NonnullRefPtr<GUI::ItemListModel<String>> m_path_history_model;
+    Vector<DeprecatedString> m_path_history;
+    NonnullRefPtr<GUI::ItemListModel<DeprecatedString>> m_path_history_model;
 
     RefPtr<GUI::ImageWidget> m_icon_image_widget;
     RefPtr<GUI::Button> m_ok_button;

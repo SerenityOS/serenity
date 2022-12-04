@@ -310,7 +310,7 @@ struct Context {
 
     struct {
         // Server Name Indicator
-        String SNI; // I hate your existence
+        DeprecatedString SNI; // I hate your existence
     } extensions;
 
     u8 request_client_certificate { 0 };
@@ -326,9 +326,9 @@ struct Context {
     // message flags
     u8 handshake_messages[11] { 0 };
     ByteBuffer user_data;
-    HashMap<String, Certificate> root_certificates;
+    HashMap<DeprecatedString, Certificate> root_certificates;
 
-    Vector<String> alpn;
+    Vector<DeprecatedString> alpn;
     StringView negotiated_alpn;
 
     size_t send_retries { 0 };
@@ -386,8 +386,8 @@ public:
 
     virtual void set_notifications_enabled(bool enabled) override { underlying_stream().set_notifications_enabled(enabled); }
 
-    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(String const& host, u16 port, Options = {});
-    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(String const& host, Core::Stream::Socket& underlying_stream, Options = {});
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, u16 port, Options = {});
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, Core::Stream::Socket& underlying_stream, Options = {});
 
     using StreamVariantType = Variant<OwnPtr<Core::Stream::Socket>, Core::Stream::Socket*>;
     explicit TLSv12(StreamVariantType, Options);
@@ -438,7 +438,7 @@ public:
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
     bool can_read() const { return m_context.application_buffer.size() > 0; }
-    String read_line(size_t max_size);
+    DeprecatedString read_line(size_t max_size);
 
     Function<void(AlertDescription)> on_tls_error;
     Function<void()> on_tls_finished;

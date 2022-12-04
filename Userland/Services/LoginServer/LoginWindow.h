@@ -20,10 +20,10 @@ public:
 
     Function<void()> on_submit;
 
-    String username() const { return m_username->text(); }
+    DeprecatedString username() const { return m_username->text(); }
     void set_username(StringView username) { m_username->set_text(username); }
 
-    String password() const { return m_password->text(); }
+    DeprecatedString password() const { return m_password->text(); }
     void set_password(StringView password) { m_password->set_text(password); }
 
     void set_fail_message(StringView message) { m_fail_message->set_text(message); }

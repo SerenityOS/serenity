@@ -353,7 +353,7 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
 #endif
 }
 
-ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
+ErrorOr<IPv4Address> Socket::resolve_host(DeprecatedString const& host, SocketType type)
 {
     int socket_type;
     switch (type) {
@@ -398,7 +398,7 @@ ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
     return Error::from_string_literal("Could not resolve to IPv4 address");
 }
 
-ErrorOr<void> Socket::connect_local(int fd, String const& path)
+ErrorOr<void> Socket::connect_local(int fd, DeprecatedString const& path)
 {
     auto address = SocketAddress::local(path);
     auto maybe_sockaddr = address.to_sockaddr_un();
@@ -510,7 +510,7 @@ void PosixSocketHelper::setup_notifier()
         m_notifier = Core::Notifier::construct(m_fd, Core::Notifier::Read);
 }
 
-ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(String const& host, u16 port)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(DeprecatedString const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Stream));
     return connect(SocketAddress { ip_address, port });
@@ -552,7 +552,7 @@ ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
     return static_cast<size_t>(value);
 }
 
-ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(String const& host, u16 port, Optional<Time> timeout)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(DeprecatedString const& host, u16 port, Optional<Time> timeout)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Datagram));
     return connect(SocketAddress { ip_address, port }, timeout);
@@ -574,7 +574,7 @@ ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& addres
     return socket;
 }
 
-ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path, PreventSIGPIPE prevent_sigpipe)
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(DeprecatedString const& path, PreventSIGPIPE prevent_sigpipe)
 {
     auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket(prevent_sigpipe)));
 

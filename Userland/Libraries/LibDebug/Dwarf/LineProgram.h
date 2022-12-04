@@ -83,7 +83,7 @@ struct PathEntryFormat {
 };
 
 struct PathEntry {
-    String path;
+    DeprecatedString path;
     size_t directory_index { 0 };
 };
 
@@ -175,7 +175,7 @@ private:
 
     size_t m_unit_offset { 0 };
     LineProgramUnitHeader32 m_unit_header {};
-    Vector<String> m_source_directories;
+    Vector<DeprecatedString> m_source_directories;
     Vector<FileEntry> m_source_files;
 
     // The registers of the "line program" virtual machine

@@ -2796,7 +2796,7 @@ HTMLTokenizer::HTMLTokenizer()
     m_source_positions.empend(0u, 0u);
 }
 
-HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
+HTMLTokenizer::HTMLTokenizer(StringView input, DeprecatedString const& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
     VERIFY(decoder);
@@ -2807,7 +2807,7 @@ HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
     m_source_positions.empend(0u, 0u);
 }
 
-void HTMLTokenizer::insert_input_at_insertion_point(String const& input)
+void HTMLTokenizer::insert_input_at_insertion_point(DeprecatedString const& input)
 {
     auto utf8_iterator_byte_offset = m_utf8_view.byte_offset_of(m_utf8_iterator);
 
@@ -2885,7 +2885,7 @@ void HTMLTokenizer::restore_to(Utf8CodePointIterator const& new_iterator)
     m_utf8_iterator = new_iterator;
 }
 
-String HTMLTokenizer::consume_current_builder()
+DeprecatedString HTMLTokenizer::consume_current_builder()
 {
     auto string = m_current_builder.to_string();
     m_current_builder.clear();

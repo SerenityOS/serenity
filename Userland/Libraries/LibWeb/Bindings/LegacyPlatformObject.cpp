@@ -30,7 +30,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::is_named_property_exposed_on_o
     // 1. If P is not a supported property name of O, then return false.
     // NOTE: This is in it's own variable to enforce the type.
     // FIXME: Can this throw?
-    Vector<String> supported_property_names = this->supported_property_names();
+    Vector<DeprecatedString> supported_property_names = this->supported_property_names();
     auto property_key_string = property_key.to_string();
     if (!supported_property_names.contains_slow(property_key_string))
         return false;
@@ -195,7 +195,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_define_own_property(J
         // 1. Let creating be true if P is not a supported property name, and false otherwise.
         // NOTE: This is in it's own variable to enforce the type.
         // FIXME: Can this throw?
-        Vector<String> supported_property_names = this->supported_property_names();
+        Vector<DeprecatedString> supported_property_names = this->supported_property_names();
         [[maybe_unused]] bool creating = !supported_property_names.contains_slow(property_name_as_string);
 
         // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
@@ -269,7 +269,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LegacyPlatformObject::interna
 
     for (u64 index = 0; index <= NumericLimits<u32>::max(); ++index) {
         if (is_supported_property_index(index))
-            keys.append(js_string(vm, String::number(index)));
+            keys.append(js_string(vm, DeprecatedString::number(index)));
         else
             break;
     }
@@ -307,7 +307,7 @@ JS::Value LegacyPlatformObject::named_item_value(FlyString const&) const
     return JS::js_undefined();
 }
 
-Vector<String> LegacyPlatformObject::supported_property_names() const
+Vector<DeprecatedString> LegacyPlatformObject::supported_property_names() const
 {
     return {};
 }

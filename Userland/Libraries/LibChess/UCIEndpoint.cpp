@@ -7,7 +7,7 @@
 #include "UCIEndpoint.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 
@@ -23,7 +23,7 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
 
 void Endpoint::send_command(Command const& command)
 {
-    dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), String(command.to_string().characters(), Chomp));
+    dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), DeprecatedString(command.to_string().characters(), Chomp));
     m_out->write(command.to_string());
 }
 
@@ -70,7 +70,7 @@ void Endpoint::set_in_notifier()
 
 NonnullOwnPtr<Command> Endpoint::read_command()
 {
-    String line(ReadonlyBytes(m_in->read_line(4096).bytes()), Chomp);
+    DeprecatedString line(ReadonlyBytes(m_in->read_line(4096).bytes()), Chomp);
 
     dbgln_if(UCI_DEBUG, "{} Received UCI Command: {}", class_name(), line);
 

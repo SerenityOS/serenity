@@ -188,7 +188,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +    unix_getUserInfo(env, jinfo, proc.pid);
 +    JNU_CHECK_EXCEPTION(env);
 +
-+    auto cmdline_file = JAVA_TRY(Core::Stream::File::open(String::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
++    auto cmdline_file = JAVA_TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
 +    auto contents = JAVA_TRY(cmdline_file->read_all(), "Unable to read /proc/pid/cmdline"sv);
 +    auto cmdline = JAVA_TRY(JsonValue::from_string(contents), "Invalid JSON in /proc/pid/cmdline"sv);
 +

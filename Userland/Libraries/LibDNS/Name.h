@@ -7,20 +7,20 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/String.h>
 
 namespace DNS {
 
 class Name {
 public:
     Name() = default;
-    Name(String const&);
+    Name(DeprecatedString const&);
 
     static Name parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
 
     size_t serialized_size() const;
-    String const& as_string() const { return m_name; }
+    DeprecatedString const& as_string() const { return m_name; }
 
     void randomize_case();
 
@@ -33,7 +33,7 @@ public:
     };
 
 private:
-    String m_name;
+    DeprecatedString m_name;
 };
 
 OutputStream& operator<<(OutputStream& stream, Name const&);

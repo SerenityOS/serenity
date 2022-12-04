@@ -1835,7 +1835,7 @@ float GridFormattingContext::get_free_space_y(Box const& box)
     return -1;
 }
 
-int GridFormattingContext::get_line_index_by_line_name(String const& needle, CSS::GridTrackSizeList grid_track_size_list)
+int GridFormattingContext::get_line_index_by_line_name(DeprecatedString const& needle, CSS::GridTrackSizeList grid_track_size_list)
 {
     if (grid_track_size_list.track_list().size() == 0)
         return -1;

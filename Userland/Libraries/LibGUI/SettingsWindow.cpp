@@ -23,7 +23,7 @@ void SettingsWindow::set_modified(bool modified)
         m_apply_button->set_enabled(modified);
 }
 
-ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, ShowDefaultsButton show_defaults_button)
+ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString title, ShowDefaultsButton show_defaults_button)
 {
     auto window = TRY(SettingsWindow::try_create());
 

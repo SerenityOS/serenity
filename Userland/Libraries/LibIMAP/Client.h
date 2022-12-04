@@ -39,9 +39,9 @@ public:
     RefPtr<Promise<Optional<SolidResponse>>> lsub(StringView reference_name, StringView mailbox_name);
     RefPtr<Promise<Optional<SolidResponse>>> select(StringView string);
     RefPtr<Promise<Optional<SolidResponse>>> examine(StringView string);
-    RefPtr<Promise<Optional<SolidResponse>>> search(Optional<String> charset, Vector<SearchKey>&& search_keys, bool uid);
+    RefPtr<Promise<Optional<SolidResponse>>> search(Optional<DeprecatedString> charset, Vector<SearchKey>&& search_keys, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> fetch(FetchCommand request, bool uid);
-    RefPtr<Promise<Optional<SolidResponse>>> store(StoreMethod, Sequence, bool silent, Vector<String> const& flags, bool uid);
+    RefPtr<Promise<Optional<SolidResponse>>> store(StoreMethod, Sequence, bool silent, Vector<DeprecatedString> const& flags, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> copy(Sequence sequence_set, StringView name, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> create_mailbox(StringView name);
     RefPtr<Promise<Optional<SolidResponse>>> delete_mailbox(StringView name);
@@ -52,7 +52,7 @@ public:
     RefPtr<Promise<Optional<ContinueRequest>>> idle();
     RefPtr<Promise<Optional<SolidResponse>>> finish_idle();
     RefPtr<Promise<Optional<SolidResponse>>> status(StringView mailbox, Vector<StatusItemType> const& types);
-    RefPtr<Promise<Optional<SolidResponse>>> append(StringView mailbox, Message&& message, Optional<Vector<String>> flags = {}, Optional<Core::DateTime> date_time = {});
+    RefPtr<Promise<Optional<SolidResponse>>> append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags = {}, Optional<Core::DateTime> date_time = {});
 
     bool is_open();
     void close();

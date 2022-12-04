@@ -43,7 +43,7 @@ MailWidget::MailWidget()
         if (!Desktop::Launcher::open(url)) {
             GUI::MessageBox::show(
                 window(),
-                String::formatted("The link to '{}' could not be opened.", url),
+                DeprecatedString::formatted("The link to '{}' could not be opened.", url),
                 "Failed to open link"sv,
                 GUI::MessageBox::Type::Error);
         }
@@ -125,7 +125,7 @@ bool MailWidget::connect_and_login()
 
     auto maybe_imap_client = tls ? IMAP::Client::connect_tls(server, port) : IMAP::Client::connect_plaintext(server, port);
     if (maybe_imap_client.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to connect to '{}:{}' over {}: {}", server, port, tls ? "TLS" : "Plaintext", maybe_imap_client.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to connect to '{}:{}' over {}: {}", server, port, tls ? "TLS" : "Plaintext", maybe_imap_client.error()));
         return false;
     }
     m_imap_client = maybe_imap_client.release_value();
@@ -138,7 +138,7 @@ bool MailWidget::connect_and_login()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to login. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to login. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to login. The server says: '{}'", response.response_text()));
         return false;
     }
 
@@ -146,7 +146,7 @@ bool MailWidget::connect_and_login()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve mailboxes. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to retrieve mailboxes. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve mailboxes. The server says: '{}'", response.response_text()));
         return false;
     }
 
@@ -257,7 +257,7 @@ void MailWidget::selected_mailbox()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to select mailbox. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to select mailbox. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to select mailbox. The server says: '{}'", response.response_text()));
         return;
     }
 
@@ -284,7 +284,7 @@ void MailWidget::selected_mailbox()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve subject/from for e-mails. The server says: '{}'", response.response_text());
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to retrieve e-mails. The server says: '{}'", response.response_text()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve e-mails. The server says: '{}'", response.response_text()));
         return;
     }
 
@@ -294,7 +294,7 @@ void MailWidget::selected_mailbox()
         auto& response_data = fetch_data.get<IMAP::FetchResponseData>();
         auto& body_data = response_data.body_data();
 
-        auto data_item_has_header = [](IMAP::FetchCommand::DataItem const& data_item, String const& search_header) {
+        auto data_item_has_header = [](IMAP::FetchCommand::DataItem const& data_item, DeprecatedString const& search_header) {
             if (!data_item.section.has_value())
                 return false;
             if (data_item.section->type != IMAP::FetchCommand::DataItem::SectionType::HeaderFields)
@@ -307,14 +307,14 @@ void MailWidget::selected_mailbox()
             return header_iterator != data_item.section->headers->end();
         };
 
-        auto subject_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<String>>& data) {
+        auto subject_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
             auto const data_item = data.get<0>();
             return data_item_has_header(data_item, "Subject");
         });
 
         VERIFY(subject_iterator != body_data.end());
 
-        auto from_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<String>>& data) {
+        auto from_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
             auto const data_item = data.get<0>();
             return data_item_has_header(data_item, "From");
         });
@@ -323,7 +323,7 @@ void MailWidget::selected_mailbox()
 
         // FIXME: All of the following doesn't really follow RFC 2822: https://datatracker.ietf.org/doc/html/rfc2822
 
-        auto parse_and_unfold = [](String const& value) {
+        auto parse_and_unfold = [](DeprecatedString const& value) {
             GenericLexer lexer(value);
             StringBuilder builder;
 
@@ -352,7 +352,7 @@ void MailWidget::selected_mailbox()
 
         auto& subject_iterator_value = subject_iterator->get<1>().value();
         auto subject_index = subject_iterator_value.find("Subject:"sv);
-        String subject;
+        DeprecatedString subject;
         if (subject_index.has_value()) {
             auto potential_subject = subject_iterator_value.substring(subject_index.value());
             auto subject_parts = potential_subject.split_limit(':', 2);
@@ -400,12 +400,12 @@ void MailWidget::selected_email_to_load()
 
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve the body structure of the selected e-mail. The server says: '{}'", fetch_response.response_text());
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
         return;
     }
 
     Vector<u32> selected_alternative_position;
-    String selected_alternative_encoding;
+    DeprecatedString selected_alternative_encoding;
 
     auto& response_data = fetch_response.data().fetch_data().last().get<IMAP::FetchResponseData>();
 
@@ -461,7 +461,7 @@ void MailWidget::selected_email_to_load()
 
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve the body of the selected e-mail. The server says: '{}'", fetch_response.response_text());
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve the selected e-mail. The server says: '{}'", fetch_response.response_text()));
         return;
     }
 
@@ -481,7 +481,7 @@ void MailWidget::selected_email_to_load()
     }
 
     auto& body_data = fetch_response_data.body_data();
-    auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, Optional<String>>& data) {
+    auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
         const auto data_item = data.get<0>();
         return data_item.section.has_value() && data_item.section->type == IMAP::FetchCommand::DataItem::SectionType::Parts;
     });
@@ -489,7 +489,7 @@ void MailWidget::selected_email_to_load()
 
     auto& encoded_data = body_text_part_iterator->get<1>().value();
 
-    String decoded_data;
+    DeprecatedString decoded_data;
 
     // FIXME: String uses char internally, so 8bit shouldn't be stored in it.
     //        However, it works for now.
@@ -503,7 +503,7 @@ void MailWidget::selected_email_to_load()
         decoded_data = IMAP::decode_quoted_printable(encoded_data);
     } else {
         dbgln("Mail: Unimplemented decoder for encoding: {}", selected_alternative_encoding);
-        GUI::MessageBox::show(window(), String::formatted("The e-mail encoding '{}' is currently unsupported.", selected_alternative_encoding), "Unsupported"sv, GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("The e-mail encoding '{}' is currently unsupported.", selected_alternative_encoding), "Unsupported"sv, GUI::MessageBox::Type::Information);
         return;
     }
 

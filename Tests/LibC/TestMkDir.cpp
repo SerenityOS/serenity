@@ -12,9 +12,9 @@
 #include <time.h>
 #include <unistd.h>
 
-static String random_dirname()
+static DeprecatedString random_dirname()
 {
-    return String::formatted("/tmp/test_mkdir_{:04x}", (u16)rand());
+    return DeprecatedString::formatted("/tmp/test_mkdir_{:04x}", (u16)rand());
 }
 
 TEST_SETUP
@@ -46,7 +46,7 @@ TEST_CASE(insufficient_permissions)
 TEST_CASE(nonexistent_parent)
 {
     auto parent = random_dirname();
-    auto child = String::formatted("{}/foo", parent);
+    auto child = DeprecatedString::formatted("{}/foo", parent);
     int res = mkdir(child.characters(), 0755);
     int cached_errno = errno;
     EXPECT(res < 0);

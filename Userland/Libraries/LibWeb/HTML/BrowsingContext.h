@@ -151,7 +151,7 @@ public:
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
     void scroll_to(Gfx::IntPoint const&);
-    void scroll_to_anchor(String const&);
+    void scroll_to_anchor(DeprecatedString const&);
 
     BrowsingContext& top_level_browsing_context()
     {
@@ -193,7 +193,7 @@ public:
 
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
-    String selected_text() const;
+    DeprecatedString selected_text() const;
     void select_all();
 
     void did_edit(Badge<EditEventHandler>);
@@ -211,8 +211,8 @@ public:
 
     JS::GCPtr<DOM::Node> currently_focused_area();
 
-    String const& name() const { return m_name; }
-    void set_name(String const& name) { m_name = name; }
+    DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString const& name) { m_name = name; }
 
     Vector<SessionHistoryEntry>& session_history() { return m_session_history; }
     Vector<SessionHistoryEntry> const& session_history() const { return m_session_history; }
@@ -237,12 +237,12 @@ public:
         bool exceptions_enabled = false,
         HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
         Optional<PolicyContainer> history_policy_container = {},
-        String navigation_type = "other",
-        Optional<String> navigation_id = {},
+        DeprecatedString navigation_type = "other",
+        Optional<DeprecatedString> navigation_id = {},
         Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {});
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, DeprecatedString navigation_id);
 
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
@@ -313,7 +313,7 @@ private:
     HashTable<ViewportClient*> m_viewport_clients;
 
     HashMap<AK::URL, size_t> m_frame_nesting_levels;
-    String m_name;
+    DeprecatedString m_name;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     JS::GCPtr<BrowsingContextGroup> m_group;

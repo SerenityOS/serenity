@@ -15,7 +15,7 @@ IdentityCell::IdentityCell()
 {
 }
 
-JS::ThrowCompletionOr<String> IdentityCell::display(Cell& cell, CellTypeMetadata const& metadata) const
+JS::ThrowCompletionOr<DeprecatedString> IdentityCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto& vm = cell.sheet().global_object().vm();
     auto data = cell.js_data();
@@ -30,7 +30,7 @@ JS::ThrowCompletionOr<JS::Value> IdentityCell::js_value(Cell& cell, CellTypeMeta
     return cell.js_data();
 }
 
-String IdentityCell::metadata_hint(MetadataName metadata) const
+DeprecatedString IdentityCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Length)
         return "Ignored";

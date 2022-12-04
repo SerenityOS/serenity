@@ -45,7 +45,7 @@ inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored
 
 // https://webidl.spec.whatwg.org/#call-a-user-objects-operation
 template<typename... Args>
-JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String const& operation_name, Optional<JS::Value> this_argument, Args&&... args)
+JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, DeprecatedString const& operation_name, Optional<JS::Value> this_argument, Args&&... args)
 {
     // 1. Let completion be an uninitialized variable.
     JS::Completion completion;

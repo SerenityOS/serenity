@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/String.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -46,13 +46,13 @@ class Element
 public:
     virtual ~Element() override;
 
-    String const& qualified_name() const { return m_qualified_name.as_string(); }
-    String const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    DeprecatedString const& qualified_name() const { return m_qualified_name.as_string(); }
+    DeprecatedString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
     virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
     FlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
-    String const& tag_name() const { return html_uppercased_qualified_name(); }
+    DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
 
     FlyString const& prefix() const { return m_qualified_name.prefix(); }
     FlyString const& namespace_() const { return m_qualified_name.namespace_(); }
@@ -62,15 +62,15 @@ public:
 
     bool has_attribute(FlyString const& name) const;
     bool has_attributes() const { return !m_attributes->is_empty(); }
-    String attribute(FlyString const& name) const { return get_attribute(name); }
-    String get_attribute(FlyString const& name) const;
-    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
-    WebIDL::ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
+    DeprecatedString attribute(FlyString const& name) const { return get_attribute(name); }
+    DeprecatedString get_attribute(FlyString const& name) const;
+    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, DeprecatedString const& value);
     void remove_attribute(FlyString const& name);
     WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
-    Vector<String> get_attribute_names() const;
+    Vector<DeprecatedString> get_attribute_names() const;
 
     JS::GCPtr<Attr> get_attribute_node(FlyString const& name) const;
 
@@ -97,7 +97,7 @@ public:
     Vector<FlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
-    virtual void parse_attribute(FlyString const& name, String const& value);
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value);
     virtual void did_remove_attribute(FlyString const&);
 
     enum class NeedsRelayout {
@@ -109,7 +109,7 @@ public:
     Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
     Layout::NodeWithStyle const* layout_node() const { return static_cast<Layout::NodeWithStyle const*>(Node::layout_node()); }
 
-    String name() const { return attribute(HTML::AttributeNames::name); }
+    DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
 
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
     void set_computed_css_values(RefPtr<CSS::StyleProperties> style) { m_computed_css_values = move(style); }
@@ -119,10 +119,10 @@ public:
 
     CSS::CSSStyleDeclaration* style_for_bindings();
 
-    WebIDL::ExceptionOr<String> inner_html() const;
-    WebIDL::ExceptionOr<void> set_inner_html(String const&);
+    WebIDL::ExceptionOr<DeprecatedString> inner_html() const;
+    WebIDL::ExceptionOr<void> set_inner_html(DeprecatedString const&);
 
-    WebIDL::ExceptionOr<void> insert_adjacent_html(String position, String text);
+    WebIDL::ExceptionOr<void> insert_adjacent_html(DeprecatedString position, DeprecatedString text);
 
     bool is_focused() const;
     bool is_active() const;
@@ -171,8 +171,8 @@ public:
 
     bool is_actually_disabled() const;
 
-    WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element);
-    WebIDL::ExceptionOr<void> insert_adjacent_text(String const& where, String const& data);
+    WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(DeprecatedString const& where, JS::NonnullGCPtr<Element> element);
+    WebIDL::ExceptionOr<void> insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data);
 
     // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
     void scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> = {});
@@ -191,10 +191,10 @@ private:
 
     void invalidate_style_after_attribute_change(FlyString const& attribute_name);
 
-    WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(String const& where, JS::NonnullGCPtr<Node> node);
+    WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node);
 
     QualifiedName m_qualified_name;
-    String m_html_uppercased_qualified_name;
+    DeprecatedString m_html_uppercased_qualified_name;
 
     JS::GCPtr<NamedNodeMap> m_attributes;
     JS::GCPtr<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;

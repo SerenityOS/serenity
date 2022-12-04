@@ -10,7 +10,7 @@
 #include <LibC/sys/arch/i386/regs.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace ELF::Core {
@@ -39,9 +39,9 @@ struct [[gnu::packed]] ProcessInfo {
     // Keys:
     // - "pid" (int)
     // - "termination_signal" (u8)
-    // - "executable_path" (String)
-    // - "arguments" (Vector<String>)
-    // - "environment" (Vector<String>)
+    // - "executable_path" (DeprecatedString)
+    // - "arguments" (Vector<DeprecatedString>)
+    // - "environment" (Vector<DeprecatedString>)
     char json_data[]; // Null terminated
 };
 
@@ -59,7 +59,7 @@ struct [[gnu::packed]] MemoryRegionInfo {
     char region_name[]; // Null terminated
 
 #ifndef KERNEL
-    String object_name() const
+    DeprecatedString object_name() const
     {
         StringView memory_region_name { region_name, strlen(region_name) };
         if (memory_region_name.contains("Loader.so"sv))

@@ -100,7 +100,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     else
         tag_name = layout_node.dom_node()->node_name();
 
-    String identifier = "";
+    DeprecatedString identifier = "";
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
         auto& element = verify_cast<DOM::Element>(*layout_node.dom_node());
         StringBuilder builder;
@@ -278,8 +278,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && verify_cast<DOM::Element>(layout_node.dom_node())->computed_css_values()) {
         struct NameAndValue {
-            String name;
-            String value;
+            DeprecatedString name;
+            DeprecatedString value;
         };
         Vector<NameAndValue> properties;
         verify_cast<DOM::Element>(*layout_node.dom_node()).computed_css_values()->for_each_property([&](auto property_id, auto& value) {

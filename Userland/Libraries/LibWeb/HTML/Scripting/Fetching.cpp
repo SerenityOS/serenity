@@ -18,10 +18,10 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#module-type-from-module-request
-String module_type_from_module_request(JS::ModuleRequest const& module_request)
+DeprecatedString module_type_from_module_request(JS::ModuleRequest const& module_request)
 {
     // 1. Let moduleType be "javascript".
-    String module_type = "javascript"sv;
+    DeprecatedString module_type = "javascript"sv;
 
     // 2. If moduleRequest.[[Assertions]] has a Record entry such that entry.[[Key]] is "type", then:
     for (auto const& entry : module_request.assertions) {
@@ -41,7 +41,7 @@ String module_type_from_module_request(JS::ModuleRequest const& module_request)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolve-a-module-specifier
-WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, String const& specifier)
+WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, DeprecatedString const& specifier)
 {
     // 1. Let settingsObject and baseURL be null.
     Optional<EnvironmentSettingsObject&> settings_object;
@@ -113,11 +113,11 @@ WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referrin
         return as_url.release_value();
 
     // 13. Throw a TypeError indicating that specifier was a bare specifier, but was not remapped to anything by importMap.
-    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Failed to resolve non relative module specifier '{}' from an import map.", specifier) };
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Failed to resolve non relative module specifier '{}' from an import map.", specifier) };
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolving-an-imports-match
-WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const& specifier_map)
+WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const& specifier_map)
 {
     // 1. For each specifierKey → resolutionResult of specifierMap:
     for (auto const& [specifier_key, resolution_result] : specifier_map) {
@@ -125,7 +125,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& norma
         if (specifier_key == normalized_specifier) {
             // 1. If resolutionResult is null, then throw a TypeError indicating that resolution of specifierKey was blocked by a null entry.
             if (!resolution_result.has_value())
-                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Import resolution of '{}' was blocked by a null entry.", specifier_key) };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Import resolution of '{}' was blocked by a null entry.", specifier_key) };
 
             // 2. Assert: resolutionResult is a URL.
             VERIFY(resolution_result->is_valid());
@@ -146,7 +146,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& norma
         ) {
             // 1. If resolutionResult is null, then throw a TypeError indicating that the resolution of specifierKey was blocked by a null entry.
             if (!resolution_result.has_value())
-                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Import resolution of '{}' was blocked by a null entry.", specifier_key) };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Import resolution of '{}' was blocked by a null entry.", specifier_key) };
 
             // 2. Assert: resolutionResult is a URL.
             VERIFY(resolution_result->is_valid());
@@ -164,7 +164,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& norma
             // 6. If url is failure, then throw a TypeError indicating that resolution of normalizedSpecifier was blocked since the afterPrefix portion
             //    could not be URL-parsed relative to the resolutionResult mapped to by the specifierKey prefix.
             if (!url.is_valid())
-                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Could not resolve '{}' as the after prefix portion could not be URL-parsed.", normalized_specifier) };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Could not resolve '{}' as the after prefix portion could not be URL-parsed.", normalized_specifier) };
 
             // 7. Assert: url is a URL.
             VERIFY(url.is_valid());
@@ -172,7 +172,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& norma
             // 8. If the serialization of resolutionResult is not a code unit prefix of the serialization of url, then throw a TypeError indicating
             //    that the resolution of normalizedSpecifier was blocked due to it backtracking above its prefix specifierKey.
             if (!Infra::is_code_unit_prefix(resolution_result->serialize(), url.serialize()))
-                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Could not resolve '{}' as it backtracks above its prefix specifierKey.", normalized_specifier) };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Could not resolve '{}' as it backtracks above its prefix specifierKey.", normalized_specifier) };
 
             // 9. Return url.
             return url;
@@ -184,7 +184,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& norma
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolving-a-url-like-module-specifier
-Optional<AK::URL> resolve_url_like_module_specifier(String const& specifier, AK::URL const& base_url)
+Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& specifier, AK::URL const& base_url)
 {
     // 1. If specifier starts with "/", "./", or "../", then:
     if (specifier.starts_with("/"sv) || specifier.starts_with("./"sv) || specifier.starts_with("../"sv)) {
@@ -339,7 +339,7 @@ void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script,
 void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, StringView, EnvironmentSettingsObject& module_map_settings_object, AK::URL const&, Optional<JS::ModuleRequest> const& module_request, TopLevelModule, ModuleCallback on_complete)
 {
     // 1. Let moduleType be "javascript".
-    String module_type = "javascript"sv;
+    DeprecatedString module_type = "javascript"sv;
 
     // 2. If moduleRequest was given, then set moduleType to the result of running the module type from module request steps given moduleRequest.
     if (module_request.has_value())
@@ -442,7 +442,7 @@ void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsO
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
-void fetch_inline_module_script_graph(String const& filename, String const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete)
+void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete)
 {
     // 1. Disallow further import maps given settings object.
     settings_object.disallow_further_import_maps();

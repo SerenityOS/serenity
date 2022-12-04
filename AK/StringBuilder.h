@@ -16,7 +16,7 @@ namespace AK {
 
 class StringBuilder {
 public:
-    using OutputType = String;
+    using OutputType = DeprecatedString;
 
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
     ~StringBuilder() = default;
@@ -60,8 +60,8 @@ public:
     }
 
 #ifndef KERNEL
-    [[nodiscard]] String build() const;
-    [[nodiscard]] String to_string() const;
+    [[nodiscard]] DeprecatedString build() const;
+    [[nodiscard]] DeprecatedString to_string() const;
 #endif
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
 

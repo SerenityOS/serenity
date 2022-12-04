@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Variant.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/WebIDL/CallbackType.h>
@@ -15,7 +15,7 @@ namespace Web::HTML {
 
 class EventHandler final : public JS::Cell {
 public:
-    explicit EventHandler(String);
+    explicit EventHandler(DeprecatedString);
     explicit EventHandler(WebIDL::CallbackType&);
 
     // Either uncompiled source code or a callback.
@@ -23,7 +23,7 @@ public:
     // NOTE: This does not contain Empty as part of the optimization of not allocating all event handler attributes up front.
     // FIXME: The string should actually be an "internal raw uncompiled handler" struct. This struct is just the uncompiled source code plus a source location for reporting parse errors.
     //        https://html.spec.whatwg.org/multipage/webappapis.html#internal-raw-uncompiled-handler
-    Variant<String, WebIDL::CallbackType*> value;
+    Variant<DeprecatedString, WebIDL::CallbackType*> value;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-listener
     DOM::DOMEventListener* listener { nullptr };

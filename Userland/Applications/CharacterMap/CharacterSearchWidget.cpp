@@ -11,8 +11,8 @@
 
 struct SearchResult {
     u32 code_point;
-    String code_point_string;
-    String display_text;
+    DeprecatedString code_point_string;
+    DeprecatedString display_text;
 };
 
 class CharacterSearchModel final : public GUI::Model {

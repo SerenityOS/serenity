@@ -171,7 +171,7 @@ private:
     VimMotion m_motion;
 
     YankType m_yank_type {};
-    String m_yank_buffer {};
+    DeprecatedString m_yank_buffer {};
     void yank(YankType);
     void yank(TextRange, YankType yank_type);
     void put_before();

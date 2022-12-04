@@ -53,7 +53,7 @@ ErrorOr<Directory> Directory::adopt_fd(int fd, Optional<LexicalPath> path)
     return Directory { fd, move(path) };
 }
 
-ErrorOr<Directory> Directory::create(String path, CreateDirectories create_directories, mode_t creation_mode)
+ErrorOr<Directory> Directory::create(DeprecatedString path, CreateDirectories create_directories, mode_t creation_mode)
 {
     return create(LexicalPath { move(path) }, create_directories, creation_mode);
 }

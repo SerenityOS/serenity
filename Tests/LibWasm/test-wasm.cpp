@@ -181,10 +181,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
                             [&](const auto& ref) -> JS::Value { return JS::Value(static_cast<double>(ref.address.value())); });
                     });
             }
-            return vm.throw_completion<JS::TypeError>(String::formatted("'{}' does not refer to a function or a global", name));
+            return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("'{}' does not refer to a function or a global", name));
         }
     }
-    return vm.throw_completion<JS::TypeError>(String::formatted("'{}' could not be found", name));
+    return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("'{}' could not be found", name));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
@@ -202,7 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 
     Vector<Wasm::Value> arguments;
     if (type->parameters().size() + 1 > vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(String::formatted("Expected {} arguments for call, but found {}", type->parameters().size() + 1, vm.argument_count()));
+        return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Expected {} arguments for call, but found {}", type->parameters().size() + 1, vm.argument_count()));
     size_t index = 1;
     for (auto& param : type->parameters()) {
         auto argument = vm.argument(index++);
@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 
     auto result = WebAssemblyModule::machine().invoke(function_address, arguments);
     if (result.is_trap())
-        return vm.throw_completion<JS::TypeError>(String::formatted("Execution trapped: {}", result.trap().reason));
+        return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Execution trapped: {}", result.trap().reason));
 
     if (result.values().is_empty())
         return JS::js_null();

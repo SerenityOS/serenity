@@ -16,14 +16,14 @@ public:
     static ContentFilter& the();
 
     bool is_filtered(const AK::URL&) const;
-    void add_pattern(String const&);
+    void add_pattern(DeprecatedString const&);
 
 private:
     ContentFilter();
     ~ContentFilter();
 
     struct Pattern {
-        String text;
+        DeprecatedString text;
     };
     Vector<Pattern> m_patterns;
 };

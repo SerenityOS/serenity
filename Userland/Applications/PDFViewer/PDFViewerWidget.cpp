@@ -184,7 +184,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 
 void PDFViewerWidget::open_file(Core::File& file)
 {
-    window()->set_title(String::formatted("{} - PDF Viewer", file.filename()));
+    window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", file.filename()));
 
     auto handle_error = [&]<typename T>(PDF::PDFErrorOr<T> maybe_error) {
         if (maybe_error.is_error()) {
@@ -214,7 +214,7 @@ void PDFViewerWidget::open_file(Core::File& file)
     if (handle_error(m_viewer->set_document(document)))
         return;
 
-    m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
+    m_total_page_label->set_text(DeprecatedString::formatted("of {}", document->get_page_count()));
 
     m_page_text_box->set_enabled(true);
     m_page_text_box->set_current_number(1, GUI::AllowCallback::No);

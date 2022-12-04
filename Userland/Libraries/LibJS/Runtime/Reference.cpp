@@ -194,7 +194,7 @@ ThrowCompletionOr<bool> Reference::delete_(VM& vm)
     return m_base_environment->delete_binding(vm, m_name.as_string());
 }
 
-String Reference::to_string() const
+DeprecatedString Reference::to_string() const
 {
     StringBuilder builder;
     builder.append("Reference { Base="sv);

@@ -42,12 +42,12 @@ public:
         No,
     };
 
-    static ErrorOr<NonnullRefPtr<SettingsWindow>> create(String title, ShowDefaultsButton = ShowDefaultsButton::No);
+    static ErrorOr<NonnullRefPtr<SettingsWindow>> create(DeprecatedString title, ShowDefaultsButton = ShowDefaultsButton::No);
 
     virtual ~SettingsWindow() override = default;
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> add_tab(String title, StringView id, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> add_tab(DeprecatedString title, StringView id, Args&&... args)
     {
         auto tab = TRY(m_tab_widget->try_add_tab<T>(move(title), forward<Args>(args)...));
         TRY(m_tabs.try_set(id, tab));

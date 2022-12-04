@@ -16,7 +16,7 @@ class HTMLMediaElement : public HTMLElement {
 public:
     virtual ~HTMLMediaElement() override;
 
-    Bindings::CanPlayTypeResult can_play_type(String const& type) const;
+    Bindings::CanPlayTypeResult can_play_type(DeprecatedString const& type) const;
 
     void load() const;
 

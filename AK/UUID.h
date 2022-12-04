@@ -14,7 +14,7 @@
 #ifdef KERNEL
 #    include <Kernel/KString.h>
 #else
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace AK {
@@ -36,7 +36,7 @@ public:
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const;
 #else
-    String to_string() const;
+    DeprecatedString to_string() const;
 #endif
     bool is_zero() const;
 

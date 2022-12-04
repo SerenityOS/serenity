@@ -34,15 +34,15 @@ public:
 
     virtual ~MainWidget() override = default;
 
-    ErrorOr<void> initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
+    ErrorOr<void> initialize(DeprecatedString const& path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
-    ErrorOr<void> open_file(String const&);
-    ErrorOr<void> save_file(String const&);
+    ErrorOr<void> open_file(DeprecatedString const&);
+    ErrorOr<void> save_file(DeprecatedString const&);
     bool request_close();
     void update_title();
 
-    String const& path() { return m_path; }
+    DeprecatedString const& path() { return m_path; }
     Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
 
     bool is_showing_font_metadata() { return m_font_metadata; }
@@ -160,10 +160,10 @@ private:
     RefPtr<GUI::TextBox> m_preview_textbox;
     RefPtr<GUI::Window> m_font_preview_window;
 
-    String m_path;
-    Vector<String> m_font_weight_list;
-    Vector<String> m_font_slope_list;
-    Vector<String> m_unicode_block_list;
+    DeprecatedString m_path;
+    Vector<DeprecatedString> m_font_weight_list;
+    Vector<DeprecatedString> m_font_slope_list;
+    Vector<DeprecatedString> m_unicode_block_list;
     bool m_font_metadata { true };
     bool m_unicode_blocks { true };
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };

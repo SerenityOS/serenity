@@ -8,12 +8,12 @@
 
 namespace Web {
 
-FileRequest::FileRequest(String path)
+FileRequest::FileRequest(DeprecatedString path)
     : m_path(move(path))
 {
 }
 
-String FileRequest::path() const
+DeprecatedString FileRequest::path() const
 {
     return m_path;
 }

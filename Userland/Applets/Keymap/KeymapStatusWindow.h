@@ -23,5 +23,5 @@ private:
 
     RefPtr<KeymapStatusWidget> m_status_widget;
 
-    void set_keymap_text(String const& keymap);
+    void set_keymap_text(DeprecatedString const& keymap);
 };

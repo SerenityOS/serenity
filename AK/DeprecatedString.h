@@ -17,92 +17,92 @@
 
 namespace AK {
 
-// String is a convenience wrapper around StringImpl, suitable for passing
+// DeprecatedString is a convenience wrapper around StringImpl, suitable for passing
 // around as a value type. It's basically the same as passing around a
 // RefPtr<StringImpl>, with a bit of syntactic sugar.
 //
 // Note that StringImpl is an immutable object that cannot shrink or grow.
 // Its allocation size is snugly tailored to the specific string it contains.
-// Copying a String is very efficient, since the internal StringImpl is
+// Copying a DeprecatedString is very efficient, since the internal StringImpl is
 // retainable and so copying only requires modifying the ref count.
 //
-// There are three main ways to construct a new String:
+// There are three main ways to construct a new DeprecatedString:
 //
-//     s = String("some literal");
+//     s = DeprecatedString("some literal");
 //
-//     s = String::formatted("{} little piggies", m_piggies);
+//     s = DeprecatedString::formatted("{} little piggies", m_piggies);
 //
 //     StringBuilder builder;
 //     builder.append("abc");
 //     builder.append("123");
 //     s = builder.to_string();
 
-class String {
+class DeprecatedString {
 public:
-    ~String() = default;
+    ~DeprecatedString() = default;
 
-    String() = default;
+    DeprecatedString() = default;
 
-    String(StringView view)
+    DeprecatedString(StringView view)
         : m_impl(StringImpl::create(view.characters_without_null_termination(), view.length()))
     {
     }
 
-    String(String const& other)
-        : m_impl(const_cast<String&>(other).m_impl)
+    DeprecatedString(DeprecatedString const& other)
+        : m_impl(const_cast<DeprecatedString&>(other).m_impl)
     {
     }
 
-    String(String&& other)
+    DeprecatedString(DeprecatedString&& other)
         : m_impl(move(other.m_impl))
     {
     }
 
-    String(char const* cstring, ShouldChomp shouldChomp = NoChomp)
+    DeprecatedString(char const* cstring, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, shouldChomp))
     {
     }
 
-    String(char const* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
+    DeprecatedString(char const* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, length, shouldChomp))
     {
     }
 
-    explicit String(ReadonlyBytes bytes, ShouldChomp shouldChomp = NoChomp)
+    explicit DeprecatedString(ReadonlyBytes bytes, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(bytes, shouldChomp))
     {
     }
 
-    String(StringImpl const& impl)
+    DeprecatedString(StringImpl const& impl)
         : m_impl(const_cast<StringImpl&>(impl))
     {
     }
 
-    String(StringImpl const* impl)
+    DeprecatedString(StringImpl const* impl)
         : m_impl(const_cast<StringImpl*>(impl))
     {
     }
 
-    String(RefPtr<StringImpl>&& impl)
+    DeprecatedString(RefPtr<StringImpl>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    String(NonnullRefPtr<StringImpl>&& impl)
+    DeprecatedString(NonnullRefPtr<StringImpl>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    String(FlyString const&);
+    DeprecatedString(FlyString const&);
 
-    [[nodiscard]] static String repeated(char, size_t count);
-    [[nodiscard]] static String repeated(StringView, size_t count);
+    [[nodiscard]] static DeprecatedString repeated(char, size_t count);
+    [[nodiscard]] static DeprecatedString repeated(StringView, size_t count);
 
-    [[nodiscard]] static String bijective_base_from(size_t value, unsigned base = 26, StringView map = {});
-    [[nodiscard]] static String roman_number_from(size_t value);
+    [[nodiscard]] static DeprecatedString bijective_base_from(size_t value, unsigned base = 26, StringView map = {});
+    [[nodiscard]] static DeprecatedString roman_number_from(size_t value);
 
     template<class SeparatorType, class CollectionType>
-    [[nodiscard]] static String join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
+    [[nodiscard]] static DeprecatedString join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
     {
         StringBuilder builder;
         builder.join(separator, collection, fmtstr);
@@ -121,15 +121,15 @@ public:
     [[nodiscard]] Optional<float> to_float(TrimWhitespace = TrimWhitespace::Yes) const;
 #endif
 
-    [[nodiscard]] String to_lowercase() const;
-    [[nodiscard]] String to_uppercase() const;
-    [[nodiscard]] String to_snakecase() const;
-    [[nodiscard]] String to_titlecase() const;
-    [[nodiscard]] String invert_case() const;
+    [[nodiscard]] DeprecatedString to_lowercase() const;
+    [[nodiscard]] DeprecatedString to_uppercase() const;
+    [[nodiscard]] DeprecatedString to_snakecase() const;
+    [[nodiscard]] DeprecatedString to_titlecase() const;
+    [[nodiscard]] DeprecatedString invert_case() const;
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
-    [[nodiscard]] String trim(StringView characters, TrimMode mode = TrimMode::Both) const
+    [[nodiscard]] DeprecatedString trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
         auto trimmed_view = StringUtils::trim(view(), characters, mode);
         if (view() == trimmed_view)
@@ -137,7 +137,7 @@ public:
         return trimmed_view;
     }
 
-    [[nodiscard]] String trim_whitespace(TrimMode mode = TrimMode::Both) const
+    [[nodiscard]] DeprecatedString trim_whitespace(TrimMode mode = TrimMode::Both) const
     {
         auto trimmed_view = StringUtils::trim_whitespace(view(), mode);
         if (view() == trimmed_view)
@@ -150,8 +150,8 @@ public:
     [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool contains(char, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
-    [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, SplitBehavior = SplitBehavior::Nothing) const;
-    [[nodiscard]] Vector<String> split(char separator, SplitBehavior = SplitBehavior::Nothing) const;
+    [[nodiscard]] Vector<DeprecatedString> split_limit(char separator, size_t limit, SplitBehavior = SplitBehavior::Nothing) const;
+    [[nodiscard]] Vector<DeprecatedString> split(char separator, SplitBehavior = SplitBehavior::Nothing) const;
     [[nodiscard]] Vector<StringView> split_view(char separator, SplitBehavior = SplitBehavior::Nothing) const;
     [[nodiscard]] Vector<StringView> split_view(Function<bool(char)> separator, SplitBehavior = SplitBehavior::Nothing) const;
 
@@ -165,8 +165,8 @@ public:
 
     [[nodiscard]] StringView find_last_split_view(char separator) const { return view().find_last_split_view(separator); }
 
-    [[nodiscard]] String substring(size_t start, size_t length) const;
-    [[nodiscard]] String substring(size_t start) const;
+    [[nodiscard]] DeprecatedString substring(size_t start, size_t length) const;
+    [[nodiscard]] DeprecatedString substring(size_t start) const;
     [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
     [[nodiscard]] StringView substring_view(size_t start) const;
 
@@ -192,7 +192,7 @@ public:
         return (*m_impl)[i];
     }
 
-    using ConstIterator = SimpleIterator<const String, char const>;
+    using ConstIterator = SimpleIterator<const DeprecatedString, char const>;
 
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
@@ -202,27 +202,27 @@ public:
     [[nodiscard]] bool starts_with(char) const;
     [[nodiscard]] bool ends_with(char) const;
 
-    bool operator==(String const&) const;
+    bool operator==(DeprecatedString const&) const;
 
     bool operator==(StringView) const;
 
     bool operator==(FlyString const&) const;
 
-    bool operator<(String const&) const;
+    bool operator<(DeprecatedString const&) const;
     bool operator<(char const*) const;
-    bool operator>=(String const& other) const { return !(*this < other); }
+    bool operator>=(DeprecatedString const& other) const { return !(*this < other); }
     bool operator>=(char const* other) const { return !(*this < other); }
 
-    bool operator>(String const&) const;
+    bool operator>(DeprecatedString const&) const;
     bool operator>(char const*) const;
-    bool operator<=(String const& other) const { return !(*this > other); }
+    bool operator<=(DeprecatedString const& other) const { return !(*this > other); }
     bool operator<=(char const* other) const { return !(*this > other); }
 
     bool operator==(char const* cstring) const;
 
-    [[nodiscard]] String isolated_copy() const;
+    [[nodiscard]] DeprecatedString isolated_copy() const;
 
-    [[nodiscard]] static String empty()
+    [[nodiscard]] static DeprecatedString empty()
     {
         return StringImpl::the_empty_stringimpl();
     }
@@ -230,27 +230,27 @@ public:
     [[nodiscard]] StringImpl* impl() { return m_impl.ptr(); }
     [[nodiscard]] StringImpl const* impl() const { return m_impl.ptr(); }
 
-    String& operator=(String&& other)
+    DeprecatedString& operator=(DeprecatedString&& other)
     {
         if (this != &other)
             m_impl = move(other.m_impl);
         return *this;
     }
 
-    String& operator=(String const& other)
+    DeprecatedString& operator=(DeprecatedString const& other)
     {
         if (this != &other)
-            m_impl = const_cast<String&>(other).m_impl;
+            m_impl = const_cast<DeprecatedString&>(other).m_impl;
         return *this;
     }
 
-    String& operator=(std::nullptr_t)
+    DeprecatedString& operator=(std::nullptr_t)
     {
         m_impl = nullptr;
         return *this;
     }
 
-    String& operator=(ReadonlyBytes bytes)
+    DeprecatedString& operator=(ReadonlyBytes bytes)
     {
         m_impl = StringImpl::create(bytes);
         return *this;
@@ -266,24 +266,24 @@ public:
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
 
     template<typename BufferType>
-    [[nodiscard]] static String copy(BufferType const& buffer, ShouldChomp should_chomp = NoChomp)
+    [[nodiscard]] static DeprecatedString copy(BufferType const& buffer, ShouldChomp should_chomp = NoChomp)
     {
         if (buffer.is_empty())
             return empty();
-        return String((char const*)buffer.data(), buffer.size(), should_chomp);
+        return DeprecatedString((char const*)buffer.data(), buffer.size(), should_chomp);
     }
 
-    [[nodiscard]] static String vformatted(StringView fmtstr, TypeErasedFormatParams&);
+    [[nodiscard]] static DeprecatedString vformatted(StringView fmtstr, TypeErasedFormatParams&);
 
     template<typename... Parameters>
-    [[nodiscard]] static String formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+    [[nodiscard]] static DeprecatedString formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         VariadicFormatParams variadic_format_parameters { parameters... };
         return vformatted(fmtstr.view(), variadic_format_parameters);
     }
 
     template<typename T>
-    [[nodiscard]] static String number(T value)
+    [[nodiscard]] static DeprecatedString number(T value)
     requires IsArithmetic<T>
     {
         return formatted("{}", value);
@@ -294,9 +294,9 @@ public:
         return { characters(), length() };
     }
 
-    [[nodiscard]] String replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const { return StringUtils::replace(*this, needle, replacement, replace_mode); }
+    [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const { return StringUtils::replace(*this, needle, replacement, replace_mode); }
     [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(*this, needle); }
-    [[nodiscard]] String reverse() const;
+    [[nodiscard]] DeprecatedString reverse() const;
 
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
@@ -321,23 +321,22 @@ private:
 };
 
 template<>
-struct Traits<String> : public GenericTraits<String> {
-    static unsigned hash(String const& s) { return s.impl() ? s.impl()->hash() : 0; }
+struct Traits<DeprecatedString> : public GenericTraits<DeprecatedString> {
+    static unsigned hash(DeprecatedString const& s) { return s.impl() ? s.impl()->hash() : 0; }
 };
 
-struct CaseInsensitiveStringTraits : public Traits<String> {
-    static unsigned hash(String const& s) { return s.impl() ? s.impl()->case_insensitive_hash() : 0; }
-    static bool equals(String const& a, String const& b) { return a.equals_ignoring_case(b); }
+struct CaseInsensitiveStringTraits : public Traits<DeprecatedString> {
+    static unsigned hash(DeprecatedString const& s) { return s.impl() ? s.impl()->case_insensitive_hash() : 0; }
+    static bool equals(DeprecatedString const& a, DeprecatedString const& b) { return a.equals_ignoring_case(b); }
 };
 
-String escape_html_entities(StringView html);
+DeprecatedString escape_html_entities(StringView html);
 
-InputStream& operator>>(InputStream& stream, String& string);
+InputStream& operator>>(InputStream& stream, DeprecatedString& string);
 
 }
 
 #if USING_AK_GLOBALLY
 using AK::CaseInsensitiveStringTraits;
 using AK::escape_html_entities;
-using AK::String;
 #endif

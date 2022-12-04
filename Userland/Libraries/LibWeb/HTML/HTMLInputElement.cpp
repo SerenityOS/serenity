@@ -27,7 +27,7 @@ namespace Web::HTML {
 
 HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_value(String::empty())
+    , m_value(DeprecatedString::empty())
 {
     set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLInputElement"));
 
@@ -268,14 +268,14 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     });
 }
 
-String HTMLInputElement::value() const
+DeprecatedString HTMLInputElement::value() const
 {
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
     if (type_state() == TypeAttributeState::FileUpload) {
         // NOTE: This "fakepath" requirement is a sad accident of history. See the example in the File Upload state section for more information.
         // NOTE: Since path components are not permitted in filenames in the list of selected files, the "\fakepath\" cannot be mistaken for a path component.
         if (m_selected_files && m_selected_files->item(0))
-            return String::formatted("C:\\fakepath\\{}", m_selected_files->item(0)->name());
+            return DeprecatedString::formatted("C:\\fakepath\\{}", m_selected_files->item(0)->name());
         return "C:\\fakepath\\"sv;
     }
 
@@ -284,12 +284,12 @@ String HTMLInputElement::value() const
     return m_value;
 }
 
-WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String value)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_value(DeprecatedString value)
 {
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
     if (type_state() == TypeAttributeState::FileUpload) {
         // On setting, if the new value is the empty string, empty the list of selected files; otherwise, throw an "InvalidStateError" DOMException.
-        if (value != String::empty())
+        if (value != DeprecatedString::empty())
             return WebIDL::InvalidStateError::create(realm(), "Setting value of input type file to non-empty string"sv);
         m_selected_files = nullptr;
         return {};
@@ -335,7 +335,7 @@ static bool is_allowed_to_have_placeholder(HTML::HTMLInputElement::TypeAttribute
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-placeholder
-Optional<String> HTMLInputElement::placeholder_value() const
+Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
 {
     if (!m_text_node || !m_text_node->data().is_empty())
         return {};
@@ -379,7 +379,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     auto* shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this);
     auto initial_value = m_value;
     if (initial_value.is_null())
-        initial_value = String::empty();
+        initial_value = DeprecatedString::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
     MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px"));
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
@@ -404,7 +404,7 @@ void HTMLInputElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
 }
 
-void HTMLInputElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLInputElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::checked) {
@@ -444,11 +444,11 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
             set_checked(false, ChangeSource::Programmatic);
     } else if (name == HTML::AttributeNames::value) {
         if (!m_dirty_value)
-            m_value = String::empty();
+            m_value = DeprecatedString::empty();
     }
 }
 
-String HTMLInputElement::type() const
+DeprecatedString HTMLInputElement::type() const
 {
     switch (m_type) {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
@@ -461,13 +461,13 @@ String HTMLInputElement::type() const
     VERIFY_NOT_REACHED();
 }
 
-void HTMLInputElement::set_type(String const& type)
+void HTMLInputElement::set_type(DeprecatedString const& type)
 {
     MUST(set_attribute(HTML::AttributeNames::type, type));
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
-String HTMLInputElement::value_sanitization_algorithm(String value) const
+DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString value) const
 {
     if (type_state() == HTMLInputElement::TypeAttributeState::Text || type_state() == HTMLInputElement::TypeAttributeState::Search || type_state() == HTMLInputElement::TypeAttributeState::Telephone || type_state() == HTMLInputElement::TypeAttributeState::Password) {
         // Strip newlines from the value.
@@ -513,7 +513,7 @@ void HTMLInputElement::set_checked_within_group()
         return;
 
     set_checked(true, ChangeSource::User);
-    String name = this->name();
+    DeprecatedString name = this->name();
 
     document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
         if (element.checked() && &element != this && element.name() == name)
@@ -541,7 +541,7 @@ void HTMLInputElement::legacy_pre_activation_behavior()
     // has its checkedness set to true, if any, and then set this element's
     // checkedness to true.
     if (type_state() == TypeAttributeState::RadioButton) {
-        String name = this->name();
+        DeprecatedString name = this->name();
 
         document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
             if (element.checked() && element.name() == name) {
@@ -574,7 +574,7 @@ void HTMLInputElement::legacy_cancelled_activation_behavior()
     // group, or if this element no longer has a radio button group, setting
     // this element's checkedness to false.
     if (type_state() == TypeAttributeState::RadioButton) {
-        String name = this->name();
+        DeprecatedString name = this->name();
         bool did_reselect_previous_element = false;
         if (m_legacy_pre_activation_behavior_checked_element_in_group) {
             auto& element_in_group = *m_legacy_pre_activation_behavior_checked_element_in_group;

@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/HTML/NavigatorID.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-appversion
-String NavigatorIDMixin::app_version() const
+DeprecatedString NavigatorIDMixin::app_version() const
 {
     // Must return the appropriate string that starts with "5.0 (", as follows:
 
@@ -33,7 +33,7 @@ String NavigatorIDMixin::app_version() const
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-platform
-String NavigatorIDMixin::platform() const
+DeprecatedString NavigatorIDMixin::platform() const
 {
     // Must return a string representing the platform on which the browser is executing (e.g. "MacIntel", "Win32",
     // "Linux x86_64", "Linux armv81") or, for privacy and compatibility, a string that is commonly returned on another
@@ -44,7 +44,7 @@ String NavigatorIDMixin::platform() const
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-useragent
-String NavigatorIDMixin::user_agent() const
+DeprecatedString NavigatorIDMixin::user_agent() const
 {
     // Must return the default `User-Agent` value.
     return ResourceLoader::the().user_agent();

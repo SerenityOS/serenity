@@ -12,7 +12,7 @@
 
 namespace DNS {
 
-Name::Name(String const& name)
+Name::Name(DeprecatedString const& name)
 {
     if (name.ends_with('.'))
         m_name = name.substring(0, name.length() - 1);

@@ -78,7 +78,7 @@
 
 namespace HackStudio {
 
-HackStudioWidget::HackStudioWidget(String path_to_project)
+HackStudioWidget::HackStudioWidget(DeprecatedString path_to_project)
     : m_editor_font(read_editor_font_from_config())
 {
     set_fill_with_background_color(true);
@@ -175,7 +175,7 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
                 return;
 
             if (event.event_path.starts_with(project().root_path())) {
-                String relative_path = LexicalPath::relative_path(event.event_path, project().root_path());
+                DeprecatedString relative_path = LexicalPath::relative_path(event.event_path, project().root_path());
                 handle_external_file_deletion(relative_path);
             } else {
                 handle_external_file_deletion(event.event_path);
@@ -213,7 +213,7 @@ void HackStudioWidget::on_action_tab_change()
     }
 }
 
-Vector<String> HackStudioWidget::read_recent_projects()
+Vector<DeprecatedString> HackStudioWidget::read_recent_projects()
 {
     auto json = Config::read_string("HackStudio"sv, "Global"sv, "RecentProjects"sv);
     AK::JsonParser parser(json);
@@ -225,7 +225,7 @@ Vector<String> HackStudioWidget::read_recent_projects()
     if (!value.is_array())
         return {};
 
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
     for (auto& json_value : value.as_array().values()) {
         if (!json_value.is_string())
             return {};
@@ -235,7 +235,7 @@ Vector<String> HackStudioWidget::read_recent_projects()
     return paths;
 }
 
-void HackStudioWidget::open_project(String const& root_path)
+void HackStudioWidget::open_project(DeprecatedString const& root_path)
 {
     if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
         return;
@@ -283,16 +283,16 @@ void HackStudioWidget::open_project(String const& root_path)
     update_recent_projects_submenu();
 }
 
-Vector<String> HackStudioWidget::selected_file_paths() const
+Vector<DeprecatedString> HackStudioWidget::selected_file_paths() const
 {
-    Vector<String> files;
+    Vector<DeprecatedString> files;
     m_project_tree_view->selection().for_each_index([&](const GUI::ModelIndex& index) {
-        String sub_path = index.data().as_string();
+        DeprecatedString sub_path = index.data().as_string();
 
         GUI::ModelIndex parent_or_invalid = index.parent();
 
         while (parent_or_invalid.is_valid()) {
-            sub_path = String::formatted("{}/{}", parent_or_invalid.data().as_string(), sub_path);
+            sub_path = DeprecatedString::formatted("{}/{}", parent_or_invalid.data().as_string(), sub_path);
 
             parent_or_invalid = parent_or_invalid.parent();
         }
@@ -302,9 +302,9 @@ Vector<String> HackStudioWidget::selected_file_paths() const
     return files;
 }
 
-bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_t column)
+bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t line, size_t column)
 {
-    String filename = full_filename;
+    DeprecatedString filename = full_filename;
     if (full_filename.starts_with(project().root_path())) {
         filename = LexicalPath::relative_path(full_filename, project().root_path());
     }
@@ -369,7 +369,7 @@ bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_
 
     set_edit_mode(EditMode::Text);
 
-    String relative_file_path = filename;
+    DeprecatedString relative_file_path = filename;
     if (filename.starts_with(m_project->root_path()))
         relative_file_path = filename.substring(m_project->root_path().length() + 1);
 
@@ -388,16 +388,16 @@ bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_
     return true;
 }
 
-void HackStudioWidget::close_file_in_all_editors(String const& filename)
+void HackStudioWidget::close_file_in_all_editors(DeprecatedString const& filename)
 {
     m_open_files.remove(filename);
     m_open_files_vector.remove_all_matching(
-        [&filename](String const& element) { return element == filename; });
+        [&filename](DeprecatedString const& element) { return element == filename; });
 
     for (auto& editor_wrapper : m_all_editor_wrappers) {
         Editor& editor = editor_wrapper.editor();
-        String editor_file_path = editor.code_document().file_path();
-        String relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
+        DeprecatedString editor_file_path = editor.code_document().file_path();
+        DeprecatedString relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
 
         if (relative_editor_file_path == filename) {
             if (m_open_files_vector.is_empty()) {
@@ -514,41 +514,41 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     return project_tree_view_context_menu;
 }
 
-NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(String const& label, String const& icon, String const& extension)
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(DeprecatedString const& label, DeprecatedString const& icon, DeprecatedString const& extension)
 {
     return GUI::Action::create(label, Gfx::Bitmap::try_load_from_file(icon).release_value_but_fixme_should_propagate_errors(), [this, extension](const GUI::Action&) {
-        String filename;
+        DeprecatedString filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:"sv, "Add new file to project"sv) != GUI::InputBox::ExecResult::OK)
             return;
 
-        if (!extension.is_empty() && !filename.ends_with(String::formatted(".{}", extension))) {
-            filename = String::formatted("{}.{}", filename, extension);
+        if (!extension.is_empty() && !filename.ends_with(DeprecatedString::formatted(".{}", extension))) {
+            filename = DeprecatedString::formatted("{}.{}", filename, extension);
         }
 
         auto path_to_selected = selected_file_paths();
 
-        String filepath;
+        DeprecatedString filepath;
 
         if (!path_to_selected.is_empty()) {
             VERIFY(Core::File::exists(path_to_selected.first()));
 
             LexicalPath selected(path_to_selected.first());
 
-            String dir_path;
+            DeprecatedString dir_path;
 
             if (Core::File::is_directory(selected.string()))
                 dir_path = selected.string();
             else
                 dir_path = selected.dirname();
 
-            filepath = String::formatted("{}/", dir_path);
+            filepath = DeprecatedString::formatted("{}/", dir_path);
         }
 
-        filepath = String::formatted("{}{}", filepath, filename);
+        filepath = DeprecatedString::formatted("{}{}", filepath, filename);
 
         auto file = Core::File::construct(filepath);
         if (!file->open((Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::MustBeNew))) {
-            GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filepath), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Failed to create '{}'", filepath), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         open_file(filepath);
@@ -558,7 +558,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(String const
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 {
     return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
-        String directory_name;
+        DeprecatedString directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:"sv, "Add new folder to project"sv) != GUI::InputBox::ExecResult::OK)
             return;
 
@@ -567,17 +567,17 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
         if (!path_to_selected.is_empty()) {
             LexicalPath selected(path_to_selected.first());
 
-            String dir_path;
+            DeprecatedString dir_path;
 
             if (Core::File::is_directory(selected.string()))
                 dir_path = selected.string();
             else
                 dir_path = selected.dirname();
 
-            directory_name = String::formatted("{}/{}", dir_path, directory_name);
+            directory_name = DeprecatedString::formatted("{}/{}", dir_path, directory_name);
         }
 
-        auto formatted_dir_name = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_project->model().root_path(), directory_name));
+        auto formatted_dir_name = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_project->model().root_path(), directory_name));
         int rc = mkdir(formatted_dir_name.characters(), 0755);
         if (rc < 0) {
             GUI::MessageBox::show(window(), "Failed to create new directory"sv, "Error"sv, GUI::MessageBox::Type::Error);
@@ -616,7 +616,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_relative_path_action()
     auto copy_relative_path_action = GUI::Action::create("Copy &Relative Path", [this](const GUI::Action&) {
         auto paths = selected_file_paths();
         VERIFY(!paths.is_empty());
-        auto paths_string = String::join('\n', paths);
+        auto paths_string = DeprecatedString::join('\n', paths);
         GUI::Clipboard::the().set_plain_text(paths_string);
     });
     copy_relative_path_action->set_enabled(true);
@@ -630,10 +630,10 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_full_path_action()
     auto copy_full_path_action = GUI::Action::create("Copy &Full Path", [this](const GUI::Action&) {
         auto paths = selected_file_paths();
         VERIFY(!paths.is_empty());
-        Vector<String> full_paths;
+        Vector<DeprecatedString> full_paths;
         for (auto& path : paths)
             full_paths.append(get_absolute_path(path));
-        auto paths_string = String::join('\n', full_paths);
+        auto paths_string = DeprecatedString::join('\n', full_paths);
         GUI::Clipboard::the().set_plain_text(paths_string);
     });
     copy_full_path_action->set_enabled(true);
@@ -649,12 +649,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
         if (files.is_empty())
             return;
 
-        String message;
+        DeprecatedString message;
         if (files.size() == 1) {
             LexicalPath file(files[0]);
-            message = String::formatted("Really remove {} from disk?", file.basename());
+            message = DeprecatedString::formatted("Really remove {} from disk?", file.basename());
         } else {
-            message = String::formatted("Really remove {} files from disk?", files.size());
+            message = DeprecatedString::formatted("Really remove {} files from disk?", files.size());
         }
 
         auto result = GUI::MessageBox::show(window(),
@@ -669,7 +669,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             struct stat st;
             if (lstat(file.characters(), &st) < 0) {
                 GUI::MessageBox::show(window(),
-                    String::formatted("lstat ({}) failed: {}", file, strerror(errno)),
+                    DeprecatedString::formatted("lstat ({}) failed: {}", file, strerror(errno)),
                     "Removal failed"sv,
                     GUI::MessageBox::Type::Error);
                 break;
@@ -680,12 +680,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
-                        String::formatted("Removing directory {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
+                        DeprecatedString::formatted("Removing directory {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
                         "Removal failed"sv,
                         GUI::MessageBox::Type::Error);
                 } else {
                     GUI::MessageBox::show(window(),
-                        String::formatted("Removing file {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
+                        DeprecatedString::formatted("Removing file {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
                         "Removal failed"sv,
                         GUI::MessageBox::Type::Error);
                 }
@@ -890,7 +890,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         auto const old_filename = current_editor_wrapper().filename();
         LexicalPath const old_path(old_filename);
 
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(),
+        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(),
             old_filename.is_null() ? "Untitled"sv : old_path.title(),
             old_filename.is_null() ? "txt"sv : old_path.extension(),
             Core::File::absolute_path(old_path.dirname()));
@@ -898,7 +898,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
             return;
         }
 
-        String const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path());
+        DeprecatedString const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path());
         if (current_editor_wrapper().filename().is_null()) {
             current_editor_wrapper().set_filename(relative_file_path);
         } else {
@@ -987,7 +987,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 {
     return GUI::Action::create("&Debug", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-run.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         if (!Core::File::exists(get_project_executable_path())) {
-            GUI::MessageBox::show(window(), String::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         if (Debugger::the().session()) {
@@ -1078,7 +1078,7 @@ void HackStudioWidget::initialize_debugger()
         });
 }
 
-String HackStudioWidget::get_full_path_of_serenity_source(String const& file)
+DeprecatedString HackStudioWidget::get_full_path_of_serenity_source(DeprecatedString const& file)
 {
     auto path_parts = LexicalPath(file).parts();
     while (!path_parts.is_empty() && path_parts[0] == "..") {
@@ -1088,10 +1088,10 @@ String HackStudioWidget::get_full_path_of_serenity_source(String const& file)
     relative_path_builder.join('/', path_parts);
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
     LexicalPath serenity_sources_base(SERENITY_LIBS_PREFIX);
-    return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
+    return DeprecatedString::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
 }
 
-String HackStudioWidget::get_absolute_path(String const& path) const
+DeprecatedString HackStudioWidget::get_absolute_path(DeprecatedString const& path) const
 {
     // TODO: We can probably do a more specific condition here, something like
     // "if (file.starts_with("../Libraries/") || file.starts_with("../AK/"))"
@@ -1101,9 +1101,9 @@ String HackStudioWidget::get_absolute_path(String const& path) const
     return m_project->to_absolute_path(path);
 }
 
-RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(String const& filename)
+RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(DeprecatedString const& filename)
 {
-    String file_path = filename;
+    DeprecatedString file_path = filename;
 
     if (filename.starts_with("../"sv)) {
         file_path = get_full_path_of_serenity_source(filename);
@@ -1114,19 +1114,19 @@ RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(String const& filenam
     return current_editor_wrapper();
 }
 
-String HackStudioWidget::get_project_executable_path() const
+DeprecatedString HackStudioWidget::get_project_executable_path() const
 {
     // FIXME: Dumb heuristic ahead!
     // e.g /my/project => /my/project/project
     // TODO: Perhaps a Makefile rule for getting the value of $(PROGRAM) would be better?
-    return String::formatted("{}/{}", m_project->root_path(), LexicalPath::basename(m_project->root_path()));
+    return DeprecatedString::formatted("{}/{}", m_project->root_path(), LexicalPath::basename(m_project->root_path()));
 }
 
 void HackStudioWidget::build()
 {
     auto result = m_project_builder->build(active_file());
     if (result.is_error()) {
-        GUI::MessageBox::show(window(), String::formatted("{}", result.error()), "Build failed"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("{}", result.error()), "Build failed"sv, GUI::MessageBox::Type::Error);
         m_build_action->set_enabled(true);
         m_stop_action->set_enabled(false);
     } else {
@@ -1138,7 +1138,7 @@ void HackStudioWidget::run()
 {
     auto result = m_project_builder->run(active_file());
     if (result.is_error()) {
-        GUI::MessageBox::show(window(), String::formatted("{}", result.error()), "Run failed"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("{}", result.error()), "Run failed"sv, GUI::MessageBox::Type::Error);
         m_run_action->set_enabled(true);
         m_stop_action->set_enabled(false);
     } else {
@@ -1172,7 +1172,7 @@ void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_w
     update_statusbar();
 }
 
-void HackStudioWidget::file_renamed(String const& old_name, String const& new_name)
+void HackStudioWidget::file_renamed(DeprecatedString const& old_name, DeprecatedString const& new_name)
 {
     auto editor_or_none = m_all_editor_wrappers.first_matching([&old_name](auto const& editor) {
         return editor->filename() == old_name;
@@ -1242,7 +1242,7 @@ void HackStudioWidget::configure_project_tree_view()
 void HackStudioWidget::create_open_files_view(GUI::Widget& parent)
 {
     m_open_files_view = parent.add<GUI::ListView>();
-    auto open_files_model = GUI::ItemListModel<String>::create(m_open_files_vector);
+    auto open_files_model = GUI::ItemListModel<DeprecatedString>::create(m_open_files_vector);
     m_open_files_view->set_model(open_files_model);
 
     m_open_files_view->on_activation = [this](auto& index) {
@@ -1554,17 +1554,17 @@ void HackStudioWidget::update_statusbar()
 {
     StringBuilder builder;
     if (current_editor().has_selection()) {
-        String selected_text = current_editor().selected_text();
+        DeprecatedString selected_text = current_editor().selected_text();
         auto word_count = current_editor().number_of_selected_words();
         builder.appendff("Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
     m_statusbar->set_text(0, builder.to_string());
     m_statusbar->set_text(1, current_editor_wrapper().editor().code_document().language_name());
-    m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
 }
 
-void HackStudioWidget::handle_external_file_deletion(String const& filepath)
+void HackStudioWidget::handle_external_file_deletion(DeprecatedString const& filepath)
 {
     close_file_in_all_editors(filepath);
 }
@@ -1602,7 +1602,7 @@ HackStudioWidget::~HackStudioWidget()
     stop_debugger_if_running();
 }
 
-HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(String const& prompt)
+HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(DeprecatedString const& prompt)
 {
     if (!any_document_is_dirty())
         return ContinueDecision::Yes;
@@ -1647,7 +1647,7 @@ void HackStudioWidget::update_tree_view()
 
 void HackStudioWidget::update_window_title()
 {
-    window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
+    window()->set_title(DeprecatedString::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
     window()->set_modified(any_document_is_dirty());
 }
 
@@ -1725,7 +1725,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_project_configuration_a
 
         if (!Core::File::exists(absolute_config_file_path)) {
             if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
-                GUI::MessageBox::show_error(window(), String::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory));
+                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory));
                 return;
             }
 
@@ -1787,7 +1787,7 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font> font)
     Config::write_i32("HackStudio"sv, "EditorFont"sv, "Size"sv, m_editor_font->presentation_size());
 }
 
-void HackStudioWidget::open_coredump(String const& coredump_path)
+void HackStudioWidget::open_coredump(DeprecatedString const& coredump_path)
 {
     open_project("/usr/src/serenity");
     m_mode = Mode::Coredump;

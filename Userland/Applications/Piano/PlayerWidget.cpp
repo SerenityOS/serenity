@@ -36,7 +36,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
 
     m_track_dropdown = add<GUI::ComboBox>();
     m_track_dropdown->set_max_width(75);
-    m_track_dropdown->set_model(*GUI::ItemListModel<String>::create(m_track_number_choices));
+    m_track_dropdown->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_track_number_choices));
     m_track_dropdown->set_only_allow_values_from_model(true);
     m_track_dropdown->set_model_column(0);
     m_track_dropdown->set_selected_index(0);
@@ -100,7 +100,7 @@ void PlayerWidget::add_track()
 {
     m_track_manager.add_track();
     auto latest_track_count = m_track_manager.track_count();
-    auto latest_track_string = String::number(latest_track_count);
+    auto latest_track_string = DeprecatedString::number(latest_track_count);
     m_track_number_choices.append(latest_track_string);
     m_track_dropdown->set_selected_index(latest_track_count - 1);
 }

@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 
 namespace AK {
 class BufferStream;
@@ -24,14 +24,14 @@ public:
     virtual ~Stub() = default;
 
     virtual u32 magic() const = 0;
-    virtual String name() const = 0;
+    virtual DeprecatedString name() const = 0;
     virtual OwnPtr<MessageBuffer> handle(Message const&) = 0;
 
 protected:
     Stub() = default;
 
 private:
-    String m_name;
+    DeprecatedString m_name;
 };
 
 }

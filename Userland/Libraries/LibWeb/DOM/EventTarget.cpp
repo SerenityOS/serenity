@@ -332,7 +332,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
     auto& event_handler = event_handler_iterator->value;
 
     // 3. If eventHandler's value is an internal raw uncompiled handler, then:
-    if (event_handler->value.has<String>()) {
+    if (event_handler->value.has<DeprecatedString>()) {
         // 1. If eventTarget is an element, then let element be eventTarget, and document be element's node document.
         //    Otherwise, eventTarget is a Window object, let element be null, and document be eventTarget's associated Document.
         JS::GCPtr<Element> element;
@@ -355,7 +355,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
             return nullptr;
 
         // 3. Let body be the uncompiled script body in eventHandler's value.
-        auto& body = event_handler->value.get<String>();
+        auto& body = event_handler->value.get<DeprecatedString>();
 
         // FIXME: 4. Let location be the location where the script body originated, as given by eventHandler's value.
 
@@ -680,7 +680,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:concept-element-attributes-change-ext
-void EventTarget::element_event_handler_attribute_changed(FlyString const& local_name, String const& value)
+void EventTarget::element_event_handler_attribute_changed(FlyString const& local_name, DeprecatedString const& value)
 {
     // NOTE: Step 1 of this algorithm was handled in HTMLElement::parse_attribute.
 

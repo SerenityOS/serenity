@@ -26,20 +26,20 @@ static void free_pages(void* ptr, size_t bytes)
     VERIFY(rc == 0);
 }
 
-NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot, String name)
+NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot, DeprecatedString name)
 {
-    auto* data = (u8*)mmap_initialized(size, 0, String::formatted("(UE) {}", name).characters());
+    auto* data = (u8*)mmap_initialized(size, 0, DeprecatedString::formatted("(UE) {}", name).characters());
     auto* shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
     auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
     region->m_name = move(name);
     return region;
 }
 
-NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, String name)
+NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, DeprecatedString name)
 {
     // Since we put the memory to an arbitrary location, do not pass MAP_FIXED and MAP_FIXED_NOREPLACE to the Kernel.
     auto real_flags = flags & ~(MAP_FIXED | MAP_FIXED_NOREPLACE);
-    auto* data = (u8*)mmap_with_name(nullptr, size, prot, real_flags, fd, offset, name.is_empty() ? nullptr : String::formatted("(UE) {}", name).characters());
+    auto* data = (u8*)mmap_with_name(nullptr, size, prot, real_flags, fd, offset, name.is_empty() ? nullptr : DeprecatedString::formatted("(UE) {}", name).characters());
     VERIFY(data != MAP_FAILED);
     auto* shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
     auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
@@ -318,10 +318,10 @@ void MmapRegion::set_prot(int prot)
     }
 }
 
-void MmapRegion::set_name(String name)
+void MmapRegion::set_name(DeprecatedString name)
 {
     m_name = move(name);
-    set_mmap_name(range().base().as_ptr(), range().size(), String::formatted("(UE) {}", m_name).characters());
+    set_mmap_name(range().base().as_ptr(), range().size(), DeprecatedString::formatted("(UE) {}", m_name).characters());
 }
 
 }

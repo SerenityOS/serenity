@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
@@ -38,8 +38,8 @@ public:
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
-    void show_tooltip(String, Widget const* tooltip_source_widget);
-    void show_tooltip_immediately(String, Widget const* tooltip_source_widget);
+    void show_tooltip(DeprecatedString, Widget const* tooltip_source_widget);
+    void show_tooltip_immediately(DeprecatedString, Widget const* tooltip_source_widget);
     void hide_tooltip();
     Widget* tooltip_source_widget() { return m_tooltip_source_widget; };
 
@@ -49,8 +49,8 @@ public:
     void did_create_window(Badge<Window>);
     void did_delete_last_window(Badge<Window>);
 
-    String const& invoked_as() const { return m_invoked_as; }
-    Vector<String> const& args() const { return m_args; }
+    DeprecatedString const& invoked_as() const { return m_invoked_as; }
+    Vector<DeprecatedString> const& args() const { return m_args; }
 
     Gfx::Palette palette() const;
     void set_palette(Gfx::Palette const&);
@@ -75,7 +75,7 @@ public:
     Widget* pending_drop_widget() { return m_pending_drop_widget.ptr(); }
     Widget const* pending_drop_widget() const { return m_pending_drop_widget.ptr(); }
 
-    void set_drag_hovered_widget(Badge<Window>, Widget* widget, Gfx::IntPoint const& position = {}, Vector<String> mime_types = {})
+    void set_drag_hovered_widget(Badge<Window>, Widget* widget, Gfx::IntPoint const& position = {}, Vector<DeprecatedString> mime_types = {})
     {
         set_drag_hovered_widget_impl(widget, position, move(mime_types));
     }
@@ -99,7 +99,7 @@ private:
     void request_tooltip_show();
     void tooltip_hide_timer_did_fire();
 
-    void set_drag_hovered_widget_impl(Widget*, Gfx::IntPoint const& = {}, Vector<String> = {});
+    void set_drag_hovered_widget_impl(Widget*, Gfx::IntPoint const& = {}, Vector<DeprecatedString> = {});
     void set_pending_drop_widget(Widget*);
 
     OwnPtr<Core::EventLoop> m_event_loop;
@@ -116,8 +116,8 @@ private:
     bool m_focus_debugging_enabled { false };
     bool m_hover_debugging_enabled { false };
     bool m_dnd_debugging_enabled { false };
-    String m_invoked_as;
-    Vector<String> m_args;
+    DeprecatedString m_invoked_as;
+    Vector<DeprecatedString> m_args;
     WeakPtr<Widget> m_drag_hovered_widget;
     WeakPtr<Widget> m_pending_drop_widget;
 };

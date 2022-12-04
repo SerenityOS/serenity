@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
@@ -23,7 +23,7 @@ static void initialize_if_needed()
     if (s_initialized)
         return;
 
-    auto user_config = String::formatted("{}/CommonLocations.json", Core::StandardPaths::config_directory());
+    auto user_config = DeprecatedString::formatted("{}/CommonLocations.json", Core::StandardPaths::config_directory());
     if (Core::File::exists(user_config)) {
         CommonLocationsProvider::load_from_json(user_config);
         return;
@@ -36,7 +36,7 @@ static void initialize_if_needed()
     s_initialized = true;
 }
 
-void CommonLocationsProvider::load_from_json(String const& json_path)
+void CommonLocationsProvider::load_from_json(DeprecatedString const& json_path)
 {
     auto file = Core::File::construct(json_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {

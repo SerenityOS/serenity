@@ -7,7 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/BinaryHeap.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 TEST_CASE(construct)
 {
@@ -44,7 +44,7 @@ TEST_CASE(populate_int)
 
 TEST_CASE(populate_string)
 {
-    BinaryHeap<int, String, 5> strings;
+    BinaryHeap<int, DeprecatedString, 5> strings;
     strings.insert(1, "ABC");
     strings.insert(2, "DEF");
     EXPECT_EQ(strings.size(), 2u);

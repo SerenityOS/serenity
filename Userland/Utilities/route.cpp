@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
@@ -51,10 +51,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        String title;
+        DeprecatedString title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        String buffer;
+        DeprecatedString buffer;
     };
 
     Vector<Column> columns;

@@ -28,7 +28,7 @@ struct Testcase {
     size_t dest_expected_n; // == dest_n
 };
 
-static String show(ByteBuffer const& buf)
+static DeprecatedString show(ByteBuffer const& buf)
 {
     StringBuilder builder;
     for (size_t i = 0; i < buf.size(); ++i) {

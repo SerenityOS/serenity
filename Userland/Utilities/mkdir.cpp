@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio cpath rpath"));
 
     bool create_parents = false;
-    String mode_string;
-    Vector<String> directories;
+    DeprecatedString mode_string;
+    Vector<DeprecatedString> directories;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create_parents, "Create parent directories if they don't exist", "parents", 'p');

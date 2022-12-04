@@ -9,11 +9,11 @@
 #include "Execution.h"
 #include "Forward.h"
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Object.h>
 
@@ -23,7 +23,7 @@ struct LocalFrame;
 
 class Job : public RefCounted<Job> {
 public:
-    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, String cmd, u64 job_id, AST::Command&& command) { return adopt_ref(*new Job(pid, pgid, move(cmd), job_id, move(command))); }
+    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, DeprecatedString cmd, u64 job_id, AST::Command&& command) { return adopt_ref(*new Job(pid, pgid, move(cmd), job_id, move(command))); }
 
     ~Job()
     {
@@ -40,7 +40,7 @@ public:
 
     pid_t pgid() const { return m_pgid; }
     pid_t pid() const { return m_pid; }
-    String const& cmd() const { return m_cmd; }
+    DeprecatedString const& cmd() const { return m_cmd; }
     const AST::Command& command() const { return *m_command; }
     AST::Command* command_ptr() { return m_command; }
     u64 job_id() const { return m_job_id; }
@@ -92,12 +92,12 @@ public:
     bool print_status(PrintStatusMode);
 
 private:
-    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id, AST::Command&& command);
+    Job(pid_t pid, unsigned pgid, DeprecatedString cmd, u64 job_id, AST::Command&& command);
 
     pid_t m_pgid { 0 };
     pid_t m_pid { 0 };
     u64 m_job_id { 0 };
-    String m_cmd;
+    DeprecatedString m_cmd;
     bool m_exited { false };
     bool m_running_in_background { false };
     bool m_should_announce_exit { false };

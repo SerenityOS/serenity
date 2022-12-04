@@ -30,7 +30,7 @@ private:
 
     virtual bool is_svg_svg_element() const override { return true; }
 
-    virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
 
     Optional<ViewBox> m_view_box;
 };

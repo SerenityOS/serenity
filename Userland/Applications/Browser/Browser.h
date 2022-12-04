@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <Applications/Browser/IconBag.h>
 
 namespace Browser {
 
-extern String g_home_url;
-extern String g_new_tab_url;
-extern String g_search_engine;
-extern Vector<String> g_content_filters;
-extern Vector<String> g_proxies;
-extern HashMap<String, size_t> g_proxy_mappings;
+extern DeprecatedString g_home_url;
+extern DeprecatedString g_new_tab_url;
+extern DeprecatedString g_search_engine;
+extern Vector<DeprecatedString> g_content_filters;
+extern Vector<DeprecatedString> g_proxies;
+extern HashMap<DeprecatedString, size_t> g_proxy_mappings;
 extern bool g_content_filters_enabled;
 extern IconBag g_icon_bag;
-extern String g_webdriver_content_ipc_path;
+extern DeprecatedString g_webdriver_content_ipc_path;
 
 }

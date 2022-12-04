@@ -129,7 +129,7 @@ static ResponseType spin_event_loop_until_dialog_closed(PageClient& client, Opti
     return response.release_value();
 }
 
-void Page::did_request_alert(String const& message)
+void Page::did_request_alert(DeprecatedString const& message)
 {
     m_pending_dialog = PendingDialog::Alert;
     m_client.page_did_request_alert(message);
@@ -149,7 +149,7 @@ void Page::alert_closed()
     }
 }
 
-bool Page::did_request_confirm(String const& message)
+bool Page::did_request_confirm(DeprecatedString const& message)
 {
     m_pending_dialog = PendingDialog::Confirm;
     m_client.page_did_request_confirm(message);
@@ -169,7 +169,7 @@ void Page::confirm_closed(bool accepted)
     }
 }
 
-String Page::did_request_prompt(String const& message, String const& default_)
+DeprecatedString Page::did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_)
 {
     m_pending_dialog = PendingDialog::Prompt;
     m_client.page_did_request_prompt(message, default_);
@@ -180,7 +180,7 @@ String Page::did_request_prompt(String const& message, String const& default_)
     return spin_event_loop_until_dialog_closed(m_client, m_pending_prompt_response);
 }
 
-void Page::prompt_closed(String response)
+void Page::prompt_closed(DeprecatedString response)
 {
     if (m_pending_dialog == PendingDialog::Prompt) {
         m_pending_dialog = PendingDialog::None;

@@ -18,7 +18,7 @@ Debugger& Debugger::the()
 }
 
 void Debugger::initialize(
-    String source_root,
+    DeprecatedString source_root,
     Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
@@ -32,7 +32,7 @@ bool Debugger::is_initialized()
 }
 
 Debugger::Debugger(
-    String source_root,
+    DeprecatedString source_root,
     Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
@@ -45,7 +45,7 @@ Debugger::Debugger(
     pthread_cond_init(&m_ui_action_cond, nullptr);
 }
 
-void Debugger::on_breakpoint_change(String const& file, size_t line, BreakpointChange change_type)
+void Debugger::on_breakpoint_change(DeprecatedString const& file, size_t line, BreakpointChange change_type)
 {
     auto position = create_source_position(file, line);
 
@@ -77,7 +77,7 @@ void Debugger::on_breakpoint_change(String const& file, size_t line, BreakpointC
     }
 }
 
-bool Debugger::set_execution_position(String const& file, size_t line)
+bool Debugger::set_execution_position(DeprecatedString const& file, size_t line)
 {
     auto position = create_source_position(file, line);
     auto session = Debugger::the().session();
@@ -92,11 +92,11 @@ bool Debugger::set_execution_position(String const& file, size_t line)
     return true;
 }
 
-Debug::DebugInfo::SourcePosition Debugger::create_source_position(String const& file, size_t line)
+Debug::DebugInfo::SourcePosition Debugger::create_source_position(DeprecatedString const& file, size_t line)
 {
     if (file.starts_with('/'))
         return { file, line + 1 };
-    return { LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file)), line + 1 };
+    return { LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_source_root, file)), line + 1 };
 }
 
 intptr_t Debugger::start_static()

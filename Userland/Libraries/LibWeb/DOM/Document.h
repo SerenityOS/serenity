@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
@@ -82,7 +82,7 @@ public:
         HTML
     };
 
-    static JS::NonnullGCPtr<Document> create_and_initialize(Type, String content_type, HTML::NavigationParams);
+    static JS::NonnullGCPtr<Document> create_and_initialize(Type, DeprecatedString content_type, HTML::NavigationParams);
 
     static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
     static JS::NonnullGCPtr<Document> construct_impl(JS::Realm&);
@@ -94,11 +94,11 @@ public:
     size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
     size_t layout_node_count() const { return m_next_layout_node_serial_id; }
 
-    String cookie(Cookie::Source = Cookie::Source::NonHttp);
-    void set_cookie(String const&, Cookie::Source = Cookie::Source::NonHttp);
+    DeprecatedString cookie(Cookie::Source = Cookie::Source::NonHttp);
+    void set_cookie(DeprecatedString const&, Cookie::Source = Cookie::Source::NonHttp);
 
-    String referrer() const;
-    void set_referrer(String);
+    DeprecatedString referrer() const;
+    void set_referrer(DeprecatedString);
 
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
@@ -108,8 +108,8 @@ public:
     void update_base_element(Badge<HTML::HTMLBaseElement>);
     JS::GCPtr<HTML::HTMLBaseElement> first_base_element_with_href_in_tree_order() const;
 
-    String url_string() const { return m_url.to_string(); }
-    String document_uri() const { return m_url.to_string(); }
+    DeprecatedString url_string() const { return m_url.to_string(); }
+    DeprecatedString document_uri() const { return m_url.to_string(); }
 
     HTML::Origin origin() const;
     void set_origin(HTML::Origin const& origin);
@@ -117,7 +117,7 @@ public:
     HTML::CrossOriginOpenerPolicy const& cross_origin_opener_policy() const { return m_cross_origin_opener_policy; }
     void set_cross_origin_opener_policy(HTML::CrossOriginOpenerPolicy policy) { m_cross_origin_opener_policy = move(policy); }
 
-    AK::URL parse_url(String const&) const;
+    AK::URL parse_url(DeprecatedString const&) const;
 
     CSS::StyleComputer& style_computer() { return *m_style_computer; }
     const CSS::StyleComputer& style_computer() const { return *m_style_computer; }
@@ -161,8 +161,8 @@ public:
 
     WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
-    String title() const;
-    void set_title(String const&);
+    DeprecatedString title() const;
+    void set_title(DeprecatedString const&);
 
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
@@ -202,7 +202,7 @@ public:
     void schedule_style_update();
     void schedule_layout_update();
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(String const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(DeprecatedString const&);
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     JS::NonnullGCPtr<HTMLCollection> applets();
@@ -215,19 +215,19 @@ public:
     JS::NonnullGCPtr<HTMLCollection> scripts();
     JS::NonnullGCPtr<HTMLCollection> all();
 
-    String const& source() const { return m_source; }
-    void set_source(String source) { m_source = move(source); }
+    DeprecatedString const& source() const { return m_source; }
+    void set_source(DeprecatedString source) { m_source = move(source); }
 
     HTML::EnvironmentSettingsObject& relevant_settings_object();
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(FlyString const& local_name);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(String const& namespace_, String const& qualified_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name);
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
-    JS::NonnullGCPtr<Text> create_text_node(String const& data);
-    JS::NonnullGCPtr<Comment> create_comment(String const& data);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(String const& interface);
+    JS::NonnullGCPtr<Text> create_text_node(DeprecatedString const& data);
+    JS::NonnullGCPtr<Comment> create_comment(DeprecatedString const& data);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(DeprecatedString const& interface);
     JS::NonnullGCPtr<Range> create_range();
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
@@ -264,7 +264,7 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> adopt_node_binding(JS::NonnullGCPtr<Node>);
 
     DocumentType const* doctype() const;
-    String const& compat_mode() const;
+    DeprecatedString const& compat_mode() const;
 
     void set_editable(bool editable) { m_editable = editable; }
     virtual bool is_editable() const final;
@@ -282,35 +282,35 @@ public:
 
     JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
 
-    String ready_state() const;
+    DeprecatedString ready_state() const;
     void update_readiness(HTML::DocumentReadyState);
 
     HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
 
     void set_window(Badge<HTML::BrowsingContext>, HTML::Window&);
 
-    WebIDL::ExceptionOr<void> write(Vector<String> const& strings);
-    WebIDL::ExceptionOr<void> writeln(Vector<String> const& strings);
+    WebIDL::ExceptionOr<void> write(Vector<DeprecatedString> const& strings);
+    WebIDL::ExceptionOr<void> writeln(Vector<DeprecatedString> const& strings);
 
-    WebIDL::ExceptionOr<Document*> open(String const& = "", String const& = "");
-    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(String const& url, String const& name, String const& features);
+    WebIDL::ExceptionOr<Document*> open(DeprecatedString const& = "", DeprecatedString const& = "");
+    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(DeprecatedString const& url, DeprecatedString const& name, DeprecatedString const& features);
     WebIDL::ExceptionOr<void> close();
 
     HTML::Window* default_view() { return m_window.ptr(); }
     HTML::Window const* default_view() const { return m_window.ptr(); }
 
-    String const& content_type() const { return m_content_type; }
-    void set_content_type(String const& content_type) { m_content_type = content_type; }
+    DeprecatedString const& content_type() const { return m_content_type; }
+    void set_content_type(DeprecatedString const& content_type) { m_content_type = content_type; }
 
     bool has_encoding() const { return m_encoding.has_value(); }
-    Optional<String> const& encoding() const { return m_encoding; }
-    String encoding_or_default() const { return m_encoding.value_or("UTF-8"); }
-    void set_encoding(Optional<String> const& encoding) { m_encoding = encoding; }
+    Optional<DeprecatedString> const& encoding() const { return m_encoding; }
+    DeprecatedString encoding_or_default() const { return m_encoding.value_or("UTF-8"); }
+    void set_encoding(Optional<DeprecatedString> const& encoding) { m_encoding = encoding; }
 
     // NOTE: These are intended for the JS bindings
-    String character_set() const { return encoding_or_default(); }
-    String charset() const { return encoding_or_default(); }
-    String input_encoding() const { return encoding_or_default(); }
+    DeprecatedString character_set() const { return encoding_or_default(); }
+    DeprecatedString charset() const { return encoding_or_default(); }
+    DeprecatedString input_encoding() const { return encoding_or_default(); }
 
     bool ready_for_post_load_tasks() const { return m_ready_for_post_load_tasks; }
     void set_ready_for_post_load_tasks(bool ready) { m_ready_for_post_load_tasks = ready; }
@@ -328,7 +328,7 @@ public:
 
     virtual EventTarget* get_parent(Event const&) override;
 
-    String dump_dom_tree_as_json() const;
+    DeprecatedString dump_dom_tree_as_json() const;
 
     bool has_a_style_sheet_that_is_blocking_scripts() const;
 
@@ -347,7 +347,7 @@ public:
     void set_page_showing(bool value) { m_page_showing = value; }
 
     bool hidden() const;
-    String visibility_state() const;
+    DeprecatedString visibility_state() const;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
     void update_the_visibility_state(HTML::VisibilityState);
@@ -366,13 +366,13 @@ public:
     void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
     void detach_parser(Badge<HTML::HTMLParser>);
 
-    static bool is_valid_name(String const&);
+    static bool is_valid_name(DeprecatedString const&);
 
     struct PrefixAndTagName {
         FlyString prefix;
         FlyString tag_name;
     };
-    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Realm&, String const& qualified_name);
+    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Realm&, DeprecatedString const& qualified_name);
 
     JS::NonnullGCPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
     JS::NonnullGCPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
@@ -397,8 +397,8 @@ public:
     bool is_initial_about_blank() const { return m_is_initial_about_blank; }
     void set_is_initial_about_blank(bool b) { m_is_initial_about_blank = b; }
 
-    String domain() const;
-    void set_domain(String const& domain);
+    DeprecatedString domain() const;
+    void set_domain(DeprecatedString const& domain);
 
     auto& pending_scroll_event_targets() { return m_pending_scroll_event_targets; }
     auto& pending_scrollend_event_targets() { return m_pending_scrollend_event_targets; }
@@ -407,8 +407,8 @@ public:
     bool is_completely_loaded() const;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
-    Optional<String> navigation_id() const;
-    void set_navigation_id(Optional<String>);
+    Optional<DeprecatedString> navigation_id() const;
+    void set_navigation_id(Optional<DeprecatedString>);
 
     // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
     HTML::SandboxingFlagSet active_sandboxing_flag_set() const;
@@ -443,7 +443,7 @@ public:
 
     void did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>);
 
-    bool query_command_supported(String const&) const;
+    bool query_command_supported(DeprecatedString const&) const;
 
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
@@ -458,7 +458,7 @@ private:
 
     void evaluate_media_rules();
 
-    WebIDL::ExceptionOr<void> run_the_document_write_steps(String);
+    WebIDL::ExceptionOr<void> run_the_document_write_steps(DeprecatedString);
 
     size_t m_next_layout_node_serial_id { 0 };
 
@@ -484,7 +484,7 @@ private:
     JS::GCPtr<HTML::HTMLParser> m_parser;
     bool m_active_parser_was_aborted { false };
 
-    String m_source;
+    DeprecatedString m_source;
 
     JS::GCPtr<HTML::HTMLScriptElement> m_pending_parsing_blocking_script;
 
@@ -511,8 +511,8 @@ private:
     JS::GCPtr<Document> m_appropriate_template_contents_owner_document;
 
     HTML::DocumentReadyState m_readiness { HTML::DocumentReadyState::Loading };
-    String m_content_type { "application/xml" };
-    Optional<String> m_encoding;
+    DeprecatedString m_content_type { "application/xml" };
+    Optional<DeprecatedString> m_encoding;
 
     bool m_ready_for_post_load_tasks { false };
 
@@ -567,7 +567,7 @@ private:
     HTML::CrossOriginOpenerPolicy m_cross_origin_opener_policy;
 
     // https://html.spec.whatwg.org/multipage/dom.html#the-document's-referrer
-    String m_referrer { "" };
+    DeprecatedString m_referrer { "" };
 
     // https://dom.spec.whatwg.org/#concept-document-origin
     HTML::Origin m_origin;
@@ -585,7 +585,7 @@ private:
     Optional<AK::Time> m_completely_loaded_time;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
-    Optional<String> m_navigation_id;
+    Optional<DeprecatedString> m_navigation_id;
 
     // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
     HTML::SandboxingFlagSet m_active_sandboxing_flag_set;

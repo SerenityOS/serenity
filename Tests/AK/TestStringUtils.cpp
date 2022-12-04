@@ -282,7 +282,7 @@ TEST_CASE(convert_to_uint_from_octal)
 
 TEST_CASE(ends_with)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     EXPECT(AK::StringUtils::ends_with(test_string, "DEF"sv, CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::ends_with(test_string, "ABCDEF"sv, CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::ends_with(test_string, "ABCDE"sv, CaseSensitivity::CaseSensitive));
@@ -293,7 +293,7 @@ TEST_CASE(ends_with)
 
 TEST_CASE(starts_with)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     EXPECT(AK::StringUtils::starts_with(test_string, "ABC"sv, CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::starts_with(test_string, "ABCDEF"sv, CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::starts_with(test_string, "BCDEF"sv, CaseSensitivity::CaseSensitive));
@@ -304,7 +304,7 @@ TEST_CASE(starts_with)
 
 TEST_CASE(contains)
 {
-    String test_string = "ABCDEFABCXYZ";
+    DeprecatedString test_string = "ABCDEFABCXYZ";
     EXPECT(AK::StringUtils::contains(test_string, "ABC"sv, CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::contains(test_string, "ABC"sv, CaseSensitivity::CaseInsensitive));
     EXPECT(AK::StringUtils::contains(test_string, "AbC"sv, CaseSensitivity::CaseInsensitive));
@@ -322,7 +322,7 @@ TEST_CASE(contains)
     EXPECT(!AK::StringUtils::contains(test_string, "L"sv, CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::contains(test_string, "L"sv, CaseSensitivity::CaseInsensitive));
 
-    String command_palette_bug_string = "Go Go Back";
+    DeprecatedString command_palette_bug_string = "Go Go Back";
     EXPECT(AK::StringUtils::contains(command_palette_bug_string, "Go Back"sv, AK::CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::contains(command_palette_bug_string, "gO bAcK"sv, AK::CaseSensitivity::CaseInsensitive));
 }
@@ -351,7 +351,7 @@ TEST_CASE(trim)
 
 TEST_CASE(find)
 {
-    String test_string = "1234567";
+    DeprecatedString test_string = "1234567";
     EXPECT_EQ(AK::StringUtils::find(test_string, "1"sv).value_or(1), 0u);
     EXPECT_EQ(AK::StringUtils::find(test_string, "2"sv).value_or(2), 1u);
     EXPECT_EQ(AK::StringUtils::find(test_string, "3"sv).value_or(3), 2u);

@@ -2,5 +2,5 @@
 
 endpoint ClipboardClient
 {
-    clipboard_data_changed([UTF8] String mime_type) =|
+    clipboard_data_changed([UTF8] DeprecatedString mime_type) =|
 }

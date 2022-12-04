@@ -74,7 +74,7 @@ void CardSettingsWidget::set_cards_background_color(Gfx::Color color)
     m_preview_frame->set_palette(new_palette);
 }
 
-bool CardSettingsWidget::set_card_back_image_path(String const& path)
+bool CardSettingsWidget::set_card_back_image_path(DeprecatedString const& path)
 {
     auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path, m_card_back_image_view->model_column());
     if (index.is_valid()) {
@@ -86,7 +86,7 @@ bool CardSettingsWidget::set_card_back_image_path(String const& path)
     return false;
 }
 
-String CardSettingsWidget::card_back_image_path() const
+DeprecatedString CardSettingsWidget::card_back_image_path() const
 {
     auto& card_back_selection = m_card_back_image_view->selection();
     GUI::ModelIndex card_back_image_index = m_last_selected_card_back;

@@ -17,8 +17,8 @@
 namespace JS {
 
 HashMap<FlyString, TokenType> Lexer::s_keywords;
-HashMap<String, TokenType> Lexer::s_three_char_tokens;
-HashMap<String, TokenType> Lexer::s_two_char_tokens;
+HashMap<DeprecatedString, TokenType> Lexer::s_three_char_tokens;
+HashMap<DeprecatedString, TokenType> Lexer::s_two_char_tokens;
 HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
 Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
@@ -159,7 +159,7 @@ void Lexer::consume()
 
     if (is_line_terminator()) {
         if constexpr (LEXER_DEBUG) {
-            String type;
+            DeprecatedString type;
             if (m_current_char == '\n')
                 type = "LINE FEED";
             else if (m_current_char == '\r')
@@ -572,7 +572,7 @@ Token Lexer::next()
     // This is being used to communicate info about invalid tokens to the parser, which then
     // can turn that into more specific error messages - instead of us having to make up a
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
-    String token_message;
+    DeprecatedString token_message;
 
     Optional<FlyString> identifier;
     size_t identifier_length = 0;

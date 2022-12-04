@@ -17,7 +17,7 @@ namespace Markdown {
 
 class CodeBlock final : public Block {
 public:
-    CodeBlock(String const& language, String const& style, String const& code, Heading* current_section)
+    CodeBlock(DeprecatedString const& language, DeprecatedString const& style, DeprecatedString const& code, Heading* current_section)
         : m_code(move(code))
         , m_language(language)
         , m_style(style)
@@ -26,15 +26,15 @@ public:
     }
     virtual ~CodeBlock() override = default;
 
-    virtual String render_to_html(bool tight = false) const override;
-    virtual String render_for_terminal(size_t view_width = 0) const override;
+    virtual DeprecatedString render_to_html(bool tight = false) const override;
+    virtual DeprecatedString render_for_terminal(size_t view_width = 0) const override;
     virtual RecursionDecision walk(Visitor&) const override;
     static OwnPtr<CodeBlock> parse(LineIterator& lines, Heading* current_section);
 
 private:
-    String m_code;
-    String m_language;
-    String m_style;
+    DeprecatedString m_code;
+    DeprecatedString m_language;
+    DeprecatedString m_style;
     Heading* m_current_section;
 
     static OwnPtr<CodeBlock> parse_backticks(LineIterator& lines, Heading* current_section);

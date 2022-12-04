@@ -31,7 +31,7 @@ CSSStyleDeclaration* CSSFontFaceRule::style()
 }
 
 // https://www.w3.org/TR/cssom/#ref-for-cssfontfacerule
-String CSSFontFaceRule::serialized() const
+DeprecatedString CSSFontFaceRule::serialized() const
 {
     StringBuilder builder;
     // The result of concatenating the following:

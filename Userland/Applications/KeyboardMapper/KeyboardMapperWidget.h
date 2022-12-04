@@ -18,7 +18,7 @@ public:
     virtual ~KeyboardMapperWidget() override = default;
 
     void create_frame();
-    ErrorOr<void> load_map_from_file(String const&);
+    ErrorOr<void> load_map_from_file(DeprecatedString const&);
     ErrorOr<void> load_map_from_system();
     ErrorOr<void> save();
     ErrorOr<void> save_to_file(StringView);
@@ -31,7 +31,7 @@ protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
 
-    void set_current_map(const String);
+    void set_current_map(const DeprecatedString);
     void update_window_title();
 
 private:
@@ -43,8 +43,8 @@ private:
     u32* map_from_name(const StringView map_name);
     void update_modifier_radio_buttons(GUI::KeyEvent&);
 
-    String m_filename;
+    DeprecatedString m_filename;
     Keyboard::CharacterMapData m_character_map;
-    String m_current_map_name;
+    DeprecatedString m_current_map_name;
     bool m_automatic_modifier { false };
 };

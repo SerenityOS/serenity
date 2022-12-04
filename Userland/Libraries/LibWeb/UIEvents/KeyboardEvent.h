@@ -14,8 +14,8 @@
 namespace Web::UIEvents {
 
 struct KeyboardEventInit : public EventModifierInit {
-    String key { "" };
-    String code { "" };
+    DeprecatedString key { "" };
+    DeprecatedString code { "" };
     u32 location { 0 };
     bool repeat { false };
     bool is_composing { false };
@@ -37,8 +37,8 @@ public:
     u32 key_code() const { return m_key_code; }
     u32 char_code() const { return m_char_code; }
 
-    String key() const { return m_key; }
-    String code() const { return m_code; }
+    DeprecatedString key() const { return m_key; }
+    DeprecatedString code() const { return m_code; }
     u32 location() const { return m_location; }
 
     bool ctrl_key() const { return m_ctrl_key; }
@@ -49,15 +49,15 @@ public:
     bool repeat() const { return m_repeat; }
     bool is_composing() const { return m_is_composing; }
 
-    bool get_modifier_state(String const& key_arg);
+    bool get_modifier_state(DeprecatedString const& key_arg);
 
     virtual u32 which() const override { return m_key_code; }
 
 private:
     KeyboardEvent(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init);
 
-    String m_key;
-    String m_code;
+    DeprecatedString m_key;
+    DeprecatedString m_code;
     u32 m_location { 0 };
     bool m_ctrl_key { false };
     bool m_shift_key { false };

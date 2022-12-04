@@ -23,18 +23,18 @@ public:
     virtual ~Script() override;
 
     AK::URL const& base_url() const { return m_base_url; }
-    String const& filename() const { return m_filename; }
+    DeprecatedString const& filename() const { return m_filename; }
 
     EnvironmentSettingsObject& settings_object() { return m_settings_object; }
 
 protected:
-    Script(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object);
+    Script(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object);
 
 private:
     virtual void visit_host_defined_self(JS::Cell::Visitor&) override;
 
     AK::URL m_base_url;
-    String m_filename;
+    DeprecatedString m_filename;
     EnvironmentSettingsObject& m_settings_object;
 };
 

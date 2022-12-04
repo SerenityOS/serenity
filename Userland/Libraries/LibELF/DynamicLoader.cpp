@@ -37,7 +37,7 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 
 namespace ELF {
 
-Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filepath)
+Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, DeprecatedString filepath)
 {
     VERIFY(filepath.starts_with('/'));
 
@@ -49,9 +49,9 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
     VERIFY(stat.st_size >= 0);
     auto size = static_cast<size_t>(stat.st_size);
     if (size < sizeof(ElfW(Ehdr)))
-        return DlErrorMessage { String::formatted("File {} has invalid ELF header", filepath) };
+        return DlErrorMessage { DeprecatedString::formatted("File {} has invalid ELF header", filepath) };
 
-    String file_mmap_name = String::formatted("ELF_DYN: {}", filepath);
+    DeprecatedString file_mmap_name = DeprecatedString::formatted("ELF_DYN: {}", filepath);
     auto* data = mmap_with_name(nullptr, size, PROT_READ, MAP_SHARED, fd, 0, file_mmap_name.characters());
     if (data == MAP_FAILED) {
         return DlErrorMessage { "DynamicLoader::try_create mmap" };
@@ -63,7 +63,7 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
     return loader;
 }
 
-DynamicLoader::DynamicLoader(int fd, String filepath, void* data, size_t size)
+DynamicLoader::DynamicLoader(int fd, DeprecatedString filepath, void* data, size_t size)
     : m_filepath(move(filepath))
     , m_file_size(size)
     , m_image_fd(fd)
@@ -230,19 +230,19 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
         // If we don't have textrels, .text has already been made executable by this point in load_stage_2.
         for (auto& text_segment : m_text_segments) {
             if (mprotect(text_segment.address().as_ptr(), text_segment.size(), PROT_READ | PROT_EXEC) < 0) {
-                return DlErrorMessage { String::formatted("mprotect .text: PROT_READ | PROT_EXEC: {}", strerror(errno)) };
+                return DlErrorMessage { DeprecatedString::formatted("mprotect .text: PROT_READ | PROT_EXEC: {}", strerror(errno)) };
             }
         }
     }
 
     if (m_relro_segment_size) {
         if (mprotect(m_relro_segment_address.as_ptr(), m_relro_segment_size, PROT_READ) < 0) {
-            return DlErrorMessage { String::formatted("mprotect .relro: PROT_READ: {}", strerror(errno)) };
+            return DlErrorMessage { DeprecatedString::formatted("mprotect .relro: PROT_READ: {}", strerror(errno)) };
         }
 
 #ifdef AK_OS_SERENITY
-        if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, String::formatted("{}: .relro", m_filepath).characters()) < 0) {
-            return DlErrorMessage { String::formatted("set_mmap_name .relro: {}", strerror(errno)) };
+        if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, DeprecatedString::formatted("{}: .relro", m_filepath).characters()) < 0) {
+            return DlErrorMessage { DeprecatedString::formatted("set_mmap_name .relro: {}", strerror(errno)) };
         }
 #endif
     }
@@ -324,7 +324,7 @@ void DynamicLoader::load_program_headers()
     }
 
     // Now that we can't accidentally block our requested space, re-map our ELF image.
-    String file_mmap_name = String::formatted("ELF_DYN: {}", m_filepath);
+    DeprecatedString file_mmap_name = DeprecatedString::formatted("ELF_DYN: {}", m_filepath);
     auto* data = mmap_with_name(nullptr, m_file_size, PROT_READ, MAP_SHARED, m_image_fd, 0, file_mmap_name.characters());
     if (data == MAP_FAILED) {
         perror("mmap new mapping");
@@ -446,7 +446,7 @@ void DynamicLoader::load_program_headers()
             MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
             0,
             0,
-            String::formatted("{}: .data", m_filepath).characters());
+            DeprecatedString::formatted("{}: .data", m_filepath).characters());
 
         if (MAP_FAILED == data_segment) {
             perror("mmap writable");

@@ -33,8 +33,8 @@ public:
     Token const& token() const { return m_value.get<Token>(); }
     operator Token() const { return m_value.get<Token>(); }
 
-    String to_string() const;
-    String to_debug_string() const;
+    DeprecatedString to_string() const;
+    DeprecatedString to_debug_string() const;
 
 private:
     Variant<Token, NonnullRefPtr<Function>, NonnullRefPtr<Block>> m_value;

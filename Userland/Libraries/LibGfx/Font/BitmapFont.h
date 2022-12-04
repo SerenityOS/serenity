@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/CharacterTypes.h>
+#include <AK/DeprecatedString.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/MappedFile.h>
@@ -30,9 +30,9 @@ public:
     ErrorOr<NonnullRefPtr<BitmapFont>> masked_character_set() const;
     ErrorOr<NonnullRefPtr<BitmapFont>> unmasked_character_set() const;
 
-    static RefPtr<BitmapFont> load_from_file(String const& path);
-    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(String const& path);
-    ErrorOr<void> write_to_file(String const& path);
+    static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
+    ErrorOr<void> write_to_file(DeprecatedString const& path);
 
     ~BitmapFont();
 
@@ -92,8 +92,8 @@ public:
     int width(Utf8View const&) const override;
     int width(Utf32View const&) const override;
 
-    String name() const override { return m_name; }
-    void set_name(String name) { m_name = move(name); }
+    DeprecatedString name() const override { return m_name; }
+    void set_name(DeprecatedString name) { m_name = move(name); }
 
     bool is_fixed_width() const override { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
@@ -113,15 +113,15 @@ public:
     u16 range_size() const { return m_range_mask_size; }
     bool is_range_empty(u32 code_point) const { return !(m_range_mask[code_point / 256 / 8] & 1 << (code_point / 256 % 8)); }
 
-    String family() const override { return m_family; }
-    void set_family(String family) { m_family = move(family); }
-    String variant() const override;
+    DeprecatedString family() const override { return m_family; }
+    void set_family(DeprecatedString family) { m_family = move(family); }
+    DeprecatedString variant() const override;
 
-    String qualified_name() const override;
-    String human_readable_name() const override { return String::formatted("{} {} {}", family(), variant(), presentation_size()); }
+    DeprecatedString qualified_name() const override;
+    DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
 private:
-    BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,
+    BitmapFont(DeprecatedString name, DeprecatedString family, u8* rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
@@ -133,8 +133,8 @@ private:
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
     int glyph_or_emoji_width_for_variable_width_font(u32 code_point) const;
 
-    String m_name;
-    String m_family;
+    DeprecatedString m_name;
+    DeprecatedString m_family;
     size_t m_glyph_count { 0 };
 
     u16 m_range_mask_size { 0 };

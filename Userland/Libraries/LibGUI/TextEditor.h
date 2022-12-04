@@ -57,7 +57,7 @@ public:
 
     virtual void set_document(TextDocument&);
 
-    String const& placeholder() const { return m_placeholder; }
+    DeprecatedString const& placeholder() const { return m_placeholder; }
     void set_placeholder(StringView placeholder) { m_placeholder = placeholder; }
 
     TextDocumentLine& current_line() { return line(m_cursor.line()); }
@@ -126,10 +126,10 @@ public:
 
     void insert_at_cursor_or_replace_selection(StringView);
     void replace_all_text_without_resetting_undo_stack(StringView text);
-    bool write_to_file(String const& path);
+    bool write_to_file(DeprecatedString const& path);
     bool write_to_file(Core::File&);
     bool has_selection() const { return m_selection.is_valid(); }
-    String selected_text() const;
+    DeprecatedString selected_text() const;
     size_t number_of_words() const;
     size_t number_of_selected_words() const;
     void set_selection(TextRange const&);
@@ -137,7 +137,7 @@ public:
     bool can_undo() const { return document().can_undo(); }
     bool can_redo() const { return document().can_redo(); }
 
-    String text() const;
+    DeprecatedString text() const;
 
     void clear();
 
@@ -290,12 +290,12 @@ private:
     virtual Vector<TextDocumentSpan> const& spans() const final { return document().spans(); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
     virtual void highlighter_did_request_update() final { update(); }
-    virtual String highlighter_did_request_text() const final { return text(); }
+    virtual DeprecatedString highlighter_did_request_text() const final { return text(); }
     virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }
     virtual GUI::TextPosition highlighter_did_request_cursor() const final { return m_cursor; }
 
     // ^Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(String const& mime_type) override;
+    virtual void clipboard_content_did_change(DeprecatedString const& mime_type) override;
 
     void create_actions();
     void paint_ruler(Painter&);
@@ -409,7 +409,7 @@ private:
 
     RefPtr<TextDocument> m_document;
 
-    String m_placeholder { "" };
+    DeprecatedString m_placeholder { "" };
 
     template<typename Callback>
     void for_each_visual_line(size_t line_index, Callback) const;

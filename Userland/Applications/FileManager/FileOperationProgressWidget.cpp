@@ -129,11 +129,11 @@ void FileOperationProgressWidget::did_error(StringView message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
-    GUI::MessageBox::show(window(), String::formatted("An error occurred: {}", message), "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+    GUI::MessageBox::show(window(), DeprecatedString::formatted("An error occurred: {}", message), "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
     window()->close();
 }
 
-String FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
+DeprecatedString FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
 {
     int elapsed = m_elapsed_timer.elapsed() / 1000;
 
@@ -144,7 +144,7 @@ String FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_
     int seconds_remaining = (bytes_left * elapsed) / bytes_done;
 
     if (seconds_remaining < 30)
-        return String::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
+        return DeprecatedString::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
     if (seconds_remaining < 60)
         return "About a minute";
     if (seconds_remaining < 90)
@@ -157,14 +157,14 @@ String FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_
 
     if (minutes_remaining < 60) {
         if (seconds_remaining < 30)
-            return String::formatted("About {} minutes", minutes_remaining);
-        return String::formatted("Over {} minutes", minutes_remaining);
+            return DeprecatedString::formatted("About {} minutes", minutes_remaining);
+        return DeprecatedString::formatted("Over {} minutes", minutes_remaining);
     }
 
     time_t hours_remaining = minutes_remaining / 60;
     minutes_remaining %= 60;
 
-    return String::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
+    return DeprecatedString::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
 }
 
 void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, StringView current_filename)
@@ -178,13 +178,13 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
 
     switch (m_operation) {
     case FileOperation::Copy:
-        files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
+        files_copied_label.set_text(DeprecatedString::formatted("Copying file {} of {}", files_done, total_file_count));
         break;
     case FileOperation::Move:
-        files_copied_label.set_text(String::formatted("Moving file {} of {}", files_done, total_file_count));
+        files_copied_label.set_text(DeprecatedString::formatted("Moving file {} of {}", files_done, total_file_count));
         break;
     case FileOperation::Delete:
-        files_copied_label.set_text(String::formatted("Deleting file {} of {}", files_done, total_file_count));
+        files_copied_label.set_text(DeprecatedString::formatted("Deleting file {} of {}", files_done, total_file_count));
         break;
     default:
         VERIFY_NOT_REACHED();

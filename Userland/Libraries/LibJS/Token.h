@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 
@@ -181,7 +181,7 @@ class Token {
 public:
     Token() = default;
 
-    Token(TokenType type, String message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
+    Token(TokenType type, DeprecatedString message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
         : m_type(type)
         , m_message(message)
         , m_trivia(trivia)
@@ -200,7 +200,7 @@ public:
     char const* name() const;
     static char const* name(TokenType);
 
-    String const& message() const { return m_message; }
+    DeprecatedString const& message() const { return m_message; }
     StringView trivia() const { return m_trivia; }
     StringView original_value() const { return m_original_value; }
     StringView value() const
@@ -233,8 +233,8 @@ public:
         UnicodeEscapeOverflow,
         LegacyOctalEscapeSequence,
     };
-    String string_value(StringValueStatus& status) const;
-    String raw_template_value() const;
+    DeprecatedString string_value(StringValueStatus& status) const;
+    DeprecatedString raw_template_value() const;
 
     void set_identifier_value(FlyString value)
     {
@@ -246,7 +246,7 @@ public:
 
 private:
     TokenType m_type { TokenType::Invalid };
-    String m_message;
+    DeprecatedString m_message;
     StringView m_trivia;
     StringView m_original_value;
     Variant<Empty, StringView, FlyString> m_value {};

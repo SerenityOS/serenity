@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
@@ -34,12 +34,12 @@ public:
     ErrorOr<void> commit();
 
     ResultOr<void> add_schema(SchemaDef const&);
-    static Key get_schema_key(String const&);
-    ResultOr<NonnullRefPtr<SchemaDef>> get_schema(String const&);
+    static Key get_schema_key(DeprecatedString const&);
+    ResultOr<NonnullRefPtr<SchemaDef>> get_schema(DeprecatedString const&);
 
     ResultOr<void> add_table(TableDef& table);
-    static Key get_table_key(String const&, String const&);
-    ResultOr<NonnullRefPtr<TableDef>> get_table(String const&, String const&);
+    static Key get_table_key(DeprecatedString const&, DeprecatedString const&);
+    ResultOr<NonnullRefPtr<TableDef>> get_table(DeprecatedString const&, DeprecatedString const&);
 
     ErrorOr<Vector<Row>> select_all(TableDef const&);
     ErrorOr<Vector<Row>> match(TableDef const&, Key const&);
@@ -48,7 +48,7 @@ public:
     ErrorOr<void> update(Row&);
 
 private:
-    explicit Database(String);
+    explicit Database(DeprecatedString);
 
     bool m_open { false };
     NonnullRefPtr<Heap> m_heap;

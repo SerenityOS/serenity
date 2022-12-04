@@ -84,7 +84,7 @@ public:
     }
 
 #ifndef KERNEL
-    bool consume_specific(String const& next)
+    bool consume_specific(DeprecatedString const& next)
     {
         return consume_specific(StringView { next });
     }
@@ -118,7 +118,7 @@ public:
     StringView consume_until(StringView);
     StringView consume_quoted_string(char escape_char = 0);
 #ifndef KERNEL
-    String consume_and_unescape_string(char escape_char = '\\');
+    DeprecatedString consume_and_unescape_string(char escape_char = '\\');
 #endif
 
     enum class UnicodeEscapeError {

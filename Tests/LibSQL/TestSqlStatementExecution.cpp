@@ -21,7 +21,7 @@ namespace {
 
 constexpr char const* db_name = "/tmp/test.db";
 
-SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, String const& sql)
+SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql)
 {
     auto parser = SQL::AST::Parser(SQL::AST::Lexer(sql));
     auto statement = parser.next_statement();
@@ -31,7 +31,7 @@ SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database,
     return statement->execute(move(database));
 }
 
-SQL::ResultSet execute(NonnullRefPtr<SQL::Database> database, String const& sql)
+SQL::ResultSet execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql)
 {
     auto result = try_execute(move(database), sql);
     if (result.is_error()) {
@@ -531,7 +531,7 @@ TEST_CASE(select_with_limit)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10;");
@@ -547,7 +547,7 @@ TEST_CASE(select_with_limit_and_offset)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10 OFFSET 10;");
@@ -562,7 +562,7 @@ TEST_CASE(select_with_order_limit_and_offset)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY IntColumn LIMIT 10 OFFSET 10;");
@@ -587,7 +587,7 @@ TEST_CASE(select_with_limit_out_of_bounds)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 500;");
@@ -602,7 +602,7 @@ TEST_CASE(select_with_offset_out_of_bounds)
     create_table(database);
     for (auto count = 0; count < 100; count++) {
         auto result = execute(database,
-            String::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
+            DeprecatedString::formatted("INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_{}', {} );", count, count));
         EXPECT(result.size() == 1);
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable LIMIT 10 OFFSET 200;");
@@ -633,7 +633,7 @@ TEST_CASE(binary_operator_execution)
     create_table(database);
 
     for (auto count = 0; count < 10; ++count) {
-        auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+        auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
         EXPECT_EQ(result.size(), 1u);
     }
 
@@ -707,7 +707,7 @@ TEST_CASE(binary_operator_failure)
     create_table(database);
 
     for (auto count = 0; count < 10; ++count) {
-        auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+        auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
         EXPECT_EQ(result.size(), 1u);
     }
 
@@ -717,7 +717,7 @@ TEST_CASE(binary_operator_failure)
         auto error = result.release_error();
         EXPECT_EQ(error.error(), SQL::SQLErrorCode::NumericOperatorTypeMismatch);
 
-        auto message = String::formatted("NumericOperatorTypeMismatch: Cannot apply '{}' operator to non-numeric operands", op);
+        auto message = DeprecatedString::formatted("NumericOperatorTypeMismatch: Cannot apply '{}' operator to non-numeric operands", op);
         EXPECT_EQ(error.error_string(), message);
     };
 
@@ -777,7 +777,7 @@ TEST_CASE(delete_single_row)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -821,7 +821,7 @@ TEST_CASE(delete_multiple_rows)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 
@@ -861,7 +861,7 @@ TEST_CASE(delete_all_rows)
 
         create_table(database);
         for (auto count = 0; count < 10; ++count) {
-            auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
             EXPECT_EQ(result.size(), 1u);
         }
 

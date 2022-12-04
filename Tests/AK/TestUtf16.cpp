@@ -7,7 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Utf16View.h>
@@ -53,7 +53,7 @@ TEST_CASE(decode_utf8)
 TEST_CASE(encode_utf8)
 {
     {
-        String utf8_string("Привет, мир! 😀 γειά σου κόσμος こんにちは世界");
+        DeprecatedString utf8_string("Привет, мир! 😀 γειά σου κόσμος こんにちは世界");
         auto string = AK::utf8_to_utf16(utf8_string);
         Utf16View view { string };
         EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes), utf8_string);

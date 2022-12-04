@@ -113,7 +113,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     auto arg_count = args.size();
 
     // 9. Let P be the empty String.
-    String parameters_string = "";
+    DeprecatedString parameters_string = "";
 
     Optional<Value> body_arg;
 
@@ -138,7 +138,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         size_t k = 0;
 
         // e. Repeat, while k < argCount - 1,
-        Vector<String> parameters;
+        Vector<DeprecatedString> parameters;
         for (; k < arg_count - 1; ++k) {
             // i. Let nextArg be args[k].
             auto next_arg = args[k];
@@ -149,18 +149,18 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 
             // iv. Set k to k + 1.
         }
-        parameters_string = String::join(',', parameters);
+        parameters_string = DeprecatedString::join(',', parameters);
 
         // f. Let bodyArg be args[k].
         body_arg = args[k];
     }
 
     // 13. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-    auto body_string = String::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_string(vm)) : "");
+    auto body_string = DeprecatedString::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_string(vm)) : "");
 
     // 14. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
     // 15. Let sourceText be StringToCodePoints(sourceString).
-    auto source_text = String::formatted("{} anonymous({}\n) {{{}}}", prefix, parameters_string, body_string);
+    auto source_text = DeprecatedString::formatted("{} anonymous({}\n) {{{}}}", prefix, parameters_string, body_string);
 
     u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName;
     if (kind == FunctionKind::Async || kind == FunctionKind::AsyncGenerator)

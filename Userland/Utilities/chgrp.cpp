@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -28,12 +28,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     gid_t new_gid = -1;
 
-    if (String(gid_arg).is_empty()) {
+    if (DeprecatedString(gid_arg).is_empty()) {
         warnln("Empty gid option");
         return 1;
     }
 
-    auto number = String(gid_arg).to_uint();
+    auto number = DeprecatedString(gid_arg).to_uint();
     if (number.has_value()) {
         new_gid = number.value();
     } else {

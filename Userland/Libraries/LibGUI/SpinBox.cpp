@@ -73,7 +73,7 @@ void SpinBox::set_value(int value, AllowCallback allow_callback)
     m_increment_button->set_enabled(m_value < m_max);
     m_decrement_button->set_enabled(m_value > m_min);
 
-    m_editor->set_text(String::number(value));
+    m_editor->set_text(DeprecatedString::number(value));
     update();
     if (on_change && allow_callback == AllowCallback::Yes)
         on_change(value);
@@ -91,7 +91,7 @@ void SpinBox::set_range(int min, int max, AllowCallback allow_callback)
     int old_value = m_value;
     m_value = clamp(m_value, m_min, m_max);
     if (m_value != old_value) {
-        m_editor->set_text(String::number(m_value));
+        m_editor->set_text(DeprecatedString::number(m_value));
         if (on_change && allow_callback == AllowCallback::Yes)
             on_change(m_value);
     }

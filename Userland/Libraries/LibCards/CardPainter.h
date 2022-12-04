@@ -21,7 +21,7 @@ public:
     NonnullRefPtr<Gfx::Bitmap> card_front_inverted(Suit, Rank);
     NonnullRefPtr<Gfx::Bitmap> card_back_inverted();
 
-    void set_background_image_path(String path);
+    void set_background_image_path(DeprecatedString path);
 
 private:
     CardPainter();
@@ -35,7 +35,7 @@ private:
     RefPtr<Gfx::Bitmap> m_card_back;
     RefPtr<Gfx::Bitmap> m_card_back_inverted;
 
-    String m_background_image_path;
+    DeprecatedString m_background_image_path;
 };
 
 }

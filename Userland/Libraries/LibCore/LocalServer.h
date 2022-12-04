@@ -17,9 +17,9 @@ class LocalServer : public Object {
 public:
     virtual ~LocalServer() override;
 
-    ErrorOr<void> take_over_from_system_server(String const& path = String());
+    ErrorOr<void> take_over_from_system_server(DeprecatedString const& path = DeprecatedString());
     bool is_listening() const { return m_listening; }
-    bool listen(String const& address);
+    bool listen(DeprecatedString const& address);
 
     ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> accept();
 

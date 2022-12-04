@@ -5,9 +5,9 @@
  */
 
 #include <AK/ByteReader.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Random.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/UFixedBigInt.h>
 #include <LibCrypto/Curves/SECP256r1.h>

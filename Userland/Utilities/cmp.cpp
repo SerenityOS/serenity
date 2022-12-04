@@ -10,7 +10,7 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-static ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file_or_stdin(String const& filename)
+static ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file_or_stdin(DeprecatedString const& filename)
 {
     OwnPtr<Core::Stream::File> file;
     if (filename == "-") {
@@ -27,8 +27,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser parser;
-    String filename1;
-    String filename2;
+    DeprecatedString filename1;
+    DeprecatedString filename2;
     bool verbose = false;
     bool silent = false;
 
@@ -69,8 +69,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (silent)
             return;
         auto additional_info = verbose
-            ? String::formatted(" after byte {}", byte_number)
-            : String::formatted(" after byte {}, line {}", byte_number, line_number);
+            ? DeprecatedString::formatted(" after byte {}", byte_number)
+            : DeprecatedString::formatted(" after byte {}, line {}", byte_number, line_number);
         warnln("cmp: EOF on {}{}", shorter_file_name, additional_info);
     };
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
@@ -31,7 +31,7 @@ private:
     ::Locale::PluralForm m_type { ::Locale::PluralForm::Cardinal }; // [[Type]]
 };
 
-::Locale::PluralOperands get_operands(String const& string);
+::Locale::PluralOperands get_operands(DeprecatedString const& string);
 ::Locale::PluralCategory plural_rule_select(StringView locale, ::Locale::PluralForm type, Value number, ::Locale::PluralOperands operands);
 ::Locale::PluralCategory resolve_plural(PluralRules const&, Value number);
 ::Locale::PluralCategory resolve_plural(NumberFormatBase const& number_format, ::Locale::PluralForm type, Value number);

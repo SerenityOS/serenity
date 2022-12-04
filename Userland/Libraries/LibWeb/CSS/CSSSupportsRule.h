@@ -26,14 +26,14 @@ public:
 
     virtual Type type() const override { return Type::Supports; };
 
-    String condition_text() const override;
-    void set_condition_text(String) override;
+    DeprecatedString condition_text() const override;
+    void set_condition_text(DeprecatedString) override;
     virtual bool condition_matches() const override { return m_supports->matches(); }
 
 private:
     CSSSupportsRule(JS::Realm&, NonnullRefPtr<Supports>&&, CSSRuleList&);
 
-    virtual String serialized() const override;
+    virtual DeprecatedString serialized() const override;
 
     NonnullRefPtr<Supports> m_supports;
 };

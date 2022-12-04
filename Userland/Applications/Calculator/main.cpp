@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<unsigned> last_rounding_mode = 1;
     for (unsigned i {}; i < rounding_modes.size(); ++i) {
-        auto round_action = GUI::Action::create_checkable(String::formatted("To &{} digits", rounding_modes[i]),
+        auto round_action = GUI::Action::create_checkable(DeprecatedString::formatted("To &{} digits", rounding_modes[i]),
             [&widget, rounding_mode = rounding_modes[i], &last_rounding_mode, i](auto&) {
                 widget->set_rounding_length(rounding_mode);
                 last_rounding_mode = i;
@@ -89,11 +89,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     constexpr auto format { "&Custom - {} ..."sv };
-    auto round_custom = GUI::Action::create_checkable(String::formatted(format, 0), [&](auto& action) {
+    auto round_custom = GUI::Action::create_checkable(DeprecatedString::formatted(format, 0), [&](auto& action) {
         unsigned custom_rounding_length = widget->rounding_length();
 
         if (RoundingDialog::show(window, "Choose custom rounding"sv, custom_rounding_length) == GUI::Dialog::ExecResult::OK) {
-            action.set_text(String::formatted(format, custom_rounding_length));
+            action.set_text(DeprecatedString::formatted(format, custom_rounding_length));
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
         } else if (last_rounding_mode.has_value())
@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (RoundingDialog::show(window, "Choose shrinking length"sv, shrink_length) == GUI::Dialog::ExecResult::OK) {
             round_custom->set_checked(true);
-            round_custom->set_text(String::formatted(format, shrink_length));
+            round_custom->set_text(DeprecatedString::formatted(format, shrink_length));
             widget->set_rounding_length(shrink_length);
             widget->shrink(shrink_length);
         }

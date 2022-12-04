@@ -152,7 +152,7 @@ void HTMLFormElement::remove_associated_element(Badge<FormAssociatedElement>, HT
 }
 
 // https://html.spec.whatwg.org/#dom-fs-action
-String HTMLFormElement::action() const
+DeprecatedString HTMLFormElement::action() const
 {
     auto value = attribute(HTML::AttributeNames::action);
 

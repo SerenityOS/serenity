@@ -10,7 +10,7 @@
 #include <pwd.h>
 
 struct PasswdEntry {
-    String name;
+    DeprecatedString name;
     uid_t uid {};
 };
 

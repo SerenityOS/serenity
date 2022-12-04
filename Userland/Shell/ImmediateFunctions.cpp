@@ -14,7 +14,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 {
     auto name = across ? "length_across" : "length";
     if (arguments.size() < 1 || arguments.size() > 2) {
-        raise_error(ShellError::EvaluatedSyntaxError, String::formatted("Expected one or two arguments to `{}'", name), invoking_node.position());
+        raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected one or two arguments to `{}'", name), invoking_node.position());
         return nullptr;
     }
 
@@ -33,7 +33,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 
         auto& mode_arg = arguments.first();
         if (!mode_arg.is_bareword()) {
-            raise_error(ShellError::EvaluatedSyntaxError, String::formatted("Expected a bareword (either 'string' or 'list') in the two-argument form of the `{}' immediate", name), mode_arg.position());
+            raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected a bareword (either 'string' or 'list') in the two-argument form of the `{}' immediate", name), mode_arg.position());
             return nullptr;
         }
 
@@ -45,7 +45,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
         } else if (mode_name == "infer") {
             mode = Infer;
         } else {
-            raise_error(ShellError::EvaluatedSyntaxError, String::formatted("Expected either 'string' or 'list' (and not {}) in the two-argument form of the `{}' immediate", mode_name, name), mode_arg.position());
+            raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected either 'string' or 'list' (and not {}) in the two-argument form of the `{}' immediate", mode_name, name), mode_arg.position());
             return nullptr;
         }
 
@@ -67,7 +67,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
     }
 
     auto value_with_number = [&](auto number) -> NonnullRefPtr<AST::Node> {
-        return AST::make_ref_counted<AST::BarewordLiteral>(invoking_node.position(), String::number(number));
+        return AST::make_ref_counted<AST::BarewordLiteral>(invoking_node.position(), DeprecatedString::number(number));
     };
 
     auto do_across = [&](StringView mode_name, auto& values) {
@@ -126,7 +126,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 
                 if (is_inferred) {
                     raise_error(ShellError::EvaluatedSyntaxError,
-                        String::formatted("Could not infer expression type, please explicitly use `{0} string' or `{0} list'", name),
+                        DeprecatedString::formatted("Could not infer expression type, please explicitly use `{0} string' or `{0} list'", name),
                         invoking_node.position());
                     return nullptr;
                 }
@@ -135,7 +135,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
                 raise_error(ShellError::EvaluatedSyntaxError,
                     source.is_empty()
                         ? "Invalid application of `length' to a list"
-                        : String::formatted("Invalid application of `length' to a list\nperhaps you meant `{1}length \"{0}\"{2}' or `{1}length_across {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
+                        : DeprecatedString::formatted("Invalid application of `length' to a list\nperhaps you meant `{1}length \"{0}\"{2}' or `{1}length_across {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
                     expr_node->position());
                 return nullptr;
             }
@@ -159,7 +159,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 
             auto source = formatter.format();
             raise_error(ShellError::EvaluatedSyntaxError,
-                String::formatted("Invalid application of `length_across' to a non-list\nperhaps you meant `{1}length {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
+                DeprecatedString::formatted("Invalid application of `length_across' to a non-list\nperhaps you meant `{1}length {0}{2}'?", source, "\x1b[32m", "\x1b[0m"),
                 expr_node->position());
             return nullptr;
         }
@@ -340,7 +340,7 @@ RefPtr<AST::Node> Shell::immediate_split(AST::ImmediateExpression& invoking_node
             return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), NonnullRefPtrVector<AST::Node> {});
 
         auto& value = list.first();
-        Vector<String> split_strings;
+        Vector<DeprecatedString> split_strings;
         if (delimiter_str.is_empty()) {
             StringBuilder builder;
             for (auto code_point : Utf8View { value }) {
@@ -462,7 +462,7 @@ RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateEx
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
-    raise_error(ShellError::EvaluatedSyntaxError, String::formatted("Unknown immediate function {}", str), invoking_node.position());
+    raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Unknown immediate function {}", str), invoking_node.position());
     return nullptr;
 }
 

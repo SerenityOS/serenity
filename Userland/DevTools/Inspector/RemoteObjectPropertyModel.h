@@ -31,7 +31,7 @@ public:
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual DeprecatedString column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual void set_data(const GUI::ModelIndex&, const GUI::Variant&) override;
     virtual bool is_editable(const GUI::ModelIndex& index) const override { return index.column() == Column::Value; }

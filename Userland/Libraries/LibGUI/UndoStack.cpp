@@ -110,14 +110,14 @@ void UndoStack::clear()
         on_state_change();
 }
 
-Optional<String> UndoStack::undo_action_text() const
+Optional<DeprecatedString> UndoStack::undo_action_text() const
 {
     if (!can_undo())
         return {};
     return m_stack[m_stack_index - 1].action_text();
 }
 
-Optional<String> UndoStack::redo_action_text() const
+Optional<DeprecatedString> UndoStack::redo_action_text() const
 {
     if (!can_redo())
         return {};

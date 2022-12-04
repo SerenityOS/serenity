@@ -28,7 +28,7 @@ int SamplesModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String SamplesModel::column_name(int column) const
+DeprecatedString SamplesModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleIndex:

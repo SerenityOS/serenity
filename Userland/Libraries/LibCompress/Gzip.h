@@ -50,7 +50,7 @@ public:
     bool handle_any_error() override;
 
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
-    static Optional<String> describe_header(ReadonlyBytes);
+    static Optional<DeprecatedString> describe_header(ReadonlyBytes);
     static bool is_likely_compressed(ReadonlyBytes bytes);
 
 private:

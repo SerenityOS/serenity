@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"sv));
 
-    Vector<String> lines;
+    Vector<DeprecatedString> lines;
 
     for (;;) {
         char* buffer = nullptr;

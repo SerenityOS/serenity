@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
@@ -36,28 +36,28 @@ public:
 
     virtual ~Locale() override = default;
 
-    String const& locale() const { return m_locale; }
-    void set_locale(String locale) { m_locale = move(locale); }
+    DeprecatedString const& locale() const { return m_locale; }
+    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
 
     bool has_calendar() const { return m_calendar.has_value(); }
-    String const& calendar() const { return m_calendar.value(); }
-    void set_calendar(String calendar) { m_calendar = move(calendar); }
+    DeprecatedString const& calendar() const { return m_calendar.value(); }
+    void set_calendar(DeprecatedString calendar) { m_calendar = move(calendar); }
 
     bool has_case_first() const { return m_case_first.has_value(); }
-    String const& case_first() const { return m_case_first.value(); }
-    void set_case_first(String case_first) { m_case_first = move(case_first); }
+    DeprecatedString const& case_first() const { return m_case_first.value(); }
+    void set_case_first(DeprecatedString case_first) { m_case_first = move(case_first); }
 
     bool has_collation() const { return m_collation.has_value(); }
-    String const& collation() const { return m_collation.value(); }
-    void set_collation(String collation) { m_collation = move(collation); }
+    DeprecatedString const& collation() const { return m_collation.value(); }
+    void set_collation(DeprecatedString collation) { m_collation = move(collation); }
 
     bool has_hour_cycle() const { return m_hour_cycle.has_value(); }
-    String const& hour_cycle() const { return m_hour_cycle.value(); }
-    void set_hour_cycle(String hour_cycle) { m_hour_cycle = move(hour_cycle); }
+    DeprecatedString const& hour_cycle() const { return m_hour_cycle.value(); }
+    void set_hour_cycle(DeprecatedString hour_cycle) { m_hour_cycle = move(hour_cycle); }
 
     bool has_numbering_system() const { return m_numbering_system.has_value(); }
-    String const& numbering_system() const { return m_numbering_system.value(); }
-    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
+    DeprecatedString const& numbering_system() const { return m_numbering_system.value(); }
+    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
 
     bool numeric() const { return m_numeric; }
     void set_numeric(bool numeric) { m_numeric = numeric; }
@@ -66,13 +66,13 @@ private:
     explicit Locale(Object& prototype);
     Locale(::Locale::LocaleID const&, Object& prototype);
 
-    String m_locale;                     // [[Locale]]
-    Optional<String> m_calendar;         // [[Calendar]]
-    Optional<String> m_case_first;       // [[CaseFirst]]
-    Optional<String> m_collation;        // [[Collation]]
-    Optional<String> m_hour_cycle;       // [[HourCycle]]
-    Optional<String> m_numbering_system; // [[NumberingSystem]]
-    bool m_numeric { false };            // [[Numeric]]
+    DeprecatedString m_locale;                     // [[Locale]]
+    Optional<DeprecatedString> m_calendar;         // [[Calendar]]
+    Optional<DeprecatedString> m_case_first;       // [[CaseFirst]]
+    Optional<DeprecatedString> m_collation;        // [[Collation]]
+    Optional<DeprecatedString> m_hour_cycle;       // [[HourCycle]]
+    Optional<DeprecatedString> m_numbering_system; // [[NumberingSystem]]
+    bool m_numeric { false };                      // [[Numeric]]
 };
 
 // Table 1: WeekInfo Record Fields, https://tc39.es/proposal-intl-locale-info/#table-locale-weekinfo-record

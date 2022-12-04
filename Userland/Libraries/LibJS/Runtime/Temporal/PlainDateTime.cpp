@@ -247,7 +247,7 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
 }
 
 // 5.5.6 TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, precision, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetimetostring
-ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object const* calendar, Variant<StringView, u8> const& precision, StringView show_calendar)
+ThrowCompletionOr<DeprecatedString> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object const* calendar, Variant<StringView, u8> const& precision, StringView show_calendar)
 {
     // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
@@ -264,7 +264,7 @@ ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 
     auto calendar_string = TRY(maybe_format_calendar_annotation(vm, calendar, show_calendar));
 
     // 9. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, 0x0054 (LATIN CAPITAL LETTER T), hour, the code unit 0x003A (COLON), minute, seconds, and calendarString.
-    return String::formatted("{}-{:02}-{:02}T{:02}:{:02}{}{}", pad_iso_year(iso_year), iso_month, iso_day, hour, minute, seconds, calendar_string);
+    return DeprecatedString::formatted("{}-{:02}-{:02}T{:02}:{:02}{}{}", pad_iso_year(iso_year), iso_month, iso_day, hour, minute, seconds, calendar_string);
 }
 
 // 5.5.7 CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime

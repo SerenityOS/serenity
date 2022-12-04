@@ -31,14 +31,14 @@ void History::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-pushstate
-WebIDL::ExceptionOr<void> History::push_state(JS::Value data, String const&, String const& url)
+WebIDL::ExceptionOr<void> History::push_state(JS::Value data, DeprecatedString const&, DeprecatedString const& url)
 {
     // NOTE: The second parameter of this function is intentionally unused.
     return shared_history_push_replace_state(data, url, IsPush::Yes);
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-replacestate
-WebIDL::ExceptionOr<void> History::replace_state(JS::Value data, String const&, String const& url)
+WebIDL::ExceptionOr<void> History::replace_state(JS::Value data, DeprecatedString const&, DeprecatedString const& url)
 {
     // NOTE: The second parameter of this function is intentionally unused.
     return shared_history_push_replace_state(data, url, IsPush::No);
@@ -105,7 +105,7 @@ WebIDL::ExceptionOr<void> History::forward()
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#shared-history-push/replace-state-steps
-WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value, String const&, IsPush)
+WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value, DeprecatedString const&, IsPush)
 {
     // 1. Let document be history's associated Document. (NOTE: Not necessary)
 

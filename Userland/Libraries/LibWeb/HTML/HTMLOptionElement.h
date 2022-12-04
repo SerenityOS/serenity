@@ -20,11 +20,11 @@ public:
     bool selected() const { return m_selected; }
     void set_selected(bool);
 
-    String value() const;
-    void set_value(String);
+    DeprecatedString value() const;
+    void set_value(DeprecatedString);
 
-    String text() const;
-    void set_text(String);
+    DeprecatedString text() const;
+    void set_text(DeprecatedString);
 
     int index() const;
 
@@ -36,7 +36,7 @@ private:
 
     HTMLOptionElement(DOM::Document&, DOM::QualifiedName);
 
-    void parse_attribute(FlyString const& name, String const& value) override;
+    void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
     void did_remove_attribute(FlyString const& name) override;
 
     void ask_for_a_reset();

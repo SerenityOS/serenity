@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -27,7 +27,7 @@ namespace SQL {
 class Value {
 public:
     explicit Value(SQLType sql_type = SQLType::Null);
-    explicit Value(String);
+    explicit Value(DeprecatedString);
     explicit Value(int);
     explicit Value(u32);
     explicit Value(double);
@@ -49,7 +49,7 @@ public:
     [[nodiscard]] StringView type_name() const;
     [[nodiscard]] bool is_null() const;
 
-    [[nodiscard]] String to_string() const;
+    [[nodiscard]] DeprecatedString to_string() const;
     [[nodiscard]] Optional<int> to_int() const;
     [[nodiscard]] Optional<u32> to_u32() const;
     [[nodiscard]] Optional<double> to_double() const;
@@ -57,7 +57,7 @@ public:
     [[nodiscard]] Optional<Vector<Value>> to_vector() const;
 
     Value& operator=(Value);
-    Value& operator=(String);
+    Value& operator=(DeprecatedString);
     Value& operator=(int);
     Value& operator=(u32);
     Value& operator=(double);
@@ -110,7 +110,7 @@ private:
         Vector<Value> values;
     };
 
-    using ValueType = Variant<String, int, double, bool, TupleValue>;
+    using ValueType = Variant<DeprecatedString, int, double, bool, TupleValue>;
 
     static ResultOr<NonnullRefPtr<TupleDescriptor>> infer_tuple_descriptor(Vector<Value> const& values);
     Value(NonnullRefPtr<TupleDescriptor> descriptor, Vector<Value> values);

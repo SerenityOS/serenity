@@ -73,7 +73,7 @@ SourceRange ASTNode::source_range() const
     return m_source_code->range_from_offsets(m_start_offset, m_end_offset);
 }
 
-String ASTNode::class_name() const
+DeprecatedString ASTNode::class_name() const
 {
     // NOTE: We strip the "JS::" prefix.
     auto const* typename_ptr = typeid(*this).name();
@@ -82,7 +82,7 @@ String ASTNode::class_name() const
 
 static void print_indent(int indent)
 {
-    out("{}", String::repeated(' ', indent * 2));
+    out("{}", DeprecatedString::repeated(' ', indent * 2));
 }
 
 static void update_function_name(Value value, FlyString const& name)
@@ -94,10 +94,10 @@ static void update_function_name(Value value, FlyString const& name)
         static_cast<ECMAScriptFunctionObject&>(function).set_name(name);
 }
 
-static ThrowCompletionOr<String> get_function_property_name(PropertyKey key)
+static ThrowCompletionOr<DeprecatedString> get_function_property_name(PropertyKey key)
 {
     if (key.is_symbol())
-        return String::formatted("[{}]", key.as_symbol()->description());
+        return DeprecatedString::formatted("[{}]", key.as_symbol()->description());
     return key.to_string();
 }
 
@@ -416,7 +416,7 @@ Completion NewExpression::execute(Interpreter& interpreter) const
     return Value { TRY(construct(vm, constructor.as_function(), move(arg_list))) };
 }
 
-Optional<String> CallExpression::expression_string() const
+Optional<DeprecatedString> CallExpression::expression_string() const
 {
     if (is<Identifier>(*m_callee))
         return static_cast<Identifier const&>(*m_callee).string();
@@ -1592,23 +1592,23 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
     method_function.make_method(target);
 
-    auto set_function_name = [&](String prefix = "") {
+    auto set_function_name = [&](DeprecatedString prefix = "") {
         auto name = property_key_or_private_name.visit(
-            [&](PropertyKey const& property_key) -> String {
+            [&](PropertyKey const& property_key) -> DeprecatedString {
                 if (property_key.is_symbol()) {
                     auto description = property_key.as_symbol()->description();
                     if (description.is_empty())
                         return "";
-                    return String::formatted("[{}]", description);
+                    return DeprecatedString::formatted("[{}]", description);
                 } else {
                     return property_key.to_string();
                 }
             },
-            [&](PrivateName const& private_name) -> String {
+            [&](PrivateName const& private_name) -> DeprecatedString {
                 return private_name.description;
             });
 
-        update_function_name(method_value, String::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", name));
+        update_function_name(method_value, DeprecatedString::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", name));
     };
 
     if (property_key_or_private_name.has<PropertyKey>()) {
@@ -1701,16 +1701,16 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     if (m_initializer) {
         auto copy_initializer = m_initializer;
         auto name = property_key_or_private_name.visit(
-            [&](PropertyKey const& property_key) -> String {
+            [&](PropertyKey const& property_key) -> DeprecatedString {
                 return property_key.is_number() ? property_key.to_string() : property_key.to_string_or_symbol().to_display_string();
             },
-            [&](PrivateName const& private_name) -> String {
+            [&](PrivateName const& private_name) -> DeprecatedString {
                 return private_name.description;
             });
 
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
-        initializer = make_handle(ECMAScriptFunctionObject::create(realm, String::empty(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
+        initializer = make_handle(ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
         initializer->make_method(target);
     }
 
@@ -1755,7 +1755,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
     // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto* body_function = ECMAScriptFunctionObject::create(realm, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+    auto* body_function = ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
     body_function->make_method(home_object);
@@ -2392,7 +2392,7 @@ void BindingPattern::dump(int indent) const
     }
 }
 
-void FunctionNode::dump(int indent, String const& class_name) const
+void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
 {
     print_indent(indent);
     auto is_async = m_kind == FunctionKind::Async || m_kind == FunctionKind::AsyncGenerator;
@@ -3101,9 +3101,9 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
         auto property_key = TRY(PropertyKey::from_value(vm, key));
         auto name = TRY(get_function_property_name(property_key));
         if (property.type() == ObjectProperty::Type::Getter) {
-            name = String::formatted("get {}", name);
+            name = DeprecatedString::formatted("get {}", name);
         } else if (property.type() == ObjectProperty::Type::Setter) {
-            name = String::formatted("set {}", name);
+            name = DeprecatedString::formatted("set {}", name);
         }
 
         update_function_name(value, name);
@@ -3138,14 +3138,14 @@ void MemberExpression::dump(int indent) const
     m_property->dump(indent + 1);
 }
 
-String MemberExpression::to_string_approximation() const
+DeprecatedString MemberExpression::to_string_approximation() const
 {
-    String object_string = "<object>";
+    DeprecatedString object_string = "<object>";
     if (is<Identifier>(*m_object))
         object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
-        return String::formatted("{}[<computed>]", object_string);
-    return String::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
+        return DeprecatedString::formatted("{}[<computed>]", object_string);
+    return DeprecatedString::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
 }
 
 // 13.3.2.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation
@@ -3264,7 +3264,7 @@ ThrowCompletionOr<JS::Reference> OptionalChain::to_reference(Interpreter& interp
 
 void MetaProperty::dump(int indent) const
 {
-    String name;
+    DeprecatedString name;
     if (m_type == MetaProperty::Type::NewTarget)
         name = "new.target";
     else if (m_type == MetaProperty::Type::ImportMeta)
@@ -3391,7 +3391,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     if (!options_value.is_undefined()) {
         // a. If Type(options) is not Object,
         if (!options_value.is_object()) {
-            auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
+            auto* error = TypeError::create(realm, DeprecatedString::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
             MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
 
@@ -3407,7 +3407,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
         if (!assertion_object.is_undefined()) {
             // i. If Type(assertionsObj) is not Object,
             if (!assertion_object.is_object()) {
-                auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
+                auto* error = TypeError::create(realm, DeprecatedString::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
                 // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
                 MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
 
@@ -3432,7 +3432,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
                 // 3. If Type(value) is not String, then
                 if (!value.is_string()) {
-                    auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
+                    auto* error = TypeError::create(realm, DeprecatedString::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
                     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
                     MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
 
@@ -4504,11 +4504,11 @@ void ExportStatement::dump(int indent) const
     print_indent(indent + 1);
     outln("(ExportEntries)");
 
-    auto string_or_null = [](String const& string) -> String {
+    auto string_or_null = [](DeprecatedString const& string) -> DeprecatedString {
         if (string.is_empty()) {
             return "null";
         }
-        return String::formatted("\"{}\"", string);
+        return DeprecatedString::formatted("\"{}\"", string);
     };
 
     for (auto& entry : m_entries) {
@@ -4816,7 +4816,7 @@ ModuleRequest::ModuleRequest(FlyString module_specifier_, Vector<Assertion> asse
     });
 }
 
-String const& SourceRange::filename() const
+DeprecatedString const& SourceRange::filename() const
 {
     return code->filename();
 }

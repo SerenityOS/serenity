@@ -13,7 +13,7 @@
 
 namespace PixelPaint {
 
-EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offset, Guide::Orientation orientation)
+EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, DeprecatedString const& offset, Guide::Orientation orientation)
     : Dialog(parent_window)
     , m_offset(offset)
     , m_orientation(orientation)

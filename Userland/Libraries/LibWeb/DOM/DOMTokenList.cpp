@@ -15,20 +15,20 @@
 namespace {
 
 // https://infra.spec.whatwg.org/#set-append
-inline void append_to_ordered_set(Vector<String>& set, String item)
+inline void append_to_ordered_set(Vector<DeprecatedString>& set, DeprecatedString item)
 {
     if (!set.contains_slow(item))
         set.append(move(item));
 }
 
 // https://infra.spec.whatwg.org/#list-remove
-inline void remove_from_ordered_set(Vector<String>& set, StringView item)
+inline void remove_from_ordered_set(Vector<DeprecatedString>& set, StringView item)
 {
     set.remove_first_matching([&](auto const& value) { return value == item; });
 }
 
 // https://infra.spec.whatwg.org/#set-replace
-inline void replace_in_ordered_set(Vector<String>& set, StringView item, String replacement)
+inline void replace_in_ordered_set(Vector<DeprecatedString>& set, StringView item, DeprecatedString replacement)
 {
     auto item_index = set.find_first_index(item);
     VERIFY(item_index.has_value());
@@ -88,9 +88,9 @@ bool DOMTokenList::is_supported_property_index(u32 index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-item
-String const& DOMTokenList::item(size_t index) const
+DeprecatedString const& DOMTokenList::item(size_t index) const
 {
-    static const String null_string {};
+    static const DeprecatedString null_string {};
 
     // 1. If index is equal to or greater than this’s token set’s size, then return null.
     if (index >= m_token_set.size())
@@ -107,7 +107,7 @@ bool DOMTokenList::contains(StringView token)
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-add
-WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
+WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<DeprecatedString> const& tokens)
 {
     // 1. For each token in tokens:
     for (auto const& token : tokens) {
@@ -125,7 +125,7 @@ WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-remove
-WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
+WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<DeprecatedString> const& tokens)
 {
     // 1. For each token in tokens:
     for (auto const& token : tokens) {
@@ -143,7 +143,7 @@ WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-toggle
-WebIDL::ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<bool> force)
+WebIDL::ExceptionOr<bool> DOMTokenList::toggle(DeprecatedString const& token, Optional<bool> force)
 {
     // 1. If token is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If token contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
@@ -174,7 +174,7 @@ WebIDL::ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<boo
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-replace
-WebIDL::ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_token)
+WebIDL::ExceptionOr<bool> DOMTokenList::replace(DeprecatedString const& token, DeprecatedString const& new_token)
 {
     // 1. If either token or newToken is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If either token or newToken contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
@@ -204,7 +204,7 @@ WebIDL::ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView tok
     // 1. If the associated attribute’s local name does not define supported tokens, throw a TypeError.
     return WebIDL::SimpleException {
         WebIDL::SimpleExceptionType::TypeError,
-        String::formatted("Attribute {} does not define any supported tokens", m_associated_attribute)
+        DeprecatedString::formatted("Attribute {} does not define any supported tokens", m_associated_attribute)
     };
 
     // 2. Let lowercase token be a copy of token, in ASCII lowercase.
@@ -213,7 +213,7 @@ WebIDL::ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView tok
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-value
-String DOMTokenList::value() const
+DeprecatedString DOMTokenList::value() const
 {
     StringBuilder builder;
     builder.join(' ', m_token_set);
@@ -221,7 +221,7 @@ String DOMTokenList::value() const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-set-value%E2%91%A2
-void DOMTokenList::set_value(String value)
+void DOMTokenList::set_value(DeprecatedString value)
 {
     JS::GCPtr<DOM::Element> associated_element = m_associated_element.ptr();
     if (!associated_element)

@@ -41,20 +41,20 @@ public:
         return q;
     }
 
-    String const& quote() const { return m_quote; }
-    String const& author() const { return m_author; }
+    DeprecatedString const& quote() const { return m_quote; }
+    DeprecatedString const& author() const { return m_author; }
     u64 const& utc_time() const { return m_utc_time; }
-    String const& url() const { return m_url; }
-    Optional<String> const& context() const { return m_context; }
+    DeprecatedString const& url() const { return m_url; }
+    Optional<DeprecatedString> const& context() const { return m_context; }
 
 private:
     Quote() = default;
 
-    String m_quote;
-    String m_author;
+    DeprecatedString m_quote;
+    DeprecatedString m_author;
     u64 m_utc_time;
-    String m_url;
-    Optional<String> m_context;
+    DeprecatedString m_url;
+    Optional<DeprecatedString> m_context;
 };
 
 static Vector<Quote> parse_all(JsonArray const& array)

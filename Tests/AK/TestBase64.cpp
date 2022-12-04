@@ -7,7 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Base64.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <string.h>
 
 TEST_CASE(test_decode)
@@ -16,7 +16,7 @@ TEST_CASE(test_decode)
         auto decoded_option = decode_base64(input);
         EXPECT(!decoded_option.is_error());
         auto decoded = decoded_option.release_value();
-        EXPECT(String::copy(decoded) == expected);
+        EXPECT(DeprecatedString::copy(decoded) == expected);
         EXPECT(expected.length() <= calculate_base64_decoded_length(input.bytes()));
     };
 
@@ -43,7 +43,7 @@ TEST_CASE(test_encode)
 {
     auto encode_equal = [&](StringView input, StringView expected) {
         auto encoded = encode_base64(input.bytes());
-        EXPECT(encoded == String(expected));
+        EXPECT(encoded == DeprecatedString(expected));
         EXPECT_EQ(expected.length(), calculate_base64_encoded_length(input.bytes()));
     };
 

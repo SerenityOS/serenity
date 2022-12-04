@@ -32,7 +32,7 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
         auto line = m_message_editor->cursor().line() + 1;
         auto col = m_message_editor->cursor().column();
 
-        m_line_and_col_label->set_text(String::formatted("Line: {}, Col: {}", line, col));
+        m_line_and_col_label->set_text(DeprecatedString::formatted("Line: {}, Col: {}", line, col));
     };
 
     m_commit_button->set_enabled(!m_message_editor->text().is_empty() && on_commit);

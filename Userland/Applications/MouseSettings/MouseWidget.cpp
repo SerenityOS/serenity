@@ -89,10 +89,10 @@ void MouseWidget::reset_default_values()
 
 void MouseWidget::update_speed_label()
 {
-    m_speed_label->set_text(String::formatted("{} %", m_speed_slider->value()));
+    m_speed_label->set_text(DeprecatedString::formatted("{} %", m_speed_slider->value()));
 }
 
 void MouseWidget::update_double_click_speed_label()
 {
-    m_double_click_speed_label->set_text(String::formatted("{} ms", m_double_click_speed_slider->value()));
+    m_double_click_speed_label->set_text(DeprecatedString::formatted("{} ms", m_double_click_speed_slider->value()));
 }

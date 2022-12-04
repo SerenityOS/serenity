@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashTable.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibXML/FundamentalTypes.h>
@@ -73,7 +73,7 @@ struct AttributeListDeclaration {
     };
     struct Enumeration {
         // FIXME: NMToken
-        HashTable<String> tokens;
+        HashTable<DeprecatedString> tokens;
     };
     using Type = Variant<StringType, TokenizedType, NotationType, Enumeration>;
 
@@ -82,10 +82,10 @@ struct AttributeListDeclaration {
     struct Implied {
     };
     struct Fixed {
-        String value;
+        DeprecatedString value;
     };
     struct DefaultValue {
-        String value;
+        DeprecatedString value;
     };
 
     using Default = Variant<Required, Implied, Fixed, DefaultValue>;
@@ -100,11 +100,11 @@ struct AttributeListDeclaration {
 };
 
 struct PublicID {
-    String public_literal;
+    DeprecatedString public_literal;
 };
 
 struct SystemID {
-    String system_literal;
+    DeprecatedString system_literal;
 };
 
 struct ExternalID {
@@ -119,12 +119,12 @@ struct EntityDefinition {
 
 struct GEDeclaration {
     Name name;
-    Variant<String, EntityDefinition> definition;
+    Variant<DeprecatedString, EntityDefinition> definition;
 };
 
 struct PEDeclaration {
     Name name;
-    Variant<String, ExternalID> definition;
+    Variant<DeprecatedString, ExternalID> definition;
 };
 
 using EntityDeclaration = Variant<GEDeclaration, PEDeclaration>;

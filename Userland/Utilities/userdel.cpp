@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
@@ -153,7 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (access(target_account.home_directory().characters(), F_OK) == -1)
             return 0;
 
-        String real_path = Core::File::real_path_for(target_account.home_directory());
+        DeprecatedString real_path = Core::File::real_path_for(target_account.home_directory());
 
         if (real_path == "/") {
             warnln("home directory is /, not deleted!");

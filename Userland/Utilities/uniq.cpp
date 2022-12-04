@@ -18,9 +18,9 @@ static ErrorOr<void> write_line_content(StringView line, size_t count, bool dupl
         return {};
 
     if (print_count)
-        TRY(outfile.write(String::formatted("{} {}\n", count, line).bytes()));
+        TRY(outfile.write(DeprecatedString::formatted("{} {}\n", count, line).bytes()));
     else
-        TRY(outfile.write(String::formatted("{}\n", line).bytes()));
+        TRY(outfile.write(DeprecatedString::formatted("{}\n", line).bytes()));
     return {};
 }
 

@@ -12,13 +12,13 @@
 #include <LibGfx/Forward.h>
 #include <errno_codes.h>
 
-Presentation::Presentation(Gfx::IntSize normative_size, HashMap<String, String> metadata)
+Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
     : m_normative_size(normative_size)
     , m_metadata(std::move(metadata))
 {
 }
 
-NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<String, String> metadata)
+NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
 {
     return NonnullOwnPtr<Presentation>(NonnullOwnPtr<Presentation>::Adopt, *new Presentation(normative_size, move(metadata)));
 }
@@ -107,9 +107,9 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     return presentation;
 }
 
-HashMap<String, String> Presentation::parse_metadata(JsonObject const& metadata_object)
+HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObject const& metadata_object)
 {
-    HashMap<String, String> metadata;
+    HashMap<DeprecatedString, DeprecatedString> metadata;
 
     metadata_object.for_each_member([&](auto const& key, auto const& value) {
         metadata.set(key, value.to_string());

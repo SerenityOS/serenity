@@ -135,7 +135,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString 
 JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyString const& nullable_namespace, FlyString const& local_name)
 {
     // 1. If namespace is the empty string, set it to null.
-    String namespace_ = nullable_namespace;
+    DeprecatedString namespace_ = nullable_namespace;
     if (namespace_.is_empty())
         namespace_ = {};
 
@@ -167,7 +167,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyStri
 }
 
 // https://dom.spec.whatwg.org/#dom-parentnode-prepend
-WebIDL::ExceptionOr<void> ParentNode::prepend(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+WebIDL::ExceptionOr<void> ParentNode::prepend(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
     auto node = TRY(convert_nodes_to_single_node(nodes, document()));
@@ -178,7 +178,7 @@ WebIDL::ExceptionOr<void> ParentNode::prepend(Vector<Variant<JS::Handle<Node>, S
     return {};
 }
 
-WebIDL::ExceptionOr<void> ParentNode::append(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+WebIDL::ExceptionOr<void> ParentNode::append(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
     auto node = TRY(convert_nodes_to_single_node(nodes, document()));
@@ -189,7 +189,7 @@ WebIDL::ExceptionOr<void> ParentNode::append(Vector<Variant<JS::Handle<Node>, St
     return {};
 }
 
-WebIDL::ExceptionOr<void> ParentNode::replace_children(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+WebIDL::ExceptionOr<void> ParentNode::replace_children(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
     auto node = TRY(convert_nodes_to_single_node(nodes, document()));

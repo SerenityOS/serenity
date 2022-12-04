@@ -151,7 +151,7 @@ void ComboBox::set_editor_placeholder(StringView placeholder)
     m_editor->set_placeholder(placeholder);
 }
 
-String const& ComboBox::editor_placeholder() const
+DeprecatedString const& ComboBox::editor_placeholder() const
 {
     return m_editor->placeholder();
 }
@@ -269,12 +269,12 @@ void ComboBox::close()
     m_list_window->hide();
 }
 
-String ComboBox::text() const
+DeprecatedString ComboBox::text() const
 {
     return m_editor->text();
 }
 
-void ComboBox::set_text(String const& text, AllowCallback allow_callback)
+void ComboBox::set_text(DeprecatedString const& text, AllowCallback allow_callback)
 {
     m_editor->set_text(text, allow_callback);
 }

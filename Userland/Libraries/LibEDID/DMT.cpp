@@ -7,7 +7,7 @@
 #include <LibEDID/DMT.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace EDID {
@@ -120,11 +120,11 @@ u32 DMT::MonitorTiming::refresh_rate_hz() const
 }
 
 #ifndef KERNEL
-String DMT::MonitorTiming::name() const
+DeprecatedString DMT::MonitorTiming::name() const
 {
     if (scan_type == ScanType::Interlaced)
-        return String::formatted("{} x {} @ {}Hz (Interlaced)", horizontal_pixels, vertical_lines, refresh_rate_hz());
-    return String::formatted("{} x {} @ {}Hz", horizontal_pixels, vertical_lines, refresh_rate_hz());
+        return DeprecatedString::formatted("{} x {} @ {}Hz (Interlaced)", horizontal_pixels, vertical_lines, refresh_rate_hz());
+    return DeprecatedString::formatted("{} x {} @ {}Hz", horizontal_pixels, vertical_lines, refresh_rate_hz());
 }
 #endif
 

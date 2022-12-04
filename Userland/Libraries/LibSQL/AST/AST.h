@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Result.h>
@@ -55,53 +55,53 @@ private:
 
 class TypeName : public ASTNode {
 public:
-    TypeName(String name, NonnullRefPtrVector<SignedNumber> signed_numbers)
+    TypeName(DeprecatedString name, NonnullRefPtrVector<SignedNumber> signed_numbers)
         : m_name(move(name))
         , m_signed_numbers(move(signed_numbers))
     {
         VERIFY(m_signed_numbers.size() <= 2);
     }
 
-    String const& name() const { return m_name; }
+    DeprecatedString const& name() const { return m_name; }
     NonnullRefPtrVector<SignedNumber> const& signed_numbers() const { return m_signed_numbers; }
 
 private:
-    String m_name;
+    DeprecatedString m_name;
     NonnullRefPtrVector<SignedNumber> m_signed_numbers;
 };
 
 class ColumnDefinition : public ASTNode {
 public:
-    ColumnDefinition(String name, NonnullRefPtr<TypeName> type_name)
+    ColumnDefinition(DeprecatedString name, NonnullRefPtr<TypeName> type_name)
         : m_name(move(name))
         , m_type_name(move(type_name))
     {
     }
 
-    String const& name() const { return m_name; }
+    DeprecatedString const& name() const { return m_name; }
     NonnullRefPtr<TypeName> const& type_name() const { return m_type_name; }
 
 private:
-    String m_name;
+    DeprecatedString m_name;
     NonnullRefPtr<TypeName> m_type_name;
 };
 
 class CommonTableExpression : public ASTNode {
 public:
-    CommonTableExpression(String table_name, Vector<String> column_names, NonnullRefPtr<Select> select_statement)
+    CommonTableExpression(DeprecatedString table_name, Vector<DeprecatedString> column_names, NonnullRefPtr<Select> select_statement)
         : m_table_name(move(table_name))
         , m_column_names(move(column_names))
         , m_select_statement(move(select_statement))
     {
     }
 
-    String const& table_name() const { return m_table_name; }
-    Vector<String> const& column_names() const { return m_column_names; }
+    DeprecatedString const& table_name() const { return m_table_name; }
+    Vector<DeprecatedString> const& column_names() const { return m_column_names; }
     NonnullRefPtr<Select> const& select_statement() const { return m_select_statement; }
 
 private:
-    String m_table_name;
-    Vector<String> m_column_names;
+    DeprecatedString m_table_name;
+    Vector<DeprecatedString> m_column_names;
     NonnullRefPtr<Select> m_select_statement;
 };
 
@@ -124,28 +124,28 @@ private:
 
 class QualifiedTableName : public ASTNode {
 public:
-    QualifiedTableName(String schema_name, String table_name, String alias)
+    QualifiedTableName(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_alias(move(alias))
     {
     }
 
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
-    String const& alias() const { return m_alias; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
+    DeprecatedString const& alias() const { return m_alias; }
 
 private:
-    String m_schema_name;
-    String m_table_name;
-    String m_alias;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
+    DeprecatedString m_alias;
 };
 
 class ReturningClause : public ASTNode {
 public:
     struct ColumnClause {
         NonnullRefPtr<Expression> expression;
-        String column_alias;
+        DeprecatedString column_alias;
     };
 
     ReturningClause() = default;
@@ -172,13 +172,13 @@ class ResultColumn : public ASTNode {
 public:
     ResultColumn() = default;
 
-    explicit ResultColumn(String table_name)
+    explicit ResultColumn(DeprecatedString table_name)
         : m_type(ResultType::Table)
         , m_table_name(move(table_name))
     {
     }
 
-    ResultColumn(NonnullRefPtr<Expression> expression, String column_alias)
+    ResultColumn(NonnullRefPtr<Expression> expression, DeprecatedString column_alias)
         : m_type(ResultType::Expression)
         , m_expression(move(expression))
         , m_column_alias(move(column_alias))
@@ -188,19 +188,19 @@ public:
     ResultType type() const { return m_type; }
 
     bool select_from_table() const { return !m_table_name.is_null(); }
-    String const& table_name() const { return m_table_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
 
     bool select_from_expression() const { return !m_expression.is_null(); }
     RefPtr<Expression> const& expression() const { return m_expression; }
-    String const& column_alias() const { return m_column_alias; }
+    DeprecatedString const& column_alias() const { return m_column_alias; }
 
 private:
     ResultType m_type { ResultType::All };
 
-    String m_table_name {};
+    DeprecatedString m_table_name {};
 
     RefPtr<Expression> m_expression {};
-    String m_column_alias {};
+    DeprecatedString m_column_alias {};
 };
 
 class GroupByClause : public ASTNode {
@@ -224,7 +224,7 @@ class TableOrSubquery : public ASTNode {
 public:
     TableOrSubquery() = default;
 
-    TableOrSubquery(String schema_name, String table_name, String table_alias)
+    TableOrSubquery(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString table_alias)
         : m_is_table(true)
         , m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
@@ -239,18 +239,18 @@ public:
     }
 
     bool is_table() const { return m_is_table; }
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
-    String const& table_alias() const { return m_table_alias; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
+    DeprecatedString const& table_alias() const { return m_table_alias; }
 
     bool is_subquery() const { return m_is_subquery; }
     NonnullRefPtrVector<TableOrSubquery> const& subqueries() const { return m_subqueries; }
 
 private:
     bool m_is_table { false };
-    String m_schema_name {};
-    String m_table_name {};
-    String m_table_alias {};
+    DeprecatedString m_schema_name {};
+    DeprecatedString m_table_name {};
+    DeprecatedString m_table_alias {};
 
     bool m_is_subquery { false };
     NonnullRefPtrVector<TableOrSubquery> m_subqueries {};
@@ -258,7 +258,7 @@ private:
 
 class OrderingTerm : public ASTNode {
 public:
-    OrderingTerm(NonnullRefPtr<Expression> expression, String collation_name, Order order, Nulls nulls)
+    OrderingTerm(NonnullRefPtr<Expression> expression, DeprecatedString collation_name, Order order, Nulls nulls)
         : m_expression(move(expression))
         , m_collation_name(move(collation_name))
         , m_order(order)
@@ -267,13 +267,13 @@ public:
     }
 
     NonnullRefPtr<Expression> const& expression() const { return m_expression; }
-    String const& collation_name() const { return m_collation_name; }
+    DeprecatedString const& collation_name() const { return m_collation_name; }
     Order order() const { return m_order; }
     Nulls nulls() const { return m_nulls; }
 
 private:
     NonnullRefPtr<Expression> m_expression;
-    String m_collation_name;
+    DeprecatedString m_collation_name;
     Order m_order;
     Nulls m_nulls;
 };
@@ -331,29 +331,29 @@ private:
 
 class StringLiteral : public Expression {
 public:
-    explicit StringLiteral(String value)
+    explicit StringLiteral(DeprecatedString value)
         : m_value(move(value))
     {
     }
 
-    String const& value() const { return m_value; }
+    DeprecatedString const& value() const { return m_value; }
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
-    String m_value;
+    DeprecatedString m_value;
 };
 
 class BlobLiteral : public Expression {
 public:
-    explicit BlobLiteral(String value)
+    explicit BlobLiteral(DeprecatedString value)
         : m_value(move(value))
     {
     }
 
-    String const& value() const { return m_value; }
+    DeprecatedString const& value() const { return m_value; }
 
 private:
-    String m_value;
+    DeprecatedString m_value;
 };
 
 class NullLiteral : public Expression {
@@ -425,22 +425,22 @@ private:
 
 class ColumnNameExpression : public Expression {
 public:
-    ColumnNameExpression(String schema_name, String table_name, String column_name)
+    ColumnNameExpression(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString column_name)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_column_name(move(column_name))
     {
     }
 
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
-    String const& column_name() const { return m_column_name; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
+    DeprecatedString const& column_name() const { return m_column_name; }
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
-    String m_schema_name;
-    String m_table_name;
-    String m_column_name;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
+    DeprecatedString m_column_name;
 };
 
 #define __enum_UnaryOperator(S) \
@@ -611,16 +611,16 @@ private:
 
 class CollateExpression : public NestedExpression {
 public:
-    CollateExpression(NonnullRefPtr<Expression> expression, String collation_name)
+    CollateExpression(NonnullRefPtr<Expression> expression, DeprecatedString collation_name)
         : NestedExpression(move(expression))
         , m_collation_name(move(collation_name))
     {
     }
 
-    String const& collation_name() const { return m_collation_name; }
+    DeprecatedString const& collation_name() const { return m_collation_name; }
 
 private:
-    String m_collation_name;
+    DeprecatedString m_collation_name;
 };
 
 enum class MatchOperator {
@@ -708,19 +708,19 @@ private:
 
 class InTableExpression : public InvertibleNestedExpression {
 public:
-    InTableExpression(NonnullRefPtr<Expression> expression, String schema_name, String table_name, bool invert_expression)
+    InTableExpression(NonnullRefPtr<Expression> expression, DeprecatedString schema_name, DeprecatedString table_name, bool invert_expression)
         : InvertibleNestedExpression(move(expression), invert_expression)
         , m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
     {
     }
 
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
 
 private:
-    String m_schema_name;
-    String m_table_name;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
 };
 
 //==================================================================================================
@@ -742,25 +742,25 @@ class ErrorStatement final : public Statement {
 
 class CreateSchema : public Statement {
 public:
-    CreateSchema(String schema_name, bool is_error_if_schema_exists)
+    CreateSchema(DeprecatedString schema_name, bool is_error_if_schema_exists)
         : m_schema_name(move(schema_name))
         , m_is_error_if_schema_exists(is_error_if_schema_exists)
     {
     }
 
-    String const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
     bool is_error_if_schema_exists() const { return m_is_error_if_schema_exists; }
 
     ResultOr<ResultSet> execute(ExecutionContext&) const override;
 
 private:
-    String m_schema_name;
+    DeprecatedString m_schema_name;
     bool m_is_error_if_schema_exists;
 };
 
 class CreateTable : public Statement {
 public:
-    CreateTable(String schema_name, String table_name, RefPtr<Select> select_statement, bool is_temporary, bool is_error_if_table_exists)
+    CreateTable(DeprecatedString schema_name, DeprecatedString table_name, RefPtr<Select> select_statement, bool is_temporary, bool is_error_if_table_exists)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_select_statement(move(select_statement))
@@ -769,7 +769,7 @@ public:
     {
     }
 
-    CreateTable(String schema_name, String table_name, NonnullRefPtrVector<ColumnDefinition> columns, bool is_temporary, bool is_error_if_table_exists)
+    CreateTable(DeprecatedString schema_name, DeprecatedString table_name, NonnullRefPtrVector<ColumnDefinition> columns, bool is_temporary, bool is_error_if_table_exists)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_columns(move(columns))
@@ -778,8 +778,8 @@ public:
     {
     }
 
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
 
     bool has_selection() const { return !m_select_statement.is_null(); }
     RefPtr<Select> const& select_statement() const { return m_select_statement; }
@@ -793,8 +793,8 @@ public:
     ResultOr<ResultSet> execute(ExecutionContext&) const override;
 
 private:
-    String m_schema_name;
-    String m_table_name;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
     RefPtr<Select> m_select_statement;
     NonnullRefPtrVector<ColumnDefinition> m_columns;
     bool m_is_temporary;
@@ -803,55 +803,55 @@ private:
 
 class AlterTable : public Statement {
 public:
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
 
 protected:
-    AlterTable(String schema_name, String table_name)
+    AlterTable(DeprecatedString schema_name, DeprecatedString table_name)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
     {
     }
 
 private:
-    String m_schema_name;
-    String m_table_name;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
 };
 
 class RenameTable : public AlterTable {
 public:
-    RenameTable(String schema_name, String table_name, String new_table_name)
+    RenameTable(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString new_table_name)
         : AlterTable(move(schema_name), move(table_name))
         , m_new_table_name(move(new_table_name))
     {
     }
 
-    String const& new_table_name() const { return m_new_table_name; }
+    DeprecatedString const& new_table_name() const { return m_new_table_name; }
 
 private:
-    String m_new_table_name;
+    DeprecatedString m_new_table_name;
 };
 
 class RenameColumn : public AlterTable {
 public:
-    RenameColumn(String schema_name, String table_name, String column_name, String new_column_name)
+    RenameColumn(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString column_name, DeprecatedString new_column_name)
         : AlterTable(move(schema_name), move(table_name))
         , m_column_name(move(column_name))
         , m_new_column_name(move(new_column_name))
     {
     }
 
-    String const& column_name() const { return m_column_name; }
-    String const& new_column_name() const { return m_new_column_name; }
+    DeprecatedString const& column_name() const { return m_column_name; }
+    DeprecatedString const& new_column_name() const { return m_new_column_name; }
 
 private:
-    String m_column_name;
-    String m_new_column_name;
+    DeprecatedString m_column_name;
+    DeprecatedString m_new_column_name;
 };
 
 class AddColumn : public AlterTable {
 public:
-    AddColumn(String schema_name, String table_name, NonnullRefPtr<ColumnDefinition> column)
+    AddColumn(DeprecatedString schema_name, DeprecatedString table_name, NonnullRefPtr<ColumnDefinition> column)
         : AlterTable(move(schema_name), move(table_name))
         , m_column(move(column))
     {
@@ -865,34 +865,34 @@ private:
 
 class DropColumn : public AlterTable {
 public:
-    DropColumn(String schema_name, String table_name, String column_name)
+    DropColumn(DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString column_name)
         : AlterTable(move(schema_name), move(table_name))
         , m_column_name(move(column_name))
     {
     }
 
-    String const& column_name() const { return m_column_name; }
+    DeprecatedString const& column_name() const { return m_column_name; }
 
 private:
-    String m_column_name;
+    DeprecatedString m_column_name;
 };
 
 class DropTable : public Statement {
 public:
-    DropTable(String schema_name, String table_name, bool is_error_if_table_does_not_exist)
+    DropTable(DeprecatedString schema_name, DeprecatedString table_name, bool is_error_if_table_does_not_exist)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_is_error_if_table_does_not_exist(is_error_if_table_does_not_exist)
     {
     }
 
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
     bool is_error_if_table_does_not_exist() const { return m_is_error_if_table_does_not_exist; }
 
 private:
-    String m_schema_name;
-    String m_table_name;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
     bool m_is_error_if_table_does_not_exist;
 };
 
@@ -906,7 +906,7 @@ enum class ConflictResolution {
 
 class Insert : public Statement {
 public:
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, String schema_name, String table_name, String alias, Vector<String> column_names, NonnullRefPtrVector<ChainedExpression> chained_expressions)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names, NonnullRefPtrVector<ChainedExpression> chained_expressions)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -917,7 +917,7 @@ public:
     {
     }
 
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, String schema_name, String table_name, String alias, Vector<String> column_names, RefPtr<Select> select_statement)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names, RefPtr<Select> select_statement)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -928,7 +928,7 @@ public:
     {
     }
 
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, String schema_name, String table_name, String alias, Vector<String> column_names)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -940,10 +940,10 @@ public:
 
     RefPtr<CommonTableExpressionList> const& common_table_expression_list() const { return m_common_table_expression_list; }
     ConflictResolution conflict_resolution() const { return m_conflict_resolution; }
-    String const& schema_name() const { return m_schema_name; }
-    String const& table_name() const { return m_table_name; }
-    String const& alias() const { return m_alias; }
-    Vector<String> const& column_names() const { return m_column_names; }
+    DeprecatedString const& schema_name() const { return m_schema_name; }
+    DeprecatedString const& table_name() const { return m_table_name; }
+    DeprecatedString const& alias() const { return m_alias; }
+    Vector<DeprecatedString> const& column_names() const { return m_column_names; }
 
     bool default_values() const { return !has_expressions() && !has_selection(); };
 
@@ -958,10 +958,10 @@ public:
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
     ConflictResolution m_conflict_resolution;
-    String m_schema_name;
-    String m_table_name;
-    String m_alias;
-    Vector<String> m_column_names;
+    DeprecatedString m_schema_name;
+    DeprecatedString m_table_name;
+    DeprecatedString m_alias;
+    Vector<DeprecatedString> m_column_names;
     NonnullRefPtrVector<ChainedExpression> m_chained_expressions;
     RefPtr<Select> m_select_statement;
 };
@@ -969,7 +969,7 @@ private:
 class Update : public Statement {
 public:
     struct UpdateColumns {
-        Vector<String> column_names;
+        Vector<DeprecatedString> column_names;
         NonnullRefPtr<Expression> expression;
     };
 

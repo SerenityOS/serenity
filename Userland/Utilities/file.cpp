@@ -20,13 +20,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static Optional<String> description_only(String description, [[maybe_unused]] String const& path)
+static Optional<DeprecatedString> description_only(DeprecatedString description, [[maybe_unused]] DeprecatedString const& path)
 {
     return description;
 }
 
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
-static Optional<String> image_details(String const& description, String const& path)
+static Optional<DeprecatedString> image_details(DeprecatedString const& description, DeprecatedString const& path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
@@ -37,10 +37,10 @@ static Optional<String> image_details(String const& description, String const& p
     if (!image_decoder)
         return {};
 
-    return String::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
+    return DeprecatedString::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
 }
 
-static Optional<String> gzip_details(String description, String const& path)
+static Optional<DeprecatedString> gzip_details(DeprecatedString description, DeprecatedString const& path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
@@ -54,10 +54,10 @@ static Optional<String> gzip_details(String description, String const& path)
     if (!gzip_details.has_value())
         return {};
 
-    return String::formatted("{}, {}", description, gzip_details.value());
+    return DeprecatedString::formatted("{}, {}", description, gzip_details.value());
 }
 
-static Optional<String> elf_details(String description, String const& path)
+static Optional<DeprecatedString> elf_details(DeprecatedString description, DeprecatedString const& path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
@@ -80,9 +80,9 @@ static Optional<String> elf_details(String description, String const& path)
     auto byteorder = header.e_ident[EI_DATA] == ELFDATA2LSB ? "LSB" : "MSB";
 
     bool is_dynamically_linked = !interpreter_path.is_empty();
-    String dynamic_section = String::formatted(", dynamically linked, interpreter {}", interpreter_path);
+    DeprecatedString dynamic_section = DeprecatedString::formatted(", dynamically linked, interpreter {}", interpreter_path);
 
-    return String::formatted("{} {}-bit {} {}, {}, version {} ({}){}",
+    return DeprecatedString::formatted("{} {}-bit {} {}, {}, version {} ({}){}",
         description,
         bitness,
         byteorder,
@@ -130,11 +130,11 @@ static Optional<String> elf_details(String description, String const& path)
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown", "Markdown document", description_only)                       \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript", "POSIX shell script text executable", description_only)
 
-static Optional<String> get_description_from_mime_type(String const& mime, String const& path)
+static Optional<DeprecatedString> get_description_from_mime_type(DeprecatedString const& mime, DeprecatedString const& path)
 {
 #define __ENUMERATE_MIME_TYPE_DESCRIPTION(mime_type, description, details) \
-    if (String(mime_type) == mime)                                         \
-        return details(String(description), path);
+    if (DeprecatedString(mime_type) == mime)                               \
+        return details(DeprecatedString(description), path);
     ENUMERATE_MIME_TYPE_DESCRIPTIONS;
 #undef __ENUMERATE_MIME_TYPE_DESCRIPTION
     return {};
@@ -144,7 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
     bool flag_mime_only = false;
 
     Core::ArgsParser args_parser;
@@ -177,7 +177,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto bytes = TRY(file->read(buffer));
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
             auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes).value_or(file_name_guess);
-            auto human_readable_description = get_description_from_mime_type(mime_type, String(path)).value_or(mime_type);
+            auto human_readable_description = get_description_from_mime_type(mime_type, DeprecatedString(path)).value_or(mime_type);
             outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
         }
     }

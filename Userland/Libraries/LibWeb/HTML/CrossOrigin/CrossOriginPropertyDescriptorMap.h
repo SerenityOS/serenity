@@ -13,7 +13,7 @@
 namespace Web::HTML {
 
 struct CrossOriginProperty {
-    String property;
+    DeprecatedString property;
     Optional<bool> needs_get {};
     Optional<bool> needs_set {};
 };

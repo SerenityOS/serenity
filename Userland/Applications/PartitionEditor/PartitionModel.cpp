@@ -12,7 +12,7 @@
 
 namespace PartitionEditor {
 
-String PartitionModel::column_name(int column) const
+DeprecatedString PartitionModel::column_name(int column) const
 {
     switch (column) {
     case Column::Partition:
@@ -60,7 +60,7 @@ GUI::Variant PartitionModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
     return {};
 }
 
-ErrorOr<void> PartitionModel::set_device_path(String const& path)
+ErrorOr<void> PartitionModel::set_device_path(DeprecatedString const& path)
 {
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 

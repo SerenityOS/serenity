@@ -34,10 +34,10 @@ ErrorOr<void> GalleryWidget::load_basic_model_tab()
 
     m_basic_model->on_invalidate = [&] {
         m_invalidation_count++;
-        m_statusbar->set_text(String::formatted("Times invalidated: {}", m_invalidation_count));
+        m_statusbar->set_text(DeprecatedString::formatted("Times invalidated: {}", m_invalidation_count));
     };
 
-    m_statusbar->set_text(String::formatted("Times invalidated: {}", m_invalidation_count));
+    m_statusbar->set_text(DeprecatedString::formatted("Times invalidated: {}", m_invalidation_count));
 
     m_basic_model->add_item("Well...");
     m_basic_model->add_item("...hello...");

@@ -13,7 +13,7 @@
 
 namespace Markdown {
 
-String CodeBlock::render_to_html(bool) const
+DeprecatedString CodeBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -46,7 +46,7 @@ String CodeBlock::render_to_html(bool) const
     return builder.build();
 }
 
-String CodeBlock::render_for_terminal(size_t) const
+DeprecatedString CodeBlock::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 

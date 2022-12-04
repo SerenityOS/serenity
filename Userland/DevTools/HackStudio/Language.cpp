@@ -37,7 +37,7 @@ Language language_from_file(LexicalPath const& file)
     return Language::Unknown;
 }
 
-Language language_from_name(String const& name)
+Language language_from_name(DeprecatedString const& name)
 {
     if (name == "Cpp")
         return Language::Cpp;
@@ -51,7 +51,7 @@ Language language_from_name(String const& name)
     return Language::Unknown;
 }
 
-String language_name_from_file(LexicalPath const& file)
+DeprecatedString language_name_from_file(LexicalPath const& file)
 {
     if (file.title() == "COMMIT_EDITMSG")
         return "GitCommit";

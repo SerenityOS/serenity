@@ -7,6 +7,7 @@
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Find.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
@@ -17,7 +18,6 @@
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Traits.h>
 #include <AK/Utf8View.h>
@@ -487,7 +487,7 @@ struct AK::Formatter<Locale::HourCycle> : Formatter<FormatString> {
 };
 
 struct LocaleData {
-    HashMap<String, size_t> calendars;
+    HashMap<DeprecatedString, size_t> calendars;
 
     size_t time_zones { 0 };
     size_t time_zone_formats { 0 };
@@ -513,27 +513,27 @@ struct CLDR {
     UniqueStorage<DayPeriodList> unique_day_period_lists;
     UniqueStorage<HourCycleList> unique_hour_cycle_lists;
 
-    HashMap<String, LocaleData> locales;
+    HashMap<DeprecatedString, LocaleData> locales;
 
-    HashMap<String, size_t> hour_cycles;
-    Vector<String> hour_cycle_regions;
+    HashMap<DeprecatedString, size_t> hour_cycles;
+    Vector<DeprecatedString> hour_cycle_regions;
 
-    HashMap<String, u8> minimum_days;
-    Vector<String> minimum_days_regions;
+    HashMap<DeprecatedString, u8> minimum_days;
+    Vector<DeprecatedString> minimum_days_regions;
 
-    HashMap<String, Locale::Weekday> first_day;
-    Vector<String> first_day_regions;
+    HashMap<DeprecatedString, Locale::Weekday> first_day;
+    Vector<DeprecatedString> first_day_regions;
 
-    HashMap<String, Locale::Weekday> weekend_start;
-    Vector<String> weekend_start_regions;
+    HashMap<DeprecatedString, Locale::Weekday> weekend_start;
+    Vector<DeprecatedString> weekend_start_regions;
 
-    HashMap<String, Locale::Weekday> weekend_end;
-    Vector<String> weekend_end_regions;
+    HashMap<DeprecatedString, Locale::Weekday> weekend_end;
+    Vector<DeprecatedString> weekend_end_regions;
 
-    HashMap<String, Vector<TimeZone::TimeZone>> meta_zones;
-    Vector<String> time_zones { "UTC"sv };
+    HashMap<DeprecatedString, Vector<TimeZone::TimeZone>> meta_zones;
+    Vector<DeprecatedString> time_zones { "UTC"sv };
 
-    Vector<String> calendars;
+    Vector<DeprecatedString> calendars;
 };
 
 static Optional<Locale::DayPeriod> day_period_from_string(StringView day_period)
@@ -563,7 +563,7 @@ static Optional<Locale::DayPeriod> day_period_from_string(StringView day_period)
     return {};
 }
 
-static ErrorOr<void> parse_hour_cycles(String core_path, CLDR& cldr)
+static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Time_Data
     LexicalPath time_data_path(move(core_path));
@@ -607,7 +607,7 @@ static ErrorOr<void> parse_hour_cycles(String core_path, CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_week_data(String core_path, CLDR& cldr)
+static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Week_Data
     LexicalPath week_data_path(move(core_path));
@@ -672,7 +672,7 @@ static ErrorOr<void> parse_week_data(String core_path, CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_meta_zones(String core_path, CLDR& cldr)
+static ErrorOr<void> parse_meta_zones(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Metazones
     LexicalPath meta_zone_path(move(core_path));
@@ -714,7 +714,7 @@ static constexpr auto is_char(char ch)
 // "{hour}:{minute} {ampm}" becomes "{hour}:{minute}" (remove the space before {ampm})
 // "{ampm} {hour}" becomes "{hour}" (remove the space after {ampm})
 // "{hour}:{minute} {ampm} {timeZoneName}" becomes "{hour}:{minute} {timeZoneName}" (remove one of the spaces around {ampm})
-static String remove_period_from_pattern(String pattern)
+static DeprecatedString remove_period_from_pattern(DeprecatedString pattern)
 {
     auto is_surrounding_space = [&](auto code_point_iterator) {
         if (code_point_iterator.done())
@@ -751,15 +751,15 @@ static String remove_period_from_pattern(String pattern)
             after_removal = it;
 
         if (is_surrounding_space(before_removal) && !is_opening(after_removal)) {
-            pattern = String::formatted("{}{}",
+            pattern = DeprecatedString::formatted("{}{}",
                 pattern.substring_view(0, *index - before_removal.underlying_code_point_length_in_bytes()),
                 pattern.substring_view(*index + remove.length()));
         } else if (is_surrounding_space(after_removal) && !is_closing(before_removal)) {
-            pattern = String::formatted("{}{}",
+            pattern = DeprecatedString::formatted("{}{}",
                 pattern.substring_view(0, *index),
                 pattern.substring_view(*index + remove.length() + after_removal.underlying_code_point_length_in_bytes()));
         } else {
-            pattern = String::formatted("{}{}",
+            pattern = DeprecatedString::formatted("{}{}",
                 pattern.substring_view(0, *index),
                 pattern.substring_view(*index + remove.length()));
         }
@@ -768,7 +768,7 @@ static String remove_period_from_pattern(String pattern)
     return pattern;
 }
 
-static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, String skeleton, CLDR& cldr)
+static Optional<CalendarPattern> parse_date_time_pattern_raw(DeprecatedString pattern, DeprecatedString skeleton, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
     using Locale::CalendarPatternStyle;
@@ -987,7 +987,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
     return format;
 }
 
-static Optional<size_t> parse_date_time_pattern(String pattern, String skeleton, CLDR& cldr)
+static Optional<size_t> parse_date_time_pattern(DeprecatedString pattern, DeprecatedString skeleton, CLDR& cldr)
 {
     auto format = parse_date_time_pattern_raw(move(pattern), move(skeleton), cldr);
     if (!format.has_value())
@@ -1377,7 +1377,7 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
     calendar.symbols = cldr.unique_calendar_symbols_lists.ensure(move(symbols_list));
 }
 
-static ErrorOr<void> parse_calendars(String locale_calendars_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath calendars_path(move(locale_calendars_path));
     if (!calendars_path.basename().starts_with("ca-"sv))
@@ -1394,7 +1394,7 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, CLDR& cldr, L
             auto format = patterns_object.get(name);
             auto skeleton = skeletons_object.get(name);
 
-            auto format_index = parse_date_time_pattern(format.as_string(), skeleton.as_string_or(String::empty()), cldr).value();
+            auto format_index = parse_date_time_pattern(format.as_string(), skeleton.as_string_or(DeprecatedString::empty()), cldr).value();
 
             if (patterns)
                 patterns->append(cldr.unique_patterns.get(format_index));
@@ -1468,7 +1468,7 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, CLDR& cldr, L
     return {};
 }
 
-static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, CLDR& cldr, LocaleData& locale)
+static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_names_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath time_zone_names_path(move(locale_time_zone_names_path));
     time_zone_names_path = time_zone_names_path.append("timeZoneNames.json"sv);
@@ -1577,7 +1577,7 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, C
     return {};
 }
 
-static ErrorOr<void> parse_day_periods(String core_path, CLDR& cldr)
+static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Day_Period_Rule_Sets
     LexicalPath day_periods_path(move(core_path));
@@ -1633,7 +1633,7 @@ static ErrorOr<void> parse_day_periods(String core_path, CLDR& cldr)
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String dates_path, CLDR& cldr)
+static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedString dates_path, CLDR& cldr)
 {
     TRY(parse_hour_cycles(core_path, cldr));
     TRY(parse_week_data(core_path, cldr));
@@ -1641,7 +1641,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String dates_path, CLDR
 
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
-    auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
+    auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
@@ -1673,15 +1673,15 @@ static ErrorOr<void> parse_all_locales(String core_path, String dates_path, CLDR
     return {};
 }
 
-static String format_identifier(StringView owner, String identifier)
+static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
 {
     identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
     identifier = identifier.replace("/"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
-        return String::formatted("{}_{}", owner[0], identifier);
+        return DeprecatedString::formatted("{}_{}", owner[0], identifier);
     if (is_ascii_lower_alpha(identifier[0]))
-        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+        return DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
     return identifier;
 }
 
@@ -1937,9 +1937,9 @@ struct DayPeriodData {
     cldr.unique_day_period_lists.generate(generator, cldr.unique_day_periods.type_that_fits(), "s_day_period_lists"sv);
     cldr.unique_hour_cycle_lists.generate(generator, cldr.unique_hour_cycle_lists.type_that_fits(), "s_hour_cycle_lists"sv);
 
-    auto append_calendars = [&](String name, auto const& calendars) {
+    auto append_calendars = [&](DeprecatedString name, auto const& calendars) {
         generator.set("name", name);
-        generator.set("size", String::number(calendars.size()));
+        generator.set("size", DeprecatedString::number(calendars.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
@@ -1949,7 +1949,7 @@ static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
             auto calendar = calendars.find(calendar_key)->value;
 
             generator.append(first ? " "sv : ", "sv);
-            generator.append(String::number(calendar));
+            generator.append(DeprecatedString::number(calendar));
             first = false;
         }
 
@@ -1959,7 +1959,7 @@ static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
     auto append_mapping = [&](auto const& keys, auto const& map, auto type, auto name, auto mapping_getter) {
         generator.set("type", type);
         generator.set("name", name);
-        generator.set("size", String::number(keys.size()));
+        generator.set("size", DeprecatedString::number(keys.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {)~~~");
@@ -1970,7 +1970,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             auto mapping = mapping_getter(value);
 
             generator.append(first ? " "sv : ", "sv);
-            generator.append(String::number(mapping));
+            generator.append(DeprecatedString::number(mapping));
             first = false;
         }
 
@@ -1992,7 +1992,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     generator.append("\n");
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
-        HashValueMap<String> hashes;
+        HashValueMap<DeprecatedString> hashes;
         hashes.ensure_capacity(values.size());
 
         for (auto const& value : values)

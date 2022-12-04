@@ -15,7 +15,7 @@
 namespace JS {
 
 // 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
-static Vector<ModuleRequest::Assertion> assert_clause_to_assertions(Vector<ModuleRequest::Assertion> const& source_assertions, Vector<String> const& supported_import_assertions)
+static Vector<ModuleRequest::Assertion> assert_clause_to_assertions(Vector<ModuleRequest::Assertion> const& source_assertions, Vector<DeprecatedString> const& supported_import_assertions)
 {
     // AssertClause : assert { AssertEntries ,opt }
     // 1. Let assertions be AssertClauseToAssertions of AssertEntries.
@@ -42,7 +42,7 @@ static Vector<ModuleRequest::Assertion> assert_clause_to_assertions(Vector<Modul
 }
 
 // 16.2.1.3 Static Semantics: ModuleRequests, https://tc39.es/ecma262/#sec-static-semantics-modulerequests
-static Vector<ModuleRequest> module_requests(Program& program, Vector<String> const& supported_import_assertions)
+static Vector<ModuleRequest> module_requests(Program& program, Vector<DeprecatedString> const& supported_import_assertions)
 {
     // A List of all the ModuleSpecifier strings used by the module represented by this record to request the importation of a module.
     // Note: The List is source text occurrence ordered!

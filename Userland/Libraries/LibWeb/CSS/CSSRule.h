@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
@@ -32,7 +32,7 @@ public:
 
     virtual Type type() const = 0;
 
-    String css_text() const;
+    DeprecatedString css_text() const;
     void set_css_text(StringView);
 
     CSSRule* parent_rule() { return m_parent_rule.ptr(); }
@@ -47,7 +47,7 @@ public:
 protected:
     explicit CSSRule(JS::Realm&);
 
-    virtual String serialized() const = 0;
+    virtual DeprecatedString serialized() const = 0;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

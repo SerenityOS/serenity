@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
@@ -36,14 +36,14 @@ public:
     Relation const* parent_relation() const { return dynamic_cast<Relation const*>(parent()); }
 
 protected:
-    Relation(String name, u32 pointer, Relation* parent = nullptr)
+    Relation(DeprecatedString name, u32 pointer, Relation* parent = nullptr)
         : Core::Object(parent)
         , m_pointer(pointer)
     {
         set_name(move(name));
     }
 
-    explicit Relation(String name, Relation* parent = nullptr)
+    explicit Relation(DeprecatedString name, Relation* parent = nullptr)
         : Core::Object(parent)
         , m_pointer(0)
     {
@@ -63,7 +63,7 @@ public:
     static Key make_key();
 
 private:
-    explicit SchemaDef(String);
+    explicit SchemaDef(DeprecatedString);
     explicit SchemaDef(Key const&);
 };
 
@@ -83,7 +83,7 @@ public:
     static Key make_key(TableDef const&);
 
 protected:
-    ColumnDef(Relation*, size_t, String, SQLType);
+    ColumnDef(Relation*, size_t, DeprecatedString, SQLType);
 
 private:
     size_t m_index;
@@ -99,7 +99,7 @@ public:
     Order sort_order() const { return m_sort_order; }
 
 private:
-    KeyPartDef(IndexDef*, String, SQLType, Order = Order::Ascending);
+    KeyPartDef(IndexDef*, DeprecatedString, SQLType, Order = Order::Ascending);
 
     Order m_sort_order { Order::Ascending };
 };
@@ -113,15 +113,15 @@ public:
     NonnullRefPtrVector<KeyPartDef> const& key_definition() const { return m_key_definition; }
     bool unique() const { return m_unique; }
     [[nodiscard]] size_t size() const { return m_key_definition.size(); }
-    void append_column(String, SQLType, Order = Order::Ascending);
+    void append_column(DeprecatedString, SQLType, Order = Order::Ascending);
     Key key() const override;
     [[nodiscard]] NonnullRefPtr<TupleDescriptor> to_tuple_descriptor() const;
     static NonnullRefPtr<IndexDef> index_def();
     static Key make_key(TableDef const& table_def);
 
 private:
-    IndexDef(TableDef*, String, bool unique = true, u32 pointer = 0);
-    explicit IndexDef(String, bool unique = true, u32 pointer = 0);
+    IndexDef(TableDef*, DeprecatedString, bool unique = true, u32 pointer = 0);
+    explicit IndexDef(DeprecatedString, bool unique = true, u32 pointer = 0);
 
     NonnullRefPtrVector<KeyPartDef> m_key_definition;
     bool m_unique { false };
@@ -134,7 +134,7 @@ class TableDef : public Relation {
 
 public:
     Key key() const override;
-    void append_column(String, SQLType);
+    void append_column(DeprecatedString, SQLType);
     void append_column(Key const&);
     size_t num_columns() { return m_columns.size(); }
     size_t num_indexes() { return m_indexes.size(); }
@@ -147,7 +147,7 @@ public:
     static Key make_key(Key const& schema_key);
 
 private:
-    explicit TableDef(SchemaDef*, String);
+    explicit TableDef(SchemaDef*, DeprecatedString);
 
     NonnullRefPtrVector<ColumnDef> m_columns;
     NonnullRefPtrVector<IndexDef> m_indexes;

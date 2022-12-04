@@ -17,7 +17,7 @@ namespace Desktop {
 
 NonnullRefPtr<AppFile> AppFile::get_for_app(StringView app_name)
 {
-    auto path = String::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
+    auto path = DeprecatedString::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
     return open(path);
 }
 
@@ -35,7 +35,7 @@ void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, StringVi
         auto name = di.next_path();
         if (!name.ends_with(".af"sv))
             continue;
-        auto path = String::formatted("{}/{}", directory, name);
+        auto path = DeprecatedString::formatted("{}/{}", directory, name);
         auto af = AppFile::open(path);
         if (!af->is_valid())
             continue;
@@ -58,36 +58,36 @@ bool AppFile::validate() const
     return true;
 }
 
-String AppFile::name() const
+DeprecatedString AppFile::name() const
 {
     auto name = m_config->read_entry("App", "Name").trim_whitespace();
     VERIFY(!name.is_empty());
     return name;
 }
 
-String AppFile::executable() const
+DeprecatedString AppFile::executable() const
 {
     auto executable = m_config->read_entry("App", "Executable").trim_whitespace();
     VERIFY(!executable.is_empty());
     return executable;
 }
 
-String AppFile::description() const
+DeprecatedString AppFile::description() const
 {
     return m_config->read_entry("App", "Description").trim_whitespace();
 }
 
-String AppFile::category() const
+DeprecatedString AppFile::category() const
 {
     return m_config->read_entry("App", "Category").trim_whitespace();
 }
 
-String AppFile::working_directory() const
+DeprecatedString AppFile::working_directory() const
 {
     return m_config->read_entry("App", "WorkingDirectory").trim_whitespace();
 }
 
-String AppFile::icon_path() const
+DeprecatedString AppFile::icon_path() const
 {
     return m_config->read_entry("App", "IconPath").trim_whitespace();
 }
@@ -112,9 +112,9 @@ bool AppFile::requires_root() const
     return m_config->read_bool_entry("App", "RequiresRoot", false);
 }
 
-Vector<String> AppFile::launcher_mime_types() const
+Vector<DeprecatedString> AppFile::launcher_mime_types() const
 {
-    Vector<String> mime_types;
+    Vector<DeprecatedString> mime_types;
     for (auto& entry : m_config->read_entry("Launcher", "MimeTypes").split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
@@ -123,9 +123,9 @@ Vector<String> AppFile::launcher_mime_types() const
     return mime_types;
 }
 
-Vector<String> AppFile::launcher_file_types() const
+Vector<DeprecatedString> AppFile::launcher_file_types() const
 {
-    Vector<String> file_types;
+    Vector<DeprecatedString> file_types;
     for (auto& entry : m_config->read_entry("Launcher", "FileTypes").split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
@@ -134,9 +134,9 @@ Vector<String> AppFile::launcher_file_types() const
     return file_types;
 }
 
-Vector<String> AppFile::launcher_protocols() const
+Vector<DeprecatedString> AppFile::launcher_protocols() const
 {
-    Vector<String> protocols;
+    Vector<DeprecatedString> protocols;
     for (auto& entry : m_config->read_entry("Launcher", "Protocols").split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
@@ -150,7 +150,7 @@ bool AppFile::spawn() const
     if (!is_valid())
         return false;
 
-    auto pid = Core::Process::spawn(executable(), Span<String const> {}, working_directory());
+    auto pid = Core::Process::spawn(executable(), Span<DeprecatedString const> {}, working_directory());
     if (pid.is_error())
         return false;
 

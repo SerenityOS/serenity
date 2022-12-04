@@ -10,10 +10,10 @@
 #include "Parser.h"
 #include <AK/Array.h>
 #include <AK/CircularQueue.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/StackInfo.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -88,8 +88,8 @@ public:
     void setup_signals();
 
     struct SourcePosition {
-        String source_file;
-        String literal_source_text;
+        DeprecatedString source_file;
+        DeprecatedString literal_source_text;
         Optional<AST::Position> position;
     };
 
@@ -102,7 +102,7 @@ public:
         };
 
         Kind kind;
-        String path;
+        DeprecatedString path;
 
         bool operator<(RunnablePath const& other) const
         {
@@ -138,50 +138,50 @@ public:
 
     int run_command(StringView, Optional<SourcePosition> = {});
     Optional<RunnablePath> runnable_path_for(StringView);
-    Optional<String> help_path_for(Vector<RunnablePath> visited, RunnablePath const& runnable_path);
+    Optional<DeprecatedString> help_path_for(Vector<RunnablePath> visited, RunnablePath const& runnable_path);
     ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
-    bool run_file(String const&, bool explicitly_invoked = true);
+    bool run_file(DeprecatedString const&, bool explicitly_invoked = true);
     bool run_builtin(const AST::Command&, NonnullRefPtrVector<AST::Rewiring> const&, int& retval);
     bool has_builtin(StringView) const;
     RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
     static bool has_immediate_function(StringView);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
-    String prompt() const;
+    DeprecatedString prompt() const;
 
-    static String expand_tilde(StringView expression);
-    static Vector<String> expand_globs(StringView path, StringView base);
-    static Vector<String> expand_globs(Vector<StringView> path_segments, StringView base);
+    static DeprecatedString expand_tilde(StringView expression);
+    static Vector<DeprecatedString> expand_globs(StringView path, StringView base);
+    static Vector<DeprecatedString> expand_globs(Vector<StringView> path_segments, StringView base);
     Vector<AST::Command> expand_aliases(Vector<AST::Command>);
-    String resolve_path(String) const;
-    String resolve_alias(StringView) const;
+    DeprecatedString resolve_path(DeprecatedString) const;
+    DeprecatedString resolve_alias(StringView) const;
 
     static bool has_history_event(StringView);
 
     RefPtr<AST::Value> get_argument(size_t) const;
     RefPtr<AST::Value> lookup_local_variable(StringView) const;
-    String local_variable_or(StringView, String const&) const;
-    void set_local_variable(String const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
+    DeprecatedString local_variable_or(StringView, DeprecatedString const&) const;
+    void set_local_variable(DeprecatedString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);
 
-    void define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body);
+    void define_function(DeprecatedString name, Vector<DeprecatedString> argnames, RefPtr<AST::Node> body);
     bool has_function(StringView);
     bool invoke_function(const AST::Command&, int& retval);
 
-    String format(StringView, ssize_t& cursor) const;
+    DeprecatedString format(StringView, ssize_t& cursor) const;
 
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
     struct LocalFrame {
-        LocalFrame(String name, HashMap<String, RefPtr<AST::Value>> variables)
+        LocalFrame(DeprecatedString name, HashMap<DeprecatedString, RefPtr<AST::Value>> variables)
             : name(move(name))
             , local_variables(move(variables))
         {
         }
 
-        String name;
-        HashMap<String, RefPtr<AST::Value>> local_variables;
+        DeprecatedString name;
+        HashMap<DeprecatedString, RefPtr<AST::Value>> local_variables;
     };
 
     struct Frame {
@@ -200,16 +200,16 @@ public:
         bool should_destroy_frame { true };
     };
 
-    [[nodiscard]] Frame push_frame(String name);
+    [[nodiscard]] Frame push_frame(DeprecatedString name);
     void pop_frame();
 
     struct Promise {
         struct Data {
             struct Unveil {
-                String path;
-                String access;
+                DeprecatedString path;
+                DeprecatedString access;
             };
-            String exec_promises;
+            DeprecatedString exec_promises;
             Vector<Unveil> unveils;
         } data;
 
@@ -243,11 +243,11 @@ public:
         SingleQuotedString,
         DoubleQuotedString,
     };
-    static String escape_token_for_double_quotes(StringView token);
-    static String escape_token_for_single_quotes(StringView token);
-    static String escape_token(StringView token, EscapeMode = EscapeMode::Bareword);
-    static String escape_token(Utf32View token, EscapeMode = EscapeMode::Bareword);
-    static String unescape_token(StringView token);
+    static DeprecatedString escape_token_for_double_quotes(StringView token);
+    static DeprecatedString escape_token_for_single_quotes(StringView token);
+    static DeprecatedString escape_token(StringView token, EscapeMode = EscapeMode::Bareword);
+    static DeprecatedString escape_token(Utf32View token, EscapeMode = EscapeMode::Bareword);
+    static DeprecatedString unescape_token(StringView token);
     enum class SpecialCharacterEscapeMode {
         Untouched,
         Escaped,
@@ -283,7 +283,7 @@ public:
     Job const* current_job() const { return m_current_job; }
     void kill_job(Job const*, int sig);
 
-    String get_history_path();
+    DeprecatedString get_history_path();
     void print_path(StringView path);
     void cache_path();
 
@@ -296,9 +296,9 @@ public:
     bool was_interrupted { false };
     bool was_resized { false };
 
-    String cwd;
-    String username;
-    String home;
+    DeprecatedString cwd;
+    DeprecatedString username;
+    DeprecatedString home;
 
     constexpr static auto TTYNameSize = 32;
     constexpr static auto HostNameSize = 64;
@@ -308,12 +308,12 @@ public:
 
     uid_t uid;
     Optional<int> last_return_code;
-    Vector<String> directory_stack;
-    CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
+    Vector<DeprecatedString> directory_stack;
+    CircularQueue<DeprecatedString, 8> cd_history; // FIXME: have a configurable cd history length
     HashMap<u64, NonnullRefPtr<Job>> jobs;
     Vector<RunnablePath, 256> cached_path;
 
-    String current_script;
+    DeprecatedString current_script;
 
     enum ShellEventType {
         ReadLine,
@@ -334,7 +334,7 @@ public:
         LaunchError,
     };
 
-    void raise_error(ShellError kind, String description, Optional<AST::Position> position = {})
+    void raise_error(ShellError kind, DeprecatedString description, Optional<AST::Position> position = {})
     {
         m_error = kind;
         m_error_description = move(description);
@@ -343,7 +343,7 @@ public:
     }
     bool has_error(ShellError err) const { return m_error == err; }
     bool has_any_error() const { return !has_error(ShellError::None); }
-    String const& error_description() const { return m_error_description; }
+    DeprecatedString const& error_description() const { return m_error_description; }
     ShellError take_error()
     {
         auto err = m_error;
@@ -435,23 +435,23 @@ private:
     pid_t m_pid { 0 };
 
     struct ShellFunction {
-        String name;
-        Vector<String> arguments;
+        DeprecatedString name;
+        Vector<DeprecatedString> arguments;
         RefPtr<AST::Node> body;
     };
 
-    HashMap<String, ShellFunction> m_functions;
+    HashMap<DeprecatedString, ShellFunction> m_functions;
     NonnullOwnPtrVector<LocalFrame> m_local_frames;
     Promise::List m_active_promises;
     NonnullRefPtrVector<AST::Redirection> m_global_redirections;
 
-    HashMap<String, String> m_aliases;
+    HashMap<DeprecatedString, DeprecatedString> m_aliases;
     bool m_is_interactive { true };
     bool m_is_subshell { false };
     bool m_should_reinstall_signal_handlers { true };
 
     ShellError m_error { ShellError::None };
-    String m_error_description;
+    DeprecatedString m_error_description;
     Optional<SourcePosition> m_source_position;
 
     bool m_should_format_live { false };
@@ -548,7 +548,7 @@ struct Traits<Shell::Shell::RunnablePath> : public GenericTraits<Shell::Shell::R
         return self.path == other;
     }
 
-    static bool equals(Shell::Shell::RunnablePath const& self, String const& other)
+    static bool equals(Shell::Shell::RunnablePath const& self, DeprecatedString const& other)
     {
         return self.path == other;
     }

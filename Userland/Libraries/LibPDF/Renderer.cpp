@@ -729,7 +729,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     return {};
 }
 
-void Renderer::show_text(String const& string)
+void Renderer::show_text(DeprecatedString const& string)
 {
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 

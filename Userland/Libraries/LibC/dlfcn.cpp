@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Types.h>
 #include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
@@ -25,7 +25,7 @@ __thread char* s_dlerror_text = NULL;
 __thread bool s_dlerror_retrieved = false;
 #endif
 
-static void store_error(String const& error)
+static void store_error(DeprecatedString const& error)
 {
     free(s_dlerror_text);
     s_dlerror_text = strdup(error.characters());

@@ -61,11 +61,11 @@ HexEditorWidget::HexEditorWidget()
     };
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
-        m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position));
-        m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
-        m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
-        m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));
-        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", m_editor->selection_size()));
+        m_statusbar->set_text(0, DeprecatedString::formatted("Offset: {:#08X}", position));
+        m_statusbar->set_text(1, DeprecatedString::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
+        m_statusbar->set_text(2, DeprecatedString::formatted("Selection Start: {}", selection_start));
+        m_statusbar->set_text(3, DeprecatedString::formatted("Selection End: {}", selection_end));
+        m_statusbar->set_text(4, DeprecatedString::formatted("Selected Bytes: {}", m_editor->selection_size()));
 
         bool has_selection = m_editor->has_selection();
         m_copy_hex_action->set_enabled(has_selection);
@@ -99,7 +99,7 @@ HexEditorWidget::HexEditorWidget()
     };
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
-        String value;
+        DeprecatedString value;
         if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto file_size = value.to_uint();
             if (!file_size.has_value()) {
@@ -108,7 +108,7 @@ HexEditorWidget::HexEditorWidget()
             }
 
             if (auto error = m_editor->open_new_file(file_size.value()); error.is_error()) {
-                GUI::MessageBox::show(window(), String::formatted("Unable to open new file: {}"sv, error.error()), "Error"sv, GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to open new file: {}"sv, error.error()), "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
 
@@ -176,11 +176,11 @@ HexEditorWidget::HexEditorWidget()
                 m_search_results->update();
 
                 if (matches.is_empty()) {
-                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
-                GUI::MessageBox::show(window(), String::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), String::formatted("{} matches", matches.size()), GUI::MessageBox::Type::Warning);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), DeprecatedString::formatted("{} matches", matches.size()), GUI::MessageBox::Type::Warning);
                 set_search_results_visible(true);
             } else {
                 bool same_buffers = false;
@@ -192,7 +192,7 @@ HexEditorWidget::HexEditorWidget()
                 auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
 
                 if (!result.has_value()) {
-                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
@@ -242,7 +242,7 @@ HexEditorWidget::HexEditorWidget()
     m_copy_as_c_code_action->set_enabled(false);
 
     m_fill_selection_action = GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
-        String value;
+        DeprecatedString value;
         if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
@@ -305,9 +305,9 @@ void HexEditorWidget::update_inspector_values(size_t position)
         else
             unsigned_byte_value = (unsigned_64_bit_int >> (64 - 8)) & 0xFF;
 
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, String::number(static_cast<i8>(unsigned_byte_value)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, String::number(unsigned_byte_value));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, String::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, DeprecatedString::number(static_cast<i8>(unsigned_byte_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, DeprecatedString::number(unsigned_byte_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, DeprecatedString::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, "");
@@ -321,8 +321,8 @@ void HexEditorWidget::update_inspector_values(size_t position)
         else
             unsigned_short_value = (unsigned_64_bit_int >> (64 - 16)) & 0xFFFF;
 
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, String::number(static_cast<i16>(unsigned_short_value)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, String::number(unsigned_short_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, DeprecatedString::number(static_cast<i16>(unsigned_short_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, DeprecatedString::number(unsigned_short_value));
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, "");
@@ -335,9 +335,9 @@ void HexEditorWidget::update_inspector_values(size_t position)
         else
             unsigned_int_value = (unsigned_64_bit_int >> 32) & 0xFFFFFFFF;
 
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, String::number(static_cast<i32>(unsigned_int_value)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, String::number(unsigned_int_value));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, String::number(bit_cast<float>(unsigned_int_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, DeprecatedString::number(static_cast<i32>(unsigned_int_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, DeprecatedString::number(unsigned_int_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, DeprecatedString::number(bit_cast<float>(unsigned_int_value)));
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, "");
@@ -345,9 +345,9 @@ void HexEditorWidget::update_inspector_values(size_t position)
     }
 
     if (byte_read_count >= 8) {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, String::number(static_cast<i64>(unsigned_64_bit_int)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, String::number(unsigned_64_bit_int));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, String::number(bit_cast<double>(unsigned_64_bit_int)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, DeprecatedString::number(static_cast<i64>(unsigned_64_bit_int)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, DeprecatedString::number(unsigned_64_bit_int));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, DeprecatedString::number(bit_cast<double>(unsigned_64_bit_int)));
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, "");
@@ -418,7 +418,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
 
         auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
         if (!result.has_value()) {
-            GUI::MessageBox::show(&window, String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, DeprecatedString::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
         m_editor->update();
@@ -459,7 +459,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_bytes_per_row_actions.set_exclusive(true);
     auto& bytes_per_row_menu = view_menu.add_submenu("Bytes per &Row");
     for (int i = 8; i <= 32; i += 8) {
-        auto action = GUI::Action::create_checkable(String::number(i), [this, i](auto&) {
+        auto action = GUI::Action::create_checkable(DeprecatedString::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
             m_editor->update();
             Config::write_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, i);

@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <grp.h>
 
@@ -22,17 +22,17 @@ public:
     static ErrorOr<Vector<Group>> all();
 
     Group() = default;
-    Group(String name, gid_t id = 0, Vector<String> members = {});
+    Group(DeprecatedString name, gid_t id = 0, Vector<DeprecatedString> members = {});
 
     ~Group() = default;
 
-    String const& name() const { return m_name; }
-    void set_name(String const& name) { m_name = name; }
+    DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString const& name) { m_name = name; }
 
     gid_t id() const { return m_id; }
     void set_group_id(gid_t const id) { m_id = id; }
 
-    Vector<String>& members() { return m_members; }
+    Vector<DeprecatedString>& members() { return m_members; }
 
     ErrorOr<void> sync();
 
@@ -41,11 +41,11 @@ private:
     static ErrorOr<bool> id_exists(gid_t id);
     ErrorOr<struct group> to_libc_group();
 
-    ErrorOr<String> generate_group_file() const;
+    ErrorOr<DeprecatedString> generate_group_file() const;
 
-    String m_name;
+    DeprecatedString m_name;
     gid_t m_id { 0 };
-    Vector<String> m_members;
+    Vector<DeprecatedString> m_members;
 };
 
 }

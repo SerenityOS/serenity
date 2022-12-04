@@ -17,7 +17,7 @@
 
 namespace WindowServer {
 
-HardwareScreenBackend::HardwareScreenBackend(String device)
+HardwareScreenBackend::HardwareScreenBackend(DeprecatedString device)
     : m_device(move(device))
 {
 }
@@ -28,7 +28,7 @@ ErrorOr<void> HardwareScreenBackend::open()
 
     GraphicsConnectorProperties properties;
     if (graphics_connector_get_properties(m_display_connector_fd, &properties) < 0)
-        return Error::from_syscall(String::formatted("failed to ioctl {}", m_device), errno);
+        return Error::from_syscall(DeprecatedString::formatted("failed to ioctl {}", m_device), errno);
 
     m_can_device_flush_buffers = (properties.partial_flushing_support != 0);
     m_can_device_flush_entire_framebuffer = (properties.flushing_support != 0);

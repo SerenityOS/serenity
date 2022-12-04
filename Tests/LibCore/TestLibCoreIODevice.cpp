@@ -8,7 +8,7 @@
 #include <LibTest/TestCase.h>
 #include <unistd.h>
 
-static bool files_have_same_contents(String filename1, String filename2)
+static bool files_have_same_contents(DeprecatedString filename1, DeprecatedString filename2)
 {
     auto file1 = Core::File::open(filename1, Core::OpenMode::ReadOnly).value();
     auto file2 = Core::File::open(filename2, Core::OpenMode::ReadOnly).value();
@@ -40,7 +40,7 @@ TEST_CASE(file_readline)
 
 TEST_CASE(file_get_read_position)
 {
-    const String path = "10kb.txt";
+    const DeprecatedString path = "10kb.txt";
     auto file = Core::File::open(path, Core::OpenMode::ReadOnly).release_value();
 
     const size_t step_size = 98;

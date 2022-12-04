@@ -14,7 +14,7 @@
 
 namespace GUI {
 
-WizardPage::WizardPage(String const& title_text, String const& subtitle_text)
+WizardPage::WizardPage(DeprecatedString const& title_text, DeprecatedString const& subtitle_text)
     : AbstractWizardPage()
 {
     set_layout<VerticalBoxLayout>();
@@ -44,12 +44,12 @@ WizardPage::WizardPage(String const& title_text, String const& subtitle_text)
     m_body_widget->layout()->set_margins(20);
 }
 
-void WizardPage::set_page_title(String const& text)
+void WizardPage::set_page_title(DeprecatedString const& text)
 {
     m_title_label->set_text(text);
 }
 
-void WizardPage::set_page_subtitle(String const& text)
+void WizardPage::set_page_subtitle(DeprecatedString const& text)
 {
     m_subtitle_label->set_text(text);
 }

@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     out("      "sv);
     for (size_t i = 0; i < cpu_count; ++i) {
-        out("{:>10}", String::formatted("CPU{}", i));
+        out("{:>10}", DeprecatedString::formatted("CPU{}", i));
     }
     outln("");
 

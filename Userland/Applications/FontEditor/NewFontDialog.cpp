@@ -138,12 +138,12 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
     for (auto& it : Gfx::font_weight_names)
         m_font_weight_list.append(it.name);
-    m_weight_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_weight_list));
+    m_weight_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_font_weight_list));
     m_weight_combobox->set_selected_index(3);
 
     for (auto& it : Gfx::font_slope_names)
         m_font_slope_list.append(it.name);
-    m_slope_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_slope_list));
+    m_slope_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_font_slope_list));
     m_slope_combobox->set_selected_index(0);
 
     m_presentation_spinbox->set_value(12);

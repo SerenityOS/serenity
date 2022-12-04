@@ -16,15 +16,15 @@ class EditGuideDialog final : public GUI::Dialog {
     C_OBJECT(EditGuideDialog);
 
 public:
-    String const offset() const { return m_offset; }
+    DeprecatedString const offset() const { return m_offset; }
     Guide::Orientation orientation() const { return m_orientation; }
 
     Optional<float> offset_as_pixel(ImageEditor const&);
 
 private:
-    EditGuideDialog(GUI::Window* parent_window, String const& offset = {}, Guide::Orientation orientation = Guide::Orientation::Unset);
+    EditGuideDialog(GUI::Window* parent_window, DeprecatedString const& offset = {}, Guide::Orientation orientation = Guide::Orientation::Unset);
 
-    String m_offset;
+    DeprecatedString m_offset;
     Guide::Orientation m_orientation;
     RefPtr<GUI::TextBox> m_offset_text_box;
     bool m_is_horizontal_checked { false };

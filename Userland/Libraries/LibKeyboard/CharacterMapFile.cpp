@@ -11,7 +11,7 @@
 
 namespace Keyboard {
 
-ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(String const& filename)
+ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(DeprecatedString const& filename)
 {
     auto path = filename;
     if (!path.ends_with(".json"sv)) {
@@ -55,7 +55,7 @@ ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(String const& filenam
     return character_map;
 }
 
-Vector<u32> CharacterMapFile::read_map(JsonObject const& json, String const& name)
+Vector<u32> CharacterMapFile::read_map(JsonObject const& json, DeprecatedString const& name)
 {
     if (!json.has(name))
         return {};

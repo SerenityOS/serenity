@@ -15,7 +15,7 @@
 
 constexpr StringView default_template = "tmp.XXXXXXXXXX"sv;
 
-static String generate_random_filename(String const& pattern)
+static DeprecatedString generate_random_filename(DeprecatedString const& pattern)
 {
     StringBuilder new_filename { pattern.length() };
 
@@ -30,7 +30,7 @@ static String generate_random_filename(String const& pattern)
     return new_filename.to_string();
 }
 
-static ErrorOr<String> make_temp(String const& pattern, bool directory, bool dry_run)
+static ErrorOr<DeprecatedString> make_temp(DeprecatedString const& pattern, bool directory, bool dry_run)
 {
     for (int i = 0; i < 100; ++i) {
         auto path = generate_random_filename(pattern);
@@ -49,7 +49,7 @@ static ErrorOr<String> make_temp(String const& pattern, bool directory, bool dry
             }
         }
     }
-    return String {};
+    return DeprecatedString {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

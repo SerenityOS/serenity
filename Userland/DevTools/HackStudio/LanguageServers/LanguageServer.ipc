@@ -1,15 +1,15 @@
 endpoint LanguageServer
 {
-    greet(String project_root) =|
+    greet(DeprecatedString project_root) =|
 
-    file_opened(String filename, IPC::File file) =|
-    file_edit_insert_text(String filename, String text, i32 start_line, i32 start_column) =|
-    file_edit_remove_text(String filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
-    set_file_content(String filename, String content) =|
+    file_opened(DeprecatedString filename, IPC::File file) =|
+    file_edit_insert_text(DeprecatedString filename, DeprecatedString text, i32 start_line, i32 start_column) =|
+    file_edit_remove_text(DeprecatedString filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
+    set_file_content(DeprecatedString filename, DeprecatedString content) =|
 
     auto_complete_suggestions(CodeComprehension::ProjectLocation location) =|
     find_declaration(CodeComprehension::ProjectLocation location) =|
     get_parameters_hint(CodeComprehension::ProjectLocation location) =|
-    get_tokens_info(String filename) =|
+    get_tokens_info(DeprecatedString filename) =|
 
 }

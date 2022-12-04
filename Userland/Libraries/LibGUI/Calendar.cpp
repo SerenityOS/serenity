@@ -332,17 +332,17 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
     update();
 }
 
-String Calendar::formatted_date(Format format)
+DeprecatedString Calendar::formatted_date(Format format)
 {
     switch (format) {
     case ShortMonthYear:
-        return String::formatted("{} {}", short_month_names[view_month() - 1], view_year());
+        return DeprecatedString::formatted("{} {}", short_month_names[view_month() - 1], view_year());
     case LongMonthYear:
-        return String::formatted("{} {}", long_month_names[view_month() - 1], view_year());
+        return DeprecatedString::formatted("{} {}", long_month_names[view_month() - 1], view_year());
     case MonthOnly:
-        return String::formatted("{}", long_month_names[view_month() - 1]);
+        return DeprecatedString::formatted("{}", long_month_names[view_month() - 1]);
     case YearOnly:
-        return String::number(view_year());
+        return DeprecatedString::number(view_year());
     default:
         VERIFY_NOT_REACHED();
     }
@@ -500,7 +500,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     text_rect = Gfx::IntRect(tile_rect);
                 }
 
-                auto display_date = String::number(m_tiles[0][i].day);
+                auto display_date = DeprecatedString::number(m_tiles[0][i].day);
                 if (m_tiles[0][i].is_selected && (width < 30 || height < 30))
                     painter.draw_rect(tile_rect, palette().base_text());
 
@@ -609,7 +609,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                         set_font(small_font);
                     }
 
-                    auto display_date = String::number(m_tiles[l][i].day);
+                    auto display_date = DeprecatedString::number(m_tiles[l][i].day);
                     if (m_tiles[l][i].is_selected)
                         painter.draw_rect(tile_rect, palette().base_text());
 
@@ -763,13 +763,13 @@ void Calendar::doubleclick_event(GUI::MouseEvent& event)
     }
 }
 
-size_t Calendar::day_of_week_index(String const& day_name)
+size_t Calendar::day_of_week_index(DeprecatedString const& day_name)
 {
     auto const& day_names = AK::long_day_names;
     return AK::find_index(day_names.begin(), day_names.end(), day_name);
 }
 
-void Calendar::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+void Calendar::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
 {
     if (domain == "Calendar" && group == "View" && key == "FirstDayOfWeek") {
         m_first_day_of_week = static_cast<DayOfWeek>(day_of_week_index(value));
@@ -780,7 +780,7 @@ void Calendar::config_string_did_change(String const& domain, String const& grou
     }
 }
 
-void Calendar::config_i32_did_change(String const& domain, String const& group, String const& key, i32 value)
+void Calendar::config_i32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value)
 {
     if (domain == "Calendar" && group == "View" && key == "WeekendLength") {
         m_weekend_length = value;

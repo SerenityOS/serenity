@@ -7,14 +7,14 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 
 namespace WebSocket {
 
 class Message {
 public:
-    explicit Message(String const& data)
+    explicit Message(DeprecatedString const& data)
         : m_is_text(true)
         , m_data(ByteBuffer::copy(data.bytes()).release_value_but_fixme_should_propagate_errors()) // FIXME: Handle possible OOM situation.
     {

@@ -54,15 +54,15 @@ private:
     PDFErrorOr<void> parse_encrypted_portion(ByteBuffer const&);
     PDFErrorOr<Vector<ByteBuffer>> parse_subroutines(Reader&);
     PDFErrorOr<Vector<float>> parse_number_array(Reader&, size_t length);
-    PDFErrorOr<String> parse_word(Reader&);
+    PDFErrorOr<DeprecatedString> parse_word(Reader&);
     PDFErrorOr<float> parse_float(Reader&);
     PDFErrorOr<int> parse_int(Reader&);
 
     PDFErrorOr<ByteBuffer> decrypt(ReadonlyBytes const&, u16 key, size_t skip);
-    bool seek_name(Reader&, String const&);
+    bool seek_name(Reader&, DeprecatedString const&);
 
     static Error error(
-        String const& message
+        DeprecatedString const& message
 #ifdef PDF_DEBUG
         ,
         SourceLocation loc = SourceLocation::current()

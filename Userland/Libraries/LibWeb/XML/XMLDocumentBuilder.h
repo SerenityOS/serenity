@@ -20,7 +20,7 @@ enum class XMLScriptingSupport {
     Enabled,
 };
 
-ErrorOr<String> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const&);
+ErrorOr<DeprecatedString> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const&);
 
 class XMLDocumentBuilder final : public XML::Listener {
 public:
@@ -29,11 +29,11 @@ public:
     bool has_error() const { return m_has_error; }
 
 private:
-    virtual void set_source(String) override;
-    virtual void element_start(XML::Name const& name, HashMap<XML::Name, String> const& attributes) override;
+    virtual void set_source(DeprecatedString) override;
+    virtual void element_start(XML::Name const& name, HashMap<XML::Name, DeprecatedString> const& attributes) override;
     virtual void element_end(XML::Name const& name) override;
-    virtual void text(String const& data) override;
-    virtual void comment(String const& data) override;
+    virtual void text(DeprecatedString const& data) override;
+    virtual void comment(DeprecatedString const& data) override;
     virtual void document_end() override;
 
     DOM::Document& m_document;

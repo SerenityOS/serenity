@@ -182,7 +182,7 @@ void Object::save_to(JsonObject& json)
     }
 }
 
-JsonValue Object::property(String const& name) const
+JsonValue Object::property(DeprecatedString const& name) const
 {
     auto it = m_properties.find(name);
     if (it == m_properties.end())
@@ -190,7 +190,7 @@ JsonValue Object::property(String const& name) const
     return it->value->get();
 }
 
-bool Object::set_property(String const& name, JsonValue const& value)
+bool Object::set_property(DeprecatedString const& name, JsonValue const& value)
 {
     auto it = m_properties.find(name);
     if (it == m_properties.end())
@@ -247,7 +247,7 @@ void Object::decrement_inspector_count(Badge<InspectorServerConnection>)
         did_end_inspection();
 }
 
-void Object::register_property(String const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
+void Object::register_property(DeprecatedString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
 {
     m_properties.set(name, make<Property>(name, move(getter), move(setter)));
 }

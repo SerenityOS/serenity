@@ -17,9 +17,9 @@
 namespace HackStudio {
 
 struct Match {
-    String filename;
+    DeprecatedString filename;
     GUI::TextRange range;
-    String text;
+    DeprecatedString text;
 };
 
 class SearchResultsModel final : public GUI::Model {
@@ -39,7 +39,7 @@ public:
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_matches.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
 
-    virtual String column_name(int column) const override
+    virtual DeprecatedString column_name(int column) const override
     {
         switch (column) {
         case Column::Filename:

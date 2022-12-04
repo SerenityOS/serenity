@@ -92,7 +92,7 @@ void Event::set_cancelled_flag()
 }
 
 // https://dom.spec.whatwg.org/#concept-event-initialize
-void Event::initialize_event(String const& type, bool bubbles, bool cancelable)
+void Event::initialize_event(DeprecatedString const& type, bool bubbles, bool cancelable)
 {
     // 1. Set event’s initialized flag.
     m_initialized = true;
@@ -119,7 +119,7 @@ void Event::initialize_event(String const& type, bool bubbles, bool cancelable)
 }
 
 // https://dom.spec.whatwg.org/#dom-event-initevent
-void Event::init_event(String const& type, bool bubbles, bool cancelable)
+void Event::init_event(DeprecatedString const& type, bool bubbles, bool cancelable)
 {
     // 1. If this’s dispatch flag is set, then return.
     if (m_dispatch)

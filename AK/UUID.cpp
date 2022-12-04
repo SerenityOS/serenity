@@ -97,7 +97,7 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> UUID::to_string() const
     return Kernel::KString::try_create(builder.string_view());
 }
 #else
-String UUID::to_string() const
+DeprecatedString UUID::to_string() const
 {
     StringBuilder builder(36);
     builder.append(encode_hex(m_uuid_buffer.span().trim(4)).view());

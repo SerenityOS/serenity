@@ -47,7 +47,7 @@ public:
     virtual Type type() const = 0;
 
 protected:
-    static Tuple<String, String> replacement_for_standard_latin_font(StringView);
+    static Tuple<DeprecatedString, DeprecatedString> replacement_for_standard_latin_font(StringView);
 
     bool m_is_standard_font { false };
 };

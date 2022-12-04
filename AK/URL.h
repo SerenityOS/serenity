@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -43,20 +43,20 @@ public:
 
     URL() = default;
     URL(StringView);
-    URL(String const& string)
+    URL(DeprecatedString const& string)
         : URL(string.view())
     {
     }
 
     bool is_valid() const { return m_valid; }
 
-    String const& scheme() const { return m_scheme; }
-    String const& username() const { return m_username; }
-    String const& password() const { return m_password; }
-    String const& host() const { return m_host; }
-    Vector<String> const& paths() const { return m_paths; }
-    String const& query() const { return m_query; }
-    String const& fragment() const { return m_fragment; }
+    DeprecatedString const& scheme() const { return m_scheme; }
+    DeprecatedString const& username() const { return m_username; }
+    DeprecatedString const& password() const { return m_password; }
+    DeprecatedString const& host() const { return m_host; }
+    Vector<DeprecatedString> const& paths() const { return m_paths; }
+    DeprecatedString const& query() const { return m_query; }
+    DeprecatedString const& fragment() const { return m_fragment; }
     Optional<u16> port() const { return m_port; }
     u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme)); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
@@ -65,39 +65,39 @@ public:
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
 
-    void set_scheme(String);
-    void set_username(String);
-    void set_password(String);
-    void set_host(String);
+    void set_scheme(DeprecatedString);
+    void set_username(DeprecatedString);
+    void set_password(DeprecatedString);
+    void set_host(DeprecatedString);
     void set_port(Optional<u16>);
-    void set_paths(Vector<String>);
-    void set_query(String);
-    void set_fragment(String);
+    void set_paths(Vector<DeprecatedString>);
+    void set_query(DeprecatedString);
+    void set_fragment(DeprecatedString);
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
-    void append_path(String path) { m_paths.append(move(path)); }
+    void append_path(DeprecatedString path) { m_paths.append(move(path)); }
 
-    String path() const;
-    String basename() const;
+    DeprecatedString path() const;
+    DeprecatedString basename() const;
 
-    String serialize(ExcludeFragment = ExcludeFragment::No) const;
-    String serialize_for_display() const;
-    String to_string() const { return serialize(); }
+    DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
+    DeprecatedString serialize_for_display() const;
+    DeprecatedString to_string() const { return serialize(); }
 
     // HTML origin
-    String serialize_origin() const;
+    DeprecatedString serialize_origin() const;
 
     bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
-    URL complete_url(String const&) const;
+    URL complete_url(DeprecatedString const&) const;
 
     bool data_payload_is_base64() const { return m_data_payload_is_base64; }
-    String const& data_mime_type() const { return m_data_mime_type; }
-    String const& data_payload() const { return m_data_payload; }
+    DeprecatedString const& data_mime_type() const { return m_data_mime_type; }
+    DeprecatedString const& data_payload() const { return m_data_payload; }
 
-    static URL create_with_url_or_path(String const&);
-    static URL create_with_file_scheme(String const& path, String const& fragment = {}, String const& hostname = {});
-    static URL create_with_help_scheme(String const& path, String const& fragment = {}, String const& hostname = {});
-    static URL create_with_data(String mime_type, String payload, bool is_base64 = false) { return URL(move(mime_type), move(payload), is_base64); };
+    static URL create_with_url_or_path(DeprecatedString const&);
+    static URL create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
+    static URL create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
+    static URL create_with_data(DeprecatedString mime_type, DeprecatedString payload, bool is_base64 = false) { return URL(move(mime_type), move(payload), is_base64); };
 
     static bool scheme_requires_port(StringView);
     static u16 default_port_for_scheme(StringView);
@@ -107,15 +107,15 @@ public:
         No,
         Yes,
     };
-    static String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
-    static String percent_decode(StringView input);
+    static DeprecatedString percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
+    static DeprecatedString percent_decode(StringView input);
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
 
     static bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet);
 
 private:
-    URL(String&& data_mime_type, String&& data_payload, bool payload_is_base64)
+    URL(DeprecatedString&& data_mime_type, DeprecatedString&& data_payload, bool payload_is_base64)
         : m_valid(true)
         , m_scheme("data")
         , m_data_payload_is_base64(payload_is_base64)
@@ -125,29 +125,29 @@ private:
     }
 
     bool compute_validity() const;
-    String serialize_data_url() const;
+    DeprecatedString serialize_data_url() const;
 
     static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
     static void append_percent_encoded(StringBuilder&, u32 code_point);
 
     bool m_valid { false };
 
-    String m_scheme;
-    String m_username;
-    String m_password;
-    String m_host;
+    DeprecatedString m_scheme;
+    DeprecatedString m_username;
+    DeprecatedString m_password;
+    DeprecatedString m_host;
     // NOTE: If the port is the default port for the scheme, m_port should be empty.
     Optional<u16> m_port;
-    String m_path;
-    Vector<String> m_paths;
-    String m_query;
-    String m_fragment;
+    DeprecatedString m_path;
+    Vector<DeprecatedString> m_paths;
+    DeprecatedString m_query;
+    DeprecatedString m_fragment;
 
     bool m_cannot_be_a_base_url { false };
 
     bool m_data_payload_is_base64 { false };
-    String m_data_mime_type;
-    String m_data_payload;
+    DeprecatedString m_data_mime_type;
+    DeprecatedString m_data_payload;
 };
 
 template<>

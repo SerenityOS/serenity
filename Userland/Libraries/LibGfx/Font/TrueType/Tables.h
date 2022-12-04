@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 
 namespace TTF {
 
@@ -173,10 +173,10 @@ public:
     };
     static Optional<Name> from_slice(ReadonlyBytes);
 
-    String family_name() const { return string_for_id(NameId::FamilyName); }
-    String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
-    String typographic_family_name() const { return string_for_id(NameId::TypographicFamilyName); }
-    String typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
+    DeprecatedString family_name() const { return string_for_id(NameId::FamilyName); }
+    DeprecatedString subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
+    DeprecatedString typographic_family_name() const { return string_for_id(NameId::TypographicFamilyName); }
+    DeprecatedString typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
 
 private:
     enum class NameId {
@@ -200,7 +200,7 @@ private:
     {
     }
 
-    String string_for_id(NameId id) const;
+    DeprecatedString string_for_id(NameId id) const;
 
     ReadonlyBytes m_slice;
 };

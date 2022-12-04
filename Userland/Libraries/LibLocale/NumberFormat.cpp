@@ -29,7 +29,7 @@ Optional<Span<u32 const>> __attribute__((weak)) get_digits_for_number_system(Str
     return digits.span();
 }
 
-String replace_digits_for_number_system(StringView system, StringView number)
+DeprecatedString replace_digits_for_number_system(StringView system, StringView number)
 {
     auto digits = get_digits_for_number_system(system);
     if (!digits.has_value())
@@ -64,7 +64,7 @@ static u32 last_code_point(StringView string)
 #endif
 
 // https://www.unicode.org/reports/tr35/tr35-numbers.html#Currencies
-Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView currency_display, [[maybe_unused]] StringView base_pattern)
+Optional<DeprecatedString> augment_currency_format_pattern([[maybe_unused]] StringView currency_display, [[maybe_unused]] StringView base_pattern)
 {
 #if ENABLE_UNICODE_DATA
     constexpr auto number_key = "{number}"sv;
@@ -78,7 +78,7 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
     VERIFY(currency_index.has_value());
 
     Utf8View utf8_currency_display { currency_display };
-    Optional<String> currency_key_with_spacing;
+    Optional<DeprecatedString> currency_key_with_spacing;
 
     if (*number_index < *currency_index) {
         u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *currency_index));
@@ -87,7 +87,7 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
             u32 first_currency_code_point = *utf8_currency_display.begin();
 
             if (!Unicode::code_point_has_general_category(first_currency_code_point, Unicode::GeneralCategory::Symbol))
-                currency_key_with_spacing = String::formatted("{}{}", spacing, currency_key);
+                currency_key_with_spacing = DeprecatedString::formatted("{}{}", spacing, currency_key);
         }
     } else {
         u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *number_index));
@@ -96,7 +96,7 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
             u32 last_currency_code_point = last_code_point(currency_display);
 
             if (!Unicode::code_point_has_general_category(last_currency_code_point, Unicode::GeneralCategory::Symbol))
-                currency_key_with_spacing = String::formatted("{}{}", currency_key, spacing);
+                currency_key_with_spacing = DeprecatedString::formatted("{}{}", currency_key, spacing);
         }
     }
 
@@ -108,11 +108,11 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
 }
 
 // https://unicode.org/reports/tr35/tr35-numbers.html#83-range-pattern-processing
-Optional<String> augment_range_pattern([[maybe_unused]] StringView range_separator, [[maybe_unused]] StringView lower, [[maybe_unused]] StringView upper)
+Optional<DeprecatedString> augment_range_pattern([[maybe_unused]] StringView range_separator, [[maybe_unused]] StringView lower, [[maybe_unused]] StringView upper)
 {
 #if ENABLE_UNICODE_DATA
     auto range_pattern_with_spacing = [&]() {
-        return String::formatted(" {} ", range_separator);
+        return DeprecatedString::formatted(" {} ", range_separator);
     };
 
     Utf8View utf8_range_separator { range_separator };

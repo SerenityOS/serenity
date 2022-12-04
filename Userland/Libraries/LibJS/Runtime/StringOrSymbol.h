@@ -22,7 +22,7 @@ public:
     {
     }
 
-    StringOrSymbol(String const& string)
+    StringOrSymbol(DeprecatedString const& string)
         : StringOrSymbol(FlyString(string))
     {
     }
@@ -74,7 +74,7 @@ public:
         return reinterpret_cast<Symbol const*>(bits() & ~1ul);
     }
 
-    String to_display_string() const
+    DeprecatedString to_display_string() const
     {
         if (is_string())
             return as_string();

@@ -25,8 +25,8 @@ private:
     CardSettingsWidget();
 
     void set_cards_background_color(Gfx::Color);
-    bool set_card_back_image_path(String const&);
-    String card_back_image_path() const;
+    bool set_card_back_image_path(DeprecatedString const&);
+    DeprecatedString card_back_image_path() const;
 
     RefPtr<GUI::Frame> m_preview_frame;
     RefPtr<GUI::ImageWidget> m_preview_card_back;

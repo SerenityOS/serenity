@@ -48,7 +48,7 @@ private:
     RefPtr<GUI::TableView> m_data_preview_table_view;
     RefPtr<GUI::Label> m_data_preview_error_label;
     RefPtr<GUI::StackWidget> m_data_preview_widget;
-    Vector<String> m_quote_escape_items {
+    Vector<DeprecatedString> m_quote_escape_items {
         // Note: Keep in sync with Reader::ParserTraits::QuoteEscape.
         "Repeat",
         "Backslash",
@@ -56,7 +56,7 @@ private:
 };
 
 struct ImportDialog {
-    static Result<NonnullRefPtrVector<Sheet>, String> make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook&);
+    static Result<NonnullRefPtrVector<Sheet>, DeprecatedString> make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook&);
 };
 
 }

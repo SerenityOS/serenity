@@ -42,12 +42,12 @@
 
 namespace Browser {
 
-URL url_from_user_input(String const& input)
+URL url_from_user_input(DeprecatedString const& input)
 {
     if (input.starts_with('?') && !g_search_engine.is_empty())
         return URL(g_search_engine.replace("{}"sv, URL::percent_encode(input.substring_view(1)), ReplaceMode::FirstOnly));
 
-    URL url_with_http_schema = URL(String::formatted("http://{}", input));
+    URL url_with_http_schema = URL(DeprecatedString::formatted("http://{}", input));
     if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())
         return url_with_http_schema;
 
@@ -62,13 +62,13 @@ void Tab::start_download(const URL& url)
 {
     auto window = GUI::Window::construct(&this->window());
     window->resize(300, 170);
-    window->set_title(String::formatted("0% of {}", url.basename()));
+    window->set_title(DeprecatedString::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
     window->set_main_widget<DownloadWidget>(url);
     window->show();
 }
 
-void Tab::view_source(const URL& url, String const& source)
+void Tab::view_source(const URL& url, DeprecatedString const& source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto& editor = window->set_main_widget<GUI::TextEditor>();
@@ -83,7 +83,7 @@ void Tab::view_source(const URL& url, String const& source)
     window->show();
 }
 
-void Tab::update_status(Optional<String> text_override, i32 count_waiting)
+void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_waiting)
 {
     if (text_override.has_value()) {
         m_statusbar->set_text(*text_override);
@@ -99,10 +99,10 @@ void Tab::update_status(Optional<String> text_override, i32 count_waiting)
 
     if (count_waiting == 0) {
         // ex: "Loading google.com"
-        m_statusbar->set_text(String::formatted("Loading {}", m_navigating_url->host()));
+        m_statusbar->set_text(DeprecatedString::formatted("Loading {}", m_navigating_url->host()));
     } else {
         // ex: "google.com is waiting on 5 resources"
-        m_statusbar->set_text(String::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv));
+        m_statusbar->set_text(DeprecatedString::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv));
     }
 }
 
@@ -386,7 +386,7 @@ Tab::Tab(BrowserWindow& window)
         return {};
     };
 
-    view().on_get_cookie = [this](auto& url, auto source) -> String {
+    view().on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
         if (on_get_cookie)
             return on_get_cookie(url, source);
         return {};
@@ -485,7 +485,7 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
         return {};
     }
 
-    String text = m_location_box->text();
+    DeprecatedString text = m_location_box->text();
 
     StringBuilder builder;
     builder.append(text);
@@ -495,7 +495,7 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
             builder.append(".com"sv);
         }
     }
-    String final_text = builder.to_string();
+    DeprecatedString final_text = builder.to_string();
 
     auto url = url_from_user_input(final_text);
     return url;
@@ -552,7 +552,7 @@ void Tab::bookmark_current_url()
     update_bookmark_button(url);
 }
 
-void Tab::update_bookmark_button(String const& url)
+void Tab::update_bookmark_button(DeprecatedString const& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
@@ -672,7 +672,7 @@ void Tab::show_console_window()
         console_window->set_title("JS Console");
         console_window->set_icon(g_icon_bag.filetype_javascript);
         m_console_widget = console_window->set_main_widget<ConsoleWidget>();
-        m_console_widget->on_js_input = [this](String const& js_source) {
+        m_console_widget->on_js_input = [this](DeprecatedString const& js_source) {
             m_web_content_view->js_console_input(js_source);
         };
         m_console_widget->on_request_messages = [this](i32 start_index) {

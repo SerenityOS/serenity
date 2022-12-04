@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/ConfigFile.h>
@@ -25,18 +25,18 @@ enum class ComponentCategory {
 };
 
 struct ComponentData {
-    String name;
-    String description;
+    DeprecatedString name;
+    DeprecatedString description;
     ComponentCategory category { ComponentCategory::Optional };
     bool was_selected { false };
-    Vector<String> dependencies;
+    Vector<DeprecatedString> dependencies;
     bool is_selected { false };
 };
 
 struct WhiptailOption {
-    String tag;
-    String name;
-    String description;
+    DeprecatedString tag;
+    DeprecatedString name;
+    DeprecatedString description;
     bool checked { false };
 };
 
@@ -77,7 +77,7 @@ static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_
     return components;
 }
 
-static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<WhiptailOption> const& options, StringView title, StringView description)
+static Result<Vector<DeprecatedString>, int> run_whiptail(WhiptailMode mode, Vector<WhiptailOption> const& options, StringView title, StringView description)
 {
     struct winsize w;
     if (ioctl(0, TIOCGWINSZ, &w) < 0) {
@@ -97,7 +97,7 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
     int read_fd = pipefd[0];
     int write_fd = pipefd[1];
 
-    Vector<String> arguments = { "whiptail", "--notags", "--separate-output", "--output-fd", String::number(write_fd) };
+    Vector<DeprecatedString> arguments = { "whiptail", "--notags", "--separate-output", "--output-fd", DeprecatedString::number(write_fd) };
 
     if (!title.is_empty()) {
         arguments.append("--title");
@@ -116,13 +116,13 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
     }
 
     if (description.is_empty())
-        arguments.append(String::empty());
+        arguments.append(DeprecatedString::empty());
     else
-        arguments.append(String::formatted("\n {}", description));
+        arguments.append(DeprecatedString::formatted("\n {}", description));
 
-    arguments.append(String::number(height));
-    arguments.append(String::number(width));
-    arguments.append(String::number(height - 9));
+    arguments.append(DeprecatedString::number(height));
+    arguments.append(DeprecatedString::number(width));
+    arguments.append(DeprecatedString::number(height - 9));
 
     // Check how wide the name field needs to be.
     size_t max_name_width = 0;
@@ -133,7 +133,7 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
 
     for (auto& option : options) {
         arguments.append(option.tag);
-        arguments.append(String::formatted("{:{2}}    {}", option.name, option.description, max_name_width));
+        arguments.append(DeprecatedString::formatted("{:{2}}    {}", option.name, option.description, max_name_width));
         if (mode == WhiptailMode::Checklist)
             arguments.append(option.checked ? "1" : "0");
     }
@@ -151,7 +151,7 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
         return -1;
     }
 
-    auto full_term_variable = String::formatted("TERM={}", term_variable);
+    auto full_term_variable = DeprecatedString::formatted("TERM={}", term_variable);
     auto colors = "NEWT_COLORS=root=,black\ncheckbox=black,lightgray";
 
     char* env[3];
@@ -194,11 +194,11 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
 
     auto file = Core::File::construct();
     file->open(read_fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-    auto data = String::copy(file->read_all());
+    auto data = DeprecatedString::copy(file->read_all());
     return data.split('\n');
 }
 
-static bool run_system_command(String const& command, StringView command_name)
+static bool run_system_command(DeprecatedString const& command, StringView command_name)
 {
     if (command.starts_with("cmake"sv))
         warnln("\e[34mRunning CMake...\e[0m");
@@ -274,7 +274,7 @@ int main()
     StringView build_type = customize ? type.substring_view(7) : type.view();
 
     // Step 4: Customize the configuration if the user requested to. In any case, set the components component.is_selected value correctly.
-    Vector<String> activated_components;
+    Vector<DeprecatedString> activated_components;
 
     if (customize) {
         Vector<WhiptailOption> options;
@@ -336,12 +336,12 @@ int main()
     }
 
     // Step 5: Generate the cmake command.
-    Vector<String> cmake_arguments = { "cmake", "../..", "-G", "Ninja", "-DBUILD_EVERYTHING=OFF" };
+    Vector<DeprecatedString> cmake_arguments = { "cmake", "../..", "-G", "Ninja", "-DBUILD_EVERYTHING=OFF" };
     for (auto& component : components)
-        cmake_arguments.append(String::formatted("-DBUILD_{}={}", component.name.to_uppercase(), component.is_selected ? "ON" : "OFF"));
+        cmake_arguments.append(DeprecatedString::formatted("-DBUILD_{}={}", component.name.to_uppercase(), component.is_selected ? "ON" : "OFF"));
 
     warnln("\e[34mThe following command will be run:\e[0m");
-    outln("{} \\", String::join(' ', cmake_arguments));
+    outln("{} \\", DeprecatedString::join(' ', cmake_arguments));
     outln("  && ninja clean\n  && rm -rf Root");
     warn("\e[34mDo you want to run the command?\e[0m [Y/n] ");
     auto character = getchar();
@@ -351,7 +351,7 @@ int main()
     }
 
     // Step 6: Run CMake, 'ninja clean' and 'rm -rf Root'
-    auto command = String::join(' ', cmake_arguments);
+    auto command = DeprecatedString::join(' ', cmake_arguments);
     if (!run_system_command(command, "CMake"sv))
         return 1;
     if (!run_system_command("ninja clean"sv, "Ninja"sv))

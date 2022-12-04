@@ -40,7 +40,7 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
     };
 }
 
-void Player::play_file_path(String const& path)
+void Player::play_file_path(DeprecatedString const& path)
 {
     if (path.is_null())
         return;
@@ -71,7 +71,7 @@ void Player::play_file_path(String const& path)
     play();
 }
 
-bool Player::is_playlist(String const& path)
+bool Player::is_playlist(DeprecatedString const& path)
 {
     return (path.ends_with(".m3u"sv, AK::CaseSensitivity::CaseInsensitive)
         || path.ends_with(".m3u8"sv, AK::CaseSensitivity::CaseInsensitive));

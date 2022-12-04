@@ -7,18 +7,18 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibJS/SourceRange.h>
 
 namespace JS {
 
 struct ParserError {
-    String message;
+    DeprecatedString message;
     Optional<Position> position;
 
-    String to_string() const;
-    String source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
+    DeprecatedString to_string() const;
+    DeprecatedString source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
 };
 
 }

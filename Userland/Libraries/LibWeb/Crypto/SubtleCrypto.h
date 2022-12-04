@@ -19,7 +19,7 @@ public:
 
     virtual ~SubtleCrypto() override;
 
-    JS::Promise* digest(String const& algorithm, JS::Handle<JS::Object> const& data);
+    JS::Promise* digest(DeprecatedString const& algorithm, JS::Handle<JS::Object> const& data);
 
 private:
     explicit SubtleCrypto(JS::Realm&);

@@ -250,7 +250,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
 void MainWidget::update_title()
 {
-    window()->set_title(String::formatted("{}[*] - Theme Editor", m_path.value_or("Untitled")));
+    window()->set_title(DeprecatedString::formatted("{}[*] - Theme Editor", m_path.value_or("Untitled")));
 }
 
 GUI::Window::CloseRequestDecision MainWidget::request_close()
@@ -272,7 +272,7 @@ GUI::Window::CloseRequestDecision MainWidget::request_close()
     return GUI::Window::CloseRequestDecision::StayOpen;
 }
 
-void MainWidget::set_path(String path)
+void MainWidget::set_path(DeprecatedString path)
 {
     m_path = path;
     update_title();
@@ -304,7 +304,7 @@ void MainWidget::save_to_file(Core::File& file)
 
     auto sync_result = theme->sync();
     if (sync_result.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Failed to save theme file: {}", sync_result.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", sync_result.error()));
     } else {
         m_last_modified_time = Time::now_monotonic();
         set_path(file.filename());
@@ -525,7 +525,7 @@ void MainWidget::set_metric(Gfx::MetricRole role, int value)
     set_palette(preview_palette);
 }
 
-void MainWidget::set_path(Gfx::PathRole role, String value)
+void MainWidget::set_path(Gfx::PathRole role, DeprecatedString value)
 {
     auto preview_palette = m_current_palette;
     preview_palette.set_path(role, value);
@@ -543,7 +543,7 @@ void MainWidget::set_palette(Gfx::Palette palette)
 void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::TextBox& path_input, PathPickerTarget path_picker_target)
 {
     bool open_folder = path_picker_target == PathPickerTarget::Folder;
-    auto window_title = String::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
+    auto window_title = DeprecatedString::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
     auto target_path = path_input.text();
     if (Core::File::exists(target_path)) {
         if (!Core::File::is_directory(target_path))

@@ -80,10 +80,10 @@ Element* HTMLCollection::named_item(FlyString const& name) const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-names
-Vector<String> HTMLCollection::supported_property_names() const
+Vector<DeprecatedString> HTMLCollection::supported_property_names() const
 {
     // 1. Let result be an empty list.
-    Vector<String> result;
+    Vector<DeprecatedString> result;
 
     // 2. For each element represented by the collection, in tree order:
     auto elements = collect_matching_elements();

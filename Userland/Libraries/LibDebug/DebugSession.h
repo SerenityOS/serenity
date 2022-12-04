@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/Demangle.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
@@ -27,7 +27,7 @@ namespace Debug {
 
 class DebugSession : public ProcessInspector {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(String const& command, String source_root = {}, Function<ErrorOr<void>()> setup_child = {});
+    static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {});
 
     virtual ~DebugSession() override;
 
@@ -55,20 +55,20 @@ public:
     };
 
     struct InsertBreakpointAtSymbolResult {
-        String library_name;
+        DeprecatedString library_name;
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(String const& symbol_name);
+    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(DeprecatedString const& symbol_name);
 
     struct InsertBreakpointAtSourcePositionResult {
-        String library_name;
-        String filename;
+        DeprecatedString library_name;
+        DeprecatedString filename;
         size_t line_number { 0 };
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(String const& filename, size_t line_number);
+    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(DeprecatedString const& filename, size_t line_number);
 
     bool insert_breakpoint(FlatPtr address);
     bool disable_breakpoint(FlatPtr address);
@@ -130,7 +130,7 @@ public:
     };
 
 private:
-    explicit DebugSession(pid_t, String source_root);
+    explicit DebugSession(pid_t, DeprecatedString source_root);
 
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
@@ -138,14 +138,14 @@ private:
     void update_loaded_libs();
 
     int m_debuggee_pid { -1 };
-    String m_source_root;
+    DeprecatedString m_source_root;
     bool m_is_debuggee_dead { false };
 
     HashMap<FlatPtr, BreakPoint> m_breakpoints;
     HashMap<FlatPtr, WatchPoint> m_watchpoints;
 
     // Maps from library name to LoadedLibrary object
-    HashMap<String, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
+    HashMap<DeprecatedString, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
 };
 
 template<typename Callback>

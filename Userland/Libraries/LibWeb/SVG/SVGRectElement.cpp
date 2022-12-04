@@ -19,7 +19,7 @@ SVGRectElement::SVGRectElement(DOM::Document& document, DOM::QualifiedName quali
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGRectElement"));
 }
 
-void SVGRectElement::parse_attribute(FlyString const& name, String const& value)
+void SVGRectElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

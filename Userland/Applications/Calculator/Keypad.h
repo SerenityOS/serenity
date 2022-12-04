@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
@@ -33,7 +33,7 @@ public:
     void set_rounding_length(unsigned);
     unsigned rounding_length() const;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     // Internal representation of the current decimal value.

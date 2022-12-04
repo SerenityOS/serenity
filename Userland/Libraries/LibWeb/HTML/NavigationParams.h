@@ -20,7 +20,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params
 struct NavigationParams {
     // a navigation id
-    String id;
+    DeprecatedString id;
 
     // null or a request that started the navigation
     JS::GCPtr<Fetch::Infrastructure::Request> request;

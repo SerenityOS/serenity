@@ -13,12 +13,12 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<Attr> Attr::create(Document& document, FlyString local_name, String value, Element const* owner_element)
+JS::NonnullGCPtr<Attr> Attr::create(Document& document, FlyString local_name, DeprecatedString value, Element const* owner_element)
 {
     return *document.heap().allocate<Attr>(document.realm(), document, move(local_name), move(value), owner_element);
 }
 
-Attr::Attr(Document& document, FlyString local_name, String value, Element const* owner_element)
+Attr::Attr(Document& document, FlyString local_name, DeprecatedString value, Element const* owner_element)
     : Node(document, NodeType::ATTRIBUTE_NODE)
     , m_qualified_name(move(local_name), {}, {})
     , m_value(move(value))
@@ -49,7 +49,7 @@ void Attr::set_owner_element(Element const* owner_element)
 }
 
 // https://dom.spec.whatwg.org/#set-an-existing-attribute-value
-void Attr::set_value(String value)
+void Attr::set_value(DeprecatedString value)
 {
     // 1. If attribute’s element is null, then set attribute’s value to value.
     if (!owner_element()) {
@@ -67,7 +67,7 @@ void Attr::set_value(String value)
 }
 
 // https://dom.spec.whatwg.org/#handle-attribute-changes
-void Attr::handle_attribute_changes(Element& element, String const& old_value, [[maybe_unused]] String const& new_value)
+void Attr::handle_attribute_changes(Element& element, DeprecatedString const& old_value, [[maybe_unused]] DeprecatedString const& new_value)
 {
     // 1. Queue a mutation record of "attributes" for element with attribute’s local name, attribute’s namespace, oldValue, « », « », null, and null.
     element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), {}), nullptr, nullptr);

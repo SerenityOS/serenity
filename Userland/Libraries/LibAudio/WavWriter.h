@@ -38,12 +38,12 @@ public:
     void set_sample_rate(int sample_rate) { m_sample_rate = sample_rate; }
     void set_bits_per_sample(int bits_per_sample) { m_bits_per_sample = bits_per_sample; }
 
-    void clear_error() { m_error_string = String(); }
+    void clear_error() { m_error_string = DeprecatedString(); }
 
 private:
     void write_header();
     RefPtr<Core::File> m_file;
-    String m_error_string;
+    DeprecatedString m_error_string;
     bool m_finalized { false };
 
     u32 m_sample_rate;

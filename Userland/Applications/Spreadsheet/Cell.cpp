@@ -11,7 +11,7 @@
 
 namespace Spreadsheet {
 
-void Cell::set_data(String new_data)
+void Cell::set_data(DeprecatedString new_data)
 {
     // If we are a formula, we do not save the beginning '=', if the new_data is "" we can simply change our kind
     if (m_kind == Formula && m_data.is_empty() && new_data.is_empty()) {
@@ -80,7 +80,7 @@ CellType const& Cell::type() const
     return *CellType::get_by_name("Identity"sv);
 }
 
-JS::ThrowCompletionOr<String> Cell::typed_display() const
+JS::ThrowCompletionOr<DeprecatedString> Cell::typed_display() const
 {
     return type().display(const_cast<Cell&>(*this), m_type_metadata);
 }
@@ -156,7 +156,7 @@ JS::Value Cell::js_data()
     return JS::js_string(m_sheet->interpreter().heap(), m_data);
 }
 
-String Cell::source() const
+DeprecatedString Cell::source() const
 {
     StringBuilder builder;
     if (m_kind == Formula)

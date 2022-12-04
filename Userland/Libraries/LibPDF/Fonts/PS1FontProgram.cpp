@@ -361,7 +361,7 @@ PDFErrorOr<PS1FontProgram::Glyph> PS1FontProgram::parse_glyph(ReadonlyBytes cons
                 }
 
                 default:
-                    return error(String::formatted("Unhandled command: 12 {}", data[i]));
+                    return error(DeprecatedString::formatted("Unhandled command: 12 {}", data[i]));
                 }
                 break;
             }
@@ -447,7 +447,7 @@ PDFErrorOr<PS1FontProgram::Glyph> PS1FontProgram::parse_glyph(ReadonlyBytes cons
             }
 
             default:
-                return error(String::formatted("Unhandled command: {}", v));
+                return error(DeprecatedString::formatted("Unhandled command: {}", v));
             }
         }
     }
@@ -560,7 +560,7 @@ PDFErrorOr<Vector<float>> PS1FontProgram::parse_number_array(Reader& reader, siz
     return array;
 }
 
-PDFErrorOr<String> PS1FontProgram::parse_word(Reader& reader)
+PDFErrorOr<DeprecatedString> PS1FontProgram::parse_word(Reader& reader)
 {
     reader.consume_whitespace();
 
@@ -579,7 +579,7 @@ PDFErrorOr<String> PS1FontProgram::parse_word(Reader& reader)
 PDFErrorOr<float> PS1FontProgram::parse_float(Reader& reader)
 {
     auto word = TRY(parse_word(reader));
-    return strtof(String(word).characters(), nullptr);
+    return strtof(DeprecatedString(word).characters(), nullptr);
 }
 
 PDFErrorOr<int> PS1FontProgram::parse_int(Reader& reader)
@@ -609,7 +609,7 @@ PDFErrorOr<ByteBuffer> PS1FontProgram::decrypt(ReadonlyBytes const& encrypted, u
     return decrypted;
 }
 
-bool PS1FontProgram::seek_name(Reader& reader, String const& name)
+bool PS1FontProgram::seek_name(Reader& reader, DeprecatedString const& name)
 {
     auto start = reader.offset();
 
@@ -631,7 +631,7 @@ bool PS1FontProgram::seek_name(Reader& reader, String const& name)
 }
 
 Error PS1FontProgram::error(
-    String const& message
+    DeprecatedString const& message
 #ifdef PDF_DEBUG
     ,
     SourceLocation loc

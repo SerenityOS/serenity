@@ -6,8 +6,8 @@
  */
 
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -41,8 +41,8 @@ static Icon s_filetype_image_icon;
 static RefPtr<Gfx::Bitmap> s_symlink_emblem;
 static RefPtr<Gfx::Bitmap> s_symlink_emblem_small;
 
-static HashMap<String, Icon> s_filetype_icons;
-static HashMap<String, Vector<String>> s_filetype_patterns;
+static HashMap<DeprecatedString, Icon> s_filetype_icons;
+static HashMap<DeprecatedString, Vector<DeprecatedString>> s_filetype_patterns;
 
 static void initialize_executable_icon_if_needed()
 {
@@ -90,7 +90,7 @@ static void initialize_if_needed()
     initialize_executable_icon_if_needed();
 
     for (auto& filetype : config->keys("Icons")) {
-        s_filetype_icons.set(filetype, Icon::default_icon(String::formatted("filetype-{}", filetype)));
+        s_filetype_icons.set(filetype, Icon::default_icon(DeprecatedString::formatted("filetype-{}", filetype)));
         s_filetype_patterns.set(filetype, config->read_entry("Icons", filetype).split(','));
     }
 
@@ -145,7 +145,7 @@ Icon FileIconProvider::filetype_image_icon()
     return s_filetype_image_icon;
 }
 
-Icon FileIconProvider::icon_for_path(String const& path)
+Icon FileIconProvider::icon_for_path(DeprecatedString const& path)
 {
     struct stat stat;
     if (::stat(path.characters(), &stat) < 0)
@@ -153,9 +153,9 @@ Icon FileIconProvider::icon_for_path(String const& path)
     return icon_for_path(path, stat.st_mode);
 }
 
-Icon FileIconProvider::icon_for_executable(String const& path)
+Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
 {
-    static HashMap<String, Icon> app_icon_cache;
+    static HashMap<DeprecatedString, Icon> app_icon_cache;
 
     if (auto it = app_icon_cache.find(path); it != app_icon_cache.end())
         return it->value;
@@ -233,7 +233,7 @@ Icon FileIconProvider::icon_for_executable(String const& path)
     return icon;
 }
 
-Icon FileIconProvider::icon_for_path(String const& path, mode_t mode)
+Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
 {
     initialize_if_needed();
     if (path == "/")
@@ -258,11 +258,11 @@ Icon FileIconProvider::icon_for_path(String const& path, mode_t mode)
         if (raw_symlink_target.is_null())
             return s_symlink_icon;
 
-        String target_path;
+        DeprecatedString target_path;
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {
-            target_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
+            target_path = Core::File::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
 

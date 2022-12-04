@@ -196,7 +196,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         break;
     }
     case AttributeDataForm::String: {
-        String str;
+        DeprecatedString str;
         u32 str_offset = debug_info_stream.offset();
         debug_info_stream >> str;
         VERIFY(!debug_info_stream.has_any_error());

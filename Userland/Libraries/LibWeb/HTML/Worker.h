@@ -26,9 +26,9 @@
 namespace Web::HTML {
 
 struct WorkerOptions {
-    String type { "classic" };
-    String credentials { "same-origin" };
-    String name { "" };
+    DeprecatedString type { "classic" };
+    DeprecatedString credentials { "same-origin" };
+    DeprecatedString name { "" };
 };
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface

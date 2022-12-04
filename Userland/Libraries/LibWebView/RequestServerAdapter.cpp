@@ -82,7 +82,7 @@ RequestServerAdapter::RequestServerAdapter(NonnullRefPtr<Protocol::RequestClient
 
 RequestServerAdapter::~RequestServerAdapter() = default;
 
-RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(String const& method, URL const& url, HashMap<String, String> const& headers, ReadonlyBytes body, Core::ProxyData const& proxy)
+RefPtr<Web::ResourceLoaderConnectorRequest> RequestServerAdapter::start_request(DeprecatedString const& method, URL const& url, HashMap<DeprecatedString, DeprecatedString> const& headers, ReadonlyBytes body, Core::ProxyData const& proxy)
 {
     auto protocol_request = m_protocol_client->start_request(method, url, headers, body, proxy);
     if (!protocol_request)

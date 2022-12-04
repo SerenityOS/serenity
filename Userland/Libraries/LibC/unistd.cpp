@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/Unveil.h>
 #include <LibCore/File.h>
@@ -189,12 +189,12 @@ int execvpe(char const* filename, char* const argv[], char* const envp[])
     ScopedValueRollback errno_rollback(errno);
 
     // TODO: Make this use the PATH search implementation from Core::File.
-    String path = getenv("PATH");
+    DeprecatedString path = getenv("PATH");
     if (path.is_empty())
         path = DEFAULT_PATH;
     auto parts = path.split(':');
     for (auto& part : parts) {
-        auto candidate = String::formatted("{}/{}", part, filename);
+        auto candidate = DeprecatedString::formatted("{}/{}", part, filename);
         int rc = execve(candidate.characters(), argv, envp);
         if (rc < 0 && errno != ENOENT) {
             errno_rollback.set_override_rollback_value(errno);
@@ -854,13 +854,13 @@ void sync()
     syscall(SC_sync);
 }
 
-static String getlogin_buffer;
+static DeprecatedString getlogin_buffer;
 
 char* getlogin()
 {
     if (getlogin_buffer.is_null()) {
         if (auto* passwd = getpwuid(getuid())) {
-            getlogin_buffer = String(passwd->pw_name);
+            getlogin_buffer = DeprecatedString(passwd->pw_name);
         }
         endpwent();
     }

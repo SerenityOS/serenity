@@ -6,8 +6,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #if ARCH(I386) || ARCH(X86_64)
 #    include <Kernel/Arch/x86/IO.h>
 #endif

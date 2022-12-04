@@ -10,7 +10,7 @@
 #include <LibCrypto/Hash/HashFunction.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace Crypto {
@@ -101,9 +101,9 @@ public:
     inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
-    virtual String class_name() const override
+    virtual DeprecatedString class_name() const override
     {
-        return String::formatted("SHA{}", DigestSize * 8);
+        return DeprecatedString::formatted("SHA{}", DigestSize * 8);
     }
 #endif
 
@@ -153,9 +153,9 @@ public:
     inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
-    virtual String class_name() const override
+    virtual DeprecatedString class_name() const override
     {
-        return String::formatted("SHA{}", DigestSize * 8);
+        return DeprecatedString::formatted("SHA{}", DigestSize * 8);
     }
 #endif
 
@@ -205,9 +205,9 @@ public:
     inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
-    virtual String class_name() const override
+    virtual DeprecatedString class_name() const override
     {
-        return String::formatted("SHA{}", DigestSize * 8);
+        return DeprecatedString::formatted("SHA{}", DigestSize * 8);
     }
 #endif
 

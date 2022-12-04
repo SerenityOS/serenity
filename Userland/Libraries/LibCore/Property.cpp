@@ -9,7 +9,7 @@
 
 namespace Core {
 
-Property::Property(String name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
+Property::Property(DeprecatedString name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
     : m_name(move(name))
     , m_getter(move(getter))
     , m_setter(move(setter))

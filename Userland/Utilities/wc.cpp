@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 struct Count {
-    String name;
+    DeprecatedString name;
     bool exists { true };
     unsigned lines { 0 };
     unsigned characters { 0 };
@@ -39,7 +39,7 @@ static void wc_out(Count const& count)
     outln("{:>14}", count.name);
 }
 
-static Count get_count(String const& file_specifier)
+static Count get_count(DeprecatedString const& file_specifier)
 {
     Count count;
     FILE* file_pointer = nullptr;
@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<String> file_specifiers;
+    Vector<DeprecatedString> file_specifiers;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(g_output_line, "Output line count", "lines", 'l');

@@ -6,8 +6,8 @@
 
 #include "GeneratorUtil.h"
 #include <AK/AnyOf.h>
+#include <AK/DeprecatedString.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -17,13 +17,13 @@
 
 struct Emoji {
     size_t name { 0 };
-    Optional<String> image_path;
+    Optional<DeprecatedString> image_path;
     Unicode::EmojiGroup group;
-    String subgroup;
+    DeprecatedString subgroup;
     u32 display_order { 0 };
     Vector<u32> code_points;
-    String encoded_code_points;
-    String status;
+    DeprecatedString encoded_code_points;
+    DeprecatedString status;
     size_t code_point_array_index { 0 };
 };
 
@@ -44,7 +44,7 @@ static void set_image_path_for_emoji(StringView emoji_resource_path, Emoji& emoj
         builder.appendff("U+{:X}", code_point);
     }
 
-    auto path = String::formatted("{}/{}.png", emoji_resource_path, builder.build());
+    auto path = DeprecatedString::formatted("{}/{}.png", emoji_resource_path, builder.build());
     if (Core::Stream::File::exists(path))
         emoji.image_path = move(path);
 }
@@ -57,7 +57,7 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
     Array<u8, 1024> buffer;
 
     Unicode::EmojiGroup group;
-    String subgroup;
+    DeprecatedString subgroup;
     u32 display_order { 0 };
 
     while (TRY(file.can_read_line())) {
@@ -178,7 +178,7 @@ static ErrorOr<void> generate_emoji_data_implementation(Core::Stream::BufferedFi
     SourceGenerator generator { builder };
 
     generator.set("string_index_type"sv, emoji_data.unique_strings.type_that_fits());
-    generator.set("emojis_size"sv, String::number(emoji_data.emojis.size()));
+    generator.set("emojis_size"sv, DeprecatedString::number(emoji_data.emojis.size()));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -198,7 +198,7 @@ namespace Unicode {
     for (auto const& emoji : emoji_data.emojis) {
         total_code_point_count += emoji.code_points.size();
     }
-    generator.set("total_code_point_count", String::number(total_code_point_count));
+    generator.set("total_code_point_count", DeprecatedString::number(total_code_point_count));
 
     generator.append(R"~~~(
 static constexpr Array<u32, @total_code_point_count@> s_emoji_code_points { {)~~~");
@@ -207,7 +207,7 @@ static constexpr Array<u32, @total_code_point_count@> s_emoji_code_points { {)~~
     for (auto const& emoji : emoji_data.emojis) {
         for (auto code_point : emoji.code_points) {
             generator.append(first ? " "sv : ", "sv);
-            generator.append(String::formatted("{:#x}", code_point));
+            generator.append(DeprecatedString::formatted("{:#x}", code_point));
             first = false;
         }
     }
@@ -245,11 +245,11 @@ struct EmojiData {
 static constexpr Array<EmojiData, @emojis_size@> s_emojis { {)~~~");
 
     for (auto const& emoji : emoji_data.emojis) {
-        generator.set("name"sv, String::number(emoji.name));
-        generator.set("group"sv, String::number(to_underlying(emoji.group)));
-        generator.set("display_order"sv, String::number(emoji.display_order));
-        generator.set("code_point_start"sv, String::number(emoji.code_point_array_index));
-        generator.set("code_point_count"sv, String::number(emoji.code_points.size()));
+        generator.set("name"sv, DeprecatedString::number(emoji.name));
+        generator.set("group"sv, DeprecatedString::number(to_underlying(emoji.group)));
+        generator.set("display_order"sv, DeprecatedString::number(emoji.display_order));
+        generator.set("code_point_start"sv, DeprecatedString::number(emoji.code_point_array_index));
+        generator.set("code_point_count"sv, DeprecatedString::number(emoji.code_points.size()));
 
         generator.append(R"~~~(
     { @name@, @group@, @display_order@, @code_point_start@, @code_point_count@ },)~~~");
@@ -312,7 +312,7 @@ static ErrorOr<void> generate_emoji_installation(Core::Stream::BufferedFile& fil
 
         generator.append("@emoji@"sv);
         generator.append(" - "sv);
-        generator.append(String::join(" "sv, emoji.code_points, "U+{:X}"sv));
+        generator.append(DeprecatedString::join(" "sv, emoji.code_points, "U+{:X}"sv));
         generator.append(" @name@ (@status@)\n"sv);
     }
 

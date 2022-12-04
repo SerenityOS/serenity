@@ -22,15 +22,15 @@ struct Handler {
         UserDefault
     };
     Type handler_type;
-    String name;
-    String executable;
-    HashTable<String> mime_types {};
-    HashTable<String> file_types {};
-    HashTable<String> protocols {};
+    DeprecatedString name;
+    DeprecatedString executable;
+    HashTable<DeprecatedString> mime_types {};
+    HashTable<DeprecatedString> file_types {};
+    HashTable<DeprecatedString> protocols {};
 
-    static String name_from_executable(StringView);
-    void from_executable(Type, String const&);
-    String to_details_str() const;
+    static DeprecatedString name_from_executable(StringView);
+    void from_executable(Type, DeprecatedString const&);
+    DeprecatedString to_details_str() const;
 };
 
 class Launcher {
@@ -38,25 +38,25 @@ public:
     Launcher();
     static Launcher& the();
 
-    void load_handlers(String const& af_dir = Desktop::AppFile::APP_FILES_DIRECTORY);
+    void load_handlers(DeprecatedString const& af_dir = Desktop::AppFile::APP_FILES_DIRECTORY);
     void load_config(Core::ConfigFile const&);
-    bool open_url(const URL&, String const& handler_name);
-    Vector<String> handlers_for_url(const URL&);
-    Vector<String> handlers_with_details_for_url(const URL&);
+    bool open_url(const URL&, DeprecatedString const& handler_name);
+    Vector<DeprecatedString> handlers_for_url(const URL&);
+    Vector<DeprecatedString> handlers_with_details_for_url(const URL&);
 
 private:
-    HashMap<String, Handler> m_handlers;
-    HashMap<String, String> m_protocol_handlers;
-    HashMap<String, String> m_file_handlers;
-    HashMap<String, String> m_mime_handlers;
+    HashMap<DeprecatedString, Handler> m_handlers;
+    HashMap<DeprecatedString, DeprecatedString> m_protocol_handlers;
+    HashMap<DeprecatedString, DeprecatedString> m_file_handlers;
+    HashMap<DeprecatedString, DeprecatedString> m_mime_handlers;
 
-    bool has_mime_handlers(String const&);
-    Optional<String> mime_type_for_file(String path);
-    Handler get_handler_for_executable(Handler::Type, String const&) const;
-    size_t for_each_handler(String const& key, HashMap<String, String> const& user_preferences, Function<bool(Handler const&)> f);
-    void for_each_handler_for_path(String const&, Function<bool(Handler const&)> f);
+    bool has_mime_handlers(DeprecatedString const&);
+    Optional<DeprecatedString> mime_type_for_file(DeprecatedString path);
+    Handler get_handler_for_executable(Handler::Type, DeprecatedString const&) const;
+    size_t for_each_handler(DeprecatedString const& key, HashMap<DeprecatedString, DeprecatedString> const& user_preferences, Function<bool(Handler const&)> f);
+    void for_each_handler_for_path(DeprecatedString const&, Function<bool(Handler const&)> f);
     bool open_file_url(const URL&);
-    bool open_with_user_preferences(HashMap<String, String> const& user_preferences, String const& key, Vector<String> const& arguments, String const& default_program = {});
-    bool open_with_handler_name(const URL&, String const& handler_name);
+    bool open_with_user_preferences(HashMap<DeprecatedString, DeprecatedString> const& user_preferences, DeprecatedString const& key, Vector<DeprecatedString> const& arguments, DeprecatedString const& default_program = {});
+    bool open_with_handler_name(const URL&, DeprecatedString const& handler_name);
 };
 }

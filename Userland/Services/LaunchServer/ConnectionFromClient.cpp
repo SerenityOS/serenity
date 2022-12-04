@@ -24,7 +24,7 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-Messages::LaunchServer::OpenUrlResponse ConnectionFromClient::open_url(URL const& url, String const& handler_name)
+Messages::LaunchServer::OpenUrlResponse ConnectionFromClient::open_url(URL const& url, DeprecatedString const& handler_name)
 {
     if (!m_allowlist.is_empty()) {
         bool allowed = false;
@@ -39,7 +39,7 @@ Messages::LaunchServer::OpenUrlResponse ConnectionFromClient::open_url(URL const
         }
         if (!allowed) {
             // You are not on the list, go home!
-            did_misbehave(String::formatted("Client requested a combination of handler/URL that was not on the list: '{}' with '{}'", handler_name, url).characters());
+            did_misbehave(DeprecatedString::formatted("Client requested a combination of handler/URL that was not on the list: '{}' with '{}'", handler_name, url).characters());
             return nullptr;
         }
     }
@@ -69,10 +69,10 @@ void ConnectionFromClient::add_allowed_url(URL const& url)
         return;
     }
 
-    m_allowlist.empend(String(), false, Vector<URL> { url });
+    m_allowlist.empend(DeprecatedString(), false, Vector<URL> { url });
 }
 
-void ConnectionFromClient::add_allowed_handler_with_any_url(String const& handler_name)
+void ConnectionFromClient::add_allowed_handler_with_any_url(DeprecatedString const& handler_name)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
@@ -87,7 +87,7 @@ void ConnectionFromClient::add_allowed_handler_with_any_url(String const& handle
     m_allowlist.empend(handler_name, true, Vector<URL>());
 }
 
-void ConnectionFromClient::add_allowed_handler_with_only_specific_urls(String const& handler_name, Vector<URL> const& urls)
+void ConnectionFromClient::add_allowed_handler_with_only_specific_urls(DeprecatedString const& handler_name, Vector<URL> const& urls)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");

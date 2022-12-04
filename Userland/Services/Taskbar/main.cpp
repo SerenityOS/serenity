@@ -34,7 +34,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static ErrorOr<Vector<String>> discover_apps_and_categories();
+static ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories();
 static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -75,10 +75,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 }
 
 struct AppMetadata {
-    String executable;
-    String name;
-    String category;
-    String working_directory;
+    DeprecatedString executable;
+    DeprecatedString name;
+    DeprecatedString category;
+    DeprecatedString working_directory;
     GUI::Icon icon;
     bool run_in_terminal;
     bool requires_root;
@@ -91,9 +91,9 @@ Vector<Gfx::SystemThemeMetaData> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 GUI::ActionGroup g_themes_group;
 
-ErrorOr<Vector<String>> discover_apps_and_categories()
+ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
 {
-    HashTable<String> seen_app_categories;
+    HashTable<DeprecatedString> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
         if (access(af->executable().characters(), X_OK) == 0) {
             g_apps.append({ af->executable(), af->name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal(), af->requires_root() });
@@ -102,7 +102,7 @@ ErrorOr<Vector<String>> discover_apps_and_categories()
     });
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
 
-    Vector<String> sorted_app_categories;
+    Vector<DeprecatedString> sorted_app_categories;
     TRY(sorted_app_categories.try_ensure_capacity(seen_app_categories.size()));
     for (auto const& category : seen_app_categories)
         sorted_app_categories.unchecked_append(category);
@@ -113,7 +113,7 @@ ErrorOr<Vector<String>> discover_apps_and_categories()
 
 ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 {
-    Vector<String> const sorted_app_categories = TRY(discover_apps_and_categories());
+    Vector<DeprecatedString> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1")); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("&About SerenityOS", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladyball.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
@@ -124,13 +124,13 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 
     // First we construct all the necessary app category submenus.
     auto category_icons = TRY(Core::ConfigFile::open("/res/icons/SystemMenu.ini"));
-    HashMap<String, NonnullRefPtr<GUI::Menu>> app_category_menus;
+    HashMap<DeprecatedString, NonnullRefPtr<GUI::Menu>> app_category_menus;
 
-    Function<void(String const&)> create_category_menu;
-    create_category_menu = [&](String const& category) {
+    Function<void(DeprecatedString const&)> create_category_menu;
+    create_category_menu = [&](DeprecatedString const& category) {
         if (app_category_menus.contains(category))
             return;
-        String parent_category, child_category = category;
+        DeprecatedString parent_category, child_category = category;
         for (ssize_t i = category.length() - 1; i >= 0; i--) {
             if (category[i] == '/') {
                 parent_category = category.substring(0, i);
@@ -183,7 +183,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             dbgln("Activated app with ID {}", app_identifier);
             auto& app = g_apps[app_identifier];
             char const* argv[4] { nullptr, nullptr, nullptr, nullptr };
-            auto pls_with_executable = String::formatted("/bin/pls {}", app.executable);
+            auto pls_with_executable = DeprecatedString::formatted("/bin/pls {}", app.executable);
             if (app.run_in_terminal && !app.requires_root) {
                 argv[0] = "/bin/Terminal";
                 argv[1] = "-e";

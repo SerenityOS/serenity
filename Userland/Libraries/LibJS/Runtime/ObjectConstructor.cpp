@@ -227,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 
     (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
-            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, DeprecatedString::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));

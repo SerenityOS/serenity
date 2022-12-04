@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Hex.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/String.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -45,7 +45,7 @@ public:
             set_parsed_value(static_cast<ValueType>(i), "");
     }
 
-    void set_parsed_value(ValueType type, String value)
+    void set_parsed_value(ValueType type, DeprecatedString value)
     {
         m_values[type] = value;
     }
@@ -60,7 +60,7 @@ public:
         return 2;
     }
 
-    String column_name(int column) const override
+    DeprecatedString column_name(int column) const override
     {
         switch (column) {
         case Column::Type:
@@ -71,7 +71,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    String inspector_value_type_to_string(ValueType type) const
+    DeprecatedString inspector_value_type_to_string(ValueType type) const
     {
         switch (type) {
         case SignedByte:
@@ -156,5 +156,5 @@ public:
 
 private:
     bool m_is_little_endian = false;
-    Array<String, ValueType::__Count> m_values = {};
+    Array<DeprecatedString, ValueType::__Count> m_values = {};
 };

@@ -99,10 +99,10 @@ public:
 
     [[nodiscard]] BasicBlock& current_block() { return *m_current_basic_block; }
 
-    BasicBlock& make_block(String name = {})
+    BasicBlock& make_block(DeprecatedString name = {})
     {
         if (name.is_empty())
-            name = String::number(m_next_block++);
+            name = DeprecatedString::number(m_next_block++);
         m_root_basic_blocks.append(BasicBlock::create(name));
         return m_root_basic_blocks.last();
     }
@@ -112,7 +112,7 @@ public:
         return m_current_basic_block->is_terminated();
     }
 
-    StringTableIndex intern_string(String string)
+    StringTableIndex intern_string(DeprecatedString string)
     {
         return m_string_table->insert(move(string));
     }

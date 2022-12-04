@@ -31,8 +31,8 @@ private:
         u8 presentation_size;
         u16 weight;
         u8 slope;
-        String name;
-        String family;
+        DeprecatedString name;
+        DeprecatedString family;
         bool is_fixed_width;
     } m_new_font_metadata;
 
@@ -51,6 +51,6 @@ private:
     RefPtr<GUI::SpinBox> m_spacing_spinbox;
     RefPtr<GUI::CheckBox> m_fixed_width_checkbox;
 
-    Vector<String> m_font_weight_list;
-    Vector<String> m_font_slope_list;
+    Vector<DeprecatedString> m_font_weight_list;
+    Vector<DeprecatedString> m_font_slope_list;
 };

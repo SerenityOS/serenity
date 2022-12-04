@@ -32,7 +32,7 @@
 
 namespace GUI {
 
-Optional<String> FilePicker::get_open_filepath(Window* parent_window, String const& window_title, StringView path, bool folder, ScreenPosition screen_position)
+Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position)
 {
     auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position);
 
@@ -40,7 +40,7 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, String con
         picker->set_title(window_title);
 
     if (picker->exec() == ExecResult::OK) {
-        String file_path = picker->selected_file();
+        DeprecatedString file_path = picker->selected_file();
 
         if (file_path.is_null())
             return {};
@@ -50,12 +50,12 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, String con
     return {};
 }
 
-Optional<String> FilePicker::get_save_filepath(Window* parent_window, String const& title, String const& extension, StringView path, ScreenPosition screen_position)
+Optional<DeprecatedString> FilePicker::get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path, ScreenPosition screen_position)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension), path, screen_position);
+    auto picker = FilePicker::construct(parent_window, Mode::Save, DeprecatedString::formatted("{}.{}", title, extension), path, screen_position);
 
     if (picker->exec() == ExecResult::OK) {
-        String file_path = picker->selected_file();
+        DeprecatedString file_path = picker->selected_file();
 
         if (file_path.is_null())
             return {};
@@ -115,7 +115,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
     auto open_parent_directory_action = Action::create(
         "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
-            set_path(String::formatted("{}/..", m_model->root_path()));
+            set_path(DeprecatedString::formatted("{}/..", m_model->root_path()));
         },
         this);
     toolbar.add_action(*open_parent_directory_action);
@@ -129,12 +129,12 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
     auto mkdir_action = Action::create(
         "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
-            String value;
+            DeprecatedString value;
             if (InputBox::show(this, value, "Enter name:"sv, "New directory"sv) == InputBox::ExecResult::OK && !value.is_empty()) {
-                auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
+                auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));
                 int rc = mkdir(new_dir_path.characters(), 0777);
                 if (rc < 0) {
-                    MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error"sv, MessageBox::Type::Error);
+                    MessageBox::show(this, DeprecatedString::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error"sv, MessageBox::Type::Error);
                 } else {
                     m_model->invalidate();
                 }
@@ -220,7 +220,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     };
 
     m_model->on_directory_change_error = [&](int, char const* error_string) {
-        m_error_label->set_text(String::formatted("Could not open {}:\n{}", m_model->root_path(), error_string));
+        m_error_label->set_text(DeprecatedString::formatted("Could not open {}:\n{}", m_model->root_path(), error_string));
         m_view->set_active_widget(m_error_label);
 
         m_view->view_as_icons_action().set_enabled(false);
@@ -239,7 +239,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         m_view->view_as_columns_action().set_enabled(true);
     };
 
-    common_locations_tray.on_item_activation = [this](String const& path) {
+    common_locations_tray.on_item_activation = [this](DeprecatedString const& path) {
         set_path(path);
     };
     for (auto& location : CommonLocationsProvider::common_locations()) {
@@ -271,7 +271,7 @@ void FilePicker::on_file_return()
     bool file_exists = Core::File::exists(path);
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
-        MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found"sv, MessageBox::Type::Error, MessageBox::InputType::OK);
+        MessageBox::show(this, DeprecatedString::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found"sv, MessageBox::Type::Error, MessageBox::InputType::OK);
         return;
     }
 
@@ -285,10 +285,10 @@ void FilePicker::on_file_return()
     done(ExecResult::OK);
 }
 
-void FilePicker::set_path(String const& path)
+void FilePicker::set_path(DeprecatedString const& path)
 {
     if (access(path.characters(), R_OK | X_OK) == -1) {
-        GUI::MessageBox::show(this, String::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(this, DeprecatedString::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         auto& common_locations_tray = *find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
         for (auto& location_button : m_common_location_buttons)
             common_locations_tray.set_item_checked(location_button.tray_item_index, m_model->root_path() == location_button.path);

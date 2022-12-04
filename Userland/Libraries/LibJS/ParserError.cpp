@@ -12,20 +12,20 @@
 
 namespace JS {
 
-String ParserError::to_string() const
+DeprecatedString ParserError::to_string() const
 {
     if (!position.has_value())
         return message;
-    return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
+    return DeprecatedString::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
 }
 
-String ParserError::source_location_hint(StringView source, char const spacer, char const indicator) const
+DeprecatedString ParserError::source_location_hint(StringView source, char const spacer, char const indicator) const
 {
     if (!position.has_value())
         return {};
     // We need to modify the source to match what the lexer considers one line - normalizing
     // line terminators to \n is easier than splitting using all different LT characters.
-    String source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
+    DeprecatedString source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
     StringBuilder builder;
     builder.append(source_string.split_view('\n', SplitBehavior::KeepEmpty)[position.value().line - 1]);
     builder.append('\n');

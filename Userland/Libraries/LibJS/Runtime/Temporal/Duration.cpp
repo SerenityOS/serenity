@@ -481,7 +481,7 @@ Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, d
 }
 
 // 7.5.18 BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-balanceduration
-ThrowCompletionOr<TimeDurationRecord> balance_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, String const& largest_unit, Object* relative_to)
+ThrowCompletionOr<TimeDurationRecord> balance_duration(VM& vm, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, DeprecatedString const& largest_unit, Object* relative_to)
 {
     // 1. If relativeTo is not present, set relativeTo to undefined.
 
@@ -627,7 +627,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(VM& vm, double days, doub
 }
 
 // 7.5.19 UnbalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-unbalancedurationrelative
-ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to)
+ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double years, double months, double weeks, double days, DeprecatedString const& largest_unit, Value relative_to)
 {
     auto& realm = *vm.current_realm();
 
@@ -816,7 +816,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
 }
 
 // 7.5.20 BalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-balancedurationrelative
-ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to_value)
+ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double years, double months, double weeks, double days, DeprecatedString const& largest_unit, Value relative_to_value)
 {
     auto& realm = *vm.current_realm();
 
@@ -1655,7 +1655,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(VM& vm, double ye
 }
 
 // 7.5.27 TemporalDurationToString ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationtostring
-String temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision)
+DeprecatedString temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision)
 {
     if (precision.has<StringView>())
         VERIFY(precision.get<StringView>() == "auto"sv);
@@ -1736,7 +1736,7 @@ String temporal_duration_to_string(double years, double months, double weeks, do
 
         // b. Let decimalPart be ToZeroPaddedDecimalString(fraction, 9).
         // NOTE: padding with zeros leads to weird results when applied to a double. Not sure if that's a bug in AK/Format.h or if I'm doing this wrong.
-        auto decimal_part = String::formatted("{:09}", (u64)fraction);
+        auto decimal_part = DeprecatedString::formatted("{:09}", (u64)fraction);
 
         // c. If precision is "auto", then
         if (precision.has<StringView>() && precision.get<StringView>() == "auto"sv) {
@@ -1748,7 +1748,7 @@ String temporal_duration_to_string(double years, double months, double weeks, do
         // d. Else if precision = 0, then
         else if (precision.get<u8>() == 0) {
             // i. Set decimalPart to "".
-            decimal_part = String::empty();
+            decimal_part = DeprecatedString::empty();
         }
         // e. Else,
         else {

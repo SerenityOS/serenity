@@ -205,7 +205,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
         return JS::js_undefined();
 
     if (cell->kind() == Spreadsheet::Cell::Kind::Formula)
-        return JS::js_string(vm, String::formatted("={}", cell->data()));
+        return JS::js_string(vm, DeprecatedString::formatted("={}", cell->data()));
 
     return JS::js_string(vm, cell->data());
 }
@@ -312,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
     auto& sheet = sheet_object->m_sheet;
     auto column_index = sheet.column_index(column_name_str);
     if (!column_index.has_value())
-        return vm.throw_completion<JS::TypeError>(String::formatted("'{}' is not a valid column", column_name_str));
+        return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("'{}' is not a valid column", column_name_str));
 
     return JS::Value((i32)column_index.value());
 }
@@ -340,7 +340,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
     auto& sheet = sheet_object->m_sheet;
     auto new_column = sheet.column_arithmetic(column_name_str, offset_number);
     if (!new_column.has_value())
-        return vm.throw_completion<JS::TypeError>(String::formatted("'{}' is not a valid column", column_name_str));
+        return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("'{}' is not a valid column", column_name_str));
 
     return JS::js_string(vm, new_column.release_value());
 }
@@ -364,7 +364,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
     auto& sheet = sheet_object->m_sheet;
     auto maybe_column_index = sheet.column_index(column_name_str);
     if (!maybe_column_index.has_value())
-        return vm.throw_completion<JS::TypeError>(String::formatted("'{}' is not a valid column", column_name_str));
+        return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("'{}' is not a valid column", column_name_str));
 
     auto bounds = sheet.written_data_bounds(*maybe_column_index);
     return JS::Value(bounds.row);

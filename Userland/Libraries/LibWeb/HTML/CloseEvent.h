@@ -14,7 +14,7 @@ namespace Web::HTML {
 struct CloseEventInit : public DOM::EventInit {
     bool was_clean { false };
     u16 code { 0 };
-    String reason { "" };
+    DeprecatedString reason { "" };
 };
 
 class CloseEvent : public DOM::Event {
@@ -28,14 +28,14 @@ public:
 
     bool was_clean() const { return m_was_clean; }
     u16 code() const { return m_code; }
-    String reason() const { return m_reason; }
+    DeprecatedString reason() const { return m_reason; }
 
 private:
     CloseEvent(JS::Realm&, FlyString const& event_name, CloseEventInit const& event_init);
 
     bool m_was_clean { false };
     u16 m_code { 0 };
-    String m_reason;
+    DeprecatedString m_reason;
 };
 
 }

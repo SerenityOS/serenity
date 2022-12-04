@@ -31,7 +31,7 @@ void WorkerDebugConsoleClient::end_group()
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
-    String indent = String::repeated("  "sv, m_group_stack_depth);
+    DeprecatedString indent = DeprecatedString::repeated("  "sv, m_group_stack_depth);
 
     if (log_level == JS::Console::LogLevel::Trace) {
         auto trace = arguments.get<JS::Console::Trace>();
@@ -53,7 +53,7 @@ JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::
         return JS::js_undefined();
     }
 
-    auto output = String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+    auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
     m_console.output_debug_message(log_level, output);
 
     switch (log_level) {

@@ -20,7 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             continue;
         auto ast_full_path = cpp_full_path.replace(".cpp"sv, ".ast"sv, ReplaceMode::FirstOnly);
         outln("{}", cpp_full_path);
-        auto res = Core::command("/bin/sh", { "-c", String::formatted("cpp-parser {} > {}", cpp_full_path, ast_full_path) }, {});
+        auto res = Core::command("/bin/sh", { "-c", DeprecatedString::formatted("cpp-parser {} > {}", cpp_full_path, ast_full_path) }, {});
         VERIFY(!res.is_error());
     }
 
@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             continue;
         auto ast_full_path = cpp_full_path.replace(".cpp"sv, ".txt"sv, ReplaceMode::FirstOnly);
         outln("{}", cpp_full_path);
-        auto res = Core::command("/bin/sh", { "-c", String::formatted("cpp-preprocessor {} > {}", cpp_full_path, ast_full_path) }, {});
+        auto res = Core::command("/bin/sh", { "-c", DeprecatedString::formatted("cpp-preprocessor {} > {}", cpp_full_path, ast_full_path) }, {});
         VERIFY(!res.is_error());
     }
 

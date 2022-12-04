@@ -16,12 +16,12 @@ namespace JS {
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM&, Value pattern, Value flags);
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM&, FunctionObject& new_target);
 
-Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(StringView flags);
+Result<regex::RegexOptions<ECMAScriptFlags>, DeprecatedString> regex_flags_from_string(StringView flags);
 struct ParseRegexPatternError {
-    String error;
+    DeprecatedString error;
 };
-ErrorOr<String, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets);
-ThrowCompletionOr<String> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets);
+ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets);
+ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets);
 
 class RegExpObject : public Object {
     JS_OBJECT(RegExpObject, Object);
@@ -37,16 +37,16 @@ public:
     };
 
     static RegExpObject* create(Realm&);
-    static RegExpObject* create(Realm&, Regex<ECMA262> regex, String pattern, String flags);
+    static RegExpObject* create(Realm&, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags);
 
     ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_initialize(VM&, Value pattern, Value flags);
-    String escape_regexp_pattern() const;
+    DeprecatedString escape_regexp_pattern() const;
 
     virtual void initialize(Realm&) override;
     virtual ~RegExpObject() override = default;
 
-    String const& pattern() const { return m_pattern; }
-    String const& flags() const { return m_flags; }
+    DeprecatedString const& pattern() const { return m_pattern; }
+    DeprecatedString const& flags() const { return m_flags; }
     Regex<ECMA262> const& regex() { return *m_regex; }
     Regex<ECMA262> const& regex() const { return *m_regex; }
     Realm& realm() { return *m_realm; }
@@ -57,10 +57,10 @@ public:
 
 private:
     RegExpObject(Object& prototype);
-    RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype);
+    RegExpObject(Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags, Object& prototype);
 
-    String m_pattern;
-    String m_flags;
+    DeprecatedString m_pattern;
+    DeprecatedString m_flags;
     bool m_legacy_features_enabled { false }; // [[LegacyFeaturesEnabled]]
     // Note: This is initialized in RegExpAlloc, but will be non-null afterwards
     GCPtr<Realm> m_realm; // [[Realm]]

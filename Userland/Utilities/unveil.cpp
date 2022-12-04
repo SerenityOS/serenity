@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<String> unveil_paths;
+    Vector<DeprecatedString> unveil_paths;
     Vector<StringView> command;
 
     Core::ArgsParser args_parser;

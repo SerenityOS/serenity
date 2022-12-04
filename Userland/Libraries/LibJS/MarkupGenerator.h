@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashTable.h>
-#include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Error.h>
 
@@ -15,9 +15,9 @@ namespace JS {
 
 class MarkupGenerator {
 public:
-    static String html_from_source(StringView);
-    static String html_from_value(Value);
-    static String html_from_error(Error const&, bool);
+    static DeprecatedString html_from_source(StringView);
+    static DeprecatedString html_from_value(Value);
+    static DeprecatedString html_from_error(Error const&, bool);
 
 private:
     enum class StyleType {
@@ -41,10 +41,10 @@ private:
     static void error_to_html(Error const&, StringBuilder& output_html, bool in_promise);
     static void trace_to_html(TracebackFrame const&, StringBuilder& output_html);
 
-    static String style_from_style_type(StyleType);
+    static DeprecatedString style_from_style_type(StyleType);
     static StyleType style_type_for_token(Token);
-    static String open_style_type(StyleType type);
-    static String wrap_string_in_style(String source, StyleType type);
+    static DeprecatedString open_style_type(StyleType type);
+    static DeprecatedString wrap_string_in_style(DeprecatedString source, StyleType type);
 };
 
 }

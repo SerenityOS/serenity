@@ -16,7 +16,7 @@ namespace HackStudio {
 class CodeDocument final : public GUI::TextDocument {
 public:
     virtual ~CodeDocument() override = default;
-    static NonnullRefPtr<CodeDocument> create(String const& file_path, Client* client = nullptr);
+    static NonnullRefPtr<CodeDocument> create(DeprecatedString const& file_path, Client* client = nullptr);
     static NonnullRefPtr<CodeDocument> create(Client* client = nullptr);
 
     Vector<size_t> const& breakpoint_lines() const { return m_breakpoint_lines; }
@@ -24,18 +24,18 @@ public:
     Optional<size_t> execution_position() const { return m_execution_position; }
     void set_execution_position(size_t line) { m_execution_position = line; }
     void clear_execution_position() { m_execution_position.clear(); }
-    String const& file_path() const { return m_file_path; }
-    String const& language_name() const { return m_language_name; };
+    DeprecatedString const& file_path() const { return m_file_path; }
+    DeprecatedString const& language_name() const { return m_language_name; };
     Language language() const { return m_language; }
 
     virtual bool is_code_document() const override final { return true; }
 
 private:
-    explicit CodeDocument(String const& file_path, Client* client = nullptr);
+    explicit CodeDocument(DeprecatedString const& file_path, Client* client = nullptr);
     explicit CodeDocument(Client* client = nullptr);
 
-    String m_file_path;
-    String m_language_name;
+    DeprecatedString m_file_path;
+    DeprecatedString m_language_name;
     Language m_language { Language::Unknown };
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;

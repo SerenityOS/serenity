@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        AK::String filename = "file for saving";
+        AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
             auto response = FileSystemAccessClient::Client::the().try_save_file(window, "Capture", "png");
             if (response.is_error())

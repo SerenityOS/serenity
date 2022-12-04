@@ -5,13 +5,13 @@
  */
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Variant.h>
 #include <LibCore/ArgsParser.h>
@@ -19,14 +19,14 @@
 #include <LibCore/Stream.h>
 #include <LibLocale/PluralRules.h>
 
-static String format_identifier(StringView owner, String identifier)
+static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
 {
     identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
-        return String::formatted("{}_{}", owner[0], identifier);
+        return DeprecatedString::formatted("{}_{}", owner[0], identifier);
     if (is_ascii_lower_alpha(identifier[0]))
-        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+        return DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
     return identifier;
 }
 
@@ -39,20 +39,20 @@ struct Relation {
         Inequality,
     };
 
-    String const& modulus_variable_name() const
+    DeprecatedString const& modulus_variable_name() const
     {
         VERIFY(modulus.has_value());
 
         if (!cached_modulus_variable_name.has_value())
-            cached_modulus_variable_name = String::formatted("mod_{}_{}", symbol, *modulus);
+            cached_modulus_variable_name = DeprecatedString::formatted("mod_{}_{}", symbol, *modulus);
 
         return *cached_modulus_variable_name;
     }
 
-    String const& exponential_variable_name() const
+    DeprecatedString const& exponential_variable_name() const
     {
         if (!cached_exponential_variable_name.has_value())
-            cached_exponential_variable_name = String::formatted("exp_{}", symbol);
+            cached_exponential_variable_name = DeprecatedString::formatted("exp_{}", symbol);
 
         return *cached_exponential_variable_name;
     }
@@ -65,25 +65,25 @@ struct Relation {
             else if (symbol == 'e' || symbol == 'c')
                 generator.append(exponential_variable_name());
             else
-                generator.append(String::formatted("ops.{}", Locale::PluralOperands::symbol_to_variable_name(symbol)));
+                generator.append(DeprecatedString::formatted("ops.{}", Locale::PluralOperands::symbol_to_variable_name(symbol)));
         };
 
         auto append_value = [&](u32 value) {
             append_variable_name();
             generator.append(" == "sv);
-            generator.append(String::number(value));
+            generator.append(DeprecatedString::number(value));
         };
 
         auto append_range = [&](auto const& range) {
             // This check avoids generating "0 <= unsigned_value", which is always true.
             if (range[0] != 0 || Locale::PluralOperands::symbol_requires_floating_point_modulus(symbol)) {
-                generator.append(String::formatted("{} <= ", range[0]));
+                generator.append(DeprecatedString::formatted("{} <= ", range[0]));
                 append_variable_name();
                 generator.append(" && "sv);
             }
 
             append_variable_name();
-            generator.append(String::formatted(" <= {}", range[1]));
+            generator.append(DeprecatedString::formatted(" <= {}", range[1]));
         };
 
         if (type == Type::Inequality)
@@ -106,7 +106,7 @@ struct Relation {
         generator.append(")"sv);
     }
 
-    void generate_precomputed_variables(SourceGenerator& generator, HashTable<String>& generated_variables) const
+    void generate_precomputed_variables(SourceGenerator& generator, HashTable<DeprecatedString>& generated_variables) const
     {
         // FIXME: How do we handle the exponential symbols? They seem unused by ECMA-402.
         if (symbol == 'e' || symbol == 'c') {
@@ -128,7 +128,7 @@ struct Relation {
         generated_variables.set(variable);
         generator.set("variable"sv, move(variable));
         generator.set("operand"sv, Locale::PluralOperands::symbol_to_variable_name(symbol));
-        generator.set("modulus"sv, String::number(*modulus));
+        generator.set("modulus"sv, DeprecatedString::number(*modulus));
 
         if (Locale::PluralOperands::symbol_requires_floating_point_modulus(symbol)) {
             generator.append(R"~~~(
@@ -145,8 +145,8 @@ struct Relation {
     Vector<Comparator> comparators;
 
 private:
-    mutable Optional<String> cached_modulus_variable_name;
-    mutable Optional<String> cached_exponential_variable_name;
+    mutable Optional<DeprecatedString> cached_modulus_variable_name;
+    mutable Optional<DeprecatedString> cached_exponential_variable_name;
 };
 
 struct Condition {
@@ -171,7 +171,7 @@ struct Condition {
         }
     }
 
-    void generate_precomputed_variables(SourceGenerator& generator, HashTable<String>& generated_variables) const
+    void generate_precomputed_variables(SourceGenerator& generator, HashTable<DeprecatedString>& generated_variables) const
     {
         for (auto const& conjunctions : relations) {
             for (auto const& relation : conjunctions)
@@ -183,18 +183,18 @@ struct Condition {
 };
 
 struct Range {
-    String start;
-    String end;
-    String category;
+    DeprecatedString start;
+    DeprecatedString end;
+    DeprecatedString category;
 };
 
-using Conditions = HashMap<String, Condition>;
+using Conditions = HashMap<DeprecatedString, Condition>;
 using Ranges = Vector<Range>;
 
 struct LocaleData {
-    static String generated_method_name(StringView form, StringView locale)
+    static DeprecatedString generated_method_name(StringView form, StringView locale)
     {
-        return String::formatted("{}_plurality_{}", form, format_identifier({}, locale));
+        return DeprecatedString::formatted("{}_plurality_{}", form, format_identifier({}, locale));
     }
 
     Conditions& rules_for_form(StringView form)
@@ -214,7 +214,7 @@ struct LocaleData {
 struct CLDR {
     UniqueStringStorage unique_strings;
 
-    HashMap<String, LocaleData> locales;
+    HashMap<DeprecatedString, LocaleData> locales;
 };
 
 static Relation parse_relation(StringView relation)
@@ -322,7 +322,7 @@ static void parse_condition(StringView category, StringView rule, Conditions& ru
     });
 }
 
-static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringView file_name, CLDR& cldr)
+static ErrorOr<void> parse_plural_rules(DeprecatedString core_supplemental_path, StringView file_name, CLDR& cldr)
 {
     static constexpr auto form_prefix = "plurals-type-"sv;
     static constexpr auto rule_prefix = "pluralRule-count-"sv;
@@ -357,7 +357,7 @@ static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringVie
 }
 
 // https://unicode.org/reports/tr35/tr35-numbers.html#Plural_Ranges
-static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, CLDR& cldr)
+static ErrorOr<void> parse_plural_ranges(DeprecatedString core_supplemental_path, CLDR& cldr)
 {
     static constexpr auto start_segment = "-start-"sv;
     static constexpr auto end_segment = "-end-"sv;
@@ -393,7 +393,7 @@ static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, CLDR& cl
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, CLDR& cldr)
+static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedString locale_names_path, CLDR& cldr)
 {
     auto identity_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
 
@@ -401,7 +401,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
     VERIFY(Core::File::is_directory(core_supplemental_path.string()));
 
-    auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
+    auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
@@ -486,7 +486,7 @@ static PluralCategory default_range(PluralCategory, PluralCategory end)
             return;
 
         generator.set("method"sv, LocaleData::generated_method_name(form, locale));
-        HashTable<String> generated_variables;
+        HashTable<DeprecatedString> generated_variables;
 
         generator.append(R"~~~(
 static PluralCategory @method@([[maybe_unused]] PluralOperands ops)
@@ -541,7 +541,7 @@ static PluralCategory @method@(PluralCategory start, PluralCategory end)
         generator.set("type"sv, type);
         generator.set("form"sv, form);
         generator.set("default"sv, default_);
-        generator.set("size"sv, String::number(locales.size()));
+        generator.set("size"sv, DeprecatedString::number(locales.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> s_@form@_functions { {)~~~");
@@ -566,7 +566,7 @@ static constexpr Array<@type@, @size@> s_@form@_functions { {)~~~");
 
     auto append_categories = [&](auto const& name, auto const& rules) {
         generator.set("name", name);
-        generator.set("size", String::number(rules.size() + 1));
+        generator.set("size", DeprecatedString::number(rules.size() + 1));
 
         generator.append(R"~~~(
 static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)~~~");

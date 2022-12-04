@@ -29,14 +29,14 @@ public:
     virtual ~ConsoleEnvironmentSettingsObject() override = default;
 
     JS::GCPtr<Web::DOM::Document> responsible_document() override { return nullptr; }
-    String api_url_character_encoding() override { return m_api_url_character_encoding; }
+    DeprecatedString api_url_character_encoding() override { return m_api_url_character_encoding; }
     AK::URL api_base_url() override { return m_url; }
     Web::HTML::Origin origin() override { return m_origin; }
     Web::HTML::PolicyContainer policy_container() override { return m_policy_container; }
     Web::HTML::CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { return Web::HTML::CanUseCrossOriginIsolatedAPIs::Yes; }
 
 private:
-    String m_api_url_character_encoding;
+    DeprecatedString m_api_url_character_encoding;
     AK::URL m_url;
     Web::HTML::Origin m_origin;
     Web::HTML::PolicyContainer m_policy_container;
@@ -66,7 +66,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     console_realm->set_host_defined(move(host_defined));
 }
 
-void WebContentConsoleClient::handle_input(String const& js_source)
+void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
 {
     if (!m_realm)
         return;
@@ -88,7 +88,7 @@ void WebContentConsoleClient::report_exception(JS::Error const& exception, bool 
     print_html(JS::MarkupGenerator::html_from_error(exception, in_promise));
 }
 
-void WebContentConsoleClient::print_html(String const& line)
+void WebContentConsoleClient::print_html(DeprecatedString const& line)
 {
     m_message_log.append({ .type = ConsoleOutput::Type::HTML, .data = line });
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
@@ -100,7 +100,7 @@ void WebContentConsoleClient::clear_output()
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
 }
 
-void WebContentConsoleClient::begin_group(String const& label, bool start_expanded)
+void WebContentConsoleClient::begin_group(DeprecatedString const& label, bool start_expanded)
 {
     m_message_log.append({ .type = start_expanded ? ConsoleOutput::Type::BeginGroup : ConsoleOutput::Type::BeginGroupCollapsed, .data = label });
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
@@ -126,8 +126,8 @@ void WebContentConsoleClient::send_messages(i32 start_index)
     }
 
     // FIXME: Replace with a single Vector of message structs
-    Vector<String> message_types;
-    Vector<String> messages;
+    Vector<DeprecatedString> message_types;
+    Vector<DeprecatedString> messages;
     message_types.ensure_capacity(messages_to_send);
     messages.ensure_capacity(messages_to_send);
 
@@ -185,11 +185,11 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
 
     if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
         auto group = arguments.get<JS::Console::Group>();
-        begin_group(String::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
+        begin_group(DeprecatedString::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
         return JS::js_undefined();
     }
 
-    auto output = String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+    auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
     m_console.output_debug_message(log_level, output);
 
     StringBuilder html;

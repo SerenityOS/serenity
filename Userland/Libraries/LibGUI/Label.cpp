@@ -17,7 +17,7 @@ REGISTER_WIDGET(GUI, Label)
 
 namespace GUI {
 
-Label::Label(String text)
+Label::Label(DeprecatedString text)
     : m_text(move(text))
 {
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
@@ -55,7 +55,7 @@ void Label::set_icon(Gfx::Bitmap const* icon)
     update();
 }
 
-void Label::set_icon_from_path(String const& path)
+void Label::set_icon_from_path(DeprecatedString const& path)
 {
     auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
     if (maybe_bitmap.is_error()) {
@@ -65,7 +65,7 @@ void Label::set_icon_from_path(String const& path)
     set_icon(maybe_bitmap.release_value());
 }
 
-void Label::set_text(String text)
+void Label::set_text(DeprecatedString text)
 {
     if (text == m_text)
         return;

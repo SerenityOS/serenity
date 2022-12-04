@@ -5,8 +5,8 @@
  */
 
 #include "BigFraction.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Math.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 
@@ -184,7 +184,7 @@ void BigFraction::reduce()
     m_denominator = denominator_divide.quotient;
 }
 
-String BigFraction::to_string(unsigned rounding_threshold) const
+DeprecatedString BigFraction::to_string(unsigned rounding_threshold) const
 {
     StringBuilder builder;
     if (m_numerator.is_negative() && m_numerator != "0"_bigint)

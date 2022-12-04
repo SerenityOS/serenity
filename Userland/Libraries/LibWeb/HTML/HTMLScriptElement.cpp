@@ -156,7 +156,7 @@ void HTMLScriptElement::prepare_script()
     //    - el has a type attribute whose value is the empty string;
     //    - el has no type attribute but it has a language attribute and that attribute's value is the empty string; or
     //    - el has neither a type attribute nor a language attribute
-    String script_block_type;
+    DeprecatedString script_block_type;
     bool has_type_attribute = has_attribute(HTML::AttributeNames::type);
     bool has_language_attribute = has_attribute(HTML::AttributeNames::language);
     if ((has_type_attribute && attribute(HTML::AttributeNames::type).is_empty())
@@ -173,7 +173,7 @@ void HTMLScriptElement::prepare_script()
     // Otherwise, el has a non-empty language attribute;
     else if (!attribute(HTML::AttributeNames::language).is_empty()) {
         // let the script block's type string be the concatenation of "text/" and the value of el's language attribute.
-        script_block_type = String::formatted("text/{}", attribute(HTML::AttributeNames::language));
+        script_block_type = DeprecatedString::formatted("text/{}", attribute(HTML::AttributeNames::language));
     }
 
     // 9. If the script block's type string is a JavaScript MIME type essence match,

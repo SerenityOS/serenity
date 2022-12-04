@@ -41,9 +41,9 @@ VM::VM(OwnPtr<CustomData> custom_data)
     : m_heap(*this)
     , m_custom_data(move(custom_data))
 {
-    m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String::empty());
+    m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::empty());
     for (size_t i = 0; i < 128; ++i) {
-        m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(String::formatted("{:c}", i));
+        m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::formatted("{:c}", i));
     }
 
     // Default hook implementations. These can be overridden by the host, for example, LibWeb overrides the default hooks to place promise jobs on the microtask queue.
@@ -110,7 +110,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
     };
 
     host_get_supported_import_assertions = [&] {
-        return Vector<String> { "type" };
+        return Vector<DeprecatedString> { "type" };
     };
 
     // 19.2.1.2 HostEnsureCanCompileStrings ( callerRealm, calleeRealm ), https://tc39.es/ecma262/#sec-hostensurecancompilestrings
@@ -231,7 +231,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(finalization_registry);
 }
 
-Symbol* VM::get_global_symbol(String const& description)
+Symbol* VM::get_global_symbol(DeprecatedString const& description)
 {
     auto result = m_global_symbol_map.get(description);
     if (result.has_value())
@@ -631,7 +631,7 @@ ThrowCompletionOr<Value> VM::resolve_this_binding()
     return TRY(environment.get_this_binding(vm));
 }
 
-String VM::join_arguments(size_t start_index) const
+DeprecatedString VM::join_arguments(size_t start_index) const
 {
     StringBuilder joined_arguments;
     for (size_t i = start_index; i < argument_count(); ++i) {
@@ -769,7 +769,7 @@ ScriptOrModule VM::get_active_script_or_module() const
     return m_execution_context_stack[0]->script_or_module;
 }
 
-VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& filename, String const&)
+VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, DeprecatedString const& filename, DeprecatedString const&)
 {
     // Note the spec says:
     // Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments
@@ -812,7 +812,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
         m_loaded_modules.empend(
             NonnullGCPtr(module),
             module.filename(),
-            String {}, // Null type
+            DeprecatedString {}, // Null type
             module,
             true);
         stored_module = &m_loaded_modules.last();
@@ -851,7 +851,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
     return {};
 }
 
-static String resolve_module_filename(StringView filename, StringView module_type)
+static DeprecatedString resolve_module_filename(StringView filename, StringView module_type)
 {
     auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
     if (module_type == "json"sv)
@@ -859,14 +859,14 @@ static String resolve_module_filename(StringView filename, StringView module_typ
     if (!Core::File::exists(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo.ext"
-            auto resolved_filepath = String::formatted("{}.{}", filename, extension);
+            auto resolved_filepath = DeprecatedString::formatted("{}.{}", filename, extension);
             if (Core::File::exists(resolved_filepath))
                 return resolved_filepath;
         }
     } else if (Core::File::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
-            auto resolved_filepath = LexicalPath::join(filename, String::formatted("index.{}", extension)).string();
+            auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
             if (Core::File::exists(resolved_filepath))
                 return resolved_filepath;
         }
@@ -893,7 +893,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
     VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
-    auto module_type = module_request.assertions.is_empty() ? String {} : module_request.assertions.first().value;
+    auto module_type = module_request.assertions.is_empty() ? DeprecatedString {} : module_request.assertions.first().value;
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
 
@@ -916,15 +916,15 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolved filename: '{}'", filename);
 
 #if JS_MODULE_DEBUG
-    String referencing_module_string = referencing_script_or_module.visit(
-        [&](Empty) -> String {
+    DeprecatedString referencing_module_string = referencing_script_or_module.visit(
+        [&](Empty) -> DeprecatedString {
             return ".";
         },
         [&](auto& script_or_module) {
             if constexpr (IsSame<Script*, decltype(script_or_module)>) {
-                return String::formatted("Script @ {}", script_or_module.ptr());
+                return DeprecatedString::formatted("Script @ {}", script_or_module.ptr());
             }
-            return String::formatted("Module @ {}", script_or_module.ptr());
+            return DeprecatedString::formatted("Module @ {}", script_or_module.ptr());
         });
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filename);
@@ -1012,7 +1012,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         // If there is no ScriptOrModule in any of the execution contexts
         if (referencing_script_or_module.has<Empty>()) {
             // Throw an error for now
-            promise->reject(InternalError::create(realm, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
+            promise->reject(InternalError::create(realm, DeprecatedString::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
             return;
         }
     }

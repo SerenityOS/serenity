@@ -9,11 +9,11 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/Math.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 
 #define LOOP_UNROLL_N 4
@@ -243,14 +243,14 @@ public:
         return VectorN<3, T>(x(), y(), z());
     }
 
-    [[nodiscard]] String to_string() const
+    [[nodiscard]] DeprecatedString to_string() const
     {
         if constexpr (N == 2)
-            return String::formatted("[{},{}]", x(), y());
+            return DeprecatedString::formatted("[{},{}]", x(), y());
         else if constexpr (N == 3)
-            return String::formatted("[{},{},{}]", x(), y(), z());
+            return DeprecatedString::formatted("[{},{},{}]", x(), y(), z());
         else
-            return String::formatted("[{},{},{},{}]", x(), y(), z(), w());
+            return DeprecatedString::formatted("[{},{},{},{}]", x(), y(), z(), w());
     }
 
     template<typename U>

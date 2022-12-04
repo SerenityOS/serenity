@@ -130,7 +130,7 @@ void TimelineTrack::mousemove_event(GUI::MouseEvent& event)
         Gfx::IntRect hoverable_rect { x - hoverable_padding, frame_thickness(), hoverable_padding * 2, height() - frame_thickness() * 2 };
         if (hoverable_rect.contains_horizontally(event.x())) {
             auto const& data = signpost.data.template get<Profile::Event::SignpostData>();
-            GUI::Application::the()->show_tooltip_immediately(String::formatted("{}, {}", data.string, data.arg), this);
+            GUI::Application::the()->show_tooltip_immediately(DeprecatedString::formatted("{}, {}", data.string, data.arg), this);
             hovering_a_signpost = true;
             return IterationDecision::Break;
         }

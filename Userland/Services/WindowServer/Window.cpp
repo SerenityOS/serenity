@@ -22,7 +22,7 @@
 
 namespace WindowServer {
 
-static String default_window_icon_path()
+static DeprecatedString default_window_icon_path()
 {
     return "/res/icons/16x16/window.png";
 }
@@ -133,7 +133,7 @@ void Window::destroy()
     set_visible(false);
 }
 
-void Window::set_title(String const& title)
+void Window::set_title(DeprecatedString const& title)
 {
     if (m_title == title)
         return;
@@ -1059,17 +1059,17 @@ void Window::set_modified(bool modified)
     frame().invalidate_titlebar();
 }
 
-String Window::computed_title() const
+DeprecatedString Window::computed_title() const
 {
-    String title = m_title.replace("[*]"sv, is_modified() ? " (*)"sv : ""sv, ReplaceMode::FirstOnly);
+    DeprecatedString title = m_title.replace("[*]"sv, is_modified() ? " (*)"sv : ""sv, ReplaceMode::FirstOnly);
     if (m_title_username.has_value())
-        title = String::formatted("{} [{}]", title, m_title_username.value());
+        title = DeprecatedString::formatted("{} [{}]", title, m_title_username.value());
     if (client() && client()->is_unresponsive())
-        return String::formatted("{} (Not responding)", title);
+        return DeprecatedString::formatted("{} (Not responding)", title);
     return title;
 }
 
-ErrorOr<Optional<String>> Window::compute_title_username(ConnectionFromClient* client)
+ErrorOr<Optional<DeprecatedString>> Window::compute_title_username(ConnectionFromClient* client)
 {
     if (!client)
         return Error::from_string_literal("Tried to compute title username without a client");
@@ -1085,7 +1085,7 @@ ErrorOr<Optional<String>> Window::compute_title_username(ConnectionFromClient* c
     if (!login_session_stat.has_value())
         return Error::from_string_literal("Failed to find login process stat");
     if (login_session_stat.value().uid == client_stat.value().uid)
-        return Optional<String> {};
+        return Optional<DeprecatedString> {};
     return client_stat.value().username;
 }
 

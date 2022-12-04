@@ -17,7 +17,7 @@ UCICommand UCICommand::from_string(StringView command)
     return UCICommand();
 }
 
-String UCICommand::to_string() const
+DeprecatedString UCICommand::to_string() const
 {
     return "uci\n";
 }
@@ -35,7 +35,7 @@ DebugCommand DebugCommand::from_string(StringView command)
     VERIFY_NOT_REACHED();
 }
 
-String DebugCommand::to_string() const
+DeprecatedString DebugCommand::to_string() const
 {
     if (flag() == Flag::On) {
         return "debug on\n";
@@ -52,7 +52,7 @@ IsReadyCommand IsReadyCommand::from_string(StringView command)
     return IsReadyCommand();
 }
 
-String IsReadyCommand::to_string() const
+DeprecatedString IsReadyCommand::to_string() const
 {
     return "isready\n";
 }
@@ -95,7 +95,7 @@ SetOptionCommand SetOptionCommand::from_string(StringView command)
     return SetOptionCommand(name.to_string().trim_whitespace(), value.to_string().trim_whitespace());
 }
 
-String SetOptionCommand::to_string() const
+DeprecatedString SetOptionCommand::to_string() const
 {
     StringBuilder builder;
     builder.append("setoption name "sv);
@@ -115,7 +115,7 @@ PositionCommand PositionCommand::from_string(StringView command)
     VERIFY(tokens[0] == "position");
     VERIFY(tokens[2] == "moves");
 
-    Optional<String> fen;
+    Optional<DeprecatedString> fen;
     if (tokens[1] != "startpos")
         fen = tokens[1];
 
@@ -126,7 +126,7 @@ PositionCommand PositionCommand::from_string(StringView command)
     return PositionCommand(fen, moves);
 }
 
-String PositionCommand::to_string() const
+DeprecatedString PositionCommand::to_string() const
 {
     StringBuilder builder;
     builder.append("position "sv);
@@ -190,7 +190,7 @@ GoCommand GoCommand::from_string(StringView command)
     return go_command;
 }
 
-String GoCommand::to_string() const
+DeprecatedString GoCommand::to_string() const
 {
     StringBuilder builder;
     builder.append("go"sv);
@@ -238,7 +238,7 @@ StopCommand StopCommand::from_string(StringView command)
     return StopCommand();
 }
 
-String StopCommand::to_string() const
+DeprecatedString StopCommand::to_string() const
 {
     return "stop\n";
 }
@@ -263,7 +263,7 @@ IdCommand IdCommand::from_string(StringView command)
     VERIFY_NOT_REACHED();
 }
 
-String IdCommand::to_string() const
+DeprecatedString IdCommand::to_string() const
 {
     StringBuilder builder;
     builder.append("id "sv);
@@ -285,7 +285,7 @@ UCIOkCommand UCIOkCommand::from_string(StringView command)
     return UCIOkCommand();
 }
 
-String UCIOkCommand::to_string() const
+DeprecatedString UCIOkCommand::to_string() const
 {
     return "uciok\n";
 }
@@ -298,7 +298,7 @@ ReadyOkCommand ReadyOkCommand::from_string(StringView command)
     return ReadyOkCommand();
 }
 
-String ReadyOkCommand::to_string() const
+DeprecatedString ReadyOkCommand::to_string() const
 {
     return "readyok\n";
 }
@@ -311,7 +311,7 @@ BestMoveCommand BestMoveCommand::from_string(StringView command)
     return BestMoveCommand(Move(tokens[1]));
 }
 
-String BestMoveCommand::to_string() const
+DeprecatedString BestMoveCommand::to_string() const
 {
     StringBuilder builder;
     builder.append("bestmove "sv);
@@ -326,7 +326,7 @@ InfoCommand InfoCommand::from_string([[maybe_unused]] StringView command)
     VERIFY_NOT_REACHED();
 }
 
-String InfoCommand::to_string() const
+DeprecatedString InfoCommand::to_string() const
 {
     // FIXME: Implement this.
     VERIFY_NOT_REACHED();

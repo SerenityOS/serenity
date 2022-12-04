@@ -18,7 +18,7 @@ NonnullOwnPtr<TempFile> TempFile::create(Type type)
     return adopt_own(*new TempFile(type));
 }
 
-String TempFile::create_temp(Type type)
+DeprecatedString TempFile::create_temp(Type type)
 {
     char name_template[] = "/tmp/tmp.XXXXXX";
     switch (type) {
@@ -34,7 +34,7 @@ String TempFile::create_temp(Type type)
         break;
     }
     }
-    return String { name_template };
+    return DeprecatedString { name_template };
 }
 
 TempFile::TempFile(Type type)

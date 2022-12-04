@@ -70,7 +70,7 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
     return adopt_ref(*new StandardSecurityHandler(document, revision, o, u, p, encrypt_metadata, length));
 }
 
-StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, String const& o_entry, String const& u_entry, u32 flags, bool encrypt_metadata, size_t length)
+StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& u_entry, u32 flags, bool encrypt_metadata, size_t length)
     : m_document(document)
     , m_revision(revision)
     , m_o_entry(o_entry)
@@ -317,7 +317,7 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
         auto string = object->cast<StringObject>();
         bytes = string->string().bytes();
         assign = [&string](ByteBuffer const& buffer) {
-            string->set_string(String(buffer.bytes()));
+            string->set_string(DeprecatedString(buffer.bytes()));
         };
     } else {
         VERIFY_NOT_REACHED();

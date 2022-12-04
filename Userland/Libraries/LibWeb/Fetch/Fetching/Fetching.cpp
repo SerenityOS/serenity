@@ -1151,7 +1151,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // 8. If contentLength is non-null, then set contentLengthHeaderValue to contentLength, serialized and
         //    isomorphic encoded.
         if (content_length.has_value())
-            content_length_header_value = MUST(ByteBuffer::copy(String::number(*content_length).bytes()));
+            content_length_header_value = MUST(ByteBuffer::copy(DeprecatedString::number(*content_length).bytes()));
 
         // 9. If contentLengthHeaderValue is non-null, then append (`Content-Length`, contentLengthHeaderValue) to
         //    httpRequest’s header list.
@@ -1267,10 +1267,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                     // FIXME: Getting to the page client reliably is way too complicated, and going via the document won't work in workers.
                     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
                     if (!document)
-                        return String::empty();
+                        return DeprecatedString::empty();
                     auto* page = document->page();
                     if (!page)
-                        return String::empty();
+                        return DeprecatedString::empty();
                     return page->client().page_did_request_cookie(http_request->current_url(), Cookie::Source::Http);
                 })();
 
@@ -1284,7 +1284,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             // 2. If httpRequest’s header list does not contain `Authorization`, then:
             if (!http_request->header_list()->contains("Authorization"sv.bytes())) {
                 // 1. Let authorizationValue be null.
-                auto authorization_value = Optional<String> {};
+                auto authorization_value = Optional<DeprecatedString> {};
 
                 // 2. If there’s an authentication entry for httpRequest and either httpRequest’s use-URL-credentials
                 //    flag is unset or httpRequest’s current URL does not include credentials, then set
@@ -1297,7 +1297,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 //    true, set authorizationValue to httpRequest’s current URL, converted to an `Authorization` value.
                 else if (http_request->current_url().includes_credentials() && is_authentication_fetch == IsAuthenticationFetch::Yes) {
                     auto const& url = http_request->current_url();
-                    authorization_value = encode_base64(String::formatted("{}:{}", url.username(), url.password()).bytes());
+                    authorization_value = encode_base64(DeprecatedString::formatted("{}:{}", url.username(), url.password()).bytes());
                 }
 
                 // 4. If authorizationValue is non-null, then append (`Authorization`, authorizationValue) to
@@ -1451,8 +1451,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 // FIXME: 2. Let username and password be the result of prompting the end user for a username and password,
                 //           respectively, in request’s window.
                 dbgln("Fetch: Username/password prompt is not implemented, using empty strings. This request will probably fail.");
-                auto username = String::empty();
-                auto password = String::empty();
+                auto username = DeprecatedString::empty();
+                auto password = DeprecatedString::empty();
 
                 // 3. Set the username given request’s current URL and username.
                 request->current_url().set_username(move(username));
@@ -1569,9 +1569,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
     auto request = fetch_params.request();
 
     auto load_request = LoadRequest::create_for_url_on_page(request->current_url(), nullptr);
-    load_request.set_method(String::copy(request->method()));
+    load_request.set_method(DeprecatedString::copy(request->method()));
     for (auto const& header : *request->header_list())
-        load_request.set_header(String::copy(header.name), String::copy(header.value));
+        load_request.set_header(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value));
     if (auto const* body = request->body().get_pointer<Infrastructure::Body>()) {
         TRY(body->source().visit(
             [&](ByteBuffer const& byte_buffer) -> WebIDL::ExceptionOr<void> {

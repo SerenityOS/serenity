@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibLocale/Locale.h>
@@ -41,8 +41,8 @@ class DisplayNames final : public Object {
 public:
     virtual ~DisplayNames() override = default;
 
-    String const& locale() const { return m_locale; }
-    void set_locale(String locale) { m_locale = move(locale); }
+    DeprecatedString const& locale() const { return m_locale; }
+    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
 
     ::Locale::Style style() const { return m_style; }
     void set_style(StringView style) { m_style = ::Locale::style_from_string(style); }
@@ -64,7 +64,7 @@ public:
 private:
     DisplayNames(Object& prototype);
 
-    String m_locale;                                   // [[Locale]]
+    DeprecatedString m_locale;                         // [[Locale]]
     ::Locale::Style m_style { ::Locale::Style::Long }; // [[Style]]
     Type m_type { Type::Invalid };                     // [[Type]]
     Fallback m_fallback { Fallback::Invalid };         // [[Fallback]]

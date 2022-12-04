@@ -49,7 +49,7 @@ void CSSImportRule::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
-String CSSImportRule::serialized() const
+DeprecatedString CSSImportRule::serialized() const
 {
     StringBuilder builder;
     // The result of concatenating the following:

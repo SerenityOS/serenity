@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     char const* separator = "  ";
     int start_number = 1;
     int number_width = 6;
-    Vector<String> files;
+    Vector<DeprecatedString> files;
 
     Core::ArgsParser args_parser;
 

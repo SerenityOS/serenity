@@ -17,13 +17,13 @@ namespace FileManager {
 
 HashTable<NonnullRefPtr<GUI::Window>> file_operation_windows;
 
-void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window* parent_window)
+void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GUI::Window* parent_window)
 {
-    String message;
+    DeprecatedString message;
     if (paths.size() == 1) {
-        message = String::formatted("Are you sure you want to delete {}?", LexicalPath::basename(paths[0]));
+        message = DeprecatedString::formatted("Are you sure you want to delete {}?", LexicalPath::basename(paths[0]));
     } else {
-        message = String::formatted("Are you sure you want to delete {} files?", paths.size());
+        message = DeprecatedString::formatted("Are you sure you want to delete {} files?", paths.size());
     }
 
     if (should_confirm) {
@@ -40,7 +40,7 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
         _exit(1);
 }
 
-ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
+ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedString> const& sources, DeprecatedString const& destination, GUI::Window* parent_window)
 {
     auto pipe_fds = TRY(Core::System::pipe2(0));
 

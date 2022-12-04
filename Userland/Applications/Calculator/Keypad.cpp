@@ -112,15 +112,15 @@ void Keypad::set_to_0()
     m_state = State::External;
 }
 
-String Keypad::to_string() const
+DeprecatedString Keypad::to_string() const
 {
     if (m_state == State::External)
         return m_internal_value.to_string(m_displayed_fraction_length);
 
     StringBuilder builder;
 
-    String const integer_value = m_int_value.to_base(10);
-    String const frac_value = m_frac_value.to_base(10);
+    DeprecatedString const integer_value = m_int_value.to_base(10);
+    DeprecatedString const frac_value = m_frac_value.to_base(10);
     unsigned const number_pre_zeros = m_frac_length.to_u64() - (frac_value.length() - 1) - (frac_value == "0" ? 0 : 1);
 
     builder.append(integer_value);

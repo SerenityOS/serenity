@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Version.h>
 #include <LibGUI/AboutDialog.h>
@@ -17,10 +17,10 @@ namespace GUI {
 
 namespace CommonActions {
 
-NonnullRefPtr<Action> make_about_action(String const& app_name, Icon const& app_icon, Window* parent)
+NonnullRefPtr<Action> make_about_action(DeprecatedString const& app_name, Icon const& app_icon, Window* parent)
 {
     auto weak_parent = AK::make_weak_ptr_if_nonnull<Window>(parent);
-    auto action = Action::create(String::formatted("&About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
+    auto action = Action::create(DeprecatedString::formatted("&About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
         AboutDialog::show(app_name, Core::Version::read_long_version_string(), app_icon.bitmap_for_size(32), weak_parent.ptr());
     });
     action->set_status_tip("Show application about box");

@@ -25,7 +25,7 @@ enum class Type : u8 {
     None,
 };
 
-String char_for_piece(Type type);
+DeprecatedString char_for_piece(Type type);
 Chess::Type piece_for_char_promotion(StringView str);
 
 enum class Color : u8 {
@@ -85,7 +85,7 @@ struct Square {
 
     bool in_bounds() const { return rank >= 0 && file >= 0 && rank < 8 && file < 8; }
     bool is_light() const { return (rank % 2) != (file % 2); }
-    String to_algebraic() const;
+    DeprecatedString to_algebraic() const;
 };
 
 class Board;
@@ -110,8 +110,8 @@ struct Move {
     bool operator==(Move const& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
     static Move from_algebraic(StringView algebraic, const Color turn, Board const& board);
-    String to_long_algebraic() const;
-    String to_algebraic() const;
+    DeprecatedString to_long_algebraic() const;
+    DeprecatedString to_algebraic() const;
 };
 
 class Board {
@@ -130,7 +130,7 @@ public:
     bool apply_move(Move const&, Color color = Color::None);
     Optional<Move> const& last_move() const { return m_last_move; }
 
-    String to_fen() const;
+    DeprecatedString to_fen() const;
 
     enum class Result {
         CheckMate,
@@ -145,8 +145,8 @@ public:
         NotFinished,
     };
 
-    static String result_to_string(Result, Color turn);
-    static String result_to_points(Result, Color turn);
+    static DeprecatedString result_to_string(Result, Color turn);
+    static DeprecatedString result_to_points(Result, Color turn);
 
     template<typename Callback>
     void generate_moves(Callback callback, Color color = Color::None) const;

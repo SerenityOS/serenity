@@ -194,7 +194,7 @@ Optional<Gfx::AntiAliasingPainter> CanvasRenderingContext2D::antialiased_painter
     return {};
 }
 
-void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, float y, Optional<double> max_width)
 {
     if (max_width.has_value() && max_width.value() <= 0)
         return;
@@ -212,7 +212,7 @@ void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, O
     did_draw(transformed_rect.to_type<float>());
 }
 
-void CanvasRenderingContext2D::stroke_text(String const& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::stroke_text(DeprecatedString const& text, float x, float y, Optional<double> max_width)
 {
     // FIXME: Stroke the text instead of filling it.
     fill_text(text, x, y, max_width);
@@ -247,7 +247,7 @@ void CanvasRenderingContext2D::stroke(Path2D const& path)
     stroke_internal(transformed_path);
 }
 
-void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, String const& fill_rule)
+void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, DeprecatedString const& fill_rule)
 {
     auto painter = this->antialiased_painter();
     if (!painter.has_value())
@@ -267,12 +267,12 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, String const& fill
     did_draw(path.bounding_box());
 }
 
-void CanvasRenderingContext2D::fill(String const& fill_rule)
+void CanvasRenderingContext2D::fill(DeprecatedString const& fill_rule)
 {
     return fill_internal(path(), fill_rule);
 }
 
-void CanvasRenderingContext2D::fill(Path2D& path, String const& fill_rule)
+void CanvasRenderingContext2D::fill(Path2D& path, DeprecatedString const& fill_rule)
 {
     auto transformed_path = path.path().copy_transformed(drawing_state().transform);
     return fill_internal(transformed_path, fill_rule);
@@ -357,7 +357,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-measuretext
-JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String const& text)
+JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(DeprecatedString const& text)
 {
     // The measureText(text) method steps are to run the text preparation
     // algorithm, passing it text and the object implementing the CanvasText
@@ -398,7 +398,7 @@ JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String cons
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#text-preparation-algorithm
-CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(String const& text, float max_width)
+CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(DeprecatedString const& text, float max_width)
 {
     // 1. If maxWidth was provided but is less than or equal to zero or equal to NaN, then return an empty array.
     if (max_width <= 0 || max_width != max_width) {
@@ -410,7 +410,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
     for (auto c : text) {
         builder.append(Infra::is_ascii_whitespace(c) ? ' ' : c);
     }
-    String replaced_text = builder.build();
+    DeprecatedString replaced_text = builder.build();
 
     // 3. Let font be the current font of target, as given by that object's font attribute.
     // FIXME: Once we have CanvasTextDrawingStyles, implement font selection.

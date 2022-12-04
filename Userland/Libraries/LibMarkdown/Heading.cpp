@@ -10,12 +10,12 @@
 
 namespace Markdown {
 
-String Heading::render_to_html(bool) const
+DeprecatedString Heading::render_to_html(bool) const
 {
-    return String::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
+    return DeprecatedString::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
 }
 
-String Heading::render_for_terminal(size_t) const
+DeprecatedString Heading::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 

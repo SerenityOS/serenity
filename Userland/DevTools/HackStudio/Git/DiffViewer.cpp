@@ -71,7 +71,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void DiffViewer::draw_line(GUI::Painter& painter, String const& line, size_t y_offset, LinePosition line_position, LineType line_type)
+void DiffViewer::draw_line(GUI::Painter& painter, DeprecatedString const& line, size_t y_offset, LinePosition line_position, LineType line_type)
 {
     size_t line_width = font().width(line);
 
@@ -131,7 +131,7 @@ Gfx::IntRect DiffViewer::separator_rect() const
         frame_inner_rect().height() };
 }
 
-void DiffViewer::set_content(String const& original, String const& diff)
+void DiffViewer::set_content(DeprecatedString const& original, DeprecatedString const& diff)
 {
     m_original_lines = split_to_lines(original);
     m_hunks = Diff::parse_hunks(diff);
@@ -147,7 +147,7 @@ DiffViewer::DiffViewer()
     setup_properties();
 }
 
-DiffViewer::DiffViewer(String const& original, String const& diff)
+DiffViewer::DiffViewer(DeprecatedString const& original, DeprecatedString const& diff)
     : m_original_lines(split_to_lines(original))
     , m_hunks(Diff::parse_hunks(diff))
 {
@@ -161,10 +161,10 @@ void DiffViewer::setup_properties()
     set_foreground_role(ColorRole::BaseText);
 }
 
-Vector<String> DiffViewer::split_to_lines(String const& text)
+Vector<DeprecatedString> DiffViewer::split_to_lines(DeprecatedString const& text)
 {
     // NOTE: This is slightly different than text.split('\n')
-    Vector<String> lines;
+    Vector<DeprecatedString> lines;
     size_t next_line_start_index = 0;
     for (size_t i = 0; i < text.length(); ++i) {
         if (text[i] == '\n') {

@@ -52,12 +52,12 @@ private:
     FetchResponseData parse_fetch_response();
     Optional<Vector<Address>> parse_address_list();
     Address parse_address();
-    HashMap<String, String> parse_body_fields_params();
+    HashMap<DeprecatedString, DeprecatedString> parse_body_fields_params();
     BodyStructure parse_body_structure();
     BodyStructure parse_one_part_body();
     BodyExtension parse_body_extension();
-    Tuple<String, HashMap<String, String>> parse_disposition();
-    Vector<String> parse_langs();
+    Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> parse_disposition();
+    Vector<DeprecatedString> parse_langs();
     Envelope parse_envelope();
 
     template<typename T>

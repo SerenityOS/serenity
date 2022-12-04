@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace CodeComprehension {
 
@@ -16,11 +16,11 @@ enum class Language {
 };
 
 struct AutocompleteResultEntry {
-    String completion;
+    DeprecatedString completion;
     size_t partial_input_length { 0 };
     // TODO: Actually assign the value of this field in more places (when applicable).
     Language language { Language::Unspecified };
-    String display_text {};
+    DeprecatedString display_text {};
 
     enum class HideAutocompleteAfterApplying {
         No,
@@ -30,7 +30,7 @@ struct AutocompleteResultEntry {
 };
 
 struct ProjectLocation {
-    String file;
+    DeprecatedString file;
     size_t line { 0 };
     size_t column { 0 };
 
@@ -51,10 +51,10 @@ enum class DeclarationType {
 };
 
 struct Declaration {
-    String name;
+    DeprecatedString name;
     ProjectLocation position;
     DeclarationType type;
-    String scope;
+    DeprecatedString scope;
 
     bool operator==(Declaration const& other) const
     {
@@ -109,8 +109,8 @@ struct TokenInfo {
 };
 
 struct TodoEntry {
-    String content;
-    String filename;
+    DeprecatedString content;
+    DeprecatedString filename;
     size_t line { 0 };
     size_t column { 0 };
 };

@@ -102,7 +102,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-node-baseuri
-String Node::base_uri() const
+DeprecatedString Node::base_uri() const
 {
     // Return this’s node document’s document base URL, serialized.
     return document().base_url().to_string();
@@ -135,7 +135,7 @@ const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(FlyString c
 }
 
 // https://dom.spec.whatwg.org/#concept-descendant-text-content
-String Node::descendant_text_content() const
+DeprecatedString Node::descendant_text_content() const
 {
     StringBuilder builder;
     for_each_in_subtree_of_type<Text>([&](auto& text_node) {
@@ -146,7 +146,7 @@ String Node::descendant_text_content() const
 }
 
 // https://dom.spec.whatwg.org/#dom-node-textcontent
-String Node::text_content() const
+DeprecatedString Node::text_content() const
 {
     // The textContent getter steps are to return the following, switching on the interface this implements:
 
@@ -167,7 +167,7 @@ String Node::text_content() const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-textcontent%E2%91%A0
-void Node::set_text_content(String const& content)
+void Node::set_text_content(DeprecatedString const& content)
 {
     // The textContent setter steps are to, if the given value is null, act as if it was the empty string instead,
     // and then do as described below, switching on the interface this implements:
@@ -198,7 +198,7 @@ void Node::set_text_content(String const& content)
 }
 
 // https://dom.spec.whatwg.org/#dom-node-nodevalue
-String Node::node_value() const
+DeprecatedString Node::node_value() const
 {
     // The nodeValue getter steps are to return the following, switching on the interface this implements:
 
@@ -217,7 +217,7 @@ String Node::node_value() const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-nodevalue%E2%91%A0
-void Node::set_node_value(String const& value)
+void Node::set_node_value(DeprecatedString const& value)
 {
     // The nodeValue setter steps are to, if the given value is null, act as if it was the empty string instead,
     // and then do as described below, switching on the interface this implements:
@@ -259,10 +259,10 @@ void Node::invalidate_style()
     document().schedule_style_update();
 }
 
-String Node::child_text_content() const
+DeprecatedString Node::child_text_content() const
 {
     if (!is<ParentNode>(*this))
-        return String::empty();
+        return DeprecatedString::empty();
 
     StringBuilder builder;
     verify_cast<ParentNode>(*this).for_each_child([&](auto& child) {
@@ -1171,7 +1171,7 @@ void Node::replace_all(JS::GCPtr<Node> node)
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
-void Node::string_replace_all(String const& string)
+void Node::string_replace_all(DeprecatedString const& string)
 {
     // 1. Let node be null.
     JS::GCPtr<Node> node;
@@ -1185,7 +1185,7 @@ void Node::string_replace_all(String const& string)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-serializing-algorithm
-WebIDL::ExceptionOr<String> Node::serialize_fragment(DOMParsing::RequireWellFormed require_well_formed) const
+WebIDL::ExceptionOr<DeprecatedString> Node::serialize_fragment(DOMParsing::RequireWellFormed require_well_formed) const
 {
     // 1. Let context document be the value of node's node document.
     auto const& context_document = document();
@@ -1307,7 +1307,7 @@ JS::NonnullGCPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
     return root();
 }
 
-String Node::debug_description() const
+DeprecatedString Node::debug_description() const
 {
     StringBuilder builder;
     builder.append(node_name().to_lowercase());
@@ -1355,7 +1355,7 @@ Painting::PaintableBox const* Node::paint_box() const
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
 {
     // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
     // FIXME: This is a total hack.
@@ -1363,7 +1363,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
 
     // 1. Let interestedObservers be an empty map.
     // mutationObserver -> mappedOldValue
-    OrderedHashMap<MutationObserver*, String> interested_observers;
+    OrderedHashMap<MutationObserver*, DeprecatedString> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
     Vector<JS::Handle<Node>> nodes;

@@ -5,7 +5,7 @@
  */
 
 #include "GridTrackSize.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/StyleValue.h>
@@ -44,7 +44,7 @@ GridSize GridSize::make_auto()
     return GridSize(CSS::Length::make_auto());
 }
 
-String GridSize::to_string() const
+DeprecatedString GridSize::to_string() const
 {
     switch (m_type) {
     case Type::Length:
@@ -52,7 +52,7 @@ String GridSize::to_string() const
     case Type::Percentage:
         return m_percentage.to_string();
     case Type::FlexibleLength:
-        return String::formatted("{}fr", m_flexible_length);
+        return DeprecatedString::formatted("{}fr", m_flexible_length);
     }
     VERIFY_NOT_REACHED();
 }
@@ -68,7 +68,7 @@ GridMinMax::GridMinMax(GridSize min_grid_size, GridSize max_grid_size)
 {
 }
 
-String GridMinMax::to_string() const
+DeprecatedString GridMinMax::to_string() const
 {
     StringBuilder builder;
     builder.append("minmax("sv);
@@ -96,7 +96,7 @@ GridRepeat::GridRepeat()
 {
 }
 
-String GridRepeat::to_string() const
+DeprecatedString GridRepeat::to_string() const
 {
     StringBuilder builder;
     builder.append("repeat("sv);
@@ -137,7 +137,7 @@ ExplicitGridTrack::ExplicitGridTrack(CSS::GridSize grid_size)
 {
 }
 
-String ExplicitGridTrack::to_string() const
+DeprecatedString ExplicitGridTrack::to_string() const
 {
     switch (m_type) {
     case Type::MinMax:
@@ -151,7 +151,7 @@ String ExplicitGridTrack::to_string() const
     }
 }
 
-GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names)
+GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<DeprecatedString>> line_names)
     : m_track_list(track_list)
     , m_line_names(line_names)
 {
@@ -168,7 +168,7 @@ GridTrackSizeList GridTrackSizeList::make_auto()
     return GridTrackSizeList();
 }
 
-String GridTrackSizeList::to_string() const
+DeprecatedString GridTrackSizeList::to_string() const
 {
     StringBuilder builder;
     auto print_line_names = [&](size_t index) -> void {

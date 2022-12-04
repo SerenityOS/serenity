@@ -19,7 +19,7 @@ public:
     {
     }
 
-    virtual String symbolicate(FlatPtr address, u32* offset = nullptr) const override
+    virtual DeprecatedString symbolicate(FlatPtr address, u32* offset = nullptr) const override
     {
         return m_elf.symbolicate(address - m_base_address, offset);
     }

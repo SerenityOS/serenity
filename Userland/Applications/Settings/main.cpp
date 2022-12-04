@@ -55,7 +55,7 @@ public:
             return app->icon();
 
         if (role == GUI::ModelRole::Display) {
-            String name;
+            DeprecatedString name;
 
             if (app->name().ends_with(" Settings"sv))
                 name = app->name().substring(0, app->name().length() - " Settings"sv.length());
@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto requires_root = model->data(index, static_cast<GUI::ModelRole>(SettingsAppsModelCustomRole::RequiresRoot)).as_bool();
 
         auto launch_origin_rect = icon_view->to_widget_rect(icon_view->content_rect(index)).translated(icon_view->screen_relative_rect().location());
-        setenv("__libgui_launch_origin_rect", String::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
+        setenv("__libgui_launch_origin_rect", DeprecatedString::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
 
         if (requires_root)
             GUI::Process::spawn_or_show_error(window, "/bin/Escalator"sv, Array { executable });

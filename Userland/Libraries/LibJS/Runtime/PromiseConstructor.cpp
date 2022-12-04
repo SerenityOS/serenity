@@ -139,7 +139,7 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
             // p. Set onFulfilled.[[Capability]] to resultCapability.
             // q. Set onFulfilled.[[RemainingElements]] to remainingElementsCount.
             auto* on_fulfilled = PromiseAllResolveElementFunction::create(realm, index, values, result_capability, remaining_elements_count);
-            on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+            on_fulfilled->define_direct_property(vm.names.name, js_string(vm, DeprecatedString::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
             return next_promise.invoke(vm, vm.names.then, on_fulfilled, result_capability.reject());
@@ -171,7 +171,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& it
             // q. Set onFulfilled.[[Capability]] to resultCapability.
             // r. Set onFulfilled.[[RemainingElements]] to remainingElementsCount.
             auto* on_fulfilled = PromiseAllSettledResolveElementFunction::create(realm, index, values, result_capability, remaining_elements_count);
-            on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+            on_fulfilled->define_direct_property(vm.names.name, js_string(vm, DeprecatedString::empty()), Attribute::Configurable);
 
             // s. Let stepsRejected be the algorithm steps defined in Promise.allSettled Reject Element Functions.
             // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
@@ -182,7 +182,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& it
             // y. Set onRejected.[[Capability]] to resultCapability.
             // z. Set onRejected.[[RemainingElements]] to remainingElementsCount.
             auto* on_rejected = PromiseAllSettledRejectElementFunction::create(realm, index, values, result_capability, remaining_elements_count);
-            on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+            on_rejected->define_direct_property(vm.names.name, js_string(vm, DeprecatedString::empty()), Attribute::Configurable);
 
             // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
             return next_promise.invoke(vm, vm.names.then, on_fulfilled, on_rejected);
@@ -217,7 +217,7 @@ static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_r
             // p. Set onRejected.[[Capability]] to resultCapability.
             // q. Set onRejected.[[RemainingElements]] to remainingElementsCount.
             auto* on_rejected = PromiseAnyRejectElementFunction::create(realm, index, errors, result_capability, remaining_elements_count);
-            on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+            on_rejected->define_direct_property(vm.names.name, js_string(vm, DeprecatedString::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
             return next_promise.invoke(vm, vm.names.then, result_capability.resolve(), on_rejected);

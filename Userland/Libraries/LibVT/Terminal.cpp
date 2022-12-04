@@ -1275,12 +1275,12 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
             dbgln("Attempted to set href but gave too few parameters");
         } else if (parameters[1].is_empty() && parameters[2].is_empty()) {
             // Clear hyperlink
-            m_current_state.attribute.href = String();
-            m_current_state.attribute.href_id = String();
+            m_current_state.attribute.href = DeprecatedString();
+            m_current_state.attribute.href_id = DeprecatedString();
         } else {
             m_current_state.attribute.href = stringview_ify(2);
             // FIXME: Respect the provided ID
-            m_current_state.attribute.href_id = String::number(m_next_href_id++);
+            m_current_state.attribute.href_id = DeprecatedString::number(m_next_href_id++);
         }
 #endif
         break;

@@ -82,7 +82,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             // b. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
             if (generator.has_binding(identifier)) {
                 // FIXME: Throw an actual SyntaxError instance.
-                generator.emit<Bytecode::Op::NewString>(generator.intern_string(String::formatted("SyntaxError: toplevel variable already declared: {}", name)));
+                generator.emit<Bytecode::Op::NewString>(generator.intern_string(DeprecatedString::formatted("SyntaxError: toplevel variable already declared: {}", name)));
                 generator.emit<Bytecode::Op::Throw>();
                 return {};
             }
@@ -98,7 +98,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
             if (generator.has_binding(identifier)) {
                 // FIXME: Throw an actual SyntaxError instance.
-                generator.emit<Bytecode::Op::NewString>(generator.intern_string(String::formatted("SyntaxError: toplevel variable already declared: {}", name)));
+                generator.emit<Bytecode::Op::NewString>(generator.intern_string(DeprecatedString::formatted("SyntaxError: toplevel variable already declared: {}", name)));
                 generator.emit<Bytecode::Op::Throw>();
             }
             return {};

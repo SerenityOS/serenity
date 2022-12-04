@@ -130,7 +130,7 @@ private:
     virtual Vector<GUI::TextDocumentSpan> const& spans() const override { return m_spans; }
     virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) override { m_spans.at(index) = move(span); }
 
-    virtual String highlighter_did_request_text() const override { return m_text; }
+    virtual DeprecatedString highlighter_did_request_text() const override { return m_text; }
     virtual void highlighter_did_request_update() override { }
     virtual GUI::TextDocument& highlighter_did_request_document() override { return m_document; }
     virtual GUI::TextPosition highlighter_did_request_cursor() const override { return {}; }

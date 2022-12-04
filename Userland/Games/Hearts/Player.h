@@ -55,7 +55,7 @@ public:
     Gfx::IntRect name_position;
     Gfx::TextAlignment name_alignment;
     Gfx::IntPoint taken_cards_target;
-    String name;
+    DeprecatedString name;
     bool is_human { false };
 };
 

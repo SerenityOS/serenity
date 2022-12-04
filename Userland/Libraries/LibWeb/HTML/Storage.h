@@ -20,13 +20,13 @@ public:
     ~Storage();
 
     size_t length() const;
-    String key(size_t index);
-    String get_item(String const& key) const;
-    WebIDL::ExceptionOr<void> set_item(String const& key, String const& value);
-    void remove_item(String const& key);
+    DeprecatedString key(size_t index);
+    DeprecatedString get_item(DeprecatedString const& key) const;
+    WebIDL::ExceptionOr<void> set_item(DeprecatedString const& key, DeprecatedString const& value);
+    void remove_item(DeprecatedString const& key);
     void clear();
 
-    Vector<String> supported_property_names() const;
+    Vector<DeprecatedString> supported_property_names() const;
 
     auto const& map() const { return m_map; }
 
@@ -36,9 +36,9 @@ private:
     explicit Storage(JS::Realm&);
 
     void reorder();
-    void broadcast(String const& key, String const& old_value, String const& new_value);
+    void broadcast(DeprecatedString const& key, DeprecatedString const& old_value, DeprecatedString const& new_value);
 
-    OrderedHashMap<String, String> m_map;
+    OrderedHashMap<DeprecatedString, DeprecatedString> m_map;
 };
 
 }

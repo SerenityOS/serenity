@@ -629,7 +629,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 
         // d. Else if p is equal to "dayPeriod", then
         else if (part == "dayPeriod"sv) {
-            String formatted_value;
+            DeprecatedString formatted_value;
 
             // i. Let f be the value of dateTimeFormat's internal slot whose name is the Internal Slot column of the matching row.
             auto style = date_time_format.day_period();
@@ -662,7 +662,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 
         // f. Else if p matches a Property column of the row in Table 6, then
         else if (auto style_and_value = find_calendar_field(part, date_time_format, range_format_options, local_time); style_and_value.has_value()) {
-            String formatted_value;
+            DeprecatedString formatted_value;
 
             // i. If rangeFormatOptions is not undefined, let f be the value of rangeFormatOptions's field whose name matches p.
             // ii. Else, let f be the value of dateTimeFormat's internal slot whose name is the Internal Slot column of the matching row.
@@ -741,7 +741,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 else if (part == "weekday"sv)
                     symbol = ::Locale::get_calendar_weekday_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Weekday>(value));
 
-                formatted_value = symbol.value_or(String::number(value));
+                formatted_value = symbol.value_or(DeprecatedString::number(value));
                 break;
             }
 
@@ -755,7 +755,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 
         // g. Else if p is equal to "ampm", then
         else if (part == "ampm"sv) {
-            String formatted_value;
+            DeprecatedString formatted_value;
 
             // i. Let v be tm.[[Hour]].
             auto value = local_time.hour;
@@ -830,7 +830,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM& vm, 
 }
 
 // 11.5.8 FormatDateTime ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetime
-ThrowCompletionOr<String> format_date_time(VM& vm, DateTimeFormat& date_time_format, double time)
+ThrowCompletionOr<DeprecatedString> format_date_time(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
     auto parts = TRY(partition_date_time_pattern(vm, date_time_format, time));
@@ -1146,7 +1146,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 }
 
 // 11.5.11 FormatDateTimeRange ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerange
-ThrowCompletionOr<String> format_date_time_range(VM& vm, DateTimeFormat& date_time_format, double start, double end)
+ThrowCompletionOr<DeprecatedString> format_date_time_range(VM& vm, DateTimeFormat& date_time_format, double start, double end)
 {
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
     auto parts = TRY(partition_date_time_range_pattern(vm, date_time_format, start, end));

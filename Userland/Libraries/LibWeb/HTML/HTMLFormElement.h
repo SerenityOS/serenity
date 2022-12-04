@@ -17,8 +17,8 @@ class HTMLFormElement final : public HTMLElement {
 public:
     virtual ~HTMLFormElement() override;
 
-    String action() const;
-    String method() const { return attribute(HTML::AttributeNames::method); }
+    DeprecatedString action() const;
+    DeprecatedString method() const { return attribute(HTML::AttributeNames::method); }
 
     void submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding = false);
 

@@ -35,7 +35,7 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
         return Error::from_string_literal("no active file");
 
     if (active_file.ends_with(".js"sv)) {
-        TRY(m_terminal->run_command(String::formatted("js -A {}", active_file)));
+        TRY(m_terminal->run_command(DeprecatedString::formatted("js -A {}", active_file)));
         return {};
     }
 
@@ -61,7 +61,7 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
         return Error::from_string_literal("no active file");
 
     if (active_file.ends_with(".js"sv)) {
-        TRY(m_terminal->run_command(String::formatted("js {}", active_file)));
+        TRY(m_terminal->run_command(DeprecatedString::formatted("js {}", active_file)));
         return {};
     }
 
@@ -105,11 +105,11 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
 ErrorOr<void> ProjectBuilder::build_serenity_component()
 {
     TRY(verify_make_is_installed());
-    TRY(m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes, "Make failed"sv));
+    TRY(m_terminal->run_command(DeprecatedString::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes, "Make failed"sv));
     return {};
 }
 
-ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
+ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_path)
 {
     auto content = TRY(Core::File::open(cmake_file_path, Core::OpenMode::ReadOnly))->read_all();
 
@@ -118,7 +118,7 @@ ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
     if (!component_name.search(StringView { content }, result))
         return Error::from_string_literal("component not found");
 
-    return String { result.capture_group_matches.at(0).at(0).view.string_view() };
+    return DeprecatedString { result.capture_group_matches.at(0).at(0).view.string_view() };
 }
 
 ErrorOr<void> ProjectBuilder::initialize_build_directory()
@@ -136,15 +136,15 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
     auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::OpenMode::WriteOnly));
     cmake_file->write(generate_cmake_file_content());
 
-    TRY(m_terminal->run_command(String::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
-                                                  " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",
+    TRY(m_terminal->run_command(DeprecatedString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
+                                                            " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",
                                     m_project_root, cmake_file_path),
         build_directory(), TerminalWrapper::WaitForExit::Yes, "CMake error"sv));
 
     return {};
 }
 
-Optional<String> ProjectBuilder::find_cmake_file_for(StringView file_path) const
+Optional<DeprecatedString> ProjectBuilder::find_cmake_file_for(StringView file_path) const
 {
     auto directory = LexicalPath::dirname(file_path);
     while (!directory.is_empty()) {
@@ -156,7 +156,7 @@ Optional<String> ProjectBuilder::find_cmake_file_for(StringView file_path) const
     return {};
 }
 
-String ProjectBuilder::generate_cmake_file_content() const
+DeprecatedString ProjectBuilder::generate_cmake_file_content() const
 {
     StringBuilder builder;
     builder.appendff("add_subdirectory({})\n", LexicalPath::dirname(m_serenity_component_cmake_file));
@@ -173,20 +173,20 @@ String ProjectBuilder::generate_cmake_file_content() const
         // all of their direct dependencies in the CMakeLists file.
         // For example, a target may directly use LibGFX but only specify LibGUI as a dependency (which in turn depends on LibGFX).
         // In this example, if we don't specify the dependencies of LibGUI in the CMake file, linking will fail because of undefined LibGFX symbols.
-        builder.appendff("target_link_libraries({} INTERFACE {})\n", library.key, String::join(' ', library.value->dependencies));
+        builder.appendff("target_link_libraries({} INTERFACE {})\n", library.key, DeprecatedString::join(' ', library.value->dependencies));
     }
 
     return builder.to_string();
 }
 
-HashMap<String, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> ProjectBuilder::get_defined_libraries()
+HashMap<DeprecatedString, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> ProjectBuilder::get_defined_libraries()
 {
-    HashMap<String, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> libraries;
+    HashMap<DeprecatedString, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> libraries;
 
-    for_each_library_definition([&libraries](String name, String path) {
+    for_each_library_definition([&libraries](DeprecatedString name, DeprecatedString path) {
         libraries.set(name, make<ProjectBuilder::LibraryInfo>(move(path)));
     });
-    for_each_library_dependencies([&libraries](String name, Vector<StringView> const& dependencies) {
+    for_each_library_dependencies([&libraries](DeprecatedString name, Vector<StringView> const& dependencies) {
         auto library = libraries.get(name);
         if (!library.has_value())
             return;
@@ -198,9 +198,9 @@ HashMap<String, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> ProjectBuilder::get_
     return libraries;
 }
 
-void ProjectBuilder::for_each_library_definition(Function<void(String, String)> func)
+void ProjectBuilder::for_each_library_definition(Function<void(DeprecatedString, DeprecatedString)> func)
 {
-    Vector<String> arguments = { "-c", "find Userland -name CMakeLists.txt | xargs grep serenity_lib" };
+    Vector<DeprecatedString> arguments = { "-c", "find Userland -name CMakeLists.txt | xargs grep serenity_lib" };
     auto res = Core::command("/bin/sh", arguments, {});
     if (res.is_error()) {
         warnln("{}", res.error());
@@ -217,7 +217,7 @@ void ProjectBuilder::for_each_library_definition(Function<void(String, String)> 
 
         auto library_name = result.capture_group_matches.at(0).at(0).view.string_view();
         auto library_obj_name = result.capture_group_matches.at(0).at(1).view.string_view();
-        auto so_path = String::formatted("{}.so", LexicalPath::join("/usr/lib"sv, String::formatted("lib{}", library_obj_name)).string());
+        auto so_path = DeprecatedString::formatted("{}.so", LexicalPath::join("/usr/lib"sv, DeprecatedString::formatted("lib{}", library_obj_name)).string());
         func(library_name, so_path);
     }
 
@@ -225,9 +225,9 @@ void ProjectBuilder::for_each_library_definition(Function<void(String, String)> 
     func("ssp", "/usr/lib/libssp.a");
 }
 
-void ProjectBuilder::for_each_library_dependencies(Function<void(String, Vector<StringView>)> func)
+void ProjectBuilder::for_each_library_dependencies(Function<void(DeprecatedString, Vector<StringView>)> func)
 {
-    Vector<String> arguments = { "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep target_link_libraries" };
+    Vector<DeprecatedString> arguments = { "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep target_link_libraries" };
     auto res = Core::command("/bin/sh", arguments, {});
     if (res.is_error()) {
         warnln("{}", res.error());
@@ -266,7 +266,7 @@ ErrorOr<void> ProjectBuilder::verify_make_is_installed()
     return Error::from_string_literal("Make port is not installed");
 }
 
-String ProjectBuilder::build_directory() const
+DeprecatedString ProjectBuilder::build_directory() const
 {
     return LexicalPath::join(m_project_root, "Build"sv).string();
 }

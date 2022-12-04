@@ -5,11 +5,11 @@
  */
 
 #include "MulticastDNS.h"
+#include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/String.h>
 #include <LibCore/File.h>
 #include <limits.h>
 #include <poll.h>
@@ -26,7 +26,7 @@ MulticastDNS::MulticastDNS(Object* parent)
     if (gethostname(buffer, sizeof(buffer)) < 0) {
         perror("gethostname");
     } else {
-        m_hostname = String::formatted("{}.local", buffer);
+        m_hostname = DeprecatedString::formatted("{}.local", buffer);
     }
 
     u8 zero = 0;
@@ -93,7 +93,7 @@ void MulticastDNS::announce()
             RecordType::A,
             RecordClass::IN,
             120,
-            String { (char const*)&raw_addr, sizeof(raw_addr) },
+            DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) },
             true,
         };
         response.add_answer(answer);

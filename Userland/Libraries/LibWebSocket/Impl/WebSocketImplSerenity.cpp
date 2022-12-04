@@ -79,7 +79,7 @@ ErrorOr<ByteBuffer> WebSocketImplSerenity::read(int max_size)
     return buffer.slice(0, read_bytes.size());
 }
 
-ErrorOr<String> WebSocketImplSerenity::read_line(size_t size)
+ErrorOr<DeprecatedString> WebSocketImplSerenity::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     auto line = TRY(m_socket->read_line(buffer));

@@ -16,7 +16,7 @@
 #    include <AK/Error.h>
 #    include <Kernel/KString.h>
 #else
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace AK {
@@ -65,18 +65,18 @@ public:
             octet(SubnetClass::D));
     }
 #else
-    String to_string() const
+    DeprecatedString to_string() const
     {
-        return String::formatted("{}.{}.{}.{}",
+        return DeprecatedString::formatted("{}.{}.{}.{}",
             octet(SubnetClass::A),
             octet(SubnetClass::B),
             octet(SubnetClass::C),
             octet(SubnetClass::D));
     }
 
-    String to_string_reversed() const
+    DeprecatedString to_string_reversed() const
     {
-        return String::formatted("{}.{}.{}.{}",
+        return DeprecatedString::formatted("{}.{}.{}.{}",
             octet(SubnetClass::D),
             octet(SubnetClass::C),
             octet(SubnetClass::B),
@@ -166,10 +166,10 @@ struct Formatter<IPv4Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>
 };
 #else
 template<>
-struct Formatter<IPv4Address> : Formatter<String> {
+struct Formatter<IPv4Address> : Formatter<DeprecatedString> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
-        return Formatter<String>::format(builder, value.to_string());
+        return Formatter<DeprecatedString>::format(builder, value.to_string());
     }
 };
 #endif

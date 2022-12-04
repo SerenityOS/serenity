@@ -147,42 +147,42 @@ void serialize_a_srgb_value(StringBuilder& builder, Color color)
         builder.appendff("rgba({}, {}, {}, {})"sv, color.red(), color.green(), color.blue(), (float)(color.alpha()) / 255.0f);
 }
 
-String escape_a_character(u32 character)
+DeprecatedString escape_a_character(u32 character)
 {
     StringBuilder builder;
     escape_a_character(builder, character);
     return builder.to_string();
 }
 
-String escape_a_character_as_code_point(u32 character)
+DeprecatedString escape_a_character_as_code_point(u32 character)
 {
     StringBuilder builder;
     escape_a_character_as_code_point(builder, character);
     return builder.to_string();
 }
 
-String serialize_an_identifier(StringView ident)
+DeprecatedString serialize_an_identifier(StringView ident)
 {
     StringBuilder builder;
     serialize_an_identifier(builder, ident);
     return builder.to_string();
 }
 
-String serialize_a_string(StringView string)
+DeprecatedString serialize_a_string(StringView string)
 {
     StringBuilder builder;
     serialize_a_string(builder, string);
     return builder.to_string();
 }
 
-String serialize_a_url(StringView url)
+DeprecatedString serialize_a_url(StringView url)
 {
     StringBuilder builder;
     serialize_a_url(builder, url);
     return builder.to_string();
 }
 
-String serialize_a_srgb_value(Color color)
+DeprecatedString serialize_a_srgb_value(Color color)
 {
     StringBuilder builder;
     serialize_a_srgb_value(builder, color);

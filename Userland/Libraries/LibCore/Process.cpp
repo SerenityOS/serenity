@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
@@ -21,11 +21,11 @@ extern char** environ;
 namespace Core {
 
 struct ArgvList {
-    String m_path;
-    String m_working_directory;
+    DeprecatedString m_path;
+    DeprecatedString m_working_directory;
     Vector<char const*, 10> m_argv;
 
-    ArgvList(String path, size_t size)
+    ArgvList(DeprecatedString path, size_t size)
         : m_path { path }
     {
         m_argv.ensure_capacity(size + 2);
@@ -44,7 +44,7 @@ struct ArgvList {
         return m_argv;
     }
 
-    void set_working_directory(String const& working_directory)
+    void set_working_directory(DeprecatedString const& working_directory)
     {
         m_working_directory = working_directory;
     }
@@ -66,7 +66,7 @@ struct ArgvList {
     }
 };
 
-ErrorOr<pid_t> Process::spawn(StringView path, Span<String const> arguments, String working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, Span<DeprecatedString const> arguments, DeprecatedString working_directory)
 {
     ArgvList argv { path, arguments.size() };
     for (auto const& arg : arguments)
@@ -75,9 +75,9 @@ ErrorOr<pid_t> Process::spawn(StringView path, Span<String const> arguments, Str
     return argv.spawn();
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, Span<StringView const> arguments, String working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, Span<StringView const> arguments, DeprecatedString working_directory)
 {
-    Vector<String> backing_strings;
+    Vector<DeprecatedString> backing_strings;
     backing_strings.ensure_capacity(arguments.size());
     ArgvList argv { path, arguments.size() };
     for (auto const& arg : arguments) {
@@ -88,7 +88,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, Span<StringView const> arguments,
     return argv.spawn();
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, Span<char const* const> arguments, String working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, Span<char const* const> arguments, DeprecatedString working_directory)
 {
     ArgvList argv { path, arguments.size() };
     for (auto arg : arguments)

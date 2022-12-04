@@ -16,20 +16,20 @@ namespace Web::HTML {
 
 ModuleScript::~ModuleScript() = default;
 
-ModuleScript::ModuleScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object)
+ModuleScript::ModuleScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object)
     : Script(move(base_url), move(filename), environment_settings_object)
 {
 }
 
 JavaScriptModuleScript::~JavaScriptModuleScript() = default;
 
-JavaScriptModuleScript::JavaScriptModuleScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object)
+JavaScriptModuleScript::JavaScriptModuleScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object)
     : ModuleScript(move(base_url), move(filename), environment_settings_object)
 {
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-javascript-module-script
-JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(String const& filename, StringView source, EnvironmentSettingsObject& settings_object, AK::URL base_url)
+JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(DeprecatedString const& filename, StringView source, EnvironmentSettingsObject& settings_object, AK::URL base_url)
 {
     // 1. If scripting is disabled for settings, then set source to the empty string.
     if (settings_object.is_scripting_disabled())

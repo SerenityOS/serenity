@@ -30,7 +30,7 @@ public:
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);
 
-    String const& current_filename() const { return m_workbook->current_filename(); }
+    DeprecatedString const& current_filename() const { return m_workbook->current_filename(); }
     SpreadsheetView* current_view() { return static_cast<SpreadsheetView*>(m_tab_widget->active_widget()); }
     Sheet* current_worksheet_if_available() { return current_view() ? current_view()->sheet_if_available() : nullptr; }
     void update_window_title();
@@ -58,7 +58,7 @@ private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(String const& mime_type) override;
+    virtual void clipboard_content_did_change(DeprecatedString const& mime_type) override;
 
     explicit SpreadsheetWidget(GUI::Window& window, NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 

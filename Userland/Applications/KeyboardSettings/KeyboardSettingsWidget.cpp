@@ -33,7 +33,7 @@ class KeymapSelectionDialog final : public GUI::Dialog {
 public:
     virtual ~KeymapSelectionDialog() override = default;
 
-    static String select_keymap(Window* parent_window, Vector<String> const& selected_keymaps)
+    static DeprecatedString select_keymap(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
     {
         auto dialog = KeymapSelectionDialog::construct(parent_window, selected_keymaps);
         dialog->set_title("Add a keymap");
@@ -42,13 +42,13 @@ public:
             return dialog->selected_keymap();
         }
 
-        return String::empty();
+        return DeprecatedString::empty();
     }
 
-    String selected_keymap() { return m_selected_keymap; }
+    DeprecatedString selected_keymap() { return m_selected_keymap; }
 
 private:
-    KeymapSelectionDialog(Window* parent_window, Vector<String> const& selected_keymaps)
+    KeymapSelectionDialog(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
         : Dialog(parent_window)
     {
         auto& widget = set_main_widget<GUI::Widget>();
@@ -62,7 +62,7 @@ private:
 
         Core::DirIterator iterator("/res/keymaps/", Core::DirIterator::Flags::SkipDots);
         if (iterator.has_error()) {
-            GUI::MessageBox::show(nullptr, String::formatted("Error on reading mapping file list: {}", iterator.error_string()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Error on reading mapping file list: {}", iterator.error_string()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
             GUI::Application::the()->quit(-1);
         }
 
@@ -79,7 +79,7 @@ private:
 
         m_keymaps_combobox = *widget.find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
         m_keymaps_combobox->set_only_allow_values_from_model(true);
-        m_keymaps_combobox->set_model(*GUI::ItemListModel<String>::create(m_character_map_files));
+        m_keymaps_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_character_map_files));
         m_keymaps_combobox->set_selected_index(0);
 
         m_keymaps_combobox->on_change = [&](auto& keymap, auto) {
@@ -98,8 +98,8 @@ private:
     }
 
     RefPtr<GUI::ComboBox> m_keymaps_combobox;
-    Vector<String> m_character_map_files;
-    String m_selected_keymap;
+    Vector<DeprecatedString> m_character_map_files;
+    DeprecatedString m_selected_keymap;
 };
 
 class KeymapModel final : public GUI::Model {
@@ -111,7 +111,7 @@ public:
 
     GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
-        String const& data = m_data.at(index.row());
+        DeprecatedString const& data = m_data.at(index.row());
         if (role == GUI::ModelRole::Font && data == m_active_keymap)
             return Gfx::FontDatabase::default_font().bold_variant();
 
@@ -124,30 +124,30 @@ public:
         invalidate();
     }
 
-    void add_keymap(String const& keymap)
+    void add_keymap(DeprecatedString const& keymap)
     {
         m_data.append(keymap);
         invalidate();
     }
 
-    void set_active_keymap(String const& keymap)
+    void set_active_keymap(DeprecatedString const& keymap)
     {
         m_active_keymap = keymap;
         invalidate();
     }
 
-    String const& active_keymap() { return m_active_keymap; }
+    DeprecatedString const& active_keymap() { return m_active_keymap; }
 
-    String const& keymap_at(size_t index)
+    DeprecatedString const& keymap_at(size_t index)
     {
         return m_data[index];
     }
 
-    Vector<String> const& keymaps() const { return m_data; }
+    Vector<DeprecatedString> const& keymaps() const { return m_data; }
 
 private:
-    Vector<String> m_data;
-    String m_active_keymap;
+    Vector<DeprecatedString> m_data;
+    DeprecatedString m_active_keymap;
 };
 
 KeyboardSettingsWidget::KeyboardSettingsWidget()
@@ -280,8 +280,8 @@ void KeyboardSettingsWidget::apply_settings()
     Config::write_bool("KeyboardSettings"sv, "StartupEnable"sv, "NumLock"sv, m_num_lock_checkbox->is_checked());
 }
 
-void KeyboardSettingsWidget::set_keymaps(Vector<String> const& keymaps, String const& active_keymap)
+void KeyboardSettingsWidget::set_keymaps(Vector<DeprecatedString> const& keymaps, DeprecatedString const& active_keymap)
 {
-    auto keymaps_string = String::join(',', keymaps);
+    auto keymaps_string = DeprecatedString::join(',', keymaps);
     GUI::Process::spawn_or_show_error(window(), "/bin/keymap"sv, Array { "-s", keymaps_string.characters(), "-m", active_keymap.characters() });
 }

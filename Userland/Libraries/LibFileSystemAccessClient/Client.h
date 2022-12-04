@@ -26,10 +26,10 @@ class Client final
     IPC_CLIENT_CONNECTION(Client, "/tmp/session/%sid/portal/filesystemaccess"sv)
 
 public:
-    Result try_request_file_read_only_approved(GUI::Window* parent_window, String const& path);
-    Result try_request_file(GUI::Window* parent_window, String const& path, Core::OpenMode mode);
-    Result try_open_file(GUI::Window* parent_window, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
-    Result try_save_file(GUI::Window* parent_window, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
+    Result try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path);
+    Result try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode);
+    Result try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
+    Result try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
 
     static Client& the();
 
@@ -42,7 +42,7 @@ private:
     {
     }
 
-    virtual void handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& fd, Optional<String> const& chosen_file) override;
+    virtual void handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& fd, Optional<DeprecatedString> const& chosen_file) override;
 
     int get_new_id();
     Result handle_promise(int);

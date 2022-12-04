@@ -46,7 +46,7 @@ Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
     return {};
 }
 
-String ManualModel::page_name(const GUI::ModelIndex& index) const
+DeprecatedString ManualModel::page_name(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -57,7 +57,7 @@ String ManualModel::page_name(const GUI::ModelIndex& index) const
     return page->name();
 }
 
-String ManualModel::page_path(const GUI::ModelIndex& index) const
+DeprecatedString ManualModel::page_path(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -68,7 +68,7 @@ String ManualModel::page_path(const GUI::ModelIndex& index) const
     return page->path();
 }
 
-ErrorOr<StringView> ManualModel::page_view(String const& path) const
+ErrorOr<StringView> ManualModel::page_view(DeprecatedString const& path) const
 {
     if (path.is_empty())
         return StringView {};
@@ -87,7 +87,7 @@ ErrorOr<StringView> ManualModel::page_view(String const& path) const
     return view;
 }
 
-String ManualModel::page_and_section(const GUI::ModelIndex& index) const
+DeprecatedString ManualModel::page_and_section(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -96,7 +96,7 @@ String ManualModel::page_and_section(const GUI::ModelIndex& index) const
         return {};
     auto* page = static_cast<ManualPageNode const*>(node);
     auto* section = static_cast<ManualSectionNode const*>(page->parent());
-    return String::formatted("{}({})", page->name(), section->section_name());
+    return DeprecatedString::formatted("{}({})", page->name(), section->section_name());
 }
 
 GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
@@ -151,7 +151,7 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
     case GUI::ModelRole::Search:
         if (!node->is_page())
             return {};
-        return String(page_view(page_path(index)).value());
+        return DeprecatedString(page_view(page_path(index)).value());
     case GUI::ModelRole::Display:
         return node->name();
     case GUI::ModelRole::Icon:

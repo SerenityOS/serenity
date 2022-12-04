@@ -17,13 +17,13 @@ class Protocol {
 public:
     virtual ~Protocol();
 
-    String const& name() const { return m_name; }
-    virtual OwnPtr<Request> start_request(ConnectionFromClient&, String const& method, const URL&, HashMap<String, String> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) = 0;
+    DeprecatedString const& name() const { return m_name; }
+    virtual OwnPtr<Request> start_request(ConnectionFromClient&, DeprecatedString const& method, const URL&, HashMap<DeprecatedString, DeprecatedString> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) = 0;
 
-    static Protocol* find_by_name(String const&);
+    static Protocol* find_by_name(DeprecatedString const&);
 
 protected:
-    explicit Protocol(String const& name);
+    explicit Protocol(DeprecatedString const& name);
     struct Pipe {
         int read_fd { -1 };
         int write_fd { -1 };
@@ -31,7 +31,7 @@ protected:
     static ErrorOr<Pipe> get_pipe_for_request();
 
 private:
-    String m_name;
+    DeprecatedString m_name;
 };
 
 }

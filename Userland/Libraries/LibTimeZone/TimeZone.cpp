@@ -5,7 +5,7 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibTimeZone/TimeZone.h>
 #include <limits.h>
 #include <stdio.h>
@@ -44,7 +44,7 @@ public:
         }
     }
 
-    ErrorOr<String> read_time_zone()
+    ErrorOr<DeprecatedString> read_time_zone()
     {
         if (!m_file)
             return Error::from_string_literal("Could not open /etc/timezone");
@@ -55,7 +55,7 @@ public:
         if (bytes == 0)
             return Error::from_string_literal("Could not read time zone from /etc/timezone");
 
-        return String(buffer.span().slice(0, bytes)).trim_whitespace();
+        return DeprecatedString(buffer.span().slice(0, bytes)).trim_whitespace();
     }
 
     ErrorOr<void> write_time_zone(StringView time_zone)

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -49,9 +49,9 @@ public:
     [[nodiscard]] JS::GCPtr<ConnectionTimingInfo> final_connection_timing_info() const { return m_final_connection_timing_info; }
     void set_final_connection_timing_info(JS::GCPtr<ConnectionTimingInfo> final_connection_timing_info) { m_final_connection_timing_info = final_connection_timing_info; }
 
-    [[nodiscard]] Vector<String>& server_timing_headers() { return m_server_timing_headers; }
-    [[nodiscard]] Vector<String> const& server_timing_headers() const { return m_server_timing_headers; }
-    void set_server_timing_headers(Vector<String> server_timing_headers) { m_server_timing_headers = move(server_timing_headers); }
+    [[nodiscard]] Vector<DeprecatedString>& server_timing_headers() { return m_server_timing_headers; }
+    [[nodiscard]] Vector<DeprecatedString> const& server_timing_headers() const { return m_server_timing_headers; }
+    void set_server_timing_headers(Vector<DeprecatedString> server_timing_headers) { m_server_timing_headers = move(server_timing_headers); }
 
     [[nodiscard]] bool render_blocking() const { return m_render_blocking; }
     void set_render_blocking(bool render_blocking) { m_render_blocking = render_blocking; }
@@ -109,7 +109,7 @@ private:
     // https://fetch.spec.whatwg.org/#fetch-timing-info-server-timing-headers
     // server-timing headers (default « »)
     //     A list of strings.
-    Vector<String> m_server_timing_headers;
+    Vector<DeprecatedString> m_server_timing_headers;
 
     // https://fetch.spec.whatwg.org/#fetch-timing-info-render-blocking
     // render-blocking (default false)

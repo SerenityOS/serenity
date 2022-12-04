@@ -43,7 +43,7 @@ RefPtr<GUI::Window> ConnectionFromClient::create_dummy_child_window(i32 window_s
     return window;
 }
 
-void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_server_client_id, i32 parent_window_id, String const& path, Core::OpenMode const& requested_access, ShouldPrompt prompt)
+void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& path, Core::OpenMode const& requested_access, ShouldPrompt prompt)
 {
     VERIFY(path.starts_with("/"sv));
 
@@ -57,7 +57,7 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
         approved = has_flag(maybe_permissions.value(), relevant_permissions);
 
     if (!approved) {
-        String access_string;
+        DeprecatedString access_string;
 
         if (has_flag(requested_access, Core::OpenMode::ReadWrite))
             access_string = "read and write";
@@ -67,14 +67,14 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
             access_string = "write to";
 
         auto pid = this->socket().peer_pid().release_value_but_fixme_should_propagate_errors();
-        auto exe_link = LexicalPath("/proc").append(String::number(pid)).append("exe"sv).string();
+        auto exe_link = LexicalPath("/proc").append(DeprecatedString::number(pid)).append("exe"sv).string();
         auto exe_path = Core::File::real_path_for(exe_link);
 
         auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
         if (prompt == ShouldPrompt::Yes) {
             auto exe_name = LexicalPath::basename(exe_path);
-            auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+            auto result = GUI::MessageBox::show(main_window, DeprecatedString::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
             approved = result == GUI::MessageBox::ExecResult::Yes;
         } else {
             approved = true;
@@ -104,17 +104,17 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
     }
 }
 
-void ConnectionFromClient::request_file_read_only_approved(i32 request_id, i32 window_server_client_id, i32 parent_window_id, String const& path)
+void ConnectionFromClient::request_file_read_only_approved(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& path)
 {
     request_file_handler(request_id, window_server_client_id, parent_window_id, path, Core::OpenMode::ReadOnly, ShouldPrompt::No);
 }
 
-void ConnectionFromClient::request_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, String const& path, Core::OpenMode const& requested_access)
+void ConnectionFromClient::request_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& path, Core::OpenMode const& requested_access)
 {
     request_file_handler(request_id, window_server_client_id, parent_window_id, path, requested_access, ShouldPrompt::Yes);
 }
 
-void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, String const& window_title, String const& path_to_view, Core::OpenMode const& requested_access)
+void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& window_title, DeprecatedString const& path_to_view, Core::OpenMode const& requested_access)
 {
     auto relevant_permissions = requested_access & (Core::OpenMode::ReadOnly | Core::OpenMode::WriteOnly);
     VERIFY(relevant_permissions != Core::OpenMode::NotOpen);
@@ -126,7 +126,7 @@ void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_cl
     prompt_helper(request_id, user_picked_file, requested_access);
 }
 
-void ConnectionFromClient::prompt_save_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, String const& name, String const& ext, String const& path_to_view, Core::OpenMode const& requested_access)
+void ConnectionFromClient::prompt_save_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& name, DeprecatedString const& ext, DeprecatedString const& path_to_view, Core::OpenMode const& requested_access)
 {
     auto relevant_permissions = requested_access & (Core::OpenMode::ReadOnly | Core::OpenMode::WriteOnly);
     VERIFY(relevant_permissions != Core::OpenMode::NotOpen);
@@ -138,7 +138,7 @@ void ConnectionFromClient::prompt_save_file(i32 request_id, i32 window_server_cl
     prompt_helper(request_id, user_picked_file, requested_access);
 }
 
-void ConnectionFromClient::prompt_helper(i32 request_id, Optional<String> const& user_picked_file, Core::OpenMode const& requested_access)
+void ConnectionFromClient::prompt_helper(i32 request_id, Optional<DeprecatedString> const& user_picked_file, Core::OpenMode const& requested_access)
 {
     if (user_picked_file.has_value()) {
         VERIFY(user_picked_file->starts_with("/"sv));
@@ -159,7 +159,7 @@ void ConnectionFromClient::prompt_helper(i32 request_id, Optional<String> const&
             async_handle_prompt_end(request_id, 0, IPC::File(file.value()->leak_fd(), IPC::File::CloseAfterSending), user_picked_file);
         }
     } else {
-        async_handle_prompt_end(request_id, -1, Optional<IPC::File> {}, Optional<String> {});
+        async_handle_prompt_end(request_id, -1, Optional<IPC::File> {}, Optional<DeprecatedString> {});
     }
 }
 

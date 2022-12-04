@@ -19,12 +19,12 @@ public:
 
     virtual FlyString node_name() const override { return m_target; }
 
-    String const& target() const { return m_target; }
+    DeprecatedString const& target() const { return m_target; }
 
 private:
-    ProcessingInstruction(Document&, String const& data, String const& target);
+    ProcessingInstruction(Document&, DeprecatedString const& data, DeprecatedString const& target);
 
-    String m_target;
+    DeprecatedString m_target;
 };
 
 template<>

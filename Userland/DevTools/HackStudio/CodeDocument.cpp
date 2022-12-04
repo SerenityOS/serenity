@@ -9,7 +9,7 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<CodeDocument> CodeDocument::create(String const& file_path, Client* client)
+NonnullRefPtr<CodeDocument> CodeDocument::create(DeprecatedString const& file_path, Client* client)
 {
     return adopt_ref(*new CodeDocument(file_path, client));
 }
@@ -19,7 +19,7 @@ NonnullRefPtr<CodeDocument> CodeDocument::create(Client* client)
     return adopt_ref(*new CodeDocument(client));
 }
 
-CodeDocument::CodeDocument(String const& file_path, Client* client)
+CodeDocument::CodeDocument(DeprecatedString const& file_path, Client* client)
     : TextDocument(client)
     , m_file_path(file_path)
 {

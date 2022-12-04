@@ -13,7 +13,7 @@
 
 namespace Web::DOM {
 
-CharacterData::CharacterData(Document& document, NodeType type, String const& data)
+CharacterData::CharacterData(Document& document, NodeType type, DeprecatedString const& data)
     : Node(document, type)
     , m_data(data)
 {
@@ -21,7 +21,7 @@ CharacterData::CharacterData(Document& document, NodeType type, String const& da
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-data
-void CharacterData::set_data(String data)
+void CharacterData::set_data(DeprecatedString data)
 {
     // [The data] setter must replace data with node this, offset 0, count this’s length, and data new value.
     // NOTE: Since the offset is 0, it can never be above data's length, so this can never throw.
@@ -31,7 +31,7 @@ void CharacterData::set_data(String data)
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-substring
-WebIDL::ExceptionOr<String> CharacterData::substring_data(size_t offset, size_t count) const
+WebIDL::ExceptionOr<DeprecatedString> CharacterData::substring_data(size_t offset, size_t count) const
 {
     // 1. Let length be node’s length.
     auto length = this->length();
@@ -50,7 +50,7 @@ WebIDL::ExceptionOr<String> CharacterData::substring_data(size_t offset, size_t 
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-replace
-WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, String const& data)
+WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, DeprecatedString const& data)
 {
     // 1. Let length be node’s length.
     auto length = this->length();
@@ -109,14 +109,14 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-appenddata
-WebIDL::ExceptionOr<void> CharacterData::append_data(String const& data)
+WebIDL::ExceptionOr<void> CharacterData::append_data(DeprecatedString const& data)
 {
     // The appendData(data) method steps are to replace data with node this, offset this’s length, count 0, and data data.
     return replace_data(m_data.length(), 0, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-insertdata
-WebIDL::ExceptionOr<void> CharacterData::insert_data(size_t offset, String const& data)
+WebIDL::ExceptionOr<void> CharacterData::insert_data(size_t offset, DeprecatedString const& data)
 {
     // The insertData(offset, data) method steps are to replace data with node this, offset offset, count 0, and data data.
     return replace_data(offset, 0, data);
@@ -126,7 +126,7 @@ WebIDL::ExceptionOr<void> CharacterData::insert_data(size_t offset, String const
 WebIDL::ExceptionOr<void> CharacterData::delete_data(size_t offset, size_t count)
 {
     // The deleteData(offset, count) method steps are to replace data with node this, offset offset, count count, and data the empty string.
-    return replace_data(offset, count, String::empty());
+    return replace_data(offset, count, DeprecatedString::empty());
 }
 
 }

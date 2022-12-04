@@ -50,7 +50,7 @@ static u16 pow_2_less_than_or_equal(u16 x)
     return result;
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(String path, unsigned int index)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(DeprecatedString path, unsigned int index)
 {
     auto file = TRY(Core::MappedFile::map(path));
     return try_load_from_externally_owned_memory(file->bytes(), index);

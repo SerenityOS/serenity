@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool ignore_env = false;
     StringView split_string {};
-    Vector<String> values;
+    Vector<DeprecatedString> values;
 
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);

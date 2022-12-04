@@ -78,7 +78,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     //    b. Return index.
     // Note: Step 1, 1.a and 1.b are handled in Module.cpp
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_linking[{}](vm, {}, {})", this, String::join(',', stack), index);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_linking[{}](vm, {}, {})", this, DeprecatedString::join(',', stack), index);
 
     // 2. If module.[[Status]] is linking, linked, evaluating-async, or evaluated, then
     if (m_status == ModuleStatus::Linking || m_status == ModuleStatus::Linked || m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated) {
@@ -282,7 +282,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
 // 16.2.1.5.2.1 InnerModuleEvaluation ( module, stack, index ), https://tc39.es/ecma262/#sec-innermoduleevaluation
 ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_evaluation[{}](vm, {}, {})", this, String::join(", "sv, stack), index);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] inner_module_evaluation[{}](vm, {}, {})", this, DeprecatedString::join(", "sv, stack), index);
     // Note: Step 1 is performed in Module.cpp
 
     // 2. If module.[[Status]] is evaluating-async or evaluated, then

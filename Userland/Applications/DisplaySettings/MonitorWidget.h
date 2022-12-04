@@ -14,10 +14,10 @@ class MonitorWidget final : public GUI::Widget {
     C_OBJECT(MonitorWidget);
 
 public:
-    bool set_wallpaper(String path);
+    bool set_wallpaper(DeprecatedString path);
     StringView wallpaper() const;
 
-    void set_wallpaper_mode(String mode);
+    void set_wallpaper_mode(DeprecatedString mode);
     StringView wallpaper_mode() const;
 
     RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper_bitmap; }
@@ -43,14 +43,14 @@ private:
     RefPtr<Gfx::Bitmap> m_desktop_bitmap;
     bool m_desktop_dirty { true };
 
-    String m_desktop_wallpaper_path;
+    DeprecatedString m_desktop_wallpaper_path;
     RefPtr<Gfx::Bitmap> m_wallpaper_bitmap;
-    String m_desktop_wallpaper_mode;
+    DeprecatedString m_desktop_wallpaper_mode;
     Gfx::IntSize m_desktop_resolution;
     int m_desktop_scale_factor { 1 };
     Gfx::Color m_desktop_color;
 
-    bool is_different_to_current_wallpaper_path(String const& path)
+    bool is_different_to_current_wallpaper_path(DeprecatedString const& path)
     {
         return (!path.is_empty() && path != m_desktop_wallpaper_path) || (path.is_empty() && m_desktop_wallpaper_path != nullptr);
     }

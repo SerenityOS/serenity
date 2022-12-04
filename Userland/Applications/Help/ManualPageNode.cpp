@@ -19,7 +19,7 @@ NonnullOwnPtrVector<ManualNode>& ManualPageNode::children() const
     return empty_vector;
 }
 
-String ManualPageNode::path() const
+DeprecatedString ManualPageNode::path() const
 {
-    return String::formatted("{}/{}.md", m_section.path(), m_page);
+    return DeprecatedString::formatted("{}/{}.md", m_section.path(), m_page);
 }

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/SourceLocation.h>
-#include <AK/String.h>
 #include <errno.h>
 
 namespace Video {
@@ -44,7 +44,7 @@ public:
     static DecoderError format(DecoderErrorCategory category, CheckedFormatString<Parameters...>&& format_string, Parameters const&... parameters)
     {
         AK::VariadicFormatParams variadic_format_params { parameters... };
-        return DecoderError::with_description(category, String::vformatted(format_string.view(), variadic_format_params));
+        return DecoderError::with_description(category, DeprecatedString::vformatted(format_string.view(), variadic_format_params));
     }
 
     static DecoderError from_source_location(DecoderErrorCategory category, StringView description, SourceLocation location = SourceLocation::current())
@@ -67,14 +67,14 @@ public:
     StringView string_literal() const { return m_description; }
 
 private:
-    DecoderError(DecoderErrorCategory category, String description)
+    DecoderError(DecoderErrorCategory category, DeprecatedString description)
         : m_category(category)
         , m_description(move(description))
     {
     }
 
     DecoderErrorCategory m_category { DecoderErrorCategory::Unknown };
-    String m_description;
+    DeprecatedString m_description;
 };
 
 #define DECODER_TRY(category, expression)                                  \

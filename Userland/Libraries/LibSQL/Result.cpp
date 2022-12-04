@@ -9,7 +9,7 @@
 
 namespace SQL {
 
-String Result::error_string() const
+DeprecatedString Result::error_string() const
 {
     VERIFY(is_error());
 

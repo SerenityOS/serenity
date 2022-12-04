@@ -59,7 +59,7 @@ public:
 protected:
     explicit EventTarget(JS::Realm&);
 
-    void element_event_handler_attribute_changed(FlyString const& local_name, String const& value);
+    void element_event_handler_attribute_changed(FlyString const& local_name, DeprecatedString const& value);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

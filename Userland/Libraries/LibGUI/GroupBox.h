@@ -16,7 +16,7 @@ class GroupBox : public Widget {
 public:
     virtual ~GroupBox() override = default;
 
-    String title() const { return m_title; }
+    DeprecatedString title() const { return m_title; }
     void set_title(StringView);
     virtual Margins content_margins() const override;
 
@@ -27,7 +27,7 @@ protected:
     virtual void fonts_change_event(FontsChangeEvent&) override;
 
 private:
-    String m_title;
+    DeprecatedString m_title;
 };
 
 }

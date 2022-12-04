@@ -31,7 +31,7 @@ JsonValue JsonPath::resolve(JsonValue const& top_root) const
     return root;
 }
 
-String JsonPath::to_string() const
+DeprecatedString JsonPath::to_string() const
 {
     StringBuilder builder;
     builder.append("{ ."sv);

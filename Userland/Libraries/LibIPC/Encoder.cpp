@@ -7,9 +7,9 @@
 
 #include <AK/BitCast.h>
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
@@ -146,7 +146,7 @@ Encoder& Encoder::operator<<(StringView value)
     return *this;
 }
 
-Encoder& Encoder::operator<<(String const& value)
+Encoder& Encoder::operator<<(DeprecatedString const& value)
 {
     if (value.is_null())
         return *this << (i32)-1;

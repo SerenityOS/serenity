@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
-#include <AK/String.h>
 
 TEST_CASE(bitap)
 {
@@ -78,9 +78,9 @@ TEST_CASE(kmp_two_chunks)
 
 TEST_CASE(timing_safe_compare)
 {
-    String data_set = "abcdefghijklmnopqrstuvwxyz123456789";
+    DeprecatedString data_set = "abcdefghijklmnopqrstuvwxyz123456789";
     EXPECT_EQ(true, AK::timing_safe_compare(data_set.characters(), data_set.characters(), data_set.length()));
 
-    String reversed = data_set.reverse();
+    DeprecatedString reversed = data_set.reverse();
     EXPECT_EQ(false, AK::timing_safe_compare(data_set.characters(), reversed.characters(), reversed.length()));
 }

@@ -24,11 +24,11 @@ class Error : public Object {
 
 public:
     static Error* create(Realm&);
-    static Error* create(Realm&, String const& message);
+    static Error* create(Realm&, DeprecatedString const& message);
 
     virtual ~Error() override = default;
 
-    [[nodiscard]] String stack_string() const;
+    [[nodiscard]] DeprecatedString stack_string() const;
 
     ThrowCompletionOr<void> install_error_cause(Value options);
 
@@ -51,7 +51,7 @@ private:
                                                                                     \
     public:                                                                         \
         static ClassName* create(Realm&);                                           \
-        static ClassName* create(Realm&, String const& message);                    \
+        static ClassName* create(Realm&, DeprecatedString const& message);          \
                                                                                     \
         explicit ClassName(Object& prototype);                                      \
         virtual ~ClassName() override = default;                                    \

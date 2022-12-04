@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Web::CSS {
 
@@ -29,11 +29,11 @@ public:
         return m_min_code_point <= code_point && code_point <= m_max_code_point;
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         if (m_min_code_point == m_max_code_point)
-            return String::formatted("U+{:x}", m_min_code_point);
-        return String::formatted("U+{:x}-{:x}", m_min_code_point, m_max_code_point);
+            return DeprecatedString::formatted("U+{:x}", m_min_code_point);
+        return DeprecatedString::formatted("U+{:x}-{:x}", m_min_code_point, m_max_code_point);
     }
 
 private:

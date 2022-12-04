@@ -21,12 +21,12 @@ public:
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 1; }
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole = GUI::ModelRole::Display) const override { return m_domain_list[index.row()]; }
 
-    void add_domain(String name);
+    void add_domain(DeprecatedString name);
     void delete_domain(size_t index);
 
 private:
     bool m_was_modified { false };
-    Vector<String> m_domain_list;
+    Vector<DeprecatedString> m_domain_list;
 };
 
 class ContentFilterSettingsWidget : public GUI::SettingsWindow::Tab {

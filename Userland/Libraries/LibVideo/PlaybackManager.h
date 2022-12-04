@@ -63,11 +63,11 @@ struct FrameQueueItem {
         return error;
     }
 
-    String debug_string() const
+    DeprecatedString debug_string() const
     {
         if (is_error())
             return error().string_literal();
-        return String::formatted("frame at {}ms", timestamp().to_milliseconds());
+        return DeprecatedString::formatted("frame at {}ms", timestamp().to_milliseconds());
     }
 
 private:

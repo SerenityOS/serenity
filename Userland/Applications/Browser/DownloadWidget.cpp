@@ -49,7 +49,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     {
         auto file_or_error = Core::Stream::File::open(m_destination_path, Core::Stream::OpenMode::Write);
         if (file_or_error.is_error()) {
-            GUI::MessageBox::show(window(), String::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
             window()->close();
             return;
         }
@@ -71,7 +71,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_browser_image->load_from_file("/res/graphics/download-animation.gif"sv);
     animation_layout.add_spacer();
 
-    auto& source_label = add<GUI::Label>(String::formatted("From: {}", url));
+    auto& source_label = add<GUI::Label>(DeprecatedString::formatted("From: {}", url));
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     source_label.set_fixed_height(16);
 
@@ -82,7 +82,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_progress_label->set_fixed_height(16);
 
-    auto& destination_label = add<GUI::Label>(String::formatted("To: {}", m_destination_path));
+    auto& destination_label = add<GUI::Label>(DeprecatedString::formatted("To: {}", m_destination_path));
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     destination_label.set_fixed_height(16);
 
@@ -161,7 +161,7 @@ void DownloadWidget::did_finish(bool success)
     m_cancel_button->update();
 
     if (!success) {
-        GUI::MessageBox::show(window(), String::formatted("Download failed for some reason"), "Download failed"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Download failed for some reason"), "Download failed"sv, GUI::MessageBox::Type::Error);
         window()->close();
         return;
     }

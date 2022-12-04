@@ -43,8 +43,8 @@
 #include <unistd.h>
 
 struct TitleAndText {
-    String title;
-    String text;
+    DeprecatedString title;
+    DeprecatedString text;
 };
 
 struct ThreadBacktracesAndCpuRegisters {
@@ -99,7 +99,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
     }
 
     return {
-        String::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
+        DeprecatedString::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
         builder.build()
     };
 }
@@ -128,7 +128,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 #endif
 
     return {
-        String::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
+        DeprecatedString::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
         builder.build()
     };
 }
@@ -145,7 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    String coredump_path {};
+    DeprecatedString coredump_path {};
     bool unlink_on_exit = false;
     StringBuilder full_backtrace;
 
@@ -161,9 +161,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    Vector<String> memory_regions;
+    Vector<DeprecatedString> memory_regions;
     coredump->for_each_memory_region_info([&](auto& memory_region_info) {
-        memory_regions.append(String::formatted("{:p} - {:p}: {}", memory_region_info.region_start, memory_region_info.region_end, memory_region_info.region_name));
+        memory_regions.append(DeprecatedString::formatted("{:p} - {:p}: {}", memory_region_info.region_start, memory_region_info.region_end, memory_region_info.region_name));
         return IterationDecision::Continue;
     });
 
@@ -197,7 +197,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app_name = af->name();
 
     auto& description_label = *widget->find_descendant_of_type_named<GUI::Label>("description");
-    description_label.set_text(String::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal));
+    description_label.set_text(DeprecatedString::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal));
 
     auto& executable_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
@@ -214,7 +214,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& arguments_label = *widget->find_descendant_of_type_named<GUI::Label>("arguments_label");
-    arguments_label.set_text(String::join(' ', crashed_process_arguments));
+    arguments_label.set_text(DeprecatedString::join(' ', crashed_process_arguments));
 
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
@@ -246,7 +246,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_tab->layout()->set_margins(4);
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
-    environment_text_editor->set_text(String::join('\n', environment));
+    environment_text_editor->set_text(DeprecatedString::join('\n', environment));
     environment_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
     environment_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
@@ -256,7 +256,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     memory_regions_tab->layout()->set_margins(4);
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
-    memory_regions_text_editor->set_text(String::join('\n', memory_regions));
+    memory_regions_text_editor->set_text(DeprecatedString::join('\n', memory_regions));
     memory_regions_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
     memory_regions_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     memory_regions_text_editor->set_should_hide_unnecessary_scrollbars(true);
@@ -284,14 +284,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        LexicalPath lexical_path(String::formatted("{}_{}_backtrace.txt", pid, app_name));
+        LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
         auto file_or_error = FileSystemAccessClient::Client::the().try_save_file(window, lexical_path.title(), lexical_path.extension());
         if (file_or_error.is_error())
             return;
 
         auto file = file_or_error.value();
         if (!file->write(full_backtrace.to_string()))
-            GUI::MessageBox::show(window, String::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
 
     (void)Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(

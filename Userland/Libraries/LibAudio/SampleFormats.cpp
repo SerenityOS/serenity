@@ -27,10 +27,10 @@ u16 pcm_bits_per_sample(PcmSampleFormat format)
     }
 }
 
-String sample_format_name(PcmSampleFormat format)
+DeprecatedString sample_format_name(PcmSampleFormat format)
 {
     bool is_float = format == PcmSampleFormat::Float32 || format == PcmSampleFormat::Float64;
-    return String::formatted("PCM {}bit {}", pcm_bits_per_sample(format), is_float ? "Float" : "LE");
+    return DeprecatedString::formatted("PCM {}bit {}", pcm_bits_per_sample(format), is_float ? "Float" : "LE");
 }
 
 }

@@ -28,8 +28,8 @@ public:
 private:
     AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
 
-    String m_name;
+    DeprecatedString m_name;
     RefPtr<Gfx::Bitmap> m_icon;
-    String m_version_string;
+    DeprecatedString m_version_string;
 };
 }

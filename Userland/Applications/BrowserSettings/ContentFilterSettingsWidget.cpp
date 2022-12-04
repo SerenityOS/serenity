@@ -20,9 +20,9 @@
 
 static constexpr bool s_default_enable_content_filtering = true;
 
-static String filter_list_file_path()
+static DeprecatedString filter_list_file_path()
 {
-    return String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory());
+    return DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory());
 }
 
 ErrorOr<void> DomainListModel::load()
@@ -55,7 +55,7 @@ ErrorOr<void> DomainListModel::save()
     return {};
 }
 
-void DomainListModel::add_domain(String name)
+void DomainListModel::add_domain(DeprecatedString name)
 {
     begin_insert_rows({}, m_domain_list.size(), m_domain_list.size());
     m_domain_list.append(move(name));
@@ -117,7 +117,7 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
     m_enable_content_filtering_checkbox->on_checked = [&](auto) { set_modified(true); };
 
     m_add_new_domain_button->on_click = [&](unsigned) {
-        String text;
+        DeprecatedString text;
 
         if (GUI::InputBox::show(window(), text, "Enter domain name"sv, "Add domain to Content Filter"sv) == GUI::Dialog::ExecResult::OK
             && !text.is_empty()) {

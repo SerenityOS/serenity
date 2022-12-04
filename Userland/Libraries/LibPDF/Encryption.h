@@ -28,7 +28,7 @@ class StandardSecurityHandler : public SecurityHandler {
 public:
     static PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> create(Document*, NonnullRefPtr<DictObject> encryption_dict);
 
-    StandardSecurityHandler(Document*, size_t revision, String const& o_entry, String const& u_entry, u32 flags, bool encrypt_metadata, size_t length);
+    StandardSecurityHandler(Document*, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& u_entry, u32 flags, bool encrypt_metadata, size_t length);
 
     ~StandardSecurityHandler() override = default;
 
@@ -49,8 +49,8 @@ private:
     Document* m_document;
     size_t m_revision;
     Optional<ByteBuffer> m_encryption_key;
-    String m_o_entry;
-    String m_u_entry;
+    DeprecatedString m_o_entry;
+    DeprecatedString m_u_entry;
     u32 m_flags;
     bool m_encrypt_metadata;
     size_t m_length;

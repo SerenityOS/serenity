@@ -11,12 +11,12 @@
 
 TEST_CASE(normal_behavior)
 {
-    Trie<char, String> dictionary('/', "");
+    Trie<char, DeprecatedString> dictionary('/', "");
     constexpr StringView data[] { "test"sv, "example"sv, "foo"sv, "foobar"sv };
     constexpr size_t total_chars = 18; // root (1), 'test' (4), 'example' (7), 'foo' (3), 'foobar' (3, "foo" already stored).
     for (auto& view : data) {
         auto it = view.begin();
-        MUST(dictionary.insert(it, view.end(), view, [](auto& parent, auto& it) -> Optional<String> { return String::formatted("{}{}", parent.metadata_value(), *it); }));
+        MUST(dictionary.insert(it, view.end(), view, [](auto& parent, auto& it) -> Optional<DeprecatedString> { return DeprecatedString::formatted("{}{}", parent.metadata_value(), *it); }));
     }
 
     size_t i = 0;

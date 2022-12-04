@@ -218,7 +218,7 @@ private:
     bool match(TokenType type) const;
     bool done() const;
     void expected(char const* what);
-    void syntax_error(String const& message, Optional<Position> = {});
+    void syntax_error(DeprecatedString const& message, Optional<Position> = {});
     Token consume();
     Token consume_identifier();
     Token consume_identifier_reference();

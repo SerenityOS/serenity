@@ -20,14 +20,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    String default_listen_address = "0.0.0.0";
+    DeprecatedString default_listen_address = "0.0.0.0";
     u16 default_port = 8000;
-    String root_path = "/www";
+    DeprecatedString root_path = "/www";
 
-    String listen_address = default_listen_address;
+    DeprecatedString listen_address = default_listen_address;
     int port = default_port;
-    String username;
-    String password;
+    DeprecatedString username;
+    DeprecatedString password;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address");

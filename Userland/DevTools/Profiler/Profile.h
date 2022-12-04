@@ -34,7 +34,7 @@ extern OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
-    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString const& object_name, DeprecatedString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         return adopt_ref(*new ProfileNode(process, object_name, move(symbol), address, offset, timestamp, pid));
     }
@@ -54,7 +54,7 @@ public:
     void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
 
     FlyString const& object_name() const { return m_object_name; }
-    String const& symbol() const { return m_symbol; }
+    DeprecatedString const& symbol() const { return m_symbol; }
     FlatPtr address() const { return m_address; }
     u32 offset() const { return m_offset; }
     u64 timestamp() const { return m_timestamp; }
@@ -74,7 +74,7 @@ public:
         m_children.append(child);
     }
 
-    ProfileNode& find_or_create_child(FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+    ProfileNode& find_or_create_child(FlyString const& object_name, DeprecatedString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
@@ -112,13 +112,13 @@ public:
 
 private:
     explicit ProfileNode(Process const&);
-    explicit ProfileNode(Process const&, FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
+    explicit ProfileNode(Process const&, FlyString const& object_name, DeprecatedString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
 
     bool m_root { false };
     Process const& m_process;
     ProfileNode* m_parent { nullptr };
     FlyString m_object_name;
-    String m_symbol;
+    DeprecatedString m_symbol;
     pid_t m_pid { 0 };
     FlatPtr m_address { 0 };
     u32 m_offset { 0 };
@@ -167,7 +167,7 @@ public:
 
     struct Frame {
         FlyString object_name;
-        String symbol;
+        DeprecatedString symbol;
         FlatPtr address { 0 };
         u32 offset { 0 };
     };
@@ -195,14 +195,14 @@ public:
         };
 
         struct SignpostData {
-            String string;
+            DeprecatedString string;
             FlatPtr arg {};
         };
 
         struct MmapData {
             FlatPtr ptr {};
             size_t size {};
-            String name;
+            DeprecatedString name;
         };
 
         struct MunmapData {
@@ -212,11 +212,11 @@ public:
 
         struct ProcessCreateData {
             pid_t parent_pid { 0 };
-            String executable;
+            DeprecatedString executable;
         };
 
         struct ProcessExecData {
-            String executable;
+            DeprecatedString executable;
         };
 
         struct ThreadCreateData {
@@ -226,7 +226,7 @@ public:
         struct ReadData {
             int fd;
             size_t size;
-            String path;
+            DeprecatedString path;
             size_t start_timestamp;
             bool success;
         };

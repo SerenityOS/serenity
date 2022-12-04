@@ -185,16 +185,16 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::login(StringView username, Stri
 RefPtr<Promise<Optional<SolidResponse>>> Client::list(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::List, m_current_command,
-        { String::formatted("\"{}\"", reference_name),
-            String::formatted("\"{}\"", mailbox) } };
+        { DeprecatedString::formatted("\"{}\"", reference_name),
+            DeprecatedString::formatted("\"{}\"", mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::lsub(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::ListSub, m_current_command,
-        { String::formatted("\"{}\"", reference_name),
-            String::formatted("\"{}\"", mailbox) } };
+        { DeprecatedString::formatted("\"{}\"", reference_name),
+            DeprecatedString::formatted("\"{}\"", mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -250,7 +250,7 @@ ErrorOr<void> Client::send_next_command()
 {
     auto command = m_command_queue.take_first();
     ByteBuffer buffer;
-    auto tag = AK::String::formatted("A{} ", m_current_command);
+    auto tag = AK::DeprecatedString::formatted("A{} ", m_current_command);
     buffer += tag.to_byte_buffer();
     auto command_type = command_byte_buffer(command.type);
     buffer.append(command_type.data(), command_type.size());
@@ -283,7 +283,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::delete_mailbox(StringView name)
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<String> const& flags, bool uid)
+RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<DeprecatedString> const& flags, bool uid)
 {
     StringBuilder data_item_name;
     switch (method) {
@@ -309,9 +309,9 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Seque
     auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.build(), flags_builder.build() } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
-RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<String> charset, Vector<SearchKey>&& keys, bool uid)
+RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<DeprecatedString> charset, Vector<SearchKey>&& keys, bool uid)
 {
-    Vector<String> args;
+    Vector<DeprecatedString> args;
     if (charset.has_value()) {
         args.append("CHARSET "sv);
         args.append(charset.value());
@@ -339,7 +339,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::finish_idle()
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vector<StatusItemType> const& types)
 {
-    Vector<String> args;
+    Vector<DeprecatedString> args;
     for (auto type : types) {
         switch (type) {
         case StatusItemType::Recent:
@@ -367,9 +367,9 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vect
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Message&& message, Optional<Vector<String>> flags, Optional<Core::DateTime> date_time)
+RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags, Optional<Core::DateTime> date_time)
 {
-    Vector<String> args = { mailbox };
+    Vector<DeprecatedString> args = { mailbox };
     if (flags.has_value()) {
         StringBuilder flags_sb;
         flags_sb.append('(');
@@ -380,7 +380,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
     if (date_time.has_value())
         args.append(date_time.value().to_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));
 
-    args.append(String::formatted("{{{}}}", message.data.length()));
+    args.append(DeprecatedString::formatted("{{{}}}", message.data.length()));
 
     auto continue_req = send_command(Command { CommandType::Append, m_current_command, args });
 

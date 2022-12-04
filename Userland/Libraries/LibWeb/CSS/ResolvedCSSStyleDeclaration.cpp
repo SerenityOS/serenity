@@ -41,7 +41,7 @@ size_t ResolvedCSSStyleDeclaration::length() const
     return 0;
 }
 
-String ResolvedCSSStyleDeclaration::item(size_t index) const
+DeprecatedString ResolvedCSSStyleDeclaration::item(size_t index) const
 {
     (void)index;
     return {};
@@ -562,20 +562,20 @@ WebIDL::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_property(PropertyID, 
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
-WebIDL::ExceptionOr<String> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
+WebIDL::ExceptionOr<DeprecatedString> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
     return WebIDL::NoModificationAllowedError::create(realm(), "Cannot remove properties from result of getComputedStyle()");
 }
 
-String ResolvedCSSStyleDeclaration::serialized() const
+DeprecatedString ResolvedCSSStyleDeclaration::serialized() const
 {
     // https://www.w3.org/TR/cssom/#dom-cssstyledeclaration-csstext
     // If the computed flag is set, then return the empty string.
 
     // NOTE: ResolvedCSSStyleDeclaration is something you would only get from window.getComputedStyle(),
     //       which returns what the spec calls "resolved style". The "computed flag" is always set here.
-    return String::empty();
+    return DeprecatedString::empty();
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext

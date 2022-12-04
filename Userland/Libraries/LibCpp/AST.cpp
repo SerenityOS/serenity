@@ -32,10 +32,10 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
 
-    String qualifiers_string;
+    DeprecatedString qualifiers_string;
     if (!m_qualifiers.is_empty()) {
         print_indent(output, indent + 1);
-        outln(output, "[{}]", String::join(' ', m_qualifiers));
+        outln(output, "[{}]", DeprecatedString::join(' ', m_qualifiers));
     }
 
     m_return_type->dump(output, indent + 1);
@@ -75,22 +75,22 @@ void Type::dump(FILE* output, size_t indent) const
     outln(output, "{}", to_string());
 }
 
-String NamedType::to_string() const
+DeprecatedString NamedType::to_string() const
 {
-    String qualifiers_string;
+    DeprecatedString qualifiers_string;
     if (!qualifiers().is_empty())
-        qualifiers_string = String::formatted("[{}] ", String::join(' ', qualifiers()));
+        qualifiers_string = DeprecatedString::formatted("[{}] ", DeprecatedString::join(' ', qualifiers()));
 
-    String name;
+    DeprecatedString name;
     if (is_auto())
         name = "auto";
     else
         name = m_name.is_null() ? ""sv : m_name->full_name();
 
-    return String::formatted("{}{}", qualifiers_string, name);
+    return DeprecatedString::formatted("{}{}", qualifiers_string, name);
 }
 
-String Pointer::to_string() const
+DeprecatedString Pointer::to_string() const
 {
     if (!m_pointee)
         return {};
@@ -100,7 +100,7 @@ String Pointer::to_string() const
     return builder.to_string();
 }
 
-String Reference::to_string() const
+DeprecatedString Reference::to_string() const
 {
     if (!m_referenced_type)
         return {};
@@ -113,7 +113,7 @@ String Reference::to_string() const
     return builder.to_string();
 }
 
-String FunctionType::to_string() const
+DeprecatedString FunctionType::to_string() const
 {
     StringBuilder builder;
     builder.append(m_return_type->to_string());
@@ -552,7 +552,7 @@ StringView Name::full_name() const
             builder.appendff("{}::", scope.name());
         }
     }
-    m_full_name = String::formatted("{}{}", builder.to_string(), m_name.is_null() ? ""sv : m_name->name());
+    m_full_name = DeprecatedString::formatted("{}{}", builder.to_string(), m_name.is_null() ? ""sv : m_name->name());
     return *m_full_name;
 }
 
@@ -652,7 +652,7 @@ StringView Declaration::full_name() const
         if (m_name)
             m_full_name = m_name->full_name();
         else
-            m_full_name = String::empty();
+            m_full_name = DeprecatedString::empty();
     }
 
     return *m_full_name;

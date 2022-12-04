@@ -34,13 +34,13 @@
 #define HANDLE(VALUE) \
     case VALUE:       \
         return #VALUE##sv;
-#define VALUES_TO_NAMES(FUNC_NAME)     \
-    static String FUNC_NAME(int value) \
-    {                                  \
+#define VALUES_TO_NAMES(FUNC_NAME)               \
+    static DeprecatedString FUNC_NAME(int value) \
+    {                                            \
         switch (value) {
-#define END_VALUES_TO_NAMES()              \
-    }                                      \
-    return String::formatted("{}", value); \
+#define END_VALUES_TO_NAMES()                        \
+    }                                                \
+    return DeprecatedString::formatted("{}", value); \
     }
 
 VALUES_TO_NAMES(errno_name)

@@ -28,7 +28,7 @@
 
 RunWindow::RunWindow()
     : m_path_history()
-    , m_path_history_model(GUI::ItemListModel<String>::create(m_path_history))
+    , m_path_history_model(GUI::ItemListModel<DeprecatedString>::create(m_path_history))
 {
     // FIXME: Handle failure to load history somehow.
     (void)load_history();
@@ -65,7 +65,7 @@ RunWindow::RunWindow()
 
     m_browse_button = *find_descendant_of_type_named<GUI::DialogButton>("browse_button");
     m_browse_button->on_click = [this](auto) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::Center);
+        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::Center);
         if (path.has_value())
             m_path_combo_box->set_text(path.value().view());
     };
@@ -95,7 +95,7 @@ void RunWindow::do_run()
 
     if (run_via_launch(run_input) || run_as_command(run_input)) {
         // Remove any existing history entry, prepend the successful run string to history and save.
-        m_path_history.remove_all_matching([&](String v) { return v == run_input; });
+        m_path_history.remove_all_matching([&](DeprecatedString v) { return v == run_input; });
         m_path_history.prepend(run_input);
         // FIXME: Handle failure to save history somehow.
         (void)save_history();
@@ -109,7 +109,7 @@ void RunWindow::do_run()
     show();
 }
 
-bool RunWindow::run_as_command(String const& run_input)
+bool RunWindow::run_as_command(DeprecatedString const& run_input)
 {
     pid_t child_pid;
     char const* shell_executable = "/bin/Shell"; // TODO query and use the user's preferred shell.
@@ -138,7 +138,7 @@ bool RunWindow::run_as_command(String const& run_input)
     return true;
 }
 
-bool RunWindow::run_via_launch(String const& run_input)
+bool RunWindow::run_via_launch(DeprecatedString const& run_input)
 {
     auto url = URL::create_with_url_or_path(run_input);
 
@@ -162,9 +162,9 @@ bool RunWindow::run_via_launch(String const& run_input)
     return true;
 }
 
-String RunWindow::history_file_path()
+DeprecatedString RunWindow::history_file_path()
 {
-    return LexicalPath::canonicalized_path(String::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt"));
+    return LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt"));
 }
 
 ErrorOr<void> RunWindow::load_history()
@@ -188,7 +188,7 @@ ErrorOr<void> RunWindow::save_history()
 
     // Write the first 25 items of history
     for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)
-        TRY(file->write(String::formatted("{}\n", m_path_history[i]).bytes()));
+        TRY(file->write(DeprecatedString::formatted("{}\n", m_path_history[i]).bytes()));
 
     return {};
 }

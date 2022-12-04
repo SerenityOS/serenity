@@ -296,7 +296,7 @@ static Vector<u32> normalize_implementation(Utf8View string, NormalizationForm f
     VERIFY_NOT_REACHED();
 }
 
-String normalize(StringView string, NormalizationForm form)
+DeprecatedString normalize(StringView string, NormalizationForm form)
 {
     Utf8View const view { string };
 

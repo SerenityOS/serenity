@@ -134,7 +134,7 @@ PaletteWidget::PaletteWidget()
 
     auto result = load_palette_path("/res/color-palettes/default.palette");
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("Loading default palette failed: {}", result.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Loading default palette failed: {}", result.error()));
         display_color_list(fallback_colors());
 
         return;
@@ -225,7 +225,7 @@ Vector<Color> PaletteWidget::colors()
     return colors;
 }
 
-Result<Vector<Color>, String> PaletteWidget::load_palette_file(Core::File& file)
+Result<Vector<Color>, DeprecatedString> PaletteWidget::load_palette_file(Core::File& file)
 {
     Vector<Color> palette;
 
@@ -245,22 +245,22 @@ Result<Vector<Color>, String> PaletteWidget::load_palette_file(Core::File& file)
     file.close();
 
     if (palette.is_empty())
-        return String { "The palette file did not contain any usable colors"sv };
+        return DeprecatedString { "The palette file did not contain any usable colors"sv };
 
     return palette;
 }
 
-Result<Vector<Color>, String> PaletteWidget::load_palette_path(String const& file_path)
+Result<Vector<Color>, DeprecatedString> PaletteWidget::load_palette_path(DeprecatedString const& file_path)
 {
     auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
-        return String { strerror(file_or_error.error().code()) };
+        return DeprecatedString { strerror(file_or_error.error().code()) };
 
     auto& file = *file_or_error.value();
     return load_palette_file(file);
 }
 
-Result<void, String> PaletteWidget::save_palette_file(Vector<Color> palette, Core::File& file)
+Result<void, DeprecatedString> PaletteWidget::save_palette_file(Vector<Color> palette, Core::File& file)
 {
     for (auto& color : palette) {
         file.write(color.to_string_without_alpha());

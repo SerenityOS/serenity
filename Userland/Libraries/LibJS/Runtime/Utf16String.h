@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -48,7 +48,7 @@ public:
     Utf16View substring_view(size_t code_unit_offset, size_t code_unit_length) const;
     Utf16View substring_view(size_t code_unit_offset) const;
 
-    String to_utf8() const;
+    DeprecatedString to_utf8() const;
     u16 code_unit_at(size_t index) const;
 
     size_t length_in_code_units() const;

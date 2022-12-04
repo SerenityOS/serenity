@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (path == "-") {
                 streams.append(stdin);
             } else {
-                FILE* stream = fopen(String(path).characters(), "r");
+                FILE* stream = fopen(DeprecatedString(path).characters(), "r");
                 if (!stream) {
                     warnln("Failed to open {}: {}", path, strerror(errno));
                     continue;
@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
                 break;
             }
-            outln("{}", String { buffer, Chomp }.reverse());
+            outln("{}", DeprecatedString { buffer, Chomp }.reverse());
         }
     }
 

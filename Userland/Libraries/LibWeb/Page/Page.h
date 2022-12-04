@@ -85,14 +85,14 @@ public:
     Gfx::IntSize const& window_size() const { return m_window_size; }
     void set_window_size(Gfx::IntSize const& size) { m_window_size = size; }
 
-    void did_request_alert(String const& message);
+    void did_request_alert(DeprecatedString const& message);
     void alert_closed();
 
-    bool did_request_confirm(String const& message);
+    bool did_request_confirm(DeprecatedString const& message);
     void confirm_closed(bool accepted);
 
-    String did_request_prompt(String const& message, String const& default_);
-    void prompt_closed(String response);
+    DeprecatedString did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_);
+    void prompt_closed(DeprecatedString response);
 
     enum class PendingDialog {
         None,
@@ -102,7 +102,7 @@ public:
     };
     bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
     PendingDialog pending_dialog() const { return m_pending_dialog; }
-    Optional<String> const& pending_dialog_text() const { return m_pending_dialog_text; }
+    Optional<DeprecatedString> const& pending_dialog_text() const { return m_pending_dialog_text; }
     void dismiss_dialog();
     void accept_dialog();
 
@@ -127,10 +127,10 @@ private:
     Gfx::IntSize m_window_size {};
 
     PendingDialog m_pending_dialog { PendingDialog::None };
-    Optional<String> m_pending_dialog_text;
+    Optional<DeprecatedString> m_pending_dialog_text;
     Optional<Empty> m_pending_alert_response;
     Optional<bool> m_pending_confirm_response;
-    Optional<String> m_pending_prompt_response;
+    Optional<DeprecatedString> m_pending_prompt_response;
 };
 
 class PageClient {
@@ -142,7 +142,7 @@ public:
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
     virtual void paint(Gfx::IntRect const&, Gfx::Bitmap&) = 0;
-    virtual void page_did_change_title(String const&) { }
+    virtual void page_did_change_title(DeprecatedString const&) { }
     virtual void page_did_request_navigate_back() { }
     virtual void page_did_request_navigate_forward() { }
     virtual void page_did_request_refresh() { }
@@ -158,11 +158,11 @@ public:
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(Gfx::IntPoint const&) { }
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
-    virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, String const&) { }
+    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
+    virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, DeprecatedString const&) { }
     virtual void page_did_leave_tooltip_area() { }
     virtual void page_did_hover_link(const AK::URL&) { }
     virtual void page_did_unhover_link() { }
@@ -172,15 +172,15 @@ public:
     virtual void page_did_request_scroll(i32, i32) { }
     virtual void page_did_request_scroll_to(Gfx::IntPoint const&) { }
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) { }
-    virtual void page_did_request_alert(String const&) { }
-    virtual void page_did_request_confirm(String const&) { }
-    virtual void page_did_request_prompt(String const&, String const&) { }
-    virtual void page_did_request_set_prompt_text(String const&) { }
+    virtual void page_did_request_alert(DeprecatedString const&) { }
+    virtual void page_did_request_confirm(DeprecatedString const&) { }
+    virtual void page_did_request_prompt(DeprecatedString const&, DeprecatedString const&) { }
+    virtual void page_did_request_set_prompt_text(DeprecatedString const&) { }
     virtual void page_did_request_accept_dialog() { }
     virtual void page_did_request_dismiss_dialog() { }
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(AK::URL const&) { return {}; }
-    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, String const&) { return {}; }
-    virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, DeprecatedString const&) { return {}; }
+    virtual DeprecatedString page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(AK::URL const&, Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }

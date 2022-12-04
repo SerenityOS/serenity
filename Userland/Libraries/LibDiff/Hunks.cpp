@@ -8,9 +8,9 @@
 #include <AK/Debug.h>
 
 namespace Diff {
-Vector<Hunk> parse_hunks(String const& diff)
+Vector<Hunk> parse_hunks(DeprecatedString const& diff)
 {
-    Vector<String> diff_lines = diff.split('\n');
+    Vector<DeprecatedString> diff_lines = diff.split('\n');
     if (diff_lines.is_empty())
         return {};
 
@@ -74,14 +74,14 @@ Vector<Hunk> parse_hunks(String const& diff)
     return hunks;
 }
 
-HunkLocation parse_hunk_location(String const& location_line)
+HunkLocation parse_hunk_location(DeprecatedString const& location_line)
 {
     size_t char_index = 0;
     struct StartAndLength {
         size_t start { 0 };
         size_t length { 0 };
     };
-    auto parse_start_and_length_pair = [](String const& raw) {
+    auto parse_start_and_length_pair = [](DeprecatedString const& raw) {
         auto index_of_separator = raw.find(',').value();
         auto start = raw.substring(0, index_of_separator).to_uint().value();
         auto length = raw.substring(index_of_separator + 1, raw.length() - index_of_separator - 1).to_uint().value();

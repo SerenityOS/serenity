@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open(String::formatted("/proc/{}/vm", pid), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/vm", pid), Core::Stream::OpenMode::Read));
 
     outln("{}:", pid);
 
@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto address = map.get("address"sv).to_addr();
         auto size = map.get("size"sv).to_string();
 
-        auto access = String::formatted("{}{}{}{}{}",
+        auto access = DeprecatedString::formatted("{}{}{}{}{}",
             (map.get("readable"sv).to_bool() ? "r" : "-"),
             (map.get("writable"sv).to_bool() ? "w" : "-"),
             (map.get("executable"sv).to_bool() ? "x" : "-"),

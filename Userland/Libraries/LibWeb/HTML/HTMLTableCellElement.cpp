@@ -56,7 +56,7 @@ unsigned int HTMLTableCellElement::col_span() const
 
 void HTMLTableCellElement::set_col_span(unsigned int value)
 {
-    MUST(set_attribute(HTML::AttributeNames::colspan, String::number(value)));
+    MUST(set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value)));
 }
 
 unsigned int HTMLTableCellElement::row_span() const
@@ -66,7 +66,7 @@ unsigned int HTMLTableCellElement::row_span() const
 
 void HTMLTableCellElement::set_row_span(unsigned int value)
 {
-    MUST(set_attribute(HTML::AttributeNames::rowspan, String::number(value)));
+    MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
 }
 
 }

@@ -18,7 +18,7 @@ public:
     explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, size_t index, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ListItemMarkerBox() override;
 
-    String const& text() const { return m_text; }
+    DeprecatedString const& text() const { return m_text; }
 
     virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
@@ -31,7 +31,7 @@ private:
     CSS::ListStyleType m_list_style_type { CSS::ListStyleType::None };
     size_t m_index;
 
-    String m_text {};
+    DeprecatedString m_text {};
 };
 
 template<>

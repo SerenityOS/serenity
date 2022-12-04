@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TrackManager track_manager;
 
     Audio::WavWriter wav_writer;
-    Optional<String> save_path;
+    Optional<DeprecatedString> save_path;
     bool need_to_write_wav = false;
 
     auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_writer);
@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         wav_writer.set_file(save_path.value());
         if (wav_writer.has_error()) {
-            GUI::MessageBox::show(window, String::formatted("Failed to export WAV file: {}", wav_writer.error_string()), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Failed to export WAV file: {}", wav_writer.error_string()), "Error"sv, GUI::MessageBox::Type::Error);
             wav_writer.clear_error();
             return;
         }

@@ -17,28 +17,28 @@
 
 namespace Core {
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_lib(String const& lib_name, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_lib(DeprecatedString const& lib_name, AllowWriting allow_altering)
 {
-    String directory_name = String::formatted("{}/lib", StandardPaths::config_directory());
+    DeprecatedString directory_name = DeprecatedString::formatted("{}/lib", StandardPaths::config_directory());
     auto directory = TRY(Directory::create(directory_name, Directory::CreateDirectories::Yes));
-    auto path = String::formatted("{}/{}.ini", directory, lib_name);
+    auto path = DeprecatedString::formatted("{}/{}.ini", directory, lib_name);
     return ConfigFile::open(path, allow_altering);
 }
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_app(DeprecatedString const& app_name, AllowWriting allow_altering)
 {
     auto directory = TRY(Directory::create(StandardPaths::config_directory(), Directory::CreateDirectories::Yes));
-    auto path = String::formatted("{}/{}.ini", directory, app_name);
+    auto path = DeprecatedString::formatted("{}/{}.ini", directory, app_name);
     return ConfigFile::open(path, allow_altering);
 }
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(String const& app_name, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(DeprecatedString const& app_name, AllowWriting allow_altering)
 {
-    auto path = String::formatted("/etc/{}.ini", app_name);
+    auto path = DeprecatedString::formatted("/etc/{}.ini", app_name);
     return ConfigFile::open(path, allow_altering);
 }
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, AllowWriting allow_altering)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, AllowWriting allow_altering)
 {
     auto maybe_file = Stream::File::open(filename, allow_altering == AllowWriting::Yes ? Stream::OpenMode::ReadWrite : Stream::OpenMode::Read);
     OwnPtr<Stream::BufferedFile> buffered_file;
@@ -57,13 +57,13 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, Allo
     return config_file;
 }
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, int fd)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, int fd)
 {
     auto file = TRY(Stream::File::adopt_fd(fd, Stream::OpenMode::ReadWrite));
     return open(filename, move(file));
 }
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, NonnullOwnPtr<Core::Stream::File> file)
 {
     auto buffered_file = TRY(Stream::BufferedFile::create(move(file)));
 
@@ -72,7 +72,7 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, Nonn
     return config_file;
 }
 
-ConfigFile::ConfigFile(String const& filename, OwnPtr<Stream::BufferedFile> open_file)
+ConfigFile::ConfigFile(DeprecatedString const& filename, OwnPtr<Stream::BufferedFile> open_file)
     : m_filename(filename)
     , m_file(move(open_file))
 {
@@ -89,7 +89,7 @@ ErrorOr<void> ConfigFile::reparse()
     if (!m_file)
         return {};
 
-    HashMap<String, String>* current_group = nullptr;
+    HashMap<DeprecatedString, DeprecatedString>* current_group = nullptr;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(m_file->can_read_line())) {
@@ -140,7 +140,7 @@ ErrorOr<void> ConfigFile::reparse()
     return {};
 }
 
-String ConfigFile::read_entry(String const& group, String const& key, String const& default_value) const
+DeprecatedString ConfigFile::read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value) const
 {
     if (!has_key(group, key)) {
         return default_value;
@@ -150,7 +150,7 @@ String ConfigFile::read_entry(String const& group, String const& key, String con
     return jt->value;
 }
 
-int ConfigFile::read_num_entry(String const& group, String const& key, int default_value) const
+int ConfigFile::read_num_entry(DeprecatedString const& group, DeprecatedString const& key, int default_value) const
 {
     if (!has_key(group, key)) {
         return default_value;
@@ -159,24 +159,24 @@ int ConfigFile::read_num_entry(String const& group, String const& key, int defau
     return read_entry(group, key).to_int().value_or(default_value);
 }
 
-bool ConfigFile::read_bool_entry(String const& group, String const& key, bool default_value) const
+bool ConfigFile::read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value) const
 {
     auto value = read_entry(group, key, default_value ? "true" : "false");
     return value == "1" || value.equals_ignoring_case("true"sv);
 }
 
-void ConfigFile::write_entry(String const& group, String const& key, String const& value)
+void ConfigFile::write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
 {
     m_groups.ensure(group).ensure(key) = value;
     m_dirty = true;
 }
 
-void ConfigFile::write_num_entry(String const& group, String const& key, int value)
+void ConfigFile::write_num_entry(DeprecatedString const& group, DeprecatedString const& key, int value)
 {
-    write_entry(group, key, String::number(value));
+    write_entry(group, key, DeprecatedString::number(value));
 }
 
-void ConfigFile::write_bool_entry(String const& group, String const& key, bool value)
+void ConfigFile::write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value)
 {
     write_entry(group, key, value ? "true" : "false");
 }
@@ -193,9 +193,9 @@ ErrorOr<void> ConfigFile::sync()
     TRY(m_file->seek(0, Stream::SeekMode::SetPosition));
 
     for (auto& it : m_groups) {
-        TRY(m_file->write(String::formatted("[{}]\n", it.key).bytes()));
+        TRY(m_file->write(DeprecatedString::formatted("[{}]\n", it.key).bytes()));
         for (auto& jt : it.value)
-            TRY(m_file->write(String::formatted("{}={}\n", jt.key, jt.value).bytes()));
+            TRY(m_file->write(DeprecatedString::formatted("{}={}\n", jt.key, jt.value).bytes()));
         TRY(m_file->write("\n"sv.bytes()));
     }
 
@@ -213,12 +213,12 @@ void ConfigFile::dump() const
     }
 }
 
-Vector<String> ConfigFile::groups() const
+Vector<DeprecatedString> ConfigFile::groups() const
 {
     return m_groups.keys();
 }
 
-Vector<String> ConfigFile::keys(String const& group) const
+Vector<DeprecatedString> ConfigFile::keys(DeprecatedString const& group) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -226,7 +226,7 @@ Vector<String> ConfigFile::keys(String const& group) const
     return it->value.keys();
 }
 
-bool ConfigFile::has_key(String const& group, String const& key) const
+bool ConfigFile::has_key(DeprecatedString const& group, DeprecatedString const& key) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -234,24 +234,24 @@ bool ConfigFile::has_key(String const& group, String const& key) const
     return it->value.contains(key);
 }
 
-bool ConfigFile::has_group(String const& group) const
+bool ConfigFile::has_group(DeprecatedString const& group) const
 {
     return m_groups.contains(group);
 }
 
-void ConfigFile::add_group(String const& group)
+void ConfigFile::add_group(DeprecatedString const& group)
 {
     m_groups.ensure(group);
     m_dirty = true;
 }
 
-void ConfigFile::remove_group(String const& group)
+void ConfigFile::remove_group(DeprecatedString const& group)
 {
     m_groups.remove(group);
     m_dirty = true;
 }
 
-void ConfigFile::remove_entry(String const& group, String const& key)
+void ConfigFile::remove_entry(DeprecatedString const& group, DeprecatedString const& key)
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())

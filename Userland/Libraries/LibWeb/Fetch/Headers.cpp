@@ -44,7 +44,7 @@ void Headers::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-append
-WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)
+WebIDL::ExceptionOr<void> Headers::append(DeprecatedString const& name_string, DeprecatedString const& value_string)
 {
     // The append(name, value) method steps are to append (name, value) to this.
     auto header = Infrastructure::Header {
@@ -56,7 +56,7 @@ WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String cons
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-delete
-WebIDL::ExceptionOr<void> Headers::delete_(String const& name_string)
+WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
 {
     // The delete(name) method steps are:
     auto name = name_string.bytes();
@@ -96,7 +96,7 @@ WebIDL::ExceptionOr<void> Headers::delete_(String const& name_string)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-get
-WebIDL::ExceptionOr<String> Headers::get(String const& name_string)
+WebIDL::ExceptionOr<DeprecatedString> Headers::get(DeprecatedString const& name_string)
 {
     // The get(name) method steps are:
     auto name = name_string.bytes();
@@ -107,12 +107,12 @@ WebIDL::ExceptionOr<String> Headers::get(String const& name_string)
 
     // 2. Return the result of getting name from this’s header list.
     auto byte_buffer = TRY_OR_RETURN_OOM(realm(), m_header_list->get(name));
-    // FIXME: Teach BindingsGenerator about Optional<String>
-    return byte_buffer.has_value() ? String { byte_buffer->span() } : String {};
+    // FIXME: Teach BindingsGenerator about Optional<DeprecatedString>
+    return byte_buffer.has_value() ? DeprecatedString { byte_buffer->span() } : DeprecatedString {};
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-has
-WebIDL::ExceptionOr<bool> Headers::has(String const& name_string)
+WebIDL::ExceptionOr<bool> Headers::has(DeprecatedString const& name_string)
 {
     // The has(name) method steps are:
     auto name = name_string.bytes();
@@ -126,7 +126,7 @@ WebIDL::ExceptionOr<bool> Headers::has(String const& name_string)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-set
-WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& value_string)
+WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, DeprecatedString const& value_string)
 {
     // The set(name, value) method steps are:
     auto name = name_string.bytes();
@@ -278,7 +278,7 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
     // To fill a Headers object headers with a given object object, run these steps:
     return object.visit(
         // 1. If object is a sequence, then for each header in object:
-        [this](Vector<Vector<String>> const& object) -> WebIDL::ExceptionOr<void> {
+        [this](Vector<Vector<DeprecatedString>> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 // 1. If header does not contain exactly two items, then throw a TypeError.
                 if (entry.size() != 2)
@@ -291,7 +291,7 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
             return {};
         },
         // 2. Otherwise, object is a record, then for each key → value in object, append (key, value) to headers.
-        [this](OrderedHashMap<String, String> const& object) -> WebIDL::ExceptionOr<void> {
+        [this](OrderedHashMap<DeprecatedString, DeprecatedString> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 auto header = TRY_OR_RETURN_OOM(realm(), Infrastructure::Header::from_string_pair(entry.key, entry.value));
                 TRY(append(move(header)));

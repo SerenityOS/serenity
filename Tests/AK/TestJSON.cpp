@@ -6,15 +6,15 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 TEST_CASE(load_form)
 {
-    String raw_form_json = R"(
+    DeprecatedString raw_form_json = R"(
     {
         "name": "Form1",
         "widgets": [
@@ -294,7 +294,7 @@ private:
 
 TEST_CASE(fallible_json_object_for_each)
 {
-    String raw_json = R"(
+    DeprecatedString raw_json = R"(
     {
         "name": "anon",
         "home": "/home/anon",
@@ -334,7 +334,7 @@ TEST_CASE(fallible_json_object_for_each)
 
 TEST_CASE(fallible_json_array_for_each)
 {
-    String raw_json = R"(
+    DeprecatedString raw_json = R"(
     [
         "anon",
         "/home/anon",

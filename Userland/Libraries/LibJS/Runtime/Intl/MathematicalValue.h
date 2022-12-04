@@ -87,7 +87,7 @@ public:
     bool is_positive() const;
     bool is_zero() const;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     Value to_value(VM&) const;
 
 private:

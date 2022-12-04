@@ -15,7 +15,7 @@
 
 namespace GUI {
 
-AbstractButton::AbstractButton(String text)
+AbstractButton::AbstractButton(DeprecatedString text)
 {
     set_text(move(text));
 
@@ -34,7 +34,7 @@ AbstractButton::AbstractButton(String text)
     REGISTER_BOOL_PROPERTY("exclusive", is_exclusive, set_exclusive);
 }
 
-void AbstractButton::set_text(String text)
+void AbstractButton::set_text(DeprecatedString text)
 {
     if (m_text == text)
         return;

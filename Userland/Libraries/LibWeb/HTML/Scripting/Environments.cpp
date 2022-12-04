@@ -301,7 +301,7 @@ bool EnvironmentSettingsObject::is_scripting_disabled() const
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#module-type-allowed
-bool EnvironmentSettingsObject::module_type_allowed(AK::String const& module_type) const
+bool EnvironmentSettingsObject::module_type_allowed(AK::DeprecatedString const& module_type) const
 {
     // 1. If moduleType is not "javascript", "css", or "json", then return false.
     if (module_type != "javascript"sv && module_type != "css"sv && module_type != "json"sv)

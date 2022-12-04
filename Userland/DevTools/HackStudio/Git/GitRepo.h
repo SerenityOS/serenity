@@ -7,11 +7,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace HackStudio {
@@ -28,37 +28,37 @@ public:
         RefPtr<GitRepo> repo;
     };
 
-    static CreateResult try_to_create(String const& repository_root);
-    static RefPtr<GitRepo> initialize_repository(String const& repository_root);
+    static CreateResult try_to_create(DeprecatedString const& repository_root);
+    static RefPtr<GitRepo> initialize_repository(DeprecatedString const& repository_root);
 
-    bool stage(String const& file);
-    bool unstage(String const& file);
-    bool commit(String const& message);
-    bool is_tracked(String const& file) const;
+    bool stage(DeprecatedString const& file);
+    bool unstage(DeprecatedString const& file);
+    bool commit(DeprecatedString const& message);
+    bool is_tracked(DeprecatedString const& file) const;
 
-    Vector<String> unstaged_files() const;
-    Vector<String> staged_files() const;
-    Optional<String> original_file_content(String const& file) const;
-    Optional<String> unstaged_diff(String const& file) const;
+    Vector<DeprecatedString> unstaged_files() const;
+    Vector<DeprecatedString> staged_files() const;
+    Optional<DeprecatedString> original_file_content(DeprecatedString const& file) const;
+    Optional<DeprecatedString> unstaged_diff(DeprecatedString const& file) const;
 
 private:
     static bool git_is_installed();
-    static bool git_repo_exists(String const& repo_root);
+    static bool git_repo_exists(DeprecatedString const& repo_root);
 
-    static String command_wrapper(Vector<String> const& command_parts, String const& chdir);
-    static Vector<String> parse_files_list(String const&);
+    static DeprecatedString command_wrapper(Vector<DeprecatedString> const& command_parts, DeprecatedString const& chdir);
+    static Vector<DeprecatedString> parse_files_list(DeprecatedString const&);
 
-    explicit GitRepo(String const& repository_root)
+    explicit GitRepo(DeprecatedString const& repository_root)
         : m_repository_root(repository_root)
     {
     }
 
-    Vector<String> modified_files() const;
-    Vector<String> untracked_files() const;
+    Vector<DeprecatedString> modified_files() const;
+    Vector<DeprecatedString> untracked_files() const;
 
-    String command(Vector<String> const& command_parts) const;
+    DeprecatedString command(Vector<DeprecatedString> const& command_parts) const;
 
-    String m_repository_root;
+    DeprecatedString m_repository_root;
 };
 
 }

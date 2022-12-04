@@ -74,7 +74,7 @@ bool Size::contains_percentage() const
     }
 }
 
-String Size::to_string() const
+DeprecatedString Size::to_string() const
 {
     switch (m_type) {
     case Type::Auto:
@@ -87,7 +87,7 @@ String Size::to_string() const
     case Type::MaxContent:
         return "max-content";
     case Type::FitContent:
-        return String::formatted("fit-content({})", m_length_percentage.to_string());
+        return DeprecatedString::formatted("fit-content({})", m_length_percentage.to_string());
     case Type::None:
         return "none";
     }

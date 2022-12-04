@@ -7,13 +7,13 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Stream.h>
 #include <ctype.h>
 
-String title_casify(String const& dashy_name)
+DeprecatedString title_casify(DeprecatedString const& dashy_name)
 {
     auto parts = dashy_name.split('-');
     StringBuilder builder;
@@ -28,7 +28,7 @@ String title_casify(String const& dashy_name)
     return builder.to_string();
 }
 
-String camel_casify(StringView dashy_name)
+DeprecatedString camel_casify(StringView dashy_name)
 {
     auto parts = dashy_name.split_view('-');
     StringBuilder builder;
@@ -49,7 +49,7 @@ String camel_casify(StringView dashy_name)
     return builder.to_string();
 }
 
-String snake_casify(String const& dashy_name)
+DeprecatedString snake_casify(DeprecatedString const& dashy_name)
 {
     return dashy_name.replace("-"sv, "_"sv, ReplaceMode::All);
 }

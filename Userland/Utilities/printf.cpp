@@ -5,8 +5,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/DeprecatedString.h>
 #include <AK/PrintfImplementation.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibMain/Main.h>
@@ -234,7 +234,7 @@ struct ArgvWithCount {
     int& argc;
 };
 
-static String handle_escapes(char const* string)
+static DeprecatedString handle_escapes(char const* string)
 {
     StringBuilder builder;
     for (auto c = *string; c; c = *++string) {
@@ -300,7 +300,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto argv = arguments.argv;
 
     ++argv;
-    String format = handle_escapes(*(argv++));
+    DeprecatedString format = handle_escapes(*(argv++));
     auto format_string = format.characters();
 
     argc -= 2;

@@ -57,7 +57,7 @@ static void handle_print_registers(PtraceRegisters const& regs)
 #endif
 }
 
-static bool handle_disassemble_command(String const& command, FlatPtr first_instruction)
+static bool handle_disassemble_command(DeprecatedString const& command, FlatPtr first_instruction)
 {
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
@@ -104,7 +104,7 @@ static bool handle_backtrace_command(PtraceRegisters const& regs)
     while (g_debug_session->peek(eip_val).has_value() && g_debug_session->peek(ebp_val).has_value()) {
         auto eip_symbol = g_debug_session->symbolicate(eip_val);
         auto source_position = g_debug_session->get_source_position(eip_val);
-        String symbol_location = (eip_symbol.has_value() && eip_symbol->symbol != "") ? eip_symbol->symbol : "???";
+        DeprecatedString symbol_location = (eip_symbol.has_value() && eip_symbol->symbol != "") ? eip_symbol->symbol : "???";
         if (source_position.has_value()) {
             outln("{:p} in {} ({}:{})", eip_val, symbol_location, source_position->file_path, source_position->line_number);
         } else {
@@ -127,7 +127,7 @@ static bool insert_breakpoint_at_address(FlatPtr address)
     return g_debug_session->insert_breakpoint(address);
 }
 
-static bool insert_breakpoint_at_source_position(String const& file, size_t line)
+static bool insert_breakpoint_at_source_position(DeprecatedString const& file, size_t line)
 {
     auto result = g_debug_session->insert_breakpoint(file, line);
     if (!result.has_value()) {
@@ -138,7 +138,7 @@ static bool insert_breakpoint_at_source_position(String const& file, size_t line
     return true;
 }
 
-static bool insert_breakpoint_at_symbol(String const& symbol)
+static bool insert_breakpoint_at_symbol(DeprecatedString const& symbol)
 {
     auto result = g_debug_session->insert_breakpoint(symbol);
     if (!result.has_value()) {
@@ -149,7 +149,7 @@ static bool insert_breakpoint_at_symbol(String const& symbol)
     return true;
 }
 
-static bool handle_breakpoint_command(String const& command)
+static bool handle_breakpoint_command(DeprecatedString const& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)
@@ -176,7 +176,7 @@ static bool handle_breakpoint_command(String const& command)
     return insert_breakpoint_at_symbol(argument);
 }
 
-static bool handle_examine_command(String const& command)
+static bool handle_examine_command(DeprecatedString const& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)

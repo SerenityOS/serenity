@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/String.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -60,7 +60,7 @@ public:
     IntRect const& rect() const { return m_rect; }
     void set_rect(IntRect const& rect) { m_rect = rect; }
 
-    Vector<String, 32> lines(TextElision elision, TextWrapping wrapping, int line_spacing) const
+    Vector<DeprecatedString, 32> lines(TextElision elision, TextWrapping wrapping, int line_spacing) const
     {
         return wrap_lines(elision, wrapping, line_spacing, FitWithinRect::Yes);
     }
@@ -68,8 +68,8 @@ public:
     IntRect bounding_rect(TextWrapping wrapping, int line_spacing) const;
 
 private:
-    Vector<String, 32> wrap_lines(TextElision, TextWrapping, int line_spacing, FitWithinRect) const;
-    String elide_text_from_right(Utf8View, bool force_elision) const;
+    Vector<DeprecatedString, 32> wrap_lines(TextElision, TextWrapping, int line_spacing, FitWithinRect) const;
+    DeprecatedString elide_text_from_right(Utf8View, bool force_elision) const;
 
     Font const* m_font;
     Utf8View m_text;

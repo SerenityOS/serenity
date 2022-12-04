@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0");
 
-    String player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
+    DeprecatedString player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
 
     game.on_status_change = [&](const AK::StringView& status) {
         statusbar.set_override_text(status);

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
@@ -22,7 +22,7 @@ public:
     Vector<ComponentValue> const& values() const { return m_values; }
     Important importance() const { return m_important; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     FlyString m_name;

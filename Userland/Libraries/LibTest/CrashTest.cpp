@@ -18,7 +18,7 @@
 
 namespace Test {
 
-Crash::Crash(String test_type, Function<Crash::Failure()> crash_function, int crash_signal)
+Crash::Crash(DeprecatedString test_type, Function<Crash::Failure()> crash_function, int crash_signal)
     : m_type(move(test_type))
     , m_crash_function(move(crash_function))
     , m_crash_signal(crash_signal)

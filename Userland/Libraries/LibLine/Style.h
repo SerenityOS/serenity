@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -72,7 +72,7 @@ public:
             : Color(r, g, b)
         {
         }
-        String to_vt_escape() const;
+        DeprecatedString to_vt_escape() const;
     };
 
     struct Foreground : public Color {
@@ -85,7 +85,7 @@ public:
         {
         }
 
-        String to_vt_escape() const;
+        DeprecatedString to_vt_escape() const;
     };
 
     struct Hyperlink {
@@ -99,11 +99,11 @@ public:
 
         Hyperlink() = default;
 
-        String to_vt_escape(bool starting) const;
+        DeprecatedString to_vt_escape(bool starting) const;
 
         bool is_empty() const { return !m_has_link; }
 
-        String m_link;
+        DeprecatedString m_link;
         bool m_has_link { false };
     };
 
@@ -124,7 +124,7 @@ public:
         {
         }
 
-        String replacement;
+        DeprecatedString replacement;
         mutable Utf8View replacement_view;
         Mode mode;
     };
@@ -180,7 +180,7 @@ public:
     bool is_anchored() const { return m_is_anchored; }
     bool is_empty() const { return m_is_empty; }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     bool m_underline { false };

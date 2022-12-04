@@ -61,9 +61,9 @@ private:
     RefPtr<GUI::ValueSlider> m_opacity_value_slider;
     RefPtr<GUI::ImageWidget> m_opacity_imagewidget;
 
-    Vector<String> m_frame_shapes;
-    Vector<String> m_msgbox_icons;
-    Vector<String> m_msgbox_buttons;
+    Vector<DeprecatedString> m_frame_shapes;
+    Vector<DeprecatedString> m_msgbox_icons;
+    Vector<DeprecatedString> m_msgbox_buttons;
     Vector<RefPtr<Gfx::Bitmap>> m_button_icons;
 
     GUI::MessageBox::Type m_msgbox_type;

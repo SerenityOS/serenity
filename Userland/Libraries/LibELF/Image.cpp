@@ -424,7 +424,7 @@ NEVER_INLINE void Image::sort_symbols() const
     });
 }
 
-String Image::symbolicate(FlatPtr address, u32* out_offset) const
+DeprecatedString Image::symbolicate(FlatPtr address, u32* out_offset) const
 {
     auto symbol_count = this->symbol_count();
     if (!symbol_count) {
@@ -448,7 +448,7 @@ String Image::symbolicate(FlatPtr address, u32* out_offset) const
         *out_offset = address - symbol->address;
         return demangled_name;
     }
-    return String::formatted("{} +{:#x}", demangled_name, address - symbol->address);
+    return DeprecatedString::formatted("{} +{:#x}", demangled_name, address - symbol->address);
 }
 #endif
 

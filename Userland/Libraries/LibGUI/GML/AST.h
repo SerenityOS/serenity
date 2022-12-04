@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
@@ -17,7 +18,6 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
 #include <LibGUI/GML/Lexer.h>
@@ -37,7 +37,7 @@ public:
         return try_make_ref_counted<NodeT>(token.m_view);
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         StringBuilder builder;
         format(builder, 0, false);
@@ -66,7 +66,7 @@ public:
 // Single line comments with //.
 class Comment : public Node {
 public:
-    Comment(String text)
+    Comment(DeprecatedString text)
         : m_text(move(text))
     {
     }
@@ -84,13 +84,13 @@ public:
     virtual ~Comment() override = default;
 
 private:
-    String m_text {};
+    DeprecatedString m_text {};
 };
 
 // Any JSON-like key: value pair.
 class KeyValuePair : public Node {
 public:
-    KeyValuePair(String key, NonnullRefPtr<ValueNode> value)
+    KeyValuePair(DeprecatedString key, NonnullRefPtr<ValueNode> value)
         : m_key(move(key))
         , m_value(move(value))
     {
@@ -106,11 +106,11 @@ public:
             builder.append('\n');
     }
 
-    String key() const { return m_key; }
+    DeprecatedString key() const { return m_key; }
     NonnullRefPtr<ValueNode> value() const { return m_value; }
 
 private:
-    String m_key;
+    DeprecatedString m_key;
     NonnullRefPtr<ValueNode> m_value;
 };
 
@@ -153,7 +153,7 @@ public:
 class Object : public ValueNode {
 public:
     Object() = default;
-    Object(String name, NonnullRefPtrVector<Node> properties, NonnullRefPtrVector<Node> sub_objects)
+    Object(DeprecatedString name, NonnullRefPtrVector<Node> properties, NonnullRefPtrVector<Node> sub_objects)
         : m_properties(move(properties))
         , m_sub_objects(move(sub_objects))
         , m_name(move(name))
@@ -163,7 +163,7 @@ public:
     virtual ~Object() override = default;
 
     StringView name() const { return m_name; }
-    void set_name(String name) { m_name = move(name); }
+    void set_name(DeprecatedString name) { m_name = move(name); }
 
     ErrorOr<void> add_sub_object_child(NonnullRefPtr<Node> child)
     {
@@ -279,7 +279,7 @@ private:
     NonnullRefPtrVector<Node> m_properties;
     // Sub objects and comments
     NonnullRefPtrVector<Node> m_sub_objects;
-    String m_name {};
+    DeprecatedString m_name {};
 };
 
 class GMLFile : public Node {

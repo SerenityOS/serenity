@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <LibGUI/Model.h>
 
 namespace Profiler {
@@ -17,23 +17,23 @@ class Profile;
 
 class FileEventNode : public RefCounted<FileEventNode> {
 public:
-    static NonnullRefPtr<FileEventNode> create(String const& path, FileEventNode* parent = nullptr)
+    static NonnullRefPtr<FileEventNode> create(DeprecatedString const& path, FileEventNode* parent = nullptr)
     {
         return adopt_ref(*new FileEventNode(path, parent));
     }
 
-    FileEventNode& find_or_create_node(String const&);
+    FileEventNode& find_or_create_node(DeprecatedString const&);
 
     Vector<NonnullRefPtr<FileEventNode>>& children() { return m_children; }
     Vector<NonnullRefPtr<FileEventNode>> const& children() const { return m_children; }
 
     FileEventNode* parent() { return m_parent; };
 
-    FileEventNode& create_recursively(String);
+    FileEventNode& create_recursively(DeprecatedString);
 
     void for_each_parent_node(Function<void(FileEventNode&)> callback);
 
-    String const& path() const { return m_path; }
+    DeprecatedString const& path() const { return m_path; }
 
     void increment_count() { m_count++; }
     u64 count() const { return m_count; }
@@ -42,13 +42,13 @@ public:
     u64 duration() const { return m_duration; }
 
 private:
-    FileEventNode(String const& path, FileEventNode* parent = nullptr)
+    FileEventNode(DeprecatedString const& path, FileEventNode* parent = nullptr)
         : m_path(path)
         , m_count(0)
         , m_duration(0)
         , m_parent(parent) {};
 
-    String m_path;
+    DeprecatedString m_path;
     u64 m_count;
     u64 m_duration;
 
@@ -74,7 +74,7 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
-    virtual String column_name(int) const override;
+    virtual DeprecatedString column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual GUI::ModelIndex index(int row, int column, GUI::ModelIndex const& parent = GUI::ModelIndex()) const override;
     virtual GUI::ModelIndex parent_index(GUI::ModelIndex const&) const override;

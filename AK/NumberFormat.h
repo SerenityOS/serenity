@@ -6,21 +6,21 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace AK {
 
 // FIXME: Remove this hackery once printf() supports floats.
-static String number_string_with_one_decimal(u64 number, u64 unit, char const* suffix)
+static DeprecatedString number_string_with_one_decimal(u64 number, u64 unit, char const* suffix)
 {
     int decimal = (number % unit) * 10 / unit;
-    return String::formatted("{}.{} {}", number / unit, decimal, suffix);
+    return DeprecatedString::formatted("{}.{} {}", number / unit, decimal, suffix);
 }
 
-static inline String human_readable_size(u64 size)
+static inline DeprecatedString human_readable_size(u64 size)
 {
     if (size < 1 * KiB)
-        return String::formatted("{} B", size);
+        return DeprecatedString::formatted("{} B", size);
     if (size < 1 * MiB)
         return number_string_with_one_decimal(size, KiB, "KiB");
     if (size < 1 * GiB)
@@ -34,15 +34,15 @@ static inline String human_readable_size(u64 size)
     return number_string_with_one_decimal(size, EiB, "EiB");
 }
 
-static inline String human_readable_size_long(u64 size)
+static inline DeprecatedString human_readable_size_long(u64 size)
 {
     if (size < 1 * KiB)
-        return String::formatted("{} bytes", size);
+        return DeprecatedString::formatted("{} bytes", size);
     else
-        return String::formatted("{} ({} bytes)", human_readable_size(size), size);
+        return DeprecatedString::formatted("{} ({} bytes)", human_readable_size(size), size);
 }
 
-static inline String human_readable_time(i64 time_in_seconds)
+static inline DeprecatedString human_readable_time(i64 time_in_seconds)
 {
     auto hours = time_in_seconds / 3600;
     time_in_seconds = time_in_seconds % 3600;
@@ -63,7 +63,7 @@ static inline String human_readable_time(i64 time_in_seconds)
     return builder.to_string();
 }
 
-static inline String human_readable_digital_time(i64 time_in_seconds)
+static inline DeprecatedString human_readable_digital_time(i64 time_in_seconds)
 {
     auto hours = time_in_seconds / 3600;
     time_in_seconds = time_in_seconds % 3600;

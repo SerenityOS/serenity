@@ -169,7 +169,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         });
         engines_action_group.add_action(*action);
-        if (engine == String("Human"))
+        if (engine == DeprecatedString("Human"))
             action->set_checked(true);
 
         TRY(engine_submenu->try_add_action(*action));

@@ -14,7 +14,7 @@
 
 namespace Desktop {
 
-auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRefPtr<Details>
+auto Launcher::Details::from_details_str(DeprecatedString const& details_str) -> NonnullRefPtr<Details>
 {
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
@@ -63,7 +63,7 @@ ErrorOr<void> Launcher::add_allowed_url(URL const& url)
     return {};
 }
 
-ErrorOr<void> Launcher::add_allowed_handler_with_any_url(String const& handler)
+ErrorOr<void> Launcher::add_allowed_handler_with_any_url(DeprecatedString const& handler)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_any_url(handler);
     if (response_or_error.is_error())
@@ -71,7 +71,7 @@ ErrorOr<void> Launcher::add_allowed_handler_with_any_url(String const& handler)
     return {};
 }
 
-ErrorOr<void> Launcher::add_allowed_handler_with_only_specific_urls(String const& handler, Vector<URL> const& urls)
+ErrorOr<void> Launcher::add_allowed_handler_with_only_specific_urls(DeprecatedString const& handler, Vector<URL> const& urls)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_only_specific_urls(handler, urls);
     if (response_or_error.is_error())
@@ -87,7 +87,7 @@ ErrorOr<void> Launcher::seal_allowlist()
     return {};
 }
 
-bool Launcher::open(const URL& url, String const& handler_name)
+bool Launcher::open(const URL& url, DeprecatedString const& handler_name)
 {
     return connection().open_url(url, handler_name);
 }
@@ -98,7 +98,7 @@ bool Launcher::open(const URL& url, Details const& details)
     return open(url, details.executable);
 }
 
-Vector<String> Launcher::get_handlers_for_url(const URL& url)
+Vector<DeprecatedString> Launcher::get_handlers_for_url(const URL& url)
 {
     return connection().get_handlers_for_url(url.to_string());
 }

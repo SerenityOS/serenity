@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace Line {

@@ -13,7 +13,7 @@
 #include <AK/Vector.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 constexpr static auto IPAD = 0x36;
@@ -74,7 +74,7 @@ public:
     }
 
 #ifndef KERNEL
-    String class_name() const
+    DeprecatedString class_name() const
     {
         StringBuilder builder;
         builder.append("HMAC-"sv);

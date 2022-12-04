@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct_empty)
@@ -29,8 +29,8 @@ TEST_CASE(view_literal)
 
 TEST_CASE(compare_views)
 {
-    String foo1 = "foo";
-    String foo2 = "foo";
+    DeprecatedString foo1 = "foo";
+    DeprecatedString foo2 = "foo";
     auto view1 = foo1.view();
     auto view2 = foo2.view();
 
@@ -43,7 +43,7 @@ TEST_CASE(compare_views)
 TEST_CASE(string_view_literal_operator)
 {
     StringView literal_view = "foo"sv;
-    String test_string = "foo";
+    DeprecatedString test_string = "foo";
 
     EXPECT_EQ(literal_view.length(), test_string.length());
     EXPECT_EQ(literal_view, test_string);
@@ -51,7 +51,7 @@ TEST_CASE(string_view_literal_operator)
 
 TEST_CASE(starts_with)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     StringView test_string_view = test_string.view();
     EXPECT(test_string_view.starts_with('A'));
     EXPECT(!test_string_view.starts_with('B'));
@@ -64,7 +64,7 @@ TEST_CASE(starts_with)
 
 TEST_CASE(ends_with)
 {
-    String test_string = "ABCDEF";
+    DeprecatedString test_string = "ABCDEF";
     StringView test_string_view = test_string.view();
     EXPECT(test_string_view.ends_with("DEF"sv));
     EXPECT(test_string_view.ends_with('F'));
@@ -78,23 +78,23 @@ TEST_CASE(ends_with)
 
 TEST_CASE(lines)
 {
-    String test_string = "a\rb\nc\r\nd";
+    DeprecatedString test_string = "a\rb\nc\r\nd";
     StringView test_string_view = test_string.view();
     Vector<StringView> test_string_vector = test_string_view.lines();
     EXPECT_EQ(test_string_vector.size(), 4u);
-    EXPECT(test_string_vector.at(0) == String("a"));
-    EXPECT(test_string_vector.at(1) == String("b"));
-    EXPECT(test_string_vector.at(2) == String("c"));
-    EXPECT(test_string_vector.at(3) == String("d"));
+    EXPECT(test_string_vector.at(0) == DeprecatedString("a"));
+    EXPECT(test_string_vector.at(1) == DeprecatedString("b"));
+    EXPECT(test_string_vector.at(2) == DeprecatedString("c"));
+    EXPECT(test_string_vector.at(3) == DeprecatedString("d"));
 
     test_string = "```\nHello there\r\nHello there\n```";
     test_string_view = test_string.view();
     test_string_vector = test_string_view.lines();
     EXPECT_EQ(test_string_vector.size(), 4u);
-    EXPECT(test_string_vector.at(0) == String("```"));
-    EXPECT(test_string_vector.at(1) == String("Hello there"));
-    EXPECT(test_string_vector.at(2) == String("Hello there"));
-    EXPECT(test_string_vector.at(3) == String("```"));
+    EXPECT(test_string_vector.at(0) == DeprecatedString("```"));
+    EXPECT(test_string_vector.at(1) == DeprecatedString("Hello there"));
+    EXPECT(test_string_vector.at(2) == DeprecatedString("Hello there"));
+    EXPECT(test_string_vector.at(3) == DeprecatedString("```"));
 
     test_string = "\n\n\n";
     test_string_view = test_string.view();

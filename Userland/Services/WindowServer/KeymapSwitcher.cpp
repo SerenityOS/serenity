@@ -88,7 +88,7 @@ void KeymapSwitcher::next_keymap()
     }
 }
 
-String KeymapSwitcher::get_current_keymap() const
+DeprecatedString KeymapSwitcher::get_current_keymap() const
 {
     auto proc_keymap = Core::File::construct("/sys/kernel/keymap");
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))
@@ -100,7 +100,7 @@ String KeymapSwitcher::get_current_keymap() const
     return keymap_object.get("keymap"sv).to_string();
 }
 
-void KeymapSwitcher::set_keymap(const AK::String& keymap)
+void KeymapSwitcher::set_keymap(const AK::DeprecatedString& keymap)
 {
     if (Core::Process::spawn("/bin/keymap"sv, Array { "-m", keymap.characters() }).is_error())
         dbgln("Failed to call /bin/keymap, error: {} ({})", errno, strerror(errno));

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibSQL/Result.h>
 #include <SQLServer/ConnectionFromClient.h>
@@ -34,7 +34,7 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(String const& database_name)
+Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedString const& database_name)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::connect(database_name: {})", database_name);
     auto database_connection = DatabaseConnection::construct(database_name, client_id());
@@ -51,7 +51,7 @@ void ConnectionFromClient::disconnect(int connection_id)
         dbgln("Database connection has disappeared");
 }
 
-Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(int connection_id, String const& sql)
+Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(int connection_id, DeprecatedString const& sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement(connection_id: {}, sql: '{}')", connection_id, sql);
     auto database_connection = DatabaseConnection::connection_for(connection_id);
@@ -73,7 +73,7 @@ void ConnectionFromClient::execute_statement(int statement_id)
         statement->execute();
     } else {
         dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
-        async_execution_error(statement_id, (int)SQL::SQLErrorCode::StatementUnavailable, String::formatted("{}", statement_id));
+        async_execution_error(statement_id, (int)SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
     }
 }
 

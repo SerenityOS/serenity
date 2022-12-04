@@ -25,7 +25,7 @@ public:
     Gfx::Bitmap* bitmap() { return m_bitmap; }
     bool create_bitmap(size_t minimum_width = 0, size_t minimum_height = 0);
 
-    JS::ThrowCompletionOr<RenderingContext> get_context(String const& type, JS::Value options);
+    JS::ThrowCompletionOr<RenderingContext> get_context(DeprecatedString const& type, JS::Value options);
 
     unsigned width() const;
     unsigned height() const;
@@ -33,7 +33,7 @@ public:
     void set_width(unsigned);
     void set_height(unsigned);
 
-    String to_data_url(String const& type, Optional<double> quality) const;
+    DeprecatedString to_data_url(DeprecatedString const& type, Optional<double> quality) const;
 
     void present();
 

@@ -33,7 +33,7 @@
 
 namespace JS {
 
-static ThrowCompletionOr<String> ak_string_from(VM& vm)
+static ThrowCompletionOr<DeprecatedString> ak_string_from(VM& vm)
 {
     auto this_value = TRY(require_object_coercible(vm, vm.this_value()));
     return TRY(this_value.to_string(vm));
@@ -131,7 +131,7 @@ CodePoint code_point_at(Utf16View const& string, size_t position)
 }
 
 StringPrototype::StringPrototype(Realm& realm)
-    : StringObject(*js_string(realm.vm(), String::empty()), *realm.intrinsics().object_prototype())
+    : StringObject(*js_string(realm.vm(), DeprecatedString::empty()), *realm.intrinsics().object_prototype())
 {
 }
 
@@ -246,7 +246,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     auto string = TRY(utf16_string_from(vm));
     auto position = TRY(vm.argument(0).to_integer_or_infinity(vm));
     if (position < 0 || position >= string.length_in_code_units())
-        return js_string(vm, String::empty());
+        return js_string(vm, DeprecatedString::empty());
 
     return js_string(vm, string.substring_view(position, 1));
 }
@@ -487,7 +487,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 3. If form is undefined, let f be "NFC".
     // 4. Else, let f be ? ToString(form).
-    String form = "NFC";
+    DeprecatedString form = "NFC";
     auto form_value = vm.argument(0);
     if (!form_value.is_undefined())
         form = TRY(form_value.to_string(vm));
@@ -536,8 +536,8 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     auto filler = filler_builder.build();
 
     auto formatted = placement == PadPlacement::Start
-        ? String::formatted("{}{}", filler, string.view())
-        : String::formatted("{}{}", string.view(), filler);
+        ? DeprecatedString::formatted("{}{}", filler, string.view())
+        : DeprecatedString::formatted("{}{}", string.view(), filler);
     return js_string(vm, move(formatted));
 }
 
@@ -569,11 +569,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
         return vm.throw_completion<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
 
     if (n == 0)
-        return js_string(vm, String::empty());
+        return js_string(vm, DeprecatedString::empty());
 
     // NOTE: This is an optimization, it is not required by the specification but it produces equivalent behavior
     if (string.is_empty())
-        return js_string(vm, String::empty());
+        return js_string(vm, DeprecatedString::empty());
 
     StringBuilder builder;
     for (size_t i = 0; i < n; ++i)
@@ -606,7 +606,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         return js_string(vm, move(string));
 
     auto preserved = string.substring_view(0, position.value());
-    String replacement;
+    DeprecatedString replacement;
 
     if (replace_value.is_function()) {
         auto result = TRY(call(vm, replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position.value()), js_string(vm, string)));
@@ -671,7 +671,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 
     for (auto position : match_positions) {
         auto preserved = string.substring_view(end_of_last_match, position - end_of_last_match);
-        String replacement;
+        DeprecatedString replacement;
 
         if (replace_value.is_function()) {
             auto result = TRY(call(vm, replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position), js_string(vm, string)));
@@ -734,7 +734,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     }
 
     if (int_start >= int_end)
-        return js_string(vm, String::empty());
+        return js_string(vm, DeprecatedString::empty());
 
     return js_string(vm, string.substring_view(int_start, int_end - int_start));
 }
@@ -876,7 +876,7 @@ enum class TargetCase {
 };
 
 // 19.1.2.1 TransformCase ( S, locales, targetCase ), https://tc39.es/ecma402/#sec-transform-case
-static ThrowCompletionOr<String> transform_case(VM& vm, StringView string, Value locales, TargetCase target_case)
+static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView string, Value locales, TargetCase target_case)
 {
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(Intl::canonicalize_locale_list(vm, locales));
@@ -909,7 +909,7 @@ static ThrowCompletionOr<String> transform_case(VM& vm, StringView string, Value
 
     // 8. Let codePoints be StringToCodePoints(S).
 
-    String new_code_points;
+    DeprecatedString new_code_points;
 
     switch (target_case) {
     // 9. If targetCase is lower, then
@@ -1021,7 +1021,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     return js_string(vm, result.build());
 }
 
-ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
+ThrowCompletionOr<DeprecatedString> trim_string(VM& vm, Value input_value, TrimMode where)
 {
     // 1. Let str be ? RequireObjectCoercible(string).
     auto input_string = TRY(require_object_coercible(vm, input_value));
@@ -1108,14 +1108,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
     auto int_end = min((i32)(int_start + int_length), size);
 
     if (int_start >= int_end)
-        return js_string(vm, String::empty());
+        return js_string(vm, DeprecatedString::empty());
 
     // 11. Return the substring of S from intStart to intEnd.
     return js_string(vm, string.substring_view(int_start, int_end - int_start));
 }
 
 // B.2.2.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
-static ThrowCompletionOr<Value> create_html(VM& vm, Value string, String const& tag, String const& attribute, Value value)
+static ThrowCompletionOr<Value> create_html(VM& vm, Value string, DeprecatedString const& tag, DeprecatedString const& attribute, Value value)
 {
     TRY(require_object_coercible(vm, string));
     auto str = TRY(string.to_string(vm));
@@ -1147,25 +1147,25 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::anchor)
 // B.2.2.3 String.prototype.big ( ), https://tc39.es/ecma262/#sec-string.prototype.big
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::big)
 {
-    return create_html(vm, vm.this_value(), "big", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "big", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.4 String.prototype.blink ( ), https://tc39.es/ecma262/#sec-string.prototype.blink
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::blink)
 {
-    return create_html(vm, vm.this_value(), "blink", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "blink", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.5 String.prototype.bold ( ), https://tc39.es/ecma262/#sec-string.prototype.bold
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::bold)
 {
-    return create_html(vm, vm.this_value(), "b", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "b", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.6 String.prototype.fixed ( ), https://tc39.es/ecma262/#sec-string.prototype.fixed
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fixed)
 {
-    return create_html(vm, vm.this_value(), "tt", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "tt", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.7 String.prototype.fontcolor ( color ), https://tc39.es/ecma262/#sec-string.prototype.fontcolor
@@ -1183,7 +1183,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontsize)
 // B.2.2.9 String.prototype.italics ( ), https://tc39.es/ecma262/#sec-string.prototype.italics
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::italics)
 {
-    return create_html(vm, vm.this_value(), "i", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "i", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.10 String.prototype.link ( url ), https://tc39.es/ecma262/#sec-string.prototype.link
@@ -1195,25 +1195,25 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::link)
 // B.2.2.11 String.prototype.small ( ), https://tc39.es/ecma262/#sec-string.prototype.small
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::small)
 {
-    return create_html(vm, vm.this_value(), "small", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "small", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.12 String.prototype.strike ( ), https://tc39.es/ecma262/#sec-string.prototype.strike
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::strike)
 {
-    return create_html(vm, vm.this_value(), "strike", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "strike", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.13 String.prototype.sub ( ), https://tc39.es/ecma262/#sec-string.prototype.sub
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sub)
 {
-    return create_html(vm, vm.this_value(), "sub", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "sub", DeprecatedString::empty(), Value());
 }
 
 // B.2.2.14 String.prototype.sup ( ), https://tc39.es/ecma262/#sec-string.prototype.sup
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 {
-    return create_html(vm, vm.this_value(), "sup", String::empty(), Value());
+    return create_html(vm, vm.this_value(), "sup", DeprecatedString::empty(), Value());
 }
 
 }

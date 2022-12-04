@@ -6,8 +6,8 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <Kernel/Net/IPv4.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -47,8 +47,8 @@ static char const* services_path = "/etc/services";
 
 static bool fill_getserv_buffers(char const* line, ssize_t read);
 static servent __getserv_buffer;
-static String __getserv_name_buffer;
-static String __getserv_protocol_buffer;
+static DeprecatedString __getserv_name_buffer;
+static DeprecatedString __getserv_protocol_buffer;
 static int __getserv_port_buffer;
 static Vector<ByteBuffer> __getserv_alias_list_buffer;
 static Vector<char*> __getserv_alias_list;
@@ -61,7 +61,7 @@ static char const* protocols_path = "/etc/protocols";
 
 static bool fill_getproto_buffers(char const* line, ssize_t read);
 static protoent __getproto_buffer;
-static String __getproto_name_buffer;
+static DeprecatedString __getproto_name_buffer;
 static Vector<ByteBuffer> __getproto_alias_list_buffer;
 static Vector<char*> __getproto_alias_list;
 static int __getproto_protocol_buffer;
@@ -89,7 +89,7 @@ static int connect_to_lookup_server()
     return fd;
 }
 
-static String gethostbyname_name_buffer;
+static DeprecatedString gethostbyname_name_buffer;
 
 hostent* gethostbyname(char const* name)
 {
@@ -211,7 +211,7 @@ hostent* gethostbyname(char const* name)
     return &__gethostbyname_buffer;
 }
 
-static String gethostbyaddr_name_buffer;
+static DeprecatedString gethostbyaddr_name_buffer;
 
 hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
 {
@@ -467,7 +467,7 @@ static bool fill_getserv_buffers(char const* line, ssize_t read)
     }
     __getserv_name_buffer = split_line[0];
 
-    auto port_protocol_split = String(split_line[1]).split('/');
+    auto port_protocol_split = DeprecatedString(split_line[1]).split('/');
     if (port_protocol_split.size() < 2) {
         warnln("getservent(): malformed services file");
         return false;
@@ -634,7 +634,7 @@ void endprotoent()
 
 static bool fill_getproto_buffers(char const* line, ssize_t read)
 {
-    String string_line = String(line, read);
+    DeprecatedString string_line = DeprecatedString(line, read);
     auto split_line = string_line.replace(" "sv, "\t"sv, ReplaceMode::All).split('\t');
 
     // This indicates an incorrect file format. Protocols file entries should

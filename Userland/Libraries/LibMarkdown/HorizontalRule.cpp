@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/HorizontalRule.h>
 #include <LibMarkdown/Visitor.h>
@@ -12,12 +12,12 @@
 
 namespace Markdown {
 
-String HorizontalRule::render_to_html(bool) const
+DeprecatedString HorizontalRule::render_to_html(bool) const
 {
     return "<hr />\n";
 }
 
-String HorizontalRule::render_for_terminal(size_t view_width) const
+DeprecatedString HorizontalRule::render_for_terminal(size_t view_width) const
 {
     StringBuilder builder(view_width + 1);
     for (size_t i = 0; i < view_width; ++i)

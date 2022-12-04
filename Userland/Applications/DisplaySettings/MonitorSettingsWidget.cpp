@@ -65,7 +65,7 @@ void MonitorSettingsWidget::create_resolution_list()
 
         i32 aspect_width = resolution.width() / gcf;
         i32 aspect_height = resolution.height() / gcf;
-        m_resolution_strings.append(String::formatted("{}x{} ({}:{})", resolution.width(), resolution.height(), aspect_width, aspect_height));
+        m_resolution_strings.append(DeprecatedString::formatted("{}x{} ({}:{})", resolution.width(), resolution.height(), aspect_width, aspect_height));
     }
 }
 
@@ -77,7 +77,7 @@ void MonitorSettingsWidget::create_frame()
 
     m_screen_combo = *find_descendant_of_type_named<GUI::ComboBox>("screen_combo");
     m_screen_combo->set_only_allow_values_from_model(true);
-    m_screen_combo->set_model(*GUI::ItemListModel<String>::create(m_screens));
+    m_screen_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_screens));
     m_screen_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_screen_index = index.row();
         selected_screen_index_or_resolution_changed();
@@ -85,7 +85,7 @@ void MonitorSettingsWidget::create_frame()
 
     m_resolution_combo = *find_descendant_of_type_named<GUI::ComboBox>("resolution_combo");
     m_resolution_combo->set_only_allow_values_from_model(true);
-    m_resolution_combo->set_model(*GUI::ItemListModel<String>::create(m_resolution_strings));
+    m_resolution_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_resolution_strings));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         auto& selected_screen = m_screen_layout.screens[m_selected_screen_index];
         selected_screen.resolution = m_resolutions.at(index.row());
@@ -123,7 +123,7 @@ void MonitorSettingsWidget::create_frame()
     m_dpi_label = *find_descendant_of_type_named<GUI::Label>("display_dpi");
 }
 
-static String display_name_from_edid(EDID::Parser const& edid)
+static DeprecatedString display_name_from_edid(EDID::Parser const& edid)
 {
     auto manufacturer_name = edid.manufacturer_name();
     auto product_name = edid.display_product_name();
@@ -131,12 +131,12 @@ static String display_name_from_edid(EDID::Parser const& edid)
     auto build_manufacturer_product_name = [&]() {
         if (product_name.is_null() || product_name.is_empty())
             return manufacturer_name;
-        return String::formatted("{} {}", manufacturer_name, product_name);
+        return DeprecatedString::formatted("{} {}", manufacturer_name, product_name);
     };
 
     if (auto screen_size = edid.screen_size(); screen_size.has_value()) {
         auto diagonal_inch = hypot(screen_size.value().horizontal_cm(), screen_size.value().vertical_cm()) / 2.54;
-        return String::formatted("{} {}\"", build_manufacturer_product_name(), roundf(diagonal_inch));
+        return DeprecatedString::formatted("{} {}\"", build_manufacturer_product_name(), roundf(diagonal_inch));
     }
 
     return build_manufacturer_product_name();
@@ -151,7 +151,7 @@ void MonitorSettingsWidget::load_current_settings()
 
     size_t virtual_screen_count = 0;
     for (size_t i = 0; i < m_screen_layout.screens.size(); i++) {
-        String screen_display_name;
+        DeprecatedString screen_display_name;
         if (m_screen_layout.screens[i].mode == WindowServer::ScreenLayout::Screen::Mode::Device) {
             if (auto edid = EDID::Parser::from_display_connector_device(m_screen_layout.screens[i].device.value()); !edid.is_error()) { // TODO: multihead
                 screen_display_name = display_name_from_edid(edid.value());
@@ -163,13 +163,13 @@ void MonitorSettingsWidget::load_current_settings()
             }
         } else {
             dbgln("Frame buffer {} is virtual.", i);
-            screen_display_name = String::formatted("Virtual screen {}", virtual_screen_count++);
+            screen_display_name = DeprecatedString::formatted("Virtual screen {}", virtual_screen_count++);
             m_screen_edids.append({});
         }
         if (i == m_screen_layout.main_screen_index)
-            m_screens.append(String::formatted("{}: {} (main screen)", i + 1, screen_display_name));
+            m_screens.append(DeprecatedString::formatted("{}: {} (main screen)", i + 1, screen_display_name));
         else
-            m_screens.append(String::formatted("{}: {}", i + 1, screen_display_name));
+            m_screens.append(DeprecatedString::formatted("{}: {}", i + 1, screen_display_name));
     }
     m_selected_screen_index = m_screen_layout.main_screen_index;
     m_screen_combo->set_selected_index(m_selected_screen_index);
@@ -185,7 +185,7 @@ void MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
     Gfx::IntSize current_resolution = m_resolutions.at(index);
 
     Optional<unsigned> screen_dpi;
-    String screen_dpi_tooltip;
+    DeprecatedString screen_dpi_tooltip;
     if (m_screen_edids[m_selected_screen_index].has_value()) {
         auto& edid = m_screen_edids[m_selected_screen_index];
         if (auto screen_size = edid.value().screen_size(); screen_size.has_value()) {
@@ -195,14 +195,14 @@ void MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
             auto diagonal_pixels = hypot(current_resolution.width(), current_resolution.height());
             if (diagonal_pixels != 0.0) {
                 screen_dpi = diagonal_pixels / diagonal_inch;
-                screen_dpi_tooltip = String::formatted("{} inch display ({}cm x {}cm)", roundf(diagonal_inch), x_cm, y_cm);
+                screen_dpi_tooltip = DeprecatedString::formatted("{} inch display ({}cm x {}cm)", roundf(diagonal_inch), x_cm, y_cm);
             }
         }
     }
 
     if (screen_dpi.has_value()) {
         m_dpi_label->set_tooltip(screen_dpi_tooltip);
-        m_dpi_label->set_text(String::formatted("{} dpi", screen_dpi.value()));
+        m_dpi_label->set_text(DeprecatedString::formatted("{} dpi", screen_dpi.value()));
         m_dpi_label->set_visible(true);
     } else {
         m_dpi_label->set_visible(false);
@@ -235,7 +235,7 @@ void MonitorSettingsWidget::apply_settings()
             auto seconds_until_revert = 10;
 
             auto box_text = [&seconds_until_revert] {
-                return String::formatted("Do you want to keep the new settings? They will be reverted after {} {}.",
+                return DeprecatedString::formatted("Do you want to keep the new settings? They will be reverted after {} {}.",
                     seconds_until_revert, seconds_until_revert == 1 ? "second" : "seconds");
             };
 
@@ -257,20 +257,20 @@ void MonitorSettingsWidget::apply_settings()
             if (box->exec() == GUI::MessageBox::ExecResult::Yes) {
                 auto save_result = GUI::ConnectionToWindowServer::the().save_screen_layout();
                 if (!save_result.success()) {
-                    GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),
+                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Error saving settings: {}", save_result.error_msg()),
                         "Unable to save setting"sv, GUI::MessageBox::Type::Error);
                 }
             } else {
                 auto restore_result = GUI::ConnectionToWindowServer::the().set_screen_layout(current_layout, false);
                 if (!restore_result.success()) {
-                    GUI::MessageBox::show(window(), String::formatted("Error restoring settings: {}", restore_result.error_msg()),
+                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Error restoring settings: {}", restore_result.error_msg()),
                         "Unable to restore setting"sv, GUI::MessageBox::Type::Error);
                 } else {
                     load_current_settings();
                 }
             }
         } else {
-            GUI::MessageBox::show(window(), String::formatted("Error setting screen layout: {}", result.error_msg()),
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Error setting screen layout: {}", result.error_msg()),
                 "Unable to apply changes"sv, GUI::MessageBox::Type::Error);
         }
     }

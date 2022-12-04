@@ -19,6 +19,7 @@ set(AK_TEST_SOURCES
     TestCircularDuplexStream.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
+    TestDeprecatedString.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
     TestDoublyLinkedList.cpp
@@ -61,7 +62,6 @@ set(AK_TEST_SOURCES
     TestSpan.cpp
     TestStack.cpp
     TestStdLibExtras.cpp
-    TestString.cpp
     TestStringFloatingPointConversions.cpp
     TestStringUtils.cpp
     TestStringView.cpp

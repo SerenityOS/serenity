@@ -13,7 +13,7 @@
 
 namespace JS {
 
-Module::Module(Realm& realm, String filename, Script::HostDefined* host_defined)
+Module::Module(Realm& realm, DeprecatedString filename, Script::HostDefined* host_defined)
     : m_realm(realm)
     , m_host_defined(host_defined)
     , m_filename(move(filename))

@@ -46,7 +46,7 @@
 
 namespace Browser {
 
-static String bookmarks_file_path()
+static DeprecatedString bookmarks_file_path()
 {
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
@@ -54,7 +54,7 @@ static String bookmarks_file_path()
     return builder.to_string();
 }
 
-static String search_engines_file_path()
+static DeprecatedString search_engines_file_path()
 {
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
@@ -247,7 +247,7 @@ void BrowserWindow::build_menus()
     m_take_visible_screenshot_action = GUI::Action::create(
         "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
             if (auto result = take_screenshot(ScreenshotType::Visible); result.is_error())
-                GUI::MessageBox::show_error(this, String::formatted("{}", result.error()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("{}", result.error()));
         },
         this);
     m_take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
@@ -255,7 +255,7 @@ void BrowserWindow::build_menus()
     m_take_full_screenshot_action = GUI::Action::create(
         "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
             if (auto result = take_screenshot(ScreenshotType::Full); result.is_error())
-                GUI::MessageBox::show_error(this, String::formatted("{}", result.error()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("{}", result.error()));
         },
         this);
     m_take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
@@ -410,7 +410,7 @@ void BrowserWindow::build_menus()
     add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
-        String user_agent;
+        DeprecatedString user_agent;
         if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv) != GUI::InputBox::ExecResult::OK || user_agent.is_empty() || user_agent.is_null()) {
             m_disable_user_agent_spoofing->activate();
             return;
@@ -501,7 +501,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     }
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
-        String search_engine;
+        DeprecatedString search_engine;
         if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK || search_engine.is_empty()) {
             m_disable_search_engine_action->activate();
             return;
@@ -543,7 +543,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 {
     auto& title = tab.title();
     auto url = tab.url();
-    set_title(String::formatted("{} - Browser", title.is_empty() ? url.to_string() : title));
+    set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_string() : title));
 }
 
 void BrowserWindow::create_new_tab(URL url, bool activate)
@@ -591,7 +591,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    new_tab.on_get_cookie = [this](auto& url, auto source) -> String {
+    new_tab.on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
         return m_cookie_jar.get_cookie(url, source);
     };
 
@@ -647,7 +647,7 @@ void BrowserWindow::proxy_mappings_changed()
     });
 }
 
-void BrowserWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+void BrowserWindow::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
 {
     if (domain != "Browser")
         return;
@@ -673,7 +673,7 @@ void BrowserWindow::config_string_did_change(String const& domain, String const&
     // TODO: ColorScheme
 }
 
-void BrowserWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
+void BrowserWindow::config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value)
 {
     dbgln("{} {} {} {}", domain, group, key, value);
     if (domain != "Browser" || group != "Preferences")

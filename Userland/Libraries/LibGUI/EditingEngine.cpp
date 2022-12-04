@@ -452,7 +452,7 @@ bool MoveLineUpOrDownCommand::merge_with(GUI::Command const&)
     return false;
 }
 
-String MoveLineUpOrDownCommand::action_text() const
+DeprecatedString MoveLineUpOrDownCommand::action_text() const
 {
     return "Move a line";
 }

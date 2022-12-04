@@ -28,7 +28,7 @@ public:
     virtual ~NetworkJob() override = default;
 
     // Could fire twice, after Headers and after Trailers!
-    Function<void(HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)> on_headers_received;
+    Function<void(HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<void(bool success)> on_finish;
     Function<void(Optional<u32>, u32)> on_progress;
 

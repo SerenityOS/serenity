@@ -24,7 +24,7 @@ private:
     {
     }
 
-    virtual void clipboard_data_changed(String const& mime_type) override
+    virtual void clipboard_data_changed(DeprecatedString const& mime_type) override
     {
         Clipboard::the().clipboard_data_changed({}, mime_type);
     }
@@ -123,7 +123,7 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
     return bitmap;
 }
 
-void Clipboard::set_data(ReadonlyBytes data, String const& type, HashMap<String, String> const& metadata)
+void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
     auto buffer_or_error = Core::AnonymousBuffer::create_with_size(data.size());
     if (buffer_or_error.is_error()) {
@@ -139,12 +139,12 @@ void Clipboard::set_data(ReadonlyBytes data, String const& type, HashMap<String,
 
 void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap)
 {
-    HashMap<String, String> metadata;
-    metadata.set("width", String::number(bitmap.width()));
-    metadata.set("height", String::number(bitmap.height()));
-    metadata.set("scale", String::number(bitmap.scale()));
-    metadata.set("format", String::number((int)bitmap.format()));
-    metadata.set("pitch", String::number(bitmap.pitch()));
+    HashMap<DeprecatedString, DeprecatedString> metadata;
+    metadata.set("width", DeprecatedString::number(bitmap.width()));
+    metadata.set("height", DeprecatedString::number(bitmap.height()));
+    metadata.set("scale", DeprecatedString::number(bitmap.scale()));
+    metadata.set("format", DeprecatedString::number((int)bitmap.format()));
+    metadata.set("pitch", DeprecatedString::number(bitmap.pitch()));
     set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", metadata);
 }
 
@@ -153,7 +153,7 @@ void Clipboard::clear()
     connection().async_set_clipboard_data({}, {}, {});
 }
 
-void Clipboard::clipboard_data_changed(Badge<ConnectionToClipboardServer>, String const& mime_type)
+void Clipboard::clipboard_data_changed(Badge<ConnectionToClipboardServer>, DeprecatedString const& mime_type)
 {
     if (on_change)
         on_change(mime_type);

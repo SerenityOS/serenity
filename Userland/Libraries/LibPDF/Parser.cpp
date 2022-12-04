@@ -37,7 +37,7 @@ void Parser::set_document(WeakPtr<Document> const& document)
     m_document = document;
 }
 
-String Parser::parse_comment()
+DeprecatedString Parser::parse_comment()
 {
     if (!m_reader.matches('%'))
         return {};
@@ -47,7 +47,7 @@ String Parser::parse_comment()
     m_reader.move_until([&](auto) {
         return m_reader.matches_eol();
     });
-    String str = StringView(m_reader.bytes().slice(comment_start_offset, m_reader.offset() - comment_start_offset));
+    DeprecatedString str = StringView(m_reader.bytes().slice(comment_start_offset, m_reader.offset() - comment_start_offset));
     m_reader.consume_eol();
     m_reader.consume_whitespace();
     return str;
@@ -98,7 +98,7 @@ PDFErrorOr<Value> Parser::parse_value(CanBeIndirectValue can_be_indirect_value)
     if (m_reader.matches('['))
         return TRY(parse_array());
 
-    return error(String::formatted("Unexpected char \"{}\"", m_reader.peek()));
+    return error(DeprecatedString::formatted("Unexpected char \"{}\"", m_reader.peek()));
 }
 
 PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()
@@ -193,7 +193,7 @@ PDFErrorOr<Value> Parser::parse_number()
 
     m_reader.consume_whitespace();
 
-    auto string = String(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
+    auto string = DeprecatedString(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
     if (is_float)
         return Value(strtof(string.characters(), nullptr));
 
@@ -240,7 +240,7 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 {
     ScopeGuard guard([&] { m_reader.consume_whitespace(); });
 
-    String string;
+    DeprecatedString string;
     bool is_binary_string;
 
     if (m_reader.matches('(')) {
@@ -272,7 +272,7 @@ NonnullRefPtr<StringObject> Parser::parse_string()
     return string_object;
 }
 
-String Parser::parse_literal_string()
+DeprecatedString Parser::parse_literal_string()
 {
     VERIFY(m_reader.consume('('));
     StringBuilder builder;
@@ -350,7 +350,7 @@ String Parser::parse_literal_string()
     return builder.to_string();
 }
 
-String Parser::parse_hex_string()
+DeprecatedString Parser::parse_hex_string()
 {
     VERIFY(m_reader.consume('<'));
 
@@ -558,7 +558,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
 }
 
 Error Parser::error(
-    String const& message
+    DeprecatedString const& message
 #ifdef PDF_DEBUG
     ,
     SourceLocation loc

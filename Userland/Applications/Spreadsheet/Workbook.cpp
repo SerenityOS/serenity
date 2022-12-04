@@ -43,7 +43,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     m_vm->enable_default_host_import_module_dynamically_hook();
 }
 
-bool Workbook::set_filename(String const& filename)
+bool Workbook::set_filename(DeprecatedString const& filename)
 {
     if (m_current_filename == filename)
         return false;
@@ -52,7 +52,7 @@ bool Workbook::set_filename(String const& filename)
     return true;
 }
 
-Result<bool, String> Workbook::open_file(Core::File& file)
+Result<bool, DeprecatedString> Workbook::open_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
@@ -64,7 +64,7 @@ Result<bool, String> Workbook::open_file(Core::File& file)
     return true;
 }
 
-Result<bool, String> Workbook::write_to_file(Core::File& file)
+Result<bool, DeprecatedString> Workbook::write_to_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
@@ -76,7 +76,7 @@ Result<bool, String> Workbook::write_to_file(Core::File& file)
     return true;
 }
 
-Result<bool, String> Workbook::import_file(Core::File& file)
+Result<bool, DeprecatedString> Workbook::import_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 

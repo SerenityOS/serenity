@@ -40,7 +40,7 @@ private:
     };
 
     RefPtr<GUI::Widget> m_properties_widget;
-    Vector<String> m_merge_mode_names {};
+    Vector<DeprecatedString> m_merge_mode_names {};
     Selection::MergeMode m_merge_mode { Selection::MergeMode::Set };
     float m_edge_feathering { 0.0f };
     bool m_selecting { false };

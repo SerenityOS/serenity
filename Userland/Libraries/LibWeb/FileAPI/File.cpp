@@ -10,7 +10,7 @@
 
 namespace Web::FileAPI {
 
-File::File(JS::Realm& realm, ByteBuffer byte_buffer, String file_name, String type, i64 last_modified)
+File::File(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString file_name, DeprecatedString type, i64 last_modified)
     : Blob(realm, move(byte_buffer), move(type))
     , m_name(move(file_name))
     , m_last_modified(last_modified)
@@ -21,7 +21,7 @@ File::File(JS::Realm& realm, ByteBuffer byte_buffer, String file_name, String ty
 File::~File() = default;
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-file-file
-WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)
 {
     // 1. Let bytes be the result of processing blob parts given fileBits and options.
     auto bytes = TRY_OR_RETURN_OOM(realm, process_blob_parts(file_bits, static_cast<Optional<BlobPropertyBag> const&>(*options)));
@@ -30,7 +30,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
     //    NOTE: Underlying OS filesystems use differing conventions for file name; with constructed files, mandating UTF-16 lessens ambiquity when file names are converted to byte sequences.
     auto name = file_name;
 
-    auto type = String::empty();
+    auto type = DeprecatedString::empty();
     i64 last_modified = 0;
     // 3. Process FilePropertyBag dictionary argument by running the following substeps:
     if (options.has_value()) {
@@ -61,7 +61,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
     return JS::NonnullGCPtr(*realm.heap().allocate<File>(realm, realm, move(bytes), move(name), move(type), last_modified));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)
 {
     return create(realm, file_bits, file_name, options);
 }

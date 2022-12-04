@@ -49,20 +49,20 @@ template<>
 struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::PropertyDescriptor const& property_descriptor)
     {
-        Vector<String> parts;
+        Vector<DeprecatedString> parts;
         if (property_descriptor.value.has_value())
-            parts.append(String::formatted("[[Value]]: {}", property_descriptor.value->to_string_without_side_effects()));
+            parts.append(DeprecatedString::formatted("[[Value]]: {}", property_descriptor.value->to_string_without_side_effects()));
         if (property_descriptor.get.has_value())
-            parts.append(String::formatted("[[Get]]: JS::Function* @ {:p}", *property_descriptor.get));
+            parts.append(DeprecatedString::formatted("[[Get]]: JS::Function* @ {:p}", *property_descriptor.get));
         if (property_descriptor.set.has_value())
-            parts.append(String::formatted("[[Set]]: JS::Function* @ {:p}", *property_descriptor.set));
+            parts.append(DeprecatedString::formatted("[[Set]]: JS::Function* @ {:p}", *property_descriptor.set));
         if (property_descriptor.writable.has_value())
-            parts.append(String::formatted("[[Writable]]: {}", *property_descriptor.writable));
+            parts.append(DeprecatedString::formatted("[[Writable]]: {}", *property_descriptor.writable));
         if (property_descriptor.enumerable.has_value())
-            parts.append(String::formatted("[[Enumerable]]: {}", *property_descriptor.enumerable));
+            parts.append(DeprecatedString::formatted("[[Enumerable]]: {}", *property_descriptor.enumerable));
         if (property_descriptor.configurable.has_value())
-            parts.append(String::formatted("[[Configurable]]: {}", *property_descriptor.configurable));
-        return Formatter<StringView>::format(builder, String::formatted("PropertyDescriptor {{ {} }}", String::join(", "sv, parts)));
+            parts.append(DeprecatedString::formatted("[[Configurable]]: {}", *property_descriptor.configurable));
+        return Formatter<StringView>::format(builder, DeprecatedString::formatted("PropertyDescriptor {{ {} }}", DeprecatedString::join(", "sv, parts)));
     }
 };
 

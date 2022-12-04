@@ -18,20 +18,20 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#requestinfo
-using RequestInfo = Variant<JS::Handle<Request>, String>;
+using RequestInfo = Variant<JS::Handle<Request>, DeprecatedString>;
 
 // https://fetch.spec.whatwg.org/#requestinit
 struct RequestInit {
-    Optional<String> method;
+    Optional<DeprecatedString> method;
     Optional<HeadersInit> headers;
     Optional<Optional<BodyInit>> body;
-    Optional<String> referrer;
+    Optional<DeprecatedString> referrer;
     Optional<Bindings::ReferrerPolicy> referrer_policy;
     Optional<Bindings::RequestMode> mode;
     Optional<Bindings::RequestCredentials> credentials;
     Optional<Bindings::RequestCache> cache;
     Optional<Bindings::RequestRedirect> redirect;
-    Optional<String> integrity;
+    Optional<DeprecatedString> integrity;
     Optional<bool> keepalive;
     Optional<JS::GCPtr<DOM::AbortSignal>> signal;
     Optional<Bindings::RequestDuplex> duplex;
@@ -77,17 +77,17 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<Infrastructure::Request> request() const { return m_request; }
 
     // JS API functions
-    [[nodiscard]] String method() const;
-    [[nodiscard]] String url() const;
+    [[nodiscard]] DeprecatedString method() const;
+    [[nodiscard]] DeprecatedString url() const;
     [[nodiscard]] JS::NonnullGCPtr<Headers> headers() const;
     [[nodiscard]] Bindings::RequestDestination destination() const;
-    [[nodiscard]] String referrer() const;
+    [[nodiscard]] DeprecatedString referrer() const;
     [[nodiscard]] Bindings::ReferrerPolicy referrer_policy() const;
     [[nodiscard]] Bindings::RequestMode mode() const;
     [[nodiscard]] Bindings::RequestCredentials credentials() const;
     [[nodiscard]] Bindings::RequestCache cache() const;
     [[nodiscard]] Bindings::RequestRedirect redirect() const;
-    [[nodiscard]] String integrity() const;
+    [[nodiscard]] DeprecatedString integrity() const;
     [[nodiscard]] bool keepalive() const;
     [[nodiscard]] bool is_reload_navigation() const;
     [[nodiscard]] bool is_history_navigation() const;

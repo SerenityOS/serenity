@@ -28,7 +28,7 @@ public:
 
     virtual Type type() const override { return Type::Style; };
 
-    String selector_text() const;
+    DeprecatedString selector_text() const;
     void set_selector_text(StringView);
 
     CSSStyleDeclaration* style();
@@ -37,7 +37,7 @@ private:
     CSSStyleRule(JS::Realm&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
 
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual String serialized() const override;
+    virtual DeprecatedString serialized() const override;
 
     NonnullRefPtrVector<Selector> m_selectors;
     CSSStyleDeclaration& m_declaration;

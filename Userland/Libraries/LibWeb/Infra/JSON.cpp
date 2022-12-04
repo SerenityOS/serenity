@@ -33,7 +33,7 @@ WebIDL::ExceptionOr<JS::Value> parse_json_bytes_to_javascript_value(JS::VM& vm, 
 }
 
 // https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-a-json-string
-WebIDL::ExceptionOr<String> serialize_javascript_value_to_json_string(JS::VM& vm, JS::Value value)
+WebIDL::ExceptionOr<DeprecatedString> serialize_javascript_value_to_json_string(JS::VM& vm, JS::Value value)
 {
     auto& realm = *vm.current_realm();
 

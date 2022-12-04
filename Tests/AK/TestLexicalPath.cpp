@@ -7,8 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 
 TEST_CASE(relative_path)
 {

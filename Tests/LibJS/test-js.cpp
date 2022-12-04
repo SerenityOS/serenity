@@ -69,7 +69,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
     auto value = TRY(reference.get_value(vm));
 
     if (!can_be_held_weakly(value))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, String::formatted("Variable with name {}", variable_name.string()));
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, DeprecatedString::formatted("Variable with name {}", variable_name.string()));
 
     vm.heap().uproot_cell(&value.as_cell());
     TRY(reference.delete_(vm));
@@ -88,7 +88,7 @@ TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
     return JS::js_null();
 }
 
-TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, JS::ExecutionContext&)
+TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Interpreter& interpreter, JS::ExecutionContext&)
 {
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;
@@ -123,8 +123,8 @@ TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, 
         parse_succeeded = !Test::JS::parse_script(test_file, interpreter.realm()).is_error();
 
     bool test_passed = true;
-    String message;
-    String expectation_string;
+    DeprecatedString message;
+    DeprecatedString expectation_string;
 
     switch (expectation) {
     case Early:

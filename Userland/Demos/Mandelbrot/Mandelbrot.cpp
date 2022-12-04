@@ -217,7 +217,7 @@ enum class ImageType {
 class Mandelbrot : public GUI::Frame {
     C_OBJECT(Mandelbrot)
 
-    void export_image(String const& export_path, ImageType image_type);
+    void export_image(DeprecatedString const& export_path, ImageType image_type);
 
     enum class Zoom {
         In,
@@ -366,7 +366,7 @@ void Mandelbrot::resize_event(GUI::ResizeEvent& event)
     m_set.resize(event.size());
 }
 
-void Mandelbrot::export_image(String const& export_path, ImageType image_type)
+void Mandelbrot::export_image(DeprecatedString const& export_path, ImageType image_type)
 {
     m_set.resize(Gfx::IntSize { 1920, 1080 });
     ByteBuffer encoded_data;
@@ -388,7 +388,7 @@ void Mandelbrot::export_image(String const& export_path, ImageType image_type)
     m_set.resize(size());
     auto file = fopen(export_path.characters(), "wb");
     if (!file) {
-        GUI::MessageBox::show(window(), String::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot"sv, GUI::MessageBox::Type::Error);
         return;
     }
     fwrite(encoded_data.data(), 1, encoded_data.size(), file);
@@ -420,21 +420,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP",
         [&](GUI::Action&) {
-            Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
+            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
             if (!export_path.has_value())
                 return;
             mandelbrot->export_image(export_path.value(), ImageType::BMP);
         })));
     TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
-            Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
+            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())
                 return;
             mandelbrot->export_image(export_path.value(), ImageType::PNG);
         })));
     TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI",
         [&](GUI::Action&) {
-            Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
+            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
             if (!export_path.has_value())
                 return;
             mandelbrot->export_image(export_path.value(), ImageType::QOI);

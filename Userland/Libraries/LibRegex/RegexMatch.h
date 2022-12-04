@@ -9,11 +9,11 @@
 #include "Forward.h"
 #include "RegexOptions.h"
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/MemMem.h>
 #include <AK/RedBlackTree.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Utf16View.h>
@@ -157,7 +157,7 @@ class RegexStringView {
 public:
     RegexStringView() = default;
 
-    RegexStringView(String const& string)
+    RegexStringView(DeprecatedString const& string)
         : m_view(string.view())
     {
     }
@@ -182,7 +182,7 @@ public:
     {
     }
 
-    explicit RegexStringView(String&&) = delete;
+    explicit RegexStringView(DeprecatedString&&) = delete;
 
     StringView string_view() const
     {
@@ -266,7 +266,7 @@ public:
         return view;
     }
 
-    RegexStringView construct_as_same(Span<u32> data, Optional<String>& optional_string_storage, Vector<u16, 1>& optional_utf16_storage) const
+    RegexStringView construct_as_same(Span<u32> data, Optional<DeprecatedString>& optional_string_storage, Vector<u16, 1>& optional_utf16_storage) const
     {
         auto view = m_view.visit(
             [&]<typename T>(T const&) {
@@ -381,7 +381,7 @@ public:
         return view;
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         return m_view.visit(
             [](StringView view) { return view.to_string(); },
@@ -440,7 +440,7 @@ public:
             [&](StringView view) { return view == cstring; });
     }
 
-    bool operator==(String const& string) const
+    bool operator==(DeprecatedString const& string) const
     {
         return m_view.visit(
             [&](Utf32View) { return to_string() == string; },
@@ -573,7 +573,7 @@ public:
     {
     }
 
-    Match(String string_, size_t const line_, size_t const column_, size_t const global_offset_)
+    Match(DeprecatedString string_, size_t const line_, size_t const column_, size_t const global_offset_)
         : string(move(string_))
         , view(string.value().view())
         , line(line_)

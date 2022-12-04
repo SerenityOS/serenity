@@ -102,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
     // 7. Let s be the empty String.
     auto sign = ""sv;
 
-    String number_string;
+    DeprecatedString number_string;
     int exponent = 0;
 
     // 8. If x < 0, then
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
     // 9. If x = 0, then
     if (number == 0) {
         // a. Let m be the String value consisting of f + 1 occurrences of the code unit 0x0030 (DIGIT ZERO).
-        number_string = String::repeated('0', fraction_digits + 1);
+        number_string = DeprecatedString::repeated('0', fraction_digits + 1);
 
         // b. Let e be 0.
         exponent = 0;
@@ -157,11 +157,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
         auto second = number_string.substring_view(1);
 
         // c. Set m to the string-concatenation of a, ".", and b.
-        number_string = String::formatted("{}.{}", first, second);
+        number_string = DeprecatedString::formatted("{}.{}", first, second);
     }
 
     char exponent_sign = 0;
-    String exponent_string;
+    DeprecatedString exponent_string;
 
     // 12. If e = 0, then
     if (exponent == 0) {
@@ -190,12 +190,12 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
         }
 
         // c. Let d be the String value consisting of the digits of the decimal representation of e (in order, with no leading zeroes).
-        exponent_string = String::number(exponent);
+        exponent_string = DeprecatedString::number(exponent);
     }
 
     // 14. Set m to the string-concatenation of m, "e", c, and d.
     // 15. Return the string-concatenation of s and m.
-    return js_string(vm, String::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
+    return js_string(vm, DeprecatedString::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
@@ -241,7 +241,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     auto n = round(pow(10.0f, fraction_digits) * number);
 
     // b. If n = 0, let m be the String "0". Otherwise, let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-    auto m = (n == 0 ? "0" : String::formatted("{}", n));
+    auto m = (n == 0 ? "0" : DeprecatedString::formatted("{}", n));
 
     // c. If f ≠ 0, then
     if (fraction_digits != 0) {
@@ -251,10 +251,10 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
         // ii. If k ≤ f, then
         if (k <= fraction_digits) {
             // 1. Let z be the String value consisting of f + 1 - k occurrences of the code unit 0x0030 (DIGIT ZERO).
-            auto z = String::repeated('0', fraction_digits + 1 - k);
+            auto z = DeprecatedString::repeated('0', fraction_digits + 1 - k);
 
             // 2. Set m to the string-concatenation of z and m.
-            m = String::formatted("{}{}", z, m);
+            m = DeprecatedString::formatted("{}{}", z, m);
 
             // 3. Set k to f + 1.
             k = fraction_digits + 1;
@@ -263,13 +263,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
         // iii. Let a be the first k - f code units of m.
         // iv. Let b be the other f code units of m.
         // v. Set m to the string-concatenation of a, ".", and b.
-        m = String::formatted("{}.{}",
+        m = DeprecatedString::formatted("{}.{}",
             m.substring_view(0, k - fraction_digits),
             m.substring_view(k - fraction_digits, fraction_digits));
     }
 
     // 12. Return the string-concatenation of s and m.
-    return js_string(vm, String::formatted("{}{}", s, m));
+    return js_string(vm, DeprecatedString::formatted("{}{}", s, m));
 }
 
 // 19.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring
@@ -321,7 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     // 7. Let s be the empty String.
     auto sign = ""sv;
 
-    String number_string;
+    DeprecatedString number_string;
     int exponent = 0;
 
     // 8. If x < 0, then
@@ -336,7 +336,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     // 9. If x = 0, then
     if (number == 0) {
         // a. Let m be the String value consisting of p occurrences of the code unit 0x0030 (DIGIT ZERO).
-        number_string = String::repeated('0', precision);
+        number_string = DeprecatedString::repeated('0', precision);
 
         // b. Let e be 0.
         exponent = 0;
@@ -365,7 +365,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
                 auto second = number_string.substring_view(1);
 
                 // 3. Set m to the string-concatenation of a, ".", and b.
-                number_string = String::formatted("{}.{}", first, second);
+                number_string = DeprecatedString::formatted("{}.{}", first, second);
             }
 
             char exponent_sign = 0;
@@ -388,21 +388,21 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
             }
 
             // v. Let d be the String value consisting of the digits of the decimal representation of e (in order, with no leading zeroes).
-            auto exponent_string = String::number(exponent);
+            auto exponent_string = DeprecatedString::number(exponent);
 
             // vi. Return the string-concatenation of s, m, the code unit 0x0065 (LATIN SMALL LETTER E), c, and d.
-            return js_string(vm, String::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
+            return js_string(vm, DeprecatedString::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
         }
     }
 
     // 11. If e = p - 1, return the string-concatenation of s and m.
     if (exponent == precision - 1)
-        return js_string(vm, String::formatted("{}{}", sign, number_string));
+        return js_string(vm, DeprecatedString::formatted("{}{}", sign, number_string));
 
     // 12. If e ≥ 0, then
     if (exponent >= 0) {
         // a. Set m to the string-concatenation of the first e + 1 code units of m, the code unit 0x002E (FULL STOP), and the remaining p - (e + 1) code units of m.
-        number_string = String::formatted(
+        number_string = DeprecatedString::formatted(
             "{}.{}",
             number_string.substring_view(0, exponent + 1),
             number_string.substring_view(exponent + 1));
@@ -410,14 +410,14 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     // 13. Else,
     else {
         // a. Set m to the string-concatenation of the code unit 0x0030 (DIGIT ZERO), the code unit 0x002E (FULL STOP), -(e + 1) occurrences of the code unit 0x0030 (DIGIT ZERO), and the String m.
-        number_string = String::formatted(
+        number_string = DeprecatedString::formatted(
             "0.{}{}",
-            String::repeated('0', -1 * (exponent + 1)),
+            DeprecatedString::repeated('0', -1 * (exponent + 1)),
             number_string);
     }
 
     // 14. Return the string-concatenation of s and m.
-    return js_string(vm, String::formatted("{}{}", sign, number_string));
+    return js_string(vm, DeprecatedString::formatted("{}{}", sign, number_string));
 }
 
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
@@ -499,7 +499,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
             characters.take_last();
     }
 
-    return js_string(vm, String(characters.data(), characters.size()));
+    return js_string(vm, DeprecatedString(characters.data(), characters.size()));
 }
 
 // 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof

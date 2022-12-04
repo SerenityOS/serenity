@@ -961,7 +961,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     default:
     unimplemented:;
         dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));
-        m_trap = Trap { String::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
+        m_trap = Trap { DeprecatedString::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
         return;
     }
 }

@@ -148,7 +148,7 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(hash_index->descriptor());
             k[0] = keys[ix];
-            k[1] = String::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
+            k[1] = DeprecatedString::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
             k.set_pointer(pointers[ix]);
             hash_index->insert(k);
         }
@@ -166,7 +166,7 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(hash_index->descriptor());
             k[0] = keys[ix];
-            k[1] = String::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
+            k[1] = DeprecatedString::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
             auto pointer_opt = hash_index->get(k);
             VERIFY(pointer_opt.has_value());
             EXPECT_EQ(pointer_opt.value(), pointers[ix]);
@@ -246,7 +246,7 @@ void insert_into_and_scan_hash_index(int num_keys)
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(hash_index->descriptor());
             k[0] = keys[ix];
-            k[1] = String::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
+            k[1] = DeprecatedString::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
             k.set_pointer(pointers[ix]);
             hash_index->insert(k);
         }
@@ -275,7 +275,7 @@ void insert_into_and_scan_hash_index(int num_keys)
                 if (keys[ix] == key_value) {
                     EXPECT_EQ(key.pointer(), pointers[ix]);
                     if (found[ix])
-                        FAIL(String::formatted("Key {}, index {} already found previously", *key_value, ix));
+                        FAIL(DeprecatedString::formatted("Key {}, index {} already found previously", *key_value, ix));
                     found[ix] = true;
                     break;
                 }
@@ -288,7 +288,7 @@ void insert_into_and_scan_hash_index(int num_keys)
         EXPECT_EQ(count, num_keys);
         for (auto ix = 0; ix < num_keys; ix++) {
             if (!found[ix])
-                FAIL(String::formatted("Key {}, index {} not found", keys[ix], ix));
+                FAIL(DeprecatedString::formatted("Key {}, index {} not found", keys[ix], ix));
         }
     }
 }

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace GUI {
 
@@ -18,7 +18,7 @@ public:
     virtual void undo() { }
     virtual void redo() { }
 
-    virtual String action_text() const { return {}; }
+    virtual DeprecatedString action_text() const { return {}; }
     virtual bool merge_with(Command const&) { return false; }
 
 protected:

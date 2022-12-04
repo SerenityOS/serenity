@@ -16,7 +16,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(J
 {
     auto decoder = TextCodec::decoder_for(encoding);
     if (!decoder)
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Invalid encoding {}", encoding) };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Invalid encoding {}", encoding) };
 
     return JS::NonnullGCPtr(*realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false));
 }
@@ -35,7 +35,7 @@ TextDecoder::TextDecoder(JS::Realm& realm, TextCodec::Decoder& decoder, FlyStrin
 TextDecoder::~TextDecoder() = default;
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode
-WebIDL::ExceptionOr<String> TextDecoder::decode(JS::Handle<JS::Object> const& input) const
+WebIDL::ExceptionOr<DeprecatedString> TextDecoder::decode(JS::Handle<JS::Object> const& input) const
 {
     // FIXME: Implement the streaming stuff.
 

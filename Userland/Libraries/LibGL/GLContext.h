@@ -543,7 +543,7 @@ private:
     GLenum m_color_material_mode { GL_AMBIENT_AND_DIFFUSE };
 
     // GL Extension string
-    String m_extensions;
+    DeprecatedString m_extensions;
 
     // Buffer objects
     NameAllocator m_buffer_name_allocator;

@@ -29,7 +29,7 @@
 
 namespace JS::Bytecode {
 
-String Instruction::to_string(Bytecode::Executable const& executable) const
+DeprecatedString Instruction::to_string(Bytecode::Executable const& executable) const
 {
 #define __BYTECODE_OP(op)       \
     case Instruction::Type::op: \
@@ -60,14 +60,14 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
     case PropertyKind::Getter: {
         auto& function = value.as_function();
         if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
-            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(String::formatted("get {}", name));
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("get {}", name));
         object->define_direct_accessor(name, &function, nullptr, Attribute::Configurable | Attribute::Enumerable);
         break;
     }
     case PropertyKind::Setter: {
         auto& function = value.as_function();
         if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
-            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(String::formatted("set {}", name));
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("set {}", name));
         object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
         break;
     }
@@ -136,9 +136,9 @@ static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
         interpreter.accumulator() = TRY(op_snake_case(vm, lhs, rhs));                           \
         return {};                                                                              \
     }                                                                                           \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                       \
+    DeprecatedString OpTitleCase::to_string_impl(Bytecode::Executable const&) const             \
     {                                                                                           \
-        return String::formatted(#OpTitleCase " {}", m_lhs_reg);                                \
+        return DeprecatedString::formatted(#OpTitleCase " {}", m_lhs_reg);                      \
     }
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
@@ -160,7 +160,7 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
         interpreter.accumulator() = TRY(op_snake_case(vm, interpreter.accumulator()));          \
         return {};                                                                              \
     }                                                                                           \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                       \
+    DeprecatedString OpTitleCase::to_string_impl(Bytecode::Executable const&) const             \
     {                                                                                           \
         return #OpTitleCase;                                                                    \
     }
@@ -430,7 +430,7 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
         if (TRY(vm.lexical_environment()->has_binding(name)))
-            return vm.throw_completion<InternalError>(String::formatted("Lexical environment already has binding '{}'", name));
+            return vm.throw_completion<InternalError>(DeprecatedString::formatted("Lexical environment already has binding '{}'", name));
 
         if (m_is_immutable)
             vm.lexical_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
@@ -1017,27 +1017,27 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
-String Load::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Load::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("Load {}", m_src);
+    return DeprecatedString::formatted("Load {}", m_src);
 }
 
-String LoadImmediate::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString LoadImmediate::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("LoadImmediate {}", m_value);
+    return DeprecatedString::formatted("LoadImmediate {}", m_value);
 }
 
-String Store::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Store::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("Store {}", m_dst);
+    return DeprecatedString::formatted("Store {}", m_dst);
 }
 
-String NewBigInt::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString NewBigInt::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("NewBigInt \"{}\"", m_bigint.to_base(10));
+    return DeprecatedString::formatted("NewBigInt \"{}\"", m_bigint.to_base(10));
 }
 
-String NewArray::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString NewArray::to_string_impl(Bytecode::Executable const&) const
 {
     StringBuilder builder;
     builder.append("NewArray"sv);
@@ -1047,34 +1047,34 @@ String NewArray::to_string_impl(Bytecode::Executable const&) const
     return builder.to_string();
 }
 
-String Append::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Append::to_string_impl(Bytecode::Executable const&) const
 {
     if (m_is_spread)
-        return String::formatted("Append lhs: **{}", m_lhs);
-    return String::formatted("Append lhs: {}", m_lhs);
+        return DeprecatedString::formatted("Append lhs: **{}", m_lhs);
+    return DeprecatedString::formatted("Append lhs: {}", m_lhs);
 }
 
-String IteratorToArray::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString IteratorToArray::to_string_impl(Bytecode::Executable const&) const
 {
     return "IteratorToArray";
 }
 
-String NewString::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString NewString::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("NewString {} (\"{}\")", m_string, executable.string_table->get(m_string));
+    return DeprecatedString::formatted("NewString {} (\"{}\")", m_string, executable.string_table->get(m_string));
 }
 
-String NewObject::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString NewObject::to_string_impl(Bytecode::Executable const&) const
 {
     return "NewObject";
 }
 
-String NewRegExp::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString NewRegExp::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("NewRegExp source:{} (\"{}\") flags:{} (\"{}\")", m_source_index, executable.get_string(m_source_index), m_flags_index, executable.get_string(m_flags_index));
+    return DeprecatedString::formatted("NewRegExp source:{} (\"{}\") flags:{} (\"{}\")", m_source_index, executable.get_string(m_source_index), m_flags_index, executable.get_string(m_flags_index));
 }
 
-String CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&) const
 {
     StringBuilder builder;
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
@@ -1086,50 +1086,50 @@ String CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&
     return builder.to_string();
 }
 
-String ConcatString::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString ConcatString::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("ConcatString {}", m_lhs);
+    return DeprecatedString::formatted("ConcatString {}", m_lhs);
 }
 
-String GetVariable::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString GetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    return DeprecatedString::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-String DeleteVariable::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString DeleteVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    return DeprecatedString::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-String CreateEnvironment::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString CreateEnvironment::to_string_impl(Bytecode::Executable const&) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical
         ? "Lexical"
         : "Variable";
-    return String::formatted("CreateEnvironment mode:{}", mode_string);
+    return DeprecatedString::formatted("CreateEnvironment mode:{}", mode_string);
 }
 
-String CreateVariable::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString CreateVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
-    return String::formatted("CreateVariable env:{} immutable:{} global:{} {} ({})", mode_string, m_is_immutable, m_is_global, m_identifier, executable.identifier_table->get(m_identifier));
+    return DeprecatedString::formatted("CreateVariable env:{} immutable:{} global:{} {} ({})", mode_string, m_is_immutable, m_is_global, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-String EnterObjectEnvironment::to_string_impl(Executable const&) const
+DeprecatedString EnterObjectEnvironment::to_string_impl(Executable const&) const
 {
-    return String::formatted("EnterObjectEnvironment");
+    return DeprecatedString::formatted("EnterObjectEnvironment");
 }
 
-String SetVariable::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString SetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
     auto initialization_mode_name = m_initialization_mode == InitializationMode ::Initialize ? "Initialize"
         : m_initialization_mode == InitializationMode::Set                                   ? "Set"
                                                                                              : "InitializeOrSet";
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
-    return String::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
+    return DeprecatedString::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-String PutById::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString PutById::to_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = m_kind == PropertyKind::Getter
         ? "getter"
@@ -1137,128 +1137,128 @@ String PutById::to_string_impl(Bytecode::Executable const& executable) const
         ? "setter"
         : "property";
 
-    return String::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
+    return DeprecatedString::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
 }
 
-String GetById::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString GetById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
+    return DeprecatedString::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
-String DeleteById::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString DeleteById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("DeleteById {} ({})", m_property, executable.identifier_table->get(m_property));
+    return DeprecatedString::formatted("DeleteById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
-String Jump::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Jump::to_string_impl(Bytecode::Executable const&) const
 {
     if (m_true_target.has_value())
-        return String::formatted("Jump {}", *m_true_target);
-    return String::formatted("Jump <empty>");
+        return DeprecatedString::formatted("Jump {}", *m_true_target);
+    return DeprecatedString::formatted("Jump <empty>");
 }
 
-String JumpConditional::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString JumpConditional::to_string_impl(Bytecode::Executable const&) const
 {
-    auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
-    auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
-    return String::formatted("JumpConditional true:{} false:{}", true_string, false_string);
+    auto true_string = m_true_target.has_value() ? DeprecatedString::formatted("{}", *m_true_target) : "<empty>";
+    auto false_string = m_false_target.has_value() ? DeprecatedString::formatted("{}", *m_false_target) : "<empty>";
+    return DeprecatedString::formatted("JumpConditional true:{} false:{}", true_string, false_string);
 }
 
-String JumpNullish::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString JumpNullish::to_string_impl(Bytecode::Executable const&) const
 {
-    auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
-    auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
-    return String::formatted("JumpNullish null:{} nonnull:{}", true_string, false_string);
+    auto true_string = m_true_target.has_value() ? DeprecatedString::formatted("{}", *m_true_target) : "<empty>";
+    auto false_string = m_false_target.has_value() ? DeprecatedString::formatted("{}", *m_false_target) : "<empty>";
+    return DeprecatedString::formatted("JumpNullish null:{} nonnull:{}", true_string, false_string);
 }
 
-String JumpUndefined::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString JumpUndefined::to_string_impl(Bytecode::Executable const&) const
 {
-    auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
-    auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
-    return String::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
+    auto true_string = m_true_target.has_value() ? DeprecatedString::formatted("{}", *m_true_target) : "<empty>";
+    auto false_string = m_false_target.has_value() ? DeprecatedString::formatted("{}", *m_false_target) : "<empty>";
+    return DeprecatedString::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
 }
 
-String Call::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString Call::to_string_impl(Bytecode::Executable const& executable) const
 {
     if (m_expression_string.has_value())
-        return String::formatted("Call callee:{}, this:{}, arguments:[...acc] ({})", m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+        return DeprecatedString::formatted("Call callee:{}, this:{}, arguments:[...acc] ({})", m_callee, m_this_value, executable.get_string(m_expression_string.value()));
 
-    return String::formatted("Call callee:{}, this:{}, arguments:[...acc]", m_callee, m_this_value);
+    return DeprecatedString::formatted("Call callee:{}, this:{}, arguments:[...acc]", m_callee, m_this_value);
 }
 
-String SuperCall::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString SuperCall::to_string_impl(Bytecode::Executable const&) const
 {
     return "SuperCall arguments:[...acc]"sv;
 }
 
-String NewFunction::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString NewFunction::to_string_impl(Bytecode::Executable const&) const
 {
     return "NewFunction";
 }
 
-String NewClass::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString NewClass::to_string_impl(Bytecode::Executable const&) const
 {
     auto name = m_class_expression.name();
-    return String::formatted("NewClass '{}'", name.is_null() ? ""sv : name);
+    return DeprecatedString::formatted("NewClass '{}'", name.is_null() ? ""sv : name);
 }
 
-String Return::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Return::to_string_impl(Bytecode::Executable const&) const
 {
     return "Return";
 }
 
-String Increment::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Increment::to_string_impl(Bytecode::Executable const&) const
 {
     return "Increment";
 }
 
-String Decrement::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Decrement::to_string_impl(Bytecode::Executable const&) const
 {
     return "Decrement";
 }
 
-String Throw::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Throw::to_string_impl(Bytecode::Executable const&) const
 {
     return "Throw";
 }
 
-String EnterUnwindContext::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString EnterUnwindContext::to_string_impl(Bytecode::Executable const&) const
 {
-    auto handler_string = m_handler_target.has_value() ? String::formatted("{}", *m_handler_target) : "<empty>";
-    auto finalizer_string = m_finalizer_target.has_value() ? String::formatted("{}", *m_finalizer_target) : "<empty>";
-    return String::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
+    auto handler_string = m_handler_target.has_value() ? DeprecatedString::formatted("{}", *m_handler_target) : "<empty>";
+    auto finalizer_string = m_finalizer_target.has_value() ? DeprecatedString::formatted("{}", *m_finalizer_target) : "<empty>";
+    return DeprecatedString::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
 }
 
-String FinishUnwind::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString FinishUnwind::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("FinishUnwind next:{}", m_next_target);
+    return DeprecatedString::formatted("FinishUnwind next:{}", m_next_target);
 }
 
-String LeaveEnvironment::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString LeaveEnvironment::to_string_impl(Bytecode::Executable const&) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical
         ? "Lexical"
         : "Variable";
-    return String::formatted("LeaveEnvironment env:{}", mode_string);
+    return DeprecatedString::formatted("LeaveEnvironment env:{}", mode_string);
 }
 
-String LeaveUnwindContext::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString LeaveUnwindContext::to_string_impl(Bytecode::Executable const&) const
 {
     return "LeaveUnwindContext";
 }
 
-String ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
+    return DeprecatedString::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
 }
 
-String PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
     builder.append("PushDeclarativeEnvironment"sv);
     if (!m_variables.is_empty()) {
         builder.append(" {"sv);
-        Vector<String> names;
+        Vector<DeprecatedString> names;
         for (auto& it : m_variables)
             names.append(executable.get_string(it.key));
         builder.append('}');
@@ -1267,19 +1267,19 @@ String PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& ex
     return builder.to_string();
 }
 
-String Yield::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString Yield::to_string_impl(Bytecode::Executable const&) const
 {
     if (m_continuation_label.has_value())
-        return String::formatted("Yield continuation:@{}", m_continuation_label->block().name());
-    return String::formatted("Yield return");
+        return DeprecatedString::formatted("Yield continuation:@{}", m_continuation_label->block().name());
+    return DeprecatedString::formatted("Yield return");
 }
 
-String GetByValue::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString GetByValue::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("GetByValue base:{}", m_base);
+    return DeprecatedString::formatted("GetByValue base:{}", m_base);
 }
 
-String PutByValue::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString PutByValue::to_string_impl(Bytecode::Executable const&) const
 {
     auto kind = m_kind == PropertyKind::Getter
         ? "getter"
@@ -1287,52 +1287,52 @@ String PutByValue::to_string_impl(Bytecode::Executable const&) const
         ? "setter"
         : "property";
 
-    return String::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
+    return DeprecatedString::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
 }
 
-String DeleteByValue::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString DeleteByValue::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("DeleteByValue base:{}", m_base);
+    return DeprecatedString::formatted("DeleteByValue base:{}", m_base);
 }
 
-String GetIterator::to_string_impl(Executable const&) const
+DeprecatedString GetIterator::to_string_impl(Executable const&) const
 {
     return "GetIterator";
 }
 
-String GetObjectPropertyIterator::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString GetObjectPropertyIterator::to_string_impl(Bytecode::Executable const&) const
 {
     return "GetObjectPropertyIterator";
 }
 
-String IteratorNext::to_string_impl(Executable const&) const
+DeprecatedString IteratorNext::to_string_impl(Executable const&) const
 {
     return "IteratorNext";
 }
 
-String IteratorResultDone::to_string_impl(Executable const&) const
+DeprecatedString IteratorResultDone::to_string_impl(Executable const&) const
 {
     return "IteratorResultDone";
 }
 
-String IteratorResultValue::to_string_impl(Executable const&) const
+DeprecatedString IteratorResultValue::to_string_impl(Executable const&) const
 {
     return "IteratorResultValue";
 }
 
-String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
 {
     return "ResolveThisBinding"sv;
 }
 
-String GetNewTarget::to_string_impl(Bytecode::Executable const&) const
+DeprecatedString GetNewTarget::to_string_impl(Bytecode::Executable const&) const
 {
     return "GetNewTarget"sv;
 }
 
-String TypeofVariable::to_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString TypeofVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+    return DeprecatedString::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 }

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
-#include <AK/String.h>
 #include <LibDeviceTree/Validation.h>
 
 namespace DeviceTree {

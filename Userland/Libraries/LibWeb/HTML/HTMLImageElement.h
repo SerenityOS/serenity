@@ -24,10 +24,10 @@ class HTMLImageElement final
 public:
     virtual ~HTMLImageElement() override;
 
-    virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
 
-    String alt() const { return attribute(HTML::AttributeNames::alt); }
-    String src() const { return attribute(HTML::AttributeNames::src); }
+    DeprecatedString alt() const { return attribute(HTML::AttributeNames::alt); }
+    DeprecatedString src() const { return attribute(HTML::AttributeNames::src); }
 
     Gfx::Bitmap const* bitmap() const;
 

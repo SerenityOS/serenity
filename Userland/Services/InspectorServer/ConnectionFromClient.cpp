@@ -27,7 +27,7 @@ Messages::InspectorServer::GetAllObjectsResponse ConnectionFromClient::get_all_o
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
-        return String {};
+        return DeprecatedString {};
 
     JsonObject request;
     request.set("type", "GetAllObjects");
@@ -49,7 +49,7 @@ Messages::InspectorServer::SetInspectedObjectResponse ConnectionFromClient::set_
     return true;
 }
 
-Messages::InspectorServer::SetObjectPropertyResponse ConnectionFromClient::set_object_property(pid_t pid, u64 object_id, String const& name, String const& value)
+Messages::InspectorServer::SetObjectPropertyResponse ConnectionFromClient::set_object_property(pid_t pid, u64 object_id, DeprecatedString const& name, DeprecatedString const& value)
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
@@ -68,7 +68,7 @@ Messages::InspectorServer::IdentifyResponse ConnectionFromClient::identify(pid_t
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
-        return String {};
+        return DeprecatedString {};
 
     JsonObject request;
     request.set("type", "Identify");

@@ -26,7 +26,7 @@ public:
     bool received_client_certificates() const { return m_received_client_certificates.has_value(); }
     Vector<TLS::Certificate> take_client_certificates() const { return m_received_client_certificates.release_value(); }
 
-    void set_certificate(String certificate, String key);
+    void set_certificate(DeprecatedString certificate, DeprecatedString key);
 
     Function<Vector<TLS::Certificate>()> on_certificate_requested;
 

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <fcntl.h>

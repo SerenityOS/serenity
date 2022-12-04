@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
     // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
     auto name = name_property.is_undefined()
-        ? String { "Error"sv }
+        ? DeprecatedString { "Error"sv }
         : TRY(name_property.to_string(vm));
 
     // 5. Let msg be ? Get(O, "message").
@@ -53,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
     // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
     auto message = message_property.is_undefined()
-        ? String::empty()
+        ? DeprecatedString::empty()
         : TRY(message_property.to_string(vm));
 
     // 7. If name is the empty String, return msg.
@@ -65,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         return js_string(vm, name);
 
     // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-    return js_string(vm, String::formatted("{}: {}", name, message));
+    return js_string(vm, DeprecatedString::formatted("{}: {}", name, message));
 }
 
 // B.1.1 get Error.prototype.stack ( ), https://tc39.es/proposal-error-stacks/#sec-get-error.prototype-stack
@@ -84,21 +84,21 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     // 4. Return ? GetStackString(error).
     // NOTE: These steps are not implemented based on the proposal, but to roughly follow behavior of other browsers.
 
-    String name = "Error";
+    DeprecatedString name = "Error";
     auto name_property = TRY(error.get(vm.names.name));
     if (!name_property.is_undefined())
         name = TRY(name_property.to_string(vm));
 
-    String message = "";
+    DeprecatedString message = "";
     auto message_property = TRY(error.get(vm.names.message));
     if (!message_property.is_undefined())
         message = TRY(message_property.to_string(vm));
 
-    String header = name;
+    DeprecatedString header = name;
     if (!message.is_empty())
-        header = String::formatted("{}: {}", name, message);
+        header = DeprecatedString::formatted("{}: {}", name, message);
 
-    return js_string(vm, String::formatted("{}\n{}", header, error.stack_string()));
+    return js_string(vm, DeprecatedString::formatted("{}\n{}", header, error.stack_string()));
 }
 
 // B.1.2 set Error.prototype.stack ( value ), https://tc39.es/proposal-error-stacks/#sec-set-error.prototype-stack

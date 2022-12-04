@@ -137,7 +137,7 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
 
     // 2. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
     if (offset > node.length())
-        return WebIDL::IndexSizeError::create(realm(), String::formatted("Node does not contain a child at offset {}", offset));
+        return WebIDL::IndexSizeError::create(realm(), DeprecatedString::formatted("Node does not contain a child at offset {}", offset));
 
     // 3. Let bp be the boundary point (node, offset).
 
@@ -250,7 +250,7 @@ WebIDL::ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& so
     //      - END_TO_START,
     //    then throw a "NotSupportedError" DOMException.
     if (how != HowToCompareBoundaryPoints::START_TO_START && how != HowToCompareBoundaryPoints::START_TO_END && how != HowToCompareBoundaryPoints::END_TO_END && how != HowToCompareBoundaryPoints::END_TO_START)
-        return WebIDL::NotSupportedError::create(realm(), String::formatted("Expected 'how' to be one of START_TO_START (0), START_TO_END (1), END_TO_END (2) or END_TO_START (3), got {}", how));
+        return WebIDL::NotSupportedError::create(realm(), DeprecatedString::formatted("Expected 'how' to be one of START_TO_START (0), START_TO_END (1), END_TO_END (2) or END_TO_START (3), got {}", how));
 
     // 2. If this’s root is not the same as sourceRange’s root, then throw a "WrongDocumentError" DOMException.
     if (&root() != &source_range.root())
@@ -474,7 +474,7 @@ WebIDL::ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset)
 
     // 3. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
     if (offset > node.length())
-        return WebIDL::IndexSizeError::create(realm(), String::formatted("Node does not contain a child at offset {}", offset));
+        return WebIDL::IndexSizeError::create(realm(), DeprecatedString::formatted("Node does not contain a child at offset {}", offset));
 
     // 4. If (node, offset) is before start or after end, return false.
     auto relative_position_to_start = position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset);
@@ -499,7 +499,7 @@ WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) cons
 
     // 3. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
     if (offset > node.length())
-        return WebIDL::IndexSizeError::create(realm(), String::formatted("Node does not contain a child at offset {}", offset));
+        return WebIDL::IndexSizeError::create(realm(), DeprecatedString::formatted("Node does not contain a child at offset {}", offset));
 
     // 4. If (node, offset) is before start, return −1.
     auto relative_position_to_start = position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset);
@@ -516,7 +516,7 @@ WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) cons
 }
 
 // https://dom.spec.whatwg.org/#dom-range-stringifier
-String Range::to_string() const
+DeprecatedString Range::to_string() const
 {
     // 1. Let s be the empty string.
     StringBuilder builder;

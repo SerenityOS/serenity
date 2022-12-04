@@ -1,20 +1,20 @@
 endpoint ConfigServer
 {
-    pledge_domains(Vector<String> domains) =|
+    pledge_domains(Vector<DeprecatedString> domains) =|
 
-    monitor_domain(String domain) =|
+    monitor_domain(DeprecatedString domain) =|
 
-    list_config_groups(String domain) => (Vector<String> groups)
-    list_config_keys(String domain, String group) => (Vector<String> keys)
+    list_config_groups(DeprecatedString domain) => (Vector<DeprecatedString> groups)
+    list_config_keys(DeprecatedString domain, DeprecatedString group) => (Vector<DeprecatedString> keys)
 
-    read_string_value(String domain, String group, String key) => (Optional<String> value)
-    read_i32_value(String domain, String group, String key) => (Optional<i32> value)
-    read_bool_value(String domain, String group, String key) => (Optional<bool> value)
+    read_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<DeprecatedString> value)
+    read_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<i32> value)
+    read_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<bool> value)
 
-    write_string_value(String domain, String group, String key, String value) => ()
-    write_i32_value(String domain, String group, String key, i32 value) => ()
-    write_bool_value(String domain, String group, String key, bool value)  => ()
-    remove_key_entry(String domain, String group, String key) => ()
-    remove_group_entry(String domain, String group) => ()
-    add_group_entry(String domain, String group)  => ()
+    write_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, DeprecatedString value) => ()
+    write_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, i32 value) => ()
+    write_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, bool value)  => ()
+    remove_key_entry(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => ()
+    remove_group_entry(DeprecatedString domain, DeprecatedString group) => ()
+    add_group_entry(DeprecatedString domain, DeprecatedString group)  => ()
 }

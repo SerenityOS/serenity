@@ -77,7 +77,7 @@ void WebContentClient::did_layout(Gfx::IntSize const& content_size)
     m_view.notify_server_did_layout({}, content_size);
 }
 
-void WebContentClient::did_change_title(String const& title)
+void WebContentClient::did_change_title(DeprecatedString const& title)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeTitle! title={}", title);
     m_view.notify_server_did_change_title({}, title);
@@ -99,7 +99,7 @@ void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
     m_view.notify_server_did_request_scroll_into_view({}, rect);
 }
 
-void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint const& content_position, String const& title)
+void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint const& content_position, DeprecatedString const& title)
 {
     m_view.notify_server_did_enter_tooltip_area({}, content_position, title);
 }
@@ -121,12 +121,12 @@ void WebContentClient::did_unhover_link()
     m_view.notify_server_did_unhover_link({});
 }
 
-void WebContentClient::did_click_link(AK::URL const& url, String const& target, unsigned modifiers)
+void WebContentClient::did_click_link(AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_view.notify_server_did_click_link({}, url, target, modifiers);
 }
 
-void WebContentClient::did_middle_click_link(AK::URL const& url, String const& target, unsigned modifiers)
+void WebContentClient::did_middle_click_link(AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_view.notify_server_did_middle_click_link({}, url, target, modifiers);
 }
@@ -141,27 +141,27 @@ void WebContentClient::did_request_context_menu(Gfx::IntPoint const& content_pos
     m_view.notify_server_did_request_context_menu({}, content_position);
 }
 
-void WebContentClient::did_request_link_context_menu(Gfx::IntPoint const& content_position, AK::URL const& url, String const& target, unsigned modifiers)
+void WebContentClient::did_request_link_context_menu(Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_view.notify_server_did_request_link_context_menu({}, content_position, url, target, modifiers);
 }
 
-void WebContentClient::did_request_image_context_menu(Gfx::IntPoint const& content_position, AK::URL const& url, String const& target, unsigned modifiers, Gfx::ShareableBitmap const& bitmap)
+void WebContentClient::did_request_image_context_menu(Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const& bitmap)
 {
     m_view.notify_server_did_request_image_context_menu({}, content_position, url, target, modifiers, bitmap);
 }
 
-void WebContentClient::did_get_source(AK::URL const& url, String const& source)
+void WebContentClient::did_get_source(AK::URL const& url, DeprecatedString const& source)
 {
     m_view.notify_server_did_get_source(url, source);
 }
 
-void WebContentClient::did_get_dom_tree(String const& dom_tree)
+void WebContentClient::did_get_dom_tree(DeprecatedString const& dom_tree)
 {
     m_view.notify_server_did_get_dom_tree(dom_tree);
 }
 
-void WebContentClient::did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)
+void WebContentClient::did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
 {
     m_view.notify_server_did_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
 }
@@ -171,27 +171,27 @@ void WebContentClient::did_output_js_console_message(i32 message_index)
     m_view.notify_server_did_output_js_console_message(message_index);
 }
 
-void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
+void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
 {
     m_view.notify_server_did_get_js_console_messages(start_index, message_types, messages);
 }
 
-void WebContentClient::did_request_alert(String const& message)
+void WebContentClient::did_request_alert(DeprecatedString const& message)
 {
     m_view.notify_server_did_request_alert({}, message);
 }
 
-void WebContentClient::did_request_confirm(String const& message)
+void WebContentClient::did_request_confirm(DeprecatedString const& message)
 {
     m_view.notify_server_did_request_confirm({}, message);
 }
 
-void WebContentClient::did_request_prompt(String const& message, String const& default_)
+void WebContentClient::did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_)
 {
     m_view.notify_server_did_request_prompt({}, message, default_);
 }
 
-void WebContentClient::did_request_set_prompt_text(String const& message)
+void WebContentClient::did_request_set_prompt_text(DeprecatedString const& message)
 {
     m_view.notify_server_did_request_set_prompt_text({}, message);
 }
@@ -220,7 +220,7 @@ Messages::WebContentClient::DidRequestAllCookiesResponse WebContentClient::did_r
     return m_view.notify_server_did_request_all_cookies({}, url);
 }
 
-Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, String const& name)
+Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, DeprecatedString const& name)
 {
     return m_view.notify_server_did_request_named_cookie({}, url, name);
 }
@@ -275,7 +275,7 @@ Messages::WebContentClient::DidRequestFullscreenWindowResponse WebContentClient:
     return m_view.notify_server_did_request_fullscreen_window();
 }
 
-void WebContentClient::did_request_file(String const& path, i32 request_id)
+void WebContentClient::did_request_file(DeprecatedString const& path, i32 request_id)
 {
     m_view.notify_server_did_request_file({}, path, request_id);
 }

@@ -36,7 +36,7 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
 
     for (auto& entry : entries) {
         if (!LexicalPath { entry.path }.is_absolute())
-            entry.path = String::formatted("{}/{}", playlist_path.dirname(), entry.path);
+            entry.path = DeprecatedString::formatted("{}/{}", playlist_path.dirname(), entry.path);
 
         if (!entry.extended_info->file_size_in_bytes.has_value()) {
             auto size = Core::File::size(entry.path);

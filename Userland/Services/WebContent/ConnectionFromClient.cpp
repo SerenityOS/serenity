@@ -60,7 +60,7 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
-void ConnectionFromClient::connect_to_webdriver(String const& webdriver_ipc_path)
+void ConnectionFromClient::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     // FIXME: Propagate this error back to the browser.
     if (auto result = m_page_host->connect_to_webdriver(webdriver_ipc_path); result.is_error())
@@ -74,7 +74,7 @@ void ConnectionFromClient::update_system_theme(Core::AnonymousBuffer const& them
     m_page_host->set_palette_impl(*impl);
 }
 
-void ConnectionFromClient::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query, String const& window_title_font_query)
+void ConnectionFromClient::update_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
@@ -91,11 +91,11 @@ void ConnectionFromClient::load_url(const URL& url)
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
 #if defined(AK_OS_SERENITY)
-    String process_name;
+    DeprecatedString process_name;
     if (url.host().is_empty())
         process_name = "WebContent";
     else
-        process_name = String::formatted("WebContent: {}", url.host());
+        process_name = DeprecatedString::formatted("WebContent: {}", url.host());
 
     pthread_setname_np(pthread_self(), process_name.characters());
 #endif
@@ -103,7 +103,7 @@ void ConnectionFromClient::load_url(const URL& url)
     page().load(url);
 }
 
-void ConnectionFromClient::load_html(String const& html, const URL& url)
+void ConnectionFromClient::load_html(DeprecatedString const& html, const URL& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", html, url);
     page().load_html(html, url);
@@ -195,7 +195,7 @@ void ConnectionFromClient::report_finished_handling_input_event(bool event_was_h
     async_did_finish_handling_input_event(event_was_handled);
 }
 
-void ConnectionFromClient::debug_request(String const& request, String const& argument)
+void ConnectionFromClient::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     if (request == "dump-dom-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document())
@@ -301,7 +301,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         if (!element.computed_css_values())
             return { false, "", "", "", "" };
 
-        auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
+        auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> DeprecatedString {
             StringBuilder builder;
 
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
@@ -313,10 +313,10 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             return builder.to_string();
         };
 
-        auto serialize_custom_properties_json = [](Web::DOM::Element const& element) -> String {
+        auto serialize_custom_properties_json = [](Web::DOM::Element const& element) -> DeprecatedString {
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
-            HashTable<String> seen_properties;
+            HashTable<DeprecatedString> seen_properties;
 
             auto const* element_to_check = &element;
             while (element_to_check) {
@@ -334,7 +334,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             return builder.to_string();
         };
-        auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> String {
+        auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> DeprecatedString {
             if (!layout_node || !layout_node->is_box()) {
                 return "{}";
             }
@@ -375,17 +375,17 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
             auto pseudo_element_style = page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
-            String computed_values = serialize_json(pseudo_element_style);
-            String resolved_values = "{}";
-            String custom_properties_json = "{}";
-            String node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
+            DeprecatedString computed_values = serialize_json(pseudo_element_style);
+            DeprecatedString resolved_values = "{}";
+            DeprecatedString custom_properties_json = "{}";
+            DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
             return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json };
         }
 
-        String computed_values = serialize_json(*element.computed_css_values());
-        String resolved_values_json = serialize_json(element.resolved_css_values());
-        String custom_properties_json = serialize_custom_properties_json(element);
-        String node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
+        DeprecatedString computed_values = serialize_json(*element.computed_css_values());
+        DeprecatedString resolved_values_json = serialize_json(element.resolved_css_values());
+        DeprecatedString custom_properties_json = serialize_custom_properties_json(element);
+        DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
         return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json };
     }
 
@@ -415,13 +415,13 @@ void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
     console_object.console().set_client(*m_console_client.ptr());
 }
 
-void ConnectionFromClient::js_console_input(String const& js_source)
+void ConnectionFromClient::js_console_input(DeprecatedString const& js_source)
 {
     if (m_console_client)
         m_console_client->handle_input(js_source);
 }
 
-void ConnectionFromClient::run_javascript(String const& js_source)
+void ConnectionFromClient::run_javascript(DeprecatedString const& js_source)
 {
     auto* active_document = page().top_level_browsing_context().active_document();
 
@@ -484,27 +484,27 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
 {
     auto* document = page().top_level_browsing_context().active_document();
     if (!document)
-        return String { "(no DOM tree)" };
+        return DeprecatedString { "(no DOM tree)" };
     auto* layout_root = document->layout_node();
     if (!layout_root)
-        return String { "(no layout tree)" };
+        return DeprecatedString { "(no layout tree)" };
     StringBuilder builder;
     Web::dump_tree(builder, *layout_root);
     return builder.to_string();
 }
 
-void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
+void ConnectionFromClient::set_content_filters(Vector<DeprecatedString> const& filters)
 {
     for (auto& filter : filters)
         Web::ContentFilter::the().add_pattern(filter);
 }
 
-void ConnectionFromClient::set_proxy_mappings(Vector<String> const& proxies, HashMap<String, size_t> const& mappings)
+void ConnectionFromClient::set_proxy_mappings(Vector<DeprecatedString> const& proxies, HashMap<DeprecatedString, size_t> const& mappings)
 {
     auto keys = mappings.keys();
     quick_sort(keys, [&](auto& a, auto& b) { return a.length() < b.length(); });
 
-    OrderedHashMap<String, size_t> sorted_mappings;
+    OrderedHashMap<DeprecatedString, size_t> sorted_mappings;
     for (auto& key : keys) {
         auto value = *mappings.get(key);
         if (value >= proxies.size())
@@ -590,7 +590,7 @@ void ConnectionFromClient::confirm_closed(bool accepted)
     m_page_host->confirm_closed(accepted);
 }
 
-void ConnectionFromClient::prompt_closed(String const& response)
+void ConnectionFromClient::prompt_closed(DeprecatedString const& response)
 {
     m_page_host->prompt_closed(response);
 }

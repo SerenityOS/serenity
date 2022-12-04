@@ -43,7 +43,7 @@ private:
 
     Cpp::SyntaxHighlighter m_simple_syntax_highlighter;
     Vector<CodeComprehension::TokenInfo> m_tokens_info;
-    String m_saved_tokens_text;
+    DeprecatedString m_saved_tokens_text;
     Vector<Token> m_saved_tokens;
     Threading::Mutex m_lock;
 };

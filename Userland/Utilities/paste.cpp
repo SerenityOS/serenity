@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -69,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (watch) {
         watch_command.append({});
 
-        clipboard.on_change = [&](String const&) {
+        clipboard.on_change = [&](DeprecatedString const&) {
             // Technically there's a race here...
             auto data_and_type = clipboard.fetch_data_and_type();
             if (data_and_type.mime_type.is_null()) {

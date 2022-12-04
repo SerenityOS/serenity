@@ -58,8 +58,8 @@ enum class PropertyID {
     Custom,
 )~~~");
 
-    Vector<String> shorthand_property_ids;
-    Vector<String> longhand_property_ids;
+    Vector<DeprecatedString> shorthand_property_ids;
+    Vector<DeprecatedString> longhand_property_ids;
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());

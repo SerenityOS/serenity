@@ -52,8 +52,8 @@ DateDurationRecord difference_iso_date(VM&, i32 year1, u8 month1, u8 day1, i32 y
 ThrowCompletionOr<ISODateRecord> regulate_iso_date(VM&, double year, double month, double day, StringView overflow);
 bool is_valid_iso_date(i32 year, u8 month, u8 day);
 ISODateRecord balance_iso_date(double year, double month, double day);
-String pad_iso_year(i32 y);
-ThrowCompletionOr<String> temporal_date_to_string(VM&, PlainDate&, StringView show_calendar);
+DeprecatedString pad_iso_year(i32 y);
+ThrowCompletionOr<DeprecatedString> temporal_date_to_string(VM&, PlainDate&, StringView show_calendar);
 ThrowCompletionOr<ISODateRecord> add_iso_date(VM&, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow);
 i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2);
 ThrowCompletionOr<Duration*> difference_temporal_plain_date(VM&, DifferenceOperation, PlainDate&, Value other, Value options);

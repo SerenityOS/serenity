@@ -62,7 +62,7 @@ public:
     virtual int total_samples() override { return static_cast<int>(m_total_samples); }
     virtual u32 sample_rate() override { return m_sample_rate; }
     virtual u16 num_channels() override { return m_num_channels; }
-    virtual String format_name() override { return "FLAC (.flac)"; }
+    virtual DeprecatedString format_name() override { return "FLAC (.flac)"; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
 
     bool is_fixed_blocksize_stream() const { return m_min_block_size == m_max_block_size; }

@@ -54,7 +54,7 @@ Screen const& ScreenInput::cursor_location_screen() const
     return *screen;
 }
 
-bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
+bool Screen::apply_layout(ScreenLayout&& screen_layout, DeprecatedString& error_msg)
 {
     if (!screen_layout.is_valid(&error_msg))
         return false;
@@ -145,7 +145,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
         } else {
             screen = WindowServer::Screen::create(index);
             if (!screen) {
-                error_msg = String::formatted("Error creating screen #{}", index);
+                error_msg = DeprecatedString::formatted("Error creating screen #{}", index);
                 return false;
             }
 
@@ -153,7 +153,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
         }
 
         if (need_to_open_device && !screen->open_device()) {
-            error_msg = String::formatted("Error opening device for screen #{}", index);
+            error_msg = DeprecatedString::formatted("Error opening device for screen #{}", index);
             return false;
         }
 

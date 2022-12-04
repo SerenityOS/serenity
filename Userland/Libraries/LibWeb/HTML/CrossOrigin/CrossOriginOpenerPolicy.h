@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Web::HTML {
 
@@ -24,13 +24,13 @@ struct CrossOriginOpenerPolicy {
     CrossOriginOpenerPolicyValue value { CrossOriginOpenerPolicyValue::UnsafeNone };
 
     // A reporting endpoint, which is string or null, initially null.
-    Optional<String> reporting_endpoint;
+    Optional<DeprecatedString> reporting_endpoint;
 
     // A report-only value, which is a cross-origin opener policy value, initially "unsafe-none".
     CrossOriginOpenerPolicyValue report_only_value { CrossOriginOpenerPolicyValue::UnsafeNone };
 
     // A report-only reporting endpoint, which is a string or null, initially null.
-    Optional<String> report_only_reporting_endpoint;
+    Optional<DeprecatedString> report_only_reporting_endpoint;
 };
 
 }

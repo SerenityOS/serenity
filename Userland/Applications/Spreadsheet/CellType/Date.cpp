@@ -17,9 +17,9 @@ DateCell::DateCell()
 {
 }
 
-JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
+JS::ThrowCompletionOr<DeprecatedString> DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
-    return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
+    return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<DeprecatedString> {
         auto& vm = cell.sheet().global_object().vm();
         auto timestamp = TRY(js_value(cell, metadata));
         auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(vm))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
@@ -39,7 +39,7 @@ JS::ThrowCompletionOr<JS::Value> DateCell::js_value(Cell& cell, CellTypeMetadata
     return JS::Value(value / 1000); // Turn it to seconds
 }
 
-String DateCell::metadata_hint(MetadataName metadata) const
+DeprecatedString DateCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Format)
         return "Date format string as supported by `strftime'";

@@ -131,7 +131,7 @@ void TimeZoneSettingsWidget::set_time_zone_location()
     auto name = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::Long, now);
     auto offset = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::LongOffset, now);
 
-    m_time_zone_text = String::formatted("{}\n({})", name, offset);
+    m_time_zone_text = DeprecatedString::formatted("{}\n({})", name, offset);
 }
 
 // https://en.wikipedia.org/wiki/Mercator_projection#Derivation

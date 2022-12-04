@@ -23,20 +23,20 @@ public:
     ~AppFile() = default;
 
     bool is_valid() const { return m_valid; }
-    String filename() const { return m_config->filename(); }
+    DeprecatedString filename() const { return m_config->filename(); }
 
-    String name() const;
-    String executable() const;
-    String category() const;
-    String description() const;
-    String working_directory() const;
-    String icon_path() const;
+    DeprecatedString name() const;
+    DeprecatedString executable() const;
+    DeprecatedString category() const;
+    DeprecatedString description() const;
+    DeprecatedString working_directory() const;
+    DeprecatedString icon_path() const;
     GUI::Icon icon() const;
     bool run_in_terminal() const;
     bool requires_root() const;
-    Vector<String> launcher_mime_types() const;
-    Vector<String> launcher_file_types() const;
-    Vector<String> launcher_protocols() const;
+    Vector<DeprecatedString> launcher_mime_types() const;
+    Vector<DeprecatedString> launcher_file_types() const;
+    Vector<DeprecatedString> launcher_protocols() const;
     bool spawn() const;
 
 private:

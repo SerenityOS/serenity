@@ -29,7 +29,7 @@ int IndividualSampleModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String IndividualSampleModel::column_name(int column) const
+DeprecatedString IndividualSampleModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:
@@ -50,7 +50,7 @@ GUI::Variant IndividualSampleModel::data(GUI::ModelIndex const& index, GUI::Mode
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)
-            return String::formatted("{:p}", frame.address);
+            return DeprecatedString::formatted("{:p}", frame.address);
 
         if (index.column() == Column::Symbol) {
             return frame.symbol;

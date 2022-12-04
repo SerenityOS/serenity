@@ -998,7 +998,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     };
 
     auto length = TRY(length_of_array_like(vm, *this_object));
-    String separator = ",";
+    DeprecatedString separator = ",";
     if (!vm.argument(0).is_undefined())
         separator = TRY(vm.argument(0).to_string(vm));
     StringBuilder builder;

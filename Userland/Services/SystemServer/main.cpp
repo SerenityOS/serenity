@@ -29,7 +29,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-String g_system_mode = "graphical";
+DeprecatedString g_system_mode = "graphical";
 NonnullRefPtrVector<Service> g_services;
 
 // NOTE: This handler ensures that the destructor of g_services is called.
@@ -76,7 +76,7 @@ static ErrorOr<void> determine_system_mode()
         // Continue and assume "text" mode.
         return {};
     }
-    const String system_mode = String::copy(f->read_all(), Chomp);
+    const DeprecatedString system_mode = DeprecatedString::copy(f->read_all(), Chomp);
     if (f->error()) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue and assume "text" mode.
@@ -142,13 +142,13 @@ inline char offset_character_with_number(char base_char, u8 offset)
     return offsetted_char;
 }
 
-static void create_devtmpfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
+static void create_devtmpfs_block_device(DeprecatedString name, mode_t mode, unsigned major, unsigned minor)
 {
     if (auto rc = mknod(name.characters(), mode | S_IFBLK, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 
-static void create_devtmpfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
+static void create_devtmpfs_char_device(DeprecatedString name, mode_t mode, unsigned major, unsigned minor)
 {
     if (auto rc = mknod(name.characters(), mode | S_IFCHR, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
@@ -203,22 +203,22 @@ static void populate_devtmpfs_devices_based_on_devctl()
         switch (major_number) {
         case 116: {
             if (!is_block_device) {
-                create_devtmpfs_char_device(String::formatted("/dev/audio/{}", minor_number), 0220, 116, minor_number);
+                create_devtmpfs_char_device(DeprecatedString::formatted("/dev/audio/{}", minor_number), 0220, 116, minor_number);
                 break;
             }
             break;
         }
         case 28: {
-            create_devtmpfs_block_device(String::formatted("/dev/gpu/render{}", minor_number), 0666, 28, minor_number);
+            create_devtmpfs_block_device(DeprecatedString::formatted("/dev/gpu/render{}", minor_number), 0666, 28, minor_number);
             break;
         }
         case 226: {
-            create_devtmpfs_char_device(String::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
+            create_devtmpfs_char_device(DeprecatedString::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
             break;
         }
         case 229: {
             if (!is_block_device) {
-                create_devtmpfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
+                create_devtmpfs_char_device(DeprecatedString::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
             }
             break;
         }
@@ -284,13 +284,13 @@ static void populate_devtmpfs_devices_based_on_devctl()
         }
         case 30: {
             if (!is_block_device) {
-                create_devtmpfs_char_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
+                create_devtmpfs_char_device(DeprecatedString::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
             }
             break;
         }
         case 3: {
             if (is_block_device) {
-                create_devtmpfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
+                create_devtmpfs_block_device(DeprecatedString::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
             }
             break;
         }

@@ -18,7 +18,7 @@ HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::Qualified
 
 HTMLFrameSetElement::~HTMLFrameSetElement() = default;
 
-void HTMLFrameSetElement::parse_attribute(FlyString const& name, String const& value)
+void HTMLFrameSetElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 

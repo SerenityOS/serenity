@@ -8,9 +8,9 @@
 
 #include <AK/Bitmap.h>
 #include <AK/ByteReader.h>
+#include <AK/DeprecatedString.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/Bitmap.h>
@@ -144,7 +144,7 @@ public:
     virtual int width(Utf8View const&) const = 0;
     virtual int width(Utf32View const&) const = 0;
 
-    virtual String name() const = 0;
+    virtual DeprecatedString name() const = 0;
 
     virtual bool is_fixed_width() const = 0;
 
@@ -152,11 +152,11 @@ public:
 
     virtual size_t glyph_count() const = 0;
 
-    virtual String family() const = 0;
-    virtual String variant() const = 0;
+    virtual DeprecatedString family() const = 0;
+    virtual DeprecatedString variant() const = 0;
 
-    virtual String qualified_name() const = 0;
-    virtual String human_readable_name() const = 0;
+    virtual DeprecatedString qualified_name() const = 0;
+    virtual DeprecatedString human_readable_name() const = 0;
 
     Font const& bold_variant() const;
 

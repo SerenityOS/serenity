@@ -16,7 +16,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-JS::NonnullGCPtr<ClassicScript> ClassicScript::create(String filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
+JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
 {
     auto& vm = environment_settings_object.realm().vm();
 
@@ -148,7 +148,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
     //            Return Completion { [[Type]]: throw, [[Value]]: a new "QuotaExceededError" DOMException, [[Target]]: empty }.
 }
 
-ClassicScript::ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object)
+ClassicScript::ClassicScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object)
     : Script(move(base_url), move(filename), environment_settings_object)
 {
 }

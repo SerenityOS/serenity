@@ -50,7 +50,7 @@ SnakeGame::SnakeGame()
     reset();
 
     m_high_score = Config::read_i32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
-    m_high_score_text = String::formatted("Best: {}", m_high_score);
+    m_high_score_text = DeprecatedString::formatted("Best: {}", m_high_score);
 }
 
 void SnakeGame::reset()
@@ -148,11 +148,11 @@ void SnakeGame::timer_event(Core::TimerEvent&)
     if (m_head == m_fruit) {
         ++m_length;
         ++m_score;
-        m_score_text = String::formatted("Score: {}", m_score);
+        m_score_text = DeprecatedString::formatted("Score: {}", m_score);
         if (m_score > m_high_score) {
             m_is_new_high_score = true;
             m_high_score = m_score;
-            m_high_score_text = String::formatted("Best: {}", m_high_score);
+            m_high_score_text = DeprecatedString::formatted("Best: {}", m_high_score);
             update(high_score_rect());
             Config::write_i32("Snake"sv, "Snake"sv, "HighScore"sv, m_high_score);
         }

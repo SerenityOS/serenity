@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/URL/URLSearchParams.h>
@@ -20,47 +20,47 @@ class URL : public Bindings::PlatformObject {
 
 public:
     static JS::NonnullGCPtr<URL> create(JS::Realm&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, String const& url, String const& base);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, DeprecatedString const& url, DeprecatedString const& base);
 
     virtual ~URL() override;
 
-    String href() const;
-    WebIDL::ExceptionOr<void> set_href(String const&);
+    DeprecatedString href() const;
+    WebIDL::ExceptionOr<void> set_href(DeprecatedString const&);
 
-    String origin() const;
+    DeprecatedString origin() const;
 
-    String protocol() const;
-    void set_protocol(String const&);
+    DeprecatedString protocol() const;
+    void set_protocol(DeprecatedString const&);
 
-    String username() const;
-    void set_username(String const&);
+    DeprecatedString username() const;
+    void set_username(DeprecatedString const&);
 
-    String password() const;
-    void set_password(String const&);
+    DeprecatedString password() const;
+    void set_password(DeprecatedString const&);
 
-    String host() const;
-    void set_host(String const&);
+    DeprecatedString host() const;
+    void set_host(DeprecatedString const&);
 
-    String hostname() const;
-    void set_hostname(String const&);
+    DeprecatedString hostname() const;
+    void set_hostname(DeprecatedString const&);
 
-    String port() const;
-    void set_port(String const&);
+    DeprecatedString port() const;
+    void set_port(DeprecatedString const&);
 
-    String pathname() const;
-    void set_pathname(String const&);
+    DeprecatedString pathname() const;
+    void set_pathname(DeprecatedString const&);
 
-    String search() const;
-    void set_search(String const&);
+    DeprecatedString search() const;
+    void set_search(DeprecatedString const&);
 
     URLSearchParams const* search_params() const;
 
-    String hash() const;
-    void set_hash(String const&);
+    DeprecatedString hash() const;
+    void set_hash(DeprecatedString const&);
 
-    String to_json() const;
+    DeprecatedString to_json() const;
 
-    void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(move(query)); }
+    void set_query(Badge<URLSearchParams>, DeprecatedString query) { m_url.set_query(move(query)); }
 
 private:
     URL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);

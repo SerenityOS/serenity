@@ -73,7 +73,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
     m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
     m_preview_textbox->on_change = [&] {
-        auto preview = String::formatted("{}\n{}", m_preview_textbox->text(), Unicode::to_unicode_uppercase_full(m_preview_textbox->text()));
+        auto preview = DeprecatedString::formatted("{}\n{}", m_preview_textbox->text(), Unicode::to_unicode_uppercase_full(m_preview_textbox->text()));
         m_preview_label->set_text(preview);
     };
     m_preview_textbox->set_text(pangrams[0]);
@@ -110,7 +110,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (!request_close())
             return;
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv);
+        Optional<DeprecatedString> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv);
         if (!open_path.has_value())
             return;
         if (auto result = open_file(open_path.value()); result.is_error())
@@ -126,7 +126,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
+        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
         if (!save_path.has_value())
             return;
         if (auto result = save_file(save_path.value()); result.is_error())
@@ -148,7 +148,7 @@ ErrorOr<void> MainWidget::create_actions()
     });
     m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
 
-    GUI::Clipboard::the().on_change = [&](String const& data_type) {
+    GUI::Clipboard::the().on_change = [&](DeprecatedString const& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
     };
 
@@ -241,7 +241,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_show_system_emoji_action->set_status_tip("Show or hide system emoji");
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
-        String input;
+        DeprecatedString input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv) == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
@@ -370,18 +370,18 @@ ErrorOr<void> MainWidget::create_models()
 {
     for (auto& it : Gfx::font_slope_names)
         TRY(m_font_slope_list.try_append(it.name));
-    m_slope_combobox->set_model(GUI::ItemListModel<String>::create(m_font_slope_list));
+    m_slope_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_font_slope_list));
 
     for (auto& it : Gfx::font_weight_names)
         TRY(m_font_weight_list.try_append(it.name));
-    m_weight_combobox->set_model(GUI::ItemListModel<String>::create(m_font_weight_list));
+    m_weight_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_font_weight_list));
 
     auto unicode_blocks = Unicode::block_display_names();
     TRY(m_unicode_block_list.try_append("Show All"));
     for (auto& block : unicode_blocks)
         TRY(m_unicode_block_list.try_append(block.display_name));
 
-    m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
+    m_unicode_block_model = GUI::ItemListModel<DeprecatedString>::create(m_unicode_block_list);
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_unicode_block_model));
     m_filter_model->set_filter_term(""sv);
 
@@ -578,7 +578,7 @@ MainWidget::MainWidget()
     };
 }
 
-ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+ErrorOr<void> MainWidget::initialize(DeprecatedString const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
 {
     if (m_edited_font == edited_font)
         return {};
@@ -711,7 +711,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     return {};
 }
 
-ErrorOr<void> MainWidget::save_file(String const& path)
+ErrorOr<void> MainWidget::save_file(DeprecatedString const& path)
 {
     auto masked_font = TRY(m_edited_font->masked_character_set());
     TRY(masked_font->write_to_file(path));
@@ -764,7 +764,7 @@ void MainWidget::set_show_system_emoji(bool show)
     m_glyph_map_widget->set_show_system_emoji(show);
 }
 
-ErrorOr<void> MainWidget::open_file(String const& path)
+ErrorOr<void> MainWidget::open_file(DeprecatedString const& path)
 {
     auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file(path))->unmasked_character_set());
     TRY(initialize(path, move(unmasked_font)));
@@ -972,11 +972,11 @@ ErrorOr<void> MainWidget::copy_selected_glyphs()
     TRY(buffer.try_append(rows, bytes_per_glyph * selection.size()));
     TRY(buffer.try_append(widths, selection.size()));
 
-    HashMap<String, String> metadata;
-    metadata.set("start", String::number(selection.start()));
-    metadata.set("count", String::number(selection.size()));
-    metadata.set("width", String::number(edited_font().max_glyph_width()));
-    metadata.set("height", String::number(edited_font().glyph_height()));
+    HashMap<DeprecatedString, DeprecatedString> metadata;
+    metadata.set("start", DeprecatedString::number(selection.start()));
+    metadata.set("count", DeprecatedString::number(selection.size()));
+    metadata.set("width", DeprecatedString::number(edited_font().max_glyph_width()));
+    metadata.set("height", DeprecatedString::number(edited_font().glyph_height()));
     GUI::Clipboard::the().set_data(buffer.bytes(), "glyph/x-fonteditor", metadata);
 
     return {};
@@ -1058,11 +1058,11 @@ void MainWidget::delete_selected_glyphs()
 
 void MainWidget::show_error(Error error, StringView preface, StringView basename)
 {
-    String formatted_error;
+    DeprecatedString formatted_error;
     if (basename.is_empty())
-        formatted_error = String::formatted("{}: {}", preface, error);
+        formatted_error = DeprecatedString::formatted("{}: {}", preface, error);
     else
-        formatted_error = String::formatted("{} \"{}\" failed: {}", preface, basename, error);
+        formatted_error = DeprecatedString::formatted("{} \"{}\" failed: {}", preface, basename, error);
     GUI::MessageBox::show_error(window(), formatted_error);
     warnln(formatted_error);
 }

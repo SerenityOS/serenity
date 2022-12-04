@@ -7,8 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
-#include <AK/String.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -330,7 +330,7 @@ static long long hex_to_ll(char const* hex)
         } else if ('a' <= ch && ch <= 'f') {
             digit = ch - 'a' + 10;
         } else {
-            FAIL(String::formatted("\n!!! Encountered char {:02x} at {}", ch, i));
+            FAIL(DeprecatedString::formatted("\n!!! Encountered char {:02x} at {}", ch, i));
             return result;
         }
         result <<= 4;
@@ -366,7 +366,7 @@ TEST_CASE(strtod_accuracy)
     }
     outln("Out of {} tests, saw {} successes and {} fails.", NUM_TESTCASES, successes, fails);
     if (fails != 0) {
-        FAIL(String::formatted("{} strtod tests failed", fails));
+        FAIL(DeprecatedString::formatted("{} strtod tests failed", fails));
     }
 
     outln("PASS (with leniency up to {} ULP from the exact solution)", LENIENCY);

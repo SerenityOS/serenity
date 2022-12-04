@@ -56,17 +56,17 @@ public:
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
     };
 
-    String type() const;
+    DeprecatedString type() const;
     TypeAttributeState type_state() const { return m_type; }
-    void set_type(String const&);
+    void set_type(DeprecatedString const&);
 
-    String default_value() const { return attribute(HTML::AttributeNames::value); }
-    String name() const { return attribute(HTML::AttributeNames::name); }
+    DeprecatedString default_value() const { return attribute(HTML::AttributeNames::value); }
+    DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
 
-    String value() const;
-    WebIDL::ExceptionOr<void> set_value(String);
+    DeprecatedString value() const;
+    WebIDL::ExceptionOr<void> set_value(DeprecatedString);
 
-    Optional<String> placeholder_value() const;
+    Optional<DeprecatedString> placeholder_value() const;
 
     bool checked() const { return m_checked; }
     enum class ChangeSource {
@@ -94,7 +94,7 @@ public:
     virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
     // ^HTMLElement
-    virtual void parse_attribute(FlyString const&, String const&) override;
+    virtual void parse_attribute(FlyString const&, DeprecatedString const&) override;
     virtual void did_remove_attribute(FlyString const&) override;
 
     // ^FormAssociatedElement
@@ -136,7 +136,7 @@ private:
     void set_checked_within_group();
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
-    String value_sanitization_algorithm(String) const;
+    DeprecatedString value_sanitization_algorithm(DeprecatedString) const;
 
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
@@ -155,7 +155,7 @@ private:
     JS::GCPtr<FileAPI::FileList> m_selected_files;
 
     TypeAttributeState m_type { TypeAttributeState::Text };
-    String m_value;
+    DeprecatedString m_value;
 };
 
 }

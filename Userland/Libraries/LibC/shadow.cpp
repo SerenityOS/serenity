@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <errno.h>
@@ -21,8 +21,8 @@ static FILE* s_stream = nullptr;
 static unsigned s_line_number = 0;
 static struct spwd s_shadow_entry;
 
-static String s_name;
-static String s_pwdp;
+static DeprecatedString s_name;
+static DeprecatedString s_pwdp;
 
 void setspent()
 {
@@ -62,7 +62,7 @@ struct spwd* getspnam(char const* name)
     return nullptr;
 }
 
-static bool parse_shadow_entry(String const& line)
+static bool parse_shadow_entry(DeprecatedString const& line)
 {
     auto parts = line.split_view(':', SplitBehavior::KeepEmpty);
     if (parts.size() != 9) {
@@ -169,7 +169,7 @@ struct spwd* getspent()
         if ((!s || !s[0]) && feof(s_stream))
             return nullptr;
 
-        String line(s, Chomp);
+        DeprecatedString line(s, Chomp);
         if (parse_shadow_entry(line))
             return &s_shadow_entry;
         // Otherwise, proceed to the next line.

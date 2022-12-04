@@ -38,8 +38,8 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
                 return nullptr;
             }
 
-            tex_coords.append({ static_cast<GLfloat>(atof(String(tex_coord_line.at(1)).characters())),
-                static_cast<GLfloat>(atof(String(tex_coord_line.at(2)).characters())) });
+            tex_coords.append({ static_cast<GLfloat>(atof(DeprecatedString(tex_coord_line.at(1)).characters())),
+                static_cast<GLfloat>(atof(DeprecatedString(tex_coord_line.at(2)).characters())) });
 
             continue;
         }
@@ -51,9 +51,9 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
                 return nullptr;
             }
 
-            normals.append({ static_cast<GLfloat>(atof(String(normal_line.at(1)).characters())),
-                static_cast<GLfloat>(atof(String(normal_line.at(2)).characters())),
-                static_cast<GLfloat>(atof(String(normal_line.at(3)).characters())) });
+            normals.append({ static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(1)).characters())),
+                static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(2)).characters())),
+                static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(3)).characters())) });
 
             continue;
         }
@@ -66,9 +66,9 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
                 return nullptr;
             }
 
-            vertices.append({ static_cast<GLfloat>(atof(String(vertex_line.at(1)).characters())),
-                static_cast<GLfloat>(atof(String(vertex_line.at(2)).characters())),
-                static_cast<GLfloat>(atof(String(vertex_line.at(3)).characters())) });
+            vertices.append({ static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(1)).characters())),
+                static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(2)).characters())),
+                static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(3)).characters())) });
 
             continue;
         }

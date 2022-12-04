@@ -32,8 +32,8 @@ public:
         Global,
     };
 
-    static ECMAScriptFunctionObject* create(Realm&, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
-    static ECMAScriptFunctionObject* create(Realm&, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static ECMAScriptFunctionObject* create(Realm&, FlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static ECMAScriptFunctionObject* create(Realm&, FlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
 
     virtual void initialize(Realm&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
@@ -64,8 +64,8 @@ public:
     Object* home_object() const { return m_home_object; }
     void set_home_object(Object* home_object) { m_home_object = home_object; }
 
-    String const& source_text() const { return m_source_text; }
-    void set_source_text(String source_text) { m_source_text = move(source_text); }
+    DeprecatedString const& source_text() const { return m_source_text; }
+    void set_source_text(DeprecatedString source_text) { m_source_text = move(source_text); }
 
     Vector<ClassFieldDefinition> const& fields() const { return m_fields; }
     void add_field(ClassFieldDefinition field) { m_fields.append(move(field)); }
@@ -93,7 +93,7 @@ protected:
     virtual Completion ordinary_call_evaluate_body();
 
 private:
-    ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
+    ECMAScriptFunctionObject(FlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
 
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
@@ -118,7 +118,7 @@ private:
     Realm* m_realm { nullptr };                                              // [[Realm]]
     ScriptOrModule m_script_or_module;                                       // [[ScriptOrModule]]
     Object* m_home_object { nullptr };                                       // [[HomeObject]]
-    String m_source_text;                                                    // [[SourceText]]
+    DeprecatedString m_source_text;                                          // [[SourceText]]
     Vector<ClassFieldDefinition> m_fields;                                   // [[Fields]]
     Vector<PrivateElement> m_private_methods;                                // [[PrivateMethods]]
     Variant<PropertyKey, PrivateName, Empty> m_class_field_initializer_name; // [[ClassFieldInitializerName]]

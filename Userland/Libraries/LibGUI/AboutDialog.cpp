@@ -24,7 +24,7 @@ AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const*
     , m_version_string(version)
 {
     resize(413, 204);
-    set_title(String::formatted("About {}", m_name));
+    set_title(DeprecatedString::formatted("About {}", m_name));
     set_resizable(false);
 
     if (parent_window)

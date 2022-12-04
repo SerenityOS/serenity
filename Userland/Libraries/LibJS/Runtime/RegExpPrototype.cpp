@@ -765,7 +765,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // j. Let namedCaptures be ? Get(result, "groups").
         auto named_captures = TRY(result->get(vm.names.groups));
 
-        String replacement;
+        DeprecatedString replacement;
 
         // k. If functionalReplace is true, then
         if (replace_value.is_function()) {
@@ -920,7 +920,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     // 8. If flags contains "y", let newFlags be flags.
     // 9. Else, let newFlags be the string-concatenation of flags and "y".
-    auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);
+    auto new_flags = flags.find('y').has_value() ? move(flags) : DeprecatedString::formatted("{}y", flags);
 
     // 10. Let splitter be ? Construct(C, « rx, newFlags »).
     auto* splitter = TRY(construct(vm, *constructor, regexp_object, js_string(vm, move(new_flags))));
@@ -1085,7 +1085,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 
     // 5. Let result be the string-concatenation of "/", pattern, "/", and flags.
     // 6. Return result.
-    return js_string(vm, String::formatted("/{}/{}", pattern, flags));
+    return js_string(vm, DeprecatedString::formatted("/{}/{}", pattern, flags));
 }
 
 // B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp.prototype.compile

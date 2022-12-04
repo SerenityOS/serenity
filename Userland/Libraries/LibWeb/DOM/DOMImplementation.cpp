@@ -38,7 +38,7 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(String const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
     // FIXME: This should specifically be an XML document.
     auto xml_document = Document::create(realm());
@@ -69,7 +69,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
-JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(String const& title) const
+JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedString const& title) const
 {
     auto html_document = Document::create(realm());
 
@@ -103,7 +103,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(String const&
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(DeprecatedString const& qualified_name, DeprecatedString const& public_id, DeprecatedString const& system_id)
 {
     TRY(Document::validate_qualified_name(realm(), qualified_name));
     auto document_type = DocumentType::create(document());

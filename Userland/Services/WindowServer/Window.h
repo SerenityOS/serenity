@@ -7,7 +7,7 @@
 #pragma once
 
 #include "HitTestResult.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>
@@ -148,10 +148,10 @@ public:
     bool is_internal() const { return m_client_id == -1; }
     i32 client_id() const { return m_client_id; }
 
-    String title() const { return m_title; }
-    void set_title(String const&);
+    DeprecatedString title() const { return m_title; }
+    void set_title(DeprecatedString const&);
 
-    String computed_title() const;
+    DeprecatedString computed_title() const;
 
     float opacity() const { return m_opacity; }
     void set_opacity(float);
@@ -385,7 +385,7 @@ private:
     void ensure_window_menu();
     void update_window_menu_items();
     void modal_unparented();
-    ErrorOr<Optional<String>> compute_title_username(ConnectionFromClient* client);
+    ErrorOr<Optional<DeprecatedString>> compute_title_username(ConnectionFromClient* client);
 
     ConnectionFromClient* m_client { nullptr };
 
@@ -394,8 +394,8 @@ private:
 
     Menubar m_menubar;
 
-    String m_title;
-    Optional<String> m_title_username;
+    DeprecatedString m_title;
+    Optional<DeprecatedString> m_title_username;
     Gfx::IntRect m_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;

@@ -23,7 +23,7 @@ struct CachedELF {
     NonnullOwnPtr<ELF::Image> image;
 };
 
-static HashMap<String, OwnPtr<CachedELF>> s_cache;
+static HashMap<DeprecatedString, OwnPtr<CachedELF>> s_cache;
 
 enum class KernelBaseState {
     Uninitialized,
@@ -42,7 +42,7 @@ Optional<FlatPtr> kernel_base()
             s_kernel_base_state = KernelBaseState::Invalid;
             return {};
         }
-        auto kernel_base_str = String { file.value()->read_all(), NoChomp };
+        auto kernel_base_str = DeprecatedString { file.value()->read_all(), NoChomp };
 #if ARCH(I386)
         using AddressType = u32;
 #elif ARCH(X86_64) || ARCH(AARCH64)
@@ -63,9 +63,9 @@ Optional<FlatPtr> kernel_base()
     return s_kernel_base;
 }
 
-Optional<Symbol> symbolicate(String const& path, FlatPtr address, IncludeSourcePosition include_source_positions)
+Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, IncludeSourcePosition include_source_positions)
 {
-    String full_path = path;
+    DeprecatedString full_path = path;
     if (!path.starts_with('/')) {
         Array<StringView, 2> search_paths { "/usr/lib"sv, "/usr/local/lib"sv };
         bool found = false;
@@ -137,7 +137,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     struct RegionWithSymbols {
         FlatPtr base { 0 };
         size_t size { 0 };
-        String path;
+        DeprecatedString path;
     };
 
     Vector<FlatPtr> stack;
@@ -152,7 +152,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     }
 
     {
-        auto stack_path = String::formatted("/proc/{}/stacks/{}", pid, tid);
+        auto stack_path = DeprecatedString::formatted("/proc/{}/stacks/{}", pid, tid);
         auto file_or_error = Core::File::open(stack_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", stack_path, file_or_error.error());
@@ -172,7 +172,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     }
 
     {
-        auto vm_path = String::formatted("/proc/{}/vm", pid);
+        auto vm_path = DeprecatedString::formatted("/proc/{}/vm", pid);
         auto file_or_error = Core::File::open(vm_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", vm_path, file_or_error.error());
@@ -191,7 +191,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
             auto address = region.get("address"sv).to_addr();
             auto size = region.get("size"sv).to_addr();
 
-            String path;
+            DeprecatedString path;
             if (name == "/usr/lib/Loader.so") {
                 path = name;
             } else if (name.ends_with(": .text"sv) || name.ends_with(": .rodata"sv)) {

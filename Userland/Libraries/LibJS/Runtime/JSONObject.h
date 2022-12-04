@@ -19,7 +19,7 @@ public:
 
     // The base implementation of stringify is exposed because it is used by
     // test-js to communicate between the JS tests and the C++ test runner.
-    static ThrowCompletionOr<String> stringify_impl(VM&, Value value, Value replacer, Value space);
+    static ThrowCompletionOr<DeprecatedString> stringify_impl(VM&, Value value, Value replacer, Value space);
 
     static Value parse_json_value(VM&, JsonValue const&);
 
@@ -29,16 +29,16 @@ private:
     struct StringifyState {
         FunctionObject* replacer_function { nullptr };
         HashTable<Object*> seen_objects;
-        String indent { String::empty() };
-        String gap;
-        Optional<Vector<String>> property_list;
+        DeprecatedString indent { DeprecatedString::empty() };
+        DeprecatedString gap;
+        Optional<Vector<DeprecatedString>> property_list;
     };
 
     // Stringify helpers
-    static ThrowCompletionOr<String> serialize_json_property(VM&, StringifyState&, PropertyKey const& key, Object* holder);
-    static ThrowCompletionOr<String> serialize_json_object(VM&, StringifyState&, Object&);
-    static ThrowCompletionOr<String> serialize_json_array(VM&, StringifyState&, Object&);
-    static String quote_json_string(String);
+    static ThrowCompletionOr<DeprecatedString> serialize_json_property(VM&, StringifyState&, PropertyKey const& key, Object* holder);
+    static ThrowCompletionOr<DeprecatedString> serialize_json_object(VM&, StringifyState&, Object&);
+    static ThrowCompletionOr<DeprecatedString> serialize_json_array(VM&, StringifyState&, Object&);
+    static DeprecatedString quote_json_string(DeprecatedString);
 
     // Parse helpers
     static Object* parse_json_object(VM&, JsonObject const&);

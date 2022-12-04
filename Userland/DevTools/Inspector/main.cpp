@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 0;
         pid = process_chooser->pid();
     } else {
-        auto pid_opt = String(arguments.strings[1]).to_int();
+        auto pid_opt = DeprecatedString(arguments.strings[1]).to_int();
         if (!pid_opt.has_value())
             print_usage_and_exit();
         pid = pid_opt.value();
@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RemoteProcess remote_process(pid);
     if (!remote_process.is_inspectable()) {
-        GUI::MessageBox::show(window, String::formatted("Process pid={} is not inspectable", remote_process.pid()), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window, DeprecatedString::formatted("Process pid={} is not inspectable", remote_process.pid()), "Error"sv, GUI::MessageBox::Type::Error);
         if (gui_mode) {
             goto choose_pid;
         } else {
@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     remote_process.on_update = [&] {
         if (!remote_process.process_name().is_null())
-            window->set_title(String::formatted("{} ({}) - Inspector", remote_process.process_name(), remote_process.pid()));
+            window->set_title(DeprecatedString::formatted("{} ({}) - Inspector", remote_process.process_name(), remote_process.pid()));
     };
 
     auto& tree_view = splitter.add<GUI::TreeView>();

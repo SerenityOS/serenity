@@ -46,7 +46,7 @@ public:
         Mouse,
     };
 
-    String to_string() const;
+    DeprecatedString to_string() const;
     Type type() const { return m_type; }
     bool is_valid() const { return m_type == Type::Keyboard ? (m_keyboard_key != Key_Invalid) : (m_mouse_button != MouseButton::None); }
     u8 modifiers() const { return m_modifiers; }

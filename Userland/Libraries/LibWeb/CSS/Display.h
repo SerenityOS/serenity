@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Web::CSS {
 
@@ -16,7 +16,7 @@ public:
     Display() = default;
     ~Display() = default;
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
     bool operator==(Display const& other) const
     {

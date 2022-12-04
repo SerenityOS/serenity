@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
 
@@ -25,7 +25,7 @@ struct BlockName {
     StringView display_name;
 };
 
-Optional<String> code_point_display_name(u32 code_point);
+Optional<DeprecatedString> code_point_display_name(u32 code_point);
 Optional<StringView> code_point_block_display_name(u32 code_point);
 Optional<StringView> code_point_abbreviation(u32 code_point);
 
@@ -39,8 +39,8 @@ Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
 u32 to_unicode_lowercase(u32 code_point);
 u32 to_unicode_uppercase(u32 code_point);
 
-String to_unicode_lowercase_full(StringView, Optional<StringView> locale = {});
-String to_unicode_uppercase_full(StringView, Optional<StringView> locale = {});
+DeprecatedString to_unicode_lowercase_full(StringView, Optional<StringView> locale = {});
+DeprecatedString to_unicode_uppercase_full(StringView, Optional<StringView> locale = {});
 
 Optional<GeneralCategory> general_category_from_string(StringView);
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);

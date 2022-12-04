@@ -5,7 +5,7 @@
  */
 
 #include "FontPluginSerenity.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibGfx/Font/FontDatabase.h>
 
 namespace Web::Platform {
@@ -26,7 +26,7 @@ Gfx::Font& FontPluginSerenity::default_fixed_width_font()
     return Gfx::FontDatabase::default_fixed_width_font();
 }
 
-String FontPluginSerenity::generic_font_name(GenericFont generic_font)
+DeprecatedString FontPluginSerenity::generic_font_name(GenericFont generic_font)
 {
     // FIXME: Replace hard-coded font names with a relevant call to FontDatabase.
     // Currently, we cannot request the default font's name, or request it at a specific size and weight.

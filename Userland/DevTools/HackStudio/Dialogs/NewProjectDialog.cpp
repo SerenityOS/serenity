@@ -10,8 +10,8 @@
 #include <DevTools/HackStudio/Dialogs/NewProjectDialogGML.h>
 #include <DevTools/HackStudio/ProjectTemplate.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
@@ -89,7 +89,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
 
     m_browse_button = *find_descendant_of_type_named<GUI::Button>("browse_button");
     m_browse_button->on_click = [this](auto) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), true);
+        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), true);
         if (path.has_value())
             m_create_in_input->set_text(path.value().view());
     };
@@ -131,7 +131,7 @@ void NewProjectDialog::update_dialog()
     m_ok_button->set_enabled(m_input_valid);
 }
 
-Optional<String> NewProjectDialog::get_available_project_name()
+Optional<DeprecatedString> NewProjectDialog::get_available_project_name()
 {
     auto create_in = m_create_in_input->text();
     auto chosen_name = m_name_input->text();
@@ -148,16 +148,16 @@ Optional<String> NewProjectDialog::get_available_project_name()
     for (int i = 0; i < 1000; i++) {
         auto candidate = (i == 0)
             ? chosen_name
-            : String::formatted("{}-{}", chosen_name, i);
+            : DeprecatedString::formatted("{}-{}", chosen_name, i);
 
-        if (!Core::File::exists(String::formatted("{}/{}", create_in, candidate)))
+        if (!Core::File::exists(DeprecatedString::formatted("{}/{}", create_in, candidate)))
             return candidate;
     }
 
     return {};
 }
 
-Optional<String> NewProjectDialog::get_project_full_path()
+Optional<DeprecatedString> NewProjectDialog::get_project_full_path()
 {
     // Do not permit forward-slashes in project names
     if (m_name_input->text().contains('/'))
@@ -189,13 +189,13 @@ void NewProjectDialog::do_create_project()
 
     auto create_in = m_create_in_input->text();
     if (!Core::File::exists(create_in) || !Core::File::is_directory(create_in)) {
-        auto result = GUI::MessageBox::show(this, String::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+        auto result = GUI::MessageBox::show(this, DeprecatedString::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (result != GUI::MessageBox::ExecResult::Yes)
             return;
 
         auto created = Core::Directory::create(maybe_project_full_path.value(), Core::Directory::CreateDirectories::Yes);
         if (created.is_error()) {
-            GUI::MessageBox::show_error(this, String::formatted("Could not create directory {}", create_in));
+            GUI::MessageBox::show_error(this, DeprecatedString::formatted("Could not create directory {}", create_in));
             return;
         }
     }
@@ -206,7 +206,7 @@ void NewProjectDialog::do_create_project()
         m_created_project_path = maybe_project_full_path.value();
         done(ExecResult::OK);
     } else {
-        GUI::MessageBox::show_error(this, String::formatted("Could not create project: {}", creation_result.error()));
+        GUI::MessageBox::show_error(this, DeprecatedString::formatted("Could not create project: {}", creation_result.error()));
     }
 }
 

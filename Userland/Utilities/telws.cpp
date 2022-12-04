@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
 
-    String origin;
-    String url_string;
+    DeprecatedString origin;
+    DeprecatedString url_string;
 
     args_parser.add_positional_argument(url_string, "URL to connect to", "url", Core::ArgsParser::Required::Yes);
     args_parser.add_option(origin, "URL to use as origin", "origin", 'o', "origin");
@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("[Received binary data : {} bytes]", message.data.size());
             return;
         }
-        outln("[Received utf8 text] {}", String(ReadonlyBytes(message.data)));
+        outln("[Received utf8 text] {}", DeprecatedString(ReadonlyBytes(message.data)));
     };
     socket->on_close = [&](auto code, auto message, bool was_clean) {
         outln("[Server {} closed connection : '{}' (code {})]",

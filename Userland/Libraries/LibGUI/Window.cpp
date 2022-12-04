@@ -235,7 +235,7 @@ void Window::hide()
     }
 }
 
-void Window::set_title(String title)
+void Window::set_title(DeprecatedString title)
 {
     m_title_when_windowless = move(title);
     if (!is_visible())
@@ -243,7 +243,7 @@ void Window::set_title(String title)
     ConnectionToWindowServer::the().async_set_window_title(m_window_id, m_title_when_windowless);
 }
 
-String Window::title() const
+DeprecatedString Window::title() const
 {
     if (!is_visible())
         return m_title_when_windowless;
@@ -1281,7 +1281,7 @@ ErrorOr<void> Window::try_add_menu(NonnullRefPtr<Menu> menu)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
+ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(DeprecatedString name)
 {
     auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
     if (m_window_id) {
@@ -1291,7 +1291,7 @@ ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
     return menu;
 }
 
-Menu& Window::add_menu(String name)
+Menu& Window::add_menu(DeprecatedString name)
 {
     auto menu = MUST(try_add_menu(move(name)));
     return *menu;

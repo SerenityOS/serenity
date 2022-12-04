@@ -296,7 +296,7 @@ Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_gly
     return 0;
 }
 
-String Name::string_for_id(NameId id) const
+DeprecatedString Name::string_for_id(NameId id) const
 {
     auto num_entries = be_u16(m_slice.offset_pointer(2));
     auto string_offset = be_u16(m_slice.offset_pointer(4));
@@ -310,7 +310,7 @@ String Name::string_for_id(NameId id) const
     }
 
     if (valid_ids.is_empty())
-        return String::empty();
+        return DeprecatedString::empty();
 
     auto it = valid_ids.find_if([this](auto const& i) {
         // check if font has naming table for en-US language id
@@ -330,7 +330,7 @@ String Name::string_for_id(NameId id) const
         return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(string_offset + offset), length });
     }
 
-    return String((char const*)m_slice.offset_pointer(string_offset + offset), length);
+    return DeprecatedString((char const*)m_slice.offset_pointer(string_offset + offset), length);
 }
 
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
@@ -354,7 +354,7 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
     };
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(String path, unsigned index)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(DeprecatedString path, unsigned index)
 {
     auto file = TRY(Core::MappedFile::map(path));
     auto font = TRY(try_load_from_externally_owned_memory(file->bytes(), index));
@@ -590,7 +590,7 @@ u16 Font::units_per_em() const
     return m_head.units_per_em();
 }
 
-String Font::family() const
+DeprecatedString Font::family() const
 {
     auto string = m_name.typographic_family_name();
     if (!string.is_empty())
@@ -598,7 +598,7 @@ String Font::family() const
     return m_name.family_name();
 }
 
-String Font::variant() const
+DeprecatedString Font::variant() const
 {
     auto string = m_name.typographic_subfamily_name();
     if (!string.is_empty())

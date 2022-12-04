@@ -157,7 +157,7 @@ void Parser::parse_untagged()
         m_response.data().add_lsub_item(move(item));
     } else if (try_consume("FLAGS"sv)) {
         consume(" "sv);
-        auto flags = parse_list(+[](StringView x) { return String(x); });
+        auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
         m_response.data().set_flags(move(flags));
         consume("\r\n"sv);
     } else if (try_consume("OK"sv)) {
@@ -180,7 +180,7 @@ void Parser::parse_untagged()
                 m_response.data().set_unseen(n);
             } else if (actual_type == "PERMANENTFLAGS"sv) {
                 consume(" "sv);
-                auto flags = parse_list(+[](StringView x) { return String(x); });
+                auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
                 m_response.data().set_permanent_flags(move(flags));
             } else if (actual_type == "HIGHESTMODSEQ"sv) {
                 consume(" "sv);
@@ -205,7 +205,7 @@ void Parser::parse_untagged()
     } else if (try_consume("BYE"sv)) {
         auto message = consume_until_end_of_line();
         consume("\r\n"sv);
-        m_response.data().set_bye(message.is_empty() ? Optional<String>() : Optional<String>(message));
+        m_response.data().set_bye(message.is_empty() ? Optional<DeprecatedString>() : Optional<DeprecatedString>(message));
     } else if (try_consume("STATUS"sv)) {
         consume(" "sv);
         auto mailbox = parse_astring();
@@ -292,7 +292,7 @@ FetchResponseData Parser::parse_fetch_response()
         }
         case FetchCommand::DataItemType::Flags: {
             consume(" "sv);
-            auto flags = parse_list(+[](StringView x) { return String(x); });
+            auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
             fetch_response.set_flags(move(flags));
             break;
         }
@@ -315,7 +315,7 @@ FetchResponseData Parser::parse_fetch_response()
             break;
         case FetchCommand::DataItemType::BodySection: {
             auto body = parse_nstring();
-            fetch_response.add_body_data(move(data_item), Optional<String>(move(body)));
+            fetch_response.add_body_data(move(data_item), Optional<DeprecatedString>(move(body)));
             break;
         }
         }
@@ -349,16 +349,16 @@ Envelope Parser::parse_envelope()
     auto message_id = parse_nstring();
     consume(")"sv);
     Envelope envelope = {
-        date.has_value() ? AK::Optional<String>(date.value()) : AK::Optional<String>(),
-        subject.has_value() ? AK::Optional<String>(subject.value()) : AK::Optional<String>(),
+        date.has_value() ? AK::Optional<DeprecatedString>(date.value()) : AK::Optional<DeprecatedString>(),
+        subject.has_value() ? AK::Optional<DeprecatedString>(subject.value()) : AK::Optional<DeprecatedString>(),
         from,
         sender,
         reply_to,
         to,
         cc,
         bcc,
-        in_reply_to.has_value() ? AK::Optional<String>(in_reply_to.value()) : AK::Optional<String>(),
-        message_id.has_value() ? AK::Optional<String>(message_id.value()) : AK::Optional<String>(),
+        in_reply_to.has_value() ? AK::Optional<DeprecatedString>(in_reply_to.value()) : AK::Optional<DeprecatedString>(),
+        message_id.has_value() ? AK::Optional<DeprecatedString>(message_id.value()) : AK::Optional<DeprecatedString>(),
     };
     return envelope;
 }
@@ -375,7 +375,7 @@ BodyStructure Parser::parse_body_structure()
 
         if (!try_consume(")"sv)) {
             consume(" "sv);
-            data.params = try_consume("NIL"sv) ? Optional<HashMap<String, String>>() : parse_body_fields_params();
+            data.params = try_consume("NIL"sv) ? Optional<HashMap<DeprecatedString, DeprecatedString>>() : parse_body_fields_params();
             if (!try_consume(")"sv)) {
                 consume(" "sv);
                 if (!try_consume("NIL"sv)) {
@@ -390,7 +390,7 @@ BodyStructure Parser::parse_body_structure()
 
                     if (!try_consume(")"sv)) {
                         consume(" "sv);
-                        data.location = try_consume("NIL"sv) ? Optional<String>() : Optional<String>(parse_string());
+                        data.location = try_consume("NIL"sv) ? Optional<DeprecatedString>() : Optional<DeprecatedString>(parse_string());
 
                         if (!try_consume(")"sv)) {
                             consume(" "sv);
@@ -434,8 +434,8 @@ BodyStructure Parser::parse_one_part_body()
         auto data = BodyStructureData {
             type,
             subtype,
-            Optional<String>(move(id)),
-            Optional<String>(move(description)),
+            Optional<DeprecatedString>(move(id)),
+            Optional<DeprecatedString>(move(description)),
             encoding,
             params,
             num_octets,
@@ -496,8 +496,8 @@ BodyStructure Parser::parse_one_part_body()
         BodyStructureData data {
             type,
             subtype,
-            Optional<String>(move(id)),
-            Optional<String>(move(description)),
+            Optional<DeprecatedString>(move(id)),
+            Optional<DeprecatedString>(move(description)),
             encoding,
             params,
             num_octets,
@@ -522,8 +522,8 @@ BodyStructure Parser::parse_one_part_body()
         BodyStructureData data {
             type,
             subtype,
-            Optional<String>(move(id)),
-            Optional<String>(move(description)),
+            Optional<DeprecatedString>(move(id)),
+            Optional<DeprecatedString>(move(description)),
             encoding,
             params,
             num_octets,
@@ -534,9 +534,9 @@ BodyStructure Parser::parse_one_part_body()
         return BodyStructure(move(data));
     }
 }
-Vector<String> Parser::parse_langs()
+Vector<DeprecatedString> Parser::parse_langs()
 {
-    AK::Vector<String> langs;
+    AK::Vector<DeprecatedString> langs;
     if (!try_consume("("sv)) {
         langs.append(parse_string());
     } else {
@@ -547,7 +547,7 @@ Vector<String> Parser::parse_langs()
     }
     return langs;
 }
-Tuple<String, HashMap<String, String>> Parser::parse_disposition()
+Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> Parser::parse_disposition()
 {
     auto disposition_type = parse_string();
     consume(" "sv);
@@ -584,15 +584,15 @@ ListItem Parser::parse_list_item()
     consume("\" "sv);
     auto mailbox = parse_astring();
     consume("\r\n"sv);
-    return ListItem { flags, String(reference), String(mailbox) };
+    return ListItem { flags, DeprecatedString(reference), DeprecatedString(mailbox) };
 }
 
 void Parser::parse_capability_response()
 {
-    auto capability = AK::Vector<String>();
+    auto capability = AK::Vector<DeprecatedString>();
     while (!try_consume("\r\n"sv)) {
         consume(" "sv);
-        auto x = String(parse_atom());
+        auto x = DeprecatedString(parse_atom());
         capability.append(x);
     }
     m_response.data().add_capabilities(move(capability));
@@ -709,7 +709,7 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
         auto section_type = consume_while([](u8 x) { return x != ']' && x != ' '; });
         if (section_type.equals_ignoring_case("HEADER.FIELDS"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFields;
-            data_item.section->headers = Vector<String>();
+            data_item.section->headers = Vector<DeprecatedString>();
             consume(" "sv);
             auto headers = parse_list(+[](StringView x) { return x; });
             for (auto& header : headers) {
@@ -718,7 +718,7 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             consume("]"sv);
         } else if (section_type.equals_ignoring_case("HEADER.FIELDS.NOT"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFieldsNot;
-            data_item.section->headers = Vector<String>();
+            data_item.section->headers = Vector<DeprecatedString>();
             consume(" ("sv);
             auto headers = parse_list(+[](StringView x) { return x; });
             for (auto& header : headers) {
@@ -803,16 +803,16 @@ Address Parser::parse_address()
     consume("("sv);
     auto address = Address();
     auto name = parse_nstring();
-    address.name = Optional<String>(move(name));
+    address.name = Optional<DeprecatedString>(move(name));
     consume(" "sv);
     auto source_route = parse_nstring();
-    address.source_route = Optional<String>(move(source_route));
+    address.source_route = Optional<DeprecatedString>(move(source_route));
     consume(" "sv);
     auto mailbox = parse_nstring();
-    address.mailbox = Optional<String>(move(mailbox));
+    address.mailbox = Optional<DeprecatedString>(move(mailbox));
     consume(" "sv);
     auto host = parse_nstring();
-    address.host = Optional<String>(move(host));
+    address.host = Optional<DeprecatedString>(move(host));
     consume(")"sv);
     return address;
 }
@@ -823,12 +823,12 @@ StringView Parser::parse_astring()
     else
         return parse_atom();
 }
-HashMap<String, String> Parser::parse_body_fields_params()
+HashMap<DeprecatedString, DeprecatedString> Parser::parse_body_fields_params()
 {
     if (try_consume("NIL"sv))
         return {};
 
-    HashMap<String, String> fields;
+    HashMap<DeprecatedString, DeprecatedString> fields;
     consume("("sv);
     while (!try_consume(")"sv)) {
         auto key = parse_string();
@@ -843,7 +843,7 @@ HashMap<String, String> Parser::parse_body_fields_params()
 BodyExtension Parser::parse_body_extension()
 {
     if (try_consume("NIL"sv)) {
-        return BodyExtension { Optional<String> {} };
+        return BodyExtension { Optional<DeprecatedString> {} };
     } else if (try_consume("("sv)) {
         Vector<OwnPtr<BodyExtension>> extensions;
         while (!try_consume(")"sv)) {

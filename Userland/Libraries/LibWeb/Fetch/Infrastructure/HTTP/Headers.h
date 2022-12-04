@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/HashTable.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -44,7 +44,7 @@ public:
 
     [[nodiscard]] bool contains(ReadonlyBytes) const;
     [[nodiscard]] ErrorOr<Optional<ByteBuffer>> get(ReadonlyBytes) const;
-    [[nodiscard]] ErrorOr<Optional<Vector<String>>> get_decode_and_split(ReadonlyBytes) const;
+    [[nodiscard]] ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split(ReadonlyBytes) const;
     [[nodiscard]] ErrorOr<void> append(Header);
     void delete_(ReadonlyBytes name);
     [[nodiscard]] ErrorOr<void> set(Header);

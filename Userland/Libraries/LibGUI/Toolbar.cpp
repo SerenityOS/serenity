@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
@@ -60,7 +60,7 @@ private:
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
 
-    virtual void set_text(String text) override
+    virtual void set_text(DeprecatedString text) override
     {
         auto const* action = this->action();
         VERIFY(action);
@@ -70,7 +70,7 @@ private:
             Button::set_text(move(text));
     }
 
-    String tooltip(Action const& action) const
+    DeprecatedString tooltip(Action const& action) const
     {
         StringBuilder builder;
         builder.append(action.text());

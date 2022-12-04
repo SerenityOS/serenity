@@ -66,7 +66,7 @@ public:
 
     bool is_root_element() const;
 
-    String debug_description() const;
+    DeprecatedString debug_description() const;
 
     bool has_style() const { return m_has_style; }
 

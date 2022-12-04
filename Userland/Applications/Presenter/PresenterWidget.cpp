@@ -75,10 +75,10 @@ void PresenterWidget::set_file(StringView file_name)
 {
     auto presentation = Presentation::load_from_file(file_name, *window());
     if (presentation.is_error()) {
-        GUI::MessageBox::show_error(window(), String::formatted("The presentation \"{}\" could not be loaded.\n{}", file_name, presentation.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("The presentation \"{}\" could not be loaded.\n{}", file_name, presentation.error()));
     } else {
         m_current_presentation = presentation.release_value();
-        window()->set_title(String::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
+        window()->set_title(DeprecatedString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
         set_min_size(m_current_presentation->normative_size());
         // This will apply the new minimum size.
         update();

@@ -20,18 +20,18 @@ public:
 
     URL const& url() const { return m_url; }
 
-    String const& origin() const { return m_origin; }
-    void set_origin(String origin) { m_origin = move(origin); }
+    DeprecatedString const& origin() const { return m_origin; }
+    void set_origin(DeprecatedString origin) { m_origin = move(origin); }
 
-    Vector<String> const& protocols() const { return m_protocols; }
-    void set_protocols(Vector<String> protocols) { m_protocols = move(protocols); }
+    Vector<DeprecatedString> const& protocols() const { return m_protocols; }
+    void set_protocols(Vector<DeprecatedString> protocols) { m_protocols = move(protocols); }
 
-    Vector<String> const& extensions() const { return m_extensions; }
-    void set_extensions(Vector<String> extensions) { m_extensions = move(extensions); }
+    Vector<DeprecatedString> const& extensions() const { return m_extensions; }
+    void set_extensions(Vector<DeprecatedString> extensions) { m_extensions = move(extensions); }
 
     struct Header {
-        String name;
-        String value;
+        DeprecatedString name;
+        DeprecatedString value;
     };
     Vector<Header> const& headers() const { return m_headers; }
     void set_headers(Vector<Header> headers) { m_headers = move(headers); }
@@ -40,13 +40,13 @@ public:
     bool is_secure() const;
 
     // "resource-name" or "/resource name/" - defined in RFC 6455 Section 3
-    String resource_name() const;
+    DeprecatedString resource_name() const;
 
 private:
     URL m_url;
-    String m_origin;
-    Vector<String> m_protocols {};
-    Vector<String> m_extensions {};
+    DeprecatedString m_origin;
+    Vector<DeprecatedString> m_protocols {};
+    Vector<DeprecatedString> m_extensions {};
     Vector<Header> m_headers {};
 };
 

@@ -18,7 +18,7 @@ Function::Function(FlyString name, Vector<ComponentValue>&& values)
 
 Function::~Function() = default;
 
-String Function::to_string() const
+DeprecatedString Function::to_string() const
 {
     StringBuilder builder;
 

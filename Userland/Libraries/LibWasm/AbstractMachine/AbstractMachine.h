@@ -19,13 +19,13 @@ class Configuration;
 struct Interpreter;
 
 struct InstantiationError {
-    String error { "Unknown error" };
+    DeprecatedString error { "Unknown error" };
 };
 struct LinkError {
     enum OtherErrors {
         InvalidImportedModule,
     };
-    Vector<String> missing_imports;
+    Vector<DeprecatedString> missing_imports;
     Vector<OtherErrors> other_errors;
 };
 
@@ -168,7 +168,7 @@ private:
 };
 
 struct Trap {
-    String reason;
+    DeprecatedString reason;
 };
 
 class Result {
@@ -197,7 +197,7 @@ using ExternValue = Variant<FunctionAddress, TableAddress, MemoryAddress, Global
 
 class ExportInstance {
 public:
-    explicit ExportInstance(String name, ExternValue value)
+    explicit ExportInstance(DeprecatedString name, ExternValue value)
         : m_name(move(name))
         , m_value(move(value))
     {
@@ -207,7 +207,7 @@ public:
     auto& value() const { return m_value; }
 
 private:
-    String m_name;
+    DeprecatedString m_name;
     ExternValue m_value;
 };
 
@@ -546,8 +546,8 @@ private:
 class Linker {
 public:
     struct Name {
-        String module;
-        String name;
+        DeprecatedString module;
+        DeprecatedString name;
         ImportSection::Import::ImportDesc type;
     };
 

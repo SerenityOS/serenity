@@ -8,9 +8,9 @@
 #pragma once
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -261,11 +261,11 @@ static RefPtr<Gfx::Bitmap> load_impl(u8 const* data, size_t data_size)
 }
 
 template<typename TContext>
-static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, String const& mmap_name)
+static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, DeprecatedString const& mmap_name)
 {
     auto bitmap = load_impl<TContext>(data, length);
     if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::FormatDetails::image_type, mmap_name));
+        bitmap->set_mmap_name(DeprecatedString::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::FormatDetails::image_type, mmap_name));
     return bitmap;
 }
 

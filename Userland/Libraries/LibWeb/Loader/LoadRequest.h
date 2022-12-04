@@ -29,8 +29,8 @@ public:
     const AK::URL& url() const { return m_url; }
     void set_url(const AK::URL& url) { m_url = url; }
 
-    String const& method() const { return m_method; }
-    void set_method(String const& method) { m_method = method; }
+    DeprecatedString const& method() const { return m_method; }
+    void set_method(DeprecatedString const& method) { m_method = method; }
 
     ByteBuffer const& body() const { return m_body; }
     void set_body(ByteBuffer body) { m_body = move(body); }
@@ -63,15 +63,15 @@ public:
         return m_url == other.m_url && m_method == other.m_method && m_body == other.m_body;
     }
 
-    void set_header(String const& name, String const& value) { m_headers.set(name, value); }
-    String header(String const& name) const { return m_headers.get(name).value_or({}); }
+    void set_header(DeprecatedString const& name, DeprecatedString const& value) { m_headers.set(name, value); }
+    DeprecatedString header(DeprecatedString const& name) const { return m_headers.get(name).value_or({}); }
 
-    HashMap<String, String, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
 
 private:
     AK::URL m_url;
-    String m_method { "GET" };
-    HashMap<String, String, CaseInsensitiveStringTraits> m_headers;
+    DeprecatedString m_method { "GET" };
+    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_headers;
     ByteBuffer m_body;
     Core::ElapsedTimer m_load_timer;
     Optional<Page&> m_page;

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/BigIntConstructor.h>

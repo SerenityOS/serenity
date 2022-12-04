@@ -10,13 +10,13 @@
 
 namespace HackStudio {
 
-GMLPreviewWidget::GMLPreviewWidget(String const& gml_content)
+GMLPreviewWidget::GMLPreviewWidget(DeprecatedString const& gml_content)
 {
     set_layout<GUI::VerticalBoxLayout>();
     load_gml(gml_content);
 }
 
-void GMLPreviewWidget::load_gml(String const& gml)
+void GMLPreviewWidget::load_gml(DeprecatedString const& gml)
 {
     remove_all_children();
 
@@ -27,8 +27,8 @@ void GMLPreviewWidget::load_gml(String const& gml)
         return;
     }
 
-    load_from_gml(gml, [](String const& name) -> RefPtr<Core::Object> {
-        return GUI::Label::construct(String::formatted("{} is not registered as a GML element!", name));
+    load_from_gml(gml, [](DeprecatedString const& name) -> RefPtr<Core::Object> {
+        return GUI::Label::construct(DeprecatedString::formatted("{} is not registered as a GML element!", name));
     });
 
     if (children().is_empty()) {

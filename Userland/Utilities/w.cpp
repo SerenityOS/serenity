@@ -51,14 +51,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
         auto login_at = login_time.to_string("%b%d %H:%M:%S"sv);
 
         auto* pw = getpwuid(uid);
-        String username;
+        DeprecatedString username;
         if (pw)
             username = pw->pw_name;
         else
-            username = String::number(uid);
+            username = DeprecatedString::number(uid);
 
         StringBuilder builder;
-        String idle_string = "n/a";
+        DeprecatedString idle_string = "n/a";
         struct stat st;
         if (stat(tty.characters(), &st) == 0) {
             auto idle_time = now - st.st_mtime;
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             }
         }
 
-        String what = "n/a";
+        DeprecatedString what = "n/a";
 
         for (auto& process : process_statistics.value().processes) {
             if (process.tty == tty && process.pid == process.pgid)

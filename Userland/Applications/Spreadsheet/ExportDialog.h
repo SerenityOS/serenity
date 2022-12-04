@@ -18,21 +18,21 @@ class Sheet;
 class Workbook;
 
 struct CSVExportDialogPage {
-    using XSV = Writer::XSV<Vector<Vector<String>>, Vector<String>>;
+    using XSV = Writer::XSV<Vector<Vector<DeprecatedString>>, Vector<DeprecatedString>>;
 
     explicit CSVExportDialogPage(Sheet const&);
 
     NonnullRefPtr<GUI::WizardPage> page() { return *m_page; }
     Optional<XSV>& writer() { return m_previously_made_writer; }
-    Result<void, String> move_into(String const& target);
+    Result<void, DeprecatedString> move_into(DeprecatedString const& target);
 
 protected:
     void update_preview();
     Optional<XSV> make_writer();
 
 private:
-    Vector<Vector<String>> m_data;
-    Vector<String> m_headers;
+    Vector<Vector<DeprecatedString>> m_data;
+    Vector<DeprecatedString> m_headers;
     Optional<XSV> m_previously_made_writer;
     RefPtr<GUI::WizardPage> m_page;
     RefPtr<GUI::RadioButton> m_delimiter_comma_radio;
@@ -49,17 +49,17 @@ private:
     RefPtr<GUI::CheckBox> m_export_header_check_box;
     RefPtr<GUI::CheckBox> m_quote_all_fields_check_box;
     RefPtr<GUI::TextEditor> m_data_preview_text_editor;
-    Vector<String> m_quote_escape_items {
+    Vector<DeprecatedString> m_quote_escape_items {
         // Note: Keep in sync with Writer::WriterTraits::QuoteEscape.
         "Repeat",
         "Backslash",
     };
 
-    String m_temp_output_file_path;
+    DeprecatedString m_temp_output_file_path;
 };
 
 struct ExportDialog {
-    static Result<void, String> make_and_run_for(StringView mime, Core::File& file, Workbook&);
+    static Result<void, DeprecatedString> make_and_run_for(StringView mime, Core::File& file, Workbook&);
 };
 
 }

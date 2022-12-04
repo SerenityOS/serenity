@@ -18,11 +18,11 @@ class Tray : public GUI::Frame {
 public:
     virtual ~Tray() override = default;
 
-    size_t add_item(String text, RefPtr<Gfx::Bitmap>, String custom_data);
+    size_t add_item(DeprecatedString text, RefPtr<Gfx::Bitmap>, DeprecatedString custom_data);
 
     void set_item_checked(size_t index, bool);
 
-    Function<void(String const&)> on_item_activation;
+    Function<void(DeprecatedString const&)> on_item_activation;
 
 protected:
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -38,9 +38,9 @@ private:
     Tray();
 
     struct Item {
-        String text;
+        DeprecatedString text;
         RefPtr<Gfx::Bitmap> bitmap;
-        String custom_data;
+        DeprecatedString custom_data;
         size_t index { 0 };
         Gfx::IntRect rect(Tray const&) const;
     };

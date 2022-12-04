@@ -13,7 +13,7 @@
 #include <LibC/elf.h>
 
 #ifndef KERNEL
-#    include <AK/String.h>
+#    include <AK/DeprecatedString.h>
 #endif
 
 namespace ELF {
@@ -238,7 +238,7 @@ public:
     bool has_symbols() const { return symbol_count(); }
 #ifndef KERNEL
     Optional<Symbol> find_demangled_function(StringView name) const;
-    String symbolicate(FlatPtr address, u32* offset = nullptr) const;
+    DeprecatedString symbolicate(FlatPtr address, u32* offset = nullptr) const;
 #endif
     Optional<Image::Symbol> find_symbol(FlatPtr address, u32* offset = nullptr) const;
 
@@ -263,7 +263,7 @@ private:
     struct SortedSymbol {
         FlatPtr address;
         StringView name;
-        String demangled_name;
+        DeprecatedString demangled_name;
         Optional<Image::Symbol> symbol;
     };
 

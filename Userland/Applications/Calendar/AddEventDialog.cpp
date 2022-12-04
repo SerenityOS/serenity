@@ -123,7 +123,7 @@ int AddEventDialog::MeridiemListModel::row_count(const GUI::ModelIndex&) const
     return 2;
 }
 
-String AddEventDialog::MonthListModel::column_name(int column) const
+DeprecatedString AddEventDialog::MonthListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Month:
@@ -133,7 +133,7 @@ String AddEventDialog::MonthListModel::column_name(int column) const
     }
 }
 
-String AddEventDialog::MeridiemListModel::column_name(int column) const
+DeprecatedString AddEventDialog::MeridiemListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Meridiem:

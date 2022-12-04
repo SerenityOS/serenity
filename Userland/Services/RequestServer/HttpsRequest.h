@@ -26,7 +26,7 @@ public:
 private:
     explicit HttpsRequest(ConnectionFromClient&, NonnullRefPtr<HTTP::HttpsJob>, NonnullOwnPtr<Core::Stream::File>&&);
 
-    virtual void set_certificate(String certificate, String key) override;
+    virtual void set_certificate(DeprecatedString certificate, DeprecatedString key) override;
 
     NonnullRefPtr<HTTP::HttpsJob> m_job;
 };

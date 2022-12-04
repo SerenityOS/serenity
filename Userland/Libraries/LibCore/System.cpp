@@ -7,10 +7,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/SessionManagement.h>
@@ -338,7 +338,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
 #elif defined(AK_OS_MACOS) || defined(AK_OS_EMSCRIPTEN)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
-    auto name = String::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
+    auto name = DeprecatedString::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
     fd = shm_open(name.characters(), O_RDWR | O_CREAT | options, 0600);
 
     if (shm_unlink(name.characters()) == -1) {
@@ -383,7 +383,7 @@ ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode)
     HANDLE_SYSCALL_RETURN_VALUE("open", rc, rc);
 #else
     // NOTE: We have to ensure that the path is null-terminated.
-    String path_string = path;
+    DeprecatedString path_string = path;
     int rc = ::openat(fd, path_string.characters(), options, mode);
     if (rc < 0)
         return Error::from_syscall("open"sv, -errno);
@@ -416,7 +416,7 @@ ErrorOr<struct stat> stat(StringView path)
     int rc = syscall(SC_stat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("stat", rc, st);
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::stat(path_string.characters(), &st) < 0)
         return Error::from_syscall("stat"sv, -errno);
     return st;
@@ -434,7 +434,7 @@ ErrorOr<struct stat> lstat(StringView path)
     int rc = syscall(SC_stat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("lstat", rc, st);
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::stat(path_string.characters(), &st) < 0)
         return Error::from_syscall("lstat"sv, -errno);
     return st;
@@ -487,21 +487,21 @@ ErrorOr<int> dup2(int source_fd, int destination_fd)
     return fd;
 }
 
-ErrorOr<String> ptsname(int fd)
+ErrorOr<DeprecatedString> ptsname(int fd)
 {
     auto* name = ::ptsname(fd);
     if (!name)
         return Error::from_syscall("ptsname"sv, -errno);
-    return String(name);
+    return DeprecatedString(name);
 }
 
-ErrorOr<String> gethostname()
+ErrorOr<DeprecatedString> gethostname()
 {
     char hostname[HOST_NAME_MAX];
     int rc = ::gethostname(hostname, sizeof(hostname));
     if (rc < 0)
         return Error::from_syscall("gethostname"sv, -errno);
-    return String(&hostname[0]);
+    return DeprecatedString(&hostname[0]);
 }
 
 ErrorOr<void> sethostname(StringView hostname)
@@ -512,13 +512,13 @@ ErrorOr<void> sethostname(StringView hostname)
     return {};
 }
 
-ErrorOr<String> getcwd()
+ErrorOr<DeprecatedString> getcwd()
 {
     auto* cwd = ::getcwd(nullptr, 0);
     if (!cwd)
         return Error::from_syscall("getcwd"sv, -errno);
 
-    String string_cwd(cwd);
+    DeprecatedString string_cwd(cwd);
     free(cwd);
     return string_cwd;
 }
@@ -572,7 +572,7 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode)
     int rc = syscall(SC_chmod, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chmod", rc, {});
 #else
-    String path = pathname;
+    DeprecatedString path = pathname;
     if (::chmod(path.characters(), mode) < 0)
         return Error::from_syscall("chmod"sv, -errno);
     return {};
@@ -603,7 +603,7 @@ ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid)
     int rc = syscall(SC_chown, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chown", rc, {});
 #else
-    String path = pathname;
+    DeprecatedString path = pathname;
     if (::chown(path.characters(), uid, gid) < 0)
         return Error::from_syscall("chown"sv, -errno);
     return {};
@@ -620,7 +620,7 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
     int rc = syscall(SC_chown, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chown", rc, {});
 #else
-    String path = pathname;
+    DeprecatedString path = pathname;
     if (::lchown(path.characters(), uid, gid) < 0)
         return Error::from_syscall("lchown"sv, -errno);
     return {};
@@ -825,8 +825,8 @@ ErrorOr<void> link(StringView old_path, StringView new_path)
     int rc = syscall(SC_link, &params);
     HANDLE_SYSCALL_RETURN_VALUE("link", rc, {});
 #else
-    String old_path_string = old_path;
-    String new_path_string = new_path;
+    DeprecatedString old_path_string = old_path;
+    DeprecatedString new_path_string = new_path;
     if (::link(old_path_string.characters(), new_path_string.characters()) < 0)
         return Error::from_syscall("link"sv, -errno);
     return {};
@@ -843,8 +843,8 @@ ErrorOr<void> symlink(StringView target, StringView link_path)
     int rc = syscall(SC_symlink, &params);
     HANDLE_SYSCALL_RETURN_VALUE("symlink", rc, {});
 #else
-    String target_string = target;
-    String link_path_string = link_path;
+    DeprecatedString target_string = target;
+    DeprecatedString link_path_string = link_path;
     if (::symlink(target_string.characters(), link_path_string.characters()) < 0)
         return Error::from_syscall("symlink"sv, -errno);
     return {};
@@ -859,7 +859,7 @@ ErrorOr<void> mkdir(StringView path, mode_t mode)
     int rc = syscall(SC_mkdir, path.characters_without_null_termination(), path.length(), mode);
     HANDLE_SYSCALL_RETURN_VALUE("mkdir", rc, {});
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::mkdir(path_string.characters(), mode) < 0)
         return Error::from_syscall("mkdir"sv, -errno);
     return {};
@@ -874,7 +874,7 @@ ErrorOr<void> chdir(StringView path)
     int rc = syscall(SC_chdir, path.characters_without_null_termination(), path.length());
     HANDLE_SYSCALL_RETURN_VALUE("chdir", rc, {});
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::chdir(path_string.characters()) < 0)
         return Error::from_syscall("chdir"sv, -errno);
     return {};
@@ -889,7 +889,7 @@ ErrorOr<void> rmdir(StringView path)
     int rc = syscall(SC_rmdir, path.characters_without_null_termination(), path.length());
     HANDLE_SYSCALL_RETURN_VALUE("rmdir", rc, {});
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::rmdir(path_string.characters()) < 0)
         return Error::from_syscall("rmdir"sv, -errno);
     return {};
@@ -925,8 +925,8 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
     int rc = syscall(SC_rename, &params);
     HANDLE_SYSCALL_RETURN_VALUE("rename", rc, {});
 #else
-    String old_path_string = old_path;
-    String new_path_string = new_path;
+    DeprecatedString old_path_string = old_path;
+    DeprecatedString new_path_string = new_path;
     if (::rename(old_path_string.characters(), new_path_string.characters()) < 0)
         return Error::from_syscall("rename"sv, -errno);
     return {};
@@ -942,7 +942,7 @@ ErrorOr<void> unlink(StringView path)
     int rc = syscall(SC_unlink, AT_FDCWD, path.characters_without_null_termination(), path.length(), 0);
     HANDLE_SYSCALL_RETURN_VALUE("unlink", rc, {});
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::unlink(path_string.characters()) < 0)
         return Error::from_syscall("unlink"sv, -errno);
     return {};
@@ -961,7 +961,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
     int rc = syscall(SC_utime, path.characters_without_null_termination(), path.length(), buf);
     HANDLE_SYSCALL_RETURN_VALUE("utime", rc, {});
 #else
-    String path_string = path;
+    DeprecatedString path_string = path;
     if (::utime(path_string.characters(), buf) < 0)
         return Error::from_syscall("utime"sv, -errno);
     return {};
@@ -1072,7 +1072,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
         return {};
     };
 
-    String exec_filename;
+    DeprecatedString exec_filename;
 
     if (search_in_path == SearchInPath::Yes) {
         auto maybe_executable = Core::File::resolve_executable_from_environment(filename);
@@ -1089,9 +1089,9 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
     TRY(run_exec(params));
     VERIFY_NOT_REACHED();
 #else
-    String filename_string { filename };
+    DeprecatedString filename_string { filename };
 
-    auto argument_strings = TRY(FixedArray<String>::try_create(arguments.size()));
+    auto argument_strings = TRY(FixedArray<DeprecatedString>::try_create(arguments.size()));
     auto argv = TRY(FixedArray<char*>::try_create(arguments.size() + 1));
     for (size_t i = 0; i < arguments.size(); ++i) {
         argument_strings[i] = arguments[i].to_string();
@@ -1101,7 +1101,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
 
     int rc = 0;
     if (environment.has_value()) {
-        auto environment_strings = TRY(FixedArray<String>::try_create(environment->size()));
+        auto environment_strings = TRY(FixedArray<DeprecatedString>::try_create(environment->size()));
         auto envp = TRY(FixedArray<char*>::try_create(environment->size() + 1));
         for (size_t i = 0; i < environment->size(); ++i) {
             environment_strings[i] = environment->at(i).to_string();
@@ -1313,7 +1313,7 @@ ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
     int rc = syscall(SC_mknod, &params);
     HANDLE_SYSCALL_RETURN_VALUE("mknod", rc, {});
 #else
-    String path_string = pathname;
+    DeprecatedString path_string = pathname;
     if (::mknod(path_string.characters(), mode, dev) < 0)
         return Error::from_syscall("mknod"sv, -errno);
     return {};
@@ -1330,8 +1330,8 @@ ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
 #ifdef AK_OS_SERENITY
     auto const rc = ::serenity_setenv(name.characters_without_null_termination(), name.length(), value.characters_without_null_termination(), value.length(), overwrite);
 #else
-    String name_string = name;
-    String value_string = value;
+    DeprecatedString name_string = name;
+    DeprecatedString value_string = value;
     auto const rc = ::setenv(name_string.characters(), value_string.characters(), overwrite);
 #endif
     if (rc < 0)
@@ -1372,14 +1372,14 @@ ErrorOr<void> access(StringView pathname, int mode)
     int rc = ::syscall(Syscall::SC_access, pathname.characters_without_null_termination(), pathname.length(), mode);
     HANDLE_SYSCALL_RETURN_VALUE("access", rc, {});
 #else
-    String path_string = pathname;
+    DeprecatedString path_string = pathname;
     if (::access(path_string.characters(), mode) < 0)
         return Error::from_syscall("access"sv, -errno);
     return {};
 #endif
 }
 
-ErrorOr<String> readlink(StringView pathname)
+ErrorOr<DeprecatedString> readlink(StringView pathname)
 {
     // FIXME: Try again with a larger buffer.
     char data[PATH_MAX];
@@ -1389,14 +1389,14 @@ ErrorOr<String> readlink(StringView pathname)
         { data, sizeof(data) }
     };
     int rc = syscall(SC_readlink, &small_params);
-    HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, String(data, rc));
+    HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, DeprecatedString(data, rc));
 #else
-    String path_string = pathname;
+    DeprecatedString path_string = pathname;
     int rc = ::readlink(path_string.characters(), data, sizeof(data));
     if (rc == -1)
         return Error::from_syscall("readlink"sv, -errno);
 
-    return String(data, rc);
+    return DeprecatedString(data, rc);
 #endif
 }
 

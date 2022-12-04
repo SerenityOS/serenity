@@ -28,7 +28,7 @@ SubtleCrypto::SubtleCrypto(JS::Realm& realm)
 SubtleCrypto::~SubtleCrypto() = default;
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
-JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
+JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<JS::Object> const& data)
 {
     auto& realm = this->realm();
 
@@ -58,7 +58,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
-        auto error = WebIDL::NotSupportedError::create(realm, String::formatted("Invalid hash function '{}'", algorithm));
+        auto error = WebIDL::NotSupportedError::create(realm, DeprecatedString::formatted("Invalid hash function '{}'", algorithm));
         auto* promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;

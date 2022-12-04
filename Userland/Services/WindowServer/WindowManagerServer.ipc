@@ -13,5 +13,5 @@ endpoint WindowManagerServer
     set_window_taskbar_rect(i32 client_id, i32 window_id, Gfx::IntRect rect) =|
     set_applet_area_position(Gfx::IntPoint position) =|
     set_workspace(u32 row, u32 column) =|
-    set_keymap([UTF8] String keymap) =|
+    set_keymap([UTF8] DeprecatedString keymap) =|
 }

@@ -20,7 +20,7 @@ public:
     virtual ~WindowEnvironmentSettingsObject() override;
 
     virtual JS::GCPtr<DOM::Document> responsible_document() override;
-    virtual String api_url_character_encoding() override;
+    virtual DeprecatedString api_url_character_encoding() override;
     virtual AK::URL api_base_url() override;
     virtual Origin origin() override;
     virtual PolicyContainer policy_container() override;

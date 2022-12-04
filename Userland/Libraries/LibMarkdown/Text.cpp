@@ -263,14 +263,14 @@ size_t Text::terminal_length() const
     return m_node->terminal_length();
 }
 
-String Text::render_to_html() const
+DeprecatedString Text::render_to_html() const
 {
     StringBuilder builder;
     m_node->render_to_html(builder);
     return builder.build().trim(" \n\t"sv);
 }
 
-String Text::render_for_terminal() const
+DeprecatedString Text::render_for_terminal() const
 {
     StringBuilder builder;
     m_node->render_for_terminal(builder);

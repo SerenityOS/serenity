@@ -26,8 +26,8 @@ void ConnectionFromClient::die()
         Core::EventLoop::current().quit(0);
 }
 
-Messages::WebSocketServer::ConnectResponse ConnectionFromClient::connect(URL const& url, String const& origin,
-    Vector<String> const& protocols, Vector<String> const& extensions, IPC::Dictionary const& additional_request_headers)
+Messages::WebSocketServer::ConnectResponse ConnectionFromClient::connect(URL const& url, DeprecatedString const& origin,
+    Vector<DeprecatedString> const& protocols, Vector<DeprecatedString> const& extensions, IPC::Dictionary const& additional_request_headers)
 {
     if (!url.is_valid()) {
         dbgln("WebSocket::Connect: Invalid URL requested: '{}'", url);
@@ -57,7 +57,7 @@ Messages::WebSocketServer::ConnectResponse ConnectionFromClient::connect(URL con
     connection->on_error = [this, id](auto message) {
         did_error(id, (i32)message);
     };
-    connection->on_close = [this, id](u16 code, String reason, bool was_clean) {
+    connection->on_close = [this, id](u16 code, DeprecatedString reason, bool was_clean) {
         did_close(id, code, move(reason), was_clean);
     };
 
@@ -84,7 +84,7 @@ void ConnectionFromClient::send(i32 connection_id, bool is_text, ByteBuffer cons
     }
 }
 
-void ConnectionFromClient::close(i32 connection_id, u16 code, String const& reason)
+void ConnectionFromClient::close(i32 connection_id, u16 code, DeprecatedString const& reason)
 {
     RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
     if (connection && connection->ready_state() == ReadyState::Open)
@@ -92,7 +92,7 @@ void ConnectionFromClient::close(i32 connection_id, u16 code, String const& reas
 }
 
 Messages::WebSocketServer::SetCertificateResponse ConnectionFromClient::set_certificate(i32 connection_id,
-    [[maybe_unused]] String const& certificate, [[maybe_unused]] String const& key)
+    [[maybe_unused]] DeprecatedString const& certificate, [[maybe_unused]] DeprecatedString const& key)
 {
     RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
     bool success = false;
@@ -119,7 +119,7 @@ void ConnectionFromClient::did_error(i32 connection_id, i32 message)
     async_errored(connection_id, message);
 }
 
-void ConnectionFromClient::did_close(i32 connection_id, u16 code, String reason, bool was_clean)
+void ConnectionFromClient::did_close(i32 connection_id, u16 code, DeprecatedString reason, bool was_clean)
 {
     async_closed(connection_id, code, reason, was_clean);
     deferred_invoke([this, connection_id] {

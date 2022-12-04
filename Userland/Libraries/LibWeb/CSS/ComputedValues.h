@@ -131,8 +131,8 @@ struct ContentData {
     } type { Type::Normal };
 
     // FIXME: Data is a list of identifiers, strings and image values.
-    String data {};
-    String alt_text {};
+    DeprecatedString data {};
+    DeprecatedString alt_text {};
 };
 
 struct BorderRadiusData {

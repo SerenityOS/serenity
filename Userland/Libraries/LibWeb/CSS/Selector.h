@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace Web::CSS {
@@ -50,11 +50,11 @@ public:
             int offset = { 0 };  // "B"
 
             // https://www.w3.org/TR/css-syntax-3/#serializing-anb
-            String serialize() const
+            DeprecatedString serialize() const
             {
                 // 1. If A is zero, return the serialization of B.
                 if (step_size == 0) {
-                    return String::formatted("{}", offset);
+                    return DeprecatedString::formatted("{}", offset);
                 }
 
                 // 2. Otherwise, let result initially be an empty string.
@@ -141,7 +141,7 @@ public:
             };
             MatchType match_type;
             FlyString name {};
-            String value {};
+            DeprecatedString value {};
             CaseType case_type;
         };
 
@@ -171,7 +171,7 @@ public:
         FlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
         FlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
 
-        String serialize() const;
+        DeprecatedString serialize() const;
     };
 
     enum class Combinator {
@@ -200,7 +200,7 @@ public:
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
     Optional<PseudoElement> pseudo_element() const { return m_pseudo_element; }
     u32 specificity() const;
-    String serialize() const;
+    DeprecatedString serialize() const;
 
 private:
     explicit Selector(Vector<CompoundSelector>&&);
@@ -294,7 +294,7 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
     VERIFY_NOT_REACHED();
 }
 
-String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
+DeprecatedString serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
 
 }
 

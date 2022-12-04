@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/SystemEffects.h>
 #include <LibGfx/Rect.h>
@@ -31,9 +31,9 @@ public:
 
     void set_wallpaper_mode(StringView mode);
 
-    String wallpaper_path() const;
+    DeprecatedString wallpaper_path() const;
     RefPtr<Gfx::Bitmap> wallpaper_bitmap() const;
-    bool set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<String> path);
+    bool set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<DeprecatedString> path);
 
     void set_system_effects(Vector<bool> effects) { m_system_effects = { effects }; };
     SystemEffects const& system_effects() const { return m_system_effects; }

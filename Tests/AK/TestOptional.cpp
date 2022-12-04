@@ -7,8 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 
 TEST_CASE(basic_optional)
@@ -59,7 +59,7 @@ TEST_CASE(optional_rvalue_ref_qualified_getters)
 TEST_CASE(optional_leak_1)
 {
     struct Structure {
-        Optional<String> str;
+        Optional<DeprecatedString> str;
     };
 
     // This used to leak, it does not anymore.
@@ -81,7 +81,7 @@ TEST_CASE(comparison_without_values)
 {
     Optional<StringView> opt0;
     Optional<StringView> opt1;
-    Optional<String> opt2;
+    Optional<DeprecatedString> opt2;
     EXPECT_EQ(opt0, opt1);
     EXPECT_EQ(opt0, opt2);
 }
@@ -90,7 +90,7 @@ TEST_CASE(comparison_with_values)
 {
     Optional<StringView> opt0;
     Optional<StringView> opt1 = "foo"sv;
-    Optional<String> opt2 = "foo"sv;
+    Optional<DeprecatedString> opt2 = "foo"sv;
     Optional<StringView> opt3 = "bar"sv;
     EXPECT_NE(opt0, opt1);
     EXPECT_EQ(opt1, opt2);
@@ -99,14 +99,14 @@ TEST_CASE(comparison_with_values)
 
 TEST_CASE(comparison_to_underlying_types)
 {
-    Optional<String> opt0;
-    EXPECT_NE(opt0, String());
+    Optional<DeprecatedString> opt0;
+    EXPECT_NE(opt0, DeprecatedString());
     EXPECT_NE(opt0, "foo");
 
     Optional<StringView> opt1 = "foo"sv;
     EXPECT_EQ(opt1, "foo");
     EXPECT_NE(opt1, "bar");
-    EXPECT_EQ(opt1, String("foo"));
+    EXPECT_EQ(opt1, DeprecatedString("foo"));
 }
 
 TEST_CASE(comparison_with_numeric_types)
@@ -262,7 +262,7 @@ TEST_CASE(comparison_reference)
     StringView test = "foo"sv;
     Optional<StringView&> opt0;
     Optional<StringView const&> opt1 = test;
-    Optional<String> opt2 = "foo"sv;
+    Optional<DeprecatedString> opt2 = "foo"sv;
     Optional<StringView> opt3 = "bar"sv;
 
     EXPECT_NE(opt0, opt1);

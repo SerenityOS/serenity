@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCpp/Token.h>
@@ -20,24 +20,24 @@ namespace Cpp {
 class Preprocessor {
 
 public:
-    explicit Preprocessor(String const& filename, StringView program);
+    explicit Preprocessor(DeprecatedString const& filename, StringView program);
     Vector<Token> process_and_lex();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
     struct Definition {
-        String key;
-        Vector<String> parameters;
-        String value;
+        DeprecatedString key;
+        Vector<DeprecatedString> parameters;
+        DeprecatedString value;
         FlyString filename;
         size_t line { 0 };
         size_t column { 0 };
     };
-    using Definitions = HashMap<String, Definition>;
+    using Definitions = HashMap<DeprecatedString, Definition>;
 
     struct Substitution {
         Vector<Token> original_tokens;
         Definition defined_value;
-        String processed_value;
+        DeprecatedString processed_value;
     };
 
     Definitions const& definitions() const { return m_definitions; }
@@ -55,7 +55,7 @@ private:
     void handle_preprocessor_statement(StringView);
     void handle_include_statement(StringView);
     void handle_preprocessor_keyword(StringView keyword, GenericLexer& line_lexer);
-    String remove_escaped_newlines(StringView value);
+    DeprecatedString remove_escaped_newlines(StringView value);
 
     size_t do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const&);
     Optional<Definition> create_definition(StringView line);
@@ -69,10 +69,10 @@ private:
         size_t end_token_index { 0 };
     };
     Optional<MacroCall> parse_macro_call(Vector<Token> const& tokens, size_t token_index);
-    String evaluate_macro_call(MacroCall const&, Definition const&);
+    DeprecatedString evaluate_macro_call(MacroCall const&, Definition const&);
 
-    String m_filename;
-    String m_program;
+    DeprecatedString m_filename;
+    DeprecatedString m_program;
 
     Vector<Token> m_unprocessed_tokens;
     Vector<Token> m_processed_tokens;

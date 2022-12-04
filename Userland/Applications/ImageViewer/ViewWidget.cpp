@@ -75,14 +75,14 @@ bool ViewWidget::is_previous_available() const
     return false;
 }
 
-Vector<String> ViewWidget::load_files_from_directory(String const& path) const
+Vector<DeprecatedString> ViewWidget::load_files_from_directory(DeprecatedString const& path) const
 {
-    Vector<String> files_in_directory;
+    Vector<DeprecatedString> files_in_directory;
 
     auto current_dir = LexicalPath(path).parent().string();
     Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
     while (iterator.has_next()) {
-        String file = iterator.next_full_path();
+        DeprecatedString file = iterator.next_full_path();
         if (!Gfx::Bitmap::is_path_a_supported_image_format(file))
             continue;
         files_in_directory.append(file);
@@ -90,7 +90,7 @@ Vector<String> ViewWidget::load_files_from_directory(String const& path) const
     return files_in_directory;
 }
 
-void ViewWidget::set_path(String const& path)
+void ViewWidget::set_path(DeprecatedString const& path)
 {
     m_path = path;
     m_files_in_same_dir = load_files_from_directory(path);
@@ -151,10 +151,10 @@ void ViewWidget::mouseup_event(GUI::MouseEvent& event)
     GUI::AbstractZoomPanWidget::mouseup_event(event);
 }
 
-void ViewWidget::load_from_file(String const& path)
+void ViewWidget::load_from_file(DeprecatedString const& path)
 {
     auto show_error = [&] {
-        GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Failed to open {}", path), "Cannot open image"sv, GUI::MessageBox::Type::Error);
     };
 
     auto file_or_error = Core::MappedFile::map(path);

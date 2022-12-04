@@ -6,7 +6,7 @@ endpoint WebSocketClient
     connected(i32 connection_id) =|
     received(i32 connection_id, bool is_text, ByteBuffer data) =|
     errored(i32 connection_id, i32 message) =|
-    closed(i32 connection_id, u16 code, String reason, bool clean) =|
+    closed(i32 connection_id, u16 code, DeprecatedString reason, bool clean) =|
 
     // Certificate requests
     certificate_requested(i32 connection_id) =|

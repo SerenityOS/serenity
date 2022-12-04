@@ -8,9 +8,9 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <LibC/elf.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
@@ -42,10 +42,10 @@ enum class ShouldInitializeWeak {
 
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filepath);
+    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, DeprecatedString filepath);
     ~DynamicLoader();
 
-    String const& filepath() const { return m_filepath; }
+    DeprecatedString const& filepath() const { return m_filepath; }
 
     bool is_valid() const { return m_valid; }
 
@@ -87,7 +87,7 @@ public:
     bool is_fully_initialized() const { return m_fully_initialized; }
 
 private:
-    DynamicLoader(int fd, String filepath, void* file_data, size_t file_size);
+    DynamicLoader(int fd, DeprecatedString filepath, void* file_data, size_t file_size);
 
     class ProgramHeaderRegion {
     public:
@@ -137,7 +137,7 @@ private:
     void do_relr_relocations();
     void find_tls_size_and_alignment();
 
-    String m_filepath;
+    DeprecatedString m_filepath;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
     void* m_file_data { nullptr };

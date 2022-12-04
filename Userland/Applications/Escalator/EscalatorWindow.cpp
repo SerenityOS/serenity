@@ -36,9 +36,9 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
 
     RefPtr<GUI::Label> app_label = *main_widget.find_descendant_of_type_named<GUI::Label>("description");
 
-    String prompt;
+    DeprecatedString prompt;
     if (options.description.is_empty())
-        prompt = String::formatted("{} requires root access. Please enter password for user \"{}\".", m_arguments[0], m_current_user.username());
+        prompt = DeprecatedString::formatted("{} requires root access. Please enter password for user \"{}\".", m_arguments[0], m_current_user.username());
     else
         prompt = options.description;
 
@@ -51,7 +51,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     m_ok_button->on_click = [this](auto) {
         auto result = check_password();
         if (result.is_error()) {
-            GUI::MessageBox::show_error(this, String::formatted("Failed to execute command: {}", result.error()));
+            GUI::MessageBox::show_error(this, DeprecatedString::formatted("Failed to execute command: {}", result.error()));
             close();
         }
     };
@@ -67,7 +67,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
 
 ErrorOr<void> EscalatorWindow::check_password()
 {
-    String password = m_password_input->text();
+    DeprecatedString password = m_password_input->text();
     if (password.is_empty()) {
         GUI::MessageBox::show_error(this, "Please enter a password."sv);
         return {};

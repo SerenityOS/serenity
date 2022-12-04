@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
@@ -23,7 +23,7 @@ class BasicBlock {
     AK_MAKE_NONCOPYABLE(BasicBlock);
 
 public:
-    static NonnullOwnPtr<BasicBlock> create(String name, size_t size = 4 * KiB);
+    static NonnullOwnPtr<BasicBlock> create(DeprecatedString name, size_t size = 4 * KiB);
     ~BasicBlock();
 
     void seal();
@@ -40,16 +40,16 @@ public:
     bool is_terminated() const { return m_terminator != nullptr; }
     Instruction const* terminator() const { return m_terminator; }
 
-    String const& name() const { return m_name; }
+    DeprecatedString const& name() const { return m_name; }
 
 private:
-    BasicBlock(String name, size_t size);
+    BasicBlock(DeprecatedString name, size_t size);
 
     u8* m_buffer { nullptr };
     Instruction const* m_terminator { nullptr };
     size_t m_buffer_capacity { 0 };
     size_t m_buffer_size { 0 };
-    String m_name;
+    DeprecatedString m_name;
 };
 
 }

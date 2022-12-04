@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<String> usernames;
+    Vector<DeprecatedString> usernames;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print group memberships for each username or, if no username is specified, for the current process.");

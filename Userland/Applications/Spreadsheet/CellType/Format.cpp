@@ -5,8 +5,8 @@
  */
 
 #include "Format.h"
+#include <AK/DeprecatedString.h>
 #include <AK/PrintfImplementation.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace Spreadsheet {
@@ -37,7 +37,7 @@ struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentL
     }
 };
 
-String format_double(char const* format, double value)
+DeprecatedString format_double(char const* format, double value)
 {
     StringBuilder builder;
     auto putch = [&](auto, auto ch) { builder.append(ch); };

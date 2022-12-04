@@ -38,7 +38,7 @@ u32 find_ampersand_shortcut_character(StringView string)
     return 0;
 }
 
-Menu::Menu(ConnectionFromClient* client, int menu_id, String name)
+Menu::Menu(ConnectionFromClient* client, int menu_id, DeprecatedString name)
     : Core::Object(client)
     , m_client(client)
     , m_menu_id(menu_id)

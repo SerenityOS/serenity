@@ -21,12 +21,12 @@ class WebSocketClient final
     IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/session/%sid/portal/websocket"sv)
 
 public:
-    RefPtr<WebSocket> connect(const URL&, String const& origin = {}, Vector<String> const& protocols = {}, Vector<String> const& extensions = {}, HashMap<String, String> const& request_headers = {});
+    RefPtr<WebSocket> connect(const URL&, DeprecatedString const& origin = {}, Vector<DeprecatedString> const& protocols = {}, Vector<DeprecatedString> const& extensions = {}, HashMap<DeprecatedString, DeprecatedString> const& request_headers = {});
 
     u32 ready_state(Badge<WebSocket>, WebSocket&);
     void send(Badge<WebSocket>, WebSocket&, ByteBuffer, bool is_text);
-    void close(Badge<WebSocket>, WebSocket&, u16 code, String reason);
-    bool set_certificate(Badge<WebSocket>, WebSocket&, String, String);
+    void close(Badge<WebSocket>, WebSocket&, u16 code, DeprecatedString reason);
+    bool set_certificate(Badge<WebSocket>, WebSocket&, DeprecatedString, DeprecatedString);
 
 private:
     WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
@@ -34,7 +34,7 @@ private:
     virtual void connected(i32) override;
     virtual void received(i32, bool, ByteBuffer const&) override;
     virtual void errored(i32, i32) override;
-    virtual void closed(i32, u16, String const&, bool) override;
+    virtual void closed(i32, u16, DeprecatedString const&, bool) override;
     virtual void certificate_requested(i32) override;
 
     HashMap<i32, NonnullRefPtr<WebSocket>> m_connections;

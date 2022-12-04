@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
@@ -90,14 +90,14 @@ Optional<size_t> Tuple::index_of(StringView name) const
     return {};
 }
 
-Value const& Tuple::operator[](String const& name) const
+Value const& Tuple::operator[](DeprecatedString const& name) const
 {
     auto index = index_of(name);
     VERIFY(index.has_value());
     return (*this)[index.value()];
 }
 
-Value& Tuple::operator[](String const& name)
+Value& Tuple::operator[](DeprecatedString const& name)
 {
     auto index = index_of(name);
     VERIFY(index.has_value());
@@ -161,7 +161,7 @@ size_t Tuple::length() const
     return len;
 }
 
-String Tuple::to_string() const
+DeprecatedString Tuple::to_string() const
 {
     StringBuilder builder;
     for (auto& part : m_data) {
@@ -176,9 +176,9 @@ String Tuple::to_string() const
     return builder.build();
 }
 
-Vector<String> Tuple::to_string_vector() const
+Vector<DeprecatedString> Tuple::to_string_vector() const
 {
-    Vector<String> ret;
+    Vector<DeprecatedString> ret;
     for (auto& value : m_data) {
         ret.append(value.to_string());
     }

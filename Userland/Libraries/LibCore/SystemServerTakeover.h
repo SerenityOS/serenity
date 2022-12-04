@@ -10,6 +10,6 @@
 
 namespace Core {
 
-ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_server(String const& socket_path = {});
+ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_server(DeprecatedString const& socket_path = {});
 
 }

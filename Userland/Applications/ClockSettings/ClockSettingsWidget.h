@@ -28,5 +28,5 @@ private:
 
     RefPtr<Core::Timer> m_clock_preview_update_timer;
 
-    String m_time_format;
+    DeprecatedString m_time_format;
 };

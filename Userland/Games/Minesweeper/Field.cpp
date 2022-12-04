@@ -127,7 +127,7 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     m_good_face_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-good.png"sv).release_value_but_fixme_should_propagate_errors();
     m_bad_face_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-bad.png"sv).release_value_but_fixme_should_propagate_errors();
     for (int i = 0; i < 8; ++i)
-        m_number_bitmap[i] = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/minesweeper/{}.png", i + 1)).release_value_but_fixme_should_propagate_errors();
+        m_number_bitmap[i] = Gfx::Bitmap::try_load_from_file(DeprecatedString::formatted("/res/icons/minesweeper/{}.png", i + 1)).release_value_but_fixme_should_propagate_errors();
     // Square with mine will be filled with background color later, i.e. red
     m_mine_palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));
 
@@ -202,7 +202,7 @@ void Field::reset()
     m_time_elapsed = 0;
     m_time_label.set_text("00:00");
     m_flags_left = m_mine_count;
-    m_flag_label.set_text(String::number(m_flags_left));
+    m_flag_label.set_text(DeprecatedString::number(m_flags_left));
     m_timer->stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
@@ -415,7 +415,7 @@ void Field::set_flag(Square& square, bool flag)
     }
     square.has_flag = flag;
 
-    m_flag_label.set_text(String::number(m_flags_left));
+    m_flag_label.set_text(DeprecatedString::number(m_flags_left));
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
     square.button->update();
 }
@@ -427,7 +427,7 @@ void Field::on_square_middle_clicked(Square& square)
     if (square.has_flag) {
         ++m_flags_left;
         square.has_flag = false;
-        m_flag_label.set_text(String::number(m_flags_left));
+        m_flag_label.set_text(DeprecatedString::number(m_flags_left));
     }
     square.is_considering = !square.is_considering;
     square.button->set_icon(square.is_considering ? m_consider_bitmap : nullptr);

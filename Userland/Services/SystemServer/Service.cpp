@@ -221,7 +221,7 @@ void Service::spawn(int socket_fd)
             setenv("HOME", account.home_directory().characters(), true);
         }
 
-        for (String& env : m_environment)
+        for (DeprecatedString& env : m_environment)
             putenv(const_cast<char*>(env.characters()));
 
         char* argv[m_extra_arguments.size() + 2];
@@ -281,11 +281,11 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     VERIFY(config.has_group(name));
 
     set_name(name);
-    m_executable_path = config.read_entry(name, "Executable", String::formatted("/bin/{}", this->name()));
+    m_executable_path = config.read_entry(name, "Executable", DeprecatedString::formatted("/bin/{}", this->name()));
     m_extra_arguments = config.read_entry(name, "Arguments", "").split(' ');
     m_stdio_file_path = config.read_entry(name, "StdIO");
 
-    String prio = config.read_entry(name, "Priority");
+    DeprecatedString prio = config.read_entry(name, "Priority");
     if (prio == "low")
         m_priority = 10;
     else if (prio == "normal" || prio.is_null())
@@ -313,12 +313,12 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
     m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
 
-    String socket_entry = config.read_entry(name, "Socket");
-    String socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
+    DeprecatedString socket_entry = config.read_entry(name, "Socket");
+    DeprecatedString socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
 
     if (!socket_entry.is_null()) {
-        Vector<String> socket_paths = socket_entry.split(',');
-        Vector<String> socket_perms = socket_permissions_entry.split(',');
+        Vector<DeprecatedString> socket_paths = socket_entry.split(',');
+        Vector<DeprecatedString> socket_perms = socket_permissions_entry.split(',');
         m_sockets.ensure_capacity(socket_paths.size());
 
         // Need i here to iterate along with all other vectors.
@@ -409,7 +409,7 @@ void Service::save_to(JsonObject& json)
 
 bool Service::is_enabled() const
 {
-    extern String g_system_mode;
+    extern DeprecatedString g_system_mode;
     return m_system_modes.contains_slow(g_system_mode);
 }
 

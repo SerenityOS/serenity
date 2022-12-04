@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
@@ -51,18 +51,18 @@ public:
 
     virtual ~DurationFormat() override = default;
 
-    void set_locale(String locale) { m_locale = move(locale); }
-    String const& locale() const { return m_locale; }
+    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    DeprecatedString const& locale() const { return m_locale; }
 
-    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
-    String const& data_locale() const { return m_data_locale; }
+    void set_data_locale(DeprecatedString data_locale) { m_data_locale = move(data_locale); }
+    DeprecatedString const& data_locale() const { return m_data_locale; }
 
-    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
-    String const& numbering_system() const { return m_numbering_system; }
+    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
+    DeprecatedString const& numbering_system() const { return m_numbering_system; }
 
     void set_style(StringView style) { m_style = style_from_string(style); }
     Style style() const { return m_style; }
-    String style_string() const { return style_to_string(m_style); }
+    DeprecatedString style_string() const { return style_to_string(m_style); }
 
     void set_years_style(StringView years_style) { m_years_style = date_style_from_string(years_style); }
     ValueStyle years_style() const { return m_years_style; }
@@ -160,9 +160,9 @@ private:
     static Display display_from_string(StringView display);
     static StringView display_to_string(Display);
 
-    String m_locale;                                      // [[Locale]]
-    String m_data_locale;                                 // [[DataLocale]]
-    String m_numbering_system;                            // [[NumberingSystem]]
+    DeprecatedString m_locale;                            // [[Locale]]
+    DeprecatedString m_data_locale;                       // [[DataLocale]]
+    DeprecatedString m_numbering_system;                  // [[NumberingSystem]]
     Style m_style;                                        // [[Style]]
     ValueStyle m_years_style { ValueStyle::Long };        // [[YearsStyle]]
     Display m_years_display { Display::Auto };            // [[YearsDisplay]]
@@ -217,14 +217,14 @@ static constexpr AK::Array<DurationInstanceComponent, 10> duration_instances_com
 };
 
 struct DurationUnitOptions {
-    String style;
-    String display;
+    DeprecatedString style;
+    DeprecatedString display;
 };
 
 ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM&, Value input);
 i8 duration_record_sign(Temporal::DurationRecord const&);
 bool is_valid_duration_record(Temporal::DurationRecord const&);
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM&, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style);
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM&, DeprecatedString const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style);
 Vector<PatternPartition> partition_duration_format_pattern(VM&, DurationFormat const&, Temporal::DurationRecord const& duration);
 
 }

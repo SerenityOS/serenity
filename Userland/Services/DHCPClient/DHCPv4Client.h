@@ -7,10 +7,10 @@
 #pragma once
 
 #include "DHCPv4.h"
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/UDPServer.h>
 #include <net/if.h>
@@ -19,7 +19,7 @@
 #include <sys/socket.h>
 
 struct InterfaceDescriptor {
-    String ifname;
+    DeprecatedString ifname;
     MACAddress mac_address;
     IPv4Address current_ip_address;
 };
@@ -54,11 +54,11 @@ public:
     static ErrorOr<Interfaces> get_discoverable_interfaces();
 
 private:
-    explicit DHCPv4Client(Vector<String> interfaces_with_dhcp_enabled);
+    explicit DHCPv4Client(Vector<DeprecatedString> interfaces_with_dhcp_enabled);
 
     void try_discover_ifs();
 
-    Vector<String> m_interfaces_with_dhcp_enabled;
+    Vector<DeprecatedString> m_interfaces_with_dhcp_enabled;
     HashMap<u32, OwnPtr<DHCPv4Transaction>> m_ongoing_transactions;
     RefPtr<Core::UDPServer> m_server;
     RefPtr<Core::Timer> m_check_timer;

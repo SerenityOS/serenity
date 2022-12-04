@@ -46,7 +46,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, size_t board_rows, size_t bo
         m_board_columns = value;
     };
 
-    static Vector<String> color_scheme_names;
+    static Vector<DeprecatedString> color_scheme_names;
     color_scheme_names.clear();
     Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
@@ -57,7 +57,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, size_t board_rows, size_t bo
 
     auto color_scheme_combo = main_widget.find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
     color_scheme_combo->set_only_allow_values_from_model(true);
-    color_scheme_combo->set_model(*GUI::ItemListModel<String>::create(color_scheme_names));
+    color_scheme_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(color_scheme_names));
     color_scheme_combo->set_selected_index(color_scheme_names.find_first_index(m_color_scheme).value());
     color_scheme_combo->set_enabled(color_scheme_names.size() > 1);
     color_scheme_combo->on_change = [&](auto&, const GUI::ModelIndex& index) {

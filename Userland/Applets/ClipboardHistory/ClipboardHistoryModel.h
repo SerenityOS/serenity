@@ -42,7 +42,7 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
     // ^Config::Listener
-    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
+    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
 
 private:
     ClipboardHistoryModel();
@@ -50,11 +50,11 @@ private:
 
     // ^GUI::Model
     virtual int row_count(const GUI::ModelIndex&) const override { return m_history_items.size(); }
-    virtual String column_name(int) const override;
+    virtual DeprecatedString column_name(int) const override;
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(String const&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
+    virtual void clipboard_content_did_change(DeprecatedString const&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
 
     Vector<ClipboardItem> m_history_items;
     size_t m_history_limit;

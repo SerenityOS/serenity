@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
@@ -22,21 +22,21 @@ class Supports final : public RefCounted<Supports> {
 
 public:
     struct Declaration {
-        String declaration;
+        DeprecatedString declaration;
         bool evaluate() const;
-        String to_string() const;
+        DeprecatedString to_string() const;
     };
 
     struct Selector {
-        String selector;
+        DeprecatedString selector;
         bool evaluate() const;
-        String to_string() const;
+        DeprecatedString to_string() const;
     };
 
     struct Feature {
         Variant<Declaration, Selector> value;
         bool evaluate() const;
-        String to_string() const;
+        DeprecatedString to_string() const;
     };
 
     struct Condition;
@@ -44,7 +44,7 @@ public:
         Variant<NonnullOwnPtr<Condition>, Feature, GeneralEnclosed> value;
 
         bool evaluate() const;
-        String to_string() const;
+        DeprecatedString to_string() const;
     };
 
     struct Condition {
@@ -57,7 +57,7 @@ public:
         Vector<InParens> children;
 
         bool evaluate() const;
-        String to_string() const;
+        DeprecatedString to_string() const;
     };
 
     static NonnullRefPtr<Supports> create(NonnullOwnPtr<Condition>&& condition)
@@ -66,7 +66,7 @@ public:
     }
 
     bool matches() const { return m_matches; }
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     Supports(NonnullOwnPtr<Condition>&&);

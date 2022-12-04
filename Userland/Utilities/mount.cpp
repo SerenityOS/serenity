@@ -63,13 +63,13 @@ static ErrorOr<int> get_source_fd(StringView source)
     return fd_or_error;
 }
 
-static bool mount_by_line(String const& line)
+static bool mount_by_line(DeprecatedString const& line)
 {
     // Skip comments and blank lines.
     if (line.is_empty() || line.starts_with('#'))
         return true;
 
-    Vector<String> parts = line.split('\t');
+    Vector<DeprecatedString> parts = line.split('\t');
     if (parts.size() < 3) {
         warnln("Invalid fstab entry: {}", line);
         return false;

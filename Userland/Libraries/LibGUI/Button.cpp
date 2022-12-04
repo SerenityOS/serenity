@@ -20,7 +20,7 @@ REGISTER_WIDGET(GUI, DialogButton)
 
 namespace GUI {
 
-Button::Button(String text)
+Button::Button(DeprecatedString text)
     : AbstractButton(move(text))
 {
     set_min_size({ 40, 22 });
@@ -179,7 +179,7 @@ void Button::set_icon(RefPtr<Gfx::Bitmap> icon)
     update();
 }
 
-void Button::set_icon_from_path(String const& path)
+void Button::set_icon_from_path(DeprecatedString const& path)
 {
     auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
     if (maybe_bitmap.is_error()) {

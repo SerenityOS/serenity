@@ -47,11 +47,11 @@ TEST_CASE(text_value)
         EXPECT_EQ(v.to_string(), "Test"sv);
     }
     {
-        SQL::Value v(String("String Test"sv));
+        SQL::Value v(DeprecatedString("String Test"sv));
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
         EXPECT_EQ(v.to_string(), "String Test"sv);
 
-        v = String("String Test 2"sv);
+        v = DeprecatedString("String Test 2"sv);
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
         EXPECT_EQ(v.to_string(), "String Test 2"sv);
     }

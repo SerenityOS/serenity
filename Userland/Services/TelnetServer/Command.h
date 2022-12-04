@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
@@ -21,7 +21,7 @@ struct Command {
     u8 command;
     u8 subcommand;
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         StringBuilder builder;
 
@@ -39,7 +39,7 @@ struct Command {
             builder.append("DONT"sv);
             break;
         default:
-            builder.append(String::formatted("UNKNOWN<{:02x}>", command));
+            builder.append(DeprecatedString::formatted("UNKNOWN<{:02x}>", command));
             break;
         }
 
@@ -53,7 +53,7 @@ struct Command {
             builder.append("SUPPRESS_GO_AHEAD"sv);
             break;
         default:
-            builder.append(String::formatted("UNKNOWN<{:02x}>", subcommand));
+            builder.append(DeprecatedString::formatted("UNKNOWN<{:02x}>", subcommand));
             break;
         }
 

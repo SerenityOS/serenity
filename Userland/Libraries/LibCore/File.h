@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
-#include <AK/String.h>
 #include <LibCore/IODevice.h>
 #include <sys/stat.h>
 
@@ -26,31 +26,31 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static ErrorOr<NonnullRefPtr<File>> open(String filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullRefPtr<File>> open(DeprecatedString filename, OpenMode, mode_t = 0644);
 
-    String filename() const { return m_filename; }
-    void set_filename(const String filename) { m_filename = move(filename); }
+    DeprecatedString filename() const { return m_filename; }
+    void set_filename(const DeprecatedString filename) { m_filename = move(filename); }
 
     bool is_directory() const;
-    static bool is_directory(String const& filename);
+    static bool is_directory(DeprecatedString const& filename);
 
     bool is_device() const;
-    static bool is_device(String const& filename);
+    static bool is_device(DeprecatedString const& filename);
     bool is_block_device() const;
-    static bool is_block_device(String const& filename);
+    static bool is_block_device(DeprecatedString const& filename);
     bool is_char_device() const;
-    static bool is_char_device(String const& filename);
+    static bool is_char_device(DeprecatedString const& filename);
 
     bool is_link() const;
-    static bool is_link(String const& filename);
+    static bool is_link(DeprecatedString const& filename);
 
     bool looks_like_shared_library() const;
-    static bool looks_like_shared_library(String const& filename);
+    static bool looks_like_shared_library(DeprecatedString const& filename);
 
-    static bool exists(String const& filename);
-    static ErrorOr<size_t> size(String const& filename);
-    static String current_working_directory();
-    static String absolute_path(String const& path);
+    static bool exists(DeprecatedString const& filename);
+    static ErrorOr<size_t> size(DeprecatedString const& filename);
+    static DeprecatedString current_working_directory();
+    static DeprecatedString absolute_path(DeprecatedString const& path);
 
     enum class RecursionMode {
         Allowed,
@@ -83,23 +83,23 @@ public:
         bool tried_recursing;
     };
 
-    static ErrorOr<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
-    static ErrorOr<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
-    static ErrorOr<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
-    static String real_path_for(String const& filename);
-    static ErrorOr<String> read_link(String const& link_path);
-    static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
+    static DeprecatedString real_path_for(DeprecatedString const& filename);
+    static ErrorOr<DeprecatedString> read_link(DeprecatedString const& link_path);
+    static ErrorOr<void> link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path);
 
     struct RemoveError : public Error {
-        RemoveError(String f, int error_code)
+        RemoveError(DeprecatedString f, int error_code)
             : Error(error_code)
             , file(move(f))
         {
         }
-        String file;
+        DeprecatedString file;
     };
-    static ErrorOr<void, RemoveError> remove(String const& path, RecursionMode, bool force);
+    static ErrorOr<void, RemoveError> remove(DeprecatedString const& path, RecursionMode, bool force);
 
     virtual bool open(OpenMode) override;
 
@@ -114,18 +114,18 @@ public:
     static NonnullRefPtr<File> standard_output();
     static NonnullRefPtr<File> standard_error();
 
-    static Optional<String> resolve_executable_from_environment(StringView filename);
+    static Optional<DeprecatedString> resolve_executable_from_environment(StringView filename);
 
 private:
     File(Object* parent = nullptr)
         : IODevice(parent)
     {
     }
-    explicit File(String filename, Object* parent = nullptr);
+    explicit File(DeprecatedString filename, Object* parent = nullptr);
 
     bool open_impl(OpenMode, mode_t);
 
-    String m_filename;
+    DeprecatedString m_filename;
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
 

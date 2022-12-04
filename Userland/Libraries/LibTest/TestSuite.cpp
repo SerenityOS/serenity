@@ -56,7 +56,7 @@ void set_suite_setup_function(Function<void()> setup)
     TestSuite::the().set_suite_setup(move(setup));
 }
 
-int TestSuite::main(String const& suite_name, int argc, char** argv)
+int TestSuite::main(DeprecatedString const& suite_name, int argc, char** argv)
 {
     m_suite_name = suite_name;
 
@@ -91,7 +91,7 @@ int TestSuite::main(String const& suite_name, int argc, char** argv)
     return run(matching_tests);
 }
 
-NonnullRefPtrVector<TestCase> TestSuite::find_cases(String const& search, bool find_tests, bool find_benchmarks)
+NonnullRefPtrVector<TestCase> TestSuite::find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks)
 {
     NonnullRefPtrVector<TestCase> matches;
     for (auto const& t : m_cases) {

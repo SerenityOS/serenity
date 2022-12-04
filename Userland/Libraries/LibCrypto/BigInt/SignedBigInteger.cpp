@@ -51,7 +51,7 @@ SignedBigInteger SignedBigInteger::from_base(u16 N, StringView str)
     return { move(unsigned_data), sign };
 }
 
-String SignedBigInteger::to_base(u16 N) const
+DeprecatedString SignedBigInteger::to_base(u16 N) const
 {
     StringBuilder builder;
 

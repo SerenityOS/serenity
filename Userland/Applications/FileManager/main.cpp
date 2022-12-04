@@ -56,15 +56,15 @@
 using namespace FileManager;
 
 static ErrorOr<int> run_in_desktop_mode();
-static ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init);
-static void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation);
-static void do_paste(String const& target_directory, GUI::Window* window);
-static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
-static void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
-static void do_set_wallpaper(String const& file_path, GUI::Window* window);
-static void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
-static void show_properties(String const& container_dir_path, String const& path, Vector<String> const& selected, GUI::Window* window);
-static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, String const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
+static ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, DeprecatedString const& entry_focused_on_init);
+static void do_copy(Vector<DeprecatedString> const& selected_file_paths, FileOperation file_operation);
+static void do_paste(DeprecatedString const& target_directory, GUI::Window* window);
+static void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window);
+static void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window);
+static void do_set_wallpaper(DeprecatedString const& file_path, GUI::Window* window);
+static void do_unzip_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window);
+static void show_properties(DeprecatedString const& container_dir_path, DeprecatedString const& path, Vector<DeprecatedString> const& selected, GUI::Window* window);
+static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, DeprecatedString const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool is_desktop_mode { false };
     bool is_selection_mode { false };
     bool ignore_path_resolution { false };
-    String initial_location;
+    DeprecatedString initial_location;
     args_parser.add_option(is_desktop_mode, "Run in desktop mode", "desktop", 'd');
     args_parser.add_option(is_selection_mode, "Show entry in parent folder", "select", 's');
     args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r');
@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (initial_location.is_empty())
         initial_location = "/";
 
-    String focused_entry;
+    DeprecatedString focused_entry;
     if (is_selection_mode) {
         LexicalPath path(initial_location);
         initial_location = path.dirname();
@@ -130,7 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return run_in_windowed_mode(initial_location, focused_entry);
 }
 
-void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation)
+void do_copy(Vector<DeprecatedString> const& selected_file_paths, FileOperation file_operation)
 {
     VERIFY(!selected_file_paths.is_empty());
 
@@ -145,14 +145,14 @@ void do_copy(Vector<String> const& selected_file_paths, FileOperation file_opera
     GUI::Clipboard::the().set_data(copy_text.build().bytes(), "text/uri-list");
 }
 
-void do_paste(String const& target_directory, GUI::Window* window)
+void do_paste(DeprecatedString const& target_directory, GUI::Window* window)
 {
     auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
     if (data_and_type.mime_type != "text/uri-list") {
         dbgln("Cannot paste clipboard type {}", data_and_type.mime_type);
         return;
     }
-    auto copied_lines = String::copy(data_and_type.data).split('\n');
+    auto copied_lines = DeprecatedString::copy(data_and_type.data).split('\n');
     if (copied_lines.is_empty()) {
         dbgln("No files to paste");
         return;
@@ -164,7 +164,7 @@ void do_paste(String const& target_directory, GUI::Window* window)
         copied_lines.remove(0);
     }
 
-    Vector<String> source_paths;
+    Vector<DeprecatedString> source_paths;
     for (auto& uri_as_string : copied_lines) {
         if (uri_as_string.is_empty())
             continue;
@@ -182,19 +182,19 @@ void do_paste(String const& target_directory, GUI::Window* window)
     }
 }
 
-void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window)
+void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window)
 {
     auto path = selected_file_paths.first();
-    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
+    auto destination = DeprecatedString::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
     if (auto result = Core::File::link_file(destination, path); result.is_error()) {
-        GUI::MessageBox::show(window, String::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager"sv,
+        GUI::MessageBox::show(window, DeprecatedString::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager"sv,
             GUI::MessageBox::Type::Error);
     }
 }
 
-void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
+void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window)
 {
-    String archive_name;
+    DeprecatedString archive_name;
     if (GUI::InputBox::show(window, archive_name, "Enter name:"sv, "Create Archive"sv) != GUI::InputBox::ExecResult::OK)
         return;
 
@@ -220,7 +220,7 @@ void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* w
     }
 
     if (!zip_pid) {
-        Vector<String> relative_paths;
+        Vector<DeprecatedString> relative_paths;
         Vector<char const*> arg_list;
         arg_list.append("/bin/zip");
         arg_list.append("-r");
@@ -244,10 +244,10 @@ void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* w
     }
 }
 
-void do_set_wallpaper(String const& file_path, GUI::Window* window)
+void do_set_wallpaper(DeprecatedString const& file_path, GUI::Window* window)
 {
     auto show_error = [&] {
-        GUI::MessageBox::show(window, String::formatted("Failed to set {} as wallpaper.", file_path), "Failed to set wallpaper"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window, DeprecatedString::formatted("Failed to set {} as wallpaper.", file_path), "Failed to set wallpaper"sv, GUI::MessageBox::Type::Error);
     };
 
     auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(file_path);
@@ -260,10 +260,10 @@ void do_set_wallpaper(String const& file_path, GUI::Window* window)
         show_error();
 }
 
-void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
+void do_unzip_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window)
 {
-    String archive_file_path = selected_file_paths.first();
-    String output_directory_path = archive_file_path.substring(0, archive_file_path.length() - 4);
+    DeprecatedString archive_file_path = selected_file_paths.first();
+    DeprecatedString output_directory_path = archive_file_path.substring(0, archive_file_path.length() - 4);
 
     pid_t unzip_pid = fork();
     if (unzip_pid < 0) {
@@ -286,7 +286,7 @@ void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* wi
     }
 }
 
-void show_properties(String const& container_dir_path, String const& path, Vector<String> const& selected, GUI::Window* window)
+void show_properties(DeprecatedString const& container_dir_path, DeprecatedString const& path, Vector<DeprecatedString> const& selected, GUI::Window* window)
 {
     RefPtr<PropertiesWindow> properties;
     if (selected.is_empty()) {
@@ -301,7 +301,7 @@ void show_properties(String const& container_dir_path, String const& path, Vecto
     properties->show();
 }
 
-bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, String const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers)
+bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, DeprecatedString const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers)
 {
     current_file_launch_handlers = directory_view.get_launch_handlers(full_path);
 
@@ -312,9 +312,9 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
             directory_view.launch(URL::create_with_file_scheme(full_path), launcher_handler);
         });
         if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
-            file_open_action->set_text(String::formatted("Run {}", file_open_action->text()));
+            file_open_action->set_text(DeprecatedString::formatted("Run {}", file_open_action->text()));
         else
-            file_open_action->set_text(String::formatted("Open in {}", file_open_action->text()));
+            file_open_action->set_text(DeprecatedString::formatted("Open in {}", file_open_action->text()));
 
         default_action = file_open_action;
 
@@ -421,8 +421,8 @@ ErrorOr<int> run_in_desktop_mode()
 
     auto properties_action = GUI::CommonActions::make_properties_action(
         [&](auto&) {
-            String path = directory_view->path();
-            Vector<String> selected = directory_view->selected_file_paths();
+            DeprecatedString path = directory_view->path();
+            Vector<DeprecatedString> selected = directory_view->selected_file_paths();
 
             show_properties(path, path, selected, directory_view->window());
         },
@@ -435,7 +435,7 @@ ErrorOr<int> run_in_desktop_mode()
         window);
     paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "text/uri-list" && access(directory_view->path().characters(), W_OK) == 0);
 
-    GUI::Clipboard::the().on_change = [&](String const& data_type) {
+    GUI::Clipboard::the().on_change = [&](DeprecatedString const& data_type) {
         paste_action->set_enabled(data_type == "text/uri-list" && access(directory_view->path().characters(), W_OK) == 0);
     };
 
@@ -537,7 +537,7 @@ ErrorOr<int> run_in_desktop_mode()
     };
 
     struct BackgroundWallpaperListener : Config::Listener {
-        virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override
+        virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override
         {
             if (domain == "WindowManager" && group == "Background" && key == "Wallpaper") {
                 auto wallpaper_bitmap_or_error = Gfx::Bitmap::try_load_from_file(value);
@@ -563,7 +563,7 @@ ErrorOr<int> run_in_desktop_mode()
     return GUI::Application::the()->exec();
 }
 
-ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init)
+ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, DeprecatedString const& entry_focused_on_init)
 {
     auto window = TRY(GUI::Window::try_create());
     window->set_title("File Manager");
@@ -753,7 +753,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     view_type_action_group->add_action(directory_view->view_as_columns_action());
 
     auto tree_view_selected_file_paths = [&] {
-        Vector<String> paths;
+        Vector<DeprecatedString> paths;
         auto& view = tree_view;
         view.selection().for_each_index([&](GUI::ModelIndex const& index) {
             paths.append(directories_model->full_path(index));
@@ -797,7 +797,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
             {},
             Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(),
             [&](GUI::Action const& action) {
-                Vector<String> paths;
+                Vector<DeprecatedString> paths;
                 if (action.activator() == tree_view_directory_context_menu)
                     paths = tree_view_selected_file_paths();
                 else
@@ -816,7 +816,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
             {},
             Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(),
             [&](GUI::Action const& action) {
-                Vector<String> paths;
+                Vector<DeprecatedString> paths;
                 if (action.activator() == tree_view_directory_context_menu)
                     paths = tree_view_selected_file_paths();
                 else
@@ -886,9 +886,9 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     auto properties_action = GUI::CommonActions::make_properties_action(
         [&](auto& action) {
-            String container_dir_path;
-            String path;
-            Vector<String> selected;
+            DeprecatedString container_dir_path;
+            DeprecatedString path;
+            Vector<DeprecatedString> selected;
             if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
                 path = directory_view->path();
                 container_dir_path = path;
@@ -905,7 +905,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     auto paste_action = GUI::CommonActions::make_paste_action(
         [&](GUI::Action const& action) {
-            String target_directory;
+            DeprecatedString target_directory;
             if (action.activator() == directory_context_menu)
                 target_directory = directory_view->selected_file_paths()[0];
             else
@@ -917,7 +917,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     auto folder_specific_paste_action = GUI::CommonActions::make_paste_action(
         [&](GUI::Action const& action) {
-            String target_directory;
+            DeprecatedString target_directory;
             if (action.activator() == directory_context_menu)
                 target_directory = directory_view->selected_file_paths()[0];
             else
@@ -945,7 +945,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         },
         window);
 
-    GUI::Clipboard::the().on_change = [&](String const& data_type) {
+    GUI::Clipboard::the().on_change = [&](DeprecatedString const& data_type) {
         auto current_location = directory_view->path();
         paste_action->set_enabled(data_type == "text/uri-list" && access(current_location.characters(), W_OK) == 0);
     };
@@ -1090,13 +1090,13 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         }
     };
 
-    directory_view->on_path_change = [&](String const& new_path, bool can_read_in_path, bool can_write_in_path) {
+    directory_view->on_path_change = [&](DeprecatedString const& new_path, bool can_read_in_path, bool can_write_in_path) {
         auto icon = GUI::FileIconProvider::icon_for_path(new_path);
         auto* bitmap = icon.bitmap_for_size(16);
         window->set_icon(bitmap);
         location_textbox.set_icon(bitmap);
 
-        window->set_title(String::formatted("{} - File Manager", new_path));
+        window->set_title(DeprecatedString::formatted("{} - File Manager", new_path));
         location_textbox.set_text(new_path);
 
         {
@@ -1298,7 +1298,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         }
     };
 
-    auto copy_urls_to_directory = [&](Vector<URL> const& urls, String const& directory) {
+    auto copy_urls_to_directory = [&](Vector<URL> const& urls, DeprecatedString const& directory) {
         if (urls.is_empty()) {
             dbgln("No files to copy");
             return;
@@ -1307,12 +1307,12 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         for (auto& url_to_copy : urls) {
             if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
                 continue;
-            auto new_path = String::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
+            auto new_path = DeprecatedString::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
             if (url_to_copy.path() == new_path)
                 continue;
 
             if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
-                auto error_message = String::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, static_cast<Error const&>(result.error()));
+                auto error_message = DeprecatedString::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, static_cast<Error const&>(result.error()));
                 GUI::MessageBox::show(window, error_message, "File Manager"sv, GUI::MessageBox::Type::Error);
             } else {
                 had_accepted_copy = true;

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 
 namespace Audio {
@@ -40,7 +40,7 @@ enum class ID3PictureType : u32 {
 // Note: This was first implemented for Flac but is compatible with ID3v2
 struct PictureData {
     ID3PictureType type {};
-    String mime_string {};
+    DeprecatedString mime_string {};
     Vector<u32> description_string {};
 
     u32 width {};

@@ -87,12 +87,12 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     TODO();
 }
 
-Tuple<String, String> PDFFont::replacement_for_standard_latin_font(StringView name)
+Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_latin_font(StringView name)
 {
     bool is_bold = name.contains("bold"sv);
     bool is_italic = name.contains("italic"sv);
 
-    String font_variant;
+    DeprecatedString font_variant;
 
     if (is_bold && is_italic) {
         font_variant = "BoldItalic";

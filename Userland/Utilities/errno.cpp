@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (search) {
         for (int i = 0; i < sys_nerr; i++) {
-            auto error = String::formatted("{}", strerror(i));
+            auto error = DeprecatedString::formatted("{}", strerror(i));
             if (error.contains(keyword, CaseSensitivity::CaseInsensitive)) {
                 outln("{} {}", i, error);
             }
@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto error = String::formatted("{}", strerror(maybe_errno.value()));
+    auto error = DeprecatedString::formatted("{}", strerror(maybe_errno.value()));
     if (error == "Unknown error"sv) {
         warnln("ERROR: Unknown errno: {}", keyword);
         return 1;

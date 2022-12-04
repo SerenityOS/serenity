@@ -110,7 +110,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
 }
 
 // 8.5.4 ParseTemporalInstant ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstant
-ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, String const& iso_string)
+ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, DeprecatedString const& iso_string)
 {
     // 1. Assert: Type(isoString) is String.
 
@@ -239,7 +239,7 @@ BigInt* round_temporal_instant(VM& vm, BigInt const& nanoseconds, u64 increment,
 }
 
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring
-ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<DeprecatedString> temporal_instant_to_string(VM& vm, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: Type(instant) is Object.
     // 2. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
@@ -262,7 +262,7 @@ ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, V
     // 7. Let dateTimeString be ? TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
     auto date_time_string = TRY(temporal_date_time_to_string(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), nullptr, precision, "never"sv));
 
-    String time_zone_string;
+    DeprecatedString time_zone_string;
 
     // 8. If timeZone is undefined, then
     if (time_zone.is_undefined()) {
@@ -279,7 +279,7 @@ ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, V
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.
-    return String::formatted("{}{}", date_time_string, time_zone_string);
+    return DeprecatedString::formatted("{}{}", date_time_string, time_zone_string);
 }
 
 // 8.5.10 DifferenceTemporalInstant ( operation, instant, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant

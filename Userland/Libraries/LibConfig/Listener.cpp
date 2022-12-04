@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
-#include <AK/String.h>
 #include <LibConfig/Listener.h>
 
 namespace Config {
@@ -29,27 +29,27 @@ void Listener::for_each(Function<void(Listener&)> callback)
         callback(*listener);
 }
 
-void Listener::config_string_did_change(String const&, String const&, String const&, String const&)
+void Listener::config_string_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&)
 {
 }
 
-void Listener::config_i32_did_change(String const&, String const&, String const&, i32)
+void Listener::config_i32_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, i32)
 {
 }
 
-void Listener::config_bool_did_change(String const&, String const&, String const&, bool)
+void Listener::config_bool_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, bool)
 {
 }
 
-void Listener::config_key_was_removed(String const&, String const&, String const&)
+void Listener::config_key_was_removed(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&)
 {
 }
 
-void Listener::config_group_was_removed(String const&, String const&)
+void Listener::config_group_was_removed(DeprecatedString const&, DeprecatedString const&)
 {
 }
 
-void Listener::config_group_was_added(String const&, String const&)
+void Listener::config_group_was_added(DeprecatedString const&, DeprecatedString const&)
 {
 }
 

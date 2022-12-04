@@ -23,9 +23,9 @@ public:
 
     virtual void inserted() override;
 
-    String rel() const { return attribute(HTML::AttributeNames::rel); }
-    String type() const { return attribute(HTML::AttributeNames::type); }
-    String href() const { return attribute(HTML::AttributeNames::href); }
+    DeprecatedString rel() const { return attribute(HTML::AttributeNames::rel); }
+    DeprecatedString type() const { return attribute(HTML::AttributeNames::type); }
+    DeprecatedString href() const { return attribute(HTML::AttributeNames::href); }
 
     bool has_loaded_icon() const;
     bool load_favicon_and_use_if_window_is_active();
@@ -33,7 +33,7 @@ public:
 private:
     HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
 
-    void parse_attribute(FlyString const&, String const&) override;
+    void parse_attribute(FlyString const&, DeprecatedString const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;

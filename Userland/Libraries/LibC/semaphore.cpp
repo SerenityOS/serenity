@@ -8,9 +8,9 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
@@ -31,7 +31,7 @@ static constexpr u32 POST_WAKES = 1 << 31;
 
 static constexpr auto sem_path_prefix = "/tmp/semaphore/"sv;
 static constexpr auto SEM_NAME_MAX = PATH_MAX - sem_path_prefix.length();
-static ErrorOr<String> sem_name_to_path(char const* name)
+static ErrorOr<DeprecatedString> sem_name_to_path(char const* name)
 {
     if (name[0] != '/')
         return EINVAL;
@@ -58,7 +58,7 @@ struct NamedSemaphore {
     sem_t* sem { nullptr };
 };
 
-static HashMap<String, NamedSemaphore> s_named_semaphores;
+static HashMap<DeprecatedString, NamedSemaphore> s_named_semaphores;
 static pthread_mutex_t s_sem_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_once_t s_sem_once = PTHREAD_ONCE_INIT;
 

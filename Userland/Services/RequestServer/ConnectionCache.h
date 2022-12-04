@@ -41,7 +41,7 @@ struct Proxy {
             return TRY(SocketType::connect(url.host(), url.port_or_default(), forward<Args>(args)...));
         }
         if (data.type == Core::ProxyData::SOCKS5) {
-            if constexpr (requires { SocketType::connect(declval<String>(), *proxy_client_storage, forward<Args>(args)...); }) {
+            if constexpr (requires { SocketType::connect(declval<DeprecatedString>(), *proxy_client_storage, forward<Args>(args)...); }) {
                 proxy_client_storage = TRY(Core::SOCKSProxyClient::connect(data.host_ipv4, data.port, Core::SOCKSProxyClient::Version::V5, url.host(), url.port_or_default()));
                 return TRY(SocketType::connect(url.host(), *proxy_client_storage, forward<Args>(args)...));
             } else if constexpr (IsSame<SocketType, Core::Stream::TCPSocket>) {
@@ -102,7 +102,7 @@ struct Connection {
 };
 
 struct ConnectionKey {
-    String hostname;
+    DeprecatedString hostname;
     u16 port { 0 };
     Core::ProxyData proxy_data {};
 

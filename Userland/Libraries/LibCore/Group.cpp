@@ -16,7 +16,7 @@
 
 namespace Core {
 
-ErrorOr<String> Group::generate_group_file() const
+ErrorOr<DeprecatedString> Group::generate_group_file() const
 {
     StringBuilder builder;
 
@@ -32,13 +32,13 @@ ErrorOr<String> Group::generate_group_file() const
     for (auto const* gr = getgrent(); gr; gr = getgrent()) {
 #endif
         if (gr->gr_name == m_name)
-            builder.appendff("{}:x:{}:{}\n", m_name, m_id, String::join(',', m_members));
+            builder.appendff("{}:x:{}:{}\n", m_name, m_id, DeprecatedString::join(',', m_members));
         else {
-            Vector<String> members;
+            Vector<DeprecatedString> members;
             for (size_t i = 0; gr->gr_mem[i]; ++i)
                 members.append(gr->gr_mem[i]);
 
-            builder.appendff("{}:x:{}:{}\n", gr->gr_name, gr->gr_gid, String::join(',', members));
+            builder.appendff("{}:x:{}:{}\n", gr->gr_name, gr->gr_gid, DeprecatedString::join(',', members));
         }
     }
 
@@ -135,7 +135,7 @@ ErrorOr<Vector<Group>> Group::all()
 #else
     for (auto const* gr = getgrent(); gr; gr = getgrent()) {
 #endif
-        Vector<String> members;
+        Vector<DeprecatedString> members;
         for (size_t i = 0; gr->gr_mem[i]; ++i)
             members.append(gr->gr_mem[i]);
 
@@ -148,7 +148,7 @@ ErrorOr<Vector<Group>> Group::all()
     return groups;
 }
 
-Group::Group(String name, gid_t id, Vector<String> members)
+Group::Group(DeprecatedString name, gid_t id, Vector<DeprecatedString> members)
     : m_name(move(name))
     , m_id(id)
     , m_members(move(members))

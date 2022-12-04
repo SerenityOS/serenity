@@ -12,7 +12,7 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 
-Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, String title)
+Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title)
     : m_slide_objects(move(slide_objects))
     , m_title(move(title))
 {

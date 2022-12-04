@@ -63,7 +63,7 @@ public:
         return m_length_percentage.length();
     }
 
-    String to_string() const;
+    DeprecatedString to_string() const;
 
 private:
     Size(Type type, LengthPercentage);

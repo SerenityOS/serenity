@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/SourceLocation.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
@@ -50,7 +50,7 @@ public:
 private:
     static inline size_t m_depth = 0;
     SourceLocation m_location;
-    String m_extra;
+    DeprecatedString m_extra;
 };
 
 template<>

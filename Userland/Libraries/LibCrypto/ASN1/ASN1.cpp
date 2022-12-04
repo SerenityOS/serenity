@@ -9,7 +9,7 @@
 
 namespace Crypto::ASN1 {
 
-String kind_name(Kind kind)
+DeprecatedString kind_name(Kind kind)
 {
     switch (kind) {
     case Kind::Eol:
@@ -45,7 +45,7 @@ String kind_name(Kind kind)
     return "InvalidKind";
 }
 
-String class_name(Class class_)
+DeprecatedString class_name(Class class_)
 {
     switch (class_) {
     case Class::Application:
@@ -61,7 +61,7 @@ String class_name(Class class_)
     return "InvalidClass";
 }
 
-String type_name(Type type)
+DeprecatedString type_name(Type type)
 {
     switch (type) {
     case Type::Constructed:

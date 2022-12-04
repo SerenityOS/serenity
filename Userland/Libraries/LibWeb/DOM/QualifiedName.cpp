@@ -67,7 +67,7 @@ void QualifiedName::Impl::make_internal_string()
         return;
     }
 
-    as_string = String::formatted("{}:{}", prefix, local_name);
+    as_string = DeprecatedString::formatted("{}:{}", prefix, local_name);
 }
 
 }

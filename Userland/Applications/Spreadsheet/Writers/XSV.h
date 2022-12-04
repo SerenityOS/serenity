@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stream.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -35,8 +35,8 @@ inline WriterBehavior operator|(WriterBehavior left, WriterBehavior right)
 }
 
 struct WriterTraits {
-    String separator;
-    String quote { "\"" };
+    DeprecatedString separator;
+    DeprecatedString quote { "\"" };
     enum QuoteEscape {
         Repeat,
         Backslash,
@@ -79,7 +79,7 @@ public:
 
     bool has_error() const { return m_error != WriteError::None; }
     WriteError error() const { return m_error; }
-    String error_string() const
+    DeprecatedString error_string() const
     {
         switch (m_error) {
 #define E(x, y)         \
@@ -137,7 +137,7 @@ private:
     template<typename T>
     void write_entry(T&& entry)
     {
-        auto string = String::formatted("{}", FormatIfSupported(entry));
+        auto string = DeprecatedString::formatted("{}", FormatIfSupported(entry));
 
         auto safe_to_write_normally = (m_behaviors & WriterBehavior::QuoteAll) == WriterBehavior::None
             && !string.contains('\n')

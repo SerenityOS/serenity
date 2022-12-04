@@ -80,7 +80,7 @@ Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView local
 }
 
 // 6.2.3 CanonicalizeUnicodeLocaleId ( locale ), https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
-String canonicalize_unicode_locale_id(::Locale::LocaleID& locale)
+DeprecatedString canonicalize_unicode_locale_id(::Locale::LocaleID& locale)
 {
     // Note: This implementation differs from the spec in how Step 3 is implemented. The spec assumes
     // the input to this method is a string, and is written such that operations are performed on parts
@@ -183,18 +183,18 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
 }
 
 // 9.2.1 CanonicalizeLocaleList ( locales ), https://tc39.es/ecma402/#sec-canonicalizelocalelist
-ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales)
+ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Value locales)
 {
     auto& realm = *vm.current_realm();
 
     // 1. If locales is undefined, then
     if (locales.is_undefined()) {
         // a. Return a new empty List.
-        return Vector<String> {};
+        return Vector<DeprecatedString> {};
     }
 
     // 2. Let seen be a new empty List.
-    Vector<String> seen;
+    Vector<DeprecatedString> seen;
 
     Object* object = nullptr;
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
@@ -230,7 +230,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
             if (!key_value.is_string() && !key_value.is_object())
                 return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrString, key_value.to_string_without_side_effects());
 
-            String tag;
+            DeprecatedString tag;
 
             // iii. If Type(kValue) is Object and kValue has an [[InitializedLocale]] internal slot, then
             if (key_value.is_object() && is<Locale>(key_value.as_object())) {
@@ -263,7 +263,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/ecma402/#sec-bestavailablelocale
-Optional<String> best_available_locale(StringView locale)
+Optional<DeprecatedString> best_available_locale(StringView locale)
 {
     // 1. Let candidate be locale.
     StringView candidate = locale;
@@ -289,12 +289,12 @@ Optional<String> best_available_locale(StringView locale)
 }
 
 struct MatcherResult {
-    String locale;
+    DeprecatedString locale;
     Vector<::Locale::Extension> extensions {};
 };
 
 // 9.2.3 LookupMatcher ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-lookupmatcher
-static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
+static MatcherResult lookup_matcher(Vector<DeprecatedString> const& requested_locales)
 {
     // 1. Let result be a new Record.
     MatcherResult result {};
@@ -337,7 +337,7 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
 }
 
 // 9.2.4 BestFitMatcher ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-bestfitmatcher
-static MatcherResult best_fit_matcher(Vector<String> const& requested_locales)
+static MatcherResult best_fit_matcher(Vector<DeprecatedString> const& requested_locales)
 {
     // The algorithm is implementation dependent, but should produce results that a typical user of the requested locales would
     // perceive as at least as good as those produced by the LookupMatcher abstract operation.
@@ -345,7 +345,7 @@ static MatcherResult best_fit_matcher(Vector<String> const& requested_locales)
 }
 
 // 9.2.6 InsertUnicodeExtensionAndCanonicalize ( locale, extension ), https://tc39.es/ecma402/#sec-insert-unicode-extension-and-canonicalize
-String insert_unicode_extension_and_canonicalize(::Locale::LocaleID locale, ::Locale::LocaleExtension extension)
+DeprecatedString insert_unicode_extension_and_canonicalize(::Locale::LocaleID locale, ::Locale::LocaleExtension extension)
 {
     // Note: This implementation differs from the spec in how the extension is inserted. The spec assumes
     // the input to this method is a string, and is written such that operations are performed on parts
@@ -376,7 +376,7 @@ static auto& find_key_in_value(T& value, StringView key)
 }
 
 // 9.2.7 ResolveLocale ( availableLocales, requestedLocales, options, relevantExtensionKeys, localeData ), https://tc39.es/ecma402/#sec-resolvelocale
-LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
+LocaleResult resolve_locale(Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
 {
     // 1. Let matcher be options.[[localeMatcher]].
     auto const& matcher = options.locale_matcher;
@@ -431,7 +431,7 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
         // f. Assert: Type(value) is either String or Null.
         // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
         //       alphabetically, so we get the locale's preferred value from LibUnicode.
-        Optional<String> value;
+        Optional<DeprecatedString> value;
         if (auto preference = ::Locale::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
             value = *preference;
 
@@ -526,10 +526,10 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 }
 
 // 9.2.8 LookupSupportedLocales ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-lookupsupportedlocales
-Vector<String> lookup_supported_locales(Vector<String> const& requested_locales)
+Vector<DeprecatedString> lookup_supported_locales(Vector<DeprecatedString> const& requested_locales)
 {
     // 1. Let subset be a new empty List.
-    Vector<String> subset;
+    Vector<DeprecatedString> subset;
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
@@ -553,7 +553,7 @@ Vector<String> lookup_supported_locales(Vector<String> const& requested_locales)
 }
 
 // 9.2.9 BestFitSupportedLocales ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-bestfitsupportedlocales
-Vector<String> best_fit_supported_locales(Vector<String> const& requested_locales)
+Vector<DeprecatedString> best_fit_supported_locales(Vector<DeprecatedString> const& requested_locales)
 {
     // The BestFitSupportedLocales abstract operation returns the subset of the provided BCP 47
     // language priority list requestedLocales for which availableLocales has a matching locale
@@ -565,7 +565,7 @@ Vector<String> best_fit_supported_locales(Vector<String> const& requested_locale
 }
 
 // 9.2.10 SupportedLocales ( availableLocales, requestedLocales, options ), https://tc39.es/ecma402/#sec-supportedlocales
-ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& requested_locales, Value options)
+ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> const& requested_locales, Value options)
 {
     auto& realm = *vm.current_realm();
 
@@ -575,7 +575,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& reques
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options_object, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
-    Vector<String> supported_locales;
+    Vector<DeprecatedString> supported_locales;
 
     // 3. If matcher is "best fit", then
     if (matcher.as_string().string() == "best fit"sv) {
@@ -589,7 +589,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& reques
     }
 
     // 5. Return CreateArrayFromList(supportedLocales).
-    return Array::create_from<String>(realm, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
+    return Array::create_from<DeprecatedString>(realm, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject

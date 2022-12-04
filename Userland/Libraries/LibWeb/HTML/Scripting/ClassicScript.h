@@ -23,7 +23,7 @@ public:
         No,
         Yes,
     };
-    static JS::NonnullGCPtr<ClassicScript> create(String filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url, size_t source_line_number = 1, MutedErrors = MutedErrors::No);
+    static JS::NonnullGCPtr<ClassicScript> create(DeprecatedString filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url, size_t source_line_number = 1, MutedErrors = MutedErrors::No);
 
     JS::Script* script_record() { return m_script_record; }
     JS::Script const* script_record() const { return m_script_record; }
@@ -37,7 +37,7 @@ public:
     MutedErrors muted_errors() const { return m_muted_errors; }
 
 private:
-    ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object);
+    ClassicScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

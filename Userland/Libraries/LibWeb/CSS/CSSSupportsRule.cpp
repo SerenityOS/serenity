@@ -23,19 +23,19 @@ CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& sup
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSSupportsRulePrototype>(realm, "CSSSupportsRule"));
 }
 
-String CSSSupportsRule::condition_text() const
+DeprecatedString CSSSupportsRule::condition_text() const
 {
     return m_supports->to_string();
 }
 
-void CSSSupportsRule::set_condition_text(String text)
+void CSSSupportsRule::set_condition_text(DeprecatedString text)
 {
     if (auto new_supports = parse_css_supports({}, text))
         m_supports = new_supports.release_nonnull();
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule
-String CSSSupportsRule::serialized() const
+DeprecatedString CSSSupportsRule::serialized() const
 {
     // Note: The spec doesn't cover this yet, so I'm roughly following the spec for the @media rule.
     // It should be pretty close!

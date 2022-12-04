@@ -24,7 +24,7 @@ class DebugInfo {
     AK_MAKE_NONMOVABLE(DebugInfo);
 
 public:
-    explicit DebugInfo(ELF::Image const&, String source_root = {}, FlatPtr base_address = 0);
+    explicit DebugInfo(ELF::Image const&, DeprecatedString source_root = {}, FlatPtr base_address = 0);
 
     ELF::Image const& elf() const { return m_elf; }
 
@@ -34,15 +34,15 @@ public:
         Optional<FlatPtr> address_of_first_statement;
 
         SourcePosition()
-            : SourcePosition(String::empty(), 0)
+            : SourcePosition(DeprecatedString::empty(), 0)
         {
         }
-        SourcePosition(String file_path, size_t line_number)
+        SourcePosition(DeprecatedString file_path, size_t line_number)
             : file_path(file_path)
             , line_number(line_number)
         {
         }
-        SourcePosition(String file_path, size_t line_number, FlatPtr address_of_first_statement)
+        SourcePosition(DeprecatedString file_path, size_t line_number, FlatPtr address_of_first_statement)
             : file_path(file_path)
             , line_number(line_number)
             , address_of_first_statement(address_of_first_statement)
@@ -60,8 +60,8 @@ public:
             Address,
             Register,
         };
-        String name;
-        String type_name;
+        DeprecatedString name;
+        DeprecatedString type_name;
         LocationType location_type { LocationType::None };
         union {
             FlatPtr address;
@@ -84,7 +84,7 @@ public:
 
     struct VariablesScope {
         bool is_function { false };
-        String name;
+        DeprecatedString name;
         FlatPtr address_low { 0 };
         FlatPtr address_high { 0 }; // Non-inclusive - the lowest address after address_low that's not in this scope
         Vector<Dwarf::DIE> dies_of_variables;
@@ -101,14 +101,14 @@ public:
     SourcePositionWithInlines get_source_position_with_inlines(FlatPtr address) const;
 
     struct SourcePositionAndAddress {
-        String file;
+        DeprecatedString file;
         size_t line;
         FlatPtr address;
     };
 
-    Optional<SourcePositionAndAddress> get_address_from_source_position(String const& file, size_t line) const;
+    Optional<SourcePositionAndAddress> get_address_from_source_position(DeprecatedString const& file, size_t line) const;
 
-    String name_of_containing_function(FlatPtr address) const;
+    DeprecatedString name_of_containing_function(FlatPtr address) const;
     Vector<SourcePosition> source_lines_in_scope(VariablesScope const&) const;
     Optional<VariablesScope> get_containing_function(FlatPtr address) const;
 
@@ -124,7 +124,7 @@ private:
     Optional<uint32_t> get_line_of_inline(Dwarf::DIE const&) const;
 
     ELF::Image const& m_elf;
-    String m_source_root;
+    DeprecatedString m_source_root;
     FlatPtr m_base_address { 0 };
     Dwarf::DwarfInfo m_dwarf_info;
 

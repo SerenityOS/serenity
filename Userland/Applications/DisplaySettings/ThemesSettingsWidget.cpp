@@ -36,7 +36,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     m_theme_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<ThemePreviewWidget>(palette());
     m_themes_combo = *find_descendant_of_type_named<GUI::ComboBox>("themes_combo");
     m_themes_combo->set_only_allow_values_from_model(true);
-    m_themes_combo->set_model(*GUI::ItemListModel<String>::create(m_theme_names));
+    m_themes_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_theme_names));
     m_themes_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_theme = &m_themes.at(index.row());
         m_theme_preview->set_theme(m_selected_theme->path);

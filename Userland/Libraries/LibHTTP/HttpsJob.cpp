@@ -9,7 +9,7 @@
 
 namespace HTTP {
 
-void HttpsJob::set_certificate(String certificate, String key)
+void HttpsJob::set_certificate(DeprecatedString certificate, DeprecatedString key)
 {
     m_received_client_certificates = TLS::TLSv12::parse_pem_certificate(certificate.bytes(), key.bytes());
 }

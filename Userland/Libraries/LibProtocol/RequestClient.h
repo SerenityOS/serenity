@@ -21,13 +21,13 @@ class RequestClient final
     IPC_CLIENT_CONNECTION(RequestClient, "/tmp/session/%sid/portal/request"sv)
 
 public:
-    template<typename RequestHashMapTraits = Traits<String>>
-    RefPtr<Request> start_request(String const& method, URL const&, HashMap<String, String, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {});
+    template<typename RequestHashMapTraits = Traits<DeprecatedString>>
+    RefPtr<Request> start_request(DeprecatedString const& method, URL const&, HashMap<DeprecatedString, DeprecatedString, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {});
 
     void ensure_connection(URL const&, ::RequestServer::CacheLevel);
 
     bool stop_request(Badge<Request>, Request&);
-    bool set_certificate(Badge<Request>, Request&, String, String);
+    bool set_certificate(Badge<Request>, Request&, DeprecatedString, DeprecatedString);
 
 private:
     RequestClient(NonnullOwnPtr<Core::Stream::LocalSocket>);

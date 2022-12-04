@@ -60,18 +60,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"sv));
 
-    String perfcore_file;
+    DeprecatedString perfcore_file;
     if (!perfcore_file_arg) {
         if (!generate_profile(pid))
             return 0;
-        perfcore_file = String::formatted("/proc/{}/perf_events", pid);
+        perfcore_file = DeprecatedString::formatted("/proc/{}/perf_events", pid);
     } else {
         perfcore_file = perfcore_file_arg;
     }
 
     auto profile_or_error = Profile::load_from_perfcore_file(perfcore_file);
     if (profile_or_error.is_error()) {
-        GUI::MessageBox::show(nullptr, String::formatted("{}", profile_or_error.error()), "Profiler"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, DeprecatedString::formatted("{}", profile_or_error.error()), "Profiler"sv, GUI::MessageBox::Type::Error);
         return 0;
     }
 
@@ -223,11 +223,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     // FIXME: Make this constexpr once String is able to.
-    auto const sample_count_percent_format_string = String::formatted("{{:.{}f}}%", number_of_percent_digits);
+    auto const sample_count_percent_format_string = DeprecatedString::formatted("{{:.{}f}}%", number_of_percent_digits);
     auto const format_sample_count = [&profile, sample_count_percent_format_string](auto const sample_count) {
         if (profile->show_percentages())
-            return String::formatted(sample_count_percent_format_string, sample_count.as_float_or(0.0));
-        return String::formatted("{} Samples", sample_count.to_i32());
+            return DeprecatedString::formatted(sample_count_percent_format_string, sample_count.as_float_or(0.0));
+        return DeprecatedString::formatted("{} Samples", sample_count.to_i32());
     };
 
     auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
@@ -310,10 +310,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return app->exec();
 }
 
-static bool prompt_to_stop_profiling(pid_t pid, String const& process_name)
+static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_name)
 {
     auto window = GUI::Window::construct();
-    window->set_title(String::formatted("Profiling {}({})", process_name, pid));
+    window->set_title(DeprecatedString::formatted("Profiling {}({})", process_name, pid));
     window->resize(240, 100);
     window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();
@@ -327,7 +327,7 @@ static bool prompt_to_stop_profiling(pid_t pid, String const& process_name)
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::construct(100, [&] {
-        timer_label.set_text(String::formatted("{:.1} seconds", clock.elapsed() / 1000.0f));
+        timer_label.set_text(DeprecatedString::formatted("{:.1} seconds", clock.elapsed() / 1000.0f));
     });
 
     auto& stop_button = widget.add<GUI::Button>("Stop");
@@ -349,7 +349,7 @@ bool generate_profile(pid_t& pid)
         pid = process_chooser->pid();
     }
 
-    String process_name;
+    DeprecatedString process_name;
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
     if (all_processes.has_value()) {
@@ -367,7 +367,7 @@ bool generate_profile(pid_t& pid)
 
     if (profiling_enable(pid, event_mask) < 0) {
         int saved_errno = errno;
-        GUI::MessageBox::show(nullptr, String::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 

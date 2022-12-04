@@ -15,7 +15,7 @@
 namespace Web::MimeSniff {
 
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
-bool is_javascript_mime_type_essence_match(String const& string)
+bool is_javascript_mime_type_essence_match(DeprecatedString const& string)
 {
     // NOTE: The mime type parser automatically lowercases the essence.
     auto type = MimeType::from_string(string);
@@ -37,7 +37,7 @@ static bool contains_only_http_quoted_string_token_code_points(StringView string
     return true;
 }
 
-MimeType::MimeType(String type, String subtype)
+MimeType::MimeType(DeprecatedString type, DeprecatedString subtype)
     : m_type(move(type))
     , m_subtype(move(subtype))
 {
@@ -131,7 +131,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
             break;
 
         // 7. Let parameterValue be null.
-        String parameter_value;
+        DeprecatedString parameter_value;
 
         // 8. If the code point at position within input is U+0022 ("), then:
         if (lexer.peek() == '"') {
@@ -177,15 +177,15 @@ Optional<MimeType> MimeType::from_string(StringView string)
 }
 
 // https://mimesniff.spec.whatwg.org/#mime-type-essence
-String MimeType::essence() const
+DeprecatedString MimeType::essence() const
 {
     // The essence of a MIME type mimeType is mimeType’s type, followed by U+002F (/), followed by mimeType’s subtype.
     // FIXME: I believe this can easily be cached as I don't think anything directly changes the type and subtype.
-    return String::formatted("{}/{}", m_type, m_subtype);
+    return DeprecatedString::formatted("{}/{}", m_type, m_subtype);
 }
 
 // https://mimesniff.spec.whatwg.org/#serialize-a-mime-type
-String MimeType::serialized() const
+DeprecatedString MimeType::serialized() const
 {
     // 1. Let serialization be the concatenation of mimeType’s type, U+002F (/), and mimeType’s subtype.
     StringBuilder serialization;
@@ -212,7 +212,7 @@ String MimeType::serialized() const
 
             // 2. Prepend U+0022 (") to value.
             // 3. Append U+0022 (") to value.
-            value = String::formatted("\"{}\"", value);
+            value = DeprecatedString::formatted("\"{}\"", value);
         }
 
         // 5. Append value to serialization.
@@ -223,7 +223,7 @@ String MimeType::serialized() const
     return serialization.to_string();
 }
 
-void MimeType::set_parameter(String const& name, String const& value)
+void MimeType::set_parameter(DeprecatedString const& name, DeprecatedString const& value)
 {
     // https://mimesniff.spec.whatwg.org/#parameters
     // A MIME type’s parameters is an ordered map whose keys are ASCII strings and values are strings limited to HTTP quoted-string token code points.

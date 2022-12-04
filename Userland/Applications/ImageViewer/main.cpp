@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
+        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
 
         if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return;
 
             auto msgbox_result = GUI::MessageBox::show(window,
-                String::formatted("Are you sure you want to delete {}?", path),
+                DeprecatedString::formatted("Are you sure you want to delete {}?", path),
                 "Confirm deletion"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
@@ -134,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto unlinked_or_error = Core::System::unlink(widget->path());
             if (unlinked_or_error.is_error()) {
                 GUI::MessageBox::show(window,
-                    String::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
+                    DeprecatedString::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
                     "Delete failed"sv,
                     GUI::MessageBox::Type::Error);
 
@@ -171,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](auto&) {
             if (!GUI::Desktop::the().set_wallpaper(widget->bitmap(), widget->path())) {
                 GUI::MessageBox::show(window,
-                    String::formatted("set_wallpaper({}) failed", widget->path()),
+                    DeprecatedString::formatted("set_wallpaper({}) failed", widget->path()),
                     "Could not set wallpaper"sv,
                     GUI::MessageBox::Type::Error);
             }

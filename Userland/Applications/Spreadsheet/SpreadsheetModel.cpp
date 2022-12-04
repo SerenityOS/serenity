@@ -21,9 +21,9 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     if (role == GUI::ModelRole::Display) {
         auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
-            return String::empty();
+            return DeprecatedString::empty();
 
-        Function<String(JS::Value)> to_string_as_exception = [&](JS::Value value) {
+        Function<DeprecatedString(JS::Value)> to_string_as_exception = [&](JS::Value value) {
             auto& vm = cell->sheet().global_object().vm();
             StringBuilder builder;
             builder.append("Error: "sv);
@@ -154,7 +154,7 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
 
     Position cursor_position { (size_t)cursor->column(), (size_t)cursor->row() };
     auto mime_data_buffer = mime_data->data("text/x-spreadsheet-data");
-    auto new_data = String::formatted("{}\n{}",
+    auto new_data = DeprecatedString::formatted("{}\n{}",
         cursor_position.to_url(m_sheet).to_string(),
         StringView(mime_data_buffer));
     mime_data->set_data("text/x-spreadsheet-data", new_data.to_byte_buffer());
@@ -162,7 +162,7 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
     return mime_data;
 }
 
-String SheetModel::column_name(int index) const
+DeprecatedString SheetModel::column_name(int index) const
 {
     if (index < 0)
         return {};
@@ -202,7 +202,7 @@ CellsUndoCommand::CellsUndoCommand(Vector<CellChange> cell_changes)
     m_cell_changes = cell_changes;
 }
 
-CellsUndoCommand::CellsUndoCommand(Cell& cell, String const& previous_data)
+CellsUndoCommand::CellsUndoCommand(Cell& cell, DeprecatedString const& previous_data)
 {
     m_cell_changes.append(CellChange(cell, previous_data));
 }

@@ -63,7 +63,7 @@ WebIDL::ExceptionOr<JS::Value> Crypto::get_random_values(JS::Value array) const
 }
 
 // https://w3c.github.io/webcrypto/#dfn-Crypto-method-randomUUID
-String Crypto::random_uuid() const
+DeprecatedString Crypto::random_uuid() const
 {
     // 1. Let bytes be a byte sequence of length 16.
     u8 bytes[16];

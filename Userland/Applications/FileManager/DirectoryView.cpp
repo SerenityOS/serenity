@@ -27,7 +27,7 @@
 
 namespace FileManager {
 
-void spawn_terminal(String const& directory)
+void spawn_terminal(DeprecatedString const& directory)
 {
     posix_spawn_file_actions_t spawn_actions;
     posix_spawn_file_actions_init(&spawn_actions);
@@ -86,7 +86,7 @@ NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(URL cons
     return handlers;
 }
 
-NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(String const& path)
+NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(DeprecatedString const& path)
 {
     return get_launch_handlers(URL::create_with_file_scheme(path));
 }
@@ -120,11 +120,11 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
 
     if (default_launcher) {
         auto launch_origin_rect = current_view().to_widget_rect(current_view().content_rect(index)).translated(current_view().screen_relative_rect().location());
-        setenv("__libgui_launch_origin_rect", String::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
+        setenv("__libgui_launch_origin_rect", DeprecatedString::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
         launch(url, *default_launcher);
         unsetenv("__libgui_launch_origin_rect");
     } else {
-        auto error_message = String::formatted("Could not open {}", path);
+        auto error_message = DeprecatedString::formatted("Could not open {}", path);
         GUI::MessageBox::show(window(), error_message, "File Manager"sv, GUI::MessageBox::Type::Error);
     }
 }
@@ -162,7 +162,7 @@ void DirectoryView::setup_model()
 {
     m_model->on_directory_change_error = [this](int, char const* error_string) {
         auto failed_path = m_model->root_path();
-        auto error_message = String::formatted("Could not read {}:\n{}", failed_path, error_string);
+        auto error_message = DeprecatedString::formatted("Could not read {}:\n{}", failed_path, error_string);
         m_error_label->set_text(error_message);
         set_active_widget(m_error_label);
 
@@ -176,7 +176,7 @@ void DirectoryView::setup_model()
     };
 
     m_model->on_rename_error = [this](int, char const* error_string) {
-        GUI::MessageBox::show_error(window(), String::formatted("Unable to rename file: {}", error_string));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to rename file: {}", error_string));
     };
 
     m_model->on_complete = [this] {
@@ -340,7 +340,7 @@ void DirectoryView::model_did_update(unsigned flags)
     update_statusbar();
 }
 
-void DirectoryView::set_view_mode_from_string(String const& mode)
+void DirectoryView::set_view_mode_from_string(DeprecatedString const& mode)
 {
     if (m_mode == Mode::Desktop)
         return;
@@ -357,7 +357,7 @@ void DirectoryView::set_view_mode_from_string(String const& mode)
     }
 }
 
-void DirectoryView::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+void DirectoryView::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
 {
     if (domain != "FileManager" || group != "DirectoryView")
         return;
@@ -389,7 +389,7 @@ void DirectoryView::set_view_mode(ViewMode mode)
     VERIFY_NOT_REACHED();
 }
 
-void DirectoryView::add_path_to_history(String path)
+void DirectoryView::add_path_to_history(DeprecatedString path)
 {
     if (m_path_history.size() && m_path_history.at(m_path_history_position) == path)
         return;
@@ -401,7 +401,7 @@ void DirectoryView::add_path_to_history(String path)
     m_path_history_position = m_path_history.size() - 1;
 }
 
-bool DirectoryView::open(String const& path)
+bool DirectoryView::open(DeprecatedString const& path)
 {
     auto real_path = Core::File::real_path_for(path);
     if (real_path.is_null() || !Core::File::is_directory(path))
@@ -525,9 +525,9 @@ void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) 
     }
 }
 
-Vector<String> DirectoryView::selected_file_paths() const
+Vector<DeprecatedString> DirectoryView::selected_file_paths() const
 {
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
     auto& view = current_view();
     auto& model = *view.model();
     view.selection().for_each_index([&](GUI::ModelIndex const& index) {
@@ -567,36 +567,36 @@ void DirectoryView::handle_selection_change()
 void DirectoryView::setup_actions()
 {
     m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
-        String value;
+        DeprecatedString value;
         if (GUI::InputBox::show(window(), value, "Enter name:"sv, "New directory"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
+            auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", path(), value));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
             }
         }
     });
 
     m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
-        String value;
+        DeprecatedString value;
         if (GUI::InputBox::show(window(), value, "Enter name:"sv, "New file"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
-            auto new_file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
+            auto new_file_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", path(), value));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::formatted("stat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("stat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
             if (rc == 0) {
-                GUI::MessageBox::show(window(), String::formatted("{}: Already exists", new_file_path), "Error"sv, GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("{}: Already exists", new_file_path), "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
             int fd = creat(new_file_path.characters(), 0666);
             if (fd < 0) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::formatted("creat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("creat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
             rc = close(fd);
@@ -663,11 +663,11 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
         return;
 
     bool had_accepted_drop = false;
-    Vector<String> paths_to_copy;
+    Vector<DeprecatedString> paths_to_copy;
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
-        auto new_path = String::formatted("{}/{}", target_node.full_path(), LexicalPath::basename(url_to_copy.path()));
+        auto new_path = DeprecatedString::formatted("{}/{}", target_node.full_path(), LexicalPath::basename(url_to_copy.path()));
         if (url_to_copy.path() == new_path)
             continue;
 

@@ -33,7 +33,7 @@ struct SessionHistoryEntry {
     JS::GCPtr<DOM::Document> document;
 
     // serialized state, which is serialized state or null, initially null
-    Optional<String> serialized_state;
+    Optional<DeprecatedString> serialized_state;
 
     // policy container, a policy container or null
     Optional<PolicyContainer> policy_container;
@@ -44,7 +44,7 @@ struct SessionHistoryEntry {
     // FIXME: scroll position data, which is scroll position data for the document's restorable scrollable regions
 
     // browsing context name, a browsing context name or null, initially null
-    Optional<String> browsing_context_name;
+    Optional<DeprecatedString> browsing_context_name;
 
     // FIXME: persisted user state, which is implementation-defined, initially null
     // NOTE: This is where we could remember the state of form controls, for example.

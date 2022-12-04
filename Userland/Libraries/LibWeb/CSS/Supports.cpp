@@ -73,42 +73,42 @@ bool Supports::Feature::evaluate() const
         });
 }
 
-String Supports::Declaration::to_string() const
+DeprecatedString Supports::Declaration::to_string() const
 {
-    return String::formatted("({})", declaration);
+    return DeprecatedString::formatted("({})", declaration);
 }
 
-String Supports::Selector::to_string() const
+DeprecatedString Supports::Selector::to_string() const
 {
-    return String::formatted("selector({})", selector);
+    return DeprecatedString::formatted("selector({})", selector);
 }
 
-String Supports::Feature::to_string() const
+DeprecatedString Supports::Feature::to_string() const
 {
     return value.visit([](auto& it) { return it.to_string(); });
 }
 
-String Supports::InParens::to_string() const
+DeprecatedString Supports::InParens::to_string() const
 {
     return value.visit(
-        [](NonnullOwnPtr<Condition> const& condition) -> String { return String::formatted("({})", condition->to_string()); },
-        [](auto& it) -> String { return it.to_string(); });
+        [](NonnullOwnPtr<Condition> const& condition) -> DeprecatedString { return DeprecatedString::formatted("({})", condition->to_string()); },
+        [](auto& it) -> DeprecatedString { return it.to_string(); });
 }
 
-String Supports::Condition::to_string() const
+DeprecatedString Supports::Condition::to_string() const
 {
     switch (type) {
     case Type::Not:
-        return String::formatted("not {}", children.first().to_string());
+        return DeprecatedString::formatted("not {}", children.first().to_string());
     case Type::And:
-        return String::join(" and "sv, children);
+        return DeprecatedString::join(" and "sv, children);
     case Type::Or:
-        return String::join(" or "sv, children);
+        return DeprecatedString::join(" or "sv, children);
     }
     VERIFY_NOT_REACHED();
 }
 
-String Supports::to_string() const
+DeprecatedString Supports::to_string() const
 {
     return m_condition->to_string();
 }

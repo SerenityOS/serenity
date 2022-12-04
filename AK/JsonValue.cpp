@@ -156,7 +156,7 @@ JsonValue::JsonValue(long long unsigned value)
 }
 
 JsonValue::JsonValue(char const* cstring)
-    : JsonValue(String(cstring))
+    : JsonValue(DeprecatedString(cstring))
 {
 }
 
@@ -174,7 +174,7 @@ JsonValue::JsonValue(bool value)
     m_value.as_bool = value;
 }
 
-JsonValue::JsonValue(String const& value)
+JsonValue::JsonValue(DeprecatedString const& value)
 {
     if (value.is_null()) {
         m_type = Type::Null;

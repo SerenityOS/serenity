@@ -19,8 +19,8 @@ public:
     };
 
     struct UsernamePasswordAuthenticationData {
-        String username;
-        String password;
+        DeprecatedString username;
+        DeprecatedString password;
     };
 
     enum class Command : u8 {
@@ -29,7 +29,7 @@ public:
         UDPAssociate = 0x03,
     };
 
-    using HostOrIPV4 = Variant<String, u32>;
+    using HostOrIPV4 = Variant<DeprecatedString, u32>;
 
     static ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> connect(Socket& underlying, Version, HostOrIPV4 const& target, int target_port, Variant<UsernamePasswordAuthenticationData, Empty> const& auth_data = {}, Command = Command::Connect);
     static ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> connect(HostOrIPV4 const& server, int server_port, Version, HostOrIPV4 const& target, int target_port, Variant<UsernamePasswordAuthenticationData, Empty> const& auth_data = {}, Command = Command::Connect);

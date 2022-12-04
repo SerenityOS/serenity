@@ -49,7 +49,7 @@ public:
 
     static JS::NonnullGCPtr<HTMLParser> create_for_scripting(DOM::Document&);
     static JS::NonnullGCPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
-    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, String const& encoding);
+    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, DeprecatedString const& encoding);
 
     void run();
     void run(const AK::URL&);
@@ -57,7 +57,7 @@ public:
     DOM::Document& document();
 
     static Vector<JS::Handle<DOM::Node>> parse_html_fragment(DOM::Element& context_element, StringView);
-    static String serialize_html_fragment(DOM::Node const& node);
+    static DeprecatedString serialize_html_fragment(DOM::Node const& node);
 
     enum class InsertionMode {
 #define __ENUMERATE_INSERTION_MODE(mode) mode,
@@ -80,7 +80,7 @@ public:
     size_t script_nesting_level() const { return m_script_nesting_level; }
 
 private:
-    HTMLParser(DOM::Document&, StringView input, String const& encoding);
+    HTMLParser(DOM::Document&, StringView input, DeprecatedString const& encoding);
     HTMLParser(DOM::Document&);
 
     virtual void visit_edges(Cell::Visitor&) override;

@@ -18,7 +18,7 @@ public:
 
     virtual Gfx::Font& default_font() override;
     virtual Gfx::Font& default_fixed_width_font() override;
-    virtual String generic_font_name(GenericFont) override;
+    virtual DeprecatedString generic_font_name(GenericFont) override;
 };
 
 }

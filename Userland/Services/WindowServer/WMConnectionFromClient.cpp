@@ -182,7 +182,7 @@ void WMConnectionFromClient::set_window_taskbar_rect(i32 client_id, i32 window_i
     window.set_taskbar_rect(rect);
 }
 
-void WMConnectionFromClient::set_keymap(String const& keymap)
+void WMConnectionFromClient::set_keymap(DeprecatedString const& keymap)
 {
     WindowManager::the().keymap_switcher()->set_keymap(keymap);
 }

@@ -17,7 +17,7 @@ int InboxModel::row_count(GUI::ModelIndex const&) const
     return m_entries.size();
 }
 
-String InboxModel::column_name(int column_index) const
+DeprecatedString InboxModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::From:

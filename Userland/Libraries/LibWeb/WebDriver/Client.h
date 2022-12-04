@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
 #include <LibCore/Stream.h>

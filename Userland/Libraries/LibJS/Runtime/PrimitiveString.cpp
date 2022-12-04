@@ -23,7 +23,7 @@ PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
 {
 }
 
-PrimitiveString::PrimitiveString(String string)
+PrimitiveString::PrimitiveString(DeprecatedString string)
     : m_has_utf8_string(true)
     , m_utf8_string(move(string))
 {
@@ -63,7 +63,7 @@ bool PrimitiveString::is_empty() const
     VERIFY_NOT_REACHED();
 }
 
-String const& PrimitiveString::string() const
+DeprecatedString const& PrimitiveString::string() const
 {
     resolve_rope_if_needed();
     if (!m_has_utf8_string) {
@@ -137,7 +137,7 @@ PrimitiveString* js_string(VM& vm, Utf16String string)
     return js_string(vm.heap(), move(string));
 }
 
-PrimitiveString* js_string(Heap& heap, String string)
+PrimitiveString* js_string(Heap& heap, DeprecatedString string)
 {
     if (string.is_empty())
         return &heap.vm().empty_string();
@@ -158,7 +158,7 @@ PrimitiveString* js_string(Heap& heap, String string)
     return it->value;
 }
 
-PrimitiveString* js_string(VM& vm, String string)
+PrimitiveString* js_string(VM& vm, DeprecatedString string)
 {
     return js_string(vm.heap(), move(string));
 }

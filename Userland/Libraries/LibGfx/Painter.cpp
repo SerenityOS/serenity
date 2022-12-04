@@ -2398,10 +2398,10 @@ void Painter::blit_tiled(IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Int
     }
 }
 
-String parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_offset)
+DeprecatedString parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_offset)
 {
     if (raw_text.is_empty())
-        return String::empty();
+        return DeprecatedString::empty();
 
     StringBuilder builder;
 

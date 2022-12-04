@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedString.h>
 #include <AK/QuickSort.h>
 #include <AK/Random.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <stdlib.h>
 
@@ -63,7 +63,7 @@ TEST_CASE(quick_sort)
             auto const& key1 = test_objects[i].m_key;
             auto const& key2 = test_objects[i + 1].m_key;
             if (key1 > key2) {
-                FAIL(String::formatted("saw key {} before key {}\n", key1, key2));
+                FAIL(DeprecatedString::formatted("saw key {} before key {}\n", key1, key2));
             }
         }
         // Check that the object's payloads have not been corrupted
@@ -71,7 +71,7 @@ TEST_CASE(quick_sort)
             auto const expected = calc_payload_for_pos(i);
             auto const payload = test_objects[i].m_payload;
             if (payload != expected) {
-                FAIL(String::formatted("Expected payload {} for pos {}, got payload {}", expected, i, payload));
+                FAIL(DeprecatedString::formatted("Expected payload {} for pos {}, got payload {}", expected, i, payload));
             }
         }
     }

@@ -9,7 +9,7 @@
 
 namespace Web::DOM {
 
-ProcessingInstruction::ProcessingInstruction(Document& document, String const& data, String const& target)
+ProcessingInstruction::ProcessingInstruction(Document& document, DeprecatedString const& data, DeprecatedString const& target)
     : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, data)
     , m_target(target)
 {

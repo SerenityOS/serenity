@@ -54,7 +54,7 @@ public:
         FixedPoint<16, u32> vertical_frequency_hz() const;
         u32 refresh_rate_hz() const;
 #ifndef KERNEL
-        String name() const;
+        DeprecatedString name() const;
 #endif
     };
 

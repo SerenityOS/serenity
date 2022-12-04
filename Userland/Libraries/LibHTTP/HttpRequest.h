@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/Forward.h>
@@ -32,19 +32,19 @@ public:
     };
 
     struct Header {
-        String name;
-        String value;
+        DeprecatedString name;
+        DeprecatedString value;
     };
 
     struct BasicAuthenticationCredentials {
-        String username;
-        String password;
+        DeprecatedString username;
+        DeprecatedString password;
     };
 
     HttpRequest() = default;
     ~HttpRequest() = default;
 
-    String const& resource() const { return m_resource; }
+    DeprecatedString const& resource() const { return m_resource; }
     Vector<Header> const& headers() const { return m_headers; }
 
     URL const& url() const { return m_url; }
@@ -56,23 +56,23 @@ public:
     ByteBuffer const& body() const { return m_body; }
     void set_body(ByteBuffer&& body) { m_body = move(body); }
 
-    String method_name() const;
+    DeprecatedString method_name() const;
     ByteBuffer to_raw_request() const;
 
-    void set_headers(HashMap<String, String> const&);
+    void set_headers(HashMap<DeprecatedString, DeprecatedString> const&);
 
     static Optional<HttpRequest> from_raw_request(ReadonlyBytes);
     static Optional<Header> get_http_basic_authentication_header(URL const&);
-    static Optional<BasicAuthenticationCredentials> parse_http_basic_authentication_header(String const&);
+    static Optional<BasicAuthenticationCredentials> parse_http_basic_authentication_header(DeprecatedString const&);
 
 private:
     URL m_url;
-    String m_resource;
+    DeprecatedString m_resource;
     Method m_method { GET };
     Vector<Header> m_headers;
     ByteBuffer m_body;
 };
 
-String to_string(HttpRequest::Method);
+DeprecatedString to_string(HttpRequest::Method);
 
 }

@@ -145,7 +145,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 // Read out the host_name
                 if (buffer.size() - res < sni_name_length)
                     return (i8)Error::NeedMoreData;
-                m_context.extensions.SNI = String { (char const*)buffer.offset_pointer(res), sni_name_length };
+                m_context.extensions.SNI = DeprecatedString { (char const*)buffer.offset_pointer(res), sni_name_length };
                 res += sni_name_length;
                 dbgln("SNI host_name: {}", m_context.extensions.SNI);
             }
@@ -159,7 +159,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                         u8 alpn_size = alpn[alpn_position++];
                         if (alpn_size + alpn_position >= extension_length)
                             break;
-                        String alpn_str { (char const*)alpn + alpn_position, alpn_length };
+                        DeprecatedString alpn_str { (char const*)alpn + alpn_position, alpn_length };
                         if (alpn_size && m_context.alpn.contains_slow(alpn_str)) {
                             m_context.negotiated_alpn = alpn_str;
                             dbgln("negotiated alpn: {}", alpn_str);

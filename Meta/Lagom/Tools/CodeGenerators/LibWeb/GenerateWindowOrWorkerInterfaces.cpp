@@ -5,9 +5,9 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
@@ -16,14 +16,14 @@
 #include <LibMain/Main.h>
 
 static ErrorOr<void> add_to_interface_sets(IDL::Interface&, Vector<IDL::Interface&>& window_exposed, Vector<IDL::Interface&>& dedicated_worker_exposed, Vector<IDL::Interface&>& shared_worker_exposed);
-static String s_error_string;
+static DeprecatedString s_error_string;
 
 static ErrorOr<void> generate_exposed_interface_header(StringView class_name, StringView output_path)
 {
     StringBuilder builder;
     SourceGenerator generator(builder);
 
-    generator.set("global_object_snake_name", String(class_name).to_snakecase());
+    generator.set("global_object_snake_name", DeprecatedString(class_name).to_snakecase());
     generator.append(R"~~~(
 #pragma once
 
@@ -37,7 +37,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object&, JS::Realm&);
 
 )~~~");
 
-    auto generated_header_path = LexicalPath(output_path).append(String::formatted("{}ExposedInterfaces.h", class_name)).string();
+    auto generated_header_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.h", class_name)).string();
     auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
     TRY(generated_header_file->write(generator.as_string_view().bytes()));
 
@@ -50,7 +50,7 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
     SourceGenerator generator(builder);
 
     generator.set("global_object_name", class_name);
-    generator.set("global_object_snake_name", String(class_name).to_snakecase());
+    generator.set("global_object_snake_name", DeprecatedString(class_name).to_snakecase());
 
     generator.append(R"~~~(
 #include <LibJS/Heap/DeferGC.h>
@@ -123,7 +123,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::R
 }
 }
 )~~~");
-    auto generated_implementation_path = LexicalPath(output_path).append(String::formatted("{}ExposedInterfaces.cpp", class_name)).string();
+    auto generated_implementation_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.cpp", class_name)).string();
     auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
     TRY(generated_implementation_file->write(generator.as_string_view().bytes()));
 
@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView output_path;
     StringView base_path;
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
 
     args_parser.add_option(output_path, "Path to output generated files into", "output-path", 'o', "output-path");
     args_parser.add_option(base_path, "Path to root of IDL file tree", "base-path", 'b', "base-path");
@@ -149,16 +149,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     const LexicalPath lexical_base(base_path);
 
     // Read in all IDL files, we must own the storage for all of these for the lifetime of the program
-    Vector<String> file_contents;
-    for (String const& path : paths) {
+    Vector<DeprecatedString> file_contents;
+    for (DeprecatedString const& path : paths) {
         auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
         if (file_or_error.is_error()) {
-            s_error_string = String::formatted("Unable to open file {}", path);
+            s_error_string = DeprecatedString::formatted("Unable to open file {}", path);
             return Error::from_string_view(s_error_string);
         }
         auto file = file_or_error.release_value();
         auto string = MUST(file->read_all());
-        file_contents.append(String(ReadonlyBytes(string)));
+        file_contents.append(DeprecatedString(ReadonlyBytes(string)));
     }
     VERIFY(paths.size() == file_contents.size());
 
@@ -220,7 +220,7 @@ static ErrorOr<ExposedTo> parse_exposure_set(IDL::Interface& interface)
 
     auto maybe_exposed = interface.extended_attributes.get("Exposed");
     if (!maybe_exposed.has_value()) {
-        s_error_string = String::formatted("Interface {} is missing extended attribute Exposed", interface.name);
+        s_error_string = DeprecatedString::formatted("Interface {} is missing extended attribute Exposed", interface.name);
         return Error::from_string_view(s_error_string);
     }
     auto exposed = maybe_exposed.value().trim_whitespace();
@@ -250,18 +250,18 @@ static ErrorOr<ExposedTo> parse_exposure_set(IDL::Interface& interface)
             } else if (candidate == "AudioWorklet"sv) {
                 whom |= ExposedTo::AudioWorklet;
             } else {
-                s_error_string = String::formatted("Unknown Exposed attribute candidate {} in {} in {}", candidate, exposed, interface.name);
+                s_error_string = DeprecatedString::formatted("Unknown Exposed attribute candidate {} in {} in {}", candidate, exposed, interface.name);
                 return Error::from_string_view(s_error_string);
             }
         }
         if (whom == ExposedTo::Nobody) {
-            s_error_string = String::formatted("Unknown Exposed attribute {} in {}", exposed, interface.name);
+            s_error_string = DeprecatedString::formatted("Unknown Exposed attribute {} in {}", exposed, interface.name);
             return Error::from_string_view(s_error_string);
         }
         return whom;
     }
 
-    s_error_string = String::formatted("Unknown Exposed attribute {} in {}", exposed, interface.name);
+    s_error_string = DeprecatedString::formatted("Unknown Exposed attribute {} in {}", exposed, interface.name);
     return Error::from_string_view(s_error_string);
 }
 
@@ -275,7 +275,7 @@ static IDL::Interface& add_synthetic_interface(IDL::Interface& reference_interfa
 
     auto new_interface = make<IDL::Interface>();
     new_interface->name = name;
-    new_interface->constructor_class = String::formatted("{}Constructor", new_interface->name);
+    new_interface->constructor_class = DeprecatedString::formatted("{}Constructor", new_interface->name);
     new_interface->prototype_class = reference_interface.prototype_class;
     new_interface->parent_name = "[Synthetic Interface]";
 

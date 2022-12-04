@@ -93,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    String output_path;
+    DeprecatedString output_path;
     bool output_to_clipboard = false;
     unsigned delay = 0;
     bool select_region = false;

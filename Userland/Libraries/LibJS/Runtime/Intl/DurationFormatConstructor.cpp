@@ -74,7 +74,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     // 8. Let opt be the Record { [[localeMatcher]]: matcher, [[nu]]: numberingSystem }.
     LocaleOptions opt {};
     opt.locale_matcher = matcher;
-    opt.nu = numbering_system.is_undefined() ? Optional<String>() : numbering_system.as_string().string();
+    opt.nu = numbering_system.is_undefined() ? Optional<DeprecatedString>() : numbering_system.as_string().string();
 
     // 9. Let r be ResolveLocale(%DurationFormat%.[[AvailableLocales]], requestedLocales, opt, %DurationFormat%.[[RelevantExtensionKeys]], %DurationFormat%.[[LocaleData]]).
     auto result = resolve_locale(requested_locales, opt, DurationFormat::relevant_extension_keys());
@@ -99,7 +99,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     duration_format->set_data_locale(move(result.data_locale));
 
     // 16. Let prevStyle be the empty String.
-    auto previous_style = String::empty();
+    auto previous_style = DeprecatedString::empty();
 
     // 17. For each row of Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {

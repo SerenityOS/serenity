@@ -12,7 +12,7 @@
 
 namespace Markdown {
 
-String List::render_to_html(bool) const
+DeprecatedString List::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -37,7 +37,7 @@ String List::render_to_html(bool) const
     return builder.build();
 }
 
-String List::render_for_terminal(size_t) const
+DeprecatedString List::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 

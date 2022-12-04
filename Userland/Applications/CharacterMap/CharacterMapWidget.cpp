@@ -69,7 +69,7 @@ CharacterMapWidget::CharacterMapWidget()
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
     m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        String input;
+        DeprecatedString input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv) == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
@@ -139,7 +139,7 @@ CharacterMapWidget::CharacterMapWidget()
     for (auto& block : unicode_blocks)
         m_unicode_block_list.append(block.display_name);
 
-    m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
+    m_unicode_block_model = GUI::ItemListModel<DeprecatedString>::create(m_unicode_block_list);
     m_unicode_block_listview->set_model(*m_unicode_block_model);
     m_unicode_block_listview->set_activates_on_selection(true);
     m_unicode_block_listview->horizontal_scrollbar().set_visible(false);

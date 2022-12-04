@@ -15,7 +15,7 @@ u32 Relation::hash() const
     return key().hash();
 }
 
-SchemaDef::SchemaDef(String name)
+SchemaDef::SchemaDef(DeprecatedString name)
     : Relation(move(name))
 {
 }
@@ -47,7 +47,7 @@ NonnullRefPtr<IndexDef> SchemaDef::index_def()
     return s_index_def;
 }
 
-ColumnDef::ColumnDef(Relation* parent, size_t column_number, String name, SQLType sql_type)
+ColumnDef::ColumnDef(Relation* parent, size_t column_number, DeprecatedString name, SQLType sql_type)
     : Relation(move(name), parent)
     , m_index(column_number)
     , m_type(sql_type)
@@ -90,25 +90,25 @@ NonnullRefPtr<IndexDef> ColumnDef::index_def()
     return s_index_def;
 }
 
-KeyPartDef::KeyPartDef(IndexDef* index, String name, SQLType sql_type, Order sort_order)
+KeyPartDef::KeyPartDef(IndexDef* index, DeprecatedString name, SQLType sql_type, Order sort_order)
     : ColumnDef(index, index->size(), move(name), sql_type)
     , m_sort_order(sort_order)
 {
 }
 
-IndexDef::IndexDef(TableDef* table, String name, bool unique, u32 pointer)
+IndexDef::IndexDef(TableDef* table, DeprecatedString name, bool unique, u32 pointer)
     : Relation(move(name), pointer, table)
     , m_key_definition()
     , m_unique(unique)
 {
 }
 
-IndexDef::IndexDef(String name, bool unique, u32 pointer)
+IndexDef::IndexDef(DeprecatedString name, bool unique, u32 pointer)
     : IndexDef(nullptr, move(name), unique, pointer)
 {
 }
 
-void IndexDef::append_column(String name, SQLType sql_type, Order sort_order)
+void IndexDef::append_column(DeprecatedString name, SQLType sql_type, Order sort_order)
 {
     auto part = KeyPartDef::construct(this, move(name), sql_type, sort_order);
     m_key_definition.append(part);
@@ -150,7 +150,7 @@ NonnullRefPtr<IndexDef> IndexDef::index_def()
     return s_index_def;
 }
 
-TableDef::TableDef(SchemaDef* schema, String name)
+TableDef::TableDef(SchemaDef* schema, DeprecatedString name)
     : Relation(move(name), schema)
     , m_columns()
     , m_indexes()
@@ -175,7 +175,7 @@ Key TableDef::key() const
     return key;
 }
 
-void TableDef::append_column(String name, SQLType sql_type)
+void TableDef::append_column(DeprecatedString name, SQLType sql_type)
 {
     auto column = ColumnDef::construct(this, num_columns(), move(name), sql_type);
     m_columns.append(column);

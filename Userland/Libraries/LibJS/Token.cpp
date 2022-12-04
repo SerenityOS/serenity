@@ -63,7 +63,7 @@ double Token::double_value() const
         builder.append(ch);
     }
 
-    String value_string = builder.to_string();
+    DeprecatedString value_string = builder.to_string();
     if (value_string[0] == '0' && value_string.length() >= 2) {
         if (value_string[1] == 'x' || value_string[1] == 'X') {
             // hexadecimal
@@ -92,14 +92,14 @@ static u32 hex2int(char x)
     return 10u + (to_ascii_lowercase(x) - 'a');
 }
 
-String Token::string_value(StringValueStatus& status) const
+DeprecatedString Token::string_value(StringValueStatus& status) const
 {
     VERIFY(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
 
     auto is_template = type() == TokenType::TemplateLiteralString;
     GenericLexer lexer(is_template ? value() : value().substring_view(1, value().length() - 2));
 
-    auto encoding_failure = [&status](StringValueStatus parse_status) -> String {
+    auto encoding_failure = [&status](StringValueStatus parse_status) -> DeprecatedString {
         status = parse_status;
         return {};
     };
@@ -173,7 +173,7 @@ String Token::string_value(StringValueStatus& status) const
 
         // In non-strict mode LegacyOctalEscapeSequence is allowed in strings:
         // https://tc39.es/ecma262/#sec-additional-syntax-string-literals
-        String octal_str;
+        DeprecatedString octal_str;
 
         auto is_octal_digit = [](char ch) { return ch >= '0' && ch <= '7'; };
         auto is_zero_to_three = [](char ch) { return ch >= '0' && ch <= '3'; };
@@ -213,7 +213,7 @@ String Token::string_value(StringValueStatus& status) const
 }
 
 // 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/#sec-static-semantics-trv
-String Token::raw_template_value() const
+DeprecatedString Token::raw_template_value() const
 {
     return value().replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All);
 }

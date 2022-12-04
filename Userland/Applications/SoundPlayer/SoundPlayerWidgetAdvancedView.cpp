@@ -199,13 +199,13 @@ void SoundPlayerWidgetAdvancedView::shuffle_mode_changed(Player::ShuffleMode)
 
 void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
 {
-    m_timestamp_label->set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60));
+    m_timestamp_label->set_text(DeprecatedString::formatted("Elapsed: {:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60));
 }
 
 void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
 {
     m_visualization->start_new_file(name);
-    m_window.set_title(String::formatted("{} - Sound Player", name));
+    m_window.set_title(DeprecatedString::formatted("{} - Sound Player", name));
 }
 
 void SoundPlayerWidgetAdvancedView::total_samples_changed(int total_samples)
@@ -225,13 +225,13 @@ void SoundPlayerWidgetAdvancedView::sound_buffer_played(FixedArray<Audio::Sample
 
 void SoundPlayerWidgetAdvancedView::volume_changed(double volume)
 {
-    m_volume_label->set_text(String::formatted("{}%", static_cast<int>(volume * 100)));
+    m_volume_label->set_text(DeprecatedString::formatted("{}%", static_cast<int>(volume * 100)));
 }
 
 void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded)
 {
     if (!loaded) {
-        GUI::MessageBox::show(&m_window, String::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(&m_window, DeprecatedString::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist"sv, GUI::MessageBox::Type::Error);
         return;
     }
     set_playlist_visible(true);
@@ -240,6 +240,6 @@ void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded
 
 void SoundPlayerWidgetAdvancedView::audio_load_error(StringView path, StringView error_string)
 {
-    GUI::MessageBox::show(&m_window, String::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error"sv : error_string),
+    GUI::MessageBox::show(&m_window, DeprecatedString::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error"sv : error_string),
         "Filetype error"sv, GUI::MessageBox::Type::Error);
 }

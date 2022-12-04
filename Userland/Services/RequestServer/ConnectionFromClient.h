@@ -31,10 +31,10 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
-    virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(String const&) override;
-    virtual Messages::RequestServer::StartRequestResponse start_request(String const&, URL const&, IPC::Dictionary const&, ByteBuffer const&, Core::ProxyData const&) override;
+    virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(DeprecatedString const&) override;
+    virtual Messages::RequestServer::StartRequestResponse start_request(DeprecatedString const&, URL const&, IPC::Dictionary const&, ByteBuffer const&, Core::ProxyData const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
-    virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, String const&, String const&) override;
+    virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, DeprecatedString const&, DeprecatedString const&) override;
     virtual void ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level) override;
 
     HashMap<i32, OwnPtr<Request>> m_requests;

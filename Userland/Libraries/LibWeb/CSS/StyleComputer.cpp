@@ -115,7 +115,7 @@ static CSSStyleSheet& default_stylesheet()
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
         extern char const default_stylesheet_source[];
-        String css = default_stylesheet_source;
+        DeprecatedString css = default_stylesheet_source;
         sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
     }
     return *sheet;
@@ -126,7 +126,7 @@ static CSSStyleSheet& quirks_mode_stylesheet()
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
         extern char const quirks_mode_stylesheet_source[];
-        String css = quirks_mode_stylesheet_source;
+        DeprecatedString css = quirks_mode_stylesheet_source;
         sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
     }
     return *sheet;
@@ -1105,7 +1105,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
-    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
+    auto find_font = [&](DeprecatedString const& family) -> RefPtr<Gfx::Font> {
         float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, slope };
 
@@ -1316,7 +1316,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& elemen
     return style;
 }
 
-PropertyDependencyNode::PropertyDependencyNode(String name)
+PropertyDependencyNode::PropertyDependencyNode(DeprecatedString name)
     : m_name(move(name))
 {
 }

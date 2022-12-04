@@ -105,21 +105,21 @@ static Gfx::IntRect calculate_absolute_rect_of_element(Web::Page const& page, We
 }
 
 // https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
-static String get_or_create_a_web_element_reference(Web::DOM::Node const& element)
+static DeprecatedString get_or_create_a_web_element_reference(Web::DOM::Node const& element)
 {
     // FIXME: 1. For each known element of the current browsing context’s list of known elements:
     // FIXME:     1. If known element equals element, return success with known element’s web element reference.
     // FIXME: 2. Add element to the list of known elements of the current browsing context.
     // FIXME: 3. Return success with the element’s web element reference.
 
-    return String::number(element.id());
+    return DeprecatedString::number(element.id());
 }
 
 // https://w3c.github.io/webdriver/#dfn-web-element-reference-object
 static JsonObject web_element_reference_object(Web::DOM::Node const& element)
 {
     // https://w3c.github.io/webdriver/#dfn-web-element-identifier
-    static String const web_element_identifier = "element-6066-11e4-a52e-4f735466cecf"sv;
+    static DeprecatedString const web_element_identifier = "element-6066-11e4-a52e-4f735466cecf"sv;
 
     // 1. Let identifier be the web element identifier.
     auto identifier = web_element_identifier;
@@ -146,27 +146,27 @@ static ErrorOr<Web::DOM::Element*, Web::WebDriver::Error> get_known_connected_el
     auto* node = Web::DOM::Node::from_id(*element);
 
     if (!node || !node->is_element())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Could not find element with ID: {}", element_id));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, DeprecatedString::formatted("Could not find element with ID: {}", element_id));
 
     return static_cast<Web::DOM::Element*>(node);
 }
 
 // https://w3c.github.io/webdriver/#dfn-get-or-create-a-shadow-root-reference
-static String get_or_create_a_shadow_root_reference(Web::DOM::ShadowRoot const& shadow_root)
+static DeprecatedString get_or_create_a_shadow_root_reference(Web::DOM::ShadowRoot const& shadow_root)
 {
     // FIXME: 1. For each known shadow root of the current browsing context’s list of known shadow roots:
     // FIXME:     1. If known shadow root equals shadow root, return success with known shadow root’s shadow root reference.
     // FIXME: 2. Add shadow to the list of known shadow roots of the current browsing context.
     // FIXME: 3. Return success with the shadow’s shadow root reference.
 
-    return String::number(shadow_root.id());
+    return DeprecatedString::number(shadow_root.id());
 }
 
 // https://w3c.github.io/webdriver/#dfn-shadow-root-reference-object
 static JsonObject shadow_root_reference_object(Web::DOM::ShadowRoot const& shadow_root)
 {
     // https://w3c.github.io/webdriver/#dfn-shadow-root-identifier
-    static String const shadow_root_identifier = "shadow-6066-11e4-a52e-4f735466cecf"sv;
+    static DeprecatedString const shadow_root_identifier = "shadow-6066-11e4-a52e-4f735466cecf"sv;
 
     // 1. Let identifier be the shadow root identifier.
     auto identifier = shadow_root_identifier;
@@ -193,7 +193,7 @@ static ErrorOr<Web::DOM::ShadowRoot*, Web::WebDriver::Error> get_known_shadow_ro
     auto* node = Web::DOM::Node::from_id(*shadow_root);
 
     if (!node || !node->is_shadow_root())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Could not find shadow root with ID: {}", shadow_id));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, DeprecatedString::formatted("Could not find shadow root with ID: {}", shadow_id));
 
     return static_cast<Web::DOM::ShadowRoot*>(node);
 }
@@ -214,7 +214,7 @@ static void scroll_element_into_view(Web::DOM::Element& element)
     element.scroll_into_view(options);
 }
 
-template<typename PropertyType = String>
+template<typename PropertyType = DeprecatedString>
 static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
 {
     if (!payload.is_object())
@@ -223,27 +223,27 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     auto const* property = payload.as_object().get_ptr(key);
 
     if (!property)
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("No property called '{}' present", key));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("No property called '{}' present", key));
 
-    if constexpr (IsSame<PropertyType, String>) {
+    if constexpr (IsSame<PropertyType, DeprecatedString>) {
         if (!property->is_string())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a String", key));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a String", key));
         return property->as_string();
     } else if constexpr (IsSame<PropertyType, bool>) {
         if (!property->is_bool())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Boolean", key));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Boolean", key));
         return property->as_bool();
     } else if constexpr (IsSame<PropertyType, u32>) {
         if (!property->is_u32())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Number", key));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Number", key));
         return property->as_u32();
     } else if constexpr (IsSame<PropertyType, JsonArray const*>) {
         if (!property->is_array())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not an Array", key));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not an Array", key));
         return &property->as_array();
     } else if constexpr (IsSame<PropertyType, JsonObject const*>) {
         if (!property->is_object())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not an Object", key));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not an Object", key));
         return &property->as_object();
     } else {
         static_assert(DependentFalse<PropertyType>, "get_property invoked with unknown property type");
@@ -251,7 +251,7 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     }
 }
 
-ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, String const& webdriver_ipc_path)
+ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
     auto socket = TRY(Core::Stream::LocalSocket::connect(webdriver_ipc_path));
@@ -550,14 +550,14 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
         if (!property)
             return Optional<i32> {};
         if (!property->is_number())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Number", name));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Number", name));
 
         auto number = property->template to_number<i64>();
 
         if (number < min)
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
         if (number > max)
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, number, max));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, number, max));
 
         return static_cast<i32>(number);
     };
@@ -695,7 +695,7 @@ Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!location_strategy.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Location strategy '{}' is invalid", location_strategy_string));
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
@@ -737,7 +737,7 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!location_strategy.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Location strategy '{}' is invalid", location_strategy_string));
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
@@ -765,7 +765,7 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
-Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::find_element_from_element(JsonValue const& payload, String const& element_id)
+Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::find_element_from_element(JsonValue const& payload, DeprecatedString const& element_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -773,7 +773,7 @@ Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::f
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!location_strategy.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Location strategy '{}' is invalid", location_strategy_string));
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
@@ -801,7 +801,7 @@ Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::f
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
-Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::find_elements_from_element(JsonValue const& payload, String const& element_id)
+Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::find_elements_from_element(JsonValue const& payload, DeprecatedString const& element_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -809,7 +809,7 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!location_strategy.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Location strategy '{}' is invalid", location_strategy_string));
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
@@ -831,7 +831,7 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
 }
 
 // 12.3.6 Find Element From Shadow Root, https://w3c.github.io/webdriver/#find-element-from-shadow-root
-Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection::find_element_from_shadow_root(JsonValue const& payload, String const& shadow_id)
+Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection::find_element_from_shadow_root(JsonValue const& payload, DeprecatedString const& shadow_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -839,7 +839,7 @@ Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!location_strategy.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Location strategy '{}' is invalid", location_strategy_string));
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
@@ -867,7 +867,7 @@ Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection
 }
 
 // 12.3.7 Find Elements From Shadow Root, https://w3c.github.io/webdriver/#find-elements-from-shadow-root
-Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnection::find_elements_from_shadow_root(JsonValue const& payload, String const& shadow_id)
+Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnection::find_elements_from_shadow_root(JsonValue const& payload, DeprecatedString const& shadow_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -875,7 +875,7 @@ Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnectio
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!location_strategy.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Location strategy '{}' is invalid", location_strategy_string));
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
@@ -911,13 +911,13 @@ Messages::WebDriverClient::GetActiveElementResponse WebDriverConnection::get_act
     // 4. If active element is a non-null element, return success with data set to web element reference object for active element.
     //    Otherwise, return error with error code no such element.
     if (active_element)
-        return String::number(active_element->id());
+        return DeprecatedString::number(active_element->id());
 
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The current document does not have an active element"sv);
 }
 
 // 12.3.9 Get Element Shadow Root, https://w3c.github.io/webdriver/#get-element-shadow-root
-Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get_element_shadow_root(String const& element_id)
+Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get_element_shadow_root(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -933,7 +933,7 @@ Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get
 
     // 5. If shadow root is null, return error with error code no such shadow root.
     if (!shadow_root)
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchShadowRoot, String::formatted("Element with ID '{}' does not have a shadow root", element_id));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchShadowRoot, DeprecatedString::formatted("Element with ID '{}' does not have a shadow root", element_id));
 
     // 6. Let serialized be the shadow root reference object for shadow root.
     auto serialized = shadow_root_reference_object(*shadow_root);
@@ -943,7 +943,7 @@ Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
-Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(String const& element_id)
+Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -979,7 +979,7 @@ Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_ele
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
-Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(String const& element_id, String const& name)
+Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(DeprecatedString const& element_id, DeprecatedString const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -991,7 +991,7 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
     auto* element = TRY(get_known_connected_element(element_id));
 
     // 4. Let result be the result of the first matching condition:
-    Optional<String> result;
+    Optional<DeprecatedString> result;
 
     // -> If name is a boolean attribute
     if (Web::HTML::is_boolean_attribute(name)) {
@@ -1012,7 +1012,7 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_element_property(String const& element_id, String const& name)
+Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_element_property(DeprecatedString const& element_id, DeprecatedString const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1023,7 +1023,7 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
 
-    Optional<String> result;
+    Optional<DeprecatedString> result;
 
     // 4. Let property be the result of calling the Object.[[GetProperty]](name) on element.
     if (auto property_or_error = element->get(name); !property_or_error.is_throw_completion()) {
@@ -1043,7 +1043,7 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
-Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_element_css_value(String const& element_id, String const& name)
+Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_element_css_value(DeprecatedString const& element_id, DeprecatedString const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1055,7 +1055,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     auto* element = TRY(get_known_connected_element(element_id));
 
     // 4. Let computed value be the result of the first matching condition:
-    String computed_value;
+    DeprecatedString computed_value;
 
     // -> current browsing context’s active document’s type is not "xml"
     if (!m_page_client.page().top_level_browsing_context().active_document()->is_xml_document()) {
@@ -1068,7 +1068,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     // -> Otherwise
     else {
         // "" (empty string)
-        computed_value = String::empty();
+        computed_value = DeprecatedString::empty();
     }
 
     // 5. Return success with data computed value.
@@ -1076,7 +1076,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
-Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_element_text(String const& element_id)
+Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_element_text(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1095,7 +1095,7 @@ Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_eleme
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
-Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_element_tag_name(String const& element_id)
+Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_element_tag_name(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1114,7 +1114,7 @@ Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_el
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
-Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_element_rect(String const& element_id)
+Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_element_rect(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1145,7 +1145,7 @@ Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_eleme
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
-Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(String const& element_id)
+Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1180,7 +1180,7 @@ Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
     TRY(handle_any_user_prompts());
 
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
-    Optional<String> source;
+    Optional<DeprecatedString> source;
 
     // 3. Let source be the result of invoking the fragment serializing algorithm on a fictional node whose only child is the document element providing true for the require well-formed flag. If this causes an exception to be thrown, let source be null.
     if (auto result = document->serialize_fragment(Web::DOMParsing::RequireWellFormed::Yes); !result.is_error())
@@ -1286,7 +1286,7 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
 }
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
-Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(String const& name)
+Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(DeprecatedString const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1303,7 +1303,7 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
     }
 
     // 4. Otherwise, return error with error code no such cookie.
-    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchCookie, String::formatted("Cookie '{}' not found", name));
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchCookie, DeprecatedString::formatted("Cookie '{}' not found", name));
 }
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
@@ -1380,7 +1380,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cookie(String const& name)
+Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cookie(DeprecatedString const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1531,7 +1531,7 @@ Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_scre
 }
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
-Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(String const& element_id)
+Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(DeprecatedString const& element_id)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1686,7 +1686,7 @@ ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGet
 
         // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
         if (elements.is_error())
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, String::formatted("The location strategy could not finish: {}", elements.error().message));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, DeprecatedString::formatted("The location strategy could not finish: {}", elements.error().message));
 
         return elements.release_value();
     };

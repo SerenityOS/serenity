@@ -192,10 +192,10 @@ public:
     }
 
 #ifndef KERNEL
-    virtual String class_name() const override
+    virtual DeprecatedString class_name() const override
     {
         return m_algorithm.visit(
-            [&](Empty const&) -> String { return "UninitializedHashManager"; },
+            [&](Empty const&) -> DeprecatedString { return "UninitializedHashManager"; },
             [&](auto const& hash) { return hash.class_name(); });
     }
 #endif

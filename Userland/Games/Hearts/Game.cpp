@@ -162,7 +162,7 @@ void Game::show_score_card(bool game_over)
     score_dialog->exec();
 }
 
-void Game::setup(String player_name, int hand_number)
+void Game::setup(DeprecatedString player_name, int hand_number)
 {
     m_players[0].name = move(player_name);
 
@@ -409,7 +409,7 @@ void Game::let_player_play_card()
     if (&player == &m_players[0])
         on_status_change("Select a card to play.");
     else
-        on_status_change(String::formatted("Waiting for {} to play a card...", player));
+        on_status_change(DeprecatedString::formatted("Waiting for {} to play a card...", player));
 
     if (player.is_human) {
         m_human_can_play = true;
@@ -618,7 +618,7 @@ void Game::play_card(Player& player, size_t card_index)
         0);
 }
 
-bool Game::is_valid_play(Player& player, Card& card, String* explanation) const
+bool Game::is_valid_play(Player& player, Card& card, DeprecatedString* explanation) const
 {
     // First card must be 2 of Clubs.
     if (m_trick_number == 0 && m_trick.is_empty()) {
@@ -691,14 +691,14 @@ void Game::card_clicked_during_passing(size_t, Card& card)
 
 void Game::card_clicked_during_play(size_t card_index, Card& card)
 {
-    String explanation;
+    DeprecatedString explanation;
     if (!is_valid_play(m_players[0], card, &explanation)) {
         if (m_inverted_card)
             m_inverted_card->set_inverted(false);
         card.set_inverted(true);
         update(card.rect());
         m_inverted_card = card;
-        on_status_change(String::formatted("You can't play this card: {}", explanation));
+        on_status_change(DeprecatedString::formatted("You can't play this card: {}", explanation));
         continue_game_after_delay();
         return;
     }

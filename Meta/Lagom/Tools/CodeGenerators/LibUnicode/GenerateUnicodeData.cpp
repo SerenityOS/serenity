@@ -8,12 +8,12 @@
 #include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Find.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
-#include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -37,21 +37,21 @@ struct SpecialCasing {
     Vector<u32> lowercase_mapping;
     Vector<u32> uppercase_mapping;
     Vector<u32> titlecase_mapping;
-    String locale;
-    String condition;
+    DeprecatedString locale;
+    DeprecatedString condition;
 };
 
 // Field descriptions: https://www.unicode.org/reports/tr44/#Character_Decomposition_Mappings
 struct CodePointDecomposition {
     // `tag` is a string since it's used for codegen as an enum value.
-    String tag { "Canonical"sv };
+    DeprecatedString tag { "Canonical"sv };
     size_t decomposition_index { 0 };
     size_t decomposition_size { 0 };
 };
 
 // PropList source: https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
 // Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
-using PropList = HashMap<String, Vector<CodePointRange>>;
+using PropList = HashMap<DeprecatedString, Vector<CodePointRange>>;
 
 // Normalization source: https://www.unicode.org/Public/13.0.0/ucd/DerivedNormalizationProps.txt
 // Normalization descriptions: https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
@@ -67,7 +67,7 @@ struct Normalization {
     QuickCheck quick_check { QuickCheck::Yes };
 };
 
-using NormalizationProps = HashMap<String, Vector<Normalization>>;
+using NormalizationProps = HashMap<DeprecatedString, Vector<Normalization>>;
 
 struct CodePointName {
     CodePointRange code_point_range;
@@ -79,17 +79,17 @@ struct CodePointName {
 //                     https://www.unicode.org/reports/tr44/#General_Category_Values
 struct CodePointData {
     u32 code_point { 0 };
-    String name;
+    DeprecatedString name;
     Optional<size_t> abbreviation;
     u8 canonical_combining_class { 0 };
-    String bidi_class;
+    DeprecatedString bidi_class;
     Optional<CodePointDecomposition> decomposition_mapping;
     Optional<i8> numeric_value_decimal;
     Optional<i8> numeric_value_digit;
     Optional<i8> numeric_value_numeric;
     bool bidi_mirrored { false };
-    String unicode_1_name;
-    String iso_comment;
+    DeprecatedString unicode_1_name;
+    DeprecatedString iso_comment;
     Optional<u32> simple_uppercase_mapping;
     Optional<u32> simple_lowercase_mapping;
     Optional<u32> simple_titlecase_mapping;
@@ -108,7 +108,7 @@ struct UnicodeData {
 
     u32 code_points_with_decomposition_mapping { 0 };
     Vector<u32> decomposition_mappings;
-    Vector<String> compatibility_tags;
+    Vector<DeprecatedString> compatibility_tags;
 
     u32 simple_uppercase_mapping_size { 0 };
     u32 simple_lowercase_mapping_size { 0 };
@@ -117,8 +117,8 @@ struct UnicodeData {
     u32 code_points_with_special_casing { 0 };
     u32 largest_casing_transform_size { 0 };
     u32 largest_special_casing_size { 0 };
-    Vector<String> conditions;
-    Vector<String> locales;
+    Vector<DeprecatedString> conditions;
+    Vector<DeprecatedString> locales;
 
     Vector<CodePointData> code_point_data;
 
@@ -159,7 +159,7 @@ struct UnicodeData {
     PropList sentence_break_props;
 };
 
-static String sanitize_entry(String const& entry)
+static DeprecatedString sanitize_entry(DeprecatedString const& entry)
 {
     auto sanitized = entry.replace("-"sv, "_"sv, ReplaceMode::All);
     sanitized = sanitized.replace(" "sv, "_"sv, ReplaceMode::All);
@@ -243,7 +243,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
             }
 
             if (!casing.locale.is_empty()) {
-                casing.locale = String::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
+                casing.locale = DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
 
                 if (!unicode_data.locales.contains_slow(casing.locale))
                     unicode_data.locales.append(casing.locale);
@@ -313,7 +313,7 @@ static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList&
 
 static ErrorOr<void> parse_alias_list(Core::Stream::BufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
 {
-    String current_property;
+    DeprecatedString current_property;
     Array<u8, 1024> buffer;
 
     auto append_alias = [&](auto alias, auto property) {
@@ -388,7 +388,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
     return {};
 }
 
-static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
+static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
     TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
     Array<u8, 1024> buffer;
@@ -553,7 +553,7 @@ static Optional<CodePointDecomposition> parse_decomposition_mapping(StringView s
     if (parts.first().starts_with('<')) {
         auto const tag = parts.take_first().trim("<>"sv);
 
-        mapping.tag = String::formatted("{:c}{}", to_ascii_uppercase(tag[0]), tag.substring_view(1));
+        mapping.tag = DeprecatedString::formatted("{:c}{}", to_ascii_uppercase(tag[0]), tag.substring_view(1));
 
         if (!unicode_data.compatibility_tags.contains_slow(mapping.tag))
             unicode_data.compatibility_tags.append(mapping.tag);
@@ -689,14 +689,14 @@ static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& fi
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
+    generator.set("casing_transform_size", DeprecatedString::number(unicode_data.largest_casing_transform_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}) {
+    auto generate_enum = [&](StringView name, StringView default_, Vector<DeprecatedString> values, Vector<Alias> aliases = {}) {
         quick_sort(values);
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
         generator.set("name", name);
-        generator.set("underlying", String::formatted("{}UnderlyingType", name));
+        generator.set("underlying", DeprecatedString::formatted("{}UnderlyingType", name));
         generator.set("type", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
 
         generator.append(R"~~~(
@@ -793,8 +793,8 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::Buffered
     SourceGenerator generator { builder };
 
     generator.set("string_index_type"sv, unicode_data.unique_strings.type_that_fits());
-    generator.set("largest_special_casing_size", String::number(unicode_data.largest_special_casing_size));
-    generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
+    generator.set("largest_special_casing_size", DeprecatedString::number(unicode_data.largest_special_casing_size));
+    generator.set("special_casing_size", DeprecatedString::number(unicode_data.special_casing.size()));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -802,7 +802,7 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::Buffered
 #include <AK/CharacterTypes.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/UnicodeData.h>
@@ -823,17 +823,17 @@ namespace Unicode {
         generator.append(", {");
         for (auto const& item : list) {
             generator.append(first ? " "sv : ", "sv);
-            generator.append(String::formatted(format, item));
+            generator.append(DeprecatedString::formatted(format, item));
             first = false;
         }
-        generator.append(String::formatted(" }}, {}", list.size()));
+        generator.append(DeprecatedString::formatted(" }}, {}", list.size()));
     };
 
     generator.append(R"~~~(
 static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { {)~~~");
 
     for (auto const& casing : unicode_data.special_casing) {
-        generator.set("code_point", String::formatted("{:#x}", casing.code_point));
+        generator.set("code_point", DeprecatedString::formatted("{:#x}", casing.code_point));
         generator.append(R"~~~(
     { @code_point@)~~~");
 
@@ -910,15 +910,15 @@ struct CodePointNameComparator : public CodePointRangeComparator {
 };
 )~~~");
 
-    generator.set("decomposition_mappings_size", String::number(unicode_data.decomposition_mappings.size()));
+    generator.set("decomposition_mappings_size", DeprecatedString::number(unicode_data.decomposition_mappings.size()));
     generator.append("\nstatic constexpr Array<u32, @decomposition_mappings_size@> s_decomposition_mappings_data { ");
-    generator.append(String::join(", "sv, unicode_data.decomposition_mappings, "{:#x}"sv));
+    generator.append(DeprecatedString::join(", "sv, unicode_data.decomposition_mappings, "{:#x}"sv));
     generator.append(" };\n");
 
     auto append_code_point_mappings = [&](StringView name, StringView mapping_type, u32 size, auto mapping_getter) {
         generator.set("name", name);
         generator.set("mapping_type", mapping_type);
-        generator.set("size", String::number(size));
+        generator.set("size", DeprecatedString::number(size));
 
         generator.append(R"~~~(
 static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
@@ -941,16 +941,16 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             if (mappings_in_current_row++ > 0)
                 generator.append(" ");
 
-            generator.set("code_point", String::formatted("{:#x}", data.code_point));
+            generator.set("code_point", DeprecatedString::formatted("{:#x}", data.code_point));
             generator.append("{ @code_point@");
 
             if constexpr (IsSame<decltype(mapping), Optional<u32>> || IsSame<decltype(mapping), Optional<size_t>>) {
-                generator.set("mapping", String::formatted("{:#x}", *mapping));
+                generator.set("mapping", DeprecatedString::formatted("{:#x}", *mapping));
                 generator.append(", @mapping@ },");
             } else if constexpr (IsSame<decltype(mapping), Optional<CodePointDecomposition>>) {
                 generator.set("tag", mapping->tag);
-                generator.set("start", String::number(mapping->decomposition_index));
-                generator.set("size", String::number(mapping->decomposition_size));
+                generator.set("start", DeprecatedString::number(mapping->decomposition_index));
+                generator.set("size", DeprecatedString::number(mapping->decomposition_size));
                 generator.append(", CompatibilityFormattingTag::@tag@, @start@, @size@ },");
             } else {
                 append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
@@ -983,9 +983,9 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             return data.decomposition_mapping;
         });
 
-    auto append_code_point_range_list = [&](String name, Vector<CodePointRange> const& ranges) {
+    auto append_code_point_range_list = [&](DeprecatedString name, Vector<CodePointRange> const& ranges) {
         generator.set("name", name);
-        generator.set("size", String::number(ranges.size()));
+        generator.set("size", DeprecatedString::number(ranges.size()));
         generator.append(R"~~~(
 static constexpr Array<CodePointRange, @size@> @name@ { {
     )~~~");
@@ -997,8 +997,8 @@ static constexpr Array<CodePointRange, @size@> @name@ { {
             if (ranges_in_current_row++ > 0)
                 generator.append(" ");
 
-            generator.set("first", String::formatted("{:#x}", range.first));
-            generator.set("last", String::formatted("{:#x}", range.last));
+            generator.set("first", DeprecatedString::formatted("{:#x}", range.first));
+            generator.set("last", DeprecatedString::formatted("{:#x}", range.last));
             generator.append("{ @first@, @last@ },");
 
             if (ranges_in_current_row == max_ranges_per_row) {
@@ -1014,7 +1014,7 @@ static constexpr Array<CodePointRange, @size@> @name@ { {
 
     auto append_prop_list = [&](StringView collection_name, StringView property_format, PropList const& property_list) {
         for (auto const& property : property_list) {
-            auto name = String::formatted(property_format, property.key);
+            auto name = DeprecatedString::formatted(property_format, property.key);
             append_code_point_range_list(move(name), property.value);
         }
 
@@ -1022,12 +1022,12 @@ static constexpr Array<CodePointRange, @size@> @name@ { {
         quick_sort(property_names);
 
         generator.set("name", collection_name);
-        generator.set("size", String::number(property_names.size()));
+        generator.set("size", DeprecatedString::number(property_names.size()));
         generator.append(R"~~~(
 static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
 
         for (auto const& property_name : property_names) {
-            generator.set("name", String::formatted(property_format, property_name));
+            generator.set("name", DeprecatedString::formatted(property_format, property_name));
             generator.append(R"~~~(
     @name@.span(),)~~~");
         }
@@ -1052,7 +1052,7 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
 
         generator.set("type", type);
         generator.set("name", name);
-        generator.set("size", String::number(display_names.size()));
+        generator.set("size", DeprecatedString::number(display_names.size()));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@ { {
@@ -1061,9 +1061,9 @@ static constexpr Array<@type@, @size@> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.set("first", String::formatted("{:#x}", display_name.code_point_range.first));
-            generator.set("last", String::formatted("{:#x}", display_name.code_point_range.last));
-            generator.set("name", String::number(display_name.name));
+            generator.set("first", DeprecatedString::formatted("{:#x}", display_name.code_point_range.first));
+            generator.set("last", DeprecatedString::formatted("{:#x}", display_name.code_point_range.last));
+            generator.set("name", DeprecatedString::number(display_name.name));
             generator.append("{ { @first@, @last@ }, @name@ }");
 
             if (values_in_current_row == max_values_per_row) {
@@ -1104,13 +1104,13 @@ Span<BlockName const> block_display_names()
     return display_names.span();
 }
 
-Optional<String> code_point_display_name(u32 code_point)
+Optional<DeprecatedString> code_point_display_name(u32 code_point)
 {
     if (auto const* entry = binary_search(s_code_point_display_names, code_point, nullptr, CodePointNameComparator {})) {
         auto display_name = decode_string(entry->display_name);
 
         if (display_name.ends_with("{:X}"sv))
-            return String::formatted(display_name, code_point);
+            return DeprecatedString::formatted(display_name, code_point);
 
         return display_name;
     }
@@ -1197,7 +1197,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
         ValueFromStringOptions options {};
 
         for (auto const& prop : prop_list) {
-            if constexpr (IsSame<RemoveCVReference<decltype(prop)>, String>) {
+            if constexpr (IsSame<RemoveCVReference<decltype(prop)>, DeprecatedString>) {
                 hashes.set(CaseInsensitiveStringViewTraits::hash(prop), prop);
                 options.sensitivity = CaseSensitivity::CaseInsensitive;
             } else {

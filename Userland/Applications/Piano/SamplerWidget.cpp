@@ -55,7 +55,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     m_open_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_open_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
     m_open_button->on_click = [this](auto) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
+        Optional<DeprecatedString> open_path = GUI::FilePicker::get_open_filepath(window());
         if (!open_path.has_value())
             return;
         // TODO: We don't actually load the sample.

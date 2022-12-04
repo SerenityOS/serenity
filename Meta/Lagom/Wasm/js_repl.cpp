@@ -50,7 +50,7 @@ EM_JS(void, user_display, (char const* string, u32 length), { globalDisplayToUse
 template<typename... Args>
 void display(CheckedFormatString<Args...> format_string, Args const&... args)
 {
-    auto string = String::formatted(format_string.view(), args...);
+    auto string = DeprecatedString::formatted(format_string.view(), args...);
     user_display(string.characters(), string.length());
 }
 
@@ -269,7 +269,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(String::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
 
     displayln();
 
@@ -298,7 +298,7 @@ public:
     // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments arguments) override
     {
-        String indent = String::repeated("  "sv, m_group_stack_depth);
+        DeprecatedString indent = DeprecatedString::repeated("  "sv, m_group_stack_depth);
 
         if (log_level == JS::Console::LogLevel::Trace) {
             auto trace = arguments.get<JS::Console::Trace>();
@@ -320,7 +320,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+        auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
         switch (log_level) {
         case JS::Console::LogLevel::Debug:
             displayln("{}{}", indent, output);

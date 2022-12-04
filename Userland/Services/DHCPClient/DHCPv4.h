@@ -151,7 +151,7 @@ struct ParsedDHCPv4Options {
         return values;
     }
 
-    String to_string() const
+    DeprecatedString to_string() const
     {
         StringBuilder builder;
         builder.append("DHCP Options ("sv);

@@ -6,23 +6,23 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 
 namespace Web {
 
 class FileRequest : public RefCounted<FileRequest> {
 public:
-    explicit FileRequest(String path);
+    explicit FileRequest(DeprecatedString path);
 
-    String path() const;
+    DeprecatedString path() const;
 
     Function<void(ErrorOr<i32>)> on_file_request_finish;
 
 private:
-    String m_path {};
+    DeprecatedString m_path {};
 };
 
 }

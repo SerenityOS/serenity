@@ -22,9 +22,9 @@ bool Ratio::is_degenerate() const
         || !isfinite(m_second_value) || m_second_value == 0;
 }
 
-String Ratio::to_string() const
+DeprecatedString Ratio::to_string() const
 {
-    return String::formatted("{} / {}", m_first_value, m_second_value);
+    return DeprecatedString::formatted("{} / {}", m_first_value, m_second_value);
 }
 
 }

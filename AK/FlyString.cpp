@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Optional.h>
 #include <AK/Singleton.h>
-#include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 
@@ -36,7 +36,7 @@ void FlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
     fly_impls().remove(&impl);
 }
 
-FlyString::FlyString(String const& string)
+FlyString::FlyString(DeprecatedString const& string)
 {
     if (string.is_null())
         return;
@@ -124,10 +124,10 @@ bool FlyString::ends_with(StringView str, CaseSensitivity case_sensitivity) cons
 
 FlyString FlyString::to_lowercase() const
 {
-    return String(*m_impl).to_lowercase();
+    return DeprecatedString(*m_impl).to_lowercase();
 }
 
-bool FlyString::operator==(String const& other) const
+bool FlyString::operator==(DeprecatedString const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }

@@ -31,7 +31,7 @@ Start from defining an endpoint in the IPC file in `MyServer.ipc`.
 ```
 endpoint MyServer
 {
-    SyncAPI(String text) => (i32 status)
+    SyncAPI(DeprecatedString text) => (i32 status)
     AsyncAPI(i32 mode) =|
 }
 ```
@@ -42,7 +42,7 @@ Part of the generated C++ messages:
 class SyncAPI final : public IPC::Message {
 public:
     using ResponseType = SyncAPIResponse;
-    SyncAPI(const String& text) : m_text(text) {}
+    SyncAPI(const DeprecatedString& text) : m_text(text) {}
     virtual ~SyncAPI() override {}
     static OwnPtr<SyncAPI> decode(...);
     virtual IPC::MessageBuffer encode(...) const override;

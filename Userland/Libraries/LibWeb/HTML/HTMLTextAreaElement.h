@@ -21,9 +21,9 @@ class HTMLTextAreaElement final
 public:
     virtual ~HTMLTextAreaElement() override;
 
-    String const& type() const
+    DeprecatedString const& type() const
     {
-        static String textarea = "textarea";
+        static DeprecatedString textarea = "textarea";
         return textarea;
     }
 

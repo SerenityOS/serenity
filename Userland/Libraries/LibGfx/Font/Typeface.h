@@ -18,7 +18,7 @@ namespace Gfx {
 
 class Typeface : public RefCounted<Typeface> {
 public:
-    Typeface(String const& family, String const& variant)
+    Typeface(DeprecatedString const& family, DeprecatedString const& variant)
         : m_family(family)
         , m_variant(variant)
     {

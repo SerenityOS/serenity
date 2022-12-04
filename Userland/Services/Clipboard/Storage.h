@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
 #include <LibCore/AnonymousBuffer.h>
 
 namespace Clipboard {
@@ -20,8 +20,8 @@ public:
 
     bool has_data() const { return m_buffer.is_valid(); }
 
-    String const& mime_type() const { return m_mime_type; }
-    HashMap<String, String> const& metadata() const { return m_metadata; }
+    DeprecatedString const& mime_type() const { return m_mime_type; }
+    HashMap<DeprecatedString, DeprecatedString> const& metadata() const { return m_metadata; }
 
     u8 const* data() const
     {
@@ -37,7 +37,7 @@ public:
         return 0;
     }
 
-    void set_data(Core::AnonymousBuffer, String const& mime_type, HashMap<String, String> const& metadata);
+    void set_data(Core::AnonymousBuffer, DeprecatedString const& mime_type, HashMap<DeprecatedString, DeprecatedString> const& metadata);
 
     Function<void()> on_content_change;
 
@@ -46,10 +46,10 @@ public:
 private:
     Storage() = default;
 
-    String m_mime_type;
+    DeprecatedString m_mime_type;
     Core::AnonymousBuffer m_buffer;
     size_t m_data_size { 0 };
-    HashMap<String, String> m_metadata;
+    HashMap<DeprecatedString, DeprecatedString> m_metadata;
 };
 
 }

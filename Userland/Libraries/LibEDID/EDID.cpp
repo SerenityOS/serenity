@@ -225,7 +225,7 @@ ErrorOr<Parser> Parser::from_display_connector_device(int display_connector_fd)
     return from_bytes(move(edid_byte_buffer));
 }
 
-ErrorOr<Parser> Parser::from_display_connector_device(String const& display_connector_device)
+ErrorOr<Parser> Parser::from_display_connector_device(DeprecatedString const& display_connector_device)
 {
     int display_connector_fd = open(display_connector_device.characters(), O_RDWR | O_CLOEXEC);
     if (display_connector_fd < 0) {
@@ -312,7 +312,7 @@ ErrorOr<void> Parser::parse()
 #ifdef KERNEL
     m_version = TRY(Kernel::KString::formatted("1.{}", (int)m_revision));
 #else
-    m_version = String::formatted("1.{}", (int)m_revision);
+    m_version = DeprecatedString::formatted("1.{}", (int)m_revision);
 #endif
 
     u8 checksum = 0x0;
@@ -417,7 +417,7 @@ StringView Parser::legacy_manufacturer_id() const
 }
 
 #ifndef KERNEL
-String Parser::manufacturer_name() const
+DeprecatedString Parser::manufacturer_name() const
 {
     if (!m_legacy_manufacturer_id_valid)
         return "Unknown";
@@ -1001,9 +1001,9 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
 }
 
 #ifndef KERNEL
-String Parser::display_product_name() const
+DeprecatedString Parser::display_product_name() const
 {
-    String product_name;
+    DeprecatedString product_name;
     auto result = for_each_display_descriptor([&](u8 descriptor_tag, Definitions::DisplayDescriptor const& display_descriptor) {
         if (descriptor_tag != (u8)Definitions::DisplayDescriptorTag::DisplayProductName)
             return IterationDecision::Continue;
@@ -1024,9 +1024,9 @@ String Parser::display_product_name() const
     return product_name;
 }
 
-String Parser::display_product_serial_number() const
+DeprecatedString Parser::display_product_serial_number() const
 {
-    String product_name;
+    DeprecatedString product_name;
     auto result = for_each_display_descriptor([&](u8 descriptor_tag, Definitions::DisplayDescriptor const& display_descriptor) {
         if (descriptor_tag != (u8)Definitions::DisplayDescriptorTag::DisplayProductSerialNumber)
             return IterationDecision::Continue;

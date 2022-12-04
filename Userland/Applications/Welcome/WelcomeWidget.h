@@ -33,5 +33,5 @@ private:
     RefPtr<WebView::OutOfProcessWebView> m_web_view;
 
     size_t m_initial_tip_index { 0 };
-    Vector<String> m_tips;
+    Vector<DeprecatedString> m_tips;
 };

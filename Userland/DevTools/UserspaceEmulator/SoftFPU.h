@@ -114,7 +114,7 @@ private:
         }
     }
 
-    String fpu_exception_string(FPU_Exception ex)
+    DeprecatedString fpu_exception_string(FPU_Exception ex)
     {
         switch (ex) {
         case FPU_Exception::StackFault:

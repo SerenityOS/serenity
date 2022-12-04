@@ -7,9 +7,9 @@
 #include "LookupServer.h"
 #include "ConnectionFromClient.h"
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Random.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
@@ -78,7 +78,7 @@ LookupServer::LookupServer()
 void LookupServer::load_etc_hosts()
 {
     m_etc_hosts.clear();
-    auto add_answer = [this](Name const& name, RecordType record_type, String data) {
+    auto add_answer = [this](Name const& name, RecordType record_type, DeprecatedString data) {
         m_etc_hosts.ensure(name).empend(name, record_type, RecordClass::IN, s_static_ttl, move(data), false);
     };
 
@@ -115,7 +115,7 @@ void LookupServer::load_etc_hosts()
         auto raw_addr = maybe_address->to_in_addr_t();
 
         Name name { fields[1] };
-        add_answer(name, RecordType::A, String { (char const*)&raw_addr, sizeof(raw_addr) });
+        add_answer(name, RecordType::A, DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) });
 
         StringBuilder builder;
         builder.append(maybe_address->to_string_reversed());
@@ -124,7 +124,7 @@ void LookupServer::load_etc_hosts()
     }
 }
 
-static String get_hostname()
+static DeprecatedString get_hostname()
 {
     char buffer[_POSIX_HOST_NAME_MAX];
     VERIFY(gethostname(buffer, sizeof(buffer)) == 0);
@@ -163,7 +163,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
     if (record_type == RecordType::A && get_hostname() == name) {
         IPv4Address address = { 127, 0, 0, 1 };
         auto raw_address = address.to_in_addr_t();
-        Answer answer { name, RecordType::A, RecordClass::IN, s_static_ttl, String { (char const*)&raw_address, sizeof(raw_address) }, false };
+        Answer answer { name, RecordType::A, RecordClass::IN, s_static_ttl, DeprecatedString { (char const*)&raw_address, sizeof(raw_address) }, false };
         answers.append(move(answer));
         return answers;
     }
@@ -224,7 +224,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
     return answers;
 }
 
-ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, String const& nameserver, bool& did_get_response, RecordType record_type, ShouldRandomizeCase should_randomize_case)
+ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString const& nameserver, bool& did_get_response, RecordType record_type, ShouldRandomizeCase should_randomize_case)
 {
     Packet request;
     request.set_is_query();

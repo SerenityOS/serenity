@@ -42,6 +42,6 @@ private:
     RefPtr<GUI::Action> m_go_to_glyph_action;
     RefPtr<GUI::Action> m_find_glyphs_action;
 
-    Vector<String> m_unicode_block_list;
+    Vector<DeprecatedString> m_unicode_block_list;
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
 };

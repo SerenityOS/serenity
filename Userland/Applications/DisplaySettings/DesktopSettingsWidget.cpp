@@ -52,7 +52,7 @@ void DesktopSettingsWidget::apply_settings()
     auto& desktop = GUI::Desktop::the();
     if (workspace_rows != desktop.workspace_rows() || workspace_columns != desktop.workspace_columns()) {
         if (!GUI::ConnectionToWindowServer::the().apply_workspace_settings(workspace_rows, workspace_columns, true)) {
-            GUI::MessageBox::show(window(), String::formatted("Error applying workspace settings"),
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Error applying workspace settings"),
                 "Workspace settings"sv, GUI::MessageBox::Type::Error);
         }
     }

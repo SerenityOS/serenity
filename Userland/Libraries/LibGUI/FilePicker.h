@@ -28,24 +28,24 @@ public:
         Save
     };
 
-    static Optional<String> get_open_filepath(Window* parent_window, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
-    static Optional<String> get_save_filepath(Window* parent_window, String const& title, String const& extension, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    static Optional<DeprecatedString> get_open_filepath(Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    static Optional<DeprecatedString> get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
 
     virtual ~FilePicker() override;
 
-    String const& selected_file() const { return m_selected_file; }
+    DeprecatedString const& selected_file() const { return m_selected_file; }
 
 private:
     void on_file_return();
 
-    void set_path(String const&);
+    void set_path(DeprecatedString const&);
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
     FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
 
-    static String ok_button_name(Mode mode)
+    static DeprecatedString ok_button_name(Mode mode)
     {
         switch (mode) {
         case Mode::Open:
@@ -60,13 +60,13 @@ private:
     }
 
     struct CommonLocationButton {
-        String path;
+        DeprecatedString path;
         size_t tray_item_index { 0 };
     };
 
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
-    String m_selected_file;
+    DeprecatedString m_selected_file;
 
     RefPtr<GUI::Label> m_error_label;
 

@@ -22,20 +22,20 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override = default;
 
-    static ExecResult show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder = {}, InputType input_type = InputType::Text);
+    static ExecResult show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, StringView placeholder = {}, InputType input_type = InputType::Text);
 
-    String const& text_value() const { return m_text_value; }
-    void set_text_value(String text_value);
+    DeprecatedString const& text_value() const { return m_text_value; }
+    void set_text_value(DeprecatedString text_value);
 
 private:
-    explicit InputBox(Window* parent_window, String text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type);
+    explicit InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type);
 
     virtual void on_done(ExecResult) override;
     void build(InputType input_type);
 
-    String m_text_value;
-    String m_prompt;
-    String m_placeholder;
+    DeprecatedString m_text_value;
+    DeprecatedString m_prompt;
+    DeprecatedString m_placeholder;
 
     RefPtr<Button> m_ok_button;
     RefPtr<Button> m_cancel_button;

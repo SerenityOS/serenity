@@ -143,7 +143,7 @@ private:
         }
     }
 
-    String m_path;
+    DeprecatedString m_path;
     Kind m_kind { Regular };
 };
 
@@ -178,7 +178,7 @@ private:
         }
     }
 
-    String m_path;
+    DeprecatedString m_path;
     Permission m_kind { Read };
 };
 
@@ -221,7 +221,7 @@ private:
         }
     }
 
-    String m_path;
+    DeprecatedString m_path;
     Flag m_kind { SGID };
 };
 
@@ -261,7 +261,7 @@ private:
         }
     }
 
-    String m_path;
+    DeprecatedString m_path;
     Owner m_kind { EffectiveGID };
 };
 
@@ -303,7 +303,7 @@ public:
         NotEqual,
     };
 
-    NumericCompare(String lhs, String rhs, Mode mode)
+    NumericCompare(DeprecatedString lhs, DeprecatedString rhs, Mode mode)
         : m_mode(mode)
     {
         auto lhs_option = lhs.trim_whitespace().to_int();
@@ -353,7 +353,7 @@ public:
         ModificationTimestampLess,
     };
 
-    FileCompare(String lhs, String rhs, Mode mode)
+    FileCompare(DeprecatedString lhs, DeprecatedString rhs, Mode mode)
         : m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_mode(mode)
@@ -393,8 +393,8 @@ private:
         }
     }
 
-    String m_lhs;
-    String m_rhs;
+    DeprecatedString m_lhs;
+    DeprecatedString m_rhs;
     Mode m_mode { Same };
 };
 

@@ -151,7 +151,7 @@ public:
         return m_preferred_color_scheme;
     }
 
-    virtual void page_did_change_title(String const&) override
+    virtual void page_did_change_title(DeprecatedString const&) override
     {
     }
 
@@ -175,23 +175,23 @@ public:
     {
     }
 
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned) override
+    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, AK::URL const&, DeprecatedString const&, unsigned) override
     {
     }
 
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned, Gfx::Bitmap const*) override
+    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, AK::URL const&, DeprecatedString const&, unsigned, Gfx::Bitmap const*) override
     {
     }
 
-    virtual void page_did_click_link(AK::URL const&, String const&, unsigned) override
+    virtual void page_did_click_link(AK::URL const&, DeprecatedString const&, unsigned) override
     {
     }
 
-    virtual void page_did_middle_click_link(AK::URL const&, String const&, unsigned) override
+    virtual void page_did_middle_click_link(AK::URL const&, DeprecatedString const&, unsigned) override
     {
     }
 
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, String const&) override
+    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, DeprecatedString const&) override
     {
     }
 
@@ -223,21 +223,21 @@ public:
     {
     }
 
-    virtual void page_did_request_alert(String const&) override
+    virtual void page_did_request_alert(DeprecatedString const&) override
     {
     }
 
-    virtual void page_did_request_confirm(String const&) override
+    virtual void page_did_request_confirm(DeprecatedString const&) override
     {
     }
 
-    virtual void page_did_request_prompt(String const&, String const&) override
+    virtual void page_did_request_prompt(DeprecatedString const&, DeprecatedString const&) override
     {
     }
 
-    virtual String page_did_request_cookie(AK::URL const&, Web::Cookie::Source) override
+    virtual DeprecatedString page_did_request_cookie(AK::URL const&, Web::Cookie::Source) override
     {
-        return String::empty();
+        return DeprecatedString::empty();
     }
 
     virtual void page_did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override
@@ -307,7 +307,7 @@ public:
         : public Web::ResourceLoaderConnectorRequest
         , public Weakable<HTTPHeadlessRequest> {
     public:
-        static ErrorOr<NonnullRefPtr<HTTPHeadlessRequest>> create(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
+        static ErrorOr<NonnullRefPtr<HTTPHeadlessRequest>> create(DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
         {
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
             auto underlying_socket = TRY(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(80)));
@@ -379,14 +379,14 @@ public:
         NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
         NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
         NonnullRefPtr<HTTP::Job> m_job;
-        HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
     };
 
     class HTTPSHeadlessRequest
         : public Web::ResourceLoaderConnectorRequest
         , public Weakable<HTTPSHeadlessRequest> {
     public:
-        static ErrorOr<NonnullRefPtr<HTTPSHeadlessRequest>> create(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
+        static ErrorOr<NonnullRefPtr<HTTPSHeadlessRequest>> create(DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
         {
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
             auto underlying_socket = TRY(TLS::TLSv12::connect(url.host(), url.port().value_or(443)));
@@ -458,14 +458,14 @@ public:
         NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
         NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
         NonnullRefPtr<HTTP::HttpsJob> m_job;
-        HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
     };
 
     class GeminiHeadlessRequest
         : public Web::ResourceLoaderConnectorRequest
         , public Weakable<GeminiHeadlessRequest> {
     public:
-        static ErrorOr<NonnullRefPtr<GeminiHeadlessRequest>> create(String const&, AK::URL const& url, HashMap<String, String> const&, ReadonlyBytes, Core::ProxyData const&)
+        static ErrorOr<NonnullRefPtr<GeminiHeadlessRequest>> create(DeprecatedString const&, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const&, ReadonlyBytes, Core::ProxyData const&)
         {
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
             auto underlying_socket = TRY(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(80)));
@@ -527,7 +527,7 @@ public:
         NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
         NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
         NonnullRefPtr<Gemini::Job> m_job;
-        HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
     };
 
     static NonnullRefPtr<HeadlessRequestServer> create()
@@ -540,7 +540,7 @@ public:
     virtual void prefetch_dns(AK::URL const&) override { }
     virtual void preconnect(AK::URL const&) override { }
 
-    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy) override
+    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy) override
     {
         RefPtr<Web::ResourceLoaderConnectorRequest> request;
         if (url.scheme().equals_ignoring_case("http"sv)) {
@@ -610,7 +610,7 @@ public:
             m_websocket->send(WebSocket::Message(message));
         }
 
-        virtual void close(u16 code, String reason) override
+        virtual void close(u16 code, DeprecatedString reason) override
         {
             m_websocket->close(code, reason);
         }
@@ -652,7 +652,7 @@ public:
                     }
                 }
             };
-            m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, String reason, bool was_clean) {
+            m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, DeprecatedString reason, bool was_clean) {
                 if (auto strong_this = weak_this.strong_ref())
                     if (strong_this->on_close)
                         strong_this->on_close(code, move(reason), was_clean);
@@ -669,7 +669,7 @@ public:
 
     virtual ~HeadlessWebSocketClientManager() override { }
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, String const& origin) override
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, DeprecatedString const& origin) override
     {
         WebSocket::ConnectionInfo connection_info(url);
         connection_info.set_origin(origin);
@@ -690,7 +690,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
         take_screenshot_after * 1000,
         [&]() {
             // FIXME: Allow passing the output path as argument
-            String output_file_path = "output.png";
+            DeprecatedString output_file_path = "output.png";
             dbgln("Saving to {}", output_file_path);
 
             if (Core::File::exists(output_file_path))

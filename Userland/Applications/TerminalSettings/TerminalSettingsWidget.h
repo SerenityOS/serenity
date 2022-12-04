@@ -24,7 +24,7 @@ private:
     void write_back_settings() const;
 
     static VT::TerminalWidget::BellMode parse_bell(StringView bell_string);
-    static String stringify_bell(VT::TerminalWidget::BellMode bell_mode);
+    static DeprecatedString stringify_bell(VT::TerminalWidget::BellMode bell_mode);
 
     VT::TerminalWidget::BellMode m_bell_mode { VT::TerminalWidget::BellMode::Disabled };
     size_t m_max_history_size;
@@ -49,13 +49,13 @@ private:
 
     RefPtr<Gfx::Font> m_font;
     float m_opacity;
-    String m_color_scheme;
+    DeprecatedString m_color_scheme;
     VT::CursorShape m_cursor_shape { VT::CursorShape::Block };
     bool m_cursor_is_blinking_set { true };
 
     RefPtr<Gfx::Font> m_original_font;
     float m_original_opacity;
-    String m_original_color_scheme;
+    DeprecatedString m_original_color_scheme;
     VT::CursorShape m_original_cursor_shape;
     bool m_original_cursor_is_blinking_set;
 };

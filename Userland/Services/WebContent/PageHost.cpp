@@ -89,7 +89,7 @@ void PageHost::set_window_size(Gfx::IntSize const& size)
     page().set_window_size(size);
 }
 
-ErrorOr<void> PageHost::connect_to_webdriver(String const& webdriver_ipc_path)
+ErrorOr<void> PageHost::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     VERIFY(!m_webdriver);
     m_webdriver = TRY(WebDriverConnection::connect(*this, webdriver_ipc_path));
@@ -158,7 +158,7 @@ void PageHost::page_did_layout()
     m_client.async_did_layout(m_content_size);
 }
 
-void PageHost::page_did_change_title(String const& title)
+void PageHost::page_did_change_title(DeprecatedString const& title)
 {
     m_client.async_did_change_title(title);
 }
@@ -223,7 +223,7 @@ void PageHost::page_did_request_scroll_into_view(Gfx::IntRect const& rect)
     m_client.async_did_request_scroll_into_view(rect);
 }
 
-void PageHost::page_did_enter_tooltip_area(Gfx::IntPoint const& content_position, String const& title)
+void PageHost::page_did_enter_tooltip_area(Gfx::IntPoint const& content_position, DeprecatedString const& title)
 {
     m_client.async_did_enter_tooltip_area(content_position, title);
 }
@@ -243,12 +243,12 @@ void PageHost::page_did_unhover_link()
     m_client.async_did_unhover_link();
 }
 
-void PageHost::page_did_click_link(const URL& url, String const& target, unsigned modifiers)
+void PageHost::page_did_click_link(const URL& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_client.async_did_click_link(url, target, modifiers);
 }
 
-void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers)
+void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers)
 {
     m_client.async_did_middle_click_link(url, target, modifiers);
 }
@@ -273,12 +273,12 @@ void PageHost::page_did_request_context_menu(Gfx::IntPoint const& content_positi
     m_client.async_did_request_context_menu(content_position);
 }
 
-void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_position, const URL& url, String const& target, unsigned modifiers)
+void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_position, const URL& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
 
-void PageHost::page_did_request_alert(String const& message)
+void PageHost::page_did_request_alert(DeprecatedString const& message)
 {
     m_client.async_did_request_alert(message);
 }
@@ -288,7 +288,7 @@ void PageHost::alert_closed()
     page().alert_closed();
 }
 
-void PageHost::page_did_request_confirm(String const& message)
+void PageHost::page_did_request_confirm(DeprecatedString const& message)
 {
     m_client.async_did_request_confirm(message);
 }
@@ -298,17 +298,17 @@ void PageHost::confirm_closed(bool accepted)
     page().confirm_closed(accepted);
 }
 
-void PageHost::page_did_request_prompt(String const& message, String const& default_)
+void PageHost::page_did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_)
 {
     m_client.async_did_request_prompt(message, default_);
 }
 
-void PageHost::page_did_request_set_prompt_text(String const& text)
+void PageHost::page_did_request_set_prompt_text(DeprecatedString const& text)
 {
     m_client.async_did_request_set_prompt_text(text);
 }
 
-void PageHost::prompt_closed(String response)
+void PageHost::prompt_closed(DeprecatedString response)
 {
     page().prompt_closed(move(response));
 }
@@ -328,7 +328,7 @@ void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
-void PageHost::page_did_request_image_context_menu(Gfx::IntPoint const& content_position, const URL& url, String const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
+void PageHost::page_did_request_image_context_menu(Gfx::IntPoint const& content_position, const URL& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
 {
     auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
     m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap);
@@ -339,12 +339,12 @@ Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& ur
     return m_client.did_request_all_cookies(url);
 }
 
-Optional<Web::Cookie::Cookie> PageHost::page_did_request_named_cookie(URL const& url, String const& name)
+Optional<Web::Cookie::Cookie> PageHost::page_did_request_named_cookie(URL const& url, DeprecatedString const& name)
 {
     return m_client.did_request_named_cookie(url, name);
 }
 
-String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
+DeprecatedString PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
     auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(move(url), static_cast<u8>(source));
     if (!response) {

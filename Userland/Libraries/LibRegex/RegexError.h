@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Types.h>
 #ifdef AK_OS_SERENITY
 #    include <bits/regex_defs.h>
@@ -39,7 +39,7 @@ enum class Error : u8 {
     InvalidCharacterClassEscape = __Regex_InvalidCharacterClassEscape, // Invalid escaped entity in character class.
 };
 
-inline String get_error_string(Error error)
+inline DeprecatedString get_error_string(Error error)
 {
     switch (error) {
     case Error::NoError:

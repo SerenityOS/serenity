@@ -48,7 +48,7 @@ JS::NonnullGCPtr<JS::PromiseCapability> Body::fully_read_as_promise() const
 
     // FIXME: Implement the streams spec - this is completely made up for now :^)
     if (auto const* byte_buffer = m_source.get_pointer<ByteBuffer>()) {
-        auto result = String::copy(*byte_buffer);
+        auto result = DeprecatedString::copy(*byte_buffer);
         return WebIDL::create_resolved_promise(realm, JS::js_string(vm, move(result)));
     }
     // Empty, Blob, FormData

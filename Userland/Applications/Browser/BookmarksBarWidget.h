@@ -31,13 +31,13 @@ public:
         No
     };
 
-    Function<void(String const& url, OpenInNewTab)> on_bookmark_click;
-    Function<void(String const&, String const&)> on_bookmark_hover;
+    Function<void(DeprecatedString const& url, OpenInNewTab)> on_bookmark_click;
+    Function<void(DeprecatedString const&, DeprecatedString const&)> on_bookmark_hover;
 
-    bool contains_bookmark(String const& url);
-    bool remove_bookmark(String const& url);
-    bool add_bookmark(String const& url, String const& title);
-    bool edit_bookmark(String const& url);
+    bool contains_bookmark(DeprecatedString const& url);
+    bool remove_bookmark(DeprecatedString const& url);
+    bool add_bookmark(DeprecatedString const& url, DeprecatedString const& title);
+    bool edit_bookmark(DeprecatedString const& url);
 
     virtual Optional<GUI::UISize> calculated_min_size() const override
     {
@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    BookmarksBarWidget(String const&, bool enabled);
+    BookmarksBarWidget(DeprecatedString const&, bool enabled);
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
@@ -63,7 +63,7 @@ private:
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
-    String m_context_menu_url;
+    DeprecatedString m_context_menu_url;
 
     NonnullRefPtrVector<GUI::Button> m_bookmarks;
 

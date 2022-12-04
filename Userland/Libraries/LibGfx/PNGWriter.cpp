@@ -7,8 +7,8 @@
  */
 
 #include <AK/Concepts.h>
+#include <AK/DeprecatedString.h>
 #include <AK/SIMDExtras.h>
-#include <AK/String.h>
 #include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
@@ -22,9 +22,9 @@ class PNGChunk {
     using data_length_type = u32;
 
 public:
-    explicit PNGChunk(String);
+    explicit PNGChunk(DeprecatedString);
     auto const& data() const { return m_data; };
-    String const& type() const { return m_type; };
+    DeprecatedString const& type() const { return m_type; };
     void reserve(size_t bytes) { m_data.ensure_capacity(bytes); }
 
     template<typename T>
@@ -47,10 +47,10 @@ private:
     requires(IsUnsigned<T>) void add(T);
 
     ByteBuffer m_data;
-    String m_type;
+    DeprecatedString m_type;
 };
 
-PNGChunk::PNGChunk(String type)
+PNGChunk::PNGChunk(DeprecatedString type)
     : m_type(move(type))
 {
     add<data_length_type>(0);

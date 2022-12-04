@@ -8,7 +8,7 @@
 
 namespace Coredump {
 
-OwnPtr<Inspector> Inspector::create(String const& coredump_path, Function<void(float)> on_progress)
+OwnPtr<Inspector> Inspector::create(DeprecatedString const& coredump_path, Function<void(float)> on_progress)
 {
     auto reader = Reader::create(coredump_path);
     if (!reader)
@@ -46,7 +46,7 @@ void Inspector::parse_loaded_libraries(Function<void(float)> on_progress)
             return;
 
         auto image = make<ELF::Image>(file_or_error.value()->bytes());
-        auto debug_info = make<Debug::DebugInfo>(*image, String {}, library.base_address);
+        auto debug_info = make<Debug::DebugInfo>(*image, DeprecatedString {}, library.base_address);
         m_loaded_libraries.append(make<Debug::LoadedLibrary>(library.name, file_or_error.value(), move(image), move(debug_info), library.base_address));
     });
 }

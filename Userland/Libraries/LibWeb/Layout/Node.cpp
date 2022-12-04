@@ -585,7 +585,7 @@ bool Node::is_root_element() const
     return is<HTML::HTMLHtmlElement>(*dom_node());
 }
 
-String Node::debug_description() const
+DeprecatedString Node::debug_description() const
 {
     StringBuilder builder;
     builder.append(class_name());

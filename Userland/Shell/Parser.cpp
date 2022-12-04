@@ -858,12 +858,12 @@ RefPtr<AST::Node> Parser::parse_match_expr()
     if (!match_expression) {
         return create<AST::MatchExpr>(
             create<AST::SyntaxError>("Expected an expression after 'match'", true),
-            String {}, Optional<AST::Position> {}, Vector<AST::MatchEntry> {});
+            DeprecatedString {}, Optional<AST::Position> {}, Vector<AST::MatchEntry> {});
     }
 
     consume_while(is_any_of(" \t\n"sv));
 
-    String match_name;
+    DeprecatedString match_name;
     Optional<AST::Position> as_position;
     auto as_start = m_offset;
     auto as_line = line();
@@ -873,7 +873,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         if (consume_while(is_any_of(" \t\n"sv)).is_empty()) {
             auto node = create<AST::MatchExpr>(
                 match_expression.release_nonnull(),
-                String {}, move(as_position), Vector<AST::MatchEntry> {});
+                DeprecatedString {}, move(as_position), Vector<AST::MatchEntry> {});
             node->set_is_syntax_error(create<AST::SyntaxError>("Expected whitespace after 'as' in 'match'", true));
             return node;
         }
@@ -882,7 +882,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         if (match_name.is_empty()) {
             auto node = create<AST::MatchExpr>(
                 match_expression.release_nonnull(),
-                String {}, move(as_position), Vector<AST::MatchEntry> {});
+                DeprecatedString {}, move(as_position), Vector<AST::MatchEntry> {});
             node->set_is_syntax_error(create<AST::SyntaxError>("Expected an identifier after 'as' in 'match'", true));
             return node;
         }
@@ -930,7 +930,7 @@ AST::MatchEntry Parser::parse_match_entry()
     NonnullRefPtrVector<AST::Node> patterns;
     Vector<Regex<ECMA262>> regexps;
     Vector<AST::Position> pipe_positions;
-    Optional<Vector<String>> match_names;
+    Optional<Vector<DeprecatedString>> match_names;
     Optional<AST::Position> match_as_position;
     enum {
         Regex,
@@ -1001,7 +1001,7 @@ AST::MatchEntry Parser::parse_match_entry()
             if (!error)
                 error = create<AST::SyntaxError>("Expected an explicit list of identifiers after a pattern 'as'");
         } else {
-            match_names = Vector<String>();
+            match_names = Vector<DeprecatedString>();
             for (;;) {
                 consume_while(is_whitespace);
                 auto name = consume_while(is_word_character);
@@ -1019,7 +1019,7 @@ AST::MatchEntry Parser::parse_match_entry()
     }
 
     if (pattern_kind == Regex) {
-        Vector<String> names;
+        Vector<DeprecatedString> names;
         for (auto& regex : regexps) {
             if (names.is_empty()) {
                 for (auto& name : regex.parser_result.capture_groups)
@@ -1226,7 +1226,7 @@ RefPtr<AST::Node> Parser::parse_expression()
 {
     auto rule_start = push_start();
     if (m_rule_start_offsets.size() > max_allowed_nested_rule_depth)
-        return create<AST::SyntaxError>(String::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth));
+        return create<AST::SyntaxError>(DeprecatedString::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth));
 
     auto starting_char = peek();
 
@@ -1897,7 +1897,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
     auto current_line = line();
     auto string = builder.to_string();
     if (string.starts_with('~')) {
-        String username;
+        DeprecatedString username;
         RefPtr<AST::Node> tilde, text;
 
         auto first_slash_index = string.find('/');
@@ -1963,7 +1963,7 @@ RefPtr<AST::Node> Parser::parse_glob()
             } else {
                 // FIXME: Allow composition of tilde+bareword with globs: '~/foo/bar/baz*'
                 restore_to(saved_offset.offset, saved_offset.line);
-                bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Unexpected {} inside a glob", bareword_part->class_name())));
+                bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(DeprecatedString::formatted("Unexpected {} inside a glob", bareword_part->class_name())));
                 return bareword_part;
             }
             textbuilder.append(text);
@@ -1984,7 +1984,7 @@ RefPtr<AST::Node> Parser::parse_glob()
                 textbuilder.append('~');
                 textbuilder.append(bareword->text());
             } else {
-                return create<AST::SyntaxError>(String::formatted("Invalid node '{}' in glob position, escape shell special characters", glob_after->class_name()));
+                return create<AST::SyntaxError>(DeprecatedString::formatted("Invalid node '{}' in glob position, escape shell special characters", glob_after->class_name()));
             }
         }
 
@@ -2093,7 +2093,7 @@ RefPtr<AST::Node> Parser::parse_heredoc_initiation_record()
     // StringLiteral | bareword
     if (auto bareword = parse_bareword()) {
         if (!bareword->is_bareword()) {
-            syntax_error_node = create<AST::SyntaxError>(String::formatted("Expected a bareword or a quoted string, not {}", bareword->class_name()));
+            syntax_error_node = create<AST::SyntaxError>(DeprecatedString::formatted("Expected a bareword or a quoted string, not {}", bareword->class_name()));
         } else {
             if (bareword->is_syntax_error())
                 syntax_error_node = bareword->syntax_error_node();
@@ -2121,7 +2121,7 @@ RefPtr<AST::Node> Parser::parse_heredoc_initiation_record()
     if (syntax_error_node)
         node->set_is_syntax_error(*syntax_error_node);
     else
-        node->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expected heredoc contents for heredoc with end key '{}'", node->end()), true));
+        node->set_is_syntax_error(*create<AST::SyntaxError>(DeprecatedString::formatted("Expected heredoc contents for heredoc with end key '{}'", node->end()), true));
 
     record.node = node;
     m_heredoc_initiations.append(move(record));
@@ -2137,7 +2137,7 @@ bool Parser::parse_heredoc_entries()
     for (auto& record : heredocs) {
         auto rule_start = push_start();
         if (m_rule_start_offsets.size() > max_allowed_nested_rule_depth) {
-            record.node->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth)));
+            record.node->set_is_syntax_error(*create<AST::SyntaxError>(DeprecatedString::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth)));
             continue;
         }
         bool found_key = false;
@@ -2164,7 +2164,7 @@ bool Parser::parse_heredoc_entries()
             // Now just wrap it in a StringLiteral and set it as the node's contents
             auto node = create<AST::StringLiteral>(m_input.substring_view(rule_start->offset, last_line_offset->offset - rule_start->offset), AST::StringLiteral::EnclosureType::None);
             if (!found_key)
-                node->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expected to find the heredoc key '{}', but found Eof", record.end), true));
+                node->set_is_syntax_error(*create<AST::SyntaxError>(DeprecatedString::formatted("Expected to find the heredoc key '{}', but found Eof", record.end), true));
             record.node->set_contents(move(node));
         } else {
             // Interpolation is allowed, so we're going to read doublequoted string innards
@@ -2213,9 +2213,9 @@ bool Parser::parse_heredoc_entries()
             if (!expr && found_key) {
                 expr = create<AST::StringLiteral>("", AST::StringLiteral::EnclosureType::None);
             } else if (!expr) {
-                expr = create<AST::SyntaxError>(String::formatted("Expected to find a valid string inside a heredoc (with end key '{}')", record.end), true);
+                expr = create<AST::SyntaxError>(DeprecatedString::formatted("Expected to find a valid string inside a heredoc (with end key '{}')", record.end), true);
             } else if (!found_key) {
-                expr->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expected to find the heredoc key '{}'", record.end), true));
+                expr->set_is_syntax_error(*create<AST::SyntaxError>(DeprecatedString::formatted("Expected to find the heredoc key '{}'", record.end), true));
             }
 
             record.node->set_contents(create<AST::DoubleQuotedString>(move(expr)));

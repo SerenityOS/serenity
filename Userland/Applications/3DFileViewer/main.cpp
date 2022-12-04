@@ -33,7 +33,7 @@ class GLContextWidget final : public GUI::Frame {
     C_OBJECT(GLContextWidget);
 
 public:
-    bool load_path(String const& fname);
+    bool load_path(DeprecatedString const& fname);
     bool load_file(Core::File& file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
@@ -267,7 +267,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     if ((m_cycles % 30) == 0) {
         auto render_time = m_accumulated_time / 30.0;
         auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
-        m_stats->set_text(String::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
+        m_stats->set_text(DeprecatedString::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
         m_accumulated_time = 0;
 
         glEnable(GL_LIGHT0);
@@ -289,12 +289,12 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_cycles++;
 }
 
-bool GLContextWidget::load_path(String const& filename)
+bool GLContextWidget::load_path(DeprecatedString const& filename)
 {
     auto file = Core::File::construct(filename);
 
     if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
@@ -305,23 +305,23 @@ bool GLContextWidget::load_file(Core::File& file)
 {
     auto const& filename = file.filename();
     if (!filename.ends_with(".obj"sv)) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     if (file.is_device()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     if (file.is_directory()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     auto new_mesh = m_mesh_loader->load(file);
     if (new_mesh.is_null()) {
-        GUI::MessageBox::show(window(), String::formatted("Reading \"{}\" failed.", filename), "Error"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed.", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
@@ -330,7 +330,7 @@ bool GLContextWidget::load_file(Core::File& file)
     builder.append(filename.split('.').at(0));
     builder.append(".bmp"sv);
 
-    String texture_path = Core::File::absolute_path(builder.string_view());
+    DeprecatedString texture_path = Core::File::absolute_path(builder.string_view());
 
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
@@ -405,7 +405,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = response.value();
         if (widget->load_file(*file)) {
             auto canonical_path = Core::File::absolute_path(file->filename());
-            window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
+            window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
         }
     }));
     file_menu.add_separator();
@@ -594,7 +594,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto filename = arguments.argc > 1 ? arguments.argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
     if (widget->load_path(filename)) {
         auto canonical_path = Core::File::absolute_path(filename);
-        window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
+        window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
     }
 
     return app->exec();

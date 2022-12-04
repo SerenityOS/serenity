@@ -1,4 +1,4 @@
 endpoint FileSystemAccessClient
 {
-    handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> fd, Optional<String> chosen_file) =|
+    handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> fd, Optional<DeprecatedString> chosen_file) =|
 }

@@ -17,7 +17,7 @@ class ScriptEditor : public GUI::TextEditor {
 public:
     virtual ~ScriptEditor() = default;
 
-    void new_script_with_temp_name(String);
+    void new_script_with_temp_name(DeprecatedString);
     ErrorOr<void> open_script_from_file(LexicalPath const&);
 
     ErrorOr<bool> save();
@@ -27,7 +27,7 @@ public:
 private:
     ScriptEditor();
 
-    String m_path;
+    DeprecatedString m_path;
 };
 
 }

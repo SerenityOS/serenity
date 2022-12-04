@@ -18,7 +18,7 @@ void History::dump() const
     }
 }
 
-void History::push(const URL& url, String const& title)
+void History::push(const URL& url, DeprecatedString const& title)
 {
     if (!m_items.is_empty() && m_items[m_current].url == url)
         return;
@@ -30,7 +30,7 @@ void History::push(const URL& url, String const& title)
     m_current++;
 }
 
-void History::replace_current(const URL& url, String const& title)
+void History::replace_current(const URL& url, DeprecatedString const& title)
 {
     if (m_current == -1)
         return;
@@ -65,7 +65,7 @@ void History::clear()
     m_current = -1;
 }
 
-void History::update_title(String const& title)
+void History::update_title(DeprecatedString const& title)
 {
     if (m_current == -1)
         return;

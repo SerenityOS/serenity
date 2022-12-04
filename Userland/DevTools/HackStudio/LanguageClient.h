@@ -31,7 +31,7 @@ class ConnectionToServer
     friend class ConnectionToServerWrapper;
 
 public:
-    ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, String const& project_path)
+    ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, DeprecatedString const& project_path)
         : IPC::ConnectionToServer<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
     {
         m_project_path = project_path;
@@ -39,7 +39,7 @@ public:
     }
 
     WeakPtr<LanguageClient> language_client() { return m_current_language_client; }
-    String const& project_path() const { return m_project_path; }
+    DeprecatedString const& project_path() const { return m_project_path; }
 
     virtual void die() override;
 
@@ -48,13 +48,13 @@ public:
 protected:
     virtual void auto_complete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> const&) override;
     virtual void declaration_location(CodeComprehension::ProjectLocation const&) override;
-    virtual void declarations_in_document(String const&, Vector<CodeComprehension::Declaration> const&) override;
-    virtual void todo_entries_in_document(String const&, Vector<CodeComprehension::TodoEntry> const&) override;
-    virtual void parameters_hint_result(Vector<String> const&, int index) override;
+    virtual void declarations_in_document(DeprecatedString const&, Vector<CodeComprehension::Declaration> const&) override;
+    virtual void todo_entries_in_document(DeprecatedString const&, Vector<CodeComprehension::TodoEntry> const&) override;
+    virtual void parameters_hint_result(Vector<DeprecatedString> const&, int index) override;
     virtual void tokens_info_result(Vector<CodeComprehension::TokenInfo> const&) override;
     void set_wrapper(ConnectionToServerWrapper& wrapper) { m_wrapper = &wrapper; }
 
-    String m_project_path;
+    DeprecatedString m_project_path;
     WeakPtr<LanguageClient> m_current_language_client;
     ConnectionToServerWrapper* m_wrapper { nullptr };
 };
@@ -63,11 +63,11 @@ class ConnectionToServerWrapper {
     AK_MAKE_NONCOPYABLE(ConnectionToServerWrapper);
 
 public:
-    explicit ConnectionToServerWrapper(String const& language_name, Function<NonnullRefPtr<ConnectionToServer>()> connection_creator);
+    explicit ConnectionToServerWrapper(DeprecatedString const& language_name, Function<NonnullRefPtr<ConnectionToServer>()> connection_creator);
     ~ConnectionToServerWrapper() = default;
 
     template<typename LanguageServerType>
-    static ConnectionToServerWrapper& get_or_create(String const& project_path);
+    static ConnectionToServerWrapper& get_or_create(DeprecatedString const& project_path);
 
     Language language() const { return m_language; }
     ConnectionToServer* connection();
@@ -93,13 +93,13 @@ private:
 
 class ConnectionToServerInstances {
 public:
-    static void set_instance_for_language(String const& language_name, NonnullOwnPtr<ConnectionToServerWrapper>&& connection_wrapper);
-    static void remove_instance_for_language(String const& language_name);
+    static void set_instance_for_language(DeprecatedString const& language_name, NonnullOwnPtr<ConnectionToServerWrapper>&& connection_wrapper);
+    static void remove_instance_for_language(DeprecatedString const& language_name);
 
-    static ConnectionToServerWrapper* get_instance_wrapper(String const& language_name);
+    static ConnectionToServerWrapper* get_instance_wrapper(DeprecatedString const& language_name);
 
 private:
-    static HashMap<String, NonnullOwnPtr<ConnectionToServerWrapper>> s_instance_for_language;
+    static HashMap<DeprecatedString, NonnullOwnPtr<ConnectionToServerWrapper>> s_instance_for_language;
 };
 
 class LanguageClient : public Weakable<LanguageClient> {
@@ -128,23 +128,23 @@ public:
     Language language() const { return m_connection_wrapper.language(); }
     void set_active_client();
     bool is_active_client() const;
-    virtual void open_file(String const& path, int fd);
-    virtual void set_file_content(String const& path, String const& content);
-    virtual void insert_text(String const& path, String const& text, size_t line, size_t column);
-    virtual void remove_text(String const& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column);
-    virtual void request_autocomplete(String const& path, size_t cursor_line, size_t cursor_column);
-    virtual void search_declaration(String const& path, size_t line, size_t column);
-    virtual void get_parameters_hint(String const& path, size_t line, size_t column);
-    virtual void get_tokens_info(String const& filename);
+    virtual void open_file(DeprecatedString const& path, int fd);
+    virtual void set_file_content(DeprecatedString const& path, DeprecatedString const& content);
+    virtual void insert_text(DeprecatedString const& path, DeprecatedString const& text, size_t line, size_t column);
+    virtual void remove_text(DeprecatedString const& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column);
+    virtual void request_autocomplete(DeprecatedString const& path, size_t cursor_line, size_t cursor_column);
+    virtual void search_declaration(DeprecatedString const& path, size_t line, size_t column);
+    virtual void get_parameters_hint(DeprecatedString const& path, size_t line, size_t column);
+    virtual void get_tokens_info(DeprecatedString const& filename);
 
     void provide_autocomplete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> const&) const;
-    void declaration_found(String const& file, size_t line, size_t column) const;
-    void parameters_hint_result(Vector<String> const& params, size_t argument_index) const;
+    void declaration_found(DeprecatedString const& file, size_t line, size_t column) const;
+    void parameters_hint_result(Vector<DeprecatedString> const& params, size_t argument_index) const;
 
     // Callbacks that get called when the result of a language server query is ready
     Function<void(Vector<CodeComprehension::AutocompleteResultEntry>)> on_autocomplete_suggestions;
-    Function<void(String const&, size_t, size_t)> on_declaration_found;
-    Function<void(Vector<String> const&, size_t)> on_function_parameters_hint_result;
+    Function<void(DeprecatedString const&, size_t, size_t)> on_declaration_found;
+    Function<void(Vector<DeprecatedString> const&, size_t)> on_function_parameters_hint_result;
     Function<void(Vector<CodeComprehension::TokenInfo> const&)> on_tokens_info_result;
 
 private:
@@ -153,13 +153,13 @@ private:
 };
 
 template<typename ConnectionToServerT>
-static inline NonnullOwnPtr<LanguageClient> get_language_client(String const& project_path)
+static inline NonnullOwnPtr<LanguageClient> get_language_client(DeprecatedString const& project_path)
 {
     return make<LanguageClient>(ConnectionToServerWrapper::get_or_create<ConnectionToServerT>(project_path));
 }
 
 template<typename LanguageServerType>
-ConnectionToServerWrapper& ConnectionToServerWrapper::get_or_create(String const& project_path)
+ConnectionToServerWrapper& ConnectionToServerWrapper::get_or_create(DeprecatedString const& project_path)
 {
     auto* wrapper = ConnectionToServerInstances::get_instance_wrapper(LanguageServerType::language_name());
     if (wrapper)

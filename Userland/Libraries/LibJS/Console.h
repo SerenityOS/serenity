@@ -45,12 +45,12 @@ public:
     };
 
     struct Group {
-        String label;
+        DeprecatedString label;
     };
 
     struct Trace {
-        String label;
-        Vector<String> stack;
+        DeprecatedString label;
+        Vector<DeprecatedString> stack;
     };
 
     explicit Console(Realm&);
@@ -61,8 +61,8 @@ public:
 
     MarkedVector<Value> vm_arguments();
 
-    HashMap<String, unsigned>& counters() { return m_counters; }
-    HashMap<String, unsigned> const& counters() const { return m_counters; }
+    HashMap<DeprecatedString, unsigned>& counters() { return m_counters; }
+    HashMap<DeprecatedString, unsigned> const& counters() const { return m_counters; }
 
     ThrowCompletionOr<Value> debug();
     ThrowCompletionOr<Value> error();
@@ -81,18 +81,18 @@ public:
     ThrowCompletionOr<Value> time_log();
     ThrowCompletionOr<Value> time_end();
 
-    void output_debug_message(LogLevel log_level, String const& output) const;
+    void output_debug_message(LogLevel log_level, DeprecatedString const& output) const;
     void report_exception(JS::Error const&, bool) const;
 
 private:
-    ThrowCompletionOr<String> value_vector_to_string(MarkedVector<Value> const&);
-    ThrowCompletionOr<String> format_time_since(Core::ElapsedTimer timer);
+    ThrowCompletionOr<DeprecatedString> value_vector_to_string(MarkedVector<Value> const&);
+    ThrowCompletionOr<DeprecatedString> format_time_since(Core::ElapsedTimer timer);
 
     Realm& m_realm;
     ConsoleClient* m_client { nullptr };
 
-    HashMap<String, unsigned> m_counters;
-    HashMap<String, Core::ElapsedTimer> m_timer_table;
+    HashMap<DeprecatedString, unsigned> m_counters;
+    HashMap<DeprecatedString, Core::ElapsedTimer> m_timer_table;
     Vector<Group> m_group_stack;
 };
 

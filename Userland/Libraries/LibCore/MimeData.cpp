@@ -10,9 +10,9 @@
 
 namespace Core {
 
-Vector<String> MimeData::formats() const
+Vector<DeprecatedString> MimeData::formats() const
 {
-    Vector<String> mime_types;
+    Vector<DeprecatedString> mime_types;
     mime_types.ensure_capacity(m_data.size());
     for (auto& it : m_data)
         mime_types.unchecked_append(it.key);
@@ -41,17 +41,17 @@ void MimeData::set_urls(Vector<URL> const& urls)
     set_data("text/uri-list", builder.to_byte_buffer());
 }
 
-String MimeData::text() const
+DeprecatedString MimeData::text() const
 {
-    return String::copy(m_data.get("text/plain").value_or({}));
+    return DeprecatedString::copy(m_data.get("text/plain").value_or({}));
 }
 
-void MimeData::set_text(String const& text)
+void MimeData::set_text(DeprecatedString const& text)
 {
     set_data("text/plain", text.to_byte_buffer());
 }
 
-String guess_mime_type_based_on_filename(StringView path)
+DeprecatedString guess_mime_type_based_on_filename(StringView path)
 {
     if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
         return "image/x‑portable‑bitmap";
@@ -164,7 +164,7 @@ String guess_mime_type_based_on_filename(StringView path)
 ENUMERATE_HEADER_CONTENTS
 #undef __ENUMERATE_MIME_TYPE_HEADER
 
-Optional<String> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes bytes)
+Optional<DeprecatedString> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes bytes)
 {
 #define __ENUMERATE_MIME_TYPE_HEADER(var_name, mime_type, pattern_offset, pattern_size, ...)                       \
     if (static_cast<ssize_t>(bytes.size()) >= pattern_offset && bytes.slice(pattern_offset).starts_with(var_name)) \

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 
 namespace Diff {
-String generate_only_additions(String const&);
+DeprecatedString generate_only_additions(DeprecatedString const&);
 };

@@ -12,23 +12,23 @@
 
 namespace JS {
 
-NonnullRefPtr<SourceCode> SourceCode::create(String filename, String code)
+NonnullRefPtr<SourceCode> SourceCode::create(DeprecatedString filename, DeprecatedString code)
 {
     return adopt_ref(*new SourceCode(move(filename), move(code)));
 }
 
-SourceCode::SourceCode(String filename, String code)
+SourceCode::SourceCode(DeprecatedString filename, DeprecatedString code)
     : m_filename(move(filename))
     , m_code(move(code))
 {
 }
 
-String const& SourceCode::filename() const
+DeprecatedString const& SourceCode::filename() const
 {
     return m_filename;
 }
 
-String const& SourceCode::code() const
+DeprecatedString const& SourceCode::code() const
 {
     return m_code;
 }

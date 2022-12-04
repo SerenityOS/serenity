@@ -210,20 +210,20 @@ u8 Reader::process_termination_signal() const
     return signal_number;
 }
 
-String Reader::process_executable_path() const
+DeprecatedString Reader::process_executable_path() const
 {
     auto process_info = this->process_info();
     auto executable_path = process_info.get("executable_path"sv);
     return executable_path.as_string_or({});
 }
 
-Vector<String> Reader::process_arguments() const
+Vector<DeprecatedString> Reader::process_arguments() const
 {
     auto process_info = this->process_info();
     auto arguments = process_info.get("arguments"sv);
     if (!arguments.is_array())
         return {};
-    Vector<String> vector;
+    Vector<DeprecatedString> vector;
     arguments.as_array().for_each([&](auto& value) {
         if (value.is_string())
             vector.append(value.as_string());
@@ -231,13 +231,13 @@ Vector<String> Reader::process_arguments() const
     return vector;
 }
 
-Vector<String> Reader::process_environment() const
+Vector<DeprecatedString> Reader::process_environment() const
 {
     auto process_info = this->process_info();
     auto environment = process_info.get("environment"sv);
     if (!environment.is_array())
         return {};
-    Vector<String> vector;
+    Vector<DeprecatedString> vector;
     environment.as_array().for_each([&](auto& value) {
         if (value.is_string())
             vector.append(value.as_string());
@@ -245,7 +245,7 @@ Vector<String> Reader::process_environment() const
     return vector;
 }
 
-HashMap<String, String> Reader::metadata() const
+HashMap<DeprecatedString, DeprecatedString> Reader::metadata() const
 {
     const ELF::Core::Metadata* metadata_notes_entry = nullptr;
     NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
@@ -263,7 +263,7 @@ HashMap<String, String> Reader::metadata() const
         return {};
     if (!metadata_json_value.value().is_object())
         return {};
-    HashMap<String, String> metadata;
+    HashMap<DeprecatedString, DeprecatedString> metadata;
     metadata_json_value.value().as_object().for_each_member([&](auto& key, auto& value) {
         metadata.set(key, value.as_string_or({}));
     });
@@ -272,13 +272,13 @@ HashMap<String, String> Reader::metadata() const
 
 Reader::LibraryData const* Reader::library_containing(FlatPtr address) const
 {
-    static HashMap<String, OwnPtr<LibraryData>> cached_libs;
+    static HashMap<DeprecatedString, OwnPtr<LibraryData>> cached_libs;
     auto region = region_containing(address);
     if (!region.has_value())
         return {};
 
     auto name = region->object_name();
-    String path = resolve_object_path(name);
+    DeprecatedString path = resolve_object_path(name);
 
     if (!cached_libs.contains(path)) {
         auto file_or_error = Core::MappedFile::map(path);
@@ -292,7 +292,7 @@ Reader::LibraryData const* Reader::library_containing(FlatPtr address) const
     return lib_data;
 }
 
-String Reader::resolve_object_path(StringView name) const
+DeprecatedString Reader::resolve_object_path(StringView name) const
 {
     // TODO: There are other places where similar method is implemented or would be useful.
     //       (e.g. UserspaceEmulator, LibSymbolication, Profiler, and DynamicLinker itself)
@@ -302,7 +302,7 @@ String Reader::resolve_object_path(StringView name) const
         return name;
     }
 
-    Vector<String> library_search_directories;
+    Vector<DeprecatedString> library_search_directories;
 
     // If LD_LIBRARY_PATH is present, check its folders first
     for (auto& environment_variable : process_environment()) {
@@ -336,7 +336,7 @@ String Reader::resolve_object_path(StringView name) const
 
 void Reader::for_each_library(Function<void(LibraryInfo)> func) const
 {
-    HashTable<String> libraries;
+    HashTable<DeprecatedString> libraries;
     for_each_memory_region_info([&](auto const& region) {
         auto name = region.object_name();
         if (name.is_null() || libraries.contains(name))
@@ -344,7 +344,7 @@ void Reader::for_each_library(Function<void(LibraryInfo)> func) const
 
         libraries.set(name);
 
-        String path = resolve_object_path(name);
+        DeprecatedString path = resolve_object_path(name);
 
         func(LibraryInfo { name, path, static_cast<FlatPtr>(region.region_start) });
         return IterationDecision::Continue;

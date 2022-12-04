@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibHTTP/HttpRequest.h>
 #include <RequestServer/ConnectionCache.h>
@@ -61,7 +61,7 @@ void init(TSelf* self, TJob job)
 }
 
 template<typename TBadgedProtocol, typename TPipeResult>
-OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& client, String const& method, const URL& url, HashMap<String, String> const& headers, ReadonlyBytes body, TPipeResult&& pipe_result, Core::ProxyData proxy_data = {})
+OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& client, DeprecatedString const& method, const URL& url, HashMap<DeprecatedString, DeprecatedString> const& headers, ReadonlyBytes body, TPipeResult&& pipe_result, Core::ProxyData proxy_data = {})
 {
     using TJob = typename TBadgedProtocol::Type::JobType;
     using TRequest = typename TBadgedProtocol::Type::RequestType;

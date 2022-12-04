@@ -29,7 +29,7 @@ public:
 
     void paint_window(StringView title, Gfx::IntRect const& rect, Gfx::WindowTheme::WindowState, Gfx::Bitmap const& icon, int button_count = 3);
 
-    Function<void(String const&)> on_theme_load_from_file;
+    Function<void(DeprecatedString const&)> on_theme_load_from_file;
     Function<void()> on_palette_change;
 
     struct Window {
@@ -71,20 +71,20 @@ private:
     RefPtr<Gfx::Bitmap> m_close_bitmap;
     RefPtr<Gfx::Bitmap> m_maximize_bitmap;
     RefPtr<Gfx::Bitmap> m_minimize_bitmap;
-    String m_last_close_path;
-    String m_last_maximize_path;
-    String m_last_minimize_path;
+    DeprecatedString m_last_close_path;
+    DeprecatedString m_last_maximize_path;
+    DeprecatedString m_last_minimize_path;
 
     RefPtr<Gfx::Bitmap> m_active_window_shadow;
     RefPtr<Gfx::Bitmap> m_inactive_window_shadow;
     RefPtr<Gfx::Bitmap> m_menu_shadow;
     RefPtr<Gfx::Bitmap> m_taskbar_shadow;
     RefPtr<Gfx::Bitmap> m_tooltip_shadow;
-    String m_last_active_window_shadow_path;
-    String m_last_inactive_window_shadow_path;
-    String m_last_menu_shadow_path;
-    String m_last_taskbar_shadow_path;
-    String m_last_tooltip_shadow_path;
+    DeprecatedString m_last_active_window_shadow_path;
+    DeprecatedString m_last_inactive_window_shadow_path;
+    DeprecatedString m_last_menu_shadow_path;
+    DeprecatedString m_last_taskbar_shadow_path;
+    DeprecatedString m_last_tooltip_shadow_path;
 };
 
 }

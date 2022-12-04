@@ -83,10 +83,10 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
 
 // https://html.spec.whatwg.org/multipage/dom.html#concept-domstringmap-pairs
 // NOTE: There isn't a direct link to this, so the link is to one of the algorithms above it.
-Vector<String> DOMStringMap::supported_property_names() const
+Vector<DeprecatedString> DOMStringMap::supported_property_names() const
 {
     // The supported property names on a DOMStringMap object at any instant are the names of each pair returned from getting the DOMStringMap's name-value pairs at that instant, in the order returned.
-    Vector<String> names;
+    Vector<DeprecatedString> names;
     auto name_value_pairs = get_name_value_pairs();
     for (auto& name_value_pair : name_value_pairs) {
         names.append(name_value_pair.name);
@@ -95,7 +95,7 @@ Vector<String> DOMStringMap::supported_property_names() const
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-nameditem
-String DOMStringMap::determine_value_of_named_property(String const& name) const
+DeprecatedString DOMStringMap::determine_value_of_named_property(DeprecatedString const& name) const
 {
     // To determine the value of a named property name for a DOMStringMap, return the value component of the name-value pair whose name component is name in the list returned from getting the
     // DOMStringMap's name-value pairs.
@@ -111,7 +111,7 @@ String DOMStringMap::determine_value_of_named_property(String const& name) const
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String const& name, String const& value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(DeprecatedString const& name, DeprecatedString const& value)
 {
     AK::StringBuilder builder;
 
@@ -150,13 +150,13 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String c
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(String const& name, String const& value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(DeprecatedString const& name, DeprecatedString const& value)
 {
     return set_value_of_new_named_property(name, value);
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-removeitem
-bool DOMStringMap::delete_existing_named_property(String const& name)
+bool DOMStringMap::delete_existing_named_property(DeprecatedString const& name)
 {
     AK::StringBuilder builder;
 

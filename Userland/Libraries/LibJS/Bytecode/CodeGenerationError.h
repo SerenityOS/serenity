@@ -16,7 +16,7 @@ struct CodeGenerationError {
     ASTNode const* failing_node { nullptr };
     StringView reason_literal;
 
-    String to_string();
+    DeprecatedString to_string();
 };
 
 template<typename T>

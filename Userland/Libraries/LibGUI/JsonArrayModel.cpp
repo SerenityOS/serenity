@@ -142,7 +142,7 @@ Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
     return {};
 }
 
-void JsonArrayModel::set_json_path(String const& json_path)
+void JsonArrayModel::set_json_path(DeprecatedString const& json_path)
 {
     if (m_json_path == json_path)
         return;

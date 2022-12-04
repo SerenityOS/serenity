@@ -30,13 +30,13 @@ void ConnectionFromClient::die()
         Core::EventLoop::current().quit(0);
 }
 
-Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(String const& protocol)
+Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_supported_protocol(DeprecatedString const& protocol)
 {
     bool supported = Protocol::find_by_name(protocol.to_lowercase());
     return supported;
 }
 
-Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(String const& method, URL const& url, IPC::Dictionary const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
+Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(DeprecatedString const& method, URL const& url, IPC::Dictionary const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
 {
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
@@ -97,7 +97,7 @@ void ConnectionFromClient::did_request_certificates(Badge<Request>, Request& req
     async_certificate_requested(request.id());
 }
 
-Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certificate(i32 request_id, String const& certificate, String const& key)
+Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certificate(i32 request_id, DeprecatedString const& certificate, DeprecatedString const& key)
 {
     auto* request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
     bool success = false;

@@ -255,7 +255,7 @@ void BoardWidget::place_pattern(size_t row, size_t column)
 
 void BoardWidget::setup_patterns()
 {
-    auto add_pattern = [&](String name, NonnullOwnPtr<Pattern> pattern) {
+    auto add_pattern = [&](DeprecatedString name, NonnullOwnPtr<Pattern> pattern) {
         auto action = GUI::Action::create(move(name), [this, pattern = pattern.ptr()](const GUI::Action&) {
             on_pattern_selection(pattern);
         });
@@ -263,29 +263,29 @@ void BoardWidget::setup_patterns()
         m_patterns.append(move(pattern));
     };
 
-    Vector<String> blinker = {
+    Vector<DeprecatedString> blinker = {
         "OOO"
     };
 
-    Vector<String> toad = {
+    Vector<DeprecatedString> toad = {
         ".OOO",
         "OOO."
     };
 
-    Vector<String> glider = {
+    Vector<DeprecatedString> glider = {
         ".O.",
         "..O",
         "OOO",
     };
 
-    Vector<String> lightweight_spaceship = {
+    Vector<DeprecatedString> lightweight_spaceship = {
         ".OO..",
         "OOOO.",
         "OO.OO",
         "..OO."
     };
 
-    Vector<String> middleweight_spaceship = {
+    Vector<DeprecatedString> middleweight_spaceship = {
         ".OOOOO",
         "O....O",
         ".....O",
@@ -293,7 +293,7 @@ void BoardWidget::setup_patterns()
         "..O..."
     };
 
-    Vector<String> heavyweight_spaceship = {
+    Vector<DeprecatedString> heavyweight_spaceship = {
         "..OO...",
         "O....O.",
         "......O",
@@ -301,9 +301,9 @@ void BoardWidget::setup_patterns()
         ".OOOOOO"
     };
 
-    Vector<String> infinite_1 = { "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO" };
+    Vector<DeprecatedString> infinite_1 = { "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO" };
 
-    Vector<String> infinite_2 = {
+    Vector<DeprecatedString> infinite_2 = {
         "......O.",
         "....O.OO",
         "....O.O.",
@@ -312,7 +312,7 @@ void BoardWidget::setup_patterns()
         "O.O....."
     };
 
-    Vector<String> infinite_3 = {
+    Vector<DeprecatedString> infinite_3 = {
         "OOO.O",
         "O....",
         "...OO",
@@ -320,7 +320,7 @@ void BoardWidget::setup_patterns()
         "O.O.O"
     };
 
-    Vector<String> simkin_glider_gun = {
+    Vector<DeprecatedString> simkin_glider_gun = {
         "OO.....OO........................",
         "OO.....OO........................",
         ".................................",
@@ -343,7 +343,7 @@ void BoardWidget::setup_patterns()
         ".....................OOO.........",
         ".......................O........."
     };
-    Vector<String> gosper_glider_gun = {
+    Vector<DeprecatedString> gosper_glider_gun = {
         "........................O...........",
         "......................O.O...........",
         "............OO......OO............OO",
@@ -355,19 +355,19 @@ void BoardWidget::setup_patterns()
         "............OO......................"
     };
 
-    Vector<String> r_pentomino = {
+    Vector<DeprecatedString> r_pentomino = {
         ".OO",
         "OO.",
         ".O."
     };
 
-    Vector<String> diehard = {
+    Vector<DeprecatedString> diehard = {
         "......O.",
         "OO......",
         ".O...OOO"
     };
 
-    Vector<String> acorn = {
+    Vector<DeprecatedString> acorn = {
         ".O.....",
         "...O...",
         "OO..OOO"

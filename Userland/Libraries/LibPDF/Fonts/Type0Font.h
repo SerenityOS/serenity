@@ -11,8 +11,8 @@
 namespace PDF {
 
 struct CIDSystemInfo {
-    String registry;
-    String ordering;
+    DeprecatedString registry;
+    DeprecatedString ordering;
     u8 supplement;
 };
 

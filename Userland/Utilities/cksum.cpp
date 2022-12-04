@@ -14,7 +14,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<String> paths;
+    Vector<DeprecatedString> paths;
     char const* opt_algorithm = nullptr;
 
     Core::ArgsParser args_parser;
@@ -22,9 +22,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto algorithm = (opt_algorithm == nullptr) ? "crc32" : String(opt_algorithm).to_lowercase();
+    auto algorithm = (opt_algorithm == nullptr) ? "crc32" : DeprecatedString(opt_algorithm).to_lowercase();
 
-    auto available_algorithms = Vector<String> { "crc32", "adler32" };
+    auto available_algorithms = Vector<DeprecatedString> { "crc32", "adler32" };
 
     if (algorithm == "list") {
         outln("Available algorithms:");

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>

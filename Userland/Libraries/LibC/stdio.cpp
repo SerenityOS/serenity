@@ -6,11 +6,11 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <LibC/bits/mutex_locker.h>
 #include <LibC/bits/stdio_file_implementation.h>
 #include <assert.h>

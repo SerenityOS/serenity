@@ -76,9 +76,9 @@ void Shell::print_path(StringView path)
     out("\033]8;;{}\033\\{}\033]8;;\033\\", url.serialize(), path);
 }
 
-String Shell::prompt() const
+DeprecatedString Shell::prompt() const
 {
-    auto build_prompt = [&]() -> String {
+    auto build_prompt = [&]() -> DeprecatedString {
         auto* ps1 = getenv("PROMPT");
         if (!ps1) {
             if (uid == 0)
@@ -113,7 +113,7 @@ String Shell::prompt() const
                     builder.append({ hostname, strlen(hostname) });
                     break;
                 case 'w': {
-                    String home_path = getenv("HOME");
+                    DeprecatedString home_path = getenv("HOME");
                     if (cwd.starts_with(home_path)) {
                         builder.append('~');
                         builder.append(cwd.substring_view(home_path.length(), cwd.length() - home_path.length()));
@@ -136,7 +136,7 @@ String Shell::prompt() const
     return build_prompt();
 }
 
-String Shell::expand_tilde(StringView expression)
+DeprecatedString Shell::expand_tilde(StringView expression)
 {
     VERIFY(expression.starts_with('~'));
 
@@ -159,9 +159,9 @@ String Shell::expand_tilde(StringView expression)
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
-            return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
+            return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_string());
         }
-        return String::formatted("{}/{}", home, path.to_string());
+        return DeprecatedString::formatted("{}/{}", home, path.to_string());
     }
 
     auto passwd = getpwnam(login_name.to_string().characters());
@@ -169,7 +169,7 @@ String Shell::expand_tilde(StringView expression)
         return expression;
     VERIFY(passwd->pw_dir);
 
-    return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
+    return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_string());
 }
 
 bool Shell::is_glob(StringView s)
@@ -204,7 +204,7 @@ Vector<StringView> Shell::split_path(StringView path)
     return parts;
 }
 
-Vector<String> Shell::expand_globs(StringView path, StringView base)
+Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
 {
     auto explicitly_set_base = false;
     if (path.starts_with('/')) {
@@ -212,7 +212,7 @@ Vector<String> Shell::expand_globs(StringView path, StringView base)
         explicitly_set_base = true;
     }
     auto parts = split_path(path);
-    String base_string = base;
+    DeprecatedString base_string = base;
     struct stat statbuf;
     if (lstat(base_string.characters(), &statbuf) < 0) {
         perror("lstat");
@@ -242,10 +242,10 @@ Vector<String> Shell::expand_globs(StringView path, StringView base)
     return results;
 }
 
-Vector<String> Shell::expand_globs(Vector<StringView> path_segments, StringView base)
+Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, StringView base)
 {
     if (path_segments.is_empty()) {
-        String base_str = base;
+        DeprecatedString base_str = base;
         struct stat statbuf;
         if (lstat(base_str.characters(), &statbuf) < 0)
             return {};
@@ -254,14 +254,14 @@ Vector<String> Shell::expand_globs(Vector<StringView> path_segments, StringView 
 
     auto first_segment = path_segments.take_first();
     if (is_glob(first_segment)) {
-        Vector<String> result;
+        Vector<DeprecatedString> result;
 
         Core::DirIterator di(base, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error())
             return {};
 
         while (di.has_next()) {
-            String path = di.next_path();
+            DeprecatedString path = di.next_path();
 
             // Dotfiles have to be explicitly requested
             if (path[0] == '.' && first_segment[0] != '.')
@@ -332,10 +332,10 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
     return commands;
 }
 
-String Shell::resolve_path(String path) const
+DeprecatedString Shell::resolve_path(DeprecatedString path) const
 {
     if (!path.starts_with('/'))
-        path = String::formatted("{}/{}", cwd, path);
+        path = DeprecatedString::formatted("{}/{}", cwd, path);
 
     return Core::File::real_path_for(path);
 }
@@ -385,7 +385,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-String Shell::local_variable_or(StringView name, String const& replacement) const
+DeprecatedString Shell::local_variable_or(StringView name, DeprecatedString const& replacement) const
 {
     auto value = lookup_local_variable(name);
     if (value) {
@@ -396,7 +396,7 @@ String Shell::local_variable_or(StringView name, String const& replacement) cons
     return replacement;
 }
 
-void Shell::set_local_variable(String const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
+void Shell::set_local_variable(DeprecatedString const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name)) {
@@ -419,7 +419,7 @@ void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
     m_local_frames.last().local_variables.remove(name);
 }
 
-void Shell::define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body)
+void Shell::define_function(DeprecatedString name, Vector<DeprecatedString> argnames, RefPtr<AST::Node> body)
 {
     add_entry_to_cache({ RunnablePath::Kind::Function, name });
     m_functions.set(name, { name, move(argnames), move(body) });
@@ -437,7 +437,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
     StringView name = command.argv.first();
 
-    TemporaryChange<String> script_change { current_script, name };
+    TemporaryChange<DeprecatedString> script_change { current_script, name };
 
     auto function_option = m_functions.get(name);
     if (!function_option.has_value())
@@ -451,12 +451,12 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     }
 
     if (command.argv.size() - 1 < function.arguments.size()) {
-        raise_error(ShellError::EvaluatedSyntaxError, String::formatted("Expected at least {} arguments to {}, but got {}", function.arguments.size(), function.name, command.argv.size() - 1), command.position);
+        raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Expected at least {} arguments to {}, but got {}", function.arguments.size(), function.name, command.argv.size() - 1), command.position);
         retval = 1;
         return true;
     }
 
-    auto frame = push_frame(String::formatted("function {}", function.name));
+    auto frame = push_frame(DeprecatedString::formatted("function {}", function.name));
     size_t index = 0;
     for (auto& arg : function.arguments) {
         ++index;
@@ -476,7 +476,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     return true;
 }
 
-String Shell::format(StringView source, ssize_t& cursor) const
+DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
 {
     Formatter formatter(source, cursor);
     auto result = formatter.format();
@@ -485,7 +485,7 @@ String Shell::format(StringView source, ssize_t& cursor) const
     return result;
 }
 
-Shell::Frame Shell::push_frame(String name)
+Shell::Frame Shell::push_frame(DeprecatedString name)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
     dbgln_if(SH_DEBUG, "New frame '{}' at {:p}", name, &m_local_frames.last());
@@ -512,7 +512,7 @@ Shell::Frame::~Frame()
     (void)frames.take_last();
 }
 
-String Shell::resolve_alias(StringView name) const
+DeprecatedString Shell::resolve_alias(StringView name) const
 {
     return m_aliases.get(name).value_or({});
 }
@@ -534,7 +534,7 @@ Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
     return *found;
 }
 
-Optional<String> Shell::help_path_for(Vector<RunnablePath> visited, Shell::RunnablePath const& runnable_path)
+Optional<DeprecatedString> Shell::help_path_for(Vector<RunnablePath> visited, Shell::RunnablePath const& runnable_path)
 {
     switch (runnable_path.kind) {
     case RunnablePath::Kind::Executable: {
@@ -734,7 +734,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     }
 
     Vector<char const*> argv;
-    Vector<String> copy_argv = command.argv;
+    Vector<DeprecatedString> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
 
     for (auto& arg : copy_argv)
@@ -1012,7 +1012,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         }
         auto job_result = run_command(command);
         if (job_result.is_error()) {
-            raise_error(ShellError::LaunchError, String::formatted("{} while running '{}'", job_result.error(), command.argv.first()), command.position);
+            raise_error(ShellError::LaunchError, DeprecatedString::formatted("{} while running '{}'", job_result.error(), command.argv.first()), command.position);
             break;
         }
 
@@ -1039,7 +1039,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
     return spawned_jobs;
 }
 
-bool Shell::run_file(String const& filename, bool explicitly_invoked)
+bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
     TemporaryChange interactive_change { m_is_interactive, false };
@@ -1047,7 +1047,7 @@ bool Shell::run_file(String const& filename, bool explicitly_invoked)
 
     auto file_result = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (file_result.is_error()) {
-        auto error = String::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_result.error());
+        auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_result.error());
         if (explicitly_invoked)
             raise_error(ShellError::OpenFailure, error);
         else
@@ -1125,14 +1125,14 @@ void Shell::block_on_job(RefPtr<Job> job)
         block_on_pipeline(command->pipeline);
 }
 
-String Shell::get_history_path()
+DeprecatedString Shell::get_history_path()
 {
     if (auto histfile = getenv("HISTFILE"))
         return { histfile };
-    return String::formatted("{}/.history", home);
+    return DeprecatedString::formatted("{}/.history", home);
 }
 
-String Shell::escape_token_for_single_quotes(StringView token)
+DeprecatedString Shell::escape_token_for_single_quotes(StringView token)
 {
     // `foo bar \n '` -> `'foo bar \n '"'"`
 
@@ -1162,7 +1162,7 @@ String Shell::escape_token_for_single_quotes(StringView token)
     return builder.build();
 }
 
-String Shell::escape_token_for_double_quotes(StringView token)
+DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
 {
     // `foo bar \n $x 'blah "hello` -> `"foo bar \\n $x 'blah \"hello"`
 
@@ -1228,7 +1228,7 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-static String do_escape(Shell::EscapeMode escape_mode, auto& token)
+static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token)
 {
     StringBuilder builder;
     for (auto c : token) {
@@ -1293,12 +1293,12 @@ static String do_escape(Shell::EscapeMode escape_mode, auto& token)
     return builder.build();
 }
 
-String Shell::escape_token(Utf32View token, EscapeMode escape_mode)
+DeprecatedString Shell::escape_token(Utf32View token, EscapeMode escape_mode)
 {
     return do_escape(escape_mode, token);
 }
 
-String Shell::escape_token(StringView token, EscapeMode escape_mode)
+DeprecatedString Shell::escape_token(StringView token, EscapeMode escape_mode)
 {
     Utf8View view { token };
     if (view.validate())
@@ -1306,7 +1306,7 @@ String Shell::escape_token(StringView token, EscapeMode escape_mode)
     return do_escape(escape_mode, token);
 }
 
-String Shell::unescape_token(StringView token)
+DeprecatedString Shell::unescape_token(StringView token)
 {
     StringBuilder builder;
 
@@ -1365,14 +1365,14 @@ void Shell::cache_path()
     }
 
     // TODO: Can we make this rely on Core::File::resolve_executable_from_environment()?
-    String path = getenv("PATH");
+    DeprecatedString path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
         for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
-                auto program_path = String::formatted("{}/{}", directory, program);
+                auto program_path = DeprecatedString::formatted("{}/{}", directory, program);
                 auto escaped_name = escape_token(program);
                 if (cached_path.contains_slow(escaped_name))
                     continue;
@@ -1439,7 +1439,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
 Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const* node, EscapeMode escape_mode)
 {
     auto token = offset ? part.substring_view(0, offset) : ""sv;
-    String path;
+    DeprecatedString path;
 
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
@@ -1500,7 +1500,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
         auto file = files.next_path();
         if (file.starts_with(token)) {
             struct stat program_status;
-            auto file_path = String::formatted("{}/{}", path, file);
+            auto file_path = DeprecatedString::formatted("{}/{}", path, file);
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
@@ -1540,7 +1540,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
     if (!match)
         return complete_path(""sv, name, offset, ExecutableOnly::Yes, nullptr, nullptr, escape_mode);
 
-    String completion = match->path;
+    DeprecatedString completion = match->path;
     auto token_length = escape_token(name, escape_mode).length();
     auto invariant_offset = token_length;
     size_t static_offset = 0;
@@ -1594,7 +1594,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
             auto parts = entry.split_view('=');
             if (parts.is_empty() || parts.first().is_empty())
                 continue;
-            String name = parts.first();
+            DeprecatedString name = parts.first();
             if (suggestions.contains_slow(name))
                 continue;
             suggestions.append(move(name));
@@ -1626,7 +1626,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
         return suggestions;
 
     while (di.has_next()) {
-        String name = di.next_path();
+        DeprecatedString name = di.next_path();
         if (name.starts_with(pattern)) {
             suggestions.append(name);
             auto& suggestion = suggestions.last();
@@ -1668,7 +1668,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     if (command_node->would_execute())
         return Error::from_string_literal("Refusing to complete nodes that would execute");
 
-    String program_name_storage;
+    DeprecatedString program_name_storage;
     if (known_program_name.is_null()) {
         auto node = command_node->leftmost_trivial_literal();
         if (!node)
@@ -1684,7 +1684,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     completion_command.argv.append(program_name);
     completion_command = expand_aliases({ completion_command }).last();
 
-    auto completion_utility_name = String::formatted("_complete_{}", completion_command.argv[0]);
+    auto completion_utility_name = DeprecatedString::formatted("_complete_{}", completion_command.argv[0]);
     if (binary_search(cached_path.span(), completion_utility_name, nullptr, RunnablePathComparator {}) != nullptr)
         completion_command.argv[0] = completion_utility_name;
     else if (!options.invoke_program_for_autocomplete)
@@ -1702,12 +1702,12 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
         Shell& shell;
         AST::Position completion_position;
-        Vector<Vector<String>> lists;
+        Vector<Vector<DeprecatedString>> lists;
         bool fail { false };
 
         void push_list() { lists.empend(); }
-        Vector<String> pop_list() { return lists.take_last(); }
-        Vector<String>& list() { return lists.last(); }
+        Vector<DeprecatedString> pop_list() { return lists.take_last(); }
+        Vector<DeprecatedString>& list() { return lists.last(); }
 
         bool should_include(AST::Node const* node) const { return node->position().end_offset <= completion_position.end_offset; }
 
@@ -1969,7 +1969,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
 
     // Black with Cyan background.
     constexpr auto default_mark = "\e[30;46m%\e[0m";
-    String eol_mark = getenv("PROMPT_EOL_MARK");
+    DeprecatedString eol_mark = getenv("PROMPT_EOL_MARK");
     if (eol_mark.is_null())
         eol_mark = default_mark;
     size_t eol_mark_length = Line::Editor::actual_rendered_string_metrics(eol_mark).line_metrics.last().total_length();
@@ -1983,7 +1983,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
     // We write a line's worth of whitespace to the terminal. This way, we ensure that
     // the prompt ends up on a new line even if there is dangling output on the current line.
     size_t fill_count = ws.ws_col - eol_mark_length;
-    auto fill_buffer = String::repeated(' ', fill_count);
+    auto fill_buffer = DeprecatedString::repeated(' ', fill_count);
     fwrite(fill_buffer.characters(), 1, fill_count, stderr);
 
     putc('\r', stderr);
@@ -2387,7 +2387,7 @@ void Shell::possibly_print_error() const
             }
         };
         int line = -1;
-        String current_line;
+        DeprecatedString current_line;
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
         if (!source_position.source_file.is_null()) {

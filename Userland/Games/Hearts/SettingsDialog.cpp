@@ -10,7 +10,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
-SettingsDialog::SettingsDialog(GUI::Window* parent, String player_name)
+SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name)
     : GUI::Dialog(parent)
     , m_player_name(move(player_name))
 {

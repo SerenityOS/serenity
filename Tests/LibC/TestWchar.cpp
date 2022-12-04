@@ -215,7 +215,7 @@ TEST_CASE(mbsinit)
     size_t ret = mbrtowc(nullptr, "\xdf", 1, &state);
 
     if (ret != -2ul)
-        FAIL(String::formatted("mbrtowc accepted partial multibyte sequence with return code {} (expected -2)", static_cast<ssize_t>(ret)));
+        FAIL(DeprecatedString::formatted("mbrtowc accepted partial multibyte sequence with return code {} (expected -2)", static_cast<ssize_t>(ret)));
 
     // Ensure that we are not in an initial state.
     EXPECT(mbsinit(&state) == 0);
@@ -224,7 +224,7 @@ TEST_CASE(mbsinit)
     ret = mbrtowc(nullptr, "\xbf", 1, &state);
 
     if (ret != 1ul)
-        FAIL(String::formatted("mbrtowc did not consume the expected number of bytes (1), returned {} instead", static_cast<ssize_t>(ret)));
+        FAIL(DeprecatedString::formatted("mbrtowc did not consume the expected number of bytes (1), returned {} instead", static_cast<ssize_t>(ret)));
 
     // Ensure that we are in an initial state again.
     EXPECT(mbsinit(&state) != 0);

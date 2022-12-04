@@ -20,7 +20,7 @@ Value::Value(SQLType type)
 {
 }
 
-Value::Value(String value)
+Value::Value(DeprecatedString value)
     : m_type(SQLType::Text)
     , m_value(move(value))
 {
@@ -105,17 +105,17 @@ bool Value::is_null() const
     return !m_value.has_value();
 }
 
-String Value::to_string() const
+DeprecatedString Value::to_string() const
 {
     if (is_null())
         return "(null)"sv;
 
     return m_value->visit(
-        [](String const& value) -> String { return value; },
-        [](int value) -> String { return String::number(value); },
-        [](double value) -> String { return String::number(value); },
-        [](bool value) -> String { return value ? "true"sv : "false"sv; },
-        [](TupleValue const& value) -> String {
+        [](DeprecatedString const& value) -> DeprecatedString { return value; },
+        [](int value) -> DeprecatedString { return DeprecatedString::number(value); },
+        [](double value) -> DeprecatedString { return DeprecatedString::number(value); },
+        [](bool value) -> DeprecatedString { return value ? "true"sv : "false"sv; },
+        [](TupleValue const& value) -> DeprecatedString {
             StringBuilder builder;
 
             builder.append('(');
@@ -132,7 +132,7 @@ Optional<int> Value::to_int() const
         return {};
 
     return m_value->visit(
-        [](String const& value) -> Optional<int> { return value.to_int(); },
+        [](DeprecatedString const& value) -> Optional<int> { return value.to_int(); },
         [](int value) -> Optional<int> { return value; },
         [](double value) -> Optional<int> {
             if (value > static_cast<double>(NumericLimits<int>::max()))
@@ -159,7 +159,7 @@ Optional<double> Value::to_double() const
         return {};
 
     return m_value->visit(
-        [](String const& value) -> Optional<double> {
+        [](DeprecatedString const& value) -> Optional<double> {
             char* end = nullptr;
             double result = strtod(value.characters(), &end);
 
@@ -179,7 +179,7 @@ Optional<bool> Value::to_bool() const
         return {};
 
     return m_value->visit(
-        [](String const& value) -> Optional<bool> {
+        [](DeprecatedString const& value) -> Optional<bool> {
             if (value.equals_ignoring_case("true"sv) || value.equals_ignoring_case("t"sv))
                 return true;
             if (value.equals_ignoring_case("false"sv) || value.equals_ignoring_case("f"sv))
@@ -218,7 +218,7 @@ Value& Value::operator=(Value value)
     return *this;
 }
 
-Value& Value::operator=(String value)
+Value& Value::operator=(DeprecatedString value)
 {
     m_type = SQLType::Text;
     m_value = move(value);
@@ -300,7 +300,7 @@ size_t Value::length() const
 
     // FIXME: This seems to be more of an encoded byte size rather than a length.
     return m_value->visit(
-        [](String const& value) -> size_t { return sizeof(u32) + value.length(); },
+        [](DeprecatedString const& value) -> size_t { return sizeof(u32) + value.length(); },
         [](int value) -> size_t { return sizeof(value); },
         [](double value) -> size_t { return sizeof(value); },
         [](bool value) -> size_t { return sizeof(value); },
@@ -320,7 +320,7 @@ u32 Value::hash() const
         return 0;
 
     return m_value->visit(
-        [](String const& value) -> u32 { return value.hash(); },
+        [](DeprecatedString const& value) -> u32 { return value.hash(); },
         [](int value) -> u32 { return int_hash(value); },
         [](double) -> u32 { VERIFY_NOT_REACHED(); },
         [](bool value) -> u32 { return int_hash(value); },
@@ -346,7 +346,7 @@ int Value::compare(Value const& other) const
         return 1;
 
     return m_value->visit(
-        [&](String const& value) -> int { return value.view().compare(other.to_string()); },
+        [&](DeprecatedString const& value) -> int { return value.view().compare(other.to_string()); },
         [&](int value) -> int {
             auto casted = other.to_int();
             if (!casted.has_value())
@@ -608,7 +608,7 @@ void Value::deserialize(Serializer& serializer)
         VERIFY_NOT_REACHED();
         break;
     case SQLType::Text:
-        m_value = serializer.deserialize<String>();
+        m_value = serializer.deserialize<DeprecatedString>();
         break;
     case SQLType::Integer:
         m_value = serializer.deserialize<int>(0);
