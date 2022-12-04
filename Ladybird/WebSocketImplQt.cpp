@@ -55,7 +55,7 @@ void WebSocketImplQt::connect(WebSocket::ConnectionInfo const& connection_info)
     if (connection_info.is_secure()) {
         auto ssl_socket = make<QSslSocket>();
         ssl_socket->connectToHostEncrypted(
-            qstring_from_akstring(connection_info.url().host()),
+            qstring_from_ak_deprecated_string(connection_info.url().host()),
             connection_info.url().port_or_default());
         QObject::connect(ssl_socket.ptr(), &QSslSocket::alertReceived, [this](QSsl::AlertLevel level, QSsl::AlertType, QString const&) {
             if (level == QSsl::AlertLevel::Fatal)
@@ -65,7 +65,7 @@ void WebSocketImplQt::connect(WebSocket::ConnectionInfo const& connection_info)
     } else {
         m_socket = make<QTcpSocket>();
         m_socket->connectToHost(
-            qstring_from_akstring(connection_info.url().host()),
+            qstring_from_ak_deprecated_string(connection_info.url().host()),
             connection_info.url().port_or_default());
     }
 
@@ -87,13 +87,13 @@ ErrorOr<ByteBuffer> WebSocketImplQt::read(int max_size)
     return buffer.slice(0, bytes_read);
 }
 
-ErrorOr<String> WebSocketImplQt::read_line(size_t size)
+ErrorOr<DeprecatedString> WebSocketImplQt::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     auto bytes_read = m_socket->readLine(reinterpret_cast<char*>(buffer.data()), buffer.size());
     if (bytes_read == -1)
         return Error::from_string_literal("WebSocketImplQt::read_line(): Error reading from socket");
-    return String::copy(buffer.span().slice(0, bytes_read));
+    return DeprecatedString::copy(buffer.span().slice(0, bytes_read));
 }
 
 }

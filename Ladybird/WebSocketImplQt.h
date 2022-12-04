@@ -22,7 +22,7 @@ public:
 
     virtual void connect(WebSocket::ConnectionInfo const&) override;
     virtual bool can_read_line() override;
-    virtual ErrorOr<String> read_line(size_t) override;
+    virtual ErrorOr<DeprecatedString> read_line(size_t) override;
     virtual ErrorOr<ByteBuffer> read(int max_size) override;
     virtual bool send(ReadonlyBytes) override;
     virtual bool eof() override;

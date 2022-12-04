@@ -12,16 +12,16 @@
 #include <LibCore/File.h>
 #include <QCoreApplication>
 
-String s_serenity_resource_root;
+DeprecatedString s_serenity_resource_root;
 
-AK::String akstring_from_qstring(QString const& qstring)
+AK::DeprecatedString ak_deprecated_string_from_qstring(QString const& qstring)
 {
-    return AK::String(qstring.toUtf8().data());
+    return AK::DeprecatedString(qstring.toUtf8().data());
 }
 
-QString qstring_from_akstring(AK::String const& akstring)
+QString qstring_from_ak_deprecated_string(AK::DeprecatedString const& ak_deprecated_string)
 {
-    return QString::fromUtf8(akstring.characters(), akstring.length());
+    return QString::fromUtf8(ak_deprecated_string.characters(), ak_deprecated_string.length());
 }
 
 void platform_init()
@@ -33,14 +33,14 @@ void platform_init()
     s_serenity_resource_root = [] {
         auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
         if (source_dir) {
-            return String::formatted("{}/Base", source_dir);
+            return DeprecatedString::formatted("{}/Base", source_dir);
         }
         auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
         VERIFY(home);
-        auto home_lagom = String::formatted("{}/.lagom", home);
+        auto home_lagom = DeprecatedString::formatted("{}/.lagom", home);
         if (Core::File::is_directory(home_lagom))
             return home_lagom;
-        auto app_dir = akstring_from_qstring(QCoreApplication::applicationDirPath());
+        auto app_dir = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath());
         return LexicalPath(app_dir).parent().append("share"sv).string();
     }();
 #endif

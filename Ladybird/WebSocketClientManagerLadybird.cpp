@@ -19,7 +19,7 @@ NonnullRefPtr<WebSocketClientManagerLadybird> WebSocketClientManagerLadybird::cr
 WebSocketClientManagerLadybird::WebSocketClientManagerLadybird() = default;
 WebSocketClientManagerLadybird::~WebSocketClientManagerLadybird() = default;
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerLadybird::connect(AK::URL const& url, String const& origin)
+RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerLadybird::connect(AK::URL const& url, DeprecatedString const& origin)
 {
     WebSocket::ConnectionInfo connection_info(url);
     connection_info.set_origin(origin);

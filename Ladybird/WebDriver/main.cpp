@@ -14,7 +14,7 @@
 #include <LibMain/Main.h>
 #include <WebDriver/Client.h>
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

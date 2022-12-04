@@ -18,7 +18,7 @@
 #include <QInputDialog>
 #include <QPlainTextEdit>
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
 BrowserWindow::BrowserWindow(int webdriver_fd_passing_socket)
@@ -230,7 +230,7 @@ BrowserWindow::BrowserWindow(int webdriver_fd_passing_socket)
     QObject::connect(custom_user_agent_action, &QAction::triggered, this, [this, disable_spoofing] {
         auto user_agent = QInputDialog::getText(this, "Custom User Agent", "Enter User Agent:");
         if (!user_agent.isEmpty()) {
-            debug_request("spoof-user-agent", akstring_from_qstring(user_agent));
+            debug_request("spoof-user-agent", ak_deprecated_string_from_qstring(user_agent));
             debug_request("clear-cache"); // clear the cache to ensure requests are re-done with the new user agent
         } else {
             disable_spoofing->activate(QAction::Trigger);
@@ -283,7 +283,7 @@ BrowserWindow::BrowserWindow(int webdriver_fd_passing_socket)
     setCentralWidget(m_tabs_container);
 }
 
-void BrowserWindow::debug_request(String const& request, String const& argument)
+void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     if (!m_current_tab)
         return;
@@ -314,7 +314,7 @@ void BrowserWindow::new_tab()
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    tab_ptr->view().on_get_cookie = [this](auto& url, auto source) -> String {
+    tab_ptr->view().on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
         return m_cookie_jar.get_cookie(url, source);
     };
 

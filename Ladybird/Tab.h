@@ -28,7 +28,7 @@ public:
 
     void navigate(QString);
 
-    void debug_request(String const& request, String const& argument);
+    void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
 public slots:
     void focus_location_editor();

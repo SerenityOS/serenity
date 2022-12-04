@@ -50,7 +50,7 @@ WebSocketLadybird::WebSocketLadybird(NonnullRefPtr<WebSocket::WebSocket> underly
             }
         }
     };
-    m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, String reason, bool was_clean) {
+    m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, DeprecatedString reason, bool was_clean) {
         if (auto strong_this = weak_this.strong_ref())
             if (strong_this->on_close)
                 strong_this->on_close(code, move(reason), was_clean);
@@ -84,7 +84,7 @@ void WebSocketLadybird::send(StringView message)
     m_websocket->send(WebSocket::Message(message));
 }
 
-void WebSocketLadybird::close(u16 code, String reason)
+void WebSocketLadybird::close(u16 code, DeprecatedString reason)
 {
     m_websocket->close(code, reason);
 }

@@ -48,15 +48,15 @@ ErrorOr<void> Session::start()
         TRY(Core::System::close(webdriver_fd_passing_fd));
         TRY(Core::System::close(webdriver_fd));
 
-        auto takeover_string = String::formatted("WebDriver:{}", webcontent_fd);
+        auto takeover_string = DeprecatedString::formatted("WebDriver:{}", webcontent_fd);
         TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
-        auto fd_passing_socket_string = String::number(webcontent_fd_passing_fd);
+        auto fd_passing_socket_string = DeprecatedString::number(webcontent_fd_passing_fd);
 
         if (m_options.headless) {
-            auto resouces = String::formatted("{}/res", s_serenity_resource_root);
-            auto error_page = String::formatted("{}/res/html/error.html", s_serenity_resource_root);
-            auto certs = String::formatted("{}/etc/ca_certs.ini", s_serenity_resource_root);
+            auto resouces = DeprecatedString::formatted("{}/res", s_serenity_resource_root);
+            auto error_page = DeprecatedString::formatted("{}/res/html/error.html", s_serenity_resource_root);
+            auto certs = DeprecatedString::formatted("{}/etc/ca_certs.ini", s_serenity_resource_root);
 
             char const* argv[] = {
                 "headless-browser",
