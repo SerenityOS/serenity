@@ -116,6 +116,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             magnifier->lock_location(action.is_checked());
         });
 
+    auto show_grid_action = GUI::Action::create_checkable(
+        "Show &Grid", { Key_G }, [&](auto& action) {
+            magnifier->show_grid(action.is_checked());
+        });
+
     size_action_group->add_action(two_x_action);
     size_action_group->add_action(four_x_action);
     size_action_group->add_action(eight_x_action);
@@ -130,6 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(pause_action));
     TRY(view_menu->try_add_action(lock_location_action));
+    TRY(view_menu->try_add_action(show_grid_action));
 
     auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
     auto previous_frame_action = GUI::Action::create(
