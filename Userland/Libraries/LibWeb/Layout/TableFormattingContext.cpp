@@ -66,7 +66,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
                     x_width++;
 
                 const size_t colspan = static_cast<TableCellBox*>(child)->colspan();
-                const size_t rowspan = 1;
+                const size_t rowspan = static_cast<TableCellBox*>(child)->rowspan();
 
                 if (x_width < x_current + colspan)
                     x_width = x_current + colspan;
