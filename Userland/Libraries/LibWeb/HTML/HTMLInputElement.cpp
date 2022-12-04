@@ -466,6 +466,23 @@ void HTMLInputElement::set_type(DeprecatedString const& type)
     MUST(set_attribute(HTML::AttributeNames::type, type));
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-simple-colour
+static bool is_valid_simple_color(DeprecatedString const& value)
+{
+    // if it is exactly seven characters long,
+    if (value.length() != 7)
+        return false;
+    // and the first character is a U+0023 NUMBER SIGN character (#),
+    if (!value.starts_with('#'))
+        return false;
+    // and the remaining six characters are all ASCII hex digits
+    for (size_t i = 1; i < value.length(); i++)
+        if (!is_ascii_hex_digit(value[i]))
+            return false;
+
+    return true;
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
 DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString value) const
 {
@@ -496,6 +513,13 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         auto maybe_double = value.to_double(TrimWhitespace::Yes);
         if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
             return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
+        // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
+        // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;
+        if (is_valid_simple_color(value))
+            return value.to_lowercase();
+        // otherwise, set it to the string "#000000".
+        return "#000000";
     }
 
     // FIXME: Implement remaining value sanitation algorithms
