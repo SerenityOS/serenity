@@ -36,8 +36,8 @@ struct Traits<GridPosition> : public GenericTraits<GridPosition> {
 
 namespace Web::Layout {
 
-TableFormattingContext::TableFormattingContext(LayoutState& state, BlockContainer const& block_container, FormattingContext* parent)
-    : BlockFormattingContext(state, block_container, parent)
+TableFormattingContext::TableFormattingContext(LayoutState& state, BlockContainer const& root, FormattingContext* parent)
+    : FormattingContext(Type::Table, state, root, parent)
 {
 }
 
@@ -246,10 +246,10 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         cell_state.border_right = cell.box.computed_values().border_right().width;
 
         cell_state.set_content_width(span_width - cell_state.border_box_left() - cell_state.border_box_right());
-        if (auto independent_formatting_context = layout_inside(cell.box, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space)))
-            independent_formatting_context->parent_context_did_dimension_child_root_box();
-
-        BlockFormattingContext::compute_height(cell.box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
+        auto independent_formatting_context = layout_inside(cell.box, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space));
+        VERIFY(independent_formatting_context);
+        cell_state.set_content_height(independent_formatting_context->automatic_content_height());
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
 
         cell.baseline = box_baseline(m_state, cell.box);
 
