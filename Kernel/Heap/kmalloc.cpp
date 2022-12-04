@@ -123,7 +123,7 @@ public:
 
     size_t slab_size() const { return m_slab_size; }
 
-    void* allocate()
+    void* allocate(CallerWillInitializeMemory caller_will_initialize_memory)
     {
         if (m_usable_blocks.is_empty()) {
             // FIXME: This allocation wastes `block_size` bytes due to the implementation of kmalloc_aligned().
@@ -141,7 +141,9 @@ public:
         if (block->is_full())
             m_full_blocks.append(*block);
 
-        memset(ptr, KMALLOC_SCRUB_BYTE, m_slab_size);
+        if (caller_will_initialize_memory == CallerWillInitializeMemory::No) {
+            memset(ptr, KMALLOC_SCRUB_BYTE, m_slab_size);
+        }
         return ptr;
     }
 
@@ -220,17 +222,17 @@ struct KmallocGlobalData {
         subheaps.append(*subheap);
     }
 
-    void* allocate(size_t size)
+    void* allocate(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
     {
         VERIFY(!expansion_in_progress);
 
         for (auto& slabheap : slabheaps) {
             if (size <= slabheap.slab_size())
-                return slabheap.allocate();
+                return slabheap.allocate(caller_will_initialize_memory);
         }
 
         for (auto& subheap : subheaps) {
-            if (auto* ptr = subheap.allocator.allocate(size))
+            if (auto* ptr = subheap.allocator.allocate(size, caller_will_initialize_memory))
                 return ptr;
         }
 
@@ -247,14 +249,14 @@ struct KmallocGlobalData {
                 }
             }
             if (did_purge)
-                return allocate(size);
+                return allocate(size, caller_will_initialize_memory);
         }
 
         if (!try_expand(size)) {
             PANIC("OOM when trying to expand kmalloc heap.");
         }
 
-        return allocate(size);
+        return allocate(size, caller_will_initialize_memory);
     }
 
     void deallocate(void* ptr, size_t size)
@@ -419,7 +421,7 @@ UNMAP_AFTER_INIT void kmalloc_init()
     s_lock.initialize();
 }
 
-void* kmalloc(size_t size)
+static void* kmalloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
 {
     // Catch bad callers allocating under spinlock.
     if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
@@ -434,7 +436,7 @@ void* kmalloc(size_t size)
         Kernel::dump_backtrace();
     }
 
-    void* ptr = g_kmalloc_global->allocate(size);
+    void* ptr = g_kmalloc_global->allocate(size, caller_will_initialize_memory);
 
     Thread* current_thread = Thread::current();
     if (!current_thread)
@@ -449,13 +451,17 @@ void* kmalloc(size_t size)
     return ptr;
 }
 
+void* kmalloc(size_t size)
+{
+    return kmalloc_impl(size, CallerWillInitializeMemory::No);
+}
+
 void* kcalloc(size_t count, size_t size)
 {
     if (Checked<size_t>::multiplication_would_overflow(count, size))
         return nullptr;
     size_t new_size = count * size;
-    auto* ptr = kmalloc(new_size);
-    // FIXME: Avoid redundantly scrubbing the memory in kmalloc()
+    auto* ptr = kmalloc_impl(new_size, CallerWillInitializeMemory::Yes);
     if (ptr)
         memset(ptr, 0, new_size);
     return ptr;
