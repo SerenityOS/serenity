@@ -37,6 +37,7 @@ public:
     };
 
     enum class ScalingMode {
+        NearestFractional,
         NearestNeighbor,
         SmoothPixels,
         BilinearBlend,
