@@ -20,7 +20,10 @@ MagnifierWidget::MagnifierWidget()
 void MagnifierWidget::set_scale_factor(int scale_factor)
 {
     VERIFY(scale_factor == 2 || scale_factor == 4 || scale_factor == 8);
+    if (m_scale_factor == scale_factor)
+        return;
     m_scale_factor = scale_factor;
+    layout_relevant_change_occurred();
     update();
 }
 
@@ -77,12 +80,14 @@ void MagnifierWidget::sync()
 
     auto size = frame_inner_rect().size();
     Gfx::IntSize grab_size { size.width() / m_scale_factor, size.height() / m_scale_factor };
+    VERIFY(grab_size.width() != 0 && grab_size.height() != 0);
 
     if (m_locked_location.has_value()) {
         m_grabbed_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap_around_location(grab_size, m_locked_location.value()).bitmap();
     } else {
         m_grabbed_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
     }
+
     m_grabbed_bitmaps.enqueue(m_grabbed_bitmap);
     update();
 }
