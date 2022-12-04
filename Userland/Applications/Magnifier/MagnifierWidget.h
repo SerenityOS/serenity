@@ -21,6 +21,8 @@ public:
     virtual ~MagnifierWidget() override = default;
     void set_scale_factor(int scale_factor);
     virtual void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>) override;
+    void show_grid(bool);
+
     void pause_capture(bool pause)
     {
         m_pause_capture = pause;
@@ -47,4 +49,5 @@ private:
     ssize_t m_frame_offset_from_head { 0 };
     bool m_pause_capture { false };
     Optional<Gfx::IntPoint> m_locked_location {};
+    bool m_show_grid { false };
 };
