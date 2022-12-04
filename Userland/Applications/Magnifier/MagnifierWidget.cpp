@@ -24,6 +24,14 @@ void MagnifierWidget::set_scale_factor(int scale_factor)
     update();
 }
 
+void MagnifierWidget::lock_location(bool lock)
+{
+    if (lock)
+        m_locked_location = GUI::ConnectionToWindowServer::the().get_global_cursor_position();
+    else
+        m_locked_location = {};
+}
+
 void MagnifierWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_filter)
 {
     m_color_filter = move(color_filter);
@@ -53,7 +61,12 @@ void MagnifierWidget::sync()
 
     auto size = frame_inner_rect().size();
     Gfx::IntSize grab_size { size.width() / m_scale_factor, size.height() / m_scale_factor };
-    m_grabbed_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
+
+    if (m_locked_location.has_value()) {
+        m_grabbed_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap_around_location(grab_size, m_locked_location.value()).bitmap();
+    } else {
+        m_grabbed_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
+    }
     m_grabbed_bitmaps.enqueue(m_grabbed_bitmap);
     update();
 }
