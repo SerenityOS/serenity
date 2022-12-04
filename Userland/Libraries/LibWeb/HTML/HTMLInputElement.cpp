@@ -506,6 +506,18 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
             }
             return builder.string_view().trim(Infra::ASCII_WHITESPACE);
         }
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Email) {
+        // https://html.spec.whatwg.org/multipage/input.html#email-state-(type=email):value-sanitization-algorithm
+        // FIXME: handle the `multiple` attribute
+        // Strip newlines from the value, then strip leading and trailing ASCII whitespace from the value.
+        if (value.contains('\r') || value.contains('\n')) {
+            StringBuilder builder;
+            for (auto c : value) {
+                if (!(c == '\r' || c == '\n'))
+                    builder.append(c);
+            }
+            return builder.string_view().trim(Infra::ASCII_WHITESPACE);
+        }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Number) {
         // If the value of the element is not a valid floating-point number, then set it to the empty string instead.
         // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
