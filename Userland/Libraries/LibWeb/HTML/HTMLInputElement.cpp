@@ -483,6 +483,51 @@ static bool is_valid_simple_color(DeprecatedString const& value)
     return true;
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#week-number-of-the-last-day
+static u32 week_number_of_the_last_day(u64)
+{
+    // FIXME: sometimes return 53 (!)
+    // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#weeks
+    return 52;
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-week-string
+static bool is_valid_week_string(DeprecatedString const& value)
+{
+    // A string is a valid week string representing a week-year year and week week if it consists of the following components in the given order:
+
+    // 1. Four or more ASCII digits, representing year, where year > 0
+    // 2. A U+002D HYPHEN-MINUS character (-)
+    // 3. A U+0057 LATIN CAPITAL LETTER W character (W)
+    // 4. Two ASCII digits, representing the week week, in the range 1 ≤ week ≤ maxweek, where maxweek is the week number of the last day of week-year year
+    auto parts = value.split('-');
+    if (parts.size() != 2)
+        return false;
+    if (parts[0].length() < 4)
+        return false;
+    for (auto digit : parts[0])
+        if (!is_ascii_digit(digit))
+            return false;
+    if (parts[1].length() != 3)
+        return false;
+
+    if (!parts[1].starts_with('W'))
+        return false;
+    if (!is_ascii_digit(parts[1][1]))
+        return false;
+    if (!is_ascii_digit(parts[1][2]))
+        return false;
+
+    u64 year = 0;
+    for (auto d : parts[0]) {
+        year *= 10;
+        year += parse_ascii_digit(d);
+    }
+    auto week = (parse_ascii_digit(parts[1][1]) * 10) + parse_ascii_digit(parts[1][2]);
+
+    return week >= 1 && week <= week_number_of_the_last_day(year);
+}
+
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-month-string
 static bool is_valid_month_string(DeprecatedString const& value)
 {
@@ -592,6 +637,10 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Month) {
         // https://html.spec.whatwg.org/multipage/input.html#month-state-(type=month):value-sanitization-algorithm
         if (!is_valid_month_string(value))
+            return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Week) {
+        // https://html.spec.whatwg.org/multipage/input.html#week-state-(type=week):value-sanitization-algorithm
+        if (!is_valid_week_string(value))
             return "";
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
