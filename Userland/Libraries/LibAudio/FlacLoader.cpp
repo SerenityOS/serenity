@@ -25,7 +25,7 @@
 
 namespace Audio {
 
-FlacLoaderPlugin::FlacLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream)
+FlacLoaderPlugin::FlacLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream)
     : LoaderPlugin(move(stream))
 {
 }

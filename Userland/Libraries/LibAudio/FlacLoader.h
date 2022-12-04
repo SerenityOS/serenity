@@ -47,7 +47,7 @@ ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBi
 //      https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03 (newer IETF draft that uses incompatible numberings and names)
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
-    explicit FlacLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream);
+    explicit FlacLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
     virtual ~FlacLoaderPlugin() override = default;
 
     static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> try_create(StringView path);

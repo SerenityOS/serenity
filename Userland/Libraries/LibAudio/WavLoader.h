@@ -29,7 +29,7 @@ static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined b
 // Parses and reads audio data from a WAV file.
 class WavLoaderPlugin : public LoaderPlugin {
 public:
-    explicit WavLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream);
+    explicit WavLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
     static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> try_create(StringView path);
     static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> try_create(Bytes buffer);
 
