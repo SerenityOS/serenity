@@ -18,5 +18,5 @@ public:
     WavefrontOBJLoader() = default;
     ~WavefrontOBJLoader() override = default;
 
-    RefPtr<Mesh> load(Core::File& file) override;
+    ErrorOr<NonnullRefPtr<Mesh>> load(Core::File& file) override;
 };

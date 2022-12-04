@@ -16,7 +16,7 @@ static inline GLuint get_index_value(StringView& representation)
     return representation.to_uint().value_or(1) - 1;
 }
 
-RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
+ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(Core::File& file)
 {
     Vector<Vertex> vertices;
     Vector<Vertex> normals;
@@ -34,8 +34,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         if (object_line.starts_with("vt"sv)) {
             auto tex_coord_line = object_line.split_view(' ');
             if (tex_coord_line.size() != 3) {
-                dbgln("Wavefront: Malformed TexCoord line. Aborting.");
-                return nullptr;
+                return Error::from_string_literal("Wavefront: Malformed TexCoord line.");
             }
 
             tex_coords.append({ static_cast<GLfloat>(atof(DeprecatedString(tex_coord_line.at(1)).characters())),
@@ -47,8 +46,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         if (object_line.starts_with("vn"sv)) {
             auto normal_line = object_line.split_view(' ');
             if (normal_line.size() != 4) {
-                dbgln("Wavefront: Malformed vertex normal line. Aborting.");
-                return nullptr;
+                return Error::from_string_literal("Wavefront: Malformed vertex normal line.");
             }
 
             normals.append({ static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(1)).characters())),
@@ -62,8 +60,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         if (object_line.starts_with('v')) {
             auto vertex_line = object_line.split_view(' ');
             if (vertex_line.size() != 4) {
-                dbgln("Wavefront: Malformed vertex line. Aborting.");
-                return nullptr;
+                return Error::from_string_literal("Wavefront: Malformed vertex line.");
             }
 
             vertices.append({ static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(1)).characters())),
@@ -78,13 +75,12 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
             auto face_line = object_line.substring_view(2).split_view(' ');
             auto number_of_vertices = face_line.size();
             if (number_of_vertices < 3) {
-                dbgln("Wavefront: Malformed face line. Aborting.");
-                return nullptr;
+                return Error::from_string_literal("Wavefront: Malformed face line.");
             }
 
-            auto vertex_indices = FixedArray<GLuint>::must_create_but_fixme_should_propagate_errors(number_of_vertices);
-            auto tex_coord_indices = FixedArray<GLuint>::must_create_but_fixme_should_propagate_errors(number_of_vertices);
-            auto normal_indices = FixedArray<GLuint>::must_create_but_fixme_should_propagate_errors(number_of_vertices);
+            auto vertex_indices = TRY(FixedArray<GLuint>::try_create(number_of_vertices));
+            auto tex_coord_indices = TRY(FixedArray<GLuint>::try_create(number_of_vertices));
+            auto normal_indices = TRY(FixedArray<GLuint>::try_create(number_of_vertices));
 
             for (size_t i = 0; i < number_of_vertices; ++i) {
                 auto vertex_parts = face_line.at(i).split_view('/', SplitBehavior::KeepEmpty);
@@ -111,8 +107,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
     }
 
     if (vertices.is_empty()) {
-        dbgln("Wavefront: Failed to read any data from 3D file: {}", file.name());
-        return nullptr;
+        return Error::from_string_literal("Wavefront: Failed to read any data from 3D file");
     }
 
     dbgln("Wavefront: Done.");
