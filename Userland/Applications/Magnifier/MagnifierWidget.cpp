@@ -40,6 +40,14 @@ void MagnifierWidget::show_grid(bool new_value)
     update();
 }
 
+void MagnifierWidget::set_grid_color(Gfx::Color new_color)
+{
+    if (m_grid_color == new_color)
+        return;
+    m_grid_color = new_color;
+    update();
+}
+
 void MagnifierWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_filter)
 {
     m_color_filter = move(color_filter);
@@ -92,8 +100,6 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_scaled_bitmap(frame_inner_rect(), *m_grabbed_bitmap, m_grabbed_bitmap->rect(), 1.0, Gfx::Painter::ScalingMode::NearestFractional);
 
     if (m_show_grid) {
-        auto line_color = Color(Color::NamedColor::Magenta);
-        line_color.set_alpha(100);
 
         auto grid_rect = frame_inner_rect();
         if (m_grabbed_bitmap)
@@ -109,10 +115,10 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
             end_x = grid_rect.right();
 
         for (int current_y = start_y; current_y <= end_y; current_y += m_scale_factor)
-            painter.draw_line({ start_x, current_y }, { end_x, current_y }, line_color);
+            painter.draw_line({ start_x, current_y }, { end_x, current_y }, m_grid_color);
 
         for (int current_x = start_y; current_x <= end_x; current_x += m_scale_factor)
-            painter.draw_line({ current_x, start_y }, { current_x, end_y }, line_color);
+            painter.draw_line({ current_x, start_y }, { current_x, end_y }, m_grid_color);
     }
 }
 
