@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <LibWeb/Layout/BlockFormattingContext.h>
+#include <LibWeb/Layout/FormattingContext.h>
 
 namespace Web::Layout {
 
-class TableFormattingContext final : public BlockFormattingContext {
+class TableFormattingContext final : public FormattingContext {
 public:
     explicit TableFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
     ~TableFormattingContext();
