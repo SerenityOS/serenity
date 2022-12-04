@@ -1194,9 +1194,13 @@ Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen
 
 Messages::WindowServer::GetScreenBitmapAroundCursorResponse ConnectionFromClient::get_screen_bitmap_around_cursor(Gfx::IntSize size)
 {
+    return get_screen_bitmap_around_location(size, ScreenInput::the().cursor_location()).bitmap();
+}
+
+Messages::WindowServer::GetScreenBitmapAroundLocationResponse ConnectionFromClient::get_screen_bitmap_around_location(Gfx::IntSize size, Gfx::IntPoint location)
+{
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
-    auto cursor_location = ScreenInput::the().cursor_location();
-    Gfx::Rect rect { cursor_location.x() - (size.width() / 2), cursor_location.y() - (size.height() / 2), size.width(), size.height() };
+    Gfx::Rect rect { location.x() - (size.width() / 2), location.y() - (size.height() / 2), size.width(), size.height() };
 
     // Recompose the screen to make sure the cursor is painted in the location we think it is.
     // FIXME: This is rather wasteful. We can probably think of a way to avoid this.
@@ -1210,10 +1214,9 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ConnectionFromClient
         return IterationDecision::Continue;
     });
 
-    auto screen_scale_factor = ScreenInput::the().cursor_location_screen().scale_factor();
     if (intersecting_with_screens == 1) {
         auto& screen = Screen::closest_to_rect(rect);
-        auto crop_rect = rect.translated(-screen.rect().location()) * screen_scale_factor;
+        auto crop_rect = rect.translated(-screen.rect().location()) * screen.scale_factor();
         auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
         if (bitmap_or_error.is_error()) {
             dbgln("get_screen_bitmap_around_cursor: Failed to crop screenshot: {}", bitmap_or_error.error());

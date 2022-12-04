@@ -168,6 +168,7 @@ endpoint WindowServer
 
     get_screen_bitmap(Optional<Gfx::IntRect> rect, Optional<u32> screen_index) => (Gfx::ShareableBitmap bitmap)
     get_screen_bitmap_around_cursor(Gfx::IntSize size) => (Gfx::ShareableBitmap bitmap)
+    get_screen_bitmap_around_location(Gfx::IntSize size, Gfx::IntPoint location) => (Gfx::ShareableBitmap bitmap)
     get_color_under_cursor() => (Optional<Gfx::Color> color)
 
     pong() =|
