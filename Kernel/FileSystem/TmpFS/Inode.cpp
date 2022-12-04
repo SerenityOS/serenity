@@ -18,6 +18,18 @@ TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<Tmp
     m_metadata.inode = identifier();
 }
 
+TmpFSInode::TmpFSInode(TmpFS& fs)
+    : Inode(fs, 1)
+    , m_root_directory_inode(true)
+{
+    auto now = kgettimeofday();
+    m_metadata.inode = identifier();
+    m_metadata.atime = now;
+    m_metadata.ctime = now;
+    m_metadata.mtime = now;
+    m_metadata.mode = S_IFDIR | S_ISVTX | 0777;
+}
+
 TmpFSInode::~TmpFSInode() = default;
 
 ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
@@ -27,13 +39,7 @@ ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMe
 
 ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
 {
-    InodeMetadata metadata;
-    auto now = kgettimeofday();
-    metadata.atime = now;
-    metadata.ctime = now;
-    metadata.mtime = now;
-    metadata.mode = S_IFDIR | S_ISVTX | 0777;
-    return try_create(fs, metadata, {});
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs));
 }
 
 InodeMetadata TmpFSInode::metadata() const
@@ -51,8 +57,11 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
         return ENOTDIR;
 
     TRY(callback({ "."sv, identifier(), 0 }));
-    if (auto parent = m_parent.strong_ref())
+    if (m_root_directory_inode) {
+        TRY(callback({ ".."sv, identifier(), 0 }));
+    } else if (auto parent = m_parent.strong_ref()) {
         TRY(callback({ ".."sv, parent->identifier(), 0 }));
+    }
 
     for (auto& child : m_children) {
         TRY(callback({ child.name->view(), child.inode->identifier(), 0 }));
