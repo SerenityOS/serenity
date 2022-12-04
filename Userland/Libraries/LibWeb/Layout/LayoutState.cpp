@@ -97,6 +97,32 @@ void LayoutState::commit()
         text_node->set_paintable(text_node->create_paintable());
 }
 
+float box_baseline(LayoutState const& state, Box const& box)
+{
+    auto const& box_state = state.get(box);
+
+    auto const& vertical_align = box.computed_values().vertical_align();
+    if (vertical_align.has<CSS::VerticalAlign>()) {
+        switch (vertical_align.get<CSS::VerticalAlign>()) {
+        case CSS::VerticalAlign::Top:
+            return box_state.border_box_top();
+        case CSS::VerticalAlign::Bottom:
+            return box_state.content_height() + box_state.border_box_bottom();
+        default:
+            break;
+        }
+    }
+
+    if (!box_state.line_boxes.is_empty())
+        return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
+    if (box.has_children() && !box.children_are_inline()) {
+        auto const* child_box = box.last_child_of_type<Box>();
+        VERIFY(child_box);
+        return box_baseline(state, *child_box);
+    }
+    return box_state.border_box_height();
+}
+
 Gfx::FloatRect margin_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
