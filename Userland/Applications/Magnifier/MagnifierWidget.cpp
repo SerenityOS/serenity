@@ -79,7 +79,7 @@ void MagnifierWidget::sync()
         return;
 
     auto size = frame_inner_rect().size();
-    Gfx::IntSize grab_size { size.width() / m_scale_factor, size.height() / m_scale_factor };
+    Gfx::IntSize grab_size { (size.width() + m_scale_factor - 1) / m_scale_factor, (size.height() + m_scale_factor - 1) / m_scale_factor };
     VERIFY(grab_size.width() != 0 && grab_size.height() != 0);
 
     if (m_locked_location.has_value()) {
@@ -101,8 +101,20 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
 
     GUI::Painter painter(*this);
 
+    if (m_pause_capture)
+        painter.fill_rect(frame_inner_rect(), Gfx::Color::Black);
+
+    // We have to clip the source rect for cases when the currently captured image is larger than the inner_rect
+    int horizontal_clip = (frame_inner_rect().width() + m_scale_factor - 1) / m_scale_factor;
+    int vertical_clip = (frame_inner_rect().height() + m_scale_factor - 1) / m_scale_factor;
+
     if (m_grabbed_bitmap)
-        painter.draw_scaled_bitmap(frame_inner_rect(), *m_grabbed_bitmap, m_grabbed_bitmap->rect(), 1.0, Gfx::Painter::ScalingMode::NearestFractional);
+        painter.draw_scaled_bitmap(
+            frame_inner_rect().intersected(Gfx::IntRect { { 0, 0 }, m_grabbed_bitmap->rect().size() } * m_scale_factor),
+            *m_grabbed_bitmap,
+            m_grabbed_bitmap->rect().intersected({ 0, 0, horizontal_clip, vertical_clip }),
+            1.0,
+            Gfx::Painter::ScalingMode::NearestFractional);
 
     if (m_show_grid) {
 
