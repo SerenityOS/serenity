@@ -476,7 +476,7 @@ if (BUILD_LAGOM)
         target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
         if (EMSCRIPTEN)
             add_executable(libjs Wasm/js_repl.cpp)
-            target_link_libraries(libjs LibJS)
+            target_link_libraries(libjs LibJS LibLocale LibTimeZone LibUnicode)
             target_link_options(libjs PRIVATE
                     -sEXPORTED_FUNCTIONS=_initialize_repl,_execute
                     -sEXPORTED_RUNTIME_METHODS=allocateUTF8
@@ -703,7 +703,7 @@ if (BUILD_LAGOM)
         if (APPLE)
             if("arm64" IN_LIST CMAKE_OSX_ARCHITECTURES AND "x86_64" IN_LIST CMAKE_OSX_ARCHITECTURES)
                 set(CPACK_SYSTEM_NAME "macOS-universal2")
-            else() 
+            else()
                 set(CPACK_SYSTEM_NAME "macOS-${CMAKE_SYSTEM_PROCESSOR}")
             endif()
         else()
