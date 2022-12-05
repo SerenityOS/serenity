@@ -7,6 +7,8 @@
 #include "BrowserWindow.h"
 #include "Settings.h"
 #include "Utilities.h"
+#include <Browser/CookieJar.h>
+#include <Browser/Database.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -14,6 +16,7 @@
 #include <LibCore/System.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
+#include <LibSQL/SQLClient.h>
 #include <QApplication>
 
 Browser::Settings* s_settings;
@@ -44,6 +47,55 @@ static ErrorOr<void> handle_attached_debugger()
     return {};
 }
 
+ErrorOr<NonnullRefPtr<Browser::Database>> create_database()
+{
+    int socket_fds[2] {};
+    TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
+    auto [browser_fd, sql_server_fd] = socket_fds;
+
+    int fd_passing_socket_fds[2] {};
+    TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
+    auto [browser_fd_passing_fd, sql_server_fd_passing_fd] = fd_passing_socket_fds;
+
+    auto sql_server_pid = TRY(Core::System::fork());
+
+    if (sql_server_pid == 0) {
+        TRY(Core::System::close(browser_fd_passing_fd));
+        TRY(Core::System::close(browser_fd));
+
+        DeprecatedString takeover_string;
+        if (auto* socket_takeover = getenv("SOCKET_TAKEOVER"))
+            takeover_string = DeprecatedString::formatted("{} SQLServer:{}", socket_takeover, sql_server_fd);
+        else
+            takeover_string = DeprecatedString::formatted("SQLServer:{}", sql_server_fd);
+        TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
+
+        auto sql_server_fd_passing_fd_string = DeprecatedString::number(sql_server_fd_passing_fd);
+
+        char const* argv[] = {
+            "SQLServer",
+            "--sql-server-fd-passing-socket",
+            sql_server_fd_passing_fd_string.characters(),
+            nullptr,
+        };
+
+        if (execvp("./SQLServer/SQLServer", const_cast<char**>(argv)) < 0)
+            perror("execvp");
+        VERIFY_NOT_REACHED();
+    }
+
+    TRY(Core::System::close(sql_server_fd_passing_fd));
+    TRY(Core::System::close(sql_server_fd));
+
+    auto socket = TRY(Core::Stream::LocalSocket::adopt_fd(browser_fd));
+    TRY(socket->set_blocking(true));
+
+    auto sql_client = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SQL::SQLClient(std::move(socket))));
+    sql_client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(browser_fd_passing_fd)));
+
+    return Browser::Database::create(move(sql_client));
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     // NOTE: This is only used for the Core::Socket inside the IPC connections.
@@ -69,7 +121,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(webdriver_fd_passing_socket, "File descriptor of the passing socket for the WebDriver connection", "webdriver-fd-passing-socket", 'd', "webdriver_fd_passing_socket");
     args_parser.parse(arguments);
 
-    BrowserWindow window(webdriver_fd_passing_socket);
+    auto database = TRY(create_database());
+    auto cookie_jar = TRY(Browser::CookieJar::create(*database));
+
+    BrowserWindow window(cookie_jar, webdriver_fd_passing_socket);
     s_settings = new Browser::Settings(&window);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);

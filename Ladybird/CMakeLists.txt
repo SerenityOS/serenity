@@ -67,6 +67,7 @@ set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
 
 set(SOURCES
     ${BROWSER_SOURCE_DIR}/CookieJar.cpp
+    ${BROWSER_SOURCE_DIR}/Database.cpp
     ${BROWSER_SOURCE_DIR}/History.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
@@ -82,7 +83,7 @@ set(SOURCES
 qt_add_executable(ladybird ${SOURCES}
     MANUAL_FINALIZATION
 )
-target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView)
+target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
@@ -113,9 +114,10 @@ add_custom_target(debug
 
 qt_finalize_executable(ladybird)
 
+add_subdirectory(SQLServer)
 add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
-add_dependencies(ladybird WebContent WebDriver)
+add_dependencies(ladybird SQLServer WebContent WebDriver)
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)

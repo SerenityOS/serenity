@@ -12,6 +12,7 @@
 #include "Utilities.h"
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
+#include <Browser/CookieJar.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
 #include <QActionGroup>
@@ -21,8 +22,9 @@
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-BrowserWindow::BrowserWindow(int webdriver_fd_passing_socket)
-    : m_webdriver_fd_passing_socket(webdriver_fd_passing_socket)
+BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, int webdriver_fd_passing_socket)
+    : m_cookie_jar(cookie_jar)
+    , m_webdriver_fd_passing_socket(webdriver_fd_passing_socket)
 {
     m_tabs_container = new QTabWidget(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
