@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include "Tab.h"
 #include <AK/NonnullOwnPtrVector.h>
-#include <Browser/CookieJar.h>
 #include <LibCore/Forward.h>
 #include <QIcon>
 #include <QLineEdit>
@@ -15,14 +16,16 @@
 #include <QTabWidget>
 #include <QToolBar>
 
-#pragma once
-
 class WebContentView;
+
+namespace Browser {
+class CookieJar;
+}
 
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(int webdriver_fd_passing_socket);
+    explicit BrowserWindow(Browser::CookieJar&, int webdriver_fd_passing_socket);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -47,7 +50,7 @@ private:
     NonnullOwnPtrVector<Tab> m_tabs;
     Tab* m_current_tab { nullptr };
 
-    Browser::CookieJar m_cookie_jar;
+    Browser::CookieJar& m_cookie_jar;
 
     int m_webdriver_fd_passing_socket { -1 };
 };
