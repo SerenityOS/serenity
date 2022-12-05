@@ -6,6 +6,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
+#include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/StandardPaths.h>
 #include <pwd.h>
@@ -51,9 +52,16 @@ DeprecatedString StandardPaths::downloads_directory()
 
 DeprecatedString StandardPaths::config_directory()
 {
+    if (auto* config_directory = getenv("XDG_CONFIG_HOME"))
+        return LexicalPath::canonicalized_path(config_directory);
+
     StringBuilder builder;
     builder.append(home_directory());
+#if defined(AK_OS_MACOS)
+    builder.append("/Library/Preferences"sv);
+#else
     builder.append("/.config"sv);
+#endif
     return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
