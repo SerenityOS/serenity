@@ -31,7 +31,7 @@ bool encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bitmap)
     auto& bitmap = *shareable_bitmap.bitmap();
     encoder << IPC::File(bitmap.anonymous_buffer().fd());
     encoder << bitmap.size();
-    encoder << bitmap.scale();
+    encoder << static_cast<u32>(bitmap.scale());
     encoder << (u32)bitmap.format();
     if (bitmap.is_indexed()) {
         auto palette = bitmap.palette_to_vector();
@@ -64,7 +64,7 @@ ErrorOr<void> decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
     if (Gfx::Bitmap::is_indexed(bitmap_format)) {
         TRY(decoder.decode(palette));
     }
-    auto buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width(), bitmap_format), size.height())));
+    auto buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width() * scale, bitmap_format), size.height() * scale)));
     auto bitmap = TRY(Gfx::Bitmap::try_create_with_anonymous_buffer(bitmap_format, move(buffer), size, scale, palette));
     shareable_bitmap = Gfx::ShareableBitmap { move(bitmap), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
     return {};
