@@ -76,9 +76,9 @@ public:
 
         m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
 
-        m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto updated, auto created, auto deleted) {
+        m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto created, auto updated, auto deleted) {
             if (updated != 0 || created != 0 || deleted != 0) {
-                outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
+                outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
             }
             if (!has_results) {
                 read_sql();

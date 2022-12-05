@@ -94,7 +94,14 @@ Optional<u64> SQLStatement::execute(Vector<SQL::Value> placeholder_values)
             auto result_size = result.size();
             next(execution_id, move(result), result_size);
         } else {
-            client_connection->async_execution_success(statement_id(), execution_id, false, 0, result.size(), 0);
+            if (result.command() == SQL::SQLCommand::Insert)
+                client_connection->async_execution_success(statement_id(), execution_id, false, result.size(), 0, 0);
+            else if (result.command() == SQL::SQLCommand::Update)
+                client_connection->async_execution_success(statement_id(), execution_id, false, 0, result.size(), 0);
+            else if (result.command() == SQL::SQLCommand::Delete)
+                client_connection->async_execution_success(statement_id(), execution_id, false, 0, 0, result.size());
+            else
+                client_connection->async_execution_success(statement_id(), execution_id, false, 0, 0, 0);
         }
     });
 
