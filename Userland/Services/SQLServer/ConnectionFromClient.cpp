@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
+#include <LibCore/StandardPaths.h>
 #include <LibSQL/Result.h>
 #include <SQLServer/ConnectionFromClient.h>
 #include <SQLServer/DatabaseConnection.h>
@@ -23,8 +23,14 @@ RefPtr<ConnectionFromClient> ConnectionFromClient::client_connection_for(int cli
     return nullptr;
 }
 
+void ConnectionFromClient::set_database_path(DeprecatedString database_path)
+{
+    m_database_path = move(database_path);
+}
+
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
     : IPC::ConnectionFromClient<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket), client_id)
+    , m_database_path(DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory()))
 {
     s_connections.set(client_id, *this);
 }
@@ -38,7 +44,7 @@ Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedStr
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::connect(database_name: {})", database_name);
 
-    if (auto database_connection = DatabaseConnection::create(database_name, client_id()); !database_connection.is_error())
+    if (auto database_connection = DatabaseConnection::create(m_database_path, database_name, client_id()); !database_connection.is_error())
         return { database_connection.value()->connection_id() };
     return { {} };
 }
