@@ -10,7 +10,6 @@
 extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)
 {
     Video::VP9::Decoder vp9_decoder;
-    if (auto decode_error = vp9_decoder.receive_sample({ data, size }); decode_error.is_error())
-        return -1;
+    (void)vp9_decoder.receive_sample({ data, size });
     return 0;
 }
