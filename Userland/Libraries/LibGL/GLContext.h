@@ -574,6 +574,36 @@ private:
     RefPtr<Buffer> m_element_array_buffer;
 };
 
+// Transposes input matrices (column-major) to our Matrix (row-major).
+template<typename I>
+constexpr FloatMatrix4x4 transpose_input_matrix(I const* matrix)
+{
+    Array<float, 16> elements;
+    for (size_t i = 0; i < 16; ++i)
+        elements[i] = static_cast<float>(matrix[i]);
+    // clang-format off
+    return {
+        elements[0], elements[4], elements[8], elements[12],
+        elements[1], elements[5], elements[9], elements[13],
+        elements[2], elements[6], elements[10], elements[14],
+        elements[3], elements[7], elements[11], elements[15],
+    };
+    // clang-format on
+}
+
+template<>
+constexpr FloatMatrix4x4 transpose_input_matrix(float const* matrix)
+{
+    // clang-format off
+    return {
+        matrix[0], matrix[4], matrix[8], matrix[12],
+        matrix[1], matrix[5], matrix[9], matrix[13],
+        matrix[2], matrix[6], matrix[10], matrix[14],
+        matrix[3], matrix[7], matrix[11], matrix[15],
+    };
+    // clang-format on
+}
+
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap&);
 void make_context_current(GLContext*);
 
