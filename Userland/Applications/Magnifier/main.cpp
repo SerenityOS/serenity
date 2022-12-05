@@ -6,6 +6,7 @@
 
 #include "MagnifierWidget.h"
 #include <AK/LexicalPath.h>
+#include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -44,6 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Magnifier.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
+    Config::pledge_domain("Magnifier");
 
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -126,9 +128,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "Choose Grid &Color", [&](auto& action [[maybe_unused]]) {
             auto dialog = GUI::ColorPicker::construct(magnifier->grid_color(), window, "Magnifier: choose grid color");
             dialog->set_color_has_alpha_channel(true);
-            if (dialog->exec() == GUI::Dialog::ExecResult::OK)
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+                Config::write_string("Magnifier"sv, "Grid"sv, "Color"sv, dialog->color().to_deprecated_string());
                 magnifier->set_grid_color(dialog->color());
+            }
         });
+    {
+        auto color_string = Config::read_string("Magnifier"sv, "Grid"sv, "Color"sv, "#ff00ff64"sv);
+        auto maybe_color = Gfx::Color::from_string(color_string);
+        magnifier->set_grid_color(maybe_color.value_or(Gfx::Color::Magenta));
+    }
 
     size_action_group->add_action(two_x_action);
     size_action_group->add_action(four_x_action);
