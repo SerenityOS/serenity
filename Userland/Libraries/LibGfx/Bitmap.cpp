@@ -459,12 +459,13 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop, Optional<BitmapFormat> new_bitmap_format) const
 {
-    auto new_bitmap = TRY(Gfx::Bitmap::try_create(new_bitmap_format.value_or(format()), { crop.width(), crop.height() }, 1));
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(new_bitmap_format.value_or(format()), { crop.width(), crop.height() }, scale()));
+    auto scaled_crop = crop * scale();
 
-    for (int y = 0; y < crop.height(); ++y) {
-        for (int x = 0; x < crop.width(); ++x) {
-            int global_x = x + crop.left();
-            int global_y = y + crop.top();
+    for (int y = 0; y < scaled_crop.height(); ++y) {
+        for (int x = 0; x < scaled_crop.width(); ++x) {
+            int global_x = x + scaled_crop.left();
+            int global_y = y + scaled_crop.top();
             if (global_x >= physical_width() || global_y >= physical_height() || global_x < 0 || global_y < 0) {
                 new_bitmap->set_pixel(x, y, Gfx::Color::Black);
             } else {
