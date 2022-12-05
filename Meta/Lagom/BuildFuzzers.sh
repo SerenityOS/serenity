@@ -2,6 +2,9 @@
 
 set -e
 
+SCRIPT_PATH="$(dirname "${0}")"
+cd "${SCRIPT_PATH}"
+
 BEST_CLANG_CANDIDATE=""
 
 die() {
