@@ -31,6 +31,7 @@ ResultOr<ResultSet> Delete::execute(ExecutionContext& context) const
         TRY(context.database->remove(table_row));
 
         // FIXME: Implement the RETURNING clause.
+        result.insert_row(table_row, {});
     }
 
     return result;
