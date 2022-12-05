@@ -1,9 +1,10 @@
+include(libgl_generators)
+
 set(SOURCES
     Buffer/Buffer.cpp
     Buffer.cpp
     ClipPlane.cpp
     ContextParameter.cpp
-    GLAPI.cpp
     GLContext.cpp
     Image.cpp
     Lighting.cpp
@@ -18,6 +19,11 @@ set(SOURCES
     Texture.cpp
     Vertex.cpp
 )
+
+generate_libgl_implementation()
+
+set(GENERATED_SOURCES
+    GLAPI.cpp)
 
 serenity_lib(LibGL gl)
 target_link_libraries(LibGL PRIVATE LibCore LibGfx LibGLSL LibGPU)
