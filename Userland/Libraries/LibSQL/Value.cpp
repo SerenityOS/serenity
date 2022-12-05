@@ -100,6 +100,21 @@ StringView Value::type_name() const
     }
 }
 
+bool Value::is_type_compatible_with(SQLType other_type) const
+{
+    switch (type()) {
+    case SQLType::Null:
+        return false;
+    case SQLType::Integer:
+    case SQLType::Float:
+        return other_type == SQLType::Integer || other_type == SQLType::Float;
+    default:
+        break;
+    }
+
+    return type() == other_type;
+}
+
 bool Value::is_null() const
 {
     return !m_value.has_value();

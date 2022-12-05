@@ -992,6 +992,8 @@ public:
     RefPtr<Expression> const& where_clause() const { return m_where_clause; }
     RefPtr<ReturningClause> const& returning_clause() const { return m_returning_clause; }
 
+    virtual ResultOr<ResultSet> execute(ExecutionContext&) const override;
+
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
     ConflictResolution m_conflict_resolution;

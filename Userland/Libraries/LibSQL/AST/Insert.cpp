@@ -12,15 +12,6 @@
 
 namespace SQL::AST {
 
-static bool does_value_data_type_match(SQLType expected, SQLType actual)
-{
-    if (actual == SQLType::Null)
-        return false;
-    if (expected == SQLType::Integer)
-        return actual == SQLType::Integer || actual == SQLType::Float;
-    return expected == actual;
-}
-
 ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
 {
     auto table_def = TRY(context.database->get_table(m_schema_name, m_table_name));
@@ -49,13 +40,12 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
             return Result { SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, DeprecatedString::empty() };
 
         for (auto ix = 0u; ix < values.size(); ix++) {
-            auto input_value_type = values[ix].type();
             auto& tuple_descriptor = *row.descriptor();
             // In case of having column names, this must succeed since we checked for every column name for existence in the table.
             auto element_index = m_column_names.is_empty() ? ix : tuple_descriptor.find_if([&](auto element) { return element.name == m_column_names[ix]; }).index();
             auto element_type = tuple_descriptor[element_index].type;
 
-            if (!does_value_data_type_match(element_type, input_value_type))
+            if (!values[ix].is_type_compatible_with(element_type))
                 return Result { SQLCommand::Insert, SQLErrorCode::InvalidValueType, table_def->columns()[element_index].name() };
 
             row[element_index] = move(values[ix]);
