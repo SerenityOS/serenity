@@ -99,19 +99,21 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
         auto extra_edge_width = non_blurred_shadow_rect.width() % 2;
         auto extra_edge_height = non_blurred_shadow_rect.height() % 2;
 
-        auto clip_corner_size = [&](auto& size, int x_bonus = 0, int y_bonus = 0) {
-            size.set_width(min(size.width(), max_edge_width + x_bonus));
-            size.set_height(min(size.height(), max_edge_height + y_bonus));
+        auto clip_corner_size = [&](auto& size, auto const& corner, int x_bonus = 0, int y_bonus = 0) {
+            auto max_x = max_edge_width + x_bonus;
+            auto max_y = max_edge_height + y_bonus;
+            auto min_x = max(corner.horizontal_radius, min(double_radius, max_x));
+            auto min_y = max(corner.vertical_radius, min(double_radius, max_y));
+            if (min_x <= max_x)
+                size.set_width(clamp(size.width(), min_x, max_x));
+            if (min_y <= max_y)
+                size.set_height(clamp(size.height(), min_y, max_y));
         };
 
-        if (!top_left_corner)
-            clip_corner_size(top_left_corner_size, extra_edge_width, extra_edge_height);
-        if (!top_right_corner)
-            clip_corner_size(top_right_corner_size, 0, extra_edge_height);
-        if (!bottom_left_corner)
-            clip_corner_size(bottom_left_corner_size, extra_edge_width);
-        if (!bottom_right_corner)
-            clip_corner_size(bottom_right_corner_size);
+        clip_corner_size(top_left_corner_size, top_left_corner, extra_edge_width, extra_edge_height);
+        clip_corner_size(top_right_corner_size, top_right_corner, 0, extra_edge_height);
+        clip_corner_size(bottom_left_corner_size, bottom_left_corner, extra_edge_width);
+        clip_corner_size(bottom_right_corner_size, bottom_right_corner);
 
         auto shadow_bitmap_rect = Gfx::IntRect(
             0, 0,
