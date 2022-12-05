@@ -720,6 +720,11 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         if (is_valid_local_date_and_time_string(value))
             return normalize_local_date_and_time_string(value);
         return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Range) {
+        // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):value-sanitization-algorithm
+        auto maybe_double = value.to_double(TrimWhitespace::Yes);
+        if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
+            return JS::number_to_string(maybe_double.value_or(0));
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
         // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;
@@ -728,8 +733,6 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         // otherwise, set it to the string "#000000".
         return "#000000";
     }
-
-    // FIXME: Implement remaining value sanitation algorithms
     return value;
 }
 
