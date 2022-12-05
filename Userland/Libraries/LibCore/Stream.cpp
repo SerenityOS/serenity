@@ -618,8 +618,14 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
         .msg_namelen = 0,
         .msg_iov = &iov,
         .msg_iovlen = 1,
+#    if defined(AK_MUSL)
+        .__pad1 = 0,
+#    endif
         .msg_control = cmsgu.control,
         .msg_controllen = sizeof(cmsgu.control),
+#    if defined(AK_MUSL)
+        .__pad2 = 0,
+#    endif
         .msg_flags = 0,
     };
     TRY(Core::System::recvmsg(m_helper.fd(), &msg, 0));
@@ -665,8 +671,14 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
         .msg_namelen = 0,
         .msg_iov = &iov,
         .msg_iovlen = 1,
+#    if defined(AK_OS_LINUX) && !defined(__GLIBC__)
+        .__pad1 = 0,
+#    endif
         .msg_control = cmsgu.control,
         .msg_controllen = sizeof(cmsgu.control),
+#    if defined(AK_OS_LINUX) && !defined(__GLIBC__)
+        .__pad2 = 0,
+#    endif
         .msg_flags = 0,
     };
 

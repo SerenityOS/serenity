@@ -187,7 +187,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     iovec iov { &packet, sizeof(packet) };
     char control_message_buffer[CMSG_SPACE(sizeof(timeval))];
-    msghdr msg = { &peer_address, sizeof(peer_address), &iov, 1, control_message_buffer, sizeof(control_message_buffer), 0 };
+    msghdr msg = { &peer_address,
+        sizeof(peer_address),
+        &iov,
+#ifdef AK_MUSL
+        0,
+#endif
+        1,
+        control_message_buffer,
+        sizeof(control_message_buffer),
+#ifdef AK_MUSL
+        0,
+#endif
+        0 };
     rc = recvmsg(fd, &msg, 0);
     if (rc < 0) {
         perror("recvmsg");

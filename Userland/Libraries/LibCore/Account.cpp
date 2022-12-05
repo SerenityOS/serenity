@@ -129,7 +129,7 @@ ErrorOr<Vector<Account>> Account::all([[maybe_unused]] Read options)
 {
     Vector<Account> accounts;
 
-#ifndef AK_OS_MACOS
+#if !defined(AK_OS_MACOS) && !defined(AK_MUSL)
     struct passwd pwd;
     struct passwd* ptr = nullptr;
     char buffer[1024] = { 0 };
@@ -139,7 +139,7 @@ ErrorOr<Vector<Account>> Account::all([[maybe_unused]] Read options)
     setpwent();
     errno = 0;
 
-#ifndef AK_OS_MACOS
+#if !defined(AK_OS_MACOS) && !defined(AK_MUSL)
     while (getpwent_r(&pwd, buffer, sizeof(buffer), &ptr) == 0 && ptr) {
 #else
     while (auto const* ptr = getpwent()) {

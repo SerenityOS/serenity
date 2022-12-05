@@ -9,7 +9,9 @@
 #include <AK/Function.h>
 #include <LibThreading/Mutex.h>
 #include <pthread.h>
-#include <sys/cdefs.h>
+#ifndef AK_MUSL
+#    include <sys/cdefs.h>
+#endif
 #include <sys/types.h>
 
 namespace Threading {

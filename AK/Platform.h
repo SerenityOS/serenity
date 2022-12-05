@@ -47,6 +47,10 @@
 #    define AK_OS_LINUX
 #endif
 
+#if defined(AK_OS_LINUX) && !defined(__GLIBC__)
+#    define AK_MUSL
+#endif
+
 #if defined(__APPLE__) && defined(__MACH__)
 #    define AK_OS_MACOS
 #    define AK_OS_BSD_GENERIC
