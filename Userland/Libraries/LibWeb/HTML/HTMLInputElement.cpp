@@ -483,6 +483,55 @@ static bool is_valid_simple_color(DeprecatedString const& value)
     return true;
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-time-string
+static bool is_valid_time_string(DeprecatedString const& value)
+{
+    // A string is a valid time string representing an hour hour, a minute minute, and a second second if it consists of the following components in the given order:
+
+    // 1. Two ASCII digits, representing hour, in the range 0 ≤ hour ≤ 23
+    // 2. A U+003A COLON character (:)
+    // 3. Two ASCII digits, representing minute, in the range 0 ≤ minute ≤ 59
+    // 4. If second is nonzero, or optionally if second is zero:
+    // 1. A U+003A COLON character (:)
+    // 2. Two ASCII digits, representing the integer part of second, in the range 0 ≤ s ≤ 59
+    // 3. If second is not an integer, or optionally if second is an integer:
+    // 1. A U+002E FULL STOP character (.)
+    // 2. One, two, or three ASCII digits, representing the fractional part of second
+    auto parts = value.split(':');
+    if (parts.size() != 2 || parts.size() != 3)
+        return false;
+    if (parts[0].length() != 2)
+        return false;
+    auto hour = (parse_ascii_digit(parts[0][0]) * 10) + parse_ascii_digit(parts[0][1]);
+    if (hour > 23)
+        return false;
+    if (parts[1].length() != 2)
+        return false;
+    auto minute = (parse_ascii_digit(parts[1][0]) * 10) + parse_ascii_digit(parts[1][1]);
+    if (minute > 59)
+        return false;
+    if (parts.size() == 2)
+        return true;
+
+    if (parts[2].length() < 2)
+        return false;
+    auto second = (parse_ascii_digit(parts[2][0]) * 10) + parse_ascii_digit(parts[2][1]);
+    if (second > 59)
+        return false;
+    if (parts[2].length() == 2)
+        return true;
+    auto second_parts = parts[2].split('.');
+    if (second_parts.size() != 2)
+        return false;
+    if (second_parts[1].length() < 1 || second_parts[1].length() > 3)
+        return false;
+    for (auto digit : second_parts[1])
+        if (!is_ascii_digit(digit))
+            return false;
+
+    return true;
+}
+
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#week-number-of-the-last-day
 static u32 week_number_of_the_last_day(u64)
 {
@@ -641,6 +690,10 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Week) {
         // https://html.spec.whatwg.org/multipage/input.html#week-state-(type=week):value-sanitization-algorithm
         if (!is_valid_week_string(value))
+            return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Time) {
+        // https://html.spec.whatwg.org/multipage/input.html#time-state-(type=time):value-sanitization-algorithm
+        if (!is_valid_time_string(value))
             return "";
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
