@@ -637,6 +637,26 @@ static bool is_valid_date_string(DeprecatedString const& value)
     return day >= 1 && day <= AK::days_in_month(year, month);
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-local-date-and-time-string
+static bool is_valid_local_date_and_time_string(DeprecatedString const& value)
+{
+    auto parts_split_by_T = value.split('T');
+    if (parts_split_by_T.size() == 2)
+        return is_valid_date_string(parts_split_by_T[0]) && is_valid_time_string(parts_split_by_T[1]);
+    auto parts_split_by_space = value.split(' ');
+    if (parts_split_by_space.size() == 2)
+        return is_valid_date_string(parts_split_by_space[0]) && is_valid_time_string(parts_split_by_space[1]);
+
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-normalised-local-date-and-time-string
+static DeprecatedString normalize_local_date_and_time_string(DeprecatedString const& value)
+{
+    VERIFY(value.count(" "sv) == 1);
+    return value.replace(" "sv, "T"sv, ReplaceMode::FirstOnly);
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
 DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString value) const
 {
@@ -695,6 +715,11 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         // https://html.spec.whatwg.org/multipage/input.html#time-state-(type=time):value-sanitization-algorithm
         if (!is_valid_time_string(value))
             return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::LocalDateAndTime) {
+        // https://html.spec.whatwg.org/multipage/input.html#local-date-and-time-state-(type=datetime-local):value-sanitization-algorithm
+        if (is_valid_local_date_and_time_string(value))
+            return normalize_local_date_and_time_string(value);
+        return "";
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
         // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;
