@@ -377,7 +377,7 @@ ErrorOr<void> Mandelbrot::export_image(DeprecatedString const& export_path, Imag
         break;
     }
     case ImageType::PNG:
-        encoded_data = Gfx::PNGWriter::encode(m_set.bitmap());
+        encoded_data = TRY(Gfx::PNGWriter::encode(m_set.bitmap()));
         break;
     case ImageType::QOI:
         encoded_data = Gfx::QOIWriter::encode(m_set.bitmap());

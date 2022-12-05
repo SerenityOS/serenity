@@ -193,7 +193,7 @@ ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_ch
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
-    auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
+    auto encoded_data = TRY(Gfx::PNGWriter::encode(*bitmap));
     if (!file.write(encoded_data.data(), encoded_data.size()))
         return Error::from_errno(file.error());
 

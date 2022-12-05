@@ -79,7 +79,7 @@ void SpiceAgent::on_message_received()
         ReadonlyBytes bytes;
         if (mime == "image/x-serenityos") {
             auto bitmap = m_clipboard_connection.get_bitmap();
-            backing_byte_buffer = Gfx::PNGWriter::encode(*bitmap);
+            backing_byte_buffer = MUST(Gfx::PNGWriter::encode(*bitmap));
             bytes = backing_byte_buffer;
         } else {
             auto data = clipboard.data();
