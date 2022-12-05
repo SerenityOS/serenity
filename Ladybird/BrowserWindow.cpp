@@ -322,8 +322,8 @@ void BrowserWindow::new_tab()
         m_cookie_jar.set_cookie(url, cookie, source);
     };
 
-    tab_ptr->view().on_update_cookie = [this](auto const& url, auto const& cookie) {
-        m_cookie_jar.update_cookie(url, cookie);
+    tab_ptr->view().on_update_cookie = [this](auto const& cookie) {
+        m_cookie_jar.update_cookie(cookie);
     };
 
     tab_ptr->focus_location_editor();

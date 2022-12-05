@@ -75,7 +75,7 @@ public:
     Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, DeprecatedString const& name)> on_get_named_cookie;
     Function<DeprecatedString(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
-    Function<void(AK::URL const& url, Web::Cookie::Cookie const& cookie)> on_update_cookie;
+    Function<void(Web::Cookie::Cookie const& cookie)> on_update_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
 
     virtual void paintEvent(QPaintEvent*) override;
@@ -147,7 +147,7 @@ public:
     virtual Optional<Web::Cookie::Cookie> notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& name) override;
     virtual DeprecatedString notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) override;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override;
-    virtual void notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Cookie const& cookie) override;
+    virtual void notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
     virtual void notify_server_did_request_restore_window() override;
     virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) override;
