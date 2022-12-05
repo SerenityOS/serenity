@@ -73,7 +73,7 @@ void ScrollableContainerWidget::resize_event(GUI::ResizeEvent& event)
     update_widget_position();
 }
 
-void ScrollableContainerWidget::layout_relevant_change_occured()
+void ScrollableContainerWidget::layout_relevant_change_occurred()
 {
     update_widget_min_size();
     update_scrollbar_visibility();

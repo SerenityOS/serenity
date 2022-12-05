@@ -199,10 +199,10 @@ Widget::Widget()
 
 Widget::~Widget() = default;
 
-void Widget::layout_relevant_change_occured()
+void Widget::layout_relevant_change_occurred()
 {
     if (auto* parent = parent_widget())
-        parent->layout_relevant_change_occured();
+        parent->layout_relevant_change_occurred();
     else if (window())
         window()->schedule_relayout();
 }
@@ -215,7 +215,7 @@ void Widget::child_event(Core::ChildEvent& event)
                 layout()->insert_widget_before(verify_cast<Widget>(*event.child()), verify_cast<Widget>(*event.insertion_before_child()));
             else
                 layout()->add_widget(verify_cast<Widget>(*event.child()));
-            layout_relevant_change_occured();
+            layout_relevant_change_occurred();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
             window()->did_add_widget({}, verify_cast<Widget>(*event.child()));
@@ -229,7 +229,7 @@ void Widget::child_event(Core::ChildEvent& event)
         if (layout()) {
             if (event.child() && is<Widget>(*event.child()))
                 layout()->remove_widget(verify_cast<Widget>(*event.child()));
-            layout_relevant_change_occured();
+            layout_relevant_change_occurred();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
             window()->did_remove_widget({}, verify_cast<Widget>(*event.child()));
@@ -426,7 +426,7 @@ void Widget::set_layout(NonnullRefPtr<Layout> layout)
     } else {
         update();
     }
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
 }
 
 void Widget::do_layout()
@@ -842,7 +842,7 @@ void Widget::set_min_size(UISize const& size)
     if (m_min_size == size)
         return;
     m_min_size = size;
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
 }
 
 void Widget::set_max_size(UISize const& size)
@@ -851,7 +851,7 @@ void Widget::set_max_size(UISize const& size)
     if (m_max_size == size)
         return;
     m_max_size = size;
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
 }
 
 void Widget::set_preferred_size(UISize const& size)
@@ -859,7 +859,7 @@ void Widget::set_preferred_size(UISize const& size)
     if (m_preferred_size == size)
         return;
     m_preferred_size = size;
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
 }
 
 Optional<UISize> Widget::calculated_preferred_size() const
@@ -891,7 +891,7 @@ void Widget::set_visible(bool visible)
     if (visible == m_visible)
         return;
     m_visible = visible;
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
     if (m_visible)
         update();
     if (!m_visible && is_focused())
@@ -1051,7 +1051,7 @@ void Widget::set_palette(Palette const& palette)
 void Widget::set_title(String title)
 {
     m_title = move(title);
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
     // For tab widget children, our change in title also affects the parent.
     if (parent_widget())
         parent_widget()->update();
@@ -1094,7 +1094,7 @@ void Widget::set_grabbable_margins(Margins const& margins)
     if (m_grabbable_margins == margins)
         return;
     m_grabbable_margins = margins;
-    layout_relevant_change_occured();
+    layout_relevant_change_occurred();
 }
 
 Gfx::IntRect Widget::relative_non_grabbable_rect() const

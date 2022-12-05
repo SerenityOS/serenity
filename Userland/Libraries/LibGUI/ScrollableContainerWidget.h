@@ -24,7 +24,7 @@ public:
 protected:
     virtual void did_scroll() override;
     virtual void resize_event(GUI::ResizeEvent&) override;
-    virtual void layout_relevant_change_occured() override;
+    virtual void layout_relevant_change_occurred() override;
 
 private:
     void update_widget_size();

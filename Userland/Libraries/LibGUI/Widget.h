@@ -373,7 +373,7 @@ protected:
     // This is called after children have been painted.
     virtual void second_paint_event(PaintEvent&);
 
-    virtual void layout_relevant_change_occured();
+    virtual void layout_relevant_change_occurred();
     virtual void custom_layout() { }
     virtual void did_change_font() { }
     virtual void did_layout() { }
