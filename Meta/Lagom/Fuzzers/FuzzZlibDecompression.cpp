@@ -9,6 +9,6 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto result = Compress::Zlib::decompress_all(ReadonlyBytes { data, size });
-    return result.has_value();
+    (void)Compress::Zlib::decompress_all(ReadonlyBytes { data, size });
+    return 0;
 }
