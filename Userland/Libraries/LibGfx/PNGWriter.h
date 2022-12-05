@@ -23,11 +23,11 @@ private:
     PNGWriter() = default;
 
     Vector<u8> m_data;
-    void add_chunk(PNGChunk&);
-    void add_png_header();
-    void add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method);
-    void add_IDAT_chunk(Gfx::Bitmap const&);
-    void add_IEND_chunk();
+    ErrorOr<void> add_chunk(PNGChunk&);
+    ErrorOr<void> add_png_header();
+    ErrorOr<void> add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method);
+    ErrorOr<void> add_IDAT_chunk(Gfx::Bitmap const&);
+    ErrorOr<void> add_IEND_chunk();
 };
 
 }

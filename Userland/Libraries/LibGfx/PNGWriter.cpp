@@ -25,26 +25,26 @@ public:
     explicit PNGChunk(DeprecatedString);
     auto const& data() const { return m_data; };
     DeprecatedString const& type() const { return m_type; };
-    void reserve(size_t bytes) { m_data.ensure_capacity(bytes); }
+    ErrorOr<void> reserve(size_t bytes) { return m_data.try_ensure_capacity(bytes); }
 
     template<typename T>
-    void add_as_big_endian(T);
+    ErrorOr<void> add_as_big_endian(T);
 
     template<typename T>
-    void add_as_little_endian(T);
+    ErrorOr<void> add_as_little_endian(T);
 
-    void add_u8(u8);
+    ErrorOr<void> add_u8(u8);
 
     template<typename T>
-    void add(T*, size_t);
+    ErrorOr<void> add(T*, size_t);
 
-    void store_type();
+    ErrorOr<void> store_type();
     void store_data_length();
     u32 crc();
 
 private:
     template<typename T>
-    requires(IsUnsigned<T>) void add(T);
+    requires(IsUnsigned<T>) ErrorOr<void> add(T);
 
     ByteBuffer m_data;
     DeprecatedString m_type;
@@ -53,13 +53,15 @@ private:
 PNGChunk::PNGChunk(DeprecatedString type)
     : m_type(move(type))
 {
-    add<data_length_type>(0);
-    store_type();
+    // NOTE: These are MUST() because they should always be able to fit in m_data's inline capacity.
+    MUST(add<data_length_type>(0));
+    MUST(store_type());
 }
 
-void PNGChunk::store_type()
+ErrorOr<void> PNGChunk::store_type()
 {
-    m_data.append(type().bytes());
+    TRY(m_data.try_append(type().bytes()));
+    return {};
 }
 
 void PNGChunk::store_data_length()
@@ -75,66 +77,75 @@ u32 PNGChunk::crc()
 }
 
 template<typename T>
-requires(IsUnsigned<T>) void PNGChunk::add(T data)
+requires(IsUnsigned<T>) ErrorOr<void> PNGChunk::add(T data)
 {
-    m_data.append(&data, sizeof(T));
+    TRY(m_data.try_append(&data, sizeof(T)));
+    return {};
 }
 
 template<typename T>
-void PNGChunk::add(T* data, size_t size)
+ErrorOr<void> PNGChunk::add(T* data, size_t size)
 {
-    m_data.append(data, size);
+    TRY(m_data.try_append(data, size));
+    return {};
 }
 
 template<typename T>
-void PNGChunk::add_as_little_endian(T data)
+ErrorOr<void> PNGChunk::add_as_little_endian(T data)
 {
     auto data_out = AK::convert_between_host_and_little_endian(data);
-    add(data_out);
+    TRY(add(data_out));
+    return {};
 }
 
 template<typename T>
-void PNGChunk::add_as_big_endian(T data)
+ErrorOr<void> PNGChunk::add_as_big_endian(T data)
 {
     auto data_out = AK::convert_between_host_and_big_endian(data);
-    add(data_out);
+    TRY(add(data_out));
+    return {};
 }
 
-void PNGChunk::add_u8(u8 data)
+ErrorOr<void> PNGChunk::add_u8(u8 data)
 {
-    add(data);
+    TRY(add(data));
+    return {};
 }
 
-void PNGWriter::add_chunk(PNGChunk& png_chunk)
+ErrorOr<void> PNGWriter::add_chunk(PNGChunk& png_chunk)
 {
     png_chunk.store_data_length();
     u32 crc = png_chunk.crc();
-    png_chunk.add_as_big_endian(crc);
-    m_data.append(png_chunk.data().data(), png_chunk.data().size());
+    TRY(png_chunk.add_as_big_endian(crc));
+    TRY(m_data.try_append(png_chunk.data().data(), png_chunk.data().size()));
+    return {};
 }
 
-void PNGWriter::add_png_header()
+ErrorOr<void> PNGWriter::add_png_header()
 {
-    m_data.append(PNG::header.data(), PNG::header.size());
+    TRY(m_data.try_append(PNG::header.data(), PNG::header.size()));
+    return {};
 }
 
-void PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
+ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
 {
     PNGChunk png_chunk { "IHDR" };
-    png_chunk.add_as_big_endian(width);
-    png_chunk.add_as_big_endian(height);
-    png_chunk.add_u8(bit_depth);
-    png_chunk.add_u8(to_underlying(color_type));
-    png_chunk.add_u8(compression_method);
-    png_chunk.add_u8(filter_method);
-    png_chunk.add_u8(interlace_method);
-    add_chunk(png_chunk);
+    TRY(png_chunk.add_as_big_endian(width));
+    TRY(png_chunk.add_as_big_endian(height));
+    TRY(png_chunk.add_u8(bit_depth));
+    TRY(png_chunk.add_u8(to_underlying(color_type)));
+    TRY(png_chunk.add_u8(compression_method));
+    TRY(png_chunk.add_u8(filter_method));
+    TRY(png_chunk.add_u8(interlace_method));
+    TRY(add_chunk(png_chunk));
+    return {};
 }
 
-void PNGWriter::add_IEND_chunk()
+ErrorOr<void> PNGWriter::add_IEND_chunk()
 {
     PNGChunk png_chunk { "IEND" };
-    add_chunk(png_chunk);
+    TRY(add_chunk(png_chunk));
+    return {};
 }
 
 union [[gnu::packed]] Pixel {
@@ -155,13 +166,13 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
+ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 {
     PNGChunk png_chunk { "IDAT" };
-    png_chunk.reserve(bitmap.size_in_bytes());
+    TRY(png_chunk.reserve(bitmap.size_in_bytes()));
 
     ByteBuffer uncompressed_block_data;
-    uncompressed_block_data.ensure_capacity(bitmap.size_in_bytes() + bitmap.height());
+    TRY(uncompressed_block_data.try_ensure_capacity(bitmap.size_in_bytes() + bitmap.height()));
 
     Pixel dummy_scanline[bitmap.width()];
     auto const* scanline_minus_1 = dummy_scanline;
@@ -174,35 +185,37 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
             ByteBuffer buffer {};
             int sum = 0;
 
-            void append(u8 byte)
+            ErrorOr<void> append(u8 byte)
             {
-                buffer.append(byte);
+                TRY(buffer.try_append(byte));
                 sum += static_cast<i8>(byte);
+                return {};
             }
 
-            void append(AK::SIMD::u8x4 simd)
+            ErrorOr<void> append(AK::SIMD::u8x4 simd)
             {
-                append(simd[0]);
-                append(simd[1]);
-                append(simd[2]);
-                append(simd[3]);
+                TRY(append(simd[0]));
+                TRY(append(simd[1]));
+                TRY(append(simd[2]));
+                TRY(append(simd[3]));
+                return {};
             }
         };
 
         Filter none_filter { .type = PNG::FilterType::None };
-        none_filter.buffer.ensure_capacity(sizeof(Pixel) * bitmap.height());
+        TRY(none_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.height()));
 
         Filter sub_filter { .type = PNG::FilterType::Sub };
-        sub_filter.buffer.ensure_capacity(sizeof(Pixel) * bitmap.height());
+        TRY(sub_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.height()));
 
         Filter up_filter { .type = PNG::FilterType::Up };
-        up_filter.buffer.ensure_capacity(sizeof(Pixel) * bitmap.height());
+        TRY(up_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.height()));
 
         Filter average_filter { .type = PNG::FilterType::Average };
-        average_filter.buffer.ensure_capacity(sizeof(ARGB32) * bitmap.height());
+        TRY(average_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.height()));
 
         Filter paeth_filter { .type = PNG::FilterType::Paeth };
-        paeth_filter.buffer.ensure_capacity(sizeof(ARGB32) * bitmap.height());
+        TRY(paeth_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.height()));
 
         auto pixel_x_minus_1 = Pixel::gfx_to_png(*dummy_scanline);
         auto pixel_xy_minus_1 = Pixel::gfx_to_png(*dummy_scanline);
@@ -211,18 +224,18 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
             auto pixel = Pixel::gfx_to_png(scanline[x]);
             auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
 
-            none_filter.append(pixel);
+            TRY(none_filter.append(pixel));
 
-            sub_filter.append(pixel - pixel_x_minus_1);
+            TRY(sub_filter.append(pixel - pixel_x_minus_1));
 
-            up_filter.append(pixel - pixel_y_minus_1);
+            TRY(up_filter.append(pixel - pixel_y_minus_1));
 
             // The sum Orig(a) + Orig(b) shall be performed without overflow (using at least nine-bit arithmetic).
             auto sum = AK::SIMD::to_u16x4(pixel_x_minus_1) + AK::SIMD::to_u16x4(pixel_y_minus_1);
             auto average = AK::SIMD::to_u8x4(sum / 2);
-            average_filter.append(pixel - average);
+            TRY(average_filter.append(pixel - average));
 
-            paeth_filter.append(pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            TRY(paeth_filter.append(pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
 
             pixel_x_minus_1 = pixel;
             pixel_xy_minus_1 = pixel_y_minus_1;
@@ -246,28 +259,28 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         if (abs(best_filter.sum) > abs(paeth_filter.sum))
             best_filter = paeth_filter;
 
-        uncompressed_block_data.append(to_underlying(best_filter.type));
-        uncompressed_block_data.append(best_filter.buffer);
+        TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
+        TRY(uncompressed_block_data.try_append(best_filter.buffer));
     }
 
     auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data, Compress::ZlibCompressionLevel::Best);
     if (!maybe_zlib_buffer.has_value()) {
-        // FIXME: Handle errors.
-        VERIFY_NOT_REACHED();
+        return Error::from_string_literal("PNGWriter: ZlibCompressor failed");
     }
     auto zlib_buffer = maybe_zlib_buffer.release_value();
 
-    png_chunk.add(zlib_buffer.data(), zlib_buffer.size());
-    add_chunk(png_chunk);
+    TRY(png_chunk.add(zlib_buffer.data(), zlib_buffer.size()));
+    TRY(add_chunk(png_chunk));
+    return {};
 }
 
 ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap)
 {
     PNGWriter writer;
-    writer.add_png_header();
-    writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0);
-    writer.add_IDAT_chunk(bitmap);
-    writer.add_IEND_chunk();
+    TRY(writer.add_png_header());
+    TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
+    TRY(writer.add_IDAT_chunk(bitmap));
+    TRY(writer.add_IEND_chunk());
     return ByteBuffer::copy(writer.m_data);
 }
 
