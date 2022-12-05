@@ -4,24 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 #include <SQLServer/ConnectionFromClient.h>
-#include <stdio.h>
-#include <sys/stat.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio accept unix rpath wpath cpath"));
 
-    if (mkdir("/home/anon/sql", 0700) < 0 && errno != EEXIST) {
-        perror("mkdir");
-        return 1;
-    }
+    auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
+    TRY(Core::Directory::create(database_path, Core::Directory::CreateDirectories::Yes));
 
-    TRY(Core::System::unveil("/home/anon/sql", "rwc"));
+    TRY(Core::System::unveil(database_path, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop event_loop;

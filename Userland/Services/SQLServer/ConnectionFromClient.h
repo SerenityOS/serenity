@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibIPC/ConnectionFromClient.h>
@@ -25,6 +26,8 @@ public:
 
     static RefPtr<ConnectionFromClient> client_connection_for(int client_id);
 
+    void set_database_path(DeprecatedString);
+
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
@@ -32,6 +35,8 @@ private:
     virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(u64, DeprecatedString const&) override;
     virtual Messages::SQLServer::ExecuteStatementResponse execute_statement(u64, Vector<SQL::Value> const& placeholder_values) override;
     virtual void disconnect(u64) override;
+
+    DeprecatedString m_database_path;
 };
 
 }

@@ -21,12 +21,14 @@ RefPtr<DatabaseConnection> DatabaseConnection::connection_for(u64 connection_id)
     return nullptr;
 }
 
-ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(DeprecatedString database_name, int client_id)
+ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(StringView database_path, DeprecatedString database_name, int client_id)
 {
     if (LexicalPath path(database_name); (path.title() != database_name) || (path.dirname() != "."))
         return Error::from_string_view("Invalid database name"sv);
 
-    auto database = SQL::Database::construct(DeprecatedString::formatted("/home/anon/sql/{}.db", database_name));
+    auto database_file = DeprecatedString::formatted("{}/{}.db", database_path, database_name);
+    auto database = SQL::Database::construct(move(database_file));
+
     if (auto result = database->open(); result.is_error()) {
         warnln("Could not open database: {}", result.error().error_string());
         return Error::from_string_view("Could not open database"sv);
