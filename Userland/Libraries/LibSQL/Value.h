@@ -47,6 +47,7 @@ public:
 
     [[nodiscard]] SQLType type() const;
     [[nodiscard]] StringView type_name() const;
+    [[nodiscard]] bool is_type_compatible_with(SQLType) const;
     [[nodiscard]] bool is_null() const;
 
     [[nodiscard]] DeprecatedString to_deprecated_string() const;

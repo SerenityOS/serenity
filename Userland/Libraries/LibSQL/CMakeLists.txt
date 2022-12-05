@@ -11,6 +11,7 @@ set(SOURCES
     AST/Statement.cpp
     AST/SyntaxHighlighter.cpp
     AST/Token.cpp
+    AST/Update.cpp
     BTree.cpp
     BTreeIterator.cpp
     Database.cpp
@@ -26,7 +27,7 @@ set(SOURCES
     TreeNode.cpp
     Tuple.cpp
     Value.cpp
-    )
+)
 
 if (SERENITYOS)
     list(APPEND SOURCES SQLClient.cpp)

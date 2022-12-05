@@ -886,4 +886,123 @@ TEST_CASE(delete_all_rows)
     }
 }
 
+TEST_CASE(update_single_row)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        create_table(database);
+        for (auto count = 0; count < 10; ++count) {
+            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            EXPECT_EQ(result.size(), 1u);
+        }
+
+        execute(database, "UPDATE TestSchema.TestTable SET IntColumn=123456 WHERE (TextColumn = 'T3');");
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 10u);
+
+        for (auto i = 0u; i < 10; ++i) {
+            if (i < 3)
+                EXPECT_EQ(result[i].row[0], i);
+            else if (i < 9)
+                EXPECT_EQ(result[i].row[0], i + 1);
+            else
+                EXPECT_EQ(result[i].row[0], 123456);
+        }
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 10u);
+
+        for (auto i = 0u; i < 10; ++i) {
+            if (i < 3)
+                EXPECT_EQ(result[i].row[0], i);
+            else if (i < 9)
+                EXPECT_EQ(result[i].row[0], i + 1);
+            else
+                EXPECT_EQ(result[i].row[0], 123456);
+        }
+    }
+}
+
+TEST_CASE(update_multiple_rows)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        create_table(database);
+        for (auto count = 0; count < 10; ++count) {
+            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            EXPECT_EQ(result.size(), 1u);
+        }
+
+        execute(database, "UPDATE TestSchema.TestTable SET IntColumn=123456 WHERE (IntColumn > 4);");
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 10u);
+
+        for (auto i = 0u; i < 10; ++i) {
+            if (i < 5)
+                EXPECT_EQ(result[i].row[0], i);
+            else
+                EXPECT_EQ(result[i].row[0], 123456);
+        }
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 10u);
+
+        for (auto i = 0u; i < 10; ++i) {
+            if (i < 5)
+                EXPECT_EQ(result[i].row[0], i);
+            else
+                EXPECT_EQ(result[i].row[0], 123456);
+        }
+    }
+}
+
+TEST_CASE(update_all_rows)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        create_table(database);
+        for (auto count = 0; count < 10; ++count) {
+            auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            EXPECT_EQ(result.size(), 1u);
+        }
+
+        execute(database, "UPDATE TestSchema.TestTable SET IntColumn=123456;");
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 10u);
+
+        for (auto i = 0u; i < 10; ++i)
+            EXPECT_EQ(result[i].row[0], 123456);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 10u);
+
+        for (auto i = 0u; i < 10; ++i)
+            EXPECT_EQ(result[i].row[0], 123456);
+    }
+}
+
 }
