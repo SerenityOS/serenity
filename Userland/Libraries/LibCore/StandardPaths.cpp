@@ -65,6 +65,24 @@ DeprecatedString StandardPaths::config_directory()
     return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
+DeprecatedString StandardPaths::data_directory()
+{
+    if (auto* data_directory = getenv("XDG_DATA_HOME"))
+        return LexicalPath::canonicalized_path(data_directory);
+
+    StringBuilder builder;
+    builder.append(home_directory());
+#if defined(AK_OS_SERENITY)
+    builder.append("/.data"sv);
+#elif defined(AK_OS_MACOS)
+    builder.append("/Library/Application Support"sv);
+#else
+    builder.append("/.local/share"sv);
+#endif
+
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+}
+
 DeprecatedString StandardPaths::tempfile_directory()
 {
     return "/tmp";
