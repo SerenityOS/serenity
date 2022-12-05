@@ -57,10 +57,10 @@ void ListView::resize_event(ResizeEvent& event)
     AbstractView::resize_event(event);
 }
 
-void ListView::layout_relevant_change_occured()
+void ListView::layout_relevant_change_occurred()
 {
     update_content_size();
-    AbstractView::layout_relevant_change_occured();
+    AbstractView::layout_relevant_change_occurred();
 }
 
 void ListView::model_did_update(unsigned flags)
