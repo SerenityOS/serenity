@@ -24,18 +24,21 @@ set(SOURCES
     ResultSet.cpp
     Row.cpp
     Serializer.cpp
+    SQLClient.cpp
     TreeNode.cpp
     Tuple.cpp
     Value.cpp
 )
 
-if (SERENITYOS)
-    list(APPEND SOURCES SQLClient.cpp)
-    set(GENERATED_SOURCES
-        ../../Services/SQLServer/SQLClientEndpoint.h
-        ../../Services/SQLServer/SQLServerEndpoint.h
-    )
+if (NOT SERENITYOS)
+    compile_ipc(../../Services/SQLServer/SQLClient.ipc ../../Services/SQLServer/SQLClientEndpoint.h)
+    compile_ipc(../../Services/SQLServer/SQLServer.ipc ../../Services/SQLServer/SQLServerEndpoint.h)
 endif()
+
+set(GENERATED_SOURCES
+    ../../Services/SQLServer/SQLClientEndpoint.h
+    ../../Services/SQLServer/SQLServerEndpoint.h
+)
 
 serenity_lib(LibSQL sql)
 target_link_libraries(LibSQL PRIVATE LibCore LibIPC LibSyntax LibRegex)
