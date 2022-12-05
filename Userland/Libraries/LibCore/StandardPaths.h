@@ -18,6 +18,7 @@ public:
     static DeprecatedString downloads_directory();
     static DeprecatedString tempfile_directory();
     static DeprecatedString config_directory();
+    static DeprecatedString data_directory();
 };
 
 }
