@@ -466,6 +466,7 @@ public:
 
     static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
     static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
+    static constexpr size_t max_auxiliary_size = Thread::default_userspace_stack_size / 8;
     NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
     NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
 

@@ -43,18 +43,27 @@ struct LoadResult {
 static constexpr size_t auxiliary_vector_size = 15;
 static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
-static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, NonnullOwnPtrVector<KString>& environment)
+static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, NonnullOwnPtrVector<KString>& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> const& auxiliary)
 {
     size_t total_arguments_size = 0;
     size_t total_environment_size = 0;
+    size_t total_auxiliary_size = 0;
 
     for (auto const& a : arguments)
         total_arguments_size += a.length() + 1;
     for (auto const& e : environment)
         total_environment_size += e.length() + 1;
+    for (auto const& v : auxiliary) {
+        if (!v.optional_string.is_empty())
+            total_auxiliary_size += round_up_to_power_of_two(v.optional_string.length() + 1, sizeof(FlatPtr));
+
+        if (v.auxv.a_type == ELF::AuxiliaryValue::Random)
+            total_auxiliary_size += round_up_to_power_of_two(16, sizeof(FlatPtr));
+    }
 
     total_arguments_size += sizeof(char*) * (arguments.size() + 1);
     total_environment_size += sizeof(char*) * (environment.size() + 1);
+    total_auxiliary_size += sizeof(auxv_t) * auxiliary.size();
 
     if (total_arguments_size > Process::max_arguments_size)
         return false;
@@ -62,7 +71,9 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
     if (total_environment_size > Process::max_environment_size)
         return false;
 
-    // FIXME: This doesn't account for the size of the auxiliary vector
+    if (total_auxiliary_size > Process::max_auxiliary_size)
+        return false;
+
     return true;
 }
 
@@ -476,10 +487,6 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
 
-    // FIXME: How much stack space does process startup need?
-    if (!validate_stack_size(arguments, environment))
-        return E2BIG;
-
     auto last_part = path->view().find_last_split_view('/');
 
     auto new_process_name = TRY(KString::try_create(last_part));
@@ -626,6 +633,10 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     auto credentials = this->credentials();
     auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, credentials->uid(), credentials->euid(), credentials->gid(), credentials->egid(), path->view(), main_program_fd_allocation);
+
+    // FIXME: How much stack space does process startup need?
+    if (!validate_stack_size(m_arguments, m_environment, auxv))
+        return E2BIG;
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
