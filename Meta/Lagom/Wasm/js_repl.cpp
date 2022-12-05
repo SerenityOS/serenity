@@ -29,6 +29,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #ifndef AK_OS_EMSCRIPTEN
@@ -349,8 +350,11 @@ private:
     int m_group_stack_depth { 0 };
 };
 
-extern "C" int initialize_repl()
+extern "C" int initialize_repl(char const* time_zone)
 {
+    if (time_zone)
+        setenv("TZ", time_zone, 1);
+
     g_vm = JS::VM::create();
     g_vm->enable_default_host_import_module_dynamically_hook();
 
