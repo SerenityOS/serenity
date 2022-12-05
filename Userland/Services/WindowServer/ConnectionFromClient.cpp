@@ -1216,7 +1216,7 @@ Messages::WindowServer::GetScreenBitmapAroundLocationResponse ConnectionFromClie
 
     if (intersecting_with_screens == 1) {
         auto& screen = Screen::closest_to_rect(rect);
-        auto crop_rect = rect.translated(-screen.rect().location()) * screen.scale_factor();
+        auto crop_rect = rect.translated(-screen.rect().location());
         auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
         if (bitmap_or_error.is_error()) {
             dbgln("get_screen_bitmap_around_cursor: Failed to crop screenshot: {}", bitmap_or_error.error());
