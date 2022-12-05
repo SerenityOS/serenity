@@ -151,11 +151,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto encoded_bitmap = Gfx::PNGWriter::encode(*bitmap);
-    if (encoded_bitmap.is_empty()) {
+    auto encoded_bitmap_or_error = Gfx::PNGWriter::encode(*bitmap);
+    if (encoded_bitmap_or_error.is_error()) {
         warnln("Failed to encode PNG");
         return 1;
     }
+    auto encoded_bitmap = encoded_bitmap_or_error.release_value();
+
     if (edit_image)
         output_path = Core::DateTime::now().to_deprecated_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
 

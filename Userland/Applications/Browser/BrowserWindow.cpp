@@ -744,7 +744,7 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
     LexicalPath path { Core::StandardPaths::downloads_directory() };
     path = path.append(Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv));
 
-    auto encoded = Gfx::PNGWriter::encode(*bitmap.bitmap());
+    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
 
     auto screenshot_file = TRY(Core::Stream::File::open(path.string(), Core::Stream::OpenMode::Write));
     TRY(screenshot_file->write(encoded));

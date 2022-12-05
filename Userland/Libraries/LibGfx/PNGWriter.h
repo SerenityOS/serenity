@@ -17,7 +17,7 @@ class PNGChunk;
 
 class PNGWriter {
 public:
-    static ByteBuffer encode(Gfx::Bitmap const&);
+    static ErrorOr<ByteBuffer> encode(Gfx::Bitmap const&);
 
 private:
     PNGWriter() = default;

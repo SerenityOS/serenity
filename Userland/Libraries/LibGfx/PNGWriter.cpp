@@ -261,15 +261,14 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     add_chunk(png_chunk);
 }
 
-ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap)
+ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap)
 {
     PNGWriter writer;
     writer.add_png_header();
     writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0);
     writer.add_IDAT_chunk(bitmap);
     writer.add_IEND_chunk();
-    // FIXME: Handle OOM failure.
-    return ByteBuffer::copy(writer.m_data).release_value_but_fixme_should_propagate_errors();
+    return ByteBuffer::copy(writer.m_data);
 }
 
 }

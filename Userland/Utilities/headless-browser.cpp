@@ -703,7 +703,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
 
             page_client.paint(output_rect, output_bitmap);
 
-            auto image_buffer = Gfx::PNGWriter::encode(output_bitmap);
+            auto image_buffer = MUST(Gfx::PNGWriter::encode(output_bitmap));
             MUST(output_file->write(image_buffer.bytes()));
 
             exit(0);
