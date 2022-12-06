@@ -85,7 +85,7 @@ public:
     ErrorOr<void> initialize_menubar(GUI::Window&);
     GUI::Window::CloseRequestDecision request_close();
     void update_title();
-    void load_from_file(Core::File&);
+    ErrorOr<void> load_from_file(Core::File&);
 
 private:
     MainWidget();

@@ -31,9 +31,9 @@ void set_system_theme(Core::AnonymousBuffer buffer)
     theme_page = theme_buffer.data<SystemTheme>();
 }
 
-Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
+ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file)
 {
-    auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(SystemTheme)).release_value();
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(sizeof(SystemTheme)));
 
     auto* data = buffer.data<SystemTheme>();
 
@@ -148,19 +148,20 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
     return buffer;
 }
 
-Core::AnonymousBuffer load_system_theme(DeprecatedString const& path)
+ErrorOr<Core::AnonymousBuffer> load_system_theme(DeprecatedString const& path)
 {
-    return load_system_theme(Core::ConfigFile::open(path).release_value_but_fixme_should_propagate_errors());
+    auto config_file = TRY(Core::ConfigFile::open(path));
+    return TRY(load_system_theme(config_file));
 }
 
-Vector<SystemThemeMetaData> list_installed_system_themes()
+ErrorOr<Vector<SystemThemeMetaData>> list_installed_system_themes()
 {
     Vector<SystemThemeMetaData> system_themes;
     Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
         auto theme_name = dt.next_path();
         auto theme_path = DeprecatedString::formatted("/res/themes/{}", theme_name);
-        system_themes.append({ LexicalPath::title(theme_name), theme_path });
+        TRY(system_themes.try_append({ LexicalPath::title(theme_name), theme_path }));
     }
     quick_sort(system_themes, [](auto& a, auto& b) { return a.name < b.name; });
     return system_themes;

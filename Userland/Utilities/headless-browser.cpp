@@ -771,10 +771,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto page_client = HeadlessBrowserPageClient::create();
 
-    if (!resources_folder.is_empty())
-        page_client->setup_palette(Gfx::load_system_theme(LexicalPath::join(resources_folder, "themes/Default.ini"sv).string()));
-    else
-        page_client->setup_palette(Gfx::load_system_theme("/res/themes/Default.ini"));
+    if (!resources_folder.is_empty()) {
+        auto system_theme = TRY(Gfx::load_system_theme(LexicalPath::join(resources_folder, "themes/Default.ini"sv).string()));
+        page_client->setup_palette(system_theme);
+    } else {
+        auto system_theme = TRY(Gfx::load_system_theme("/res/themes/Default.ini"));
+        page_client->setup_palette(system_theme);
+    }
 
     dbgln("Loading {}", url);
     page_client->load(AK::URL(url));

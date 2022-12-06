@@ -56,8 +56,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path.value());
                 if (response.is_error())
                     GUI::MessageBox::show_error(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", path.value(), response.error()));
-                else
-                    main_widget->load_from_file(response.release_value());
+                else {
+                    auto load_from_file_result = main_widget->load_from_file(response.release_value());
+                    if (load_from_file_result.is_error())
+                        GUI::MessageBox::show_error(window, DeprecatedString::formatted("Loading theme from file has failed: {}", load_from_file_result.error()));
+                }
             });
     }
 

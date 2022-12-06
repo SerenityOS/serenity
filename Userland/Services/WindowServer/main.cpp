@@ -44,8 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto wm_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
-    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", theme_name));
-    VERIFY(theme.is_valid());
+    auto theme = TRY(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", theme_name)));
     Gfx::set_system_theme(theme);
     auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
 

@@ -13,6 +13,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/ItemListModel.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Process.h>
 
 namespace DisplaySettings {
@@ -21,7 +22,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     : m_background_settings_changed { background_settings_changed }
 {
     load_from_gml(themes_settings_gml);
-    m_themes = Gfx::list_installed_system_themes();
+    m_themes = MUST(Gfx::list_installed_system_themes());
 
     size_t current_theme_index;
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
@@ -39,7 +40,10 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     m_themes_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_theme_names));
     m_themes_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_theme = &m_themes.at(index.row());
-        m_theme_preview->set_theme(m_selected_theme->path);
+        auto set_theme_result = m_theme_preview->set_theme(m_selected_theme->path);
+        if (set_theme_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("There was an error generating the theme preview: {}", set_theme_result.error()));
+        }
         set_modified(true);
     };
     m_themes_combo->set_selected_index(current_theme_index, GUI::AllowCallback::No);
@@ -66,7 +70,10 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
             if (current_theme_name == theme_meta.name) {
                 m_themes_combo->set_selected_index(index, GUI::AllowCallback::No);
                 m_selected_theme = &m_themes.at(index);
-                m_theme_preview->set_theme(m_selected_theme->path);
+                auto set_theme_result = m_theme_preview->set_theme(m_selected_theme->path);
+                if (set_theme_result.is_error()) {
+                    GUI::MessageBox::show_error(window(), DeprecatedString::formatted("There was an error setting the new theme: {}", set_theme_result.error()));
+                }
             }
             ++index;
         }
