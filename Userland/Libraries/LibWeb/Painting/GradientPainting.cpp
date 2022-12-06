@@ -129,7 +129,7 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
     return { resolved_color_stops, repeat_length };
 }
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::FloatSize const& gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
+LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::FloatSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
 {
     auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
     auto gradient_length_px = calulate_gradient_length(gradient_size.to_rounded<int>(), gradient_angle);
@@ -155,7 +155,7 @@ ConicGradientData resolve_conic_gradient_data(Layout::Node const& node, CSS::Con
     return { conic_gradient.angle_degrees(), resolved_color_stops };
 }
 
-RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, Gfx::FloatSize const& gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
+RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, Gfx::FloatSize gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
 {
     // Start center, goes right to ending point, where the gradient line intersects the ending shape
     auto gradient_length = CSS::Length::make_px(gradient_size.width());
@@ -302,7 +302,7 @@ void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_re
     });
 }
 
-void paint_radial_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::FloatSize const& size)
+void paint_radial_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::FloatSize size)
 {
     // A conservative guesstimate on how many colors we need to generate:
     auto max_dimension = max(gradient_rect.width(), gradient_rect.height());

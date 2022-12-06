@@ -22,7 +22,7 @@ public:
         Trailing,
     };
 
-    LineBoxFragment(Node const& layout_node, int start, int length, Gfx::FloatPoint offset, Gfx::FloatSize const& size, float border_box_top, float border_box_bottom, Type type)
+    LineBoxFragment(Node const& layout_node, int start, int length, Gfx::FloatPoint offset, Gfx::FloatSize size, float border_box_top, float border_box_bottom, Type type)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -47,7 +47,7 @@ public:
     void set_baseline(float y) { m_baseline = y; }
     float baseline() const { return m_baseline; }
 
-    Gfx::FloatSize const& size() const { return m_size; }
+    Gfx::FloatSize size() const { return m_size; }
     void set_width(float width) { m_size.set_width(width); }
     void set_height(float height) { m_size.set_height(height); }
     float width() const { return m_size.width(); }

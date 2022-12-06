@@ -1827,7 +1827,7 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
         && m_color_stop_list == other.m_color_stop_list);
 }
 
-float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize const& gradient_size) const
+float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize gradient_size) const
 {
     auto corner_angle_degrees = [&] {
         return static_cast<float>(atan2(gradient_size.height(), gradient_size.width())) * 180 / AK::Pi<float>;
@@ -1866,7 +1866,7 @@ float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize const& gradient_siz
         });
 }
 
-void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& size) const
+void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize size) const
 {
     if (m_resolved.has_value() && m_resolved->size == size)
         return;
@@ -2150,7 +2150,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     return resolved_size;
 }
 
-void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& paint_size) const
+void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize paint_size) const
 {
     Gfx::FloatRect gradient_box { { 0, 0 }, paint_size };
     auto center = m_position.resolved(node, gradient_box);
@@ -2204,7 +2204,7 @@ DeprecatedString ConicGradientStyleValue::to_deprecated_string() const
     return builder.to_deprecated_string();
 }
 
-void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& size) const
+void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize size) const
 {
     if (!m_resolved.has_value())
         m_resolved = ResolvedData { Painting::resolve_conic_gradient_data(node, *this), {} };
