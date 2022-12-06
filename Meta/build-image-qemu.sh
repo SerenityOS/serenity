@@ -1,17 +1,4 @@
-#!/bin/sh
-
-# Note: This is done before `set -e` to let `command` fail if needed
-FUSE2FS_PATH=$(command -v fuse2fs)
-RESIZE2FS_PATH=$(command -v resize2fs)
-
-if [ -z "$FUSE2FS_PATH" ]; then
-    FUSE2FS_PATH=/usr/sbin/fuse2fs
-fi
-
-if [ -z "$RESIZE2FS_PATH" ]; then
-    RESIZE2FS_PATH=/usr/sbin/resize2fs
-fi
-
+#!/usr/bin/env bash
 set -e
 
 SCRIPT_DIR="$(dirname "${0}")"
@@ -41,26 +28,6 @@ if [ "$(id -u)" != 0 ]; then
 else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
-
-if [ "$(uname -s)" = "Darwin" ]; then
-    export PATH="/usr/local/opt/e2fsprogs/bin:$PATH"
-    export PATH="/usr/local/opt/e2fsprogs/sbin:$PATH"
-    export PATH="/opt/homebrew/opt/e2fsprogs/bin:$PATH"
-    export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
-
-    E2FSCK="e2fsck"
-    RESIZE2FS_PATH="resize2fs"
-elif [ ! -f "$E2FSCK" ]; then
-    E2FSCK="$(command -v e2fsck)"
-
-    if [ ! -f "$E2FSCK" ]; then
-        E2FSCK="/usr/sbin/e2fsck"
-        if [ ! -f "$E2FSCK" ]; then
-            E2FSCK="/sbin/e2fsck"
-        fi
-    fi
-fi
-
 
 # Prepend the toolchain qemu directory so we pick up QEMU from there
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
