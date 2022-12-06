@@ -224,7 +224,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    for (auto& symbol : m_global_symbol_map)
+    for (auto& symbol : m_global_symbol_registry)
         roots.set(symbol.value);
 
     for (auto* finalization_registry : m_finalization_registry_cleanup_jobs)
@@ -233,12 +233,12 @@ void VM::gather_roots(HashTable<Cell*>& roots)
 
 Symbol* VM::get_global_symbol(DeprecatedString const& description)
 {
-    auto result = m_global_symbol_map.get(description);
+    auto result = m_global_symbol_registry.get(description);
     if (result.has_value())
         return result.value();
 
     auto new_global_symbol = js_symbol(*this, description, true);
-    m_global_symbol_map.set(description, new_global_symbol);
+    m_global_symbol_registry.set(description, new_global_symbol);
     return new_global_symbol;
 }
 
