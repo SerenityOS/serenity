@@ -1157,7 +1157,7 @@ public:
     virtual Optional<int> natural_height() const { return {}; }
 
     virtual void load_any_resources(DOM::Document&) {};
-    virtual void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const {};
+    virtual void resolve_for_size(Layout::Node const&, Gfx::FloatSize) const {};
 
     virtual bool is_paintable() const = 0;
     virtual void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const = 0;
@@ -1251,7 +1251,7 @@ public:
 
     bool is_paintable() const override { return true; }
 
-    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+    void resolve_for_size(Layout::Node const&, Gfx::FloatSize) const override;
 
     Gfx::FloatSize resolve_size(Layout::Node const&, Gfx::FloatPoint, Gfx::FloatRect const&) const;
 
@@ -1308,7 +1308,7 @@ public:
 
     bool is_paintable() const override { return true; }
 
-    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+    void resolve_for_size(Layout::Node const&, Gfx::FloatSize) const override;
 
     virtual ~ConicGradientStyleValue() override = default;
 
@@ -1366,9 +1366,9 @@ public:
 
     bool is_repeating() const { return m_repeating == GradientRepeating::Yes; }
 
-    float angle_degrees(Gfx::FloatSize const& gradient_size) const;
+    float angle_degrees(Gfx::FloatSize gradient_size) const;
 
-    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+    void resolve_for_size(Layout::Node const&, Gfx::FloatSize) const override;
 
     bool is_paintable() const override { return true; }
     void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;

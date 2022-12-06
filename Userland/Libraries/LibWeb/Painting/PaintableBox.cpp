@@ -60,7 +60,7 @@ void PaintableBox::set_offset(Gfx::FloatPoint offset)
     const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
-void PaintableBox::set_content_size(Gfx::FloatSize const& size)
+void PaintableBox::set_content_size(Gfx::FloatSize size)
 {
     m_content_size = size;
     // FIXME: This const_cast is gross.

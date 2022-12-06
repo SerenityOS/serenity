@@ -38,8 +38,8 @@ public:
     void set_offset(Gfx::FloatPoint);
     void set_offset(float x, float y) { set_offset({ x, y }); }
 
-    Gfx::FloatSize const& content_size() const { return m_content_size; }
-    void set_content_size(Gfx::FloatSize const&);
+    Gfx::FloatSize content_size() const { return m_content_size; }
+    void set_content_size(Gfx::FloatSize);
     void set_content_size(float width, float height) { set_content_size({ width, height }); }
 
     void set_content_width(float width) { set_content_size(width, content_height()); }
