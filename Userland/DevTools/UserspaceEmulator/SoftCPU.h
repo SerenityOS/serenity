@@ -1348,6 +1348,8 @@ private:
 
     void update_code_cache();
 
+    void write_segment_register(X86::SegmentRegister, ValueWithShadow<u16>);
+
     Emulator& m_emulator;
     SoftFPU m_fpu;
     SoftVPU m_vpu;
