@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Diagnostics.h>
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/PlatformObject.h>
@@ -15,7 +16,9 @@ namespace Web::WebIDL {
 
 #define TRY_OR_RETURN_OOM(realm, expression)                                \
     ({                                                                      \
-        auto _temporary_result = (expression);                              \
+        /* Ignore -Wshadow to allow nesting the macro. */                   \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                    \
+            auto _temporary_result = (expression));                         \
         if (_temporary_result.is_error()) {                                 \
             VERIFY(_temporary_result.error().code() == ENOMEM);             \
             return WebIDL::UnknownError::create(realm, "Out of memory."sv); \
