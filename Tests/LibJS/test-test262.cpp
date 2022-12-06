@@ -222,10 +222,10 @@ public:
     NonnullOwnPtr<Core::Stream::File> m_output;
 };
 
-static HashMap<size_t, TestResult> run_test_files(Span<DeprecatedString> files, size_t offset, StringView command, char const* const arguments[])
+static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString> files, size_t offset, StringView command, char const* const arguments[])
 {
     HashMap<size_t, TestResult> results {};
-    results.ensure_capacity(files.size());
+    TRY(results.try_ensure_capacity(files.size()));
     size_t test_index = 0;
 
     auto fail_all_after = [&] {
@@ -378,9 +378,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     while (index < paths.size()) {
         print_progress();
         auto this_batch_size = min(batch_size, paths.size() - index);
-        auto batch_results = run_test_files(paths.span().slice(index, this_batch_size), index, args[0], raw_args.data());
+        auto batch_results = TRY(run_test_files(paths.span().slice(index, this_batch_size), index, args[0], raw_args.data()));
 
-        results.ensure_capacity(results.size() + batch_results.size());
+        TRY(results.try_ensure_capacity(results.size() + batch_results.size()));
         for (auto& [key, value] : batch_results) {
             results.set(key, value);
             ++result_counts[static_cast<size_t>(value)];
