@@ -316,16 +316,14 @@ void TreeMapWidget::keydown_event(GUI::KeyEvent& event)
 
 void TreeMapWidget::mousewheel_event(GUI::MouseEvent& event)
 {
-    int delta = event.wheel_delta_y();
-    // FIXME: The wheel_delta_y is premultiplied in the window server, we actually want a raw value here.
-    int step_size = GUI::ConnectionToWindowServer::the().get_scroll_step_size();
+    int delta = event.wheel_raw_delta_y();
     if (delta > 0) {
-        size_t step_back = delta / step_size;
+        size_t step_back = delta;
         if (step_back > m_viewpoint)
             step_back = m_viewpoint;
         set_viewpoint(m_viewpoint - step_back);
     } else {
-        size_t step_up = (-delta) / step_size;
+        size_t step_up = -delta;
         set_viewpoint(m_viewpoint + step_up);
     }
 }
