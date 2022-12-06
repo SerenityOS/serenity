@@ -133,7 +133,7 @@ void ConsoleWidget::print_source_line(StringView source)
     html.append("&gt; "sv);
     html.append("</span>"sv);
 
-    html.append(JS::MarkupGenerator::html_from_source(source));
+    html.append(JS::MarkupGenerator::html_from_source(source).release_value_but_fixme_should_propagate_errors());
 
     print_html(html.string_view());
 }

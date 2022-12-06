@@ -30,7 +30,7 @@ DeprecatedString CodeBlock::render_to_html(bool) const
         builder.appendff("<code class=\"language-{}\">", escape_html_entities(m_language));
 
     if (m_language == "js")
-        builder.append(JS::MarkupGenerator::html_from_source(m_code));
+        builder.append(JS::MarkupGenerator::html_from_source(m_code).release_value_but_fixme_should_propagate_errors());
     else
         builder.append(escape_html_entities(m_code));
 
