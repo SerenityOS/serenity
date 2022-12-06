@@ -381,6 +381,8 @@ public:
     u16 ds() const { return m_segment[(int)X86::SegmentRegister::DS]; }
     u16 es() const { return m_segment[(int)X86::SegmentRegister::ES]; }
     u16 ss() const { return m_segment[(int)X86::SegmentRegister::SS]; }
+    u16 fs() const { return m_segment[(int)X86::SegmentRegister::FS]; }
+    u16 gs() const { return m_segment[(int)X86::SegmentRegister::GS]; }
 
     ValueWithShadow<u8> read_memory8(X86::LogicalAddress);
     ValueWithShadow<u16> read_memory16(X86::LogicalAddress);
