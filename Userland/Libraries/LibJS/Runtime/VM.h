@@ -168,6 +168,9 @@ public:
 
     StackInfo const& stack_info() const { return m_stack_info; };
 
+    HashMap<DeprecatedString, NonnullGCPtr<Symbol>> const& global_symbol_registry() const { return m_global_symbol_registry; }
+    HashMap<DeprecatedString, NonnullGCPtr<Symbol>>& global_symbol_registry() { return m_global_symbol_registry; }
+
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
 
