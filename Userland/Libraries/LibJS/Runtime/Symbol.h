@@ -14,8 +14,6 @@ namespace JS {
 
 class Symbol final : public Cell {
     JS_CELL(Symbol, Cell);
-    AK_MAKE_NONCOPYABLE(Symbol);
-    AK_MAKE_NONMOVABLE(Symbol);
 
 public:
     virtual ~Symbol() = default;
