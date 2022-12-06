@@ -46,8 +46,8 @@ protected:
     virtual StringView tool_name() const override { return "Brush Tool"sv; }
 
     virtual Color color_for(GUI::MouseEvent const& event);
-    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point);
-    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end);
+    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& point);
+    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& start, Gfx::IntPoint const& end);
     virtual NonnullRefPtr<Gfx::Bitmap> build_cursor();
     void refresh_editor_cursor();
     float m_scale_last_created_cursor = 0;

@@ -23,13 +23,13 @@ PenTool::PenTool()
     set_size(1);
 }
 
-void PenTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
+void PenTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& point)
 {
     GUI::Painter painter(bitmap);
     painter.draw_line(point, point, color, size());
 }
 
-void PenTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end)
+void PenTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& start, Gfx::IntPoint const& end)
 {
     GUI::Painter painter(bitmap);
     painter.draw_line(start, end, color, size());

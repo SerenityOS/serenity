@@ -32,7 +32,7 @@ void CardStack::clear()
     m_stack_positions.clear();
 }
 
-void CardStack::paint(GUI::Painter& painter, Gfx::Color const& background_color)
+void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
 {
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;

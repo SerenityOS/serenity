@@ -2277,7 +2277,7 @@ void WindowManager::set_cursor_highlight_radius(int radius)
     sync_config_to_disk();
 }
 
-void WindowManager::set_cursor_highlight_color(Gfx::Color const& color)
+void WindowManager::set_cursor_highlight_color(Gfx::Color color)
 {
     m_cursor_highlight_color = color;
     Compositor::the().invalidate_cursor();

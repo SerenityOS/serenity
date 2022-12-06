@@ -316,7 +316,7 @@ Optional<Color> Color::from_string(StringView string)
     return Color(r.value(), g.value(), b.value(), a.value());
 }
 
-Color Color::mixed_with(Color const& other, float weight) const
+Color Color::mixed_with(Color other, float weight) const
 {
     if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0)) {
         return Gfx::Color {
@@ -382,7 +382,7 @@ ErrorOr<void> IPC::decode(Decoder& decoder, Color& color)
     return {};
 }
 
-ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color const& value)
+ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color value)
 {
     return Formatter<StringView>::format(builder, value.to_deprecated_string());
 }

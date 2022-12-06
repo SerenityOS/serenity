@@ -32,7 +32,7 @@ void Card::paint(GUI::Painter& painter) const
     painter.blit(position(), bitmap, bitmap->rect());
 }
 
-void Card::clear(GUI::Painter& painter, Color const& background_color) const
+void Card::clear(GUI::Painter& painter, Color background_color) const
 {
     painter.fill_rect({ old_position(), { width, height } }, background_color);
 }
@@ -43,7 +43,7 @@ void Card::save_old_position()
     m_old_position_valid = true;
 }
 
-void Card::clear_and_paint(GUI::Painter& painter, Color const& background_color)
+void Card::clear_and_paint(GUI::Painter& painter, Color background_color)
 {
     if (is_old_position_valid())
         clear(painter, background_color);

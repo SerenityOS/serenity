@@ -16,7 +16,7 @@
 
 namespace PixelPaint {
 
-void CloneTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const&, Gfx::IntPoint const& point)
+void CloneTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color, Gfx::IntPoint const& point)
 {
     if (!m_sample_location.has_value())
         return;
@@ -45,7 +45,7 @@ void CloneTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const&, Gfx::IntPoint
     }
 }
 
-void CloneTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end)
+void CloneTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& start, Gfx::IntPoint const& end)
 {
     if (!m_sample_location.has_value())
         return;

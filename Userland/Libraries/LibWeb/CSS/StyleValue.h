@@ -1642,13 +1642,13 @@ private:
 class ShadowStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<ShadowStyleValue>
-    create(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+    create(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
     {
         return adopt_ref(*new ShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
     }
     virtual ~ShadowStyleValue() override = default;
 
-    Color const& color() const { return m_color; }
+    Color color() const { return m_color; }
     Length const& offset_x() const { return m_offset_x; }
     Length const& offset_y() const { return m_offset_y; }
     Length const& blur_radius() const { return m_blur_radius; }
@@ -1659,7 +1659,7 @@ public:
     virtual bool equals(StyleValue const& other) const override;
 
 private:
-    explicit ShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+    explicit ShadowStyleValue(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
         : StyleValue(Type::Shadow)
         , m_color(color)
         , m_offset_x(offset_x)

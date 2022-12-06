@@ -19,7 +19,7 @@ public:
     virtual ~CardGame() = default;
 
     Gfx::Color background_color() const;
-    void set_background_color(Gfx::Color const&);
+    void set_background_color(Gfx::Color);
 
     NonnullRefPtrVector<CardStack>& stacks() { return m_stacks; }
     NonnullRefPtrVector<CardStack> const& stacks() const { return m_stacks; }

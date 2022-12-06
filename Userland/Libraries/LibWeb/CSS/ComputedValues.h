@@ -327,13 +327,13 @@ public:
     void set_font_size(float font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }
-    void set_color(Color const& color) { m_inherited.color = color; }
+    void set_color(Color color) { m_inherited.color = color; }
     void set_clip(CSS::Clip const& clip) { m_noninherited.clip = clip; }
     void set_content(ContentData const& content) { m_noninherited.content = content; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
-    void set_background_color(Color const& color) { m_noninherited.background_color = color; }
+    void set_background_color(Color color) { m_noninherited.background_color = color; }
     void set_background_layers(Vector<BackgroundLayerData>&& layers) { m_noninherited.background_layers = move(layers); }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }

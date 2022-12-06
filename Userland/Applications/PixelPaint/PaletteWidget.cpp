@@ -77,7 +77,7 @@ public:
             on_color_change(dialog->color());
     }
 
-    void set_background_color(Color const& color)
+    void set_background_color(Color color)
     {
         auto pal = palette();
         pal.set_color(ColorRole::Background, color);
@@ -86,7 +86,7 @@ public:
         m_color = color;
     }
 
-    Function<void(Color const&)> on_color_change;
+    Function<void(Color)> on_color_change;
     Color m_color = Color::White;
 
 private:
@@ -103,14 +103,14 @@ PaletteWidget::PaletteWidget()
     set_fixed_height(35);
 
     m_secondary_color_widget = add<SelectedColorWidget>();
-    m_secondary_color_widget->on_color_change = [&](auto& color) {
+    m_secondary_color_widget->on_color_change = [&](auto color) {
         set_secondary_color(color);
     };
     m_secondary_color_widget->set_relative_rect({ 0, 2, 60, 33 });
     m_secondary_color_widget->set_fill_with_background_color(true);
 
     m_primary_color_widget = add<SelectedColorWidget>();
-    m_primary_color_widget->on_color_change = [&](auto& color) {
+    m_primary_color_widget->on_color_change = [&](auto color) {
         set_primary_color(color);
     };
     auto rect = Gfx::IntRect(0, 0, 35, 17).centered_within(m_secondary_color_widget->relative_rect());

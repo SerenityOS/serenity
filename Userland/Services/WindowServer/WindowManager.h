@@ -320,7 +320,7 @@ public:
     void apply_cursor_theme(DeprecatedString const& name);
 
     void set_cursor_highlight_radius(int radius);
-    void set_cursor_highlight_color(Gfx::Color const& color);
+    void set_cursor_highlight_color(Gfx::Color color);
 
     bool is_cursor_highlight_enabled() const { return m_cursor_highlight_radius > 0 && m_cursor_highlight_enabled; }
 
