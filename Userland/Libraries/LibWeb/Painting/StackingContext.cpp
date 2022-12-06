@@ -439,7 +439,7 @@ static TraversalDecision for_each_in_subtree_of_type_within_same_stacking_contex
     return TraversalDecision::Continue;
 }
 
-Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
+Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitTestType type) const
 {
     if (!m_box.is_visible())
         return {};

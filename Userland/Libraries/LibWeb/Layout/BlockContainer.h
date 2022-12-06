@@ -26,8 +26,8 @@ public:
     BlockContainer const* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
 
     bool is_scrollable() const;
-    Gfx::FloatPoint const& scroll_offset() const { return m_scroll_offset; }
-    void set_scroll_offset(Gfx::FloatPoint const&);
+    Gfx::FloatPoint scroll_offset() const { return m_scroll_offset; }
+    void set_scroll_offset(Gfx::FloatPoint);
 
     Painting::PaintableWithLines const* paint_box() const;
 
