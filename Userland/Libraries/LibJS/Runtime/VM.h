@@ -264,7 +264,8 @@ private:
 
     StackInfo m_stack_info;
 
-    HashMap<DeprecatedString, Symbol*> m_global_symbol_map;
+    // GlobalSymbolRegistry, https://tc39.es/ecma262/#table-globalsymbolregistry-record-fields
+    HashMap<DeprecatedString, Symbol*> m_global_symbol_registry;
 
     Vector<Function<ThrowCompletionOr<Value>()>> m_promise_jobs;
 
