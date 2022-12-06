@@ -182,8 +182,6 @@ public:
         return throw_completion<T>(DeprecatedString::formatted(type.message(), forward<Args>(args)...));
     }
 
-    Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedVector<Value>> arguments);
-
     Value get_new_target();
 
     Object& get_global_object();
