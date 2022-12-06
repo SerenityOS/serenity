@@ -45,6 +45,9 @@ concept OneOfIgnoringCV = IsOneOfIgnoringCV<U, Ts...>;
 template<typename T, template<typename...> typename S>
 concept SpecializationOf = IsSpecializationOf<T, S>;
 
+template<typename T, typename S>
+concept DerivedFrom = IsBaseOf<S, T>;
+
 template<typename T>
 concept AnyString = IsConstructible<StringView, T>;
 
@@ -136,6 +139,7 @@ namespace AK {
 #endif
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
+using AK::Concepts::DerivedFrom;
 using AK::Concepts::Enum;
 using AK::Concepts::FallibleFunction;
 using AK::Concepts::FloatingPoint;
