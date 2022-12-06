@@ -374,7 +374,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
-            auto pseudo_element_style = page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
+            auto pseudo_element_style = MUST(page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element));
             DeprecatedString computed_values = serialize_json(pseudo_element_style);
             DeprecatedString resolved_values = "{}";
             DeprecatedString custom_properties_json = "{}";

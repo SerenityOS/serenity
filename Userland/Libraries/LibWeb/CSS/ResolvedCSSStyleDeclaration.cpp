@@ -7,6 +7,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -531,7 +532,13 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
     }
 
     if (!m_element->layout_node()) {
-        auto style = m_element->document().style_computer().compute_style(const_cast<DOM::Element&>(*m_element));
+        auto style_or_error = m_element->document().style_computer().compute_style(const_cast<DOM::Element&>(*m_element));
+        if (style_or_error.is_error()) {
+            dbgln("ResolvedCSSStyleDeclaration::property style computer failed");
+            return {};
+        }
+        auto style = style_or_error.release_value();
+
         // FIXME: This is a stopgap until we implement shorthand -> longhand conversion.
         auto value = style->maybe_null_property(property_id);
         if (!value) {
