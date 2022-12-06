@@ -89,6 +89,8 @@
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringIteratorPrototype.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/SuppressedErrorConstructor.h>
+#include <LibJS/Runtime/SuppressedErrorPrototype.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/SymbolPrototype.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>

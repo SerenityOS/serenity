@@ -193,6 +193,9 @@ set(SOURCES
     Runtime/StringIteratorPrototype.cpp
     Runtime/StringObject.cpp
     Runtime/StringPrototype.cpp
+    Runtime/SuppressedError.cpp
+    Runtime/SuppressedErrorConstructor.cpp
+    Runtime/SuppressedErrorPrototype.cpp
     Runtime/Symbol.cpp
     Runtime/SymbolConstructor.cpp
     Runtime/SymbolObject.cpp
