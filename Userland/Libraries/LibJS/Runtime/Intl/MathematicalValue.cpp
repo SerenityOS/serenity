@@ -308,7 +308,7 @@ Value MathematicalValue::to_value(VM& vm) const
             return Value(value);
         },
         [&](Crypto::SignedBigInteger const& value) {
-            return Value(js_bigint(vm, value));
+            return Value(BigInt::create(vm, value));
         },
         [](auto symbol) {
             switch (symbol) {

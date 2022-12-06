@@ -169,7 +169,8 @@ JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 
 ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = js_bigint(interpreter.vm().heap(), m_bigint);
+    auto& vm = interpreter.vm();
+    interpreter.accumulator() = BigInt::create(vm, m_bigint);
     return {};
 }
 
@@ -706,7 +707,7 @@ ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpret
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() + 1);
     else
-        interpreter.accumulator() = js_bigint(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+        interpreter.accumulator() = BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
     return {};
 }
 
@@ -718,7 +719,7 @@ ThrowCompletionOr<void> Decrement::execute_impl(Bytecode::Interpreter& interpret
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() - 1);
     else
-        interpreter.accumulator() = js_bigint(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+        interpreter.accumulator() = BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
     return {};
 }
 

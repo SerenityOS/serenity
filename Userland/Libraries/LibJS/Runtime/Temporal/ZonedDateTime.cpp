@@ -69,7 +69,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
         // d. Return epochNanoseconds.
-        return js_bigint(vm, move(epoch_nanoseconds));
+        return BigInt::create(vm, move(epoch_nanoseconds)).ptr();
     }
 
     // 5. Assert: offsetBehaviour is option.
@@ -471,7 +471,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
     auto& start_ns = relative_to.nanoseconds().big_integer();
 
     // 6. Let startInstant be ! CreateTemporalInstant(ℤ(startNs)).
-    auto* start_instant = MUST(create_temporal_instant(vm, *js_bigint(vm, start_ns)));
+    auto* start_instant = MUST(create_temporal_instant(vm, BigInt::create(vm, start_ns)));
 
     // 7. Let startDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], startInstant, relativeTo.[[Calendar]]).
     auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &relative_to.time_zone(), *start_instant, relative_to.calendar()));
@@ -479,14 +479,14 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
     // 8. Let endNs be startNs + nanoseconds.
     auto end_ns = start_ns.plus(nanoseconds);
 
-    auto* end_ns_bigint = js_bigint(vm, end_ns);
+    auto end_ns_bigint = BigInt::create(vm, end_ns);
 
     // 9. If ! IsValidEpochNanoseconds(ℤ(endNs)) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*end_ns_bigint))
+    if (!is_valid_epoch_nanoseconds(end_ns_bigint))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 10. Let endInstant be ! CreateTemporalInstant(ℤ(endNs)).
-    auto* end_instant = MUST(create_temporal_instant(vm, *end_ns_bigint));
+    auto* end_instant = MUST(create_temporal_instant(vm, end_ns_bigint));
 
     // 11. Let endDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], endInstant, relativeTo.[[Calendar]]).
     auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &relative_to.time_zone(), *end_instant, relative_to.calendar()));
@@ -498,7 +498,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
     auto days = date_difference.days;
 
     // 14. Let intermediateNs be ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
-    auto intermediate_ns = TRY(add_zoned_date_time(vm, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
+    auto intermediate_ns = TRY(add_zoned_date_time(vm, BigInt::create(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
 
     // 15. If sign is 1, then
     if (sign == 1) {
@@ -508,7 +508,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
             days--;
 
             // ii. Set intermediateNs to ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
-            intermediate_ns = TRY(add_zoned_date_time(vm, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
+            intermediate_ns = TRY(add_zoned_date_time(vm, BigInt::create(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
         }
     }
 
@@ -519,7 +519,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
     // 18. Repeat, while done is false,
     while (true) {
         // a. Let oneDayFartherNs be ℝ(? AddZonedDateTime(ℤ(intermediateNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, sign, 0, 0, 0, 0, 0, 0)).
-        auto one_day_farther_ns = TRY(add_zoned_date_time(vm, *js_bigint(vm, intermediate_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, sign, 0, 0, 0, 0, 0, 0))->big_integer();
+        auto one_day_farther_ns = TRY(add_zoned_date_time(vm, BigInt::create(vm, intermediate_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, sign, 0, 0, 0, 0, 0, 0))->big_integer();
 
         // b. Set dayLengthNs to oneDayFartherNs - intermediateNs.
         day_length_ns = one_day_farther_ns.minus(intermediate_ns);

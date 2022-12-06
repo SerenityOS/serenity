@@ -16,6 +16,8 @@ class BigInt final : public Cell {
     JS_CELL(BigInt, Cell);
 
 public:
+    [[nodiscard]] static NonnullGCPtr<BigInt> create(VM&, Crypto::SignedBigInteger);
+
     virtual ~BigInt() override = default;
 
     Crypto::SignedBigInteger const& big_integer() const { return m_big_integer; }
@@ -27,8 +29,6 @@ private:
     Crypto::SignedBigInteger m_big_integer;
 };
 
-BigInt* js_bigint(Heap&, Crypto::SignedBigInteger);
-BigInt* js_bigint(VM&, Crypto::SignedBigInteger);
 ThrowCompletionOr<BigInt*> number_to_bigint(VM&, Value);
 
 }

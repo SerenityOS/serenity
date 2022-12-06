@@ -111,10 +111,10 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
     if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
         if constexpr (IsSigned<UnderlyingBufferDataType>) {
             static_assert(IsSame<UnderlyingBufferDataType, i64>);
-            return js_bigint(vm, Crypto::SignedBigInteger { int_value });
+            return BigInt::create(vm, Crypto::SignedBigInteger { int_value });
         } else {
             static_assert(IsOneOf<UnderlyingBufferDataType, u64, double>);
-            return js_bigint(vm, Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { int_value } });
+            return BigInt::create(vm, Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { int_value } });
         }
     } else {
         return Value(int_value);

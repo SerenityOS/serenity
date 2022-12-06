@@ -99,7 +99,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
 ISODateTime get_iso_parts_from_epoch(VM& vm, Crypto::SignedBigInteger const& epoch_nanoseconds)
 {
     // 1. Assert: ! IsValidEpochNanoseconds(ℤ(epochNanoseconds)) is true.
-    VERIFY(is_valid_epoch_nanoseconds(*js_bigint(vm, epoch_nanoseconds)));
+    VERIFY(is_valid_epoch_nanoseconds(BigInt::create(vm, epoch_nanoseconds)));
 
     // 2. Let remainderNs be epochNanoseconds modulo 10^6.
     auto remainder_ns_bigint = modulo(epoch_nanoseconds, Crypto::UnsignedBigInteger { 1'000'000 });
@@ -480,24 +480,24 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<
     auto epoch_nanoseconds = get_utc_epoch_nanoseconds(date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
 
     // 8. Let dayBeforeNs be epochNanoseconds - ℤ(nsPerDay).
-    auto* day_before_ns = js_bigint(vm, epoch_nanoseconds.minus(ns_per_day_bigint));
+    auto day_before_ns = BigInt::create(vm, epoch_nanoseconds.minus(ns_per_day_bigint));
 
     // 9. If ! IsValidEpochNanoseconds(dayBeforeNs) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*day_before_ns))
+    if (!is_valid_epoch_nanoseconds(day_before_ns))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 10. Let dayBefore be ! CreateTemporalInstant(dayBeforeNs).
-    auto* day_before = MUST(create_temporal_instant(vm, *day_before_ns));
+    auto* day_before = MUST(create_temporal_instant(vm, day_before_ns));
 
     // 11. Let dayAfterNs be epochNanoseconds + ℤ(nsPerDay).
-    auto* day_after_ns = js_bigint(vm, epoch_nanoseconds.plus(ns_per_day_bigint));
+    auto day_after_ns = BigInt::create(vm, epoch_nanoseconds.plus(ns_per_day_bigint));
 
     // 12. If ! IsValidEpochNanoseconds(dayAfterNs) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*day_after_ns))
+    if (!is_valid_epoch_nanoseconds(day_after_ns))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 13. Let dayAfter be ! CreateTemporalInstant(dayAfterNs).
-    auto* day_after = MUST(create_temporal_instant(vm, *day_after_ns));
+    auto* day_after = MUST(create_temporal_instant(vm, day_after_ns));
 
     // 14. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
     auto offset_before = TRY(get_offset_nanoseconds_for(vm, time_zone, *day_before));

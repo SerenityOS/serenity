@@ -164,8 +164,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
         // b. Let instant be ! CreateTemporalInstant(epochNanoseconds).
-        auto* epoch_nanoseconds_bigint = js_bigint(vm, move(epoch_nanoseconds));
-        auto* instant = MUST(create_temporal_instant(vm, *epoch_nanoseconds_bigint));
+        auto epoch_nanoseconds_bigint = BigInt::create(vm, move(epoch_nanoseconds));
+        auto* instant = MUST(create_temporal_instant(vm, epoch_nanoseconds_bigint));
 
         // c. Append instant to possibleInstants.
         possible_instants.append(instant);

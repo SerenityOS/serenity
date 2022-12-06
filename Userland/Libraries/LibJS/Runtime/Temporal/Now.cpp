@@ -170,7 +170,7 @@ BigInt* system_utc_epoch_nanoseconds(VM& vm)
     //       if an overflow occurs during seconds -> nanoseconds conversion.
 
     // 3. Return ℤ(ns).
-    return js_bigint(vm, move(ns));
+    return BigInt::create(vm, move(ns));
 }
 
 // 2.3.3 SystemInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal-systeminstant

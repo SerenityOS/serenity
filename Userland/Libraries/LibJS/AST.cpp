@@ -2817,7 +2817,7 @@ Completion UpdateExpression::execute(Interpreter& interpreter) const
         else {
             // a. Assert: Type(oldValue) is BigInt.
             // b. Let newValue be BigInt::add(oldValue, 1ℤ).
-            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+            new_value = BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
         }
         break;
     case UpdateOp::Decrement:
@@ -2830,7 +2830,7 @@ Completion UpdateExpression::execute(Interpreter& interpreter) const
         else {
             // a. Assert: Type(oldValue) is BigInt.
             // b. Let newValue be BigInt::subtract(oldValue, 1ℤ).
-            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+            new_value = BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
         }
         break;
     default:
@@ -3483,19 +3483,20 @@ Completion NumericLiteral::execute(Interpreter& interpreter) const
 Completion BigIntLiteral::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& vm = interpreter.vm();
 
     // 1. Return the NumericValue of NumericLiteral as defined in 12.8.3.
     Crypto::SignedBigInteger integer;
     if (m_value[0] == '0' && m_value.length() >= 3) {
         if (m_value[1] == 'x' || m_value[1] == 'X') {
-            return Value { js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(16, m_value.substring(2, m_value.length() - 3))) };
+            return Value { BigInt::create(vm, Crypto::SignedBigInteger::from_base(16, m_value.substring(2, m_value.length() - 3))) };
         } else if (m_value[1] == 'o' || m_value[1] == 'O') {
-            return Value { js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(8, m_value.substring(2, m_value.length() - 3))) };
+            return Value { BigInt::create(vm, Crypto::SignedBigInteger::from_base(8, m_value.substring(2, m_value.length() - 3))) };
         } else if (m_value[1] == 'b' || m_value[1] == 'B') {
-            return Value { js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3))) };
+            return Value { BigInt::create(vm, Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3))) };
         }
     }
-    return Value { js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1))) };
+    return Value { BigInt::create(vm, Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1))) };
 }
 
 // 13.2.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation

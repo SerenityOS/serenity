@@ -143,7 +143,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, DeprecatedString const
     }
 
     // 9. Return result.
-    return js_bigint(vm, move(result_ns));
+    return BigInt::create(vm, move(result_ns)).ptr();
 }
 
 // 8.5.5 CompareEpochNanoseconds ( epochNanosecondsOne, epochNanosecondsTwo ), https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds
@@ -167,7 +167,7 @@ ThrowCompletionOr<BigInt*> add_instant(VM& vm, BigInt const& epoch_nanoseconds, 
     VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
 
     // 1. Let result be epochNanoseconds + ℤ(nanoseconds) + ℤ(microseconds) × 1000ℤ + ℤ(milliseconds) × 10^6ℤ + ℤ(seconds) × 10^9ℤ + ℤ(minutes) × 60ℤ × 10^9ℤ + ℤ(hours) × 3600ℤ × 10^9ℤ.
-    auto* result = js_bigint(vm,
+    auto result = BigInt::create(vm,
         epoch_nanoseconds.big_integer()
             .plus(Crypto::SignedBigInteger { nanoseconds })
             .plus(Crypto::SignedBigInteger { microseconds }.multiplied_by(Crypto::SignedBigInteger { 1'000 }))
@@ -181,7 +181,7 @@ ThrowCompletionOr<BigInt*> add_instant(VM& vm, BigInt const& epoch_nanoseconds, 
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 3. Return result.
-    return result;
+    return result.ptr();
 }
 
 // 8.5.7 DifferenceInstant ( ns1, ns2, roundingIncrement, smallestUnit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant
@@ -191,7 +191,7 @@ BigInt* difference_instant(VM& vm, BigInt const& nanoseconds1, BigInt const& nan
     // 2. Assert: Type(ns2) is BigInt.
 
     // 3. Return ! RoundTemporalInstant(ns2 - ns1, roundingIncrement, smallestUnit, roundingMode).
-    return round_temporal_instant(vm, *js_bigint(vm, nanoseconds2.big_integer().minus(nanoseconds1.big_integer())), rounding_increment, smallest_unit, rounding_mode);
+    return round_temporal_instant(vm, BigInt::create(vm, nanoseconds2.big_integer().minus(nanoseconds1.big_integer())), rounding_increment, smallest_unit, rounding_mode);
 }
 
 // 8.5.8 RoundTemporalInstant ( ns, increment, unit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant
@@ -235,7 +235,7 @@ BigInt* round_temporal_instant(VM& vm, BigInt const& nanoseconds, u64 increment,
     }
 
     // 8. Return RoundNumberToIncrementAsIfPositive(ℝ(ns), incrementNs, roundingMode).
-    return js_bigint(vm, round_number_to_increment_as_if_positive(nanoseconds.big_integer(), increment_nanoseconds, rounding_mode));
+    return BigInt::create(vm, round_number_to_increment_as_if_positive(nanoseconds.big_integer(), increment_nanoseconds, rounding_mode));
 }
 
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring

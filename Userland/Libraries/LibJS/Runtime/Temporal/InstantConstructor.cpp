@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
     // 1. If Type(item) is Object and item has an [[InitializedTemporalInstant]] internal slot, then
     if (item.is_object() && is<Instant>(item.as_object())) {
         // a. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
-        return MUST(create_temporal_instant(vm, *js_bigint(vm, static_cast<Instant&>(item.as_object()).nanoseconds().big_integer())));
+        return MUST(create_temporal_instant(vm, BigInt::create(vm, static_cast<Instant&>(item.as_object()).nanoseconds().big_integer())));
     }
 
     // 2. Return ? ToTemporalInstant(item).
@@ -89,14 +89,14 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
     auto* epoch_seconds = TRY(number_to_bigint(vm, epoch_seconds_value));
 
     // 3. Let epochNanoseconds be epochSeconds × 10^9ℤ.
-    auto* epoch_nanoseconds = js_bigint(vm, epoch_seconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000'000 }));
+    auto epoch_nanoseconds = BigInt::create(vm, epoch_seconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000'000 }));
 
     // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+    if (!is_valid_epoch_nanoseconds(epoch_nanoseconds))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
-    return MUST(create_temporal_instant(vm, *epoch_nanoseconds));
+    return MUST(create_temporal_instant(vm, epoch_nanoseconds));
 }
 
 // 8.2.4 Temporal.Instant.fromEpochMilliseconds ( epochMilliseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds
@@ -109,14 +109,14 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
     auto* epoch_milliseconds = TRY(number_to_bigint(vm, epoch_milliseconds_value));
 
     // 3. Let epochNanoseconds be epochMilliseconds × 10^6ℤ.
-    auto* epoch_nanoseconds = js_bigint(vm, epoch_milliseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
+    auto epoch_nanoseconds = BigInt::create(vm, epoch_milliseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
 
     // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+    if (!is_valid_epoch_nanoseconds(epoch_nanoseconds))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
-    return MUST(create_temporal_instant(vm, *epoch_nanoseconds));
+    return MUST(create_temporal_instant(vm, epoch_nanoseconds));
 }
 
 // 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmicroseconds
@@ -126,14 +126,14 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
     auto* epoch_microseconds = TRY(vm.argument(0).to_bigint(vm));
 
     // 2. Let epochNanoseconds be epochMicroseconds × 1000ℤ.
-    auto* epoch_nanoseconds = js_bigint(vm, epoch_microseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000 }));
+    auto epoch_nanoseconds = BigInt::create(vm, epoch_microseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000 }));
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+    if (!is_valid_epoch_nanoseconds(epoch_nanoseconds))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Return ! CreateTemporalInstant(epochNanoseconds).
-    return MUST(create_temporal_instant(vm, *epoch_nanoseconds));
+    return MUST(create_temporal_instant(vm, epoch_nanoseconds));
 }
 
 // 8.2.6 Temporal.Instant.fromEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds
