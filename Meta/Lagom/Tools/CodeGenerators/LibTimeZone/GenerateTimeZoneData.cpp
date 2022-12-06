@@ -7,6 +7,7 @@
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/DateConstants.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
@@ -607,9 +608,9 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
     }
     generator.append("} };\n");
 
-    auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
+    auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) -> ErrorOr<void> {
         HashValueMap<DeprecatedString> hashes;
-        hashes.ensure_capacity(values.size());
+        TRY(hashes.try_ensure_capacity(values.size()));
 
         auto hash = [](auto const& value) {
             return CaseInsensitiveStringViewTraits::hash(value);
@@ -625,11 +626,13 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes), options);
         generate_value_to_string(generator, "{}_to_string"sv, enum_title, enum_snake, format_identifier, values);
+
+        return {};
     };
 
-    append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
-    append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
-    append_string_conversions("Region"sv, "region"sv, time_zone_data.time_zone_region_names);
+    TRY(append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases));
+    TRY(append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names));
+    TRY(append_string_conversions("Region"sv, "region"sv, time_zone_data.time_zone_region_names));
 
     generator.append(R"~~~(
 static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Time time)

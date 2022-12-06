@@ -8,6 +8,7 @@
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
@@ -1438,9 +1439,9 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 )~~~");
     };
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) -> ErrorOr<void> {
         HashValueMap<DeprecatedString> hashes;
-        hashes.ensure_capacity(values.size());
+        TRY(hashes.try_ensure_capacity(values.size()));
 
         for (auto const& value : values)
             hashes.set(value.hash(), format_identifier(enum_title, value));
@@ -1448,11 +1449,13 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
             hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+
+        return {};
     };
 
-    auto append_alias_search = [&](StringView enum_snake, auto const& aliases) {
+    auto append_alias_search = [&](StringView enum_snake, auto const& aliases) -> ErrorOr<void> {
         HashValueMap<size_t> hashes;
-        hashes.ensure_capacity(aliases.size());
+        TRY(hashes.try_ensure_capacity(aliases.size()));
 
         for (auto const& alias : aliases)
             hashes.set(alias.key.hash(), alias.value);
@@ -1462,34 +1465,36 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         options.return_format = "decode_string({})"sv;
 
         generate_value_from_string(generator, "resolve_{}_alias"sv, string_index_type, enum_snake, move(hashes), options);
+
+        return {};
     };
 
-    append_from_string("Locale"sv, "locale"sv, cldr.locales.keys(), cldr.locale_aliases);
+    TRY(append_from_string("Locale"sv, "locale"sv, cldr.locales.keys(), cldr.locale_aliases));
 
-    append_from_string("Language"sv, "language"sv, cldr.languages);
+    TRY(append_from_string("Language"sv, "language"sv, cldr.languages));
     append_mapping_search("language"sv, "language"sv, "s_languages"sv, "s_language_lists"sv);
-    append_alias_search("language"sv, cldr.language_aliases);
+    TRY(append_alias_search("language"sv, cldr.language_aliases));
 
-    append_from_string("Territory"sv, "territory"sv, cldr.territories);
+    TRY(append_from_string("Territory"sv, "territory"sv, cldr.territories));
     append_mapping_search("territory"sv, "territory"sv, "s_territories"sv, "s_territory_lists"sv);
-    append_alias_search("territory"sv, cldr.territory_aliases);
+    TRY(append_alias_search("territory"sv, cldr.territory_aliases));
 
-    append_from_string("ScriptTag"sv, "script_tag"sv, cldr.scripts);
+    TRY(append_from_string("ScriptTag"sv, "script_tag"sv, cldr.scripts));
     append_mapping_search("script"sv, "script_tag"sv, "s_scripts"sv, "s_script_lists"sv);
-    append_alias_search("script_tag"sv, cldr.script_aliases);
+    TRY(append_alias_search("script_tag"sv, cldr.script_aliases));
 
-    append_from_string("Currency"sv, "currency"sv, cldr.currencies);
+    TRY(append_from_string("Currency"sv, "currency"sv, cldr.currencies));
     append_mapping_search("long_currency"sv, "currency"sv, "s_long_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("short_currency"sv, "currency"sv, "s_short_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv, "s_currency_lists"sv);
 
-    append_from_string("DateField"sv, "date_field"sv, cldr.date_fields, cldr.date_field_aliases);
+    TRY(append_from_string("DateField"sv, "date_field"sv, cldr.date_fields, cldr.date_field_aliases));
     append_mapping_search("long_date_field"sv, "date_field"sv, "s_long_date_fields"sv, "s_date_field_lists"sv);
     append_mapping_search("short_date_field"sv, "date_field"sv, "s_short_date_fields"sv, "s_date_field_lists"sv);
     append_mapping_search("narrow_date_field"sv, "date_field"sv, "s_narrow_date_fields"sv, "s_date_field_lists"sv);
 
-    append_from_string("Key"sv, "key"sv, cldr.keywords.keys());
+    TRY(append_from_string("Key"sv, "key"sv, cldr.keywords.keys()));
 
     for (auto const& keyword : cldr.keywords) {
         auto const& keyword_name = cldr.keyword_names.find(keyword.key)->value;
@@ -1497,19 +1502,19 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         auto enum_snake = DeprecatedString::formatted("keyword_{}", keyword.key);
 
         if (auto aliases = cldr.keyword_aliases.find(keyword.key); aliases != cldr.keyword_aliases.end())
-            append_from_string(enum_name, enum_snake, keyword.value, aliases->value);
+            TRY(append_from_string(enum_name, enum_snake, keyword.value, aliases->value));
         else
-            append_from_string(enum_name, enum_snake, keyword.value);
+            TRY(append_from_string(enum_name, enum_snake, keyword.value));
     }
 
     append_mapping_search("calendar"sv, "keyword_ca"sv, "s_calendars"sv, "s_calendar_lists"sv);
 
-    append_alias_search("variant"sv, cldr.variant_aliases);
-    append_alias_search("subdivision"sv, cldr.subdivision_aliases);
+    TRY(append_alias_search("variant"sv, cldr.variant_aliases));
+    TRY(append_alias_search("subdivision"sv, cldr.subdivision_aliases));
 
-    append_from_string("ListPatternType"sv, "list_pattern_type"sv, cldr.list_pattern_types);
+    TRY(append_from_string("ListPatternType"sv, "list_pattern_type"sv, cldr.list_pattern_types));
 
-    append_from_string("CharacterOrder"sv, "character_order"sv, cldr.character_orders);
+    TRY(append_from_string("CharacterOrder"sv, "character_order"sv, cldr.character_orders));
     generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, cldr.character_orders);
 
     generator.append(R"~~~(
