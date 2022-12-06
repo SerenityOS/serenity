@@ -386,7 +386,7 @@ extern "C" int initialize_repl(char const* time_zone)
     return 0;
 }
 
-extern "C" bool execute(char const* s, u32 length)
+extern "C" bool execute(char const* source)
 {
-    return parse_and_run(*g_interpreter, { s, length }, "REPL"sv);
+    return parse_and_run(*g_interpreter, { source, strlen(source) }, "REPL"sv);
 }
