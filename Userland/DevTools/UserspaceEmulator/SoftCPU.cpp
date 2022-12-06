@@ -117,6 +117,7 @@ SoftCPU::SoftCPU(Emulator& emulator)
     m_segment[(int)X86::SegmentRegister::DS] = 0x23;
     m_segment[(int)X86::SegmentRegister::ES] = 0x23;
     m_segment[(int)X86::SegmentRegister::SS] = 0x23;
+    m_segment[(int)X86::SegmentRegister::FS] = 0x23;
     m_segment[(int)X86::SegmentRegister::GS] = 0x2b;
 }
 
