@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
@@ -1190,9 +1191,9 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 )~~~");
     };
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& prop_list, Vector<Alias> const& aliases) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& prop_list, Vector<Alias> const& aliases) -> ErrorOr<void> {
         HashValueMap<StringView> hashes;
-        hashes.ensure_capacity(prop_list.size() + aliases.size());
+        TRY(hashes.try_ensure_capacity(prop_list.size() + aliases.size()));
 
         ValueFromStringOptions options {};
 
@@ -1209,22 +1210,24 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
             hashes.set(alias.alias.hash(), alias.alias);
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes), options);
+
+        return {};
     };
 
-    append_from_string("Locale"sv, "locale"sv, unicode_data.locales, {});
+    TRY(append_from_string("Locale"sv, "locale"sv, unicode_data.locales, {}));
 
     append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
-    append_from_string("GeneralCategory"sv, "general_category"sv, unicode_data.general_categories, unicode_data.general_category_aliases);
+    TRY(append_from_string("GeneralCategory"sv, "general_category"sv, unicode_data.general_categories, unicode_data.general_category_aliases));
 
     append_prop_search("Property"sv, "property"sv, "s_properties"sv);
-    append_from_string("Property"sv, "property"sv, unicode_data.prop_list, unicode_data.prop_aliases);
+    TRY(append_from_string("Property"sv, "property"sv, unicode_data.prop_list, unicode_data.prop_aliases));
 
     append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
     append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
-    append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases);
+    TRY(append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases));
 
     append_prop_search("Block"sv, "block"sv, "s_blocks"sv);
-    append_from_string("Block"sv, "block"sv, unicode_data.block_list, unicode_data.block_aliases);
+    TRY(append_from_string("Block"sv, "block"sv, unicode_data.block_list, unicode_data.block_aliases));
 
     append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv);
     append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv);

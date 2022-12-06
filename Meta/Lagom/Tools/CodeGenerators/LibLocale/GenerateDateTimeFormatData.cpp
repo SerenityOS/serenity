@@ -8,6 +8,7 @@
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
@@ -1991,9 +1992,9 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_mapping(cldr.weekend_end_regions, cldr.weekend_end, "u8"sv, "s_weekend_end"sv, [](auto weekend_end) { return to_underlying(weekend_end); });
     generator.append("\n");
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) -> ErrorOr<void> {
         HashValueMap<DeprecatedString> hashes;
-        hashes.ensure_capacity(values.size());
+        TRY(hashes.try_ensure_capacity(values.size()));
 
         for (auto const& value : values)
             hashes.set(value.hash(), format_identifier(enum_title, value));
@@ -2001,13 +2002,15 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+
+        return {};
     };
 
-    append_from_string("HourCycleRegion"sv, "hour_cycle_region"sv, cldr.hour_cycle_regions);
-    append_from_string("MinimumDaysRegion"sv, "minimum_days_region"sv, cldr.minimum_days_regions);
-    append_from_string("FirstDayRegion"sv, "first_day_region"sv, cldr.first_day_regions);
-    append_from_string("WeekendStartRegion"sv, "weekend_start_region"sv, cldr.weekend_start_regions);
-    append_from_string("WeekendEndRegion"sv, "weekend_end_region"sv, cldr.weekend_end_regions);
+    TRY(append_from_string("HourCycleRegion"sv, "hour_cycle_region"sv, cldr.hour_cycle_regions));
+    TRY(append_from_string("MinimumDaysRegion"sv, "minimum_days_region"sv, cldr.minimum_days_regions));
+    TRY(append_from_string("FirstDayRegion"sv, "first_day_region"sv, cldr.first_day_regions));
+    TRY(append_from_string("WeekendStartRegion"sv, "weekend_start_region"sv, cldr.weekend_start_regions));
+    TRY(append_from_string("WeekendEndRegion"sv, "weekend_end_region"sv, cldr.weekend_end_regions));
 
     generator.append(R"~~~(
 static Optional<Calendar> keyword_to_calendar(KeywordCalendar keyword)
