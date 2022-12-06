@@ -2153,8 +2153,24 @@ void SoftCPU::MOV_reg8_imm8(const X86::Instruction& insn)
     gpr8(insn.reg8()) = shadow_wrap_as_initialized(insn.imm8());
 }
 
-void SoftCPU::MOV_seg_RM16(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::write_segment_register(X86::SegmentRegister segment_register, ValueWithShadow<u16> value)
+{
+    // FIXME: Validate the segment selector and raise exception if necessary.
+    // FIXME: Complain if uninitialized data is moved into a segment register.
+    m_segment[to_underlying(segment_register)] = value.value();
+}
+
+void SoftCPU::MOV_seg_RM16(X86::Instruction const& insn)
+{
+    write_segment_register(insn.segment_register(), insn.modrm().read16(*this, insn));
+}
+
+void SoftCPU::MOV_seg_RM32(X86::Instruction const& insn)
+{
+    // NOTE: This instruction performs a 32-bit read but only the bottom 16 bits are used since segment registers are 16-bit.
+    auto value = insn.modrm().read32(*this, insn);
+    write_segment_register(insn.segment_register(), ValueWithShadow<u16>(value.value(), value.shadow_as_value()));
+}
 
 void SoftCPU::MUL_RM16(const X86::Instruction& insn)
 {
