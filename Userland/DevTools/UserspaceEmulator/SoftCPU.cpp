@@ -2083,7 +2083,10 @@ void SoftCPU::MOV_RM16_reg16(const X86::Instruction& insn)
     insn.modrm().write16(*this, insn, const_gpr16(insn.reg16()));
 }
 
-void SoftCPU::MOV_RM16_seg(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::MOV_RM16_seg(X86::Instruction const& insn)
+{
+    insn.modrm().write16(*this, insn, shadow_wrap_as_initialized(m_segment[to_underlying(insn.segment_register())]));
+}
 
 void SoftCPU::MOV_RM32_imm32(const X86::Instruction& insn)
 {
