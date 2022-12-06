@@ -26,7 +26,7 @@ public:
         update();
     }
 
-    void set_color(Gfx::Color const& color)
+    void set_color(Gfx::Color color)
     {
         m_color = color;
         update();

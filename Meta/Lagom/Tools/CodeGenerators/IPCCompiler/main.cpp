@@ -66,6 +66,17 @@ static bool is_primitive_type(DeprecatedString const& type)
     return type.is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "bool", "double", "float", "int", "unsigned", "unsigned int");
 }
 
+static bool is_simple_type(DeprecatedString const& type)
+{
+    // Small types that it makes sense just to pass by value.
+    return type.is_one_of("Gfx::Color");
+}
+
+static bool is_primitive_or_simple_type(DeprecatedString const& type)
+{
+    return is_primitive_type(type) || is_simple_type(type);
+}
+
 static DeprecatedString message_name(DeprecatedString const& endpoint, DeprecatedString const& message, bool is_response)
 {
     StringBuilder builder;
@@ -477,7 +488,7 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
             auto const& parameter = parameters[i];
             auto argument_generator = message_generator.fork();
             argument_generator.set("argument.name", parameter.name);
-            if (is_primitive_type(parameters[i].type))
+            if (is_primitive_or_simple_type(parameters[i].type))
                 argument_generator.append("@argument.name@");
             else
                 argument_generator.append("move(@argument.name@)");
@@ -734,7 +745,7 @@ public:
             auto make_argument_type = [](DeprecatedString const& type) {
                 StringBuilder builder;
 
-                bool const_ref = !is_primitive_type(type);
+                bool const_ref = !is_primitive_or_simple_type(type);
 
                 builder.append(type);
                 if (const_ref)

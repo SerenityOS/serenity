@@ -108,8 +108,8 @@ public:
     void save_old_position();
 
     void paint(GUI::Painter&) const;
-    void clear(GUI::Painter&, Color const& background_color) const;
-    void clear_and_paint(GUI::Painter& painter, Color const& background_color);
+    void clear(GUI::Painter&, Color background_color) const;
+    void clear_and_paint(GUI::Painter& painter, Color background_color);
 
 private:
     Card(Suit, Rank);

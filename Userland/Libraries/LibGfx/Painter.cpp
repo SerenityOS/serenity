@@ -1856,7 +1856,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Painter::get_region_bitmap(IntRect const& region,
     return m_target->cropped(bitmap_region, format);
 }
 
-ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
+ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color color)
 {
     // This always sets a single physical pixel, independent of scale().
     // This should only be called by routines that already handle scale.
@@ -1874,7 +1874,7 @@ ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color co
     }
 }
 
-ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, int width, Color const& color)
+ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, int width, Color color)
 {
     // This always draws a single physical scanline, independent of scale().
     // This should only be called by routines that already handle scale.

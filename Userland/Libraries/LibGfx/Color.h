@@ -236,9 +236,9 @@ public:
 #endif
     }
 
-    Color mixed_with(Color const& other, float weight) const;
+    Color mixed_with(Color other, float weight) const;
 
-    Color interpolate(Color const& other, float weight) const noexcept
+    Color interpolate(Color other, float weight) const noexcept
     {
         u8 r = red() + round_to<u8>(static_cast<float>(other.red() - red()) * weight);
         u8 g = green() + round_to<u8>(static_cast<float>(other.green() - green()) * weight);
@@ -247,7 +247,7 @@ public:
         return Color(r, g, b, a);
     }
 
-    constexpr Color multiply(Color const& other) const
+    constexpr Color multiply(Color other) const
     {
         return Color(
             red() * other.red() / 255,
@@ -256,7 +256,7 @@ public:
             alpha() * other.alpha() / 255);
     }
 
-    constexpr float distance_squared_to(Color const& other) const
+    constexpr float distance_squared_to(Color other) const
     {
         int delta_red = other.red() - red();
         int delta_green = other.green() - green();
@@ -271,7 +271,7 @@ public:
         return (red() * 0.2126f + green() * 0.7152f + blue() * 0.0722f);
     }
 
-    constexpr float contrast_ratio(Color const& other)
+    constexpr float contrast_ratio(Color other)
     {
         auto l1 = luminosity();
         auto l2 = other.luminosity();
@@ -340,14 +340,14 @@ public:
         return Color(~red(), ~green(), ~blue(), alpha());
     }
 
-    constexpr Color xored(Color const& other) const
+    constexpr Color xored(Color other) const
     {
         return Color(((other.m_value ^ m_value) & 0x00ffffff) | (m_value & 0xff000000));
     }
 
     constexpr ARGB32 value() const { return m_value; }
 
-    constexpr bool operator==(Color const& other) const
+    constexpr bool operator==(Color other) const
     {
         return m_value == other.m_value;
     }
@@ -566,7 +566,7 @@ namespace AK {
 
 template<>
 struct Formatter<Gfx::Color> : public Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder&, Gfx::Color const&);
+    ErrorOr<void> format(FormatBuilder&, Gfx::Color);
 };
 
 }

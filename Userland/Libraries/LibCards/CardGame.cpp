@@ -121,7 +121,7 @@ Gfx::Color CardGame::background_color() const
     return palette().color(background_role());
 }
 
-void CardGame::set_background_color(Gfx::Color const& color)
+void CardGame::set_background_color(Gfx::Color color)
 {
     auto new_palette = palette();
     new_palette.set_color(Gfx::ColorRole::Background, color);

@@ -20,8 +20,8 @@ public:
         m_states.append(State());
     }
 
-    Gfx::Color const& fill_color() const { return state().fill_color; }
-    Gfx::Color const& stroke_color() const { return state().stroke_color; }
+    Gfx::Color fill_color() const { return state().fill_color; }
+    Gfx::Color stroke_color() const { return state().stroke_color; }
     float stroke_width() const { return state().stroke_width; }
 
     void set_fill_color(Gfx::Color color) { state().fill_color = color; }

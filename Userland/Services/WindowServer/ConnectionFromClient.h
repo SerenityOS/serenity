@@ -154,7 +154,7 @@ private:
     virtual void apply_cursor_theme(DeprecatedString const&) override;
     virtual void set_cursor_highlight_radius(int radius) override;
     virtual Messages::WindowServer::GetCursorHighlightRadiusResponse get_cursor_highlight_radius() override;
-    virtual void set_cursor_highlight_color(Gfx::Color const& color) override;
+    virtual void set_cursor_highlight_color(Gfx::Color color) override;
     virtual Messages::WindowServer::GetCursorHighlightColorResponse get_cursor_highlight_color() override;
     virtual Messages::WindowServer::GetCursorThemeResponse get_cursor_theme() override;
     virtual Messages::WindowServer::SetSystemFontsResponse set_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
