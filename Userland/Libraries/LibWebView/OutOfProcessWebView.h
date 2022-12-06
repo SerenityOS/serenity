@@ -71,7 +71,7 @@ public:
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
 
-    void set_window_position(Gfx::IntPoint const&);
+    void set_window_position(Gfx::IntPoint);
     void set_window_size(Gfx::IntSize const&);
 
     void set_system_visibility_state(bool visible);
@@ -79,10 +79,10 @@ public:
     Gfx::ShareableBitmap take_screenshot() const;
     Gfx::ShareableBitmap take_document_screenshot();
 
-    Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
+    Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
-    Function<void(const AK::URL&, Gfx::IntPoint const& screen_position)> on_link_context_menu_request;
-    Function<void(const AK::URL&, Gfx::IntPoint const& screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
+    Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
+    Function<void(const AK::URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_middle_click;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void(DeprecatedString const&)> on_title_change;
@@ -106,7 +106,7 @@ public:
     Function<void(AK::URL const& url, Web::Cookie::Cookie const& cookie)> on_update_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
     Function<void()> on_restore_window;
-    Function<Gfx::IntPoint(Gfx::IntPoint const&)> on_reposition_window;
+    Function<Gfx::IntPoint(Gfx::IntPoint)> on_reposition_window;
     Function<Gfx::IntSize(Gfx::IntSize const&)> on_resize_window;
     Function<Gfx::IntRect()> on_maximize_window;
     Function<Gfx::IntRect()> on_minimize_window;
@@ -143,9 +143,9 @@ private:
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) override;
     virtual void notify_server_did_change_title(Badge<WebContentClient>, DeprecatedString const&) override;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) override;
-    virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const&) override;
+    virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) override;
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) override;
-    virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, DeprecatedString const&) override;
+    virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) override;
     virtual void notify_server_did_hover_link(Badge<WebContentClient>, const AK::URL&) override;
     virtual void notify_server_did_unhover_link(Badge<WebContentClient>) override;
@@ -156,9 +156,9 @@ private:
     virtual void notify_server_did_request_navigate_back(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_navigate_forward(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_refresh(Badge<WebContentClient>) override;
-    virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&) override;
-    virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, DeprecatedString const& target, unsigned modifiers) override;
-    virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const&) override;
+    virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint) override;
+    virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers) override;
+    virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const&) override;
     virtual void notify_server_did_request_alert(Badge<WebContentClient>, DeprecatedString const& message) override;
     virtual void notify_server_did_request_confirm(Badge<WebContentClient>, DeprecatedString const& message) override;
     virtual void notify_server_did_request_prompt(Badge<WebContentClient>, DeprecatedString const& message, DeprecatedString const& default_) override;
@@ -178,7 +178,7 @@ private:
     virtual void notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Cookie const& cookie) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
     virtual void notify_server_did_request_restore_window() override;
-    virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint const&) override;
+    virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) override;
     virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) override;
     virtual Gfx::IntRect notify_server_did_request_maximize_window() override;
     virtual Gfx::IntRect notify_server_did_request_minimize_window() override;

@@ -71,7 +71,7 @@ MailWidget::MailWidget()
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
     }));
 
-    m_web_view->on_link_context_menu_request = [this](auto& url, auto& screen_position) {
+    m_web_view->on_link_context_menu_request = [this](auto& url, auto screen_position) {
         m_link_context_menu_url = url;
         m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);
     };
@@ -89,7 +89,7 @@ MailWidget::MailWidget()
         m_web_view->on_link_click(m_image_context_menu_url, "", 0);
     }));
 
-    m_web_view->on_image_context_menu_request = [this](auto& image_url, auto& screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
+    m_web_view->on_image_context_menu_request = [this](auto& image_url, auto screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
         m_image_context_menu->popup(screen_position);

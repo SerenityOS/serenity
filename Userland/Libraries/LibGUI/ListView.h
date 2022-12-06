@@ -29,9 +29,9 @@ public:
 
     virtual void scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically) override;
 
-    Gfx::IntPoint adjusted_position(Gfx::IntPoint const&) const;
+    Gfx::IntPoint adjusted_position(Gfx::IntPoint) const;
 
-    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&) const override;
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint) const override;
     virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
 
     int model_column() const { return m_model_column; }

@@ -383,7 +383,7 @@ void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
         container()->layout_node()->set_needs_display();
 }
 
-void BrowsingContext::scroll_to(Gfx::IntPoint const& position)
+void BrowsingContext::scroll_to(Gfx::IntPoint position)
 {
     if (active_document())
         active_document()->force_layout();
@@ -437,7 +437,7 @@ Gfx::IntRect BrowsingContext::to_top_level_rect(Gfx::IntRect const& a_rect)
     return rect;
 }
 
-Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint const& a_position)
+Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint a_position)
 {
     auto position = a_position;
     for (auto ancestor = parent(); ancestor; ancestor = ancestor->parent()) {

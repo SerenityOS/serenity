@@ -92,7 +92,7 @@ public:
     }
 
     static Screen& closest_to_rect(Gfx::IntRect const&);
-    static Screen& closest_to_location(Gfx::IntPoint const&);
+    static Screen& closest_to_location(Gfx::IntPoint);
 
     static Screen* find_by_index(size_t index)
     {
@@ -109,7 +109,7 @@ public:
         return rects;
     }
 
-    static Screen* find_by_location(Gfx::IntPoint const& point)
+    static Screen* find_by_location(Gfx::IntPoint point)
     {
         for (auto& screen : s_screens) {
             if (screen.rect().contains(point))

@@ -55,11 +55,11 @@ private:
     virtual void load_html(DeprecatedString const&, URL const&) override;
     virtual void paint(Gfx::IntRect const&, i32) override;
     virtual void set_viewport_rect(Gfx::IntRect const&) override;
-    virtual void mouse_down(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
-    virtual void mouse_move(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
-    virtual void mouse_up(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
-    virtual void mouse_wheel(Gfx::IntPoint const&, unsigned, unsigned, unsigned, i32, i32) override;
-    virtual void doubleclick(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_down(Gfx::IntPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_move(Gfx::IntPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_up(Gfx::IntPoint, unsigned, unsigned, unsigned) override;
+    virtual void mouse_wheel(Gfx::IntPoint, unsigned, unsigned, unsigned, i32, i32) override;
+    virtual void doubleclick(Gfx::IntPoint, unsigned, unsigned, unsigned) override;
     virtual void key_down(i32, unsigned, u32) override;
     virtual void key_up(i32, unsigned, u32) override;
     virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
@@ -75,7 +75,7 @@ private:
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
-    virtual void set_window_position(Gfx::IntPoint const&) override;
+    virtual void set_window_position(Gfx::IntPoint) override;
     virtual void set_window_size(Gfx::IntSize const&) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
     virtual void set_system_visibility_state(bool visible) override;

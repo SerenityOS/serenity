@@ -69,7 +69,7 @@ static bool is_primitive_type(DeprecatedString const& type)
 static bool is_simple_type(DeprecatedString const& type)
 {
     // Small types that it makes sense just to pass by value.
-    return type.is_one_of("Gfx::Color");
+    return type.is_one_of("Gfx::Color", "Gfx::IntPoint");
 }
 
 static bool is_primitive_or_simple_type(DeprecatedString const& type)

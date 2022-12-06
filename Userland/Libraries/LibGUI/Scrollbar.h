@@ -82,10 +82,10 @@ private:
     void on_automatic_scrolling_timer_fired();
     void set_automatic_scrolling_active(bool, Component);
 
-    void scroll_to_position(Gfx::IntPoint const&);
-    void scroll_by_page(Gfx::IntPoint const&);
+    void scroll_to_position(Gfx::IntPoint);
+    void scroll_by_page(Gfx::IntPoint);
 
-    Component component_at_position(Gfx::IntPoint const&);
+    Component component_at_position(Gfx::IntPoint);
 
     void update_animated_scroll();
 

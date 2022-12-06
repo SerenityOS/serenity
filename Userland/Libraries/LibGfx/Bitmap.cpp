@@ -636,7 +636,7 @@ Optional<Color> Bitmap::solid_color(u8 alpha_threshold) const
     return color;
 }
 
-void Bitmap::flood_visit_from_point(Gfx::IntPoint const& start_point, int threshold,
+void Bitmap::flood_visit_from_point(Gfx::IntPoint start_point, int threshold,
     Function<void(Gfx::IntPoint location)> pixel_reached)
 {
 

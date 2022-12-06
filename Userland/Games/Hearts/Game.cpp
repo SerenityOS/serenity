@@ -222,7 +222,7 @@ void Game::setup(DeprecatedString player_name, int hand_number)
     continue_game_after_delay();
 }
 
-void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const& end, Function<void()> did_finish_callback, int initial_delay_ms, int steps)
+void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, Function<void()> did_finish_callback, int initial_delay_ms, int steps)
 {
     stop_animation();
 

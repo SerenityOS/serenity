@@ -318,7 +318,7 @@ void AbstractScrollableWidget::set_automatic_scrolling_timer(bool active)
     }
 }
 
-Gfx::IntPoint AbstractScrollableWidget::automatic_scroll_delta_from_position(Gfx::IntPoint const& pos) const
+Gfx::IntPoint AbstractScrollableWidget::automatic_scroll_delta_from_position(Gfx::IntPoint pos) const
 {
     Gfx::IntPoint delta { 0, 0 };
 
@@ -344,7 +344,7 @@ Gfx::IntRect AbstractScrollableWidget::widget_inner_rect() const
     return rect;
 }
 
-Gfx::IntPoint AbstractScrollableWidget::to_content_position(Gfx::IntPoint const& widget_position) const
+Gfx::IntPoint AbstractScrollableWidget::to_content_position(Gfx::IntPoint widget_position) const
 {
     auto content_position = widget_position;
     content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
@@ -352,7 +352,7 @@ Gfx::IntPoint AbstractScrollableWidget::to_content_position(Gfx::IntPoint const&
     return content_position;
 }
 
-Gfx::IntPoint AbstractScrollableWidget::to_widget_position(Gfx::IntPoint const& content_position) const
+Gfx::IntPoint AbstractScrollableWidget::to_widget_position(Gfx::IntPoint content_position) const
 {
     auto widget_position = content_position;
     widget_position.translate_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());

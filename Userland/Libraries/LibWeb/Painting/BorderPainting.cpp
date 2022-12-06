@@ -355,7 +355,7 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
 
     // TODO: Support dual color corners. Other browsers will render a rounded corner between two borders of
     // different colors using both colours, normally split at a 45 degree angle (though the exact angle is interpolated).
-    auto blit_corner = [&](Gfx::IntPoint const& position, Gfx::IntRect const& src_rect, Color corner_color) {
+    auto blit_corner = [&](Gfx::IntPoint position, Gfx::IntRect const& src_rect, Color corner_color) {
         context.painter().blit_filtered(position, *corner_bitmap, src_rect, [&](auto const& corner_pixel) {
             return corner_color.with_alpha((corner_color.alpha() * corner_pixel.alpha()) / 255);
         });

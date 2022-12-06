@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-DropEvent::DropEvent(Gfx::IntPoint const& position, DeprecatedString const& text, NonnullRefPtr<Core::MimeData> mime_data)
+DropEvent::DropEvent(Gfx::IntPoint position, DeprecatedString const& text, NonnullRefPtr<Core::MimeData> mime_data)
     : Event(Event::Drop)
     , m_position(position)
     , m_text(text)

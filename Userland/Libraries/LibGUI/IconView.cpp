@@ -106,7 +106,7 @@ auto IconView::get_item_data(int item_index) const -> ItemData&
     return item_data;
 }
 
-auto IconView::item_data_from_content_position(Gfx::IntPoint const& content_position) const -> ItemData*
+auto IconView::item_data_from_content_position(Gfx::IntPoint content_position) const -> ItemData*
 {
     if (!m_visual_row_count || !m_visual_column_count)
         return nullptr;
@@ -195,7 +195,7 @@ Gfx::IntRect IconView::item_rect(int item_index) const
     };
 }
 
-ModelIndex IconView::index_at_event_position(Gfx::IntPoint const& position) const
+ModelIndex IconView::index_at_event_position(Gfx::IntPoint position) const
 {
     VERIFY(model());
     auto adjusted_position = to_content_position(position);
@@ -244,7 +244,7 @@ void IconView::mouseup_event(MouseEvent& event)
     AbstractView::mouseup_event(event);
 }
 
-bool IconView::update_rubber_banding(Gfx::IntPoint const& input_position)
+bool IconView::update_rubber_banding(Gfx::IntPoint input_position)
 {
     auto adjusted_position = to_content_position(input_position.constrained(widget_inner_rect().inflated(1, 1)));
     if (m_rubber_band_current != adjusted_position) {

@@ -22,7 +22,7 @@ Label::Label(DOM::Document& document, HTML::HTMLLabelElement* element, NonnullRe
 
 Label::~Label() = default;
 
-void Label::handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const&, unsigned button)
+void Label::handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint, unsigned button)
 {
     if (button != GUI::MouseButton::Primary)
         return;
@@ -33,7 +33,7 @@ void Label::handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPo
     m_tracking_mouse = true;
 }
 
-void Label::handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const& position, unsigned button)
+void Label::handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint position, unsigned button)
 {
     if (!m_tracking_mouse || button != GUI::MouseButton::Primary)
         return;
@@ -49,7 +49,7 @@ void Label::handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoin
     m_tracking_mouse = false;
 }
 
-void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const& position, unsigned)
+void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint position, unsigned)
 {
     if (!m_tracking_mouse)
         return;
@@ -62,7 +62,7 @@ void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPo
     }
 }
 
-bool Label::is_inside_associated_label(LabelableNode const& control, Gfx::IntPoint const& position)
+bool Label::is_inside_associated_label(LabelableNode const& control, Gfx::IntPoint position)
 {
     if (auto* label = label_for_control_node(control); label)
         return enclosing_int_rect(label->paint_box()->absolute_rect()).contains(position);

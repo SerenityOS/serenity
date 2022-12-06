@@ -95,7 +95,7 @@ void OpacitySlider::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
 }
 
-int OpacitySlider::value_at(Gfx::IntPoint const& position) const
+int OpacitySlider::value_at(Gfx::IntPoint position) const
 {
     auto inner_rect = frame_inner_rect();
     if (position.x() < inner_rect.left())

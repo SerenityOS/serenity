@@ -31,7 +31,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
 
-    int note_for_event_position(Gfx::IntPoint const&) const;
+    int note_for_event_position(Gfx::IntPoint) const;
 
     void set_key(i8 key, DSP::Keyboard::Switch);
 

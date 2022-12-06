@@ -240,8 +240,8 @@ public:
         WeakPtr<Widget> widget;
         Gfx::IntPoint local_position;
     };
-    HitTestResult hit_test(Gfx::IntPoint const&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
-    Widget* child_at(Gfx::IntPoint const&) const;
+    HitTestResult hit_test(Gfx::IntPoint, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
+    Widget* child_at(Gfx::IntPoint) const;
 
     void set_relative_rect(Gfx::IntRect const&);
     void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }
@@ -251,13 +251,13 @@ public:
     void set_width(int width) { set_relative_rect(x(), y(), width, height()); }
     void set_height(int height) { set_relative_rect(x(), y(), width(), height); }
 
-    void move_to(Gfx::IntPoint const& point) { set_relative_rect({ point, relative_rect().size() }); }
+    void move_to(Gfx::IntPoint point) { set_relative_rect({ point, relative_rect().size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
     void resize(Gfx::IntSize const& size) { set_relative_rect({ relative_rect().location(), size }); }
     void resize(int width, int height) { resize({ width, height }); }
 
     void move_by(int x, int y) { move_by({ x, y }); }
-    void move_by(Gfx::IntPoint const& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
+    void move_by(Gfx::IntPoint delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
     Gfx::ColorRole background_role() const { return m_background_role; }
     void set_background_role(Gfx::ColorRole);

@@ -148,7 +148,7 @@ void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, f
 }
 
 template<>
-IntPoint AffineTransform::map(IntPoint const& point) const
+IntPoint AffineTransform::map(IntPoint point) const
 {
     float mapped_x;
     float mapped_y;
@@ -157,7 +157,7 @@ IntPoint AffineTransform::map(IntPoint const& point) const
 }
 
 template<>
-FloatPoint AffineTransform::map(FloatPoint const& point) const
+FloatPoint AffineTransform::map(FloatPoint point) const
 {
     float mapped_x;
     float mapped_y;

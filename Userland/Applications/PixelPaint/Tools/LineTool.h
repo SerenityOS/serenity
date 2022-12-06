@@ -26,7 +26,7 @@ public:
     virtual GUI::Widget* get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
-    void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, Color color, int thickness);
+    void draw_using(GUI::Painter&, Gfx::IntPoint start_position, Gfx::IntPoint end_position, Color color, int thickness);
 
     virtual bool is_overriding_alt() override { return true; }
 

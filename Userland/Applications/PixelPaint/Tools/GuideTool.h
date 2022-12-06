@@ -33,7 +33,7 @@ public:
 private:
     virtual StringView tool_name() const override { return "Guide Tool"sv; }
 
-    RefPtr<Guide> closest_guide(Gfx::IntPoint const&);
+    RefPtr<Guide> closest_guide(Gfx::IntPoint);
 
     RefPtr<GUI::Widget> m_properties_widget;
 

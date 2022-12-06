@@ -89,7 +89,7 @@ public:
     bool is_modified() const { return m_modified; }
     void set_modified(bool);
 
-    void popup_window_menu(Gfx::IntPoint const&, WindowMenuDefaultAction);
+    void popup_window_menu(Gfx::IntPoint, WindowMenuDefaultAction);
     void handle_window_menu_action(WindowMenuAction);
     void window_menu_activate_default();
     void request_close();
@@ -166,7 +166,7 @@ public:
         m_alpha_hit_threshold = threshold;
     }
 
-    Optional<HitTestResult> hit_test(Gfx::IntPoint const&, bool include_frame = true);
+    Optional<HitTestResult> hit_test(Gfx::IntPoint, bool include_frame = true);
 
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
@@ -201,14 +201,14 @@ public:
     void set_taskbar_rect(Gfx::IntRect const&);
     Gfx::IntRect const& taskbar_rect() const { return m_taskbar_rect; }
 
-    void move_to(Gfx::IntPoint const& position) { set_rect({ position, size() }); }
+    void move_to(Gfx::IntPoint position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
 
-    void move_by(Gfx::IntPoint const& delta) { set_position_without_repaint(position().translated(delta)); }
+    void move_by(Gfx::IntPoint delta) { set_position_without_repaint(position().translated(delta)); }
 
     Gfx::IntPoint position() const { return m_rect.location(); }
-    void set_position(Gfx::IntPoint const& position) { set_rect({ position.x(), position.y(), width(), height() }); }
-    void set_position_without_repaint(Gfx::IntPoint const& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
+    void set_position(Gfx::IntPoint position) { set_rect({ position.x(), position.y(), width(), height() }); }
+    void set_position_without_repaint(Gfx::IntPoint position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
     Gfx::IntSize size() const { return m_rect.size(); }
 

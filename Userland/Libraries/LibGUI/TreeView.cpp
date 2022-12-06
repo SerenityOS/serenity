@@ -46,7 +46,7 @@ TreeView::TreeView()
     m_collapse_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/serenity/treeview-collapse.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
-ModelIndex TreeView::index_at_event_position(Gfx::IntPoint const& a_position, bool& is_toggle) const
+ModelIndex TreeView::index_at_event_position(Gfx::IntPoint a_position, bool& is_toggle) const
 {
     auto position = a_position.translated(0, -column_header().height()).translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     is_toggle = false;

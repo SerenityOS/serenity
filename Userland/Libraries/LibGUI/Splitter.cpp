@@ -115,7 +115,7 @@ void Splitter::leave_event(Core::Event&)
     set_hovered_grabbable(nullptr);
 }
 
-Splitter::Grabbable* Splitter::grabbable_at(Gfx::IntPoint const& position)
+Splitter::Grabbable* Splitter::grabbable_at(Gfx::IntPoint position)
 {
     for (auto& grabbable : m_grabbables) {
         if (grabbable.grabbable_rect.contains(position))

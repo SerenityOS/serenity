@@ -89,7 +89,7 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, Gfx::IntPoint const& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x = 0, int wheel_delta_y = 0, int wheel_raw_delta_x = 0, int wheel_raw_delta_y = 0)
+    MouseEvent(Type type, Gfx::IntPoint position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x = 0, int wheel_delta_y = 0, int wheel_raw_delta_x = 0, int wheel_raw_delta_y = 0)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -102,7 +102,7 @@ public:
     {
     }
 
-    Gfx::IntPoint const& position() const { return m_position; }
+    Gfx::IntPoint position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
@@ -124,7 +124,7 @@ public:
     void set_drag(bool b) { m_drag = b; }
     void set_mime_data(Core::MimeData const& mime_data) { m_mime_data = mime_data; }
 
-    MouseEvent translated(Gfx::IntPoint const& delta) const
+    MouseEvent translated(Gfx::IntPoint delta) const
     {
         MouseEvent event = *this;
         event.m_position = m_position.translated(delta);

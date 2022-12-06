@@ -64,7 +64,7 @@ private:
     template<typename Function>
     void lay_out_children(TreeMapNode const&, Gfx::IntRect const&, int depth, Function);
     void paint_cell_frame(GUI::Painter&, TreeMapNode const&, Gfx::IntRect const&, Gfx::IntRect const&, int depth, HasLabel has_label) const;
-    Vector<int> path_to_position(Gfx::IntPoint const&);
+    Vector<int> path_to_position(Gfx::IntPoint);
 
     RefPtr<TreeMap> m_tree;
     Vector<int> m_path;

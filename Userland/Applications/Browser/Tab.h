@@ -49,14 +49,14 @@ public:
     void go_forward(int steps = 1);
 
     void did_become_active();
-    void context_menu_requested(Gfx::IntPoint const& screen_position);
+    void context_menu_requested(Gfx::IntPoint screen_position);
     void content_filters_changed();
     void proxy_mappings_changed();
 
     void action_entered(GUI::Action&);
     void action_left(GUI::Action&);
 
-    void window_position_changed(Gfx::IntPoint const&);
+    void window_position_changed(Gfx::IntPoint);
     void window_size_changed(Gfx::IntSize const&);
 
     Function<void(DeprecatedString const&)> on_title_change;

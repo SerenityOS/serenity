@@ -609,7 +609,7 @@ void ImageEditor::set_secondary_color(Color color)
         on_secondary_color_change(color);
 }
 
-Layer* ImageEditor::layer_at_editor_position(Gfx::IntPoint const& editor_position)
+Layer* ImageEditor::layer_at_editor_position(Gfx::IntPoint editor_position)
 {
     auto image_position = frame_to_content_position(editor_position);
     for (ssize_t i = m_image->layer_count() - 1; i >= 0; --i) {

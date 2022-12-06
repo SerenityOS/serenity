@@ -11,7 +11,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
-void EyesWidget::track_mouse_move(Gfx::IntPoint const& point)
+void EyesWidget::track_mouse_move(Gfx::IntPoint point)
 {
     m_mouse_position = point - window()->position();
     update();

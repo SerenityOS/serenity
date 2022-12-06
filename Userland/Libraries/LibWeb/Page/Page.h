@@ -54,11 +54,11 @@ public:
 
     void load_html(StringView, const AK::URL&);
 
-    bool handle_mouseup(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousedown(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousemove(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-    bool handle_doubleclick(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousedown(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousemove(Gfx::IntPoint, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
@@ -79,8 +79,8 @@ public:
     bool is_webdriver_active() const { return m_is_webdriver_active; }
     void set_is_webdriver_active(bool b) { m_is_webdriver_active = b; }
 
-    Gfx::IntPoint const& window_position() const { return m_window_position; }
-    void set_window_position(Gfx::IntPoint const& position) { m_window_position = position; }
+    Gfx::IntPoint window_position() const { return m_window_position; }
+    void set_window_position(Gfx::IntPoint position) { m_window_position = position; }
 
     Gfx::IntSize const& window_size() const { return m_window_size; }
     void set_window_size(Gfx::IntSize const& size) { m_window_size = size; }
@@ -147,7 +147,7 @@ public:
     virtual void page_did_request_navigate_forward() { }
     virtual void page_did_request_refresh() { }
     virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize const&) { return {}; }
-    virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint const&) { return {}; }
+    virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint) { return {}; }
     virtual void page_did_request_restore_window() { }
     virtual Gfx::IntRect page_did_request_maximize_window() { return {}; }
     virtual Gfx::IntRect page_did_request_minimize_window() { return {}; }
@@ -157,12 +157,12 @@ public:
     virtual void page_did_finish_loading(const AK::URL&) { }
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
-    virtual void page_did_request_context_menu(Gfx::IntPoint const&) { }
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
+    virtual void page_did_request_context_menu(Gfx::IntPoint) { }
+    virtual void page_did_request_link_context_menu(Gfx::IntPoint, const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(Gfx::IntPoint, const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
     virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, DeprecatedString const&) { }
+    virtual void page_did_enter_tooltip_area(Gfx::IntPoint, DeprecatedString const&) { }
     virtual void page_did_leave_tooltip_area() { }
     virtual void page_did_hover_link(const AK::URL&) { }
     virtual void page_did_unhover_link() { }
@@ -170,7 +170,7 @@ public:
     virtual void page_did_change_favicon(Gfx::Bitmap const&) { }
     virtual void page_did_layout() { }
     virtual void page_did_request_scroll(i32, i32) { }
-    virtual void page_did_request_scroll_to(Gfx::IntPoint const&) { }
+    virtual void page_did_request_scroll_to(Gfx::IntPoint) { }
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) { }
     virtual void page_did_request_alert(DeprecatedString const&) { }
     virtual void page_did_request_confirm(DeprecatedString const&) { }

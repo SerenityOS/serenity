@@ -52,7 +52,7 @@ public:
 
     void set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
 
-    Gfx::IntPoint adjusted_position(Gfx::IntPoint const&) const;
+    Gfx::IntPoint adjusted_position(Gfx::IntPoint) const;
 
     virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
     Gfx::IntRect content_rect_minus_scrollbars(ModelIndex const&) const;
@@ -67,8 +67,8 @@ public:
         scroll_into_view(index, orientation == Gfx::Orientation::Horizontal, orientation == Gfx::Orientation::Vertical);
     }
 
-    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&, bool& is_toggle) const;
-    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&) const override;
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint, bool& is_toggle) const;
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint) const override;
 
     virtual void select_all() override;
 
@@ -106,7 +106,7 @@ protected:
 
     void move_cursor_relative(int vertical_steps, int horizontal_steps, SelectionUpdate);
 
-    virtual Gfx::IntPoint automatic_scroll_delta_from_position(Gfx::IntPoint const& pos) const override;
+    virtual Gfx::IntPoint automatic_scroll_delta_from_position(Gfx::IntPoint pos) const override;
 
 private:
     void layout_headers();

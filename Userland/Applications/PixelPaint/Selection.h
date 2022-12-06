@@ -44,10 +44,10 @@ public:
     Gfx::IntRect bounding_rect() const { return m_mask.bounding_rect(); }
 
     [[nodiscard]] bool is_selected(int x, int y) const { return m_mask.get(x, y) > 0; }
-    [[nodiscard]] bool is_selected(Gfx::IntPoint const& point) const { return is_selected(point.x(), point.y()); }
+    [[nodiscard]] bool is_selected(Gfx::IntPoint point) const { return is_selected(point.x(), point.y()); }
 
     [[nodiscard]] u8 get_selection_alpha(int x, int y) const { return m_mask.get(x, y); }
-    [[nodiscard]] u8 get_selection_alpha(Gfx::IntPoint const& point) const { return get_selection_alpha(point.x(), point.y()); }
+    [[nodiscard]] u8 get_selection_alpha(Gfx::IntPoint point) const { return get_selection_alpha(point.x(), point.y()); }
 
     Mask const& mask() const { return m_mask; }
     void set_mask(Mask);

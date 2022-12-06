@@ -64,27 +64,27 @@ CSS::PreferredColorScheme Page::preferred_color_scheme() const
     return m_client.preferred_color_scheme();
 }
 
-bool Page::handle_mousewheel(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
+bool Page::handle_mousewheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     return top_level_browsing_context().event_handler().handle_mousewheel(position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
-bool Page::handle_mouseup(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool Page::handle_mouseup(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_mouseup(position, button, buttons, modifiers);
 }
 
-bool Page::handle_mousedown(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool Page::handle_mousedown(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_mousedown(position, button, buttons, modifiers);
 }
 
-bool Page::handle_mousemove(Gfx::IntPoint const& position, unsigned buttons, unsigned modifiers)
+bool Page::handle_mousemove(Gfx::IntPoint position, unsigned buttons, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_mousemove(position, buttons, modifiers);
 }
 
-bool Page::handle_doubleclick(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool Page::handle_doubleclick(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_doubleclick(position, button, buttons, modifiers);
 }

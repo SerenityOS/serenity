@@ -73,7 +73,7 @@ float Type1Font::get_char_width(u16 char_code) const
     return static_cast<float>(width) / 1000.0f;
 }
 
-void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float width, u32 char_code, Color color)
+void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint point, float width, u32 char_code, Color color)
 {
     if (!m_data.font_program)
         return;

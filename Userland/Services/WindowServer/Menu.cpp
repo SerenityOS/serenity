@@ -112,7 +112,7 @@ void Menu::redraw(MenuItem const& menu_item)
     menu_window()->invalidate(menu_item.rect());
 }
 
-Window& Menu::ensure_menu_window(Gfx::IntPoint const& position)
+Window& Menu::ensure_menu_window(Gfx::IntPoint position)
 {
     auto& screen = Screen::closest_to_location(position);
     int width = this->content_width();
@@ -575,7 +575,7 @@ bool Menu::remove_item_with_identifier(unsigned identifier)
     return m_items.remove_first_matching([&](auto& item) { return item->identifier() == identifier; });
 }
 
-int Menu::item_index_at(Gfx::IntPoint const& position)
+int Menu::item_index_at(Gfx::IntPoint position)
 {
     int i = 0;
     for (auto& item : m_items) {
@@ -597,7 +597,7 @@ void Menu::redraw_if_theme_changed()
         redraw();
 }
 
-void Menu::open_button_menu(Gfx::IntPoint const& position, Gfx::IntRect const& button_rect)
+void Menu::open_button_menu(Gfx::IntPoint position, Gfx::IntRect const& button_rect)
 {
     if (is_empty())
         return;
@@ -618,12 +618,12 @@ void Menu::open_button_menu(Gfx::IntPoint const& position, Gfx::IntRect const& b
     WindowManager::the().did_popup_a_menu({});
 }
 
-void Menu::popup(Gfx::IntPoint const& position)
+void Menu::popup(Gfx::IntPoint position)
 {
     do_popup(position, true);
 }
 
-void Menu::do_popup(Gfx::IntPoint const& position, bool make_input, bool as_submenu)
+void Menu::do_popup(Gfx::IntPoint position, bool make_input, bool as_submenu)
 {
     if (is_empty()) {
         dbgln("Menu: Empty menu popup");

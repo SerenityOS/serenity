@@ -252,7 +252,7 @@ void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClien
     vertical_scrollbar().increase_slider_by(y_delta);
 }
 
-void OutOfProcessWebView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const& scroll_position)
+void OutOfProcessWebView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint scroll_position)
 {
     horizontal_scrollbar().set_value(scroll_position.x());
     vertical_scrollbar().set_value(scroll_position.y());
@@ -263,7 +263,7 @@ void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebCo
     scroll_into_view(rect, true, true);
 }
 
-void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, DeprecatedString const& title)
+void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const& title)
 {
     GUI::Application::the()->show_tooltip(title, nullptr);
 }
@@ -330,19 +330,19 @@ void OutOfProcessWebView::notify_server_did_request_refresh(Badge<WebContentClie
         on_refresh();
 }
 
-void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
+void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position)
 {
     if (on_context_menu_request)
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, DeprecatedString const&, unsigned)
+void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, DeprecatedString const&, unsigned)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
+void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     if (on_image_context_menu_request)
         on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);
@@ -479,7 +479,7 @@ void OutOfProcessWebView::notify_server_did_request_restore_window()
         on_restore_window();
 }
 
-Gfx::IntPoint OutOfProcessWebView::notify_server_did_request_reposition_window(Gfx::IntPoint const& position)
+Gfx::IntPoint OutOfProcessWebView::notify_server_did_request_reposition_window(Gfx::IntPoint position)
 {
     if (on_reposition_window)
         return on_reposition_window(position);
@@ -648,7 +648,7 @@ void OutOfProcessWebView::connect_to_webdriver(DeprecatedString const& webdriver
     client().async_connect_to_webdriver(webdriver_ipc_path);
 }
 
-void OutOfProcessWebView::set_window_position(Gfx::IntPoint const& position)
+void OutOfProcessWebView::set_window_position(Gfx::IntPoint position)
 {
     client().async_set_window_position(position);
 }

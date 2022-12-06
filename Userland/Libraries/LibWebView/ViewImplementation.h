@@ -25,9 +25,9 @@ public:
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) = 0;
     virtual void notify_server_did_change_title(Badge<WebContentClient>, DeprecatedString const&) = 0;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) = 0;
-    virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const&) = 0;
+    virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) = 0;
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
-    virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, DeprecatedString const&) = 0;
+    virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) = 0;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_hover_link(Badge<WebContentClient>, const AK::URL&) = 0;
     virtual void notify_server_did_unhover_link(Badge<WebContentClient>) = 0;
@@ -38,9 +38,9 @@ public:
     virtual void notify_server_did_request_navigate_back(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_navigate_forward(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_refresh(Badge<WebContentClient>) = 0;
-    virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&) = 0;
-    virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, DeprecatedString const& target, unsigned modifiers) = 0;
-    virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const&) = 0;
+    virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint) = 0;
+    virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers) = 0;
+    virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const&) = 0;
     virtual void notify_server_did_request_alert(Badge<WebContentClient>, DeprecatedString const& message) = 0;
     virtual void notify_server_did_request_confirm(Badge<WebContentClient>, DeprecatedString const& message) = 0;
     virtual void notify_server_did_request_prompt(Badge<WebContentClient>, DeprecatedString const& message, DeprecatedString const& default_) = 0;
@@ -60,7 +60,7 @@ public:
     virtual void notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Cookie const& cookie) = 0;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) = 0;
     virtual void notify_server_did_request_restore_window() = 0;
-    virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint const&) = 0;
+    virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) = 0;
     virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) = 0;
     virtual Gfx::IntRect notify_server_did_request_maximize_window() = 0;
     virtual Gfx::IntRect notify_server_did_request_minimize_window() = 0;

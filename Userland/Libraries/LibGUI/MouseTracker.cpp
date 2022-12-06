@@ -26,7 +26,7 @@ MouseTracker::~MouseTracker()
     }
 }
 
-void MouseTracker::track_mouse_move(Badge<ConnectionToWindowServer>, Gfx::IntPoint const& point)
+void MouseTracker::track_mouse_move(Badge<ConnectionToWindowServer>, Gfx::IntPoint point)
 {
     for (auto& tracker : s_trackers) {
         tracker.track_mouse_move(point);

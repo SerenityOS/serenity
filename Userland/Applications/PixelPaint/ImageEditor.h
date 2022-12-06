@@ -64,7 +64,7 @@ public:
 
     void layers_did_change();
 
-    Layer* layer_at_editor_position(Gfx::IntPoint const&);
+    Layer* layer_at_editor_position(Gfx::IntPoint);
 
     void fit_image_to_view(FitType type = FitType::Both);
 
@@ -84,7 +84,7 @@ public:
 
     Function<void(DeprecatedString const&)> on_title_change;
 
-    Function<void(Gfx::IntPoint const&)> on_image_mouse_position_change;
+    Function<void(Gfx::IntPoint)> on_image_mouse_position_change;
 
     Function<void(void)> on_leave;
     Function<void(bool modified)> on_modified_change;

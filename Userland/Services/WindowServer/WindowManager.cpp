@@ -684,7 +684,7 @@ void WindowManager::check_hide_geometry_overlay(Window& window)
         m_geometry_overlay = nullptr;
 }
 
-void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origin)
+void WindowManager::start_window_move(Window& window, Gfx::IntPoint origin)
 {
     MenuManager::the().close_everyone();
 
@@ -708,7 +708,7 @@ void WindowManager::start_window_move(Window& window, MouseEvent const& event)
     start_window_move(window, event.position());
 }
 
-void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& position, MouseButton button, ResizeDirection resize_direction)
+void WindowManager::start_window_resize(Window& window, Gfx::IntPoint position, MouseButton button, ResizeDirection resize_direction)
 {
     MenuManager::the().close_everyone();
 
@@ -830,7 +830,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
     return true;
 }
 
-Gfx::IntPoint WindowManager::to_floating_cursor_position(Gfx::IntPoint const& origin) const
+Gfx::IntPoint WindowManager::to_floating_cursor_position(Gfx::IntPoint origin) const
 {
     VERIFY(m_move_window);
 
@@ -2157,7 +2157,7 @@ void WindowManager::set_always_on_top(Window& window, bool always_on_top)
     });
 }
 
-Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const& desired)
+Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
     Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette()) + 10);

@@ -22,7 +22,7 @@
 
 namespace PixelPaint {
 
-static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint const& start_pos, Gfx::IntPoint const& end_pos, float angle_increment)
+static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint start_pos, Gfx::IntPoint end_pos, float angle_increment)
 {
     float current_angle = AK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
 
@@ -56,7 +56,7 @@ void LineTool::on_mousedown(Layer* layer, MouseEvent& event)
     m_editor->update();
 }
 
-void LineTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, Color color, int thickness)
+void LineTool::draw_using(GUI::Painter& painter, Gfx::IntPoint start_position, Gfx::IntPoint end_position, Color color, int thickness)
 {
     if (m_antialias_enabled) {
         Gfx::AntiAliasingPainter aa_painter { painter };

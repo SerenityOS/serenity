@@ -104,7 +104,7 @@ public:
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 
-    Color color_at(Gfx::IntPoint const& point) const;
+    Color color_at(Gfx::IntPoint point) const;
 
 private:
     explicit Image(Gfx::IntSize const&);

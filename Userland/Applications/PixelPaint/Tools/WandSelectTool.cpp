@@ -21,7 +21,7 @@
 
 namespace PixelPaint {
 
-static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint const& start_position, Gfx::IntPoint const& selection_offset, int threshold, Selection::MergeMode merge_mode)
+static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint start_position, Gfx::IntPoint selection_offset, int threshold, Selection::MergeMode merge_mode)
 {
     VERIFY(bitmap.bpp() == 32);
 

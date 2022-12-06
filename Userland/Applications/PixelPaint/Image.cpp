@@ -570,7 +570,7 @@ void Image::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scali
     did_change_rect();
 }
 
-Color Image::color_at(Gfx::IntPoint const& point) const
+Color Image::color_at(Gfx::IntPoint point) const
 {
     Color color;
     for (auto& layer : m_layers) {

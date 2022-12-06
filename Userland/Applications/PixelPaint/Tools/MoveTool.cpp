@@ -58,7 +58,7 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
     }
 
     if (m_scaling) {
-        auto& cursor_location = event.image_event().position();
+        auto cursor_location = event.image_event().position();
         auto width = abs(m_layer_being_moved->location().x() - cursor_location.x());
         auto height = abs(m_layer_being_moved->location().y() - cursor_location.y());
         if (m_keep_ascept_ratio) {

@@ -690,7 +690,7 @@ void BrowserWindow::config_bool_did_change(DeprecatedString const& domain, Depre
     // NOTE: CloseDownloadWidgetOnFinish is read each time in DownloadWindow
 }
 
-void BrowserWindow::broadcast_window_position(Gfx::IntPoint const& position)
+void BrowserWindow::broadcast_window_position(Gfx::IntPoint position)
 {
     tab_widget().for_each_child_of_type<Browser::Tab>([&](auto& tab) {
         tab.window_position_changed(position);

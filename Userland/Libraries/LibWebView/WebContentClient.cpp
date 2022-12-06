@@ -88,7 +88,7 @@ void WebContentClient::did_request_scroll(i32 x_delta, i32 y_delta)
     m_view.notify_server_did_request_scroll({}, x_delta, y_delta);
 }
 
-void WebContentClient::did_request_scroll_to(Gfx::IntPoint const& scroll_position)
+void WebContentClient::did_request_scroll_to(Gfx::IntPoint scroll_position)
 {
     m_view.notify_server_did_request_scroll_to({}, scroll_position);
 }
@@ -99,7 +99,7 @@ void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
     m_view.notify_server_did_request_scroll_into_view({}, rect);
 }
 
-void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint const& content_position, DeprecatedString const& title)
+void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint content_position, DeprecatedString const& title)
 {
     m_view.notify_server_did_enter_tooltip_area({}, content_position, title);
 }
@@ -136,17 +136,17 @@ void WebContentClient::did_start_loading(AK::URL const& url, bool is_redirect)
     m_view.notify_server_did_start_loading({}, url, is_redirect);
 }
 
-void WebContentClient::did_request_context_menu(Gfx::IntPoint const& content_position)
+void WebContentClient::did_request_context_menu(Gfx::IntPoint content_position)
 {
     m_view.notify_server_did_request_context_menu({}, content_position);
 }
 
-void WebContentClient::did_request_link_context_menu(Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
+void WebContentClient::did_request_link_context_menu(Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_view.notify_server_did_request_link_context_menu({}, content_position, url, target, modifiers);
 }
 
-void WebContentClient::did_request_image_context_menu(Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const& bitmap)
+void WebContentClient::did_request_image_context_menu(Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const& bitmap)
 {
     m_view.notify_server_did_request_image_context_menu({}, content_position, url, target, modifiers, bitmap);
 }
@@ -250,7 +250,7 @@ void WebContentClient::did_request_restore_window()
     m_view.notify_server_did_request_restore_window();
 }
 
-Messages::WebContentClient::DidRequestRepositionWindowResponse WebContentClient::did_request_reposition_window(Gfx::IntPoint const& position)
+Messages::WebContentClient::DidRequestRepositionWindowResponse WebContentClient::did_request_reposition_window(Gfx::IntPoint position)
 {
     return m_view.notify_server_did_request_reposition_window(position);
 }

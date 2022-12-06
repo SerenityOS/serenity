@@ -35,7 +35,7 @@ public:
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
     void set_is_scripting_enabled(bool);
-    void set_window_position(Gfx::IntPoint const&);
+    void set_window_position(Gfx::IntPoint);
     void set_window_size(Gfx::IntSize const&);
 
     Gfx::IntSize const& content_size() const { return m_content_size; }
@@ -61,22 +61,22 @@ private:
     virtual void page_did_request_navigate_forward() override;
     virtual void page_did_request_refresh() override;
     virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize const&) override;
-    virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint const&) override;
+    virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint) override;
     virtual void page_did_request_restore_window() override;
     virtual Gfx::IntRect page_did_request_maximize_window() override;
     virtual Gfx::IntRect page_did_request_minimize_window() override;
     virtual Gfx::IntRect page_did_request_fullscreen_window() override;
     virtual void page_did_request_scroll(i32, i32) override;
-    virtual void page_did_request_scroll_to(Gfx::IntPoint const&) override;
+    virtual void page_did_request_scroll_to(Gfx::IntPoint) override;
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override;
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, DeprecatedString const&) override;
+    virtual void page_did_enter_tooltip_area(Gfx::IntPoint, DeprecatedString const&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
     virtual void page_did_click_link(const URL&, DeprecatedString const& target, unsigned modifiers) override;
     virtual void page_did_middle_click_link(const URL&, DeprecatedString const& target, unsigned modifiers) override;
-    virtual void page_did_request_context_menu(Gfx::IntPoint const&) override;
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const URL&, DeprecatedString const& target, unsigned modifiers) override;
+    virtual void page_did_request_context_menu(Gfx::IntPoint) override;
+    virtual void page_did_request_link_context_menu(Gfx::IntPoint, const URL&, DeprecatedString const& target, unsigned modifiers) override;
     virtual void page_did_start_loading(const URL&, bool) override;
     virtual void page_did_create_main_document() override;
     virtual void page_did_finish_loading(const URL&) override;
@@ -87,7 +87,7 @@ private:
     virtual void page_did_request_accept_dialog() override;
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
+    virtual void page_did_request_image_context_menu(Gfx::IntPoint, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, DeprecatedString const&) override;
     virtual DeprecatedString page_did_request_cookie(const URL&, Web::Cookie::Source) override;

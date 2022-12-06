@@ -171,15 +171,15 @@ public:
     {
     }
 
-    virtual void page_did_request_context_menu(Gfx::IntPoint const&) override
+    virtual void page_did_request_context_menu(Gfx::IntPoint) override
     {
     }
 
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, AK::URL const&, DeprecatedString const&, unsigned) override
+    virtual void page_did_request_link_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned) override
     {
     }
 
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, AK::URL const&, DeprecatedString const&, unsigned, Gfx::Bitmap const*) override
+    virtual void page_did_request_image_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned, Gfx::Bitmap const*) override
     {
     }
 
@@ -191,7 +191,7 @@ public:
     {
     }
 
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, DeprecatedString const&) override
+    virtual void page_did_enter_tooltip_area(Gfx::IntPoint, DeprecatedString const&) override
     {
     }
 

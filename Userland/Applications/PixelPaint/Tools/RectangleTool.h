@@ -42,7 +42,7 @@ private:
         FromCorner,
     };
 
-    void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness, int corner_radius);
+    void draw_using(GUI::Painter&, Gfx::IntPoint start_position, Gfx::IntPoint end_position, int thickness, int corner_radius);
 
     RefPtr<GUI::Widget> m_properties_widget;
     RefPtr<GUI::TextBox> m_aspect_w_textbox;

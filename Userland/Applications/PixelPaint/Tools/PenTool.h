@@ -22,8 +22,8 @@ public:
     virtual GUI::Widget* get_properties_widget() override;
 
 protected:
-    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& point) override;
-    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& start, Gfx::IntPoint const& end) override;
+    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint point) override;
+    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint start, Gfx::IntPoint end) override;
 
 private:
     virtual StringView tool_name() const override { return "Pen Tool"sv; }
