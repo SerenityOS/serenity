@@ -231,17 +231,6 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(finalization_registry);
 }
 
-Symbol* VM::get_global_symbol(DeprecatedString const& description)
-{
-    auto result = m_global_symbol_registry.get(description);
-    if (result.has_value())
-        return result.value();
-
-    auto* new_global_symbol = js_symbol(*this, description, true);
-    m_global_symbol_registry.set(description, *new_global_symbol);
-    return new_global_symbol;
-}
-
 ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, FlyString const& name)
 {
     // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition

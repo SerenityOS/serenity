@@ -73,9 +73,10 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    Symbol* get_global_symbol(DeprecatedString const& description);
-
-    HashMap<DeprecatedString, PrimitiveString*>& string_cache() { return m_string_cache; }
+    HashMap<DeprecatedString, PrimitiveString*>& string_cache()
+    {
+        return m_string_cache;
+    }
     PrimitiveString& empty_string() { return *m_empty_string; }
     PrimitiveString& single_ascii_character_string(u8 character)
     {

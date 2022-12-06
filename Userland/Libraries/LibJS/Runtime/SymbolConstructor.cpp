@@ -53,8 +53,27 @@ ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
-    auto description = TRY(vm.argument(0).to_string(vm));
-    return vm.get_global_symbol(description);
+    // 1. Let stringKey be ? ToString(key).
+    auto string_key = TRY(vm.argument(0).to_string(vm));
+
+    // 2. For each element e of the GlobalSymbolRegistry List, do
+    auto result = vm.global_symbol_registry().get(string_key);
+    if (result.has_value()) {
+        // a. If SameValue(e.[[Key]], stringKey) is true, return e.[[Symbol]].
+        return result.value();
+    }
+
+    // 3. Assert: GlobalSymbolRegistry does not currently contain an entry for stringKey.
+    VERIFY(!result.has_value());
+
+    // 4. Let newSymbol be a new unique Symbol value whose [[Description]] value is stringKey.
+    auto* new_symbol = js_symbol(vm, string_key, true);
+
+    // 5. Append the Record { [[Key]]: stringKey, [[Symbol]]: newSymbol } to the GlobalSymbolRegistry List.
+    vm.global_symbol_registry().set(string_key, *new_symbol);
+
+    // 6. Return newSymbol.
+    return new_symbol;
 }
 
 // 20.4.2.6 Symbol.keyFor ( sym ), https://tc39.es/ecma262/#sec-symbol.keyfor
