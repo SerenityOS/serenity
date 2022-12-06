@@ -16,6 +16,11 @@
 
 namespace AK {
 
+enum StringShouldChomp {
+    NoChomp,
+    Chomp
+};
+
 namespace Detail {
 class StringData;
 }
@@ -41,6 +46,7 @@ public:
 
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
+    static ErrorOr<String> from_utf8(StringView, StringShouldChomp);
 
     // Creates a substring with a deep copy of the specified data window.
     ErrorOr<String> substring_from_byte_offset(size_t start, size_t byte_count) const;

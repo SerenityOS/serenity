@@ -310,7 +310,7 @@ struct Context {
 
     struct {
         // Server Name Indicator
-        DeprecatedString SNI; // I hate your existence
+        String SNI; // I hate your existence
     } extensions;
 
     u8 request_client_certificate { 0 };
@@ -326,9 +326,9 @@ struct Context {
     // message flags
     u8 handshake_messages[11] { 0 };
     ByteBuffer user_data;
-    HashMap<DeprecatedString, Certificate> root_certificates;
+    HashMap<String, Certificate> root_certificates;
 
-    Vector<DeprecatedString> alpn;
+    Vector<String> alpn;
     StringView negotiated_alpn;
 
     size_t send_retries { 0 };
@@ -386,15 +386,15 @@ public:
 
     virtual void set_notifications_enabled(bool enabled) override { underlying_stream().set_notifications_enabled(enabled); }
 
-    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, u16 port, Options = {});
-    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, Core::Stream::Socket& underlying_stream, Options = {});
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(String const& host, u16 port, Options = {});
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(String const& host, Core::Stream::Socket& underlying_stream, Options = {});
 
     using StreamVariantType = Variant<OwnPtr<Core::Stream::Socket>, Core::Stream::Socket*>;
     explicit TLSv12(StreamVariantType, Options);
 
     bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }
 
-    void set_sni(StringView sni)
+    void set_sni(String const& sni)
     {
         if (m_context.is_server || m_context.critical_error || m_context.connection_status != ConnectionStatus::Disconnected) {
             dbgln("invalid state for set_sni");
@@ -438,7 +438,7 @@ public:
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
     bool can_read() const { return m_context.application_buffer.size() > 0; }
-    DeprecatedString read_line(size_t max_size);
+    ErrorOr<String> read_line(size_t max_size);
 
     Function<void(AlertDescription)> on_tls_error;
     Function<void()> on_tls_finished;
@@ -479,7 +479,7 @@ private:
     bool check_connection_state(bool read);
     void notify_client_for_app_data();
 
-    ssize_t handle_server_hello(ReadonlyBytes, WritePacketStage&);
+    ErrorOr<ssize_t> handle_server_hello(ReadonlyBytes, WritePacketStage&);
     ssize_t handle_handshake_finished(ReadonlyBytes, WritePacketStage&);
     ssize_t handle_certificate(ReadonlyBytes);
     ssize_t handle_server_key_exchange(ReadonlyBytes);

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
@@ -32,10 +33,10 @@ ErrorOr<Bytes> TLSv12::read(Bytes bytes)
     return Bytes { bytes.data(), size_to_read };
 }
 
-DeprecatedString TLSv12::read_line(size_t max_size)
+ErrorOr<String> TLSv12::read_line(size_t max_size)
 {
     if (!can_read_line())
-        return {};
+        return String();
 
     auto* start = m_context.application_buffer.data();
     auto* newline = (u8*)memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size());
@@ -44,11 +45,10 @@ DeprecatedString TLSv12::read_line(size_t max_size)
     size_t offset = newline - start;
 
     if (offset > max_size)
-        return {};
+        return String();
 
-    DeprecatedString line { bit_cast<char const*>(start), offset, Chomp };
-    // FIXME: Propagate errors.
-    m_context.application_buffer = MUST(m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1));
+    String line = TRY(String::from_utf8(StringView { bit_cast<char const*>(start), offset }, AK::StringShouldChomp::Chomp));
+    m_context.application_buffer = TRY(m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1));
 
     return line;
 }
@@ -72,10 +72,10 @@ ErrorOr<size_t> TLSv12::write(ReadonlyBytes bytes)
     return bytes.size();
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, u16 port, Options options)
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, u16 port, Options options)
 {
     Core::EventLoop loop;
-    OwnPtr<Core::Stream::Socket> tcp_socket = TRY(Core::Stream::TCPSocket::connect(host, port));
+    OwnPtr<Core::Stream::Socket> tcp_socket = TRY(Core::Stream::TCPSocket::connect(host.to_deprecated_string(), port));
     TRY(tcp_socket->set_blocking(false));
     auto tls_socket = make<TLSv12>(move(tcp_socket), move(options));
     tls_socket->set_sni(host);
@@ -94,7 +94,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, u16
     return AK::Error::from_string_view(alert_name(static_cast<AlertDescription>(256 - result)));
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, Core::Stream::Socket& underlying_stream, Options options)
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, Core::Stream::Socket& underlying_stream, Options options)
 {
     TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));

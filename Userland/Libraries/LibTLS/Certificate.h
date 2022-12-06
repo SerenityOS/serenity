@@ -10,6 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Singleton.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
@@ -38,16 +39,16 @@ public:
     Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key {};
     Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key {};
     struct Name {
-        DeprecatedString country;
-        DeprecatedString state;
-        DeprecatedString location;
-        DeprecatedString entity;
-        DeprecatedString subject;
-        DeprecatedString unit;
+        String country;
+        String state;
+        String location;
+        String entity;
+        String subject;
+        String unit;
     } issuer, subject;
     Core::DateTime not_before;
     Core::DateTime not_after;
-    Vector<DeprecatedString> SAN;
+    Vector<String> SAN;
     u8* ocsp { nullptr };
     Crypto::UnsignedBigInteger serial_number;
     ByteBuffer sign_key {};
@@ -65,64 +66,64 @@ public:
 
     bool is_valid() const;
 
-    DeprecatedString subject_identifier_string() const
+    ErrorOr<String> subject_identifier_string() const
     {
         StringBuilder cert_name;
         if (!subject.country.is_empty()) {
             cert_name.append("/C="sv);
-            cert_name.append(subject.country);
+            cert_name.append(subject.country.to_deprecated_string());
         }
         if (!subject.state.is_empty()) {
             cert_name.append("/ST="sv);
-            cert_name.append(subject.state);
+            cert_name.append(subject.state.to_deprecated_string());
         }
         if (!subject.location.is_empty()) {
             cert_name.append("/L="sv);
-            cert_name.append(subject.location);
+            cert_name.append(subject.location.to_deprecated_string());
         }
         if (!subject.entity.is_empty()) {
             cert_name.append("/O="sv);
-            cert_name.append(subject.entity);
+            cert_name.append(subject.entity.to_deprecated_string());
         }
         if (!subject.unit.is_empty()) {
             cert_name.append("/OU="sv);
-            cert_name.append(subject.unit);
+            cert_name.append(subject.unit.to_deprecated_string());
         }
         if (!subject.subject.is_empty()) {
             cert_name.append("/CN="sv);
-            cert_name.append(subject.subject);
+            cert_name.append(subject.subject.to_deprecated_string());
         }
-        return cert_name.build();
+        return TRY(String::from_deprecated_string(cert_name.build()));
     }
 
-    DeprecatedString issuer_identifier_string() const
+    ErrorOr<String> issuer_identifier_string() const
     {
         StringBuilder cert_name;
         if (!issuer.country.is_empty()) {
             cert_name.append("/C="sv);
-            cert_name.append(issuer.country);
+            cert_name.append(issuer.country.to_deprecated_string());
         }
         if (!issuer.state.is_empty()) {
             cert_name.append("/ST="sv);
-            cert_name.append(issuer.state);
+            cert_name.append(issuer.state.to_deprecated_string());
         }
         if (!issuer.location.is_empty()) {
             cert_name.append("/L="sv);
-            cert_name.append(issuer.location);
+            cert_name.append(issuer.location.to_deprecated_string());
         }
         if (!issuer.entity.is_empty()) {
             cert_name.append("/O="sv);
-            cert_name.append(issuer.entity);
+            cert_name.append(issuer.entity.to_deprecated_string());
         }
         if (!issuer.unit.is_empty()) {
             cert_name.append("/OU="sv);
-            cert_name.append(issuer.unit);
+            cert_name.append(issuer.unit.to_deprecated_string());
         }
         if (!issuer.subject.is_empty()) {
             cert_name.append("/CN="sv);
-            cert_name.append(issuer.subject);
+            cert_name.append(issuer.subject.to_deprecated_string());
         }
-        return cert_name.build();
+        return TRY(String::from_deprecated_string(cert_name.build()));
     }
 };
 

@@ -220,6 +220,23 @@ ErrorOr<String> String::from_utf8(StringView view)
     return String { move(data) };
 }
 
+ErrorOr<String> String::from_utf8(StringView view, StringShouldChomp should_chomp)
+{
+    if (should_chomp == StringShouldChomp::Chomp) {
+        size_t chomped_length = view.length();
+        while (chomped_length > 0) {
+            char last_ch = view[chomped_length - 1];
+            if (!last_ch || last_ch == '\n' || last_ch == '\r')
+                --chomped_length;
+            else
+                break;
+        }
+        return TRY(from_utf8(view.substring_view(0, chomped_length)));
+    }
+
+    return TRY(from_utf8(view));
+}
+
 StringView String::bytes_as_string_view() const
 {
     return StringView(bytes());

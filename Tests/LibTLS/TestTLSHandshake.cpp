@@ -5,14 +5,14 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/String.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibCrypto/ASN1/ASN1.h>
 #include <LibTLS/TLSv12.h>
 #include <LibTest/TestCase.h>
 
-static char const* ca_certs_file = "./ca_certs.ini";
+constexpr auto CA_CERTS_FILE = "./ca_certs.ini"sv;
 static int port = 443;
 
 constexpr auto DEFAULT_SERVER = "www.google.com"sv;
@@ -22,31 +22,26 @@ static ByteBuffer operator""_b(char const* string, size_t length)
     return ByteBuffer::copy(string, length).release_value();
 }
 
-Vector<Certificate> load_certificates();
-DeprecatedString locate_ca_certs_file();
+ErrorOr<Vector<Certificate>> load_certificates();
+ErrorOr<String> locate_ca_certs_file();
 
-DeprecatedString locate_ca_certs_file()
+ErrorOr<String> locate_ca_certs_file()
 {
-    if (Core::File::exists(ca_certs_file)) {
-        return ca_certs_file;
+    if (Core::File::exists(CA_CERTS_FILE)) {
+        return String::from_utf8(CA_CERTS_FILE);
     }
-    auto on_target_path = DeprecatedString("/etc/ca_certs.ini");
-    if (Core::File::exists(on_target_path)) {
-        return on_target_path;
+    auto on_target_path = TRY(String::from_utf8("/etc/ca_certs.ini"sv));
+    if (!Core::File::exists(on_target_path.to_deprecated_string())) {
+        return Error::from_string_literal("Could not locate ca_certs.ini file.");
     }
-    return "";
+    return on_target_path;
 }
 
-Vector<Certificate> load_certificates()
+ErrorOr<Vector<Certificate>> load_certificates()
 {
     Vector<Certificate> certificates;
-    auto ca_certs_filepath = locate_ca_certs_file();
-    if (ca_certs_filepath == "") {
-        warnln("Could not locate ca_certs.ini file.");
-        return certificates;
-    }
-
-    auto config = Core::ConfigFile::open(ca_certs_filepath).release_value_but_fixme_should_propagate_errors();
+    auto ca_certs_filepath = TRY(locate_ca_certs_file());
+    auto config = TRY(Core::ConfigFile::open(ca_certs_filepath.to_deprecated_string()));
     for (auto& entity : config->groups()) {
         for (auto& subject : config->keys(entity)) {
             auto certificate_base64 = config->read_entry(entity, subject);
@@ -70,10 +65,10 @@ Vector<Certificate> load_certificates()
     return certificates;
 }
 
-static Vector<Certificate> s_root_ca_certificates = load_certificates();
-
 TEST_CASE(test_TLS_hello_handshake)
 {
+    Vector<Certificate> s_root_ca_certificates = MUST(load_certificates());
+
     Core::EventLoop loop;
     TLS::Options options;
     options.set_root_certificates(s_root_ca_certificates);
