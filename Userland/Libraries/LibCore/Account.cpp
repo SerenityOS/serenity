@@ -259,28 +259,19 @@ ErrorOr<DeprecatedString> Account::generate_shadow_file() const
     struct spwd* p;
     errno = 0;
     while ((p = getspent())) {
-        if (p->sp_namp == m_username) {
-            builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
-                m_username, m_password_hash,
-                (p->sp_lstchg == -1) ? "" : DeprecatedString::formatted("{}", p->sp_lstchg),
-                (p->sp_min == -1) ? "" : DeprecatedString::formatted("{}", p->sp_min),
-                (p->sp_max == -1) ? "" : DeprecatedString::formatted("{}", p->sp_max),
-                (p->sp_warn == -1) ? "" : DeprecatedString::formatted("{}", p->sp_warn),
-                (p->sp_inact == -1) ? "" : DeprecatedString::formatted("{}", p->sp_inact),
-                (p->sp_expire == -1) ? "" : DeprecatedString::formatted("{}", p->sp_expire),
-                (p->sp_flag == 0) ? "" : DeprecatedString::formatted("{}", p->sp_flag));
+        if (p->sp_namp == m_username)
+            builder.appendff("{}:{}", m_username, m_password_hash);
+        else
+            builder.appendff("{}:{}", p->sp_namp, p->sp_pwdp);
 
-        } else {
-            builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
-                p->sp_namp, p->sp_pwdp,
-                (p->sp_lstchg == -1) ? "" : DeprecatedString::formatted("{}", p->sp_lstchg),
-                (p->sp_min == -1) ? "" : DeprecatedString::formatted("{}", p->sp_min),
-                (p->sp_max == -1) ? "" : DeprecatedString::formatted("{}", p->sp_max),
-                (p->sp_warn == -1) ? "" : DeprecatedString::formatted("{}", p->sp_warn),
-                (p->sp_inact == -1) ? "" : DeprecatedString::formatted("{}", p->sp_inact),
-                (p->sp_expire == -1) ? "" : DeprecatedString::formatted("{}", p->sp_expire),
-                (p->sp_flag == 0) ? "" : DeprecatedString::formatted("{}", p->sp_flag));
-        }
+        builder.appendff(":{}:{}:{}:{}:{}:{}:{}\n",
+            (p->sp_lstchg == -1) ? "" : DeprecatedString::formatted("{}", p->sp_lstchg),
+            (p->sp_min == -1) ? "" : DeprecatedString::formatted("{}", p->sp_min),
+            (p->sp_max == -1) ? "" : DeprecatedString::formatted("{}", p->sp_max),
+            (p->sp_warn == -1) ? "" : DeprecatedString::formatted("{}", p->sp_warn),
+            (p->sp_inact == -1) ? "" : DeprecatedString::formatted("{}", p->sp_inact),
+            (p->sp_expire == -1) ? "" : DeprecatedString::formatted("{}", p->sp_expire),
+            (p->sp_flag == 0) ? "" : DeprecatedString::formatted("{}", p->sp_flag));
     }
     endspent();
 
