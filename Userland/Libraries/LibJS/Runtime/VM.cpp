@@ -237,8 +237,8 @@ Symbol* VM::get_global_symbol(DeprecatedString const& description)
     if (result.has_value())
         return result.value();
 
-    auto new_global_symbol = js_symbol(*this, description, true);
-    m_global_symbol_registry.set(description, new_global_symbol);
+    auto* new_global_symbol = js_symbol(*this, description, true);
+    m_global_symbol_registry.set(description, *new_global_symbol);
     return new_global_symbol;
 }
 
