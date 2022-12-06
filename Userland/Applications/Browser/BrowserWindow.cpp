@@ -698,7 +698,7 @@ void BrowserWindow::broadcast_window_position(Gfx::IntPoint position)
     });
 }
 
-void BrowserWindow::broadcast_window_size(Gfx::IntSize const& size)
+void BrowserWindow::broadcast_window_size(Gfx::IntSize size)
 {
     tab_widget().for_each_child_of_type<Browser::Tab>([&](auto& tab) {
         tab.window_size_changed(size);

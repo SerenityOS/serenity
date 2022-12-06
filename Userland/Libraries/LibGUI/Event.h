@@ -143,13 +143,13 @@ private:
 
 class WMAppletAreaSizeChangedEvent : public WMEvent {
 public:
-    explicit WMAppletAreaSizeChangedEvent(Gfx::IntSize const& size)
+    explicit WMAppletAreaSizeChangedEvent(Gfx::IntSize size)
         : WMEvent(Event::Type::WM_AppletAreaSizeChanged, 0, 0)
         , m_size(size)
     {
     }
 
-    Gfx::IntSize const& size() const { return m_size; }
+    Gfx::IntSize size() const { return m_size; }
 
 private:
     Gfx::IntSize m_size;
@@ -265,7 +265,7 @@ private:
 
 class MultiPaintEvent final : public Event {
 public:
-    explicit MultiPaintEvent(Vector<Gfx::IntRect, 32> rects, Gfx::IntSize const& window_size)
+    explicit MultiPaintEvent(Vector<Gfx::IntRect, 32> rects, Gfx::IntSize window_size)
         : Event(Event::MultiPaint)
         , m_rects(move(rects))
         , m_window_size(window_size)
@@ -273,7 +273,7 @@ public:
     }
 
     Vector<Gfx::IntRect, 32> const& rects() const { return m_rects; }
-    Gfx::IntSize const& window_size() const { return m_window_size; }
+    Gfx::IntSize window_size() const { return m_window_size; }
 
 private:
     Vector<Gfx::IntRect, 32> m_rects;
@@ -282,7 +282,7 @@ private:
 
 class PaintEvent final : public Event {
 public:
-    explicit PaintEvent(Gfx::IntRect const& rect, Gfx::IntSize const& window_size = {})
+    explicit PaintEvent(Gfx::IntRect const& rect, Gfx::IntSize window_size = {})
         : Event(Event::Paint)
         , m_rect(rect)
         , m_window_size(window_size)
@@ -290,7 +290,7 @@ public:
     }
 
     Gfx::IntRect const& rect() const { return m_rect; }
-    Gfx::IntSize const& window_size() const { return m_window_size; }
+    Gfx::IntSize window_size() const { return m_window_size; }
 
 private:
     Gfx::IntRect m_rect;
@@ -299,13 +299,13 @@ private:
 
 class ResizeEvent final : public Event {
 public:
-    explicit ResizeEvent(Gfx::IntSize const& size)
+    explicit ResizeEvent(Gfx::IntSize size)
         : Event(Event::Resize)
         , m_size(size)
     {
     }
 
-    Gfx::IntSize const& size() const { return m_size; }
+    Gfx::IntSize size() const { return m_size; }
 
 private:
     Gfx::IntSize m_size;

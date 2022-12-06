@@ -121,7 +121,7 @@ protected:
     virtual void doubleclick_event(MouseEvent&) override;
 
 private:
-    Gfx::IntRect child_rect_for_size(Gfx::IntSize const&) const;
+    Gfx::IntRect child_rect_for_size(Gfx::IntSize) const;
     Gfx::IntRect button_rect(size_t index) const;
     Gfx::IntRect vertical_button_rect(size_t index) const;
     Gfx::IntRect horizontal_button_rect(size_t index) const;

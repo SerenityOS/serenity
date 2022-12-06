@@ -209,7 +209,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
     }
 }
 
-RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize const& corners_size)
+RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize corners_size)
 {
     auto allocate_mask_bitmap = [&]() -> RefPtr<Gfx::Bitmap> {
         auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_size);

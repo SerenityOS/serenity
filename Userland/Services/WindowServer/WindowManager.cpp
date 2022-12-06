@@ -526,7 +526,7 @@ void WindowManager::tell_wms_screen_rects_changed()
     });
 }
 
-void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
+void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize size)
 {
     for_each_window_manager([&](WMConnectionFromClient& conn) {
         if (conn.window_id() < 0)

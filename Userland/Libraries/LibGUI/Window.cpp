@@ -292,7 +292,7 @@ Gfx::IntSize Window::minimum_size() const
     return ConnectionToWindowServer::the().get_window_minimum_size(m_window_id);
 }
 
-void Window::set_minimum_size(Gfx::IntSize const& size)
+void Window::set_minimum_size(Gfx::IntSize size)
 {
     VERIFY(size.width() >= 0 && size.height() >= 0);
     VERIFY(!is_obeying_widget_min_size());
@@ -918,7 +918,7 @@ void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
     m_back_store->bitmap().set_volatile();
 }
 
-OwnPtr<WindowBackingStore> Window::create_backing_store(Gfx::IntSize const& size)
+OwnPtr<WindowBackingStore> Window::create_backing_store(Gfx::IntSize size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
 
@@ -1171,7 +1171,7 @@ Action* Window::action_for_shortcut(Shortcut const& shortcut)
     return Action::find_action_for_shortcut(*this, shortcut);
 }
 
-void Window::set_base_size(Gfx::IntSize const& base_size)
+void Window::set_base_size(Gfx::IntSize base_size)
 {
     if (m_base_size == base_size)
         return;
@@ -1180,7 +1180,7 @@ void Window::set_base_size(Gfx::IntSize const& base_size)
         ConnectionToWindowServer::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
-void Window::set_size_increment(Gfx::IntSize const& size_increment)
+void Window::set_size_increment(Gfx::IntSize size_increment)
 {
     if (m_size_increment == size_increment)
         return;

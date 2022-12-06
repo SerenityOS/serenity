@@ -196,7 +196,7 @@ void AbstractScrollableWidget::update_scrollbar_visibility()
     }
 }
 
-void AbstractScrollableWidget::set_content_size(Gfx::IntSize const& size)
+void AbstractScrollableWidget::set_content_size(Gfx::IntSize size)
 {
     if (m_content_size == size)
         return;
@@ -204,7 +204,7 @@ void AbstractScrollableWidget::set_content_size(Gfx::IntSize const& size)
     update_scrollbar_ranges();
 }
 
-void AbstractScrollableWidget::set_min_content_size(Gfx::IntSize const& min_size)
+void AbstractScrollableWidget::set_min_content_size(Gfx::IntSize min_size)
 {
     if (m_min_content_size == min_size)
         return;
@@ -212,7 +212,7 @@ void AbstractScrollableWidget::set_min_content_size(Gfx::IntSize const& min_size
     update_scrollbar_ranges();
 }
 
-void AbstractScrollableWidget::set_size_occupied_by_fixed_elements(Gfx::IntSize const& size)
+void AbstractScrollableWidget::set_size_occupied_by_fixed_elements(Gfx::IntSize size)
 {
     if (m_size_occupied_by_fixed_elements == size)
         return;

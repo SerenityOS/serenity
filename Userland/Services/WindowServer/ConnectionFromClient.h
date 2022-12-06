@@ -102,7 +102,7 @@ private:
     virtual void remove_menu_item(i32 menu_id, i32 identifier) override;
     virtual void flash_menubar_menu(i32, i32) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool,
-        bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
+        bool, bool, bool, bool, bool, float, float, Gfx::IntSize, Gfx::IntSize, Gfx::IntSize,
         Optional<Gfx::IntSize> const&, i32, i32, DeprecatedString const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
     virtual void set_window_title(i32, DeprecatedString const&) override;
@@ -114,14 +114,14 @@ private:
     virtual void start_window_resize(i32, i32) override;
     virtual Messages::WindowServer::SetWindowRectResponse set_window_rect(i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::GetWindowRectResponse get_window_rect(i32) override;
-    virtual void set_window_minimum_size(i32, Gfx::IntSize const&) override;
+    virtual void set_window_minimum_size(i32, Gfx::IntSize) override;
     virtual Messages::WindowServer::GetWindowMinimumSizeResponse get_window_minimum_size(i32) override;
     virtual Messages::WindowServer::GetAppletRectOnScreenResponse get_applet_rect_on_screen(i32) override;
     virtual void invalidate_rect(i32, Vector<Gfx::IntRect> const&, bool) override;
     virtual void did_finish_painting(i32, Vector<Gfx::IntRect> const&) override;
     virtual void set_global_mouse_tracking(bool) override;
     virtual void set_window_opacity(i32, float) override;
-    virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize const&, bool) override;
+    virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize, bool) override;
     virtual void set_window_has_alpha_channel(i32, bool) override;
     virtual void set_window_alpha_hit_threshold(i32, float) override;
     virtual void move_window_to_front(i32) override;
@@ -159,7 +159,7 @@ private:
     virtual Messages::WindowServer::GetCursorThemeResponse get_cursor_theme() override;
     virtual Messages::WindowServer::SetSystemFontsResponse set_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
     virtual void set_system_effects(Vector<bool> const&, u8) override;
-    virtual void set_window_base_size_and_size_increment(i32, Gfx::IntSize const&, Gfx::IntSize const&) override;
+    virtual void set_window_base_size_and_size_increment(i32, Gfx::IntSize, Gfx::IntSize) override;
     virtual void set_window_resize_aspect_ratio(i32, Optional<Gfx::IntSize> const&) override;
     virtual void enable_display_link() override;
     virtual void disable_display_link() override;
@@ -173,7 +173,7 @@ private:
     virtual void set_scroll_step_size(u32) override;
     virtual Messages::WindowServer::GetScrollStepSizeResponse get_scroll_step_size() override;
     virtual Messages::WindowServer::GetScreenBitmapResponse get_screen_bitmap(Optional<Gfx::IntRect> const&, Optional<u32> const&) override;
-    virtual Messages::WindowServer::GetScreenBitmapAroundCursorResponse get_screen_bitmap_around_cursor(Gfx::IntSize const&) override;
+    virtual Messages::WindowServer::GetScreenBitmapAroundCursorResponse get_screen_bitmap_around_cursor(Gfx::IntSize) override;
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_buttons_switched(bool) override;

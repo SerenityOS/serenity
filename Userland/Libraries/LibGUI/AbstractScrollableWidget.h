@@ -84,9 +84,9 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
     virtual void did_scroll() { }
-    void set_content_size(Gfx::IntSize const&);
-    void set_min_content_size(Gfx::IntSize const&);
-    void set_size_occupied_by_fixed_elements(Gfx::IntSize const&);
+    void set_content_size(Gfx::IntSize);
+    void set_min_content_size(Gfx::IntSize);
+    void set_size_occupied_by_fixed_elements(Gfx::IntSize);
     virtual void on_automatic_scrolling_timer_fired() {};
     int autoscroll_threshold() const { return m_autoscroll_threshold; }
     void update_scrollbar_visibility();

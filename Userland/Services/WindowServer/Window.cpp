@@ -188,7 +188,7 @@ bool Window::apply_minimum_size(Gfx::IntRect& rect)
     return did_size_clamp;
 }
 
-void Window::set_minimum_size(Gfx::IntSize const& size)
+void Window::set_minimum_size(Gfx::IntSize size)
 {
     VERIFY(size.width() >= 0 && size.height() >= 0);
     if (m_minimum_size == size)

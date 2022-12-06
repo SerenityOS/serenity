@@ -23,7 +23,7 @@ namespace SoftGPU {
 template<typename T>
 class Typed2DBuffer final : public RefCounted<Typed2DBuffer<T>> {
 public:
-    static ErrorOr<NonnullRefPtr<Typed2DBuffer>> try_create(Gfx::IntSize const& size)
+    static ErrorOr<NonnullRefPtr<Typed2DBuffer>> try_create(Gfx::IntSize size)
     {
         auto buffer = TRY(Typed3DBuffer<T>::try_create(size.width(), size.height(), 1));
         return adopt_ref(*new Typed2DBuffer(buffer));

@@ -25,7 +25,7 @@ namespace SoftGPU {
 template<typename C, typename D, typename S>
 class FrameBuffer final : public RefCounted<FrameBuffer<C, D, S>> {
 public:
-    static ErrorOr<NonnullRefPtr<FrameBuffer<C, D, S>>> try_create(Gfx::IntSize const& size)
+    static ErrorOr<NonnullRefPtr<FrameBuffer<C, D, S>>> try_create(Gfx::IntSize size)
     {
         Gfx::IntRect rect = { 0, 0, size.width(), size.height() };
         auto color_buffer = TRY(Typed2DBuffer<C>::try_create(size));

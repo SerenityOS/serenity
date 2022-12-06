@@ -195,7 +195,7 @@ public:
     bool apply_minimum_size(Gfx::IntRect&);
 
     Gfx::IntSize minimum_size() const { return m_minimum_size; }
-    void set_minimum_size(Gfx::IntSize const&);
+    void set_minimum_size(Gfx::IntSize);
     void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void set_taskbar_rect(Gfx::IntRect const&);
@@ -259,7 +259,7 @@ public:
     void set_has_alpha_channel(bool value);
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
-    void set_size_increment(Gfx::IntSize const& increment) { m_size_increment = increment; }
+    void set_size_increment(Gfx::IntSize increment) { m_size_increment = increment; }
 
     Optional<Gfx::IntSize> const& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
     void set_resize_aspect_ratio(Optional<Gfx::IntSize> const& ratio)
@@ -274,7 +274,7 @@ public:
     }
 
     Gfx::IntSize base_size() const { return m_base_size; }
-    void set_base_size(Gfx::IntSize const& size) { m_base_size = size; }
+    void set_base_size(Gfx::IntSize size) { m_base_size = size; }
 
     Gfx::Bitmap const& icon() const { return *m_icon; }
     void set_icon(NonnullRefPtr<Gfx::Bitmap>&& icon) { m_icon = move(icon); }

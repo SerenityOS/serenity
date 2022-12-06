@@ -277,7 +277,7 @@ Tab::Tab(BrowserWindow& window)
         return this->window().position();
     };
 
-    view().on_resize_window = [this](Gfx::IntSize const& size) {
+    view().on_resize_window = [this](Gfx::IntSize size) {
         this->window().resize(size);
         return this->window().size();
     };
@@ -619,7 +619,7 @@ void Tab::window_position_changed(Gfx::IntPoint position)
     m_web_content_view->set_window_position(position);
 }
 
-void Tab::window_size_changed(Gfx::IntSize const& size)
+void Tab::window_size_changed(Gfx::IntSize size)
 {
     m_web_content_view->set_window_size(size);
 }

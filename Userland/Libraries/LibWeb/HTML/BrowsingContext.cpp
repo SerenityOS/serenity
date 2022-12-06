@@ -345,7 +345,7 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
     HTML::main_thread_event_loop().schedule();
 }
 
-void BrowsingContext::set_size(Gfx::IntSize const& size)
+void BrowsingContext::set_size(Gfx::IntSize size)
 {
     if (m_size == size)
         return;

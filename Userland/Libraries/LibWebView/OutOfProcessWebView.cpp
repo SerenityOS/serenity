@@ -235,7 +235,7 @@ void OutOfProcessWebView::notify_server_did_request_cursor_change(Badge<WebConte
     set_override_cursor(cursor);
 }
 
-void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size)
+void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size)
 {
     set_content_size(content_size);
 }
@@ -486,7 +486,7 @@ Gfx::IntPoint OutOfProcessWebView::notify_server_did_request_reposition_window(G
     return {};
 }
 
-Gfx::IntSize OutOfProcessWebView::notify_server_did_request_resize_window(Gfx::IntSize const& size)
+Gfx::IntSize OutOfProcessWebView::notify_server_did_request_resize_window(Gfx::IntSize size)
 {
     if (on_resize_window)
         return on_resize_window(size);
@@ -653,7 +653,7 @@ void OutOfProcessWebView::set_window_position(Gfx::IntPoint position)
     client().async_set_window_position(position);
 }
 
-void OutOfProcessWebView::set_window_size(Gfx::IntSize const& size)
+void OutOfProcessWebView::set_window_size(Gfx::IntSize size)
 {
     client().async_set_window_size(size);
 }

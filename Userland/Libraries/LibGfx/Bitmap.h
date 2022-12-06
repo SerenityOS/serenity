@@ -92,12 +92,12 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize const&, int intrinsic_scale, size_t pitch, void*);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create(BitmapFormat, IntSize, int intrinsic_scale = 1);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize, int intrinsic_scale = 1);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_file(StringView path, int scale_factor = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_fd_and_close(int fd, StringView path);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int intrinsic_scale, Vector<ARGB32> const& palette);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale, Vector<ARGB32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_serialized_byte_buffer(ByteBuffer&&);
 
     static bool is_path_a_supported_image_format(StringView path)
@@ -247,11 +247,11 @@ public:
     void flood_visit_from_point(Gfx::IntPoint start_point, int threshold, Function<void(Gfx::IntPoint location)> pixel_reached);
 
 private:
-    Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
-    Bitmap(BitmapFormat, IntSize const&, int, size_t pitch, void*);
-    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int, Vector<ARGB32> const& palette);
+    Bitmap(BitmapFormat, IntSize, int, BackingStore const&);
+    Bitmap(BitmapFormat, IntSize, int, size_t pitch, void*);
+    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize, int, Vector<ARGB32> const& palette);
 
-    static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
+    static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize size, int scale_factor);
 
     void allocate_palette_from_format(BitmapFormat, Vector<ARGB32> const& source_palette);
 

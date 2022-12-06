@@ -43,12 +43,12 @@ struct PixelQuad;
 
 class Device final : public GPU::Device {
 public:
-    Device(Gfx::IntSize const& min_size);
+    Device(Gfx::IntSize min_size);
 
     virtual GPU::DeviceInfo info() const override;
 
     virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, Vector<GPU::Vertex>& vertices) override;
-    virtual void resize(Gfx::IntSize const& min_size) override;
+    virtual void resize(Gfx::IntSize min_size) override;
     virtual void clear_color(FloatVector4 const&) override;
     virtual void clear_depth(GPU::DepthType) override;
     virtual void clear_stencil(GPU::StencilType) override;

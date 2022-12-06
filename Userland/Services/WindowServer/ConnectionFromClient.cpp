@@ -523,7 +523,7 @@ static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
     return { 0, 0 };
 }
 
-void ConnectionFromClient::set_window_minimum_size(i32 window_id, Gfx::IntSize const& size)
+void ConnectionFromClient::set_window_minimum_size(i32 window_id, Gfx::IntSize size)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -588,8 +588,8 @@ Window* ConnectionFromClient::window_from_id(i32 window_id)
 void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool minimizable, bool closeable, bool resizable,
     bool fullscreen, bool frameless, bool forced_shadow, float opacity,
-    float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
-    Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
+    float alpha_hit_threshold, Gfx::IntSize base_size, Gfx::IntSize size_increment,
+    Gfx::IntSize minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
     DeprecatedString const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
 {
     Window* parent_window = nullptr;
@@ -732,7 +732,7 @@ void ConnectionFromClient::did_finish_painting(i32 window_id, Vector<Gfx::IntRec
 
 void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unused]] i32 bpp,
     [[maybe_unused]] i32 pitch, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
-    Gfx::IntSize const& size, bool flush_immediately)
+    Gfx::IntSize size, bool flush_immediately)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -969,7 +969,7 @@ void ConnectionFromClient::set_system_effects(Vector<bool> const& effects, u8 ge
     });
 }
 
-void ConnectionFromClient::set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment)
+void ConnectionFromClient::set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize base_size, Gfx::IntSize size_increment)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -1191,7 +1191,7 @@ Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen
     return { Gfx::ShareableBitmap() };
 }
 
-Messages::WindowServer::GetScreenBitmapAroundCursorResponse ConnectionFromClient::get_screen_bitmap_around_cursor(Gfx::IntSize const& size)
+Messages::WindowServer::GetScreenBitmapAroundCursorResponse ConnectionFromClient::get_screen_bitmap_around_cursor(Gfx::IntSize size)
 {
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
     auto cursor_location = ScreenInput::the().cursor_location();

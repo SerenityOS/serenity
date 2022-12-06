@@ -18,7 +18,7 @@ class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
 
-    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size) = 0;
+    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
     virtual void notify_server_did_change_selection(Badge<WebContentClient>) = 0;
@@ -61,7 +61,7 @@ public:
     virtual void notify_server_did_update_resource_count(i32 count_waiting) = 0;
     virtual void notify_server_did_request_restore_window() = 0;
     virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) = 0;
-    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) = 0;
+    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize) = 0;
     virtual Gfx::IntRect notify_server_did_request_maximize_window() = 0;
     virtual Gfx::IntRect notify_server_did_request_minimize_window() = 0;
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() = 0;

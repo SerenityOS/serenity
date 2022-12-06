@@ -16,7 +16,7 @@
 
 namespace PixelPaint {
 
-ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Window* parent_window)
+ResizeImageDialog::ResizeImageDialog(Gfx::IntSize suggested_size, GUI::Window* parent_window)
     : Dialog(parent_window)
 {
     m_desired_size.set_width(max(1, suggested_size.width()));

@@ -36,9 +36,9 @@ public:
     void set_has_focus(bool);
     void set_is_scripting_enabled(bool);
     void set_window_position(Gfx::IntPoint);
-    void set_window_size(Gfx::IntSize const&);
+    void set_window_size(Gfx::IntSize);
 
-    Gfx::IntSize const& content_size() const { return m_content_size; }
+    Gfx::IntSize content_size() const { return m_content_size; }
 
     ErrorOr<void> connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
 
@@ -60,7 +60,7 @@ private:
     virtual void page_did_request_navigate_back() override;
     virtual void page_did_request_navigate_forward() override;
     virtual void page_did_request_refresh() override;
-    virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize const&) override;
+    virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize) override;
     virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint) override;
     virtual void page_did_request_restore_window() override;
     virtual Gfx::IntRect page_did_request_maximize_window() override;

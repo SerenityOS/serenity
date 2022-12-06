@@ -24,7 +24,7 @@
 
 namespace PixelPaint {
 
-ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& size)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize size)
 {
     VERIFY(!size.is_empty());
 
@@ -34,7 +34,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& si
     return adopt_nonnull_ref_or_enomem(new (nothrow) Image(size));
 }
 
-Image::Image(Gfx::IntSize const& size)
+Image::Image(Gfx::IntSize size)
     : m_size(size)
     , m_selection(*this)
 {
@@ -548,7 +548,7 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
     return bounding_rect;
 }
 
-void Image::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
+void Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode)
 {
     float scale_x = 1.0f;
     float scale_y = 1.0f;

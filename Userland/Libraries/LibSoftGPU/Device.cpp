@@ -821,7 +821,7 @@ void Device::rasterize_triangle(Triangle& triangle)
         });
 }
 
-Device::Device(Gfx::IntSize const& size)
+Device::Device(Gfx::IntSize size)
     : m_frame_buffer(FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>::try_create(size).release_value_but_fixme_should_propagate_errors())
 {
     m_options.scissor_box = m_frame_buffer->rect();
@@ -1361,7 +1361,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
     quad.out_color.set_w(quad.out_color.w() * quad.coverage);
 }
 
-void Device::resize(Gfx::IntSize const& size)
+void Device::resize(Gfx::IntSize size)
 {
     auto frame_buffer_or_error = FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>::try_create(size);
     m_frame_buffer = MUST(frame_buffer_or_error);
@@ -1711,7 +1711,7 @@ Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size) const
 
 extern "C" {
 
-GPU::Device* serenity_gpu_create_device(Gfx::IntSize const& size)
+GPU::Device* serenity_gpu_create_device(Gfx::IntSize size)
 {
     return make<SoftGPU::Device>(size).leak_ptr();
 }

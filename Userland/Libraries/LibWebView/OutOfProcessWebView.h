@@ -72,7 +72,7 @@ public:
     void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
 
     void set_window_position(Gfx::IntPoint);
-    void set_window_size(Gfx::IntSize const&);
+    void set_window_size(Gfx::IntSize);
 
     void set_system_visibility_state(bool visible);
 
@@ -107,7 +107,7 @@ public:
     Function<void(i32 count_waiting)> on_resource_status_change;
     Function<void()> on_restore_window;
     Function<Gfx::IntPoint(Gfx::IntPoint)> on_reposition_window;
-    Function<Gfx::IntSize(Gfx::IntSize const&)> on_resize_window;
+    Function<Gfx::IntSize(Gfx::IntSize)> on_resize_window;
     Function<Gfx::IntRect()> on_maximize_window;
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
@@ -136,7 +136,7 @@ private:
     virtual void did_scroll() override;
 
     // ^WebView::ViewImplementation
-    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size) override;
+    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) override;
     virtual void notify_server_did_change_selection(Badge<WebContentClient>) override;
@@ -179,7 +179,7 @@ private:
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
     virtual void notify_server_did_request_restore_window() override;
     virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) override;
-    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) override;
+    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize) override;
     virtual Gfx::IntRect notify_server_did_request_maximize_window() override;
     virtual Gfx::IntRect notify_server_did_request_minimize_window() override;
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() override;

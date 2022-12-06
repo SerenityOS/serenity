@@ -113,14 +113,14 @@ public:
     Gfx::IntPoint position() const { return rect().location(); }
 
     Gfx::IntSize minimum_size() const;
-    void set_minimum_size(Gfx::IntSize const&);
+    void set_minimum_size(Gfx::IntSize);
     void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
     void move_to(Gfx::IntPoint point) { set_rect({ point, size() }); }
 
     void resize(int width, int height) { resize({ width, height }); }
-    void resize(Gfx::IntSize const& size) { set_rect({ position(), size }); }
+    void resize(Gfx::IntSize size) { set_rect({ position(), size }); }
 
     void center_on_screen();
     void center_within(Window const&);
@@ -180,9 +180,9 @@ public:
     Gfx::Bitmap* back_bitmap();
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
-    void set_size_increment(Gfx::IntSize const&);
+    void set_size_increment(Gfx::IntSize);
     Gfx::IntSize base_size() const { return m_base_size; }
-    void set_base_size(Gfx::IntSize const&);
+    void set_base_size(Gfx::IntSize);
     Optional<Gfx::IntSize> const& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
     void set_resize_aspect_ratio(int width, int height) { set_resize_aspect_ratio(Gfx::IntSize(width, height)); }
     void set_no_resize_aspect_ratio() { set_resize_aspect_ratio({}); }
@@ -270,7 +270,7 @@ private:
 
     void server_did_destroy();
 
-    OwnPtr<WindowBackingStore> create_backing_store(Gfx::IntSize const&);
+    OwnPtr<WindowBackingStore> create_backing_store(Gfx::IntSize);
     void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false);
     void flip(Vector<Gfx::IntRect, 32> const& dirty_rects);
     void force_update();

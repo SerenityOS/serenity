@@ -34,7 +34,7 @@ public:
     Point<T> map(Point<T>) const;
 
     template<Arithmetic T>
-    Size<T> map(Size<T> const&) const;
+    Size<T> map(Size<T>) const;
 
     template<Arithmetic T>
     Rect<T> map(Rect<T> const&) const;

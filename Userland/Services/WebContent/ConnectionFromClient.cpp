@@ -535,7 +535,7 @@ void ConnectionFromClient::set_window_position(Gfx::IntPoint position)
     m_page_host->set_window_position(position);
 }
 
-void ConnectionFromClient::set_window_size(Gfx::IntSize const& size)
+void ConnectionFromClient::set_window_size(Gfx::IntSize size)
 {
     m_page_host->set_window_size(size);
 }

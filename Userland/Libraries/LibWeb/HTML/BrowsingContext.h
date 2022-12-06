@@ -134,8 +134,8 @@ public:
     Page* page() { return m_page; }
     Page const* page() const { return m_page; }
 
-    Gfx::IntSize const& size() const { return m_size; }
-    void set_size(Gfx::IntSize const&);
+    Gfx::IntSize size() const { return m_size; }
+    void set_size(Gfx::IntSize);
 
     void set_needs_display();
     void set_needs_display(Gfx::IntRect const&);
