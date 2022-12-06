@@ -489,6 +489,7 @@ namespace JS {
     P(substring)                             \
     P(subtract)                              \
     P(sup)                                   \
+    P(suppressed)                            \
     P(supportedLocalesOf)                    \
     P(supportedValuesOf)                     \
     P(symmetricDifference)                   \
