@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,8 +41,8 @@ ThrowCompletionOr<Value> SymbolConstructor::call()
 {
     auto& vm = this->vm();
     if (vm.argument(0).is_undefined())
-        return js_symbol(vm, {}, false);
-    return js_symbol(vm, TRY(vm.argument(0).to_string(vm)), false);
+        return Symbol::create(vm, {}, false);
+    return Symbol::create(vm, TRY(vm.argument(0).to_string(vm)), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
@@ -67,10 +68,10 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
     VERIFY(!result.has_value());
 
     // 4. Let newSymbol be a new unique Symbol value whose [[Description]] value is stringKey.
-    auto* new_symbol = js_symbol(vm, string_key, true);
+    auto new_symbol = Symbol::create(vm, string_key, true);
 
     // 5. Append the Record { [[Key]]: stringKey, [[Symbol]]: newSymbol } to the GlobalSymbolRegistry List.
-    vm.global_symbol_registry().set(string_key, *new_symbol);
+    vm.global_symbol_registry().set(string_key, new_symbol);
 
     // 6. Return newSymbol.
     return new_symbol;
