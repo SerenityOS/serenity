@@ -46,7 +46,7 @@ public:
     void clear_rect(IntRect const&, Color);
     void fill_rect(IntRect const&, Color);
     void fill_rect_with_dither_pattern(IntRect const&, Color, Color);
-    void fill_rect_with_checkerboard(IntRect const&, IntSize const&, Color color_dark, Color color_light);
+    void fill_rect_with_checkerboard(IntRect const&, IntSize, Color color_dark, Color color_light);
     void fill_rect_with_gradient(Orientation, IntRect const&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(IntRect const&, Color gradient_start, Color gradient_end);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);

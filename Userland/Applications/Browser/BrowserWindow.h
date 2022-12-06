@@ -46,7 +46,7 @@ public:
     void proxy_mappings_changed();
 
     void broadcast_window_position(Gfx::IntPoint);
-    void broadcast_window_size(Gfx::IntSize const&);
+    void broadcast_window_size(Gfx::IntSize);
 
 private:
     explicit BrowserWindow(CookieJar&, URL);

@@ -302,7 +302,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     terminal->on_title_change = [&](auto title) {
         window->set_title(title);
     };
-    terminal->on_terminal_size_change = [&](auto& size) {
+    terminal->on_terminal_size_change = [&](auto size) {
         window->resize(size);
     };
     terminal->apply_size_increments_to_window(*window);

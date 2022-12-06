@@ -85,7 +85,7 @@ public:
     const StringView color_scheme_name() const { return m_color_scheme_name; }
 
     Function<void(StringView)> on_title_change;
-    Function<void(Gfx::IntSize const&)> on_terminal_size_change;
+    Function<void(Gfx::IntSize)> on_terminal_size_change;
     Function<void()> on_command_exit;
 
     GUI::Menu& context_menu() { return *m_context_menu; }
@@ -148,7 +148,7 @@ private:
     void update_cursor();
     void invalidate_cursor();
 
-    void relayout(Gfx::IntSize const&);
+    void relayout(Gfx::IntSize);
 
     void update_copy_action();
     void update_paste_action();

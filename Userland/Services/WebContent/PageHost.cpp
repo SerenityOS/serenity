@@ -84,7 +84,7 @@ void PageHost::set_window_position(Gfx::IntPoint position)
     page().set_window_position(position);
 }
 
-void PageHost::set_window_size(Gfx::IntSize const& size)
+void PageHost::set_window_size(Gfx::IntSize size)
 {
     page().set_window_size(size);
 }
@@ -178,7 +178,7 @@ void PageHost::page_did_request_refresh()
     m_client.async_did_request_refresh();
 }
 
-Gfx::IntSize PageHost::page_did_request_resize_window(Gfx::IntSize const& size)
+Gfx::IntSize PageHost::page_did_request_resize_window(Gfx::IntSize size)
 {
     return m_client.did_request_resize_window(size);
 }

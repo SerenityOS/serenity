@@ -14,7 +14,7 @@ class CreateNewImageDialog final : public GUI::Dialog {
     C_OBJECT(CreateNewImageDialog)
 
 public:
-    Gfx::IntSize const& image_size() const { return m_image_size; }
+    Gfx::IntSize image_size() const { return m_image_size; }
     DeprecatedString const& image_name() const { return m_image_name; }
 
 private:

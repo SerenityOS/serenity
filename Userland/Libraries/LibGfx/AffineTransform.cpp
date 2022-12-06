@@ -166,7 +166,7 @@ FloatPoint AffineTransform::map(FloatPoint point) const
 }
 
 template<>
-IntSize AffineTransform::map(IntSize const& size) const
+IntSize AffineTransform::map(IntSize size) const
 {
     return {
         round_to<int>(static_cast<float>(size.width()) * x_scale()),
@@ -175,7 +175,7 @@ IntSize AffineTransform::map(IntSize const& size) const
 }
 
 template<>
-FloatSize AffineTransform::map(FloatSize const& size) const
+FloatSize AffineTransform::map(FloatSize size) const
 {
     return { size.width() * x_scale(), size.height() * y_scale() };
 }

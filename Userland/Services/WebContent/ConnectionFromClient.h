@@ -76,7 +76,7 @@ private:
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
     virtual void set_window_position(Gfx::IntPoint) override;
-    virtual void set_window_size(Gfx::IntSize const&) override;
+    virtual void set_window_size(Gfx::IntSize) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
     virtual void set_system_visibility_state(bool visible) override;
 

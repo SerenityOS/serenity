@@ -16,7 +16,7 @@
 
 namespace PixelPaint {
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::IntSize const& size, DeprecatedString name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::IntSize size, DeprecatedString name)
 {
     VERIFY(!size.is_empty());
 
@@ -221,7 +221,7 @@ void Layer::crop(Gfx::IntRect const& rect)
     did_modify_bitmap();
 }
 
-void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode)
+void Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode)
 {
     auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
     auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);
@@ -261,7 +261,7 @@ void Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scali
     resize(new_rect.size(), new_rect.location(), scaling_mode);
 }
 
-void Layer::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
+void Layer::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode)
 {
     resize(new_size, location(), scaling_mode);
 }

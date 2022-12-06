@@ -36,7 +36,7 @@ private:
     virtual void did_invalidate_content_rect(Gfx::IntRect const&) override;
     virtual void did_change_selection() override;
     virtual void did_request_cursor_change(i32) override;
-    virtual void did_layout(Gfx::IntSize const&) override;
+    virtual void did_layout(Gfx::IntSize) override;
     virtual void did_change_title(DeprecatedString const&) override;
     virtual void did_request_scroll(i32, i32) override;
     virtual void did_request_scroll_to(Gfx::IntPoint) override;
@@ -71,7 +71,7 @@ private:
     virtual void did_update_resource_count(i32 count_waiting) override;
     virtual void did_request_restore_window() override;
     virtual Messages::WebContentClient::DidRequestRepositionWindowResponse did_request_reposition_window(Gfx::IntPoint) override;
-    virtual Messages::WebContentClient::DidRequestResizeWindowResponse did_request_resize_window(Gfx::IntSize const&) override;
+    virtual Messages::WebContentClient::DidRequestResizeWindowResponse did_request_resize_window(Gfx::IntSize) override;
     virtual Messages::WebContentClient::DidRequestMaximizeWindowResponse did_request_maximize_window() override;
     virtual Messages::WebContentClient::DidRequestMinimizeWindowResponse did_request_minimize_window() override;
     virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;

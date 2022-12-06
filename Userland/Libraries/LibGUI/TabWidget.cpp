@@ -158,7 +158,7 @@ void TabWidget::resize_event(ResizeEvent& event)
     m_active_widget->set_relative_rect(child_rect_for_size(event.size()));
 }
 
-Gfx::IntRect TabWidget::child_rect_for_size(Gfx::IntSize const& size) const
+Gfx::IntRect TabWidget::child_rect_for_size(Gfx::IntSize size) const
 {
     Gfx::IntRect rect;
     switch (m_tab_position) {

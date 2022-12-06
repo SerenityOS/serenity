@@ -503,7 +503,7 @@ void TerminalWidget::resize_event(GUI::ResizeEvent& event)
     relayout(event.size());
 }
 
-void TerminalWidget::relayout(Gfx::IntSize const& size)
+void TerminalWidget::relayout(Gfx::IntSize size)
 {
     if (!m_scrollbar)
         return;

@@ -175,7 +175,7 @@ void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a
     }
 }
 
-void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize const& cell_size, Color color_dark, Color color_light)
+void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize cell_size, Color color_dark, Color color_light)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 

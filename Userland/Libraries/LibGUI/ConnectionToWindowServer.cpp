@@ -89,7 +89,7 @@ void ConnectionToWindowServer::update_system_effects(Vector<bool> const& effects
     Desktop::the().set_system_effects(effects);
 }
 
-void ConnectionToWindowServer::paint(i32 window_id, Gfx::IntSize const& window_size, Vector<Gfx::IntRect> const& rects)
+void ConnectionToWindowServer::paint(i32 window_id, Gfx::IntSize window_size, Vector<Gfx::IntRect> const& rects)
 {
     if (auto* window = Window::from_window_id(window_id))
         Core::EventLoop::current().post_event(*window, make<MultiPaintEvent>(rects, window_size));

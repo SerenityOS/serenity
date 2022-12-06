@@ -253,7 +253,7 @@ public:
 
     void move_to(Gfx::IntPoint point) { set_relative_rect({ point, relative_rect().size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
-    void resize(Gfx::IntSize const& size) { set_relative_rect({ relative_rect().location(), size }); }
+    void resize(Gfx::IntSize size) { set_relative_rect({ relative_rect().location(), size }); }
     void resize(int width, int height) { resize({ width, height }); }
 
     void move_by(int x, int y) { move_by({ x, y }); }

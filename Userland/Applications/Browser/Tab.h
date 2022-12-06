@@ -57,7 +57,7 @@ public:
     void action_left(GUI::Action&);
 
     void window_position_changed(Gfx::IntPoint);
-    void window_size_changed(Gfx::IntSize const&);
+    void window_size_changed(Gfx::IntSize);
 
     Function<void(DeprecatedString const&)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;

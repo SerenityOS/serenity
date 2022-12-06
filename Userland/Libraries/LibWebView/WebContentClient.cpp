@@ -71,7 +71,7 @@ void WebContentClient::did_request_cursor_change(i32 cursor_type)
     m_view.notify_server_did_request_cursor_change({}, (Gfx::StandardCursor)cursor_type);
 }
 
-void WebContentClient::did_layout(Gfx::IntSize const& content_size)
+void WebContentClient::did_layout(Gfx::IntSize content_size)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidLayout! content_size={}", content_size);
     m_view.notify_server_did_layout({}, content_size);
@@ -255,7 +255,7 @@ Messages::WebContentClient::DidRequestRepositionWindowResponse WebContentClient:
     return m_view.notify_server_did_request_reposition_window(position);
 }
 
-Messages::WebContentClient::DidRequestResizeWindowResponse WebContentClient::did_request_resize_window(Gfx::IntSize const& size)
+Messages::WebContentClient::DidRequestResizeWindowResponse WebContentClient::did_request_resize_window(Gfx::IntSize size)
 {
     return m_view.notify_server_did_request_resize_window(size);
 }

@@ -29,7 +29,7 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize const&, DeprecatedString name);
+    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize, DeprecatedString name);
     static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
     static ErrorOr<NonnullRefPtr<Layer>> try_create_snapshot(Image&, Layer const&);
 
@@ -59,9 +59,9 @@ public:
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
-    void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
+    void resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode);
     void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
-    void resize(Gfx::IntSize const& new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode);
+    void resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 

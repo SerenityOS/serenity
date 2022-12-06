@@ -39,7 +39,7 @@ public:
     virtual DeviceInfo info() const = 0;
 
     virtual void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, Vector<Vertex>& vertices) = 0;
-    virtual void resize(Gfx::IntSize const& min_size) = 0;
+    virtual void resize(Gfx::IntSize min_size) = 0;
     virtual void clear_color(FloatVector4 const&) = 0;
     virtual void clear_depth(DepthType) = 0;
     virtual void clear_stencil(StencilType) = 0;
@@ -71,6 +71,6 @@ public:
 
 }
 
-typedef GPU::Device* (*serenity_gpu_create_device_t)(Gfx::IntSize const& size);
+typedef GPU::Device* (*serenity_gpu_create_device_t)(Gfx::IntSize size);
 
-extern "C" GPU::Device* serenity_gpu_create_device(Gfx::IntSize const& size);
+extern "C" GPU::Device* serenity_gpu_create_device(Gfx::IntSize size);

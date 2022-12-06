@@ -82,8 +82,8 @@ public:
     Gfx::IntPoint window_position() const { return m_window_position; }
     void set_window_position(Gfx::IntPoint position) { m_window_position = position; }
 
-    Gfx::IntSize const& window_size() const { return m_window_size; }
-    void set_window_size(Gfx::IntSize const& size) { m_window_size = size; }
+    Gfx::IntSize window_size() const { return m_window_size; }
+    void set_window_size(Gfx::IntSize size) { m_window_size = size; }
 
     void did_request_alert(DeprecatedString const& message);
     void alert_closed();
@@ -146,7 +146,7 @@ public:
     virtual void page_did_request_navigate_back() { }
     virtual void page_did_request_navigate_forward() { }
     virtual void page_did_request_refresh() { }
-    virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize const&) { return {}; }
+    virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize) { return {}; }
     virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint) { return {}; }
     virtual void page_did_request_restore_window() { }
     virtual Gfx::IntRect page_did_request_maximize_window() { return {}; }

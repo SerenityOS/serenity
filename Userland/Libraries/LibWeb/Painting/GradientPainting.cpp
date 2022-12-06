@@ -20,12 +20,12 @@ static float normalized_gradient_angle_radians(float gradient_angle)
     return real_angle * (AK::Pi<float> / 180);
 }
 
-static float calulate_gradient_length(Gfx::IntSize const& gradient_size, float sin_angle, float cos_angle)
+static float calulate_gradient_length(Gfx::IntSize gradient_size, float sin_angle, float cos_angle)
 {
     return AK::fabs(gradient_size.height() * sin_angle) + AK::fabs(gradient_size.width() * cos_angle);
 }
 
-static float calulate_gradient_length(Gfx::IntSize const& gradient_size, float gradient_angle)
+static float calulate_gradient_length(Gfx::IntSize gradient_size, float gradient_angle)
 {
     float angle = normalized_gradient_angle_radians(gradient_angle);
     float sin_angle, cos_angle;
