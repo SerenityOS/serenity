@@ -130,8 +130,8 @@ public:
             //        Handle this with a custom VM+page allocator instead of using kmalloc_aligned().
             auto* slot = kmalloc_aligned(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size);
             if (!slot) {
-                // FIXME: Dare to return nullptr!
-                PANIC("OOM while growing slabheap ({})", m_slab_size);
+                dbgln_if(KMALLOC_DEBUG, "OOM while growing slabheap ({})", m_slab_size);
+                return nullptr;
             }
             auto* block = new (slot) KmallocSlabBlock(m_slab_size);
             m_usable_blocks.append(*block);
@@ -253,7 +253,8 @@ struct KmallocGlobalData {
         }
 
         if (!try_expand(size)) {
-            PANIC("OOM when trying to expand kmalloc heap.");
+            dbgln_if(KMALLOC_DEBUG, "OOM when trying to expand kmalloc heap");
+            return nullptr;
         }
 
         return allocate(size, caller_will_initialize_memory);
@@ -320,14 +321,14 @@ struct KmallocGlobalData {
         dbgln_if(KMALLOC_DEBUG, "Unable to allocate {}, expanding kmalloc heap", allocation_request);
 
         if (!expansion_data->virtual_range.contains(new_subheap_base, new_subheap_size)) {
-            // FIXME: Dare to return false and allow kmalloc() to fail!
-            PANIC("Out of address space when expanding kmalloc heap.");
+            dbgln_if(KMALLOC_DEBUG, "Out of address space when expanding kmalloc heap");
+            return false;
         }
 
         auto physical_pages_or_error = MM.commit_physical_pages(new_subheap_size / PAGE_SIZE);
         if (physical_pages_or_error.is_error()) {
-            // FIXME: Dare to return false!
-            PANIC("Out of physical pages when expanding kmalloc heap.");
+            dbgln_if(KMALLOC_DEBUG, "Out of address space when expanding kmalloc heap");
+            return false;
         }
         auto physical_pages = physical_pages_or_error.release_value();
 
