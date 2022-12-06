@@ -18,44 +18,44 @@
 
 namespace JS {
 
-DeprecatedString MarkupGenerator::html_from_source(StringView source)
+ErrorOr<String> MarkupGenerator::html_from_source(StringView source)
 {
     StringBuilder builder;
     auto lexer = Lexer(source);
     for (auto token = lexer.next(); token.type() != TokenType::Eof; token = lexer.next()) {
-        builder.append(token.trivia());
-        builder.append(wrap_string_in_style(token.value(), style_type_for_token(token)));
+        TRY(builder.try_append(token.trivia()));
+        TRY(builder.try_append(TRY(wrap_string_in_style(token.value(), style_type_for_token(token)))));
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-DeprecatedString MarkupGenerator::html_from_value(Value value)
+ErrorOr<String> MarkupGenerator::html_from_value(Value value)
 {
     StringBuilder output_html;
-    value_to_html(value, output_html);
-    return output_html.to_deprecated_string();
+    TRY(value_to_html(value, output_html));
+    return output_html.to_string();
 }
 
-DeprecatedString MarkupGenerator::html_from_error(Error const& object, bool in_promise)
+ErrorOr<String> MarkupGenerator::html_from_error(Error const& object, bool in_promise)
 {
     StringBuilder output_html;
-    error_to_html(object, output_html, in_promise);
-    return output_html.to_deprecated_string();
+    TRY(error_to_html(object, output_html, in_promise));
+    return output_html.to_string();
 }
 
-void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)
+ErrorOr<void> MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)
 {
     if (value.is_empty()) {
-        output_html.append("&lt;empty&gt;"sv);
-        return;
+        TRY(output_html.try_append("&lt;empty&gt;"sv));
+        return {};
     }
 
     if (value.is_object()) {
         if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
             //        not for all reoccurring objects.
-            output_html.appendff("&lt;already printed Object {:p}&gt;", &value.as_object());
-            return;
+            TRY(output_html.try_appendff("&lt;already printed Object {:p}&gt;", &value.as_object()));
+            return {};
         }
         seen_objects.set(&value.as_object());
     }
@@ -64,7 +64,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
         auto& object = value.as_object();
         if (is<Array>(object))
             return array_to_html(static_cast<Array const&>(object), output_html, seen_objects);
-        output_html.append(wrap_string_in_style(object.class_name(), StyleType::ObjectType));
+        TRY(output_html.try_append(TRY(wrap_string_in_style(object.class_name(), StyleType::ObjectType))));
         if (object.is_function())
             return function_to_html(object, output_html, seen_objects);
         if (is<Date>(object))
@@ -73,76 +73,81 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
     }
 
     if (value.is_string())
-        output_html.append(open_style_type(StyleType::String));
+        TRY(output_html.try_append(TRY(open_style_type(StyleType::String))));
     else if (value.is_number())
-        output_html.append(open_style_type(StyleType::Number));
+        TRY(output_html.try_append(TRY(open_style_type(StyleType::Number))));
     else if (value.is_boolean() || value.is_nullish())
-        output_html.append(open_style_type(StyleType::KeywordBold));
+        TRY(output_html.try_append(TRY(open_style_type(StyleType::KeywordBold))));
 
     if (value.is_string())
-        output_html.append('"');
-    output_html.append(escape_html_entities(value.to_string_without_side_effects()));
+        TRY(output_html.try_append('"'));
+    TRY(output_html.try_append(escape_html_entities(value.to_string_without_side_effects())));
     if (value.is_string())
-        output_html.append('"');
+        TRY(output_html.try_append('"'));
 
-    output_html.append("</span>"sv);
+    TRY(output_html.try_append("</span>"sv));
+    return {};
 }
 
-void MarkupGenerator::array_to_html(Array const& array, StringBuilder& html_output, HashTable<Object*>& seen_objects)
+ErrorOr<void> MarkupGenerator::array_to_html(Array const& array, StringBuilder& html_output, HashTable<Object*>& seen_objects)
 {
-    html_output.append(wrap_string_in_style("[ ", StyleType::Punctuation));
+    TRY(html_output.try_append(TRY(wrap_string_in_style("[ "sv, StyleType::Punctuation))));
     bool first = true;
     for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
         if (!first)
-            html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
+            TRY(html_output.try_append(TRY(wrap_string_in_style(", "sv, StyleType::Punctuation))));
         first = false;
         // FIXME: Exception check
-        value_to_html(array.get(it.index()).release_value(), html_output, seen_objects);
+        TRY(value_to_html(array.get(it.index()).release_value(), html_output, seen_objects));
     }
-    html_output.append(wrap_string_in_style(" ]", StyleType::Punctuation));
+    TRY(html_output.try_append(TRY(wrap_string_in_style(" ]"sv, StyleType::Punctuation))));
+    return {};
 }
 
-void MarkupGenerator::object_to_html(Object const& object, StringBuilder& html_output, HashTable<Object*>& seen_objects)
+ErrorOr<void> MarkupGenerator::object_to_html(Object const& object, StringBuilder& html_output, HashTable<Object*>& seen_objects)
 {
-    html_output.append(wrap_string_in_style("{ ", StyleType::Punctuation));
+    TRY(html_output.try_append(TRY(wrap_string_in_style("{ "sv, StyleType::Punctuation))));
     bool first = true;
     for (auto& entry : object.indexed_properties()) {
         if (!first)
-            html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
+            TRY(html_output.try_append(TRY(wrap_string_in_style(", "sv, StyleType::Punctuation))));
         first = false;
-        html_output.append(wrap_string_in_style(DeprecatedString::number(entry.index()), StyleType::Number));
-        html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
+        TRY(html_output.try_append(TRY(wrap_string_in_style(TRY(String::number(entry.index())), StyleType::Number))));
+        TRY(html_output.try_append(TRY(wrap_string_in_style(": "sv, StyleType::Punctuation))));
         // FIXME: Exception check
-        value_to_html(object.get(entry.index()).release_value(), html_output, seen_objects);
+        TRY(value_to_html(object.get(entry.index()).release_value(), html_output, seen_objects));
     }
 
     if (!object.indexed_properties().is_empty() && object.shape().property_count())
-        html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
+        TRY(html_output.try_append(TRY(wrap_string_in_style(", "sv, StyleType::Punctuation))));
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
-        html_output.append(wrap_string_in_style(DeprecatedString::formatted("\"{}\"", escape_html_entities(it.key.to_display_string())), StyleType::String));
-        html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
-        value_to_html(object.get_direct(it.value.offset), html_output, seen_objects);
+        TRY(html_output.try_append(TRY(wrap_string_in_style(TRY(String::formatted("\"{}\"", escape_html_entities(it.key.to_display_string()))), StyleType::String))));
+        TRY(html_output.try_append(TRY(wrap_string_in_style(": "sv, StyleType::Punctuation))));
+        TRY(value_to_html(object.get_direct(it.value.offset), html_output, seen_objects));
         if (index != object.shape().property_count() - 1)
-            html_output.append(wrap_string_in_style(", ", StyleType::Punctuation));
+            TRY(html_output.try_append(TRY(wrap_string_in_style(", "sv, StyleType::Punctuation))));
         ++index;
     }
 
-    html_output.append(wrap_string_in_style(" }", StyleType::Punctuation));
+    TRY(html_output.try_append(TRY(wrap_string_in_style(" }"sv, StyleType::Punctuation))));
+    return {};
 }
 
-void MarkupGenerator::function_to_html(Object const& function, StringBuilder& html_output, HashTable<Object*>&)
+ErrorOr<void> MarkupGenerator::function_to_html(Object const& function, StringBuilder& html_output, HashTable<Object*>&)
 {
-    html_output.appendff("[{}]", function.class_name());
+    TRY(html_output.try_appendff("[{}]", function.class_name()));
+    return {};
 }
 
-void MarkupGenerator::date_to_html(Object const& date, StringBuilder& html_output, HashTable<Object*>&)
+ErrorOr<void> MarkupGenerator::date_to_html(Object const& date, StringBuilder& html_output, HashTable<Object*>&)
 {
-    html_output.appendff("Date {}", to_date_string(static_cast<Date const&>(date).date_value()));
+    TRY(html_output.try_appendff("Date {}", to_date_string(static_cast<Date const&>(date).date_value())));
+    return {};
 }
 
-void MarkupGenerator::trace_to_html(TracebackFrame const& traceback_frame, StringBuilder& html_output)
+ErrorOr<void> MarkupGenerator::trace_to_html(TracebackFrame const& traceback_frame, StringBuilder& html_output)
 {
     auto function_name = escape_html_entities(traceback_frame.function_name);
     auto [line, column, _] = traceback_frame.source_range.start;
@@ -151,52 +156,54 @@ void MarkupGenerator::trace_to_html(TracebackFrame const& traceback_frame, Strin
         return last_slash_index.has_value() ? filename.substring_view(*last_slash_index + 1) : filename;
     };
     auto filename = escape_html_entities(get_filename_from_path(traceback_frame.source_range.filename()));
-    auto trace = DeprecatedString::formatted("at {} ({}:{}:{})", function_name, filename, line, column);
+    auto trace = TRY(String::formatted("at {} ({}:{}:{})", function_name, filename, line, column));
 
-    html_output.appendff("&nbsp;&nbsp;{}<br>", trace);
+    TRY(html_output.try_appendff("&nbsp;&nbsp;{}<br>", trace));
+    return {};
 }
 
-void MarkupGenerator::error_to_html(Error const& error, StringBuilder& html_output, bool in_promise)
+ErrorOr<void> MarkupGenerator::error_to_html(Error const& error, StringBuilder& html_output, bool in_promise)
 {
     auto& vm = error.vm();
     auto name = error.get_without_side_effects(vm.names.name).value_or(js_undefined());
     auto message = error.get_without_side_effects(vm.names.message).value_or(js_undefined());
     auto name_string = name.to_string_without_side_effects();
     auto message_string = message.to_string_without_side_effects();
-    auto uncaught_message = DeprecatedString::formatted("Uncaught {}[{}]: ", in_promise ? "(in promise) " : "", name_string);
+    auto uncaught_message = TRY(String::formatted("Uncaught {}[{}]: ", in_promise ? "(in promise) " : "", name_string));
 
-    html_output.append(wrap_string_in_style(uncaught_message, StyleType::Invalid));
-    html_output.appendff("{}<br>", message_string.is_empty() ? "\"\"" : escape_html_entities(message_string));
+    TRY(html_output.try_append(TRY(wrap_string_in_style(uncaught_message, StyleType::Invalid)).bytes_as_string_view()));
+    TRY(html_output.try_appendff("{}<br>", message_string.is_empty() ? "\"\"" : escape_html_entities(message_string)));
 
     for (size_t i = 0; i < error.traceback().size() - min(error.traceback().size(), 3); i++) {
         auto& traceback_frame = error.traceback().at(i);
-        trace_to_html(traceback_frame, html_output);
+        TRY(trace_to_html(traceback_frame, html_output));
     }
+    return {};
 }
 
-DeprecatedString MarkupGenerator::style_from_style_type(StyleType type)
+StringView MarkupGenerator::style_from_style_type(StyleType type)
 {
     switch (type) {
     case StyleType::Invalid:
-        return "color: red;";
+        return "color: red;"sv;
     case StyleType::String:
-        return "color: -libweb-palette-syntax-string;";
+        return "color: -libweb-palette-syntax-string;"sv;
     case StyleType::Number:
-        return "color: -libweb-palette-syntax-number;";
+        return "color: -libweb-palette-syntax-number;"sv;
     case StyleType::KeywordBold:
-        return "color: -libweb-palette-syntax-keyword; font-weight: bold;";
+        return "color: -libweb-palette-syntax-keyword; font-weight: bold;"sv;
     case StyleType::Punctuation:
-        return "color: -libweb-palette-syntax-punctuation;";
+        return "color: -libweb-palette-syntax-punctuation;"sv;
     case StyleType::Operator:
-        return "color: -libweb-palette-syntax-operator;";
+        return "color: -libweb-palette-syntax-operator;"sv;
     case StyleType::Keyword:
-        return "color: -libweb-palette-syntax-keyword;";
+        return "color: -libweb-palette-syntax-keyword;"sv;
     case StyleType::ControlKeyword:
-        return "color: -libweb-palette-syntax-control-keyword;";
+        return "color: -libweb-palette-syntax-control-keyword;"sv;
     case StyleType::Identifier:
-        return "color: -libweb-palette-syntax-identifier;";
+        return "color: -libweb-palette-syntax-identifier;"sv;
     case StyleType::ObjectType:
-        return "padding: 2px; background-color: #ddf; color: black; font-weight: bold;";
+        return "padding: 2px; background-color: #ddf; color: black; font-weight: bold;"sv;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -233,14 +240,14 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     }
 }
 
-DeprecatedString MarkupGenerator::open_style_type(StyleType type)
+ErrorOr<String> MarkupGenerator::open_style_type(StyleType type)
 {
-    return DeprecatedString::formatted("<span style=\"{}\">", style_from_style_type(type));
+    return String::formatted("<span style=\"{}\">", style_from_style_type(type));
 }
 
-DeprecatedString MarkupGenerator::wrap_string_in_style(DeprecatedString source, StyleType type)
+ErrorOr<String> MarkupGenerator::wrap_string_in_style(StringView source, StyleType type)
 {
-    return DeprecatedString::formatted("<span style=\"{}\">{}</span>", style_from_style_type(type), escape_html_entities(source));
+    return String::formatted("<span style=\"{}\">{}</span>", style_from_style_type(type), escape_html_entities(source));
 }
 
 }

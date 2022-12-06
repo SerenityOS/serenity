@@ -79,13 +79,13 @@ void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
 
     if (result.value().has_value()) {
         m_console_global_object->set_most_recent_result(result.value().value());
-        print_html(JS::MarkupGenerator::html_from_value(*result.value()));
+        print_html(JS::MarkupGenerator::html_from_value(*result.value()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     }
 }
 
 void WebContentConsoleClient::report_exception(JS::Error const& exception, bool in_promise)
 {
-    print_html(JS::MarkupGenerator::html_from_error(exception, in_promise));
+    print_html(JS::MarkupGenerator::html_from_error(exception, in_promise).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
 }
 
 void WebContentConsoleClient::print_html(DeprecatedString const& line)
