@@ -259,7 +259,7 @@ JS::Value DOMTokenList::item_value(size_t index) const
     auto const& string = item(index);
     if (string.is_null())
         return JS::js_undefined();
-    return JS::js_string(vm(), string);
+    return JS::PrimitiveString::create(vm(), string);
 }
 
 }

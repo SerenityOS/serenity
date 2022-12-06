@@ -27,8 +27,9 @@ JS::ThrowCompletionOr<DeprecatedString> StringCell::display(Cell& cell, CellType
 
 JS::ThrowCompletionOr<JS::Value> StringCell::js_value(Cell& cell, CellTypeMetadata const& metadata) const
 {
+    auto& vm = cell.sheet().interpreter().vm();
     auto string = TRY(display(cell, metadata));
-    return JS::js_string(cell.sheet().interpreter().heap(), string);
+    return JS::PrimitiveString::create(vm, string);
 }
 
 DeprecatedString StringCell::metadata_hint(MetadataName metadata) const

@@ -103,7 +103,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::R
         auto& constructor = Bindings::ensure_web_constructor<Bindings::@constructor_class@>(realm, "@interface_name@");
         global.define_direct_property("@interface_name@", &constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
         prototype.define_direct_property(vm.names.constructor, &constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
-        constructor.define_direct_property(vm.names.name, js_string(vm, "@interface_name@"), JS::Attribute::Configurable);
+        constructor.define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@interface_name@"), JS::Attribute::Configurable);
     }
 )~~~"); };
 

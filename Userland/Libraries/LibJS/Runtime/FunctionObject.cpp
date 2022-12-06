@@ -75,7 +75,7 @@ void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& 
     }
 
     // 6. Perform ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-    MUST(define_property_or_throw(vm.names.name, PropertyDescriptor { .value = js_string(vm, move(name)), .writable = false, .enumerable = false, .configurable = true }));
+    MUST(define_property_or_throw(vm.names.name, PropertyDescriptor { .value = PrimitiveString::create(vm, move(name)), .writable = false, .enumerable = false, .configurable = true }));
 
     // 7. Return unused.
 }

@@ -20,7 +20,7 @@ void AsyncGeneratorPrototype::initialize(Realm& realm)
     Object::initialize(realm);
 
     // 27.6.1.5 AsyncGenerator.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-asyncgenerator-prototype-tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "AsyncGenerator"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "AsyncGenerator"), Attribute::Configurable);
 }
 
 }

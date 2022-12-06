@@ -119,7 +119,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 
     // 10. If argCount = 0, let bodyArg be the empty String.
     if (arg_count == 0) {
-        // Optimization: Instead of creating a js_string() here, we just check if body_arg is empty in step 16.
+        // Optimization: Instead of creating a PrimitiveString here, we just check if body_arg is empty in step 16.
     }
     // 11. Else if argCount = 1, let bodyArg be args[0].
     else if (arg_count == 1) {

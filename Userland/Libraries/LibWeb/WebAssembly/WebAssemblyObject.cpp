@@ -43,25 +43,25 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
     auto& vm = this->vm();
 
     auto& memory_constructor = Bindings::ensure_web_constructor<WebAssemblyMemoryConstructor>(realm, "WebAssembly.Memory");
-    memory_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
+    memory_constructor.define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
     auto& memory_prototype = Bindings::ensure_web_prototype<WebAssemblyMemoryPrototype>(realm, "WebAssemblyMemoryPrototype");
     memory_prototype.define_direct_property(vm.names.constructor, &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Memory", &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     auto& instance_constructor = Bindings::ensure_web_constructor<WebAssemblyInstanceConstructor>(realm, "WebAssembly.Instance");
-    instance_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Instance"), JS::Attribute::Configurable);
+    instance_constructor.define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "WebAssembly.Instance"), JS::Attribute::Configurable);
     auto& instance_prototype = Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssemblyInstancePrototype");
     instance_prototype.define_direct_property(vm.names.constructor, &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Instance", &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     auto& module_constructor = Bindings::ensure_web_constructor<WebAssemblyModuleConstructor>(realm, "WebAssembly.Module");
-    module_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Module"), JS::Attribute::Configurable);
+    module_constructor.define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "WebAssembly.Module"), JS::Attribute::Configurable);
     auto& module_prototype = Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssemblyModulePrototype");
     module_prototype.define_direct_property(vm.names.constructor, &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Module", &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     auto& table_constructor = Bindings::ensure_web_constructor<WebAssemblyTableConstructor>(realm, "WebAssembly.Table");
-    table_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Table"), JS::Attribute::Configurable);
+    table_constructor.define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "WebAssembly.Table"), JS::Attribute::Configurable);
     auto& table_prototype = Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssemblyTablePrototype");
     table_prototype.define_direct_property(vm.names.constructor, &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);

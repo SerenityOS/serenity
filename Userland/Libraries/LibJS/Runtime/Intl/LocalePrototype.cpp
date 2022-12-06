@@ -31,7 +31,7 @@ void LocalePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.Locale"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.Locale"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.baseName, base_name, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.calendar, calendar, {}, Attribute::Configurable);
@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::to_string)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Return loc.[[Locale]].
-    return js_string(vm, locale_object->locale());
+    return PrimitiveString::create(vm, locale_object->locale());
 }
 
 // 14.3.6 get Intl.Locale.prototype.baseName, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.baseName
@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
     VERIFY(locale.has_value());
 
     // 4. Return the substring of locale corresponding to the unicode_language_id production.
-    return js_string(vm, locale->language_id.to_deprecated_string());
+    return PrimitiveString::create(vm, locale->language_id.to_deprecated_string());
 }
 
 #define JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES \
@@ -130,13 +130,13 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
 // 14.3.9 get Intl.Locale.prototype.collation, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.collation
 // 14.3.10 get Intl.Locale.prototype.hourCycle, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.hourCycle
 // 14.3.12 get Intl.Locale.prototype.numberingSystem, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numberingSystem
-#define __JS_ENUMERATE(keyword)                           \
-    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)   \
-    {                                                     \
-        auto* locale_object = TRY(typed_this_object(vm)); \
-        if (!locale_object->has_##keyword())              \
-            return js_undefined();                        \
-        return js_string(vm, locale_object->keyword());   \
+#define __JS_ENUMERATE(keyword)                                       \
+    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)               \
+    {                                                                 \
+        auto* locale_object = TRY(typed_this_object(vm));             \
+        if (!locale_object->has_##keyword())                          \
+            return js_undefined();                                    \
+        return PrimitiveString::create(vm, locale_object->keyword()); \
     }
 JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES
 #undef __JS_ENUMERATE
@@ -166,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::language)
     VERIFY(locale.has_value());
 
     // 5. Return the substring of locale corresponding to the unicode_language_subtag production of the unicode_language_id.
-    return js_string(vm, *locale->language_id.language);
+    return PrimitiveString::create(vm, *locale->language_id.language);
 }
 
 // 14.3.14 get Intl.Locale.prototype.script, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.script
@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::script)
         return js_undefined();
 
     // 6. Return the substring of locale corresponding to the unicode_script_subtag production of the unicode_language_id.
-    return js_string(vm, *locale->language_id.script);
+    return PrimitiveString::create(vm, *locale->language_id.script);
 }
 
 // 14.3.15 get Intl.Locale.prototype.region, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.region
@@ -208,7 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
         return js_undefined();
 
     // 6. Return the substring of locale corresponding to the unicode_region_subtag production of the unicode_language_id.
-    return js_string(vm, *locale->language_id.region);
+    return PrimitiveString::create(vm, *locale->language_id.region);
 }
 
 #define JS_ENUMERATE_LOCALE_INFO_PROPERTIES \
@@ -264,7 +264,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     auto direction = character_direction_of_locale(*locale_object);
 
     // 5. Perform ! CreateDataPropertyOrThrow(info, "direction", dir).
-    MUST(info->create_data_property_or_throw(vm.names.direction, js_string(vm, direction)));
+    MUST(info->create_data_property_or_throw(vm.names.direction, PrimitiveString::create(vm, direction)));
 
     // 6. Return info.
     return info;

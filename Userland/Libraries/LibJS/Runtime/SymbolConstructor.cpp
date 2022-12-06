@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 
     auto& symbol = argument.as_symbol();
     if (symbol.is_global())
-        return js_string(vm, symbol.description());
+        return PrimitiveString::create(vm, symbol.description());
 
     return js_undefined();
 }

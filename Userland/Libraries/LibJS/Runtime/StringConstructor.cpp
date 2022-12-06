@@ -43,9 +43,9 @@ ThrowCompletionOr<Value> StringConstructor::call()
 {
     auto& vm = this->vm();
     if (!vm.argument_count())
-        return js_string(heap(), "");
+        return PrimitiveString::create(vm, "");
     if (vm.argument(0).is_symbol())
-        return js_string(vm, vm.argument(0).as_symbol().to_deprecated_string());
+        return PrimitiveString::create(vm, vm.argument(0).as_symbol().to_deprecated_string());
     return TRY(vm.argument(0).to_primitive_string(vm));
 }
 
@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_targ
 
     PrimitiveString* primitive_string;
     if (!vm.argument_count())
-        primitive_string = js_string(vm, "");
+        primitive_string = PrimitiveString::create(vm, "");
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     auto literal_segments = TRY(length_of_array_like(vm, *raw));
 
     if (literal_segments == 0)
-        return js_string(vm, "");
+        return PrimitiveString::create(vm, "");
 
     auto const number_of_substituions = vm.argument_count() - 1;
 
@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
             builder.append(next_sub);
         }
     }
-    return js_string(vm, builder.build());
+    return PrimitiveString::create(vm, builder.build());
 }
 
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
     for (size_t i = 0; i < vm.argument_count(); ++i)
         string.append(TRY(vm.argument(i).to_u16(vm)));
 
-    return js_string(vm, Utf16String(move(string)));
+    return PrimitiveString::create(vm, Utf16String(move(string)));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         AK::code_point_to_utf16(string, static_cast<u32>(code_point));
     }
 
-    return js_string(vm, Utf16String(move(string)));
+    return PrimitiveString::create(vm, Utf16String(move(string)));
 }
 
 }

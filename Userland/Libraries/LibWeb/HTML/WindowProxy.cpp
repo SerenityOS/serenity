@@ -233,7 +233,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> WindowProxy::internal_own_pro
     // 5. Repeat while index < maxProperties,
     for (size_t i = 0; i < max_properties; ++i) {
         // 1. Add ! ToString(index) as the last element of keys.
-        keys.append(JS::js_string(vm, DeprecatedString::number(i)));
+        keys.append(JS::PrimitiveString::create(vm, DeprecatedString::number(i)));
 
         // 2. Increment index by 1.
     }

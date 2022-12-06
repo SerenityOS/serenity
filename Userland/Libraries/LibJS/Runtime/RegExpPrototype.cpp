@@ -275,7 +275,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
 
     // 27. Let matchedValue be ! GetMatchString(S, match).
     // 28. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
-    MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
+    MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, match.view.u16_view())));
 
     // 29. If R contains any GroupName, then
     //     a. Let groups be OrdinaryObjectCreate(null).
@@ -312,7 +312,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]: captureEnd }.
             // v. Let capturedValue be ! GetMatchString(S, capture).
             auto capture_as_utf16_string = Utf16String(capture.view.u16_view());
-            captured_value = js_string(vm, capture_as_utf16_string);
+            captured_value = PrimitiveString::create(vm, capture_as_utf16_string);
             // vi. Append capture to indices.
             indices.append(Match::create(capture));
             // vii. Append capturedValue to the end of capturedValues.
@@ -375,8 +375,8 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     }
 
     // 22. Perform ! CreateDataPropertyOrThrow(A, "input", S).
-    // NOTE: This step is performed last to allow the string to be moved into the js_string invocation.
-    MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
+    // NOTE: This step is performed last to allow the string to be moved into the PrimitiveString::create() invocation.
+    MUST(array->create_data_property_or_throw(vm.names.input, PrimitiveString::create(vm, move(string))));
 
     // 34. Return A.
     return array;
@@ -391,7 +391,7 @@ ThrowCompletionOr<Value> regexp_exec(VM& vm, Object& regexp_object, Utf16String 
     // 2. If IsCallable(exec) is true, then
     if (exec.is_function()) {
         // a. Let result be ? Call(exec, R, « S »).
-        auto result = TRY(call(vm, exec.as_function(), &regexp_object, js_string(vm, move(string))));
+        auto result = TRY(call(vm, exec.as_function(), &regexp_object, PrimitiveString::create(vm, move(string))));
 
         // b. If Type(result) is neither Object nor Null, throw a TypeError exception.
         if (!result.is_object() && !result.is_null())
@@ -510,7 +510,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 #undef __JS_ENUMERATE
 
     // 18. Return result.
-    return js_string(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 22.2.5.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
@@ -576,7 +576,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         auto match_str = TRY(match_value.to_string(vm));
 
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
-        MUST(array->create_data_property_or_throw(n, js_string(vm, match_str)));
+        MUST(array->create_data_property_or_throw(n, PrimitiveString::create(vm, match_str)));
 
         // 3. If matchStr is the empty String, then
         if (match_str.is_empty()) {
@@ -620,7 +620,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     bool full_unicode = flags.contains('u') || flags.contains('v');
 
     // 6. Let matcher be ? Construct(C, « R, flags »).
-    auto* matcher = TRY(construct(vm, *constructor, regexp_object, js_string(vm, move(flags))));
+    auto* matcher = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(flags))));
 
     // 7. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
     auto last_index_value = TRY(regexp_object->get(vm.names.lastIndex));
@@ -654,7 +654,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     if (!replace_value.is_function()) {
         // a. Set replaceValue to ? ToString(replaceValue).
         auto replace_string = TRY(replace_value.to_string(vm));
-        replace_value = js_string(vm, move(replace_string));
+        replace_value = PrimitiveString::create(vm, move(replace_string));
     }
 
     // 7. Let flags be ? ToString(? Get(rx, "flags")).
@@ -752,7 +752,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             // ii. If capN is not undefined, then
             if (!capture.is_undefined()) {
                 // 1. Set capN to ? ToString(capN).
-                capture = js_string(vm, TRY(capture.to_string(vm)));
+                capture = PrimitiveString::create(vm, TRY(capture.to_string(vm)));
             }
 
             // iii. Append capN as the last element of captures.
@@ -771,14 +771,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (replace_value.is_function()) {
             // i. Let replacerArgs be « matched ».
             MarkedVector<Value> replacer_args(vm.heap());
-            replacer_args.append(js_string(vm, move(matched)));
+            replacer_args.append(PrimitiveString::create(vm, move(matched)));
 
             // ii. Append in List order the elements of captures to the end of the List replacerArgs.
             replacer_args.extend(move(captures));
 
             // iii. Append 𝔽(position) and S to replacerArgs.
             replacer_args.append(Value(position));
-            replacer_args.append(js_string(vm, string));
+            replacer_args.append(PrimitiveString::create(vm, string));
 
             // iv. If namedCaptures is not undefined, then
             if (!named_captures.is_undefined()) {
@@ -820,13 +820,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 15. If nextSourcePosition ≥ lengthS, return accumulatedResult.
     if (next_source_position >= string.length_in_code_units())
-        return js_string(vm, accumulated_result.build());
+        return PrimitiveString::create(vm, accumulated_result.build());
 
     // 16. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
     auto substring = string.substring_view(next_source_position);
     accumulated_result.append(substring);
 
-    return js_string(vm, accumulated_result.build());
+    return PrimitiveString::create(vm, accumulated_result.build());
 }
 
 // 22.2.5.12 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
@@ -881,7 +881,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     if (!is<RegExpObject>(regexp_object)) {
         // a. If SameValue(R, %RegExp.prototype%) is true, return "(?:)".
         if (same_value(regexp_object, realm.intrinsics().regexp_prototype()))
-            return js_string(vm, "(?:)");
+            return PrimitiveString::create(vm, "(?:)");
 
         // b. Otherwise, throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp");
@@ -891,7 +891,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     // 5. Let src be R.[[OriginalSource]].
     // 6. Let flags be R.[[OriginalFlags]].
     // 7. Return EscapeRegExpPattern(src, flags).
-    return js_string(vm, static_cast<RegExpObject&>(*regexp_object).escape_regexp_pattern());
+    return PrimitiveString::create(vm, static_cast<RegExpObject&>(*regexp_object).escape_regexp_pattern());
 }
 
 // 22.2.5.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
@@ -923,7 +923,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto new_flags = flags.find('y').has_value() ? move(flags) : DeprecatedString::formatted("{}y", flags);
 
     // 10. Let splitter be ? Construct(C, « rx, newFlags »).
-    auto* splitter = TRY(construct(vm, *constructor, regexp_object, js_string(vm, move(new_flags))));
+    auto* splitter = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(new_flags))));
 
     // 11. Let A be ! ArrayCreate(0).
     auto* array = MUST(Array::create(realm, 0));
@@ -951,7 +951,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
             return array;
 
         // c. Perform ! CreateDataPropertyOrThrow(A, "0", S).
-        MUST(array->create_data_property_or_throw(0, js_string(vm, move(string))));
+        MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, move(string))));
 
         // d. Return A.
         return array;
@@ -998,7 +998,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         auto substring = string.substring_view(last_match_end, next_search_from - last_match_end);
 
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
-        MUST(array->create_data_property_or_throw(array_length, js_string(vm, substring)));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, substring)));
 
         // 3. Set lengthA to lengthA + 1.
         ++array_length;
@@ -1045,7 +1045,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto substring = string.substring_view(last_match_end);
 
     // 21. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
-    MUST(array->create_data_property_or_throw(array_length, js_string(vm, substring)));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, substring)));
 
     // 22. Return A.
     return array;
@@ -1085,7 +1085,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 
     // 5. Let result be the string-concatenation of "/", pattern, "/", and flags.
     // 6. Return result.
-    return js_string(vm, DeprecatedString::formatted("/{}/{}", pattern, flags));
+    return PrimitiveString::create(vm, DeprecatedString::formatted("/{}/{}", pattern, flags));
 }
 
 // B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp.prototype.compile
@@ -1122,10 +1122,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
         auto& regexp_pattern = static_cast<RegExpObject&>(pattern.as_object());
 
         // b. Let P be pattern.[[OriginalSource]].
-        pattern = js_string(vm, regexp_pattern.pattern());
+        pattern = PrimitiveString::create(vm, regexp_pattern.pattern());
 
         // c. Let F be pattern.[[OriginalFlags]].
-        flags = js_string(vm, regexp_pattern.flags());
+        flags = PrimitiveString::create(vm, regexp_pattern.flags());
     }
     // 8. Else,
     //     a. Let P be pattern.

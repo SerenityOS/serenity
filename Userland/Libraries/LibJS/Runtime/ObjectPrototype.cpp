@@ -70,11 +70,11 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 
     // 1. If the this value is undefined, return "[object Undefined]".
     if (this_value.is_undefined())
-        return js_string(vm, "[object Undefined]");
+        return PrimitiveString::create(vm, "[object Undefined]");
 
     // 2. If the this value is null, return "[object Null]".
     if (this_value.is_null())
-        return js_string(vm, "[object Null]");
+        return PrimitiveString::create(vm, "[object Null]");
 
     // 3. Let O be ! ToObject(this value).
     auto* object = MUST(this_value.to_object(vm));
@@ -128,7 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         tag = to_string_tag.as_string().deprecated_string();
 
     // 17. Return the string-concatenation of "[object ", tag, and "]".
-    return js_string(vm, DeprecatedString::formatted("[object {}]", tag));
+    return PrimitiveString::create(vm, DeprecatedString::formatted("[object {}]", tag));
 }
 
 // 20.1.3.5 Object.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-object.prototype.tolocalestring

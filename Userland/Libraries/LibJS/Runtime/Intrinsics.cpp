@@ -126,7 +126,7 @@ namespace JS {
 
 static void initialize_constructor(VM& vm, PropertyKey const& property_key, Object& constructor, Object* prototype, PropertyAttributes constructor_property_attributes = Attribute::Writable | Attribute::Configurable)
 {
-    constructor.define_direct_property(vm.names.name, js_string(vm, property_key.as_string()), Attribute::Configurable);
+    constructor.define_direct_property(vm.names.name, PrimitiveString::create(vm, property_key.as_string()), Attribute::Configurable);
     if (prototype)
         prototype->define_direct_property(vm.names.constructor, &constructor, constructor_property_attributes);
 }
@@ -228,7 +228,7 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
         },
         0, "", &realm);
     m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
-    m_throw_type_error_function->define_direct_property(vm.names.name, js_string(vm, ""), 0);
+    m_throw_type_error_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, ""), 0);
     MUST(m_throw_type_error_function->internal_prevent_extensions());
 
 #define __JS_ENUMERATE(ClassName, snake_name) \

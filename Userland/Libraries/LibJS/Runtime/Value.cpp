@@ -334,7 +334,7 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
     if (is_string())
         return &as_string();
     auto string = TRY(to_string(vm));
-    return js_string(vm, string);
+    return PrimitiveString::create(vm, string).ptr();
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
@@ -428,7 +428,7 @@ ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_typ
         auto to_primitive_method = TRY(get_method(vm, *vm.well_known_symbol_to_primitive()));
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
-            auto result = TRY(call(vm, *to_primitive_method, *this, js_string(vm, hint)));
+            auto result = TRY(call(vm, *to_primitive_method, *this, PrimitiveString::create(vm, hint)));
             if (!result.is_object())
                 return result;
             return vm.throw_completion<TypeError>(ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
@@ -1182,7 +1182,7 @@ ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
         auto lhs_string = TRY(lhs_primitive.to_primitive_string(vm));
         auto rhs_string = TRY(rhs_primitive.to_primitive_string(vm));
-        return js_rope_string(vm, *lhs_string, *rhs_string);
+        return PrimitiveString::create(vm, *lhs_string, *rhs_string);
     }
 
     auto lhs_numeric = TRY(lhs_primitive.to_numeric(vm));

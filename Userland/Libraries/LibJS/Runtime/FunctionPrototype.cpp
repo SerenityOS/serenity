@@ -36,7 +36,7 @@ void FunctionPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, *vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-    define_direct_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
+    define_direct_property(vm.names.name, PrimitiveString::create(vm, ""), Attribute::Configurable);
 }
 
 ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, MarkedVector<Value>)
@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]] is a sequence of Unicode code points and HostHasSourceTextAvailable(func) is true, then
     if (is<ECMAScriptFunctionObject>(function)) {
         // a. Return CodePointsToString(func.[[SourceText]]).
-        return js_string(vm, static_cast<ECMAScriptFunctionObject&>(function).source_text());
+        return PrimitiveString::create(vm, static_cast<ECMAScriptFunctionObject&>(function).source_text());
     }
 
     // 3. If func is a built-in function object, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal slot and func.[[InitialName]] is a String, the portion of the returned String that would be matched by NativeFunctionAccessor[opt] PropertyName must be the value of func.[[InitialName]].
@@ -164,12 +164,12 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         // NOTE: once we remove name(), the fallback here can simply be an empty string.
         auto const& native_function = static_cast<NativeFunction&>(function);
         auto const name = native_function.initial_name().value_or(native_function.name());
-        return js_string(vm, DeprecatedString::formatted("function {}() {{ [native code] }}", name));
+        return PrimitiveString::create(vm, DeprecatedString::formatted("function {}() {{ [native code] }}", name));
     }
 
     // 4. If Type(func) is Object and IsCallable(func) is true, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction.
     // NOTE: ProxyObject, BoundFunction, WrappedFunction
-    return js_string(vm, "function () { [native code] }");
+    return PrimitiveString::create(vm, "function () { [native code] }");
 }
 
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance

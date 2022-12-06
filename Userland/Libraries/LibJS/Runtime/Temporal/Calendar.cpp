@@ -119,7 +119,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& cale
     }
 
     // 3. Let fieldsArray be ? Call(fields, calendar, « CreateArrayFromList(fieldNames) »).
-    auto fields_array = TRY(call(vm, *fields, &calendar, Array::create_from<StringView>(realm, field_names, [&](auto value) { return js_string(vm, value); })));
+    auto fields_array = TRY(call(vm, *fields, &calendar, Array::create_from<StringView>(realm, field_names, [&](auto value) { return PrimitiveString::create(vm, value); })));
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
     auto list = TRY(iterable_to_list_of_type(vm, fields_array, { OptionType::String }));
@@ -397,7 +397,7 @@ ThrowCompletionOr<Value> calendar_era(VM& vm, Object& calendar, Object& date_lik
 
     // 3. If result is not undefined, set result to ? ToString(result).
     if (!result.is_undefined())
-        result = js_string(vm, TRY(result.to_string(vm)));
+        result = PrimitiveString::create(vm, TRY(result.to_string(vm)));
 
     // 4. Return result.
     return result;
@@ -811,7 +811,7 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
     // 11. Let monthCodeNumber be ! ToIntegerOrInfinity(monthCodeDigits).
-    auto month_code_number = MUST(Value(js_string(vm, move(month_code_digits))).to_integer_or_infinity(vm));
+    auto month_code_number = MUST(Value(PrimitiveString::create(vm, move(month_code_digits))).to_integer_or_infinity(vm));
 
     // 12. Assert: SameValue(monthCode, ISOMonthCode(monthCodeNumber)) is true.
     VERIFY(month_code_string == iso_month_code(month_code_number));

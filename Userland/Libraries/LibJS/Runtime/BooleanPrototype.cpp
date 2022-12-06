@@ -31,12 +31,12 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
 {
     auto this_value = vm.this_value();
     if (this_value.is_boolean())
-        return js_string(vm, this_value.as_bool() ? "true" : "false");
+        return PrimitiveString::create(vm, this_value.as_bool() ? "true" : "false");
     if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object()))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Boolean");
 
     bool bool_value = static_cast<BooleanObject const&>(this_value.as_object()).boolean();
-    return js_string(vm, bool_value ? "true" : "false");
+    return PrimitiveString::create(vm, bool_value ? "true" : "false");
 }
 
 // 20.3.3.3 Boolean.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-boolean.prototype.valueof

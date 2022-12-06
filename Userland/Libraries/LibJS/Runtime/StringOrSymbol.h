@@ -86,7 +86,7 @@ public:
     Value to_value(VM& vm) const
     {
         if (is_string())
-            return js_string(vm, as_string());
+            return PrimitiveString::create(vm, as_string());
         if (is_symbol())
             return const_cast<Symbol*>(as_symbol());
         return {};

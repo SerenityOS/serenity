@@ -100,7 +100,7 @@ JS::Value MediaList::item_value(size_t index) const
 {
     if (index >= m_media.size())
         return JS::js_undefined();
-    return JS::js_string(vm(), m_media[index].to_deprecated_string());
+    return JS::PrimitiveString::create(vm(), m_media[index].to_deprecated_string());
 }
 
 }

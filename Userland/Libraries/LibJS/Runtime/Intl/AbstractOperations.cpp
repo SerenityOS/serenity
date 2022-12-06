@@ -589,7 +589,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     }
 
     // 5. Return CreateArrayFromList(supportedLocales).
-    return Array::create_from<DeprecatedString>(realm, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
+    return Array::create_from<DeprecatedString>(realm, supported_locales, [&vm](auto& locale) { return PrimitiveString::create(vm, locale); });
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject

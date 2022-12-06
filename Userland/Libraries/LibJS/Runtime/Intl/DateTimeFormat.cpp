@@ -135,7 +135,7 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
         // a. For each property name prop of « "year", "month", "day" », do
         for (auto const& property : AK::Array { vm.names.year, vm.names.month, vm.names.day }) {
             // i. Perform ? CreateDataPropertyOrThrow(options, prop, "numeric").
-            TRY(options->create_data_property_or_throw(property, js_string(vm, "numeric"sv)));
+            TRY(options->create_data_property_or_throw(property, PrimitiveString::create(vm, "numeric"sv)));
         }
     }
 
@@ -144,7 +144,7 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
         // a. For each property name prop of « "hour", "minute", "second" », do
         for (auto const& property : AK::Array { vm.names.hour, vm.names.minute, vm.names.second }) {
             // i. Perform ? CreateDataPropertyOrThrow(options, prop, "numeric").
-            TRY(options->create_data_property_or_throw(property, js_string(vm, "numeric"sv)));
+            TRY(options->create_data_property_or_throw(property, PrimitiveString::create(vm, "numeric"sv)));
         }
     }
 
@@ -548,7 +548,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
     auto const& data_locale = date_time_format.data_locale();
 
     auto construct_number_format = [&](auto* options) -> ThrowCompletionOr<NumberFormat*> {
-        auto* number_format = TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, locale), options));
+        auto* number_format = TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale), options));
         return static_cast<NumberFormat*>(number_format);
     };
 
@@ -868,10 +868,10 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
         auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
-        MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
+        MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));
 
         // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
-        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, move(part.value))));
+        MUST(object->create_data_property_or_throw(vm.names.value, PrimitiveString::create(vm, move(part.value))));
 
         // d. Perform ! CreateDataProperty(result, ! ToString(n), O).
         MUST(result->create_data_property_or_throw(n, object));
@@ -1184,13 +1184,13 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
         auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
-        MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
+        MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));
 
         // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
-        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, move(part.value))));
+        MUST(object->create_data_property_or_throw(vm.names.value, PrimitiveString::create(vm, move(part.value))));
 
         // d. Perform ! CreateDataPropertyOrThrow(O, "source", part.[[Source]]).
-        MUST(object->create_data_property_or_throw(vm.names.source, js_string(vm, part.source)));
+        MUST(object->create_data_property_or_throw(vm.names.source, PrimitiveString::create(vm, part.source)));
 
         // e. Perform ! CreateDataProperty(result, ! ToString(n), O).
         MUST(result->create_data_property_or_throw(n, object));

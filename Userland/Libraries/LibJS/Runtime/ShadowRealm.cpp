@@ -83,7 +83,7 @@ ThrowCompletionOr<void> copy_name_and_length(VM& vm, FunctionObject& function, F
 
     // 7. If Type(targetName) is not String, set targetName to the empty String.
     if (!target_name.is_string())
-        target_name = js_string(vm, DeprecatedString::empty());
+        target_name = PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 8. Perform SetFunctionName(F, targetName, prefix).
     function.set_function_name({ target_name.as_string().deprecated_string() }, move(prefix));

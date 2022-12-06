@@ -31,7 +31,7 @@ void InstantPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 8.3.2 Temporal.Instant.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Instant"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.Instant"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
@@ -312,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     auto* rounded_instant = MUST(create_temporal_instant(vm, *rounded_ns));
 
     // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
-    return js_string(vm, TRY(temporal_instant_to_string(vm, *rounded_instant, time_zone, precision.precision)));
+    return PrimitiveString::create(vm, TRY(temporal_instant_to_string(vm, *rounded_instant, time_zone, precision.precision)));
 }
 
 // 8.3.14 Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring
@@ -324,7 +324,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
     auto* instant = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    return js_string(vm, TRY(temporal_instant_to_string(vm, *instant, js_undefined(), "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_instant_to_string(vm, *instant, js_undefined(), "auto"sv)));
 }
 
 // 8.3.15 Temporal.Instant.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson
@@ -335,7 +335,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
     auto* instant = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    return js_string(vm, TRY(temporal_instant_to_string(vm, *instant, js_undefined(), "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_instant_to_string(vm, *instant, js_undefined(), "auto"sv)));
 }
 
 // 8.3.16 Temporal.Instant.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof

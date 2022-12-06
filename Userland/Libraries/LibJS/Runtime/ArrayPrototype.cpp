@@ -991,7 +991,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     // FWIW: engine262, a "100% spec compliant" ECMA-262 impl, aborts with "too much recursion".
     // Same applies to Array.prototype.toLocaleString().
     if (s_array_join_seen_objects.contains(this_object))
-        return js_string(vm, "");
+        return PrimitiveString::create(vm, "");
     s_array_join_seen_objects.set(this_object);
     ArmedScopeGuard unsee_object_guard = [&] {
         s_array_join_seen_objects.remove(this_object);
@@ -1012,7 +1012,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         builder.append(string);
     }
 
-    return js_string(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 23.1.3.19 Array.prototype.keys ( ), https://tc39.es/ecma262/#sec-array.prototype.keys
@@ -1702,7 +1702,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (s_array_join_seen_objects.contains(this_object))
-        return js_string(vm, "");
+        return PrimitiveString::create(vm, "");
     s_array_join_seen_objects.set(this_object);
     ArmedScopeGuard unsee_object_guard = [&] {
         s_array_join_seen_objects.remove(this_object);
@@ -1743,7 +1743,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     }
 
     // 7. Return R.
-    return js_string(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 1.1.1.4 Array.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed

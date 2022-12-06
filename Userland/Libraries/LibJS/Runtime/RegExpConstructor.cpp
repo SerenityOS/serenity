@@ -100,11 +100,11 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject& new_targ
     if (pattern.is_object() && is<RegExpObject>(pattern.as_object())) {
         // a. Let P be pattern.[[OriginalSource]].
         auto& regexp_pattern = static_cast<RegExpObject&>(pattern.as_object());
-        pattern_value = js_string(vm, regexp_pattern.pattern());
+        pattern_value = PrimitiveString::create(vm, regexp_pattern.pattern());
 
         // b. If flags is undefined, let F be pattern.[[OriginalFlags]].
         if (flags.is_undefined())
-            flags_value = js_string(vm, regexp_pattern.flags());
+            flags_value = PrimitiveString::create(vm, regexp_pattern.flags());
         // c. Else, let F be flags.
         else
             flags_value = flags;

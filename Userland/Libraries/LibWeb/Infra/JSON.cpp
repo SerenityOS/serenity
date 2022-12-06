@@ -18,7 +18,7 @@ WebIDL::ExceptionOr<JS::Value> parse_json_string_to_javascript_value(JS::VM& vm,
     auto& realm = *vm.current_realm();
 
     // 1. Return ? Call(%JSON.parse%, undefined, « string »).
-    return TRY(JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), JS::js_string(vm, string)));
+    return TRY(JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), JS::PrimitiveString::create(vm, string)));
 }
 
 // https://infra.spec.whatwg.org/#parse-json-bytes-to-a-javascript-value

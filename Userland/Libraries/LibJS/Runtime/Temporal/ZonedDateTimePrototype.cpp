@@ -33,7 +33,7 @@ void ZonedDateTimePrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 6.3.2 Temporal.ZonedDateTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.ZonedDateTime"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.ZonedDateTime"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.timeZone, time_zone_getter, {}, Attribute::Configurable);
@@ -179,7 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
     auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *instant, calendar));
 
     // 7. Return ? CalendarMonthCode(calendar, temporalDateTime).
-    return js_string(vm, TRY(calendar_month_code(vm, calendar, *temporal_date_time)));
+    return PrimitiveString::create(vm, TRY(calendar_month_code(vm, calendar, *temporal_date_time)));
 }
 
 // 6.3.8 get Temporal.ZonedDateTime.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.day
@@ -669,7 +669,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
     auto offset_string = TRY(builtin_time_zone_get_offset_string_for(vm, &zoned_date_time->time_zone(), *instant));
-    return js_string(vm, move(offset_string));
+    return PrimitiveString::create(vm, move(offset_string));
 }
 
 // 15.6.10.2 get Temporal.ZonedDateTime.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.era
@@ -1093,7 +1093,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
     auto show_offset = TRY(to_show_offset_option(vm, *options));
 
     // 9. Return ? TemporalZonedDateTimeToString(zonedDateTime, precision.[[Precision]], showCalendar, showTimeZone, showOffset, precision.[[Increment]], precision.[[Unit]], roundingMode).
-    return js_string(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, precision.precision, show_calendar, show_time_zone, show_offset, precision.increment, precision.unit, rounding_mode)));
+    return PrimitiveString::create(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, precision.precision, show_calendar, show_time_zone, show_offset, precision.increment, precision.unit, rounding_mode)));
 }
 
 // 6.3.42 Temporal.ZonedDateTime.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tolocalestring
@@ -1105,7 +1105,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_locale_string)
     auto* zoned_date_time = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalZonedDateTimeToString(zonedDateTime, "auto", "auto", "auto", "auto").
-    return js_string(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, "auto"sv, "auto"sv, "auto"sv, "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, "auto"sv, "auto"sv, "auto"sv, "auto"sv)));
 }
 
 // 6.3.43 Temporal.ZonedDateTime.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tojson
@@ -1116,7 +1116,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_json)
     auto* zoned_date_time = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalZonedDateTimeToString(zonedDateTime, "auto", "auto", "auto", "auto").
-    return js_string(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, "auto"sv, "auto"sv, "auto"sv, "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, "auto"sv, "auto"sv, "auto"sv, "auto"sv)));
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
@@ -1345,7 +1345,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
     MUST(fields->create_data_property_or_throw(vm.names.isoYear, Value(date_time->iso_year())));
 
     // 19. Perform ! CreateDataPropertyOrThrow(fields, "offset", offset).
-    MUST(fields->create_data_property_or_throw(vm.names.offset, js_string(vm, offset)));
+    MUST(fields->create_data_property_or_throw(vm.names.offset, PrimitiveString::create(vm, offset)));
 
     // 20. Perform ! CreateDataPropertyOrThrow(fields, "timeZone", timeZone).
     MUST(fields->create_data_property_or_throw(vm.names.timeZone, Value(&time_zone)));

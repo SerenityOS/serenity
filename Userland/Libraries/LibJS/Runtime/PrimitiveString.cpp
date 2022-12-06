@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -105,65 +106,50 @@ Optional<Value> PrimitiveString::get(VM& vm, PropertyKey const& property_key) co
     auto length = str.length_in_code_units();
     if (length <= index.as_index())
         return {};
-    return js_string(vm, str.substring_view(index.as_index(), 1));
+    return create(vm, str.substring_view(index.as_index(), 1));
 }
 
-PrimitiveString* js_string(Heap& heap, Utf16View const& view)
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16View const& view)
 {
-    return js_string(heap, Utf16String(view));
+    return create(vm, Utf16String(view));
 }
 
-PrimitiveString* js_string(VM& vm, Utf16View const& view)
-{
-    return js_string(vm.heap(), view);
-}
-
-PrimitiveString* js_string(Heap& heap, Utf16String string)
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16String string)
 {
     if (string.is_empty())
-        return &heap.vm().empty_string();
+        return vm.empty_string();
 
     if (string.length_in_code_units() == 1) {
         u16 code_unit = string.code_unit_at(0);
         if (is_ascii(code_unit))
-            return &heap.vm().single_ascii_character_string(static_cast<u8>(code_unit));
+            return vm.single_ascii_character_string(static_cast<u8>(code_unit));
     }
 
-    return heap.allocate_without_realm<PrimitiveString>(move(string));
+    return *vm.heap().allocate_without_realm<PrimitiveString>(move(string));
 }
 
-PrimitiveString* js_string(VM& vm, Utf16String string)
-{
-    return js_string(vm.heap(), move(string));
-}
-
-PrimitiveString* js_string(Heap& heap, DeprecatedString string)
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString string)
 {
     if (string.is_empty())
-        return &heap.vm().empty_string();
+        return vm.empty_string();
 
     if (string.length() == 1) {
         auto ch = static_cast<u8>(string.characters()[0]);
         if (is_ascii(ch))
-            return &heap.vm().single_ascii_character_string(ch);
+            return vm.single_ascii_character_string(ch);
     }
 
-    auto& string_cache = heap.vm().string_cache();
+    auto& string_cache = vm.string_cache();
     auto it = string_cache.find(string);
     if (it == string_cache.end()) {
-        auto* new_string = heap.allocate_without_realm<PrimitiveString>(string);
+        auto* new_string = vm.heap().allocate_without_realm<PrimitiveString>(string);
         string_cache.set(move(string), new_string);
-        return new_string;
+        return *new_string;
     }
-    return it->value;
+    return *it->value;
 }
 
-PrimitiveString* js_string(VM& vm, DeprecatedString string)
-{
-    return js_string(vm.heap(), move(string));
-}
-
-PrimitiveString* js_rope_string(VM& vm, PrimitiveString& lhs, PrimitiveString& rhs)
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, PrimitiveString& lhs, PrimitiveString& rhs)
 {
     // We're here to concatenate two strings into a new rope string.
     // However, if any of them are empty, no rope is required.
@@ -172,15 +158,15 @@ PrimitiveString* js_rope_string(VM& vm, PrimitiveString& lhs, PrimitiveString& r
     bool rhs_empty = rhs.is_empty();
 
     if (lhs_empty && rhs_empty)
-        return &vm.empty_string();
+        return vm.empty_string();
 
     if (lhs_empty)
-        return &rhs;
+        return rhs;
 
     if (rhs_empty)
-        return &lhs;
+        return lhs;
 
-    return vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
+    return *vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
 }
 
 void PrimitiveString::resolve_rope_if_needed() const

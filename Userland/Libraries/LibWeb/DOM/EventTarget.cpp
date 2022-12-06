@@ -624,8 +624,8 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         //    the fourth having the value of event's colno attribute, the fifth having the value of event's error attribute, and with the callback this value set to event's currentTarget.
         //    Let return value be the callback's return value. [WEBIDL]
         auto& error_event = verify_cast<HTML::ErrorEvent>(event);
-        auto* wrapped_message = JS::js_string(vm(), error_event.message());
-        auto* wrapped_filename = JS::js_string(vm(), error_event.filename());
+        auto wrapped_message = JS::PrimitiveString::create(vm(), error_event.message());
+        auto wrapped_filename = JS::PrimitiveString::create(vm(), error_event.filename());
         auto wrapped_lineno = JS::Value(error_event.lineno());
         auto wrapped_colno = JS::Value(error_event.colno());
 

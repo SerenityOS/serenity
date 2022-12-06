@@ -1538,7 +1538,7 @@ Completion UnaryExpression::execute(Interpreter& interpreter) const
     case UnaryOp::Minus:
         return TRY(unary_minus(vm, lhs_result));
     case UnaryOp::Typeof:
-        return Value { js_string(vm, lhs_result.typeof()) };
+        return Value { PrimitiveString::create(vm, lhs_result.typeof()) };
     case UnaryOp::Void:
         return js_undefined();
     case UnaryOp::Delete:
@@ -3465,9 +3465,10 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 Completion StringLiteral::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& vm = interpreter.vm();
 
     // 1. Return the SV of StringLiteral as defined in 12.8.4.2.
-    return Value { js_string(interpreter.heap(), m_value) };
+    return Value { PrimitiveString::create(vm, m_value) };
 }
 
 // 13.2.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation
@@ -3627,7 +3628,7 @@ Completion TemplateLiteral::execute(Interpreter& interpreter) const
     }
 
     // 7. Return the string-concatenation of head, middle, and tail.
-    return Value { js_string(interpreter.heap(), string_builder.build()) };
+    return Value { PrimitiveString::create(vm, string_builder.build()) };
 }
 
 void TaggedTemplateLiteral::dump(int indent) const

@@ -153,7 +153,8 @@ JS::Value Cell::js_data()
     if (m_kind == Formula)
         return m_evaluated_data;
 
-    return JS::js_string(m_sheet->interpreter().heap(), m_data);
+    auto& vm = m_sheet->interpreter().vm();
+    return JS::PrimitiveString::create(vm, m_data);
 }
 
 DeprecatedString Cell::source() const

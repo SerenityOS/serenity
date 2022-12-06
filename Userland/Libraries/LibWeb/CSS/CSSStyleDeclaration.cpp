@@ -340,8 +340,8 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyK
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_get(name, receiver);
     if (auto maybe_property = property(property_id); maybe_property.has_value())
-        return { js_string(vm(), maybe_property->value->to_deprecated_string()) };
-    return { js_string(vm(), DeprecatedString::empty()) };
+        return { JS::PrimitiveString::create(vm(), maybe_property->value->to_deprecated_string()) };
+    return { JS::PrimitiveString::create(vm(), DeprecatedString::empty()) };
 }
 
 JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey const& name, JS::Value value, JS::Value receiver)

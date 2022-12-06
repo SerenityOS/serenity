@@ -236,10 +236,10 @@ JS::MarkedVector<JS::Value> cross_origin_own_property_keys(Variant<Bindings::Loc
 
     // 2. For each e of CrossOriginProperties(O), append e.[[Property]] to keys.
     for (auto& entry : cross_origin_properties(object))
-        keys.append(JS::js_string(vm, move(entry.property)));
+        keys.append(JS::PrimitiveString::create(vm, move(entry.property)));
 
     // 3. Return the concatenation of keys and « "then", @@toStringTag, @@hasInstance, @@isConcatSpreadable ».
-    keys.append(JS::js_string(vm, vm.names.then.as_string()));
+    keys.append(JS::PrimitiveString::create(vm, vm.names.then.as_string()));
     keys.append(vm.well_known_symbol_to_string_tag());
     keys.append(vm.well_known_symbol_has_instance());
     keys.append(vm.well_known_symbol_is_concat_spreadable());

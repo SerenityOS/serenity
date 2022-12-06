@@ -36,7 +36,7 @@ void CalendarPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Calendar"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.Calendar"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.id, id_getter, {}, Attribute::Configurable);
 
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return calendar.[[Identifier]].
-    return { js_string(vm, calendar->identifier()) };
+    return { PrimitiveString::create(vm, calendar->identifier()) };
 }
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
@@ -300,7 +300,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
     // NOTE: The assertion happens in iso_month() call.
 
     // 6. Return ISOMonthCode(temporalDateLike.[[ISOMonth]]).
-    return js_string(vm, iso_month_code(iso_month(temporal_date_like.as_object())));
+    return PrimitiveString::create(vm, iso_month_code(iso_month(temporal_date_like.as_object())));
 }
 
 // 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day
@@ -589,7 +589,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return calendar.[[Identifier]].
-    return js_string(vm, calendar->identifier());
+    return PrimitiveString::create(vm, calendar->identifier());
 }
 
 // 12.4.24 Temporal.Calendar.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tojson
@@ -600,7 +600,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(calendar).
-    return js_string(vm, TRY(Value(calendar).to_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(calendar).to_string(vm)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era

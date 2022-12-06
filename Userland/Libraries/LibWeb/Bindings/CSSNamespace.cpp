@@ -33,7 +33,7 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "CSS.escape");
 
     auto identifier = TRY(vm.argument(0).to_string(vm));
-    return JS::js_string(vm, Web::CSS::serialize_an_identifier(identifier));
+    return JS::PrimitiveString::create(vm, Web::CSS::serialize_an_identifier(identifier));
 }
 
 // https://www.w3.org/TR/css-conditional-3/#dom-css-supports

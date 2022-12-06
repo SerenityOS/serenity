@@ -178,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_name)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
 
     auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
-    return JS::js_string(vm, sheet_object->m_sheet.name());
+    return JS::PrimitiveString::create(vm, sheet_object->m_sheet.name());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
@@ -205,9 +205,9 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
         return JS::js_undefined();
 
     if (cell->kind() == Spreadsheet::Cell::Kind::Formula)
-        return JS::js_string(vm, DeprecatedString::formatted("={}", cell->data()));
+        return JS::PrimitiveString::create(vm, DeprecatedString::formatted("={}", cell->data()));
 
-    return JS::js_string(vm, cell->data());
+    return JS::PrimitiveString::create(vm, cell->data());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
@@ -260,7 +260,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
         return JS::js_undefined();
 
     auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
-    object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)), JS::default_attributes);
+    object->define_direct_property("column", JS::PrimitiveString::create(vm, sheet_object->m_sheet.column(position.value().column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.value().row), JS::default_attributes);
 
     return object;
@@ -286,7 +286,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
     auto position = current_cell->position();
 
     auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
-    object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)), JS::default_attributes);
+    object->define_direct_property("column", JS::PrimitiveString::create(vm, sheet_object->m_sheet.column(position.column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.row), JS::default_attributes);
 
     return object;
@@ -342,7 +342,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
     if (!new_column.has_value())
         return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("'{}' is not a valid column", column_name_str));
 
-    return JS::js_string(vm, new_column.release_value());
+    return JS::PrimitiveString::create(vm, new_column.release_value());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)

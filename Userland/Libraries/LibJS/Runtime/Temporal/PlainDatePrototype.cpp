@@ -32,7 +32,7 @@ void PlainDatePrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 3.3.2 Temporal.PlainDate.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.PlainDate"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.PlainDate"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.year, year_getter, {}, Attribute::Configurable);
@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_code_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarMonthCode(calendar, temporalDate).
-    return js_string(vm, TRY(calendar_month_code(vm, calendar, *temporal_date)));
+    return PrimitiveString::create(vm, TRY(calendar_month_code(vm, calendar, *temporal_date)));
 }
 
 // 3.3.7 get Temporal.PlainDate.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.day
@@ -599,7 +599,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
     auto show_calendar = TRY(to_calendar_name_option(vm, *options));
 
     // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
-    return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, show_calendar)));
+    return PrimitiveString::create(vm, TRY(temporal_date_to_string(vm, *temporal_date, show_calendar)));
 }
 
 // 3.3.29 Temporal.PlainDate.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tolocalestring
@@ -611,7 +611,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_locale_string)
     auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
-    return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
 }
 
 // 3.3.30 Temporal.PlainDate.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tojson
@@ -622,7 +622,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_json)
     auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
-    return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
 }
 
 // 3.3.31 Temporal.PlainDate.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.valueof

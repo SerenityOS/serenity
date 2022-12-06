@@ -269,14 +269,14 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LegacyPlatformObject::interna
 
     for (u64 index = 0; index <= NumericLimits<u32>::max(); ++index) {
         if (is_supported_property_index(index))
-            keys.append(js_string(vm, DeprecatedString::number(index)));
+            keys.append(JS::PrimitiveString::create(vm, DeprecatedString::number(index)));
         else
             break;
     }
 
     for (auto& named_property : supported_property_names()) {
         if (TRY(is_named_property_exposed_on_object(named_property)))
-            keys.append(js_string(vm, named_property));
+            keys.append(JS::PrimitiveString::create(vm, named_property));
     }
 
     // 4. For each P of O’s own property keys that is a String, in ascending chronological order of property creation, append P to keys.
