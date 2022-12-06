@@ -24,7 +24,7 @@ public:
     RefPtr<AST::Node> parse_word_list();
 
     struct Error {
-        String message;
+        DeprecatedString message;
         Optional<AST::Position> position;
     };
     auto& errors() const { return m_errors; }
@@ -96,7 +96,7 @@ private:
     void error(Token const& token, CheckedFormatString<Ts...> fmt, Ts&&... args)
     {
         m_errors.append(Error {
-            String::formatted(fmt.view(), forward<Ts>(args)...),
+            DeprecatedString::formatted(fmt.view(), forward<Ts>(args)...),
             token.position,
         });
     }

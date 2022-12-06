@@ -3008,7 +3008,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
     auto right = right_value->resolve_as_list(shell);
 
     if (m_mode == Mode::StringExpand) {
-        Vector<String> result;
+        Vector<DeprecatedString> result;
         result.ensure_capacity(left.size() + right.size());
 
         for (auto& left_item : left)
@@ -3016,7 +3016,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
 
         if (!result.is_empty() && !right.is_empty()) {
             auto& last = result.last();
-            last = String::formatted("{}{}", last, right.first());
+            last = DeprecatedString::formatted("{}{}", last, right.first());
             right.take_first();
         }
         for (auto& right_item : right)

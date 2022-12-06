@@ -368,7 +368,7 @@ Lexer::ReductionResult Lexer::reduce_start()
     if (m_state.escaping && consume_specific('\n')) {
         m_state.escaping = false;
 
-        auto buffer = m_state.buffer.to_string().substring(0, m_state.buffer.length() - 1);
+        auto buffer = m_state.buffer.to_deprecated_string().substring(0, m_state.buffer.length() - 1);
         m_state.buffer.clear();
         m_state.buffer.append(buffer);
 
@@ -497,7 +497,7 @@ Lexer::ReductionResult Lexer::reduce_arithmetic_expansion()
     if (m_lexer.peek() == ')' && m_state.buffer.string_view().ends_with(')')) {
         m_state.buffer.append(consume());
         auto& expansion = m_state.expansions.last().get<ArithmeticExpansion>();
-        expansion.expression = expansion.value.to_string().substring(0, expansion.value.length() - 1);
+        expansion.expression = expansion.value.to_deprecated_string().substring(0, expansion.value.length() - 1);
         expansion.value.clear();
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 

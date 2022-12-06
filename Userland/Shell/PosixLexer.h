@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
-#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <Shell/AST.h>
@@ -44,15 +44,15 @@ struct CommandExpansion {
     ExpansionRange range;
 };
 struct ArithmeticExpansion {
-    String expression;
+    DeprecatedString expression;
     StringBuilder value;
     ExpansionRange range;
 };
 using Expansion = Variant<ParameterExpansion, CommandExpansion, ArithmeticExpansion>;
 
 struct ResolvedParameterExpansion {
-    String parameter;
-    String argument;
+    DeprecatedString parameter;
+    DeprecatedString argument;
     ExpansionRange range;
     enum class Op {
         UseDefaultValue,                    // ${parameter:-word}
@@ -84,7 +84,7 @@ struct ResolvedParameterExpansion {
         Word,
     } expand { Expand::Nothing };
 
-    String to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         StringBuilder builder;
         builder.append("{"sv);
@@ -162,7 +162,7 @@ struct ResolvedParameterExpansion {
         builder.append(argument);
         builder.append(")"sv);
         builder.append("}"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 };
 // struct ResolvedArithmeticExpansion {
@@ -172,7 +172,7 @@ struct ResolvedParameterExpansion {
 //         long value;
 //     };
 //     struct Variable {
-//         String name;
+//         DeprecatedString name;
 //     };
 //     struct Expression;
 //     // Dr.POSIX:
@@ -321,7 +321,7 @@ struct Token {
     };
 
     Type type;
-    String value;
+    DeprecatedString value;
     Optional<AST::Position> position;
     Vector<Expansion> expansions;
     Vector<ResolvedExpansion> resolved_expansions {};
@@ -335,7 +335,7 @@ struct Token {
 
         auto token = Token {
             .type = Type::Token,
-            .value = state.buffer.to_string(),
+            .value = state.buffer.to_deprecated_string(),
             .position = state.position,
             .expansions = state.expansions,
             .original_text = {},
@@ -427,14 +427,14 @@ struct Token {
     {
         return {
             .type = Type::Continuation,
-            .value = String::formatted("{:c}", expected),
+            .value = DeprecatedString::formatted("{:c}", expected),
             .position = {},
             .expansions = {},
             .original_text = {},
         };
     }
 
-    static Token continuation(String expected)
+    static Token continuation(DeprecatedString expected)
     {
         return {
             .type = Type::Continuation,

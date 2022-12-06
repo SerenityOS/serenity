@@ -497,7 +497,7 @@ RefPtr<AST::Node> Shell::immediate_error_if_empty(AST::ImmediateExpression& invo
 
     auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this);
     if (error_value.is_empty())
-        error_value = String::formatted("Expected {} to be non-empty", name);
+        error_value = DeprecatedString::formatted("Expected {} to be non-empty", name);
 
     raise_error(ShellError::EvaluatedSyntaxError, error_value, invoking_node.position());
     return nullptr;
@@ -561,7 +561,7 @@ RefPtr<AST::Node> Shell::immediate_error_if_unset(AST::ImmediateExpression& invo
 
     auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this);
     if (error_value.is_empty())
-        error_value = String::formatted("Expected {} to be set", name);
+        error_value = DeprecatedString::formatted("Expected {} to be set", name);
 
     raise_error(ShellError::EvaluatedSyntaxError, error_value, invoking_node.position());
     return nullptr;

@@ -100,19 +100,19 @@ void Parser::fill_token_buffer()
         auto token = next_expanded_token();
         if (!token.has_value())
             break;
-        String position = "(~)";
+        DeprecatedString position = "(~)";
         if (token->position.has_value())
-            position = String::formatted("{}:{}", token->position->start_offset, token->position->end_offset);
-        String expansions = "";
+            position = DeprecatedString::formatted("{}:{}", token->position->start_offset, token->position->end_offset);
+        DeprecatedString expansions = "";
         for (auto& exp : token->resolved_expansions)
             exp.visit(
-                [&](ResolvedParameterExpansion& x) { expansions = String::formatted("{}param({}),", expansions, x.to_string()); },
-                [&](ResolvedCommandExpansion& x) { expansions = String::formatted("{}command({:p})", expansions, x.command.ptr()); });
-        String rexpansions = "";
+                [&](ResolvedParameterExpansion& x) { expansions = DeprecatedString::formatted("{}param({}),", expansions, x.to_deprecated_string()); },
+                [&](ResolvedCommandExpansion& x) { expansions = DeprecatedString::formatted("{}command({:p})", expansions, x.command.ptr()); });
+        DeprecatedString rexpansions = "";
         for (auto& exp : token->expansions)
             exp.visit(
-                [&](ParameterExpansion& x) { rexpansions = String::formatted("{}param({}) from {} to {},", rexpansions, x.parameter.string_view(), x.range.start, x.range.length); },
-                [&](auto&) { rexpansions = String::formatted("{}...,", rexpansions); });
+                [&](ParameterExpansion& x) { rexpansions = DeprecatedString::formatted("{}param({}) from {} to {},", rexpansions, x.parameter.string_view(), x.range.start, x.range.length); },
+                [&](auto&) { rexpansions = DeprecatedString::formatted("{}...,", rexpansions); });
         dbgln("Token @ {}: '{}' (type {}) - parsed expansions: {} - raw expansions: {}", position, token->value.replace("\n"sv, "\\n"sv, ReplaceMode::All), token->type_name(), expansions, rexpansions);
     }
     m_token_index = 0;
@@ -333,7 +333,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                     // ${NUMBER}
                     if (all_of(text, is_ascii_digit)) {
                         return ResolvedParameterExpansion {
-                            .parameter = expansion.parameter.to_string(),
+                            .parameter = expansion.parameter.to_deprecated_string(),
                             .argument = {},
                             .range = expansion.range,
                             .op = ResolvedParameterExpansion::Op::GetPositionalParameter,
@@ -370,7 +370,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                             } else {
                                 error(token, "Unknown parameter expansion: {}", text);
                                 return ResolvedParameterExpansion {
-                                    .parameter = expansion.parameter.to_string(),
+                                    .parameter = expansion.parameter.to_deprecated_string(),
                                     .argument = {},
                                     .range = expansion.range,
                                     .op = ResolvedParameterExpansion::Op::StringLength,
@@ -388,7 +388,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
 
                     if (text.starts_with('#')) {
                         return ResolvedParameterExpansion {
-                            .parameter = text.substring_view(1).to_string(),
+                            .parameter = text.substring_view(1).to_deprecated_string(),
                             .argument = {},
                             .range = expansion.range,
                             .op = ResolvedParameterExpansion::Op::StringLength,
@@ -429,7 +429,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                         default:
                             error(token, "Unknown parameter expansion: {}", text);
                             return ResolvedParameterExpansion {
-                                .parameter = parameter.to_string(),
+                                .parameter = parameter.to_deprecated_string(),
                                 .argument = {},
                                 .range = expansion.range,
                                 .op = ResolvedParameterExpansion::Op::StringLength,
@@ -476,7 +476,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                         } else {
                             error(token, "Unknown parameter expansion: {}", text);
                             return ResolvedParameterExpansion {
-                                .parameter = parameter.to_string(),
+                                .parameter = parameter.to_deprecated_string(),
                                 .argument = {},
                                 .range = expansion.range,
                                 .op = ResolvedParameterExpansion::Op::StringLength,
@@ -486,14 +486,14 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                     VERIFY(lexer.is_eof());
 
                     return ResolvedParameterExpansion {
-                        .parameter = parameter.to_string(),
-                        .argument = argument.to_string(),
+                        .parameter = parameter.to_deprecated_string(),
+                        .argument = argument.to_deprecated_string(),
                         .range = expansion.range,
                         .op = op,
                         .expand = ResolvedParameterExpansion::Expand::Word,
                     };
                 },
-                [&](ArithmeticExpansion const&) -> ResolvedExpansion {
+                [&](ArithmeticExpansion const& expansion) -> ResolvedExpansion {
                     error(token, "Arithmetic expansion is not supported");
                     TODO();
                 },
@@ -874,7 +874,7 @@ RefPtr<AST::Node> Parser::parse_brace_group()
     if (peek().type != Token::Type::CloseBrace) {
         error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected '}}', not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected '}}', not {}", peek().type_name()));
     } else {
         consume();
     }
@@ -902,12 +902,12 @@ RefPtr<AST::Node> Parser::parse_case_clause()
     if (!expr)
         expr = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected a word, not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected a word, not {}", peek().type_name()));
 
     if (peek().type != Token::Type::In) {
         syntax_error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected 'in', not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected 'in', not {}", peek().type_name()));
     } else {
         skip();
     }
@@ -941,7 +941,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    String::formatted("Expected ')', not {}", peek().type_name()));
+                    DeprecatedString::formatted("Expected ')', not {}", peek().type_name()));
         }
 
         while (peek().type == Token::Type::Newline)
@@ -955,7 +955,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    String::formatted("Expected ';;', not {}", peek().type_name()));
+                    DeprecatedString::formatted("Expected ';;', not {}", peek().type_name()));
         }
 
         if (syntax_error) {
@@ -978,7 +978,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
     if (peek().type != Token::Type::Esac) {
         syntax_error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected 'esac', not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected 'esac', not {}", peek().type_name()));
     } else {
         skip();
     }
@@ -986,7 +986,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
     auto node = make_ref_counted<AST::MatchExpr>(
         start_position.with_end(peek().position.value_or(empty_position())),
         expr.release_nonnull(),
-        String {},
+        DeprecatedString {},
         Optional<AST::Position> {},
         move(entries));
 
@@ -1013,7 +1013,7 @@ Parser::CaseItemsResult Parser::parse_case_list()
         if (!node)
             node = make_ref_counted<AST::SyntaxError>(
                 peek().position.value_or(empty_position()),
-                String::formatted("Expected a word, not {}", peek().type_name()));
+                DeprecatedString::formatted("Expected a word, not {}", peek().type_name()));
 
         nodes.append(node.release_nonnull());
 
@@ -1028,7 +1028,7 @@ Parser::CaseItemsResult Parser::parse_case_list()
     if (nodes.is_empty())
         nodes.append(make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected a word, not {}", peek().type_name())));
+            DeprecatedString::formatted("Expected a word, not {}", peek().type_name())));
 
     return { move(pipes), move(nodes) };
 }
@@ -1049,7 +1049,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
     if (peek().type != Token::Type::Then) {
         syntax_error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected 'then', not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected 'then', not {}", peek().type_name()));
     } else {
         skip();
     }
@@ -1071,7 +1071,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    String::formatted("Expected 'then', not {}", peek().type_name()));
+                    DeprecatedString::formatted("Expected 'then', not {}", peek().type_name()));
         } else {
             skip();
         }
@@ -1101,7 +1101,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
         if (!syntax_error)
             syntax_error = make_ref_counted<AST::SyntaxError>(
                 peek().position.value_or(empty_position()),
-                String::formatted("Expected 'else' or 'fi', not {}", peek().type_name()));
+                DeprecatedString::formatted("Expected 'else' or 'fi', not {}", peek().type_name()));
         break;
     }
 
@@ -1110,7 +1110,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    String::formatted("Expected 'fi', not {}", peek().type_name()));
+                    DeprecatedString::formatted("Expected 'fi', not {}", peek().type_name()));
         } else {
             skip();
         }
@@ -1210,7 +1210,7 @@ RefPtr<AST::Node> Parser::parse_for_clause()
 
     auto start_position = consume().position.value_or(empty_position());
 
-    String name;
+    DeprecatedString name;
     Optional<AST::Position> name_position;
     if (peek().type == Token::Type::VariableName) {
         name_position = peek().position;
@@ -1349,7 +1349,7 @@ RefPtr<AST::Node> Parser::parse_word()
     };
 
     auto append_parameter_expansion = [&](ResolvedParameterExpansion const& x) {
-        String immediate_function_name;
+        DeprecatedString immediate_function_name;
         RefPtr<AST::Node> node;
         switch (x.op) {
         case ResolvedParameterExpansion::Op::UseDefaultValue:
@@ -1595,7 +1595,7 @@ RefPtr<AST::Node> Parser::parse_do_group()
     if (peek().type != Token::Type::Do) {
         return make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected 'do', not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected 'do', not {}", peek().type_name()));
     }
 
     consume();
@@ -1606,7 +1606,7 @@ RefPtr<AST::Node> Parser::parse_do_group()
     if (peek().type != Token::Type::Done) {
         error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            String::formatted("Expected 'done', not {}", peek().type_name()));
+            DeprecatedString::formatted("Expected 'done', not {}", peek().type_name()));
     } else {
         consume();
     }
@@ -1625,7 +1625,7 @@ RefPtr<AST::Node> Parser::parse_simple_command()
 {
     auto start_position = peek().position.value_or(empty_position());
 
-    Vector<String> definitions;
+    Vector<DeprecatedString> definitions;
     NonnullRefPtrVector<AST::Node> nodes;
 
     // FIXME: Prefix: redir
