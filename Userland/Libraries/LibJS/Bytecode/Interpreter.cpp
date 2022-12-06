@@ -75,8 +75,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
         TemporaryChange temp_change { m_pc, &pc };
 
+        // FIXME: This is getting kinda spaghetti-y
         bool will_jump = false;
         bool will_return = false;
+        bool will_yield = false;
         while (!pc.at_end()) {
             auto& instruction = *pc;
             auto ran_or_error = instruction.execute(*this);
@@ -113,6 +115,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             }
             if (!m_return_value.is_empty()) {
                 will_return = true;
+                // Note: A `yield` statement will not go through a finally statement,
+                //       hence we need to set a flag to not do so,
+                //       but we generate a Yield Operation in the case of returns in
+                //       generators as well, so we need to check if it will actually
+                //       continue or is a `return` in disguise
+                will_yield = instruction.type() == Instruction::Type::Yield && static_cast<Op::Yield const&>(instruction).continuation().has_value();
                 break;
             }
             ++pc;
@@ -121,7 +129,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         if (will_jump)
             continue;
 
-        if (!unwind_contexts().is_empty()) {
+        if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
             if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
                 m_saved_return_value = make_handle(m_return_value);
