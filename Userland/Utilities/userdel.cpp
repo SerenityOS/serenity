@@ -7,31 +7,23 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <ctype.h>
-#include <dirent.h>
-#include <errno.h>
 #include <pwd.h>
 #include <shadow.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr proc exec"));
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
     TRY(Core::System::unveil("/etc/", "rwc"));
-    TRY(Core::System::unveil("/bin/rm", "x"));
 
     StringView username;
     bool remove_home = false;
@@ -50,11 +42,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& target_account = account_or_error.value();
 
-    if (remove_home) {
+    if (remove_home)
         TRY(Core::System::unveil(target_account.home_directory(), "c"sv));
-    } else {
-        TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
-    }
+
     TRY(Core::System::unveil(nullptr, nullptr));
 
     char temp_passwd[] = "/etc/passwd.XXXXXX";
@@ -153,26 +143,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (access(target_account.home_directory().characters(), F_OK) == -1)
             return 0;
 
-        DeprecatedString real_path = Core::File::real_path_for(target_account.home_directory());
+        auto const real_path = Core::File::real_path_for(target_account.home_directory());
 
         if (real_path == "/") {
             warnln("home directory is /, not deleted!");
             return 12;
         }
 
-        pid_t child;
-        char const* argv[] = { "rm", "-r", target_account.home_directory().characters(), nullptr };
-        if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-            return 12;
-        }
-        int wstatus;
-        if (waitpid(child, &wstatus, 0) < 0) {
-            perror("waitpid");
-            return 12;
-        }
-        if (WEXITSTATUS(wstatus)) {
-            warnln("failed to remove the home directory");
+        if (auto result = Core::File::remove(real_path, Core::File::RecursionMode::Allowed); result.is_error()) {
+            warnln("{}", result.release_error());
             return 12;
         }
     }
