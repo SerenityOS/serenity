@@ -17,7 +17,7 @@ class NetworkSettingsWidget : public GUI::SettingsWindow::Tab {
 
 public:
     virtual void apply_settings() override;
-    void switch_adapter(DeprecatedString const& adapter);
+    void switch_adapter(String const& adapter);
 
 private:
     NetworkSettingsWidget();
@@ -25,15 +25,15 @@ private:
     struct NetworkAdapterData {
         bool enabled = false;
         bool dhcp = false;
-        DeprecatedString ip_address;
+        String ip_address;
         int cidr = 0;
-        DeprecatedString default_gateway;
+        String default_gateway;
     };
 
-    void on_switch_adapter(DeprecatedString const& adapter);
+    void on_switch_adapter(String const& adapter);
     void on_switch_enabled_or_dhcp();
 
-    HashMap<DeprecatedString, NetworkAdapterData> m_network_adapters;
+    HashMap<String, NetworkAdapterData> m_network_adapters;
     Vector<DeprecatedString> m_adapter_names;
     NetworkAdapterData* m_current_adapter_data = nullptr;
 
