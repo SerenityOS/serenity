@@ -81,7 +81,7 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(StringView cmdline_from_bootloader)
 {
     s_the = this;
     auto const& args = m_string->view().split_view(' ');
-    m_params.ensure_capacity(args.size());
+    MUST(m_params.try_ensure_capacity(args.size()));
     add_arguments(args);
 }
 
