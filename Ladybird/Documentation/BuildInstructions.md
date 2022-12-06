@@ -28,7 +28,7 @@ On macOS:
 
 ```
 xcode-select --install
-brew install qt ninja
+brew install cmake qt ninja
 ```
 
 For the C++ compiler, gcc-12 or clang-13 are required at a minimum for c++20 support.
