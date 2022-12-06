@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,8 @@ class Symbol final : public Cell {
     JS_CELL(Symbol, Cell);
 
 public:
+    [[nodiscard]] static NonnullGCPtr<Symbol> create(VM&, Optional<DeprecatedString> description, bool is_global);
+
     virtual ~Symbol() = default;
 
     DeprecatedString description() const { return m_description.value_or(""); }
@@ -29,8 +32,5 @@ private:
     Optional<DeprecatedString> m_description;
     bool m_is_global;
 };
-
-Symbol* js_symbol(Heap&, Optional<DeprecatedString> description, bool is_global);
-Symbol* js_symbol(VM&, Optional<DeprecatedString> description, bool is_global);
 
 }
