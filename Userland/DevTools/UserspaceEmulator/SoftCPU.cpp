@@ -2409,11 +2409,30 @@ void SoftCPU::PUSHFD(const X86::Instruction&)
     push32(shadow_wrap_as_initialized(m_eflags & 0x00fcffff));
 }
 
-void SoftCPU::PUSH_CS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSH_DS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSH_ES(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSH_FS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSH_GS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_CS(X86::Instruction const&)
+{
+    push16(shadow_wrap_as_initialized(cs()));
+}
+
+void SoftCPU::PUSH_DS(X86::Instruction const&)
+{
+    push16(shadow_wrap_as_initialized(ds()));
+}
+
+void SoftCPU::PUSH_ES(X86::Instruction const&)
+{
+    push16(shadow_wrap_as_initialized(es()));
+}
+
+void SoftCPU::PUSH_FS(X86::Instruction const&)
+{
+    push16(shadow_wrap_as_initialized(fs()));
+}
+
+void SoftCPU::PUSH_GS(X86::Instruction const&)
+{
+    push16(shadow_wrap_as_initialized(gs()));
+}
 
 void SoftCPU::PUSH_RM16(const X86::Instruction& insn)
 {
@@ -2426,7 +2445,11 @@ void SoftCPU::PUSH_RM32(const X86::Instruction& insn)
 }
 
 void SoftCPU::PUSH_SP_8086_80186(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSH_SS(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::PUSH_SS(X86::Instruction const&)
+{
+    push16(shadow_wrap_as_initialized(ss()));
+}
 
 void SoftCPU::PUSH_imm16(const X86::Instruction& insn)
 {
