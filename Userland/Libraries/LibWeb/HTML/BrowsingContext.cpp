@@ -512,7 +512,7 @@ DeprecatedString BrowsingContext::selected_text() const
         builder.append(text.substring(0, selection.end().index_in_node));
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void BrowsingContext::select_all()

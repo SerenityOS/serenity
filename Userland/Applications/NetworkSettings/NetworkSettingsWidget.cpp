@@ -78,7 +78,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
     size_t index = 0;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto adapter_name = if_object.get("name"sv).to_string();
+        auto adapter_name = if_object.get("name"sv).to_deprecated_string();
         if (adapter_name == "loop")
             return;
 
@@ -137,7 +137,7 @@ void NetworkSettingsWidget::apply_settings()
 {
     auto config_file = Core::ConfigFile::open_for_system("Network", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
     for (auto const& adapter_data : m_network_adapters) {
-        auto netmask = IPv4Address::netmask_from_cidr(adapter_data.value.cidr).to_string();
+        auto netmask = IPv4Address::netmask_from_cidr(adapter_data.value.cidr).to_deprecated_string();
         config_file->write_bool_entry(adapter_data.key, "Enabled", adapter_data.value.enabled);
         config_file->write_bool_entry(adapter_data.key, "DHCP", adapter_data.value.dhcp);
         if (adapter_data.value.enabled && !adapter_data.value.dhcp) {

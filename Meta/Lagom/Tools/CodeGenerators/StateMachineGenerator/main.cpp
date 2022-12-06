@@ -159,7 +159,7 @@ parse_state_machine(StringView input)
                       consume_whitespace();
                       state.exit_action = consume_identifier();
                   } else if (lexer.next_is('@')) {
-                      auto directive = consume_identifier().to_string();
+                      auto directive = consume_identifier().to_deprecated_string();
                       fprintf(stderr, "Unimplemented @ directive %s\n", directive.characters());
                       exit(1);
                   } else {
@@ -189,7 +189,7 @@ parse_state_machine(StringView input)
             lexer.consume_specific('@');
             state_machine->anywhere = consume_state_description();
         } else if (lexer.consume_specific('@')) {
-            auto directive = consume_identifier().to_string();
+            auto directive = consume_identifier().to_deprecated_string();
             fprintf(stderr, "Unimplemented @ directive %s\n", directive.characters());
             exit(1);
         } else {

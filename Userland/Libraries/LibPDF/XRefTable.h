@@ -140,7 +140,7 @@ struct Formatter<PDF::XRefTable> : Formatter<StringView> {
         for (auto& entry : table.m_entries)
             builder.appendff("\n  {}", entry);
         builder.append("\n}"sv);
-        return Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
     }
 };
 

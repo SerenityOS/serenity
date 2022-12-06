@@ -16,7 +16,7 @@ StylePropertiesModel::StylePropertiesModel(JsonObject properties)
     m_properties.for_each_member([&](auto& property_name, auto& property_value) {
         Value value;
         value.name = property_name;
-        value.value = property_value.to_string();
+        value.value = property_value.to_deprecated_string();
         m_values.append(value);
     });
 

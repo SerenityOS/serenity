@@ -45,7 +45,7 @@ ThrowCompletionOr<Value> StringConstructor::call()
     if (!vm.argument_count())
         return js_string(heap(), "");
     if (vm.argument(0).is_symbol())
-        return js_string(vm, vm.argument(0).as_symbol().to_string());
+        return js_string(vm, vm.argument(0).as_symbol().to_deprecated_string());
     return TRY(vm.argument(0).to_primitive_string(vm));
 }
 

@@ -16,7 +16,7 @@ public:
     Display() = default;
     ~Display() = default;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
     bool operator==(Display const& other) const
     {

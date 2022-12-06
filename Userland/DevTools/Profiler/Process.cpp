@@ -89,7 +89,7 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, DeprecatedString co
         entry.base = min(entry.base, base);
         entry.size = max(entry.size + size, base - entry.base + size);
     } else {
-        DeprecatedString path_string = path.to_string();
+        DeprecatedString path_string = path.to_deprecated_string();
         DeprecatedString full_path;
         if (path_string.starts_with('/'))
             full_path = path_string;

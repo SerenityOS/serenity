@@ -34,7 +34,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         builder.append(Core::StandardPaths::downloads_directory());
         builder.append('/');
         builder.append(m_url.basename());
-        m_destination_path = builder.to_string();
+        m_destination_path = builder.to_deprecated_string();
     }
 
     auto close_on_finish = Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, false);
@@ -129,7 +129,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
         builder.append("Downloaded "sv);
         builder.append(human_readable_size(downloaded_size));
         builder.appendff(" in {} sec", m_elapsed_timer.elapsed() / 1000);
-        m_progress_label->set_text(builder.to_string());
+        m_progress_label->set_text(builder.to_deprecated_string());
     }
 
     {
@@ -142,7 +142,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
         }
         builder.append(" of "sv);
         builder.append(m_url.basename());
-        window()->set_title(builder.to_string());
+        window()->set_title(builder.to_deprecated_string());
     }
 }
 

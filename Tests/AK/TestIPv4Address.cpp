@@ -61,7 +61,7 @@ TEST_CASE(should_convert_to_string)
 {
     constexpr IPv4Address addr(1, 25, 39, 42);
 
-    EXPECT_EQ("1.25.39.42", addr.to_string());
+    EXPECT_EQ("1.25.39.42", addr.to_deprecated_string());
 }
 
 TEST_CASE(should_make_ipv4_address_from_string)

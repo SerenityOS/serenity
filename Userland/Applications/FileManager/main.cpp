@@ -1312,7 +1312,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                 continue;
 
             if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
-                auto error_message = DeprecatedString::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, static_cast<Error const&>(result.error()));
+                auto error_message = DeprecatedString::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_deprecated_string(), new_path, static_cast<Error const&>(result.error()));
                 GUI::MessageBox::show(window, error_message, "File Manager"sv, GUI::MessageBox::Type::Error);
             } else {
                 had_accepted_copy = true;

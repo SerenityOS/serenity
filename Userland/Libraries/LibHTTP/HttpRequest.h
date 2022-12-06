@@ -73,6 +73,6 @@ private:
     ByteBuffer m_body;
 };
 
-DeprecatedString to_string(HttpRequest::Method);
+DeprecatedString to_deprecated_string(HttpRequest::Method);
 
 }

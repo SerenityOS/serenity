@@ -33,7 +33,7 @@ public:
     void set_rounding_length(unsigned);
     unsigned rounding_length() const;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     // Internal representation of the current decimal value.

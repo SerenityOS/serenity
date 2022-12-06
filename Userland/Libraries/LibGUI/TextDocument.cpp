@@ -152,7 +152,7 @@ DeprecatedString TextDocumentLine::to_utf8() const
 {
     StringBuilder builder;
     builder.append(view());
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 TextDocumentLine::TextDocumentLine(TextDocument& document)
@@ -353,7 +353,7 @@ DeprecatedString TextDocument::text() const
         if (i != line_count() - 1)
             builder.append('\n');
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
@@ -379,7 +379,7 @@ DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
             builder.append('\n');
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 u32 TextDocument::code_point_at(TextPosition const& position) const
@@ -800,7 +800,7 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(m_text);
     builder.append(typed_other.m_text);
-    m_text = builder.to_string();
+    m_text = builder.to_deprecated_string();
     m_range.set_end(typed_other.m_range.end());
 
     m_timestamp = Time::now_monotonic();
@@ -900,7 +900,7 @@ bool RemoveTextCommand::merge_with(GUI::Command const& other)
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(typed_other.m_text);
     builder.append(m_text);
-    m_text = builder.to_string();
+    m_text = builder.to_deprecated_string();
     m_range.set_start(typed_other.m_range.start());
 
     m_timestamp = Time::now_monotonic();

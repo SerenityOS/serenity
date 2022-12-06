@@ -520,7 +520,7 @@ void HexEditorWidget::update_title()
     else
         builder.append(m_path);
     builder.append("[*] - Hex Editor"sv);
-    window()->set_title(builder.to_string());
+    window()->set_title(builder.to_deprecated_string());
 }
 
 void HexEditorWidget::open_file(NonnullRefPtr<Core::File> file)

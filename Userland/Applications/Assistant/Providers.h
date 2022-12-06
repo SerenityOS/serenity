@@ -115,7 +115,7 @@ private:
 class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
-        : Result(url.to_string(), "Open URL in Browser"sv, 50)
+        : Result(url.to_deprecated_string(), "Open URL in Browser"sv, 50)
         , m_bitmap(GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16))
     {
     }

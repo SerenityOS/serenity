@@ -113,7 +113,7 @@ static DeprecatedString with_whitespace_collapsed(StringView string)
         }
         builder.append(string[i]);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
@@ -167,12 +167,12 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
                 builder.append(name);
                 builder.append('=');
                 builder.append('"');
-                builder.append(value.to_string());
+                builder.append(value.to_deprecated_string());
                 builder.append('"');
             });
         }
         builder.append('>');
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
     return {};
 }

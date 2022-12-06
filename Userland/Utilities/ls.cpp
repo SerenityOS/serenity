@@ -362,7 +362,7 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
         }
     }
 
-    printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_string().characters());
+    printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string().characters());
 
     print_name(st, name, path.characters(), path.characters());
 
@@ -419,7 +419,7 @@ static int do_file_system_object_long(char const* path)
         builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(metadata.name);
-        metadata.path = builder.to_string();
+        metadata.path = builder.to_deprecated_string();
         VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0)
@@ -463,7 +463,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
         builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(name);
-        if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
+        if (!print_filesystem_object_short(builder.to_deprecated_string().characters(), name.characters(), &nprinted))
             return 2;
         int offset = 0;
         if (terminal_columns > longest_name)
@@ -531,7 +531,7 @@ int do_file_system_object_short(char const* path)
         builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(metadata.name);
-        metadata.path = builder.to_string();
+        metadata.path = builder.to_deprecated_string();
         VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0)

@@ -26,21 +26,21 @@ DeprecatedString MarkupGenerator::html_from_source(StringView source)
         builder.append(token.trivia());
         builder.append(wrap_string_in_style(token.value(), style_type_for_token(token)));
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString MarkupGenerator::html_from_value(Value value)
 {
     StringBuilder output_html;
     value_to_html(value, output_html);
-    return output_html.to_string();
+    return output_html.to_deprecated_string();
 }
 
 DeprecatedString MarkupGenerator::html_from_error(Error const& object, bool in_promise)
 {
     StringBuilder output_html;
     error_to_html(object, output_html, in_promise);
-    return output_html.to_string();
+    return output_html.to_deprecated_string();
 }
 
 void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)

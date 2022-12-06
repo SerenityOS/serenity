@@ -209,7 +209,7 @@ void Service::spawn(int socket_fd)
 
         if (!m_sockets.is_empty()) {
             // The new descriptor is !CLOEXEC here.
-            setenv("SOCKET_TAKEOVER", builder.to_string().characters(), true);
+            setenv("SOCKET_TAKEOVER", builder.to_deprecated_string().characters(), true);
         }
 
         if (m_account.has_value() && m_account.value().uid() != getuid()) {

@@ -45,17 +45,17 @@ void OutOfProcessWebView::handle_web_content_process_crash()
     handle_resize();
     StringBuilder builder;
     builder.append("<html><head><title>Crashed: "sv);
-    builder.append(escape_html_entities(m_url.to_string()));
+    builder.append(escape_html_entities(m_url.to_deprecated_string()));
     builder.append("</title></head><body>"sv);
     builder.append("<h1>Web page crashed"sv);
     if (!m_url.host().is_empty()) {
         builder.appendff(" on {}", escape_html_entities(m_url.host()));
     }
     builder.append("</h1>"sv);
-    auto escaped_url = escape_html_entities(m_url.to_string());
+    auto escaped_url = escape_html_entities(m_url.to_deprecated_string());
     builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
     builder.append("</body></html>"sv);
-    load_html(builder.to_string(), m_url);
+    load_html(builder.to_deprecated_string(), m_url);
 }
 
 void OutOfProcessWebView::create_client()

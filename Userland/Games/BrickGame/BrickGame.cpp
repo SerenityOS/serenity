@@ -582,7 +582,7 @@ void BrickGame::game_over()
         Config::write_i32(m_app_name, m_app_name, "HighScore"sv, int(m_high_score = current_score));
     }
     GUI::MessageBox::show(window(),
-        text.to_string(),
+        text.to_deprecated_string(),
         "Game Over"sv,
         GUI::MessageBox::Type::Information);
 

@@ -537,16 +537,16 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
         // iii. If fieldNames contains nextValue, then
         if (field_names.contains_slow(next_value)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
+            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value.as_string().deprecated_string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
-        if (!next_value.as_string().string().is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+        if (!next_value.as_string().deprecated_string().is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
+            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().deprecated_string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(vm, iterator_record, move(completion)));

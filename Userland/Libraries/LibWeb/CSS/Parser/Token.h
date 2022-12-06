@@ -145,7 +145,7 @@ public:
     DeprecatedString bracket_string() const;
     DeprecatedString bracket_mirror_string() const;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
     DeprecatedString to_debug_string() const;
 
     Position const& start_position() const { return m_start_position; }

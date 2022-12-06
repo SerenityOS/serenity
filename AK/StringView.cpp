@@ -251,7 +251,7 @@ bool StringView::operator==(DeprecatedString const& string) const
     return *this == string.view();
 }
 
-DeprecatedString StringView::to_string() const { return DeprecatedString { *this }; }
+DeprecatedString StringView::to_deprecated_string() const { return DeprecatedString { *this }; }
 
 DeprecatedString StringView::replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const
 {

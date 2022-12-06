@@ -84,7 +84,7 @@ public:
         return alternative;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         if (is_string())
             return as_string();
@@ -283,7 +283,7 @@ template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JsonValue const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 #endif

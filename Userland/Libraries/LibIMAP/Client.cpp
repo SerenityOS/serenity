@@ -378,7 +378,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
         args.append(flags_sb.build());
     }
     if (date_time.has_value())
-        args.append(date_time.value().to_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));
+        args.append(date_time.value().to_deprecated_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));
 
     args.append(DeprecatedString::formatted("{{{}}}", message.data.length()));
 

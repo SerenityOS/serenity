@@ -28,7 +28,7 @@ public:
     StringView name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     Function(FlyString name, Vector<ComponentValue>&& values);

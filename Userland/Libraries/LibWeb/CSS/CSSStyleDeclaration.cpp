@@ -201,7 +201,7 @@ DeprecatedString CSSStyleDeclaration::get_property_value(StringView property_nam
     auto maybe_property = property(property_id);
     if (!maybe_property.has_value())
         return {};
-    return maybe_property->value->to_string();
+    return maybe_property->value->to_deprecated_string();
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertypriority
@@ -265,7 +265,7 @@ static DeprecatedString serialize_a_css_declaration(CSS::PropertyID property, De
     builder.append(';');
 
     // 7. Return s.
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-declaration-block
@@ -291,7 +291,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
         // FIXME: 4. Shorthand loop: For each shorthand in shorthands, follow these substeps: ...
 
         // 5. Let value be the result of invoking serialize a CSS value of declaration.
-        auto value = declaration.value->to_string();
+        auto value = declaration.value->to_deprecated_string();
 
         // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
         //    and the important flag set if declaration has its important flag set.
@@ -307,7 +307,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
     // 4. Return list joined with " " (U+0020).
     StringBuilder builder;
     builder.join(' ', list);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 static CSS::PropertyID property_id_from_name(StringView name)
@@ -340,7 +340,7 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyK
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_get(name, receiver);
     if (auto maybe_property = property(property_id); maybe_property.has_value())
-        return { js_string(vm(), maybe_property->value->to_string()) };
+        return { js_string(vm(), maybe_property->value->to_deprecated_string()) };
     return { js_string(vm(), DeprecatedString::empty()) };
 }
 

@@ -516,7 +516,7 @@ WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) cons
 }
 
 // https://dom.spec.whatwg.org/#dom-range-stringifier
-DeprecatedString Range::to_string() const
+DeprecatedString Range::to_deprecated_string() const
 {
     // 1. Let s be the empty string.
     StringBuilder builder;
@@ -541,7 +541,7 @@ DeprecatedString Range::to_string() const
         builder.append(static_cast<Text const&>(*end_container()).data().substring_view(0, end_offset()));
 
     // 6. Return s.
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#dom-range-extractcontents

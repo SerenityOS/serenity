@@ -37,7 +37,7 @@ public:
 
     void sort();
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
     using ForEachCallback = Function<JS::ThrowCompletionOr<void>(DeprecatedString const&, DeprecatedString const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);

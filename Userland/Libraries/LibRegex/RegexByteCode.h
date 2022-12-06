@@ -570,7 +570,7 @@ public:
         return *m_state;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         return DeprecatedString::formatted("[{:#02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
@@ -748,7 +748,7 @@ public:
     ALWAYS_INLINE size_t arguments_count() const { return argument(0); }
     ALWAYS_INLINE size_t arguments_size() const { return argument(1); }
     DeprecatedString arguments_string() const override;
-    Vector<DeprecatedString> variable_arguments_to_string(Optional<MatchInput const&> input = {}) const;
+    Vector<DeprecatedString> variable_arguments_to_deprecated_string(Optional<MatchInput const&> input = {}) const;
     Vector<CompareTypeAndValuePair> flat_compares() const;
     static bool matches_character_class(CharClass, u32, bool insensitive);
 

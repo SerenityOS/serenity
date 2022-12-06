@@ -19,7 +19,7 @@ Declaration::Declaration(FlyString name, Vector<ComponentValue> values, Importan
 
 Declaration::~Declaration() = default;
 
-DeprecatedString Declaration::to_string() const
+DeprecatedString Declaration::to_deprecated_string() const
 {
     StringBuilder builder;
 
@@ -30,7 +30,7 @@ DeprecatedString Declaration::to_string() const
     if (m_important == Important::Yes)
         builder.append(" !important"sv);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

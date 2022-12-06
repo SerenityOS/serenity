@@ -26,7 +26,7 @@ CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& me
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleSheetPrototype>(realm, "CSSStyleSheet"));
 
     if (location.has_value())
-        set_location(location->to_string());
+        set_location(location->to_deprecated_string());
 
     for (auto& rule : *m_rules)
         rule.set_parent_style_sheet(this);

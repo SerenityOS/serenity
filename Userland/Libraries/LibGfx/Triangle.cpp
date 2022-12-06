@@ -11,13 +11,13 @@
 namespace Gfx {
 
 template<>
-DeprecatedString Triangle<int>::to_string() const
+DeprecatedString Triangle<int>::to_deprecated_string() const
 {
     return DeprecatedString::formatted("({},{},{})", m_a, m_b, m_c);
 }
 
 template<>
-DeprecatedString Triangle<float>::to_string() const
+DeprecatedString Triangle<float>::to_deprecated_string() const
 {
     return DeprecatedString::formatted("({},{},{})", m_a, m_b, m_c);
 }

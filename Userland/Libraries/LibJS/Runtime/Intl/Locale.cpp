@@ -28,7 +28,7 @@ Locale::Locale(Object& prototype)
 Locale::Locale(::Locale::LocaleID const& locale_id, Object& prototype)
     : Object(prototype)
 {
-    set_locale(locale_id.to_string());
+    set_locale(locale_id.to_deprecated_string());
 
     for (auto const& extension : locale_id.extensions) {
         if (!extension.has<::Locale::LocaleExtension>())

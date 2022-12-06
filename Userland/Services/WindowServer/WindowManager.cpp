@@ -2044,7 +2044,7 @@ void WindowManager::set_accepts_drag(bool accepts)
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
-    Compositor::the().set_background_color(m_config->read_entry("Background", "Color", palette().desktop_background().to_string()));
+    Compositor::the().set_background_color(m_config->read_entry("Background", "Color", palette().desktop_background().to_deprecated_string()));
     WindowFrame::reload_config();
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& window) {
@@ -2281,7 +2281,7 @@ void WindowManager::set_cursor_highlight_color(Gfx::Color const& color)
 {
     m_cursor_highlight_color = color;
     Compositor::the().invalidate_cursor();
-    m_config->write_entry("Mouse", "CursorHighlightColor", color.to_string());
+    m_config->write_entry("Mouse", "CursorHighlightColor", color.to_deprecated_string());
     sync_config_to_disk();
 }
 

@@ -125,7 +125,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
     for (Block& block : blocks) {
         switch (block.type) {
         case BlockType::Newline: {
-            lines.append(builder.to_string());
+            lines.append(builder.to_deprecated_string());
             builder.clear();
             line_width = 0;
 
@@ -147,7 +147,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
             }
 
             if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
-                lines.append(builder.to_string());
+                lines.append(builder.to_deprecated_string());
                 builder.clear();
                 line_width = 0;
             }
@@ -166,7 +166,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
 
 blocks_processed:
     if (!did_not_finish) {
-        auto last_line = builder.to_string();
+        auto last_line = builder.to_deprecated_string();
         if (!last_line.is_empty())
             lines.append(last_line);
     }
@@ -212,7 +212,7 @@ DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_eli
             StringBuilder builder;
             builder.append(text.substring_view(0, offset).as_string());
             builder.append("..."sv);
-            return builder.to_string();
+            return builder.to_deprecated_string();
         }
     }
 

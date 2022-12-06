@@ -97,7 +97,7 @@ DeprecatedString KeymapSwitcher::get_current_keymap() const
     auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"sv));
-    return keymap_object.get("keymap"sv).to_string();
+    return keymap_object.get("keymap"sv).to_deprecated_string();
 }
 
 void KeymapSwitcher::set_keymap(const AK::DeprecatedString& keymap)

@@ -182,7 +182,7 @@ static DeprecatedString read_next_piece()
         }
     } while (s_repl_line_level + line_level_delta_for_next_line > 0);
 
-    return piece.to_string();
+    return piece.to_deprecated_string();
 }
 
 static bool write_to_file(DeprecatedString const& path)
@@ -227,7 +227,7 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_string());
+                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_deprecated_string());
                 return ReturnEarly::No;
             }
 
@@ -266,8 +266,8 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln("{}", error.to_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_string());
+            outln("{}", error.to_deprecated_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
         } else {
             auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -280,8 +280,8 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln(error.to_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_string());
+            outln(error.to_deprecated_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
         } else {
             auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)

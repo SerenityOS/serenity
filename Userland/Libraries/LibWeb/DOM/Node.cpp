@@ -105,7 +105,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
 DeprecatedString Node::base_uri() const
 {
     // Return this’s node document’s document base URL, serialized.
-    return document().base_url().to_string();
+    return document().base_url().to_deprecated_string();
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
@@ -142,7 +142,7 @@ DeprecatedString Node::descendant_text_content() const
         builder.append(text_node.data());
         return IterationDecision::Continue;
     });
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-textcontent
@@ -1318,7 +1318,7 @@ DeprecatedString Node::debug_description() const
         for (auto const& class_name : element.class_names())
             builder.appendff(".{}", class_name);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-length

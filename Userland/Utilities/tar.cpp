@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     long_name.append(reinterpret_cast<char*>(slice.data()), slice.size());
                 }
 
-                local_overrides.set("path", long_name.to_string());
+                local_overrides.set("path", long_name.to_deprecated_string());
                 TRY(tar_stream->advance());
                 continue;
             }

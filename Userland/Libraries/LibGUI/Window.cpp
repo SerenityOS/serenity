@@ -80,7 +80,7 @@ Window::Window(Core::Object* parent)
         "title",
         [this] { return title(); },
         [this](auto& value) {
-            set_title(value.to_string());
+            set_title(value.to_deprecated_string());
             return true;
         });
 

@@ -58,17 +58,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("date: Format string must start with '+'");
             return 1;
         }
-        outln("{}", date.to_string(format_string.substring_view(1)));
+        outln("{}", date.to_deprecated_string(format_string.substring_view(1)));
     } else if (print_unix_date) {
         outln("{}", date.timestamp());
     } else if (print_iso_8601) {
-        outln("{}", date.to_string("%Y-%m-%dT%H:%M:%S%:z"sv));
+        outln("{}", date.to_deprecated_string("%Y-%m-%dT%H:%M:%S%:z"sv));
     } else if (print_rfc_5322) {
-        outln("{}", date.to_string("%a, %d %b %Y %H:%M:%S %z"sv));
+        outln("{}", date.to_deprecated_string("%a, %d %b %Y %H:%M:%S %z"sv));
     } else if (print_rfc_3339) {
-        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S%:z"sv));
+        outln("{}", date.to_deprecated_string("%Y-%m-%d %H:%M:%S%:z"sv));
     } else {
-        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S %Z"sv));
+        outln("{}", date.to_deprecated_string("%Y-%m-%d %H:%M:%S %Z"sv));
     }
     return 0;
 }

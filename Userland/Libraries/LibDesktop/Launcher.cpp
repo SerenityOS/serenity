@@ -19,10 +19,10 @@ auto Launcher::Details::from_details_str(DeprecatedString const& details_str) ->
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
     auto const& obj = json.as_object();
-    details->executable = obj.get("executable"sv).to_string();
-    details->name = obj.get("name"sv).to_string();
+    details->executable = obj.get("executable"sv).to_deprecated_string();
+    details->name = obj.get("name"sv).to_deprecated_string();
     if (auto type_value = obj.get_ptr("type"sv)) {
-        auto type_str = type_value->to_string();
+        auto type_str = type_value->to_deprecated_string();
         if (type_str == "app")
             details->launcher_type = LauncherType::Application;
         else if (type_str == "userpreferred")
@@ -100,12 +100,12 @@ bool Launcher::open(const URL& url, Details const& details)
 
 Vector<DeprecatedString> Launcher::get_handlers_for_url(const URL& url)
 {
-    return connection().get_handlers_for_url(url.to_string());
+    return connection().get_handlers_for_url(url.to_deprecated_string());
 }
 
 auto Launcher::get_handlers_with_details_for_url(const URL& url) -> NonnullRefPtrVector<Details>
 {
-    auto details = connection().get_handlers_with_details_for_url(url.to_string());
+    auto details = connection().get_handlers_with_details_for_url(url.to_deprecated_string());
     NonnullRefPtrVector<Details> handlers_with_details;
     for (auto& value : details) {
         handlers_with_details.append(Details::from_details_str(value));

@@ -42,7 +42,7 @@ void ListView::update_content_size()
     int content_width = 0;
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
         auto text = model()->index(row, m_model_column).data();
-        content_width = max(content_width, font().width(text.to_string()) + horizontal_padding() * 2);
+        content_width = max(content_width, font().width(text.to_deprecated_string()) + horizontal_padding() * 2);
     }
     m_max_item_width = content_width;
     content_width = max(content_width, widget_inner_rect().width());
@@ -133,7 +133,7 @@ void ListView::paint_list_item(Painter& painter, int row_index, int painted_item
         text_rect.translate_by(horizontal_padding(), 0);
         text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
         auto text_alignment = index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-        draw_item_text(painter, index, is_selected_row, text_rect, data.to_string(), font, text_alignment, Gfx::TextElision::None);
+        draw_item_text(painter, index, is_selected_row, text_rect, data.to_deprecated_string(), font, text_alignment, Gfx::TextElision::None);
     }
 }
 

@@ -117,7 +117,7 @@ void EditorWrapper::update_title()
 
     if (editor().document().is_modified())
         title.append(" (*)"sv);
-    m_filename_title = title.to_string();
+    m_filename_title = title.to_deprecated_string();
 }
 
 void EditorWrapper::set_debug_mode(bool enabled)

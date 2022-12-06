@@ -30,7 +30,7 @@ DeprecatedString StandardPaths::desktop_directory()
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Desktop"sv);
-    return LexicalPath::canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
 DeprecatedString StandardPaths::documents_directory()
@@ -38,7 +38,7 @@ DeprecatedString StandardPaths::documents_directory()
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Documents"sv);
-    return LexicalPath::canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
 DeprecatedString StandardPaths::downloads_directory()
@@ -46,7 +46,7 @@ DeprecatedString StandardPaths::downloads_directory()
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/Downloads"sv);
-    return LexicalPath::canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
 DeprecatedString StandardPaths::config_directory()
@@ -54,7 +54,7 @@ DeprecatedString StandardPaths::config_directory()
     StringBuilder builder;
     builder.append(home_directory());
     builder.append("/.config"sv);
-    return LexicalPath::canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
 DeprecatedString StandardPaths::tempfile_directory()

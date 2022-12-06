@@ -215,7 +215,7 @@ Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_
             sb.append("Failed to parse "sv);
             sb.append(file.filename());
 
-            return sb.to_string();
+            return sb.to_deprecated_string();
         }
 
         auto& json_value = json_value_option.value();
@@ -224,7 +224,7 @@ Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_
             sb.append("Did not find a spreadsheet in "sv);
             sb.append(file.filename());
 
-            return sb.to_string();
+            return sb.to_deprecated_string();
         }
 
         NonnullRefPtrVector<Sheet> sheets;

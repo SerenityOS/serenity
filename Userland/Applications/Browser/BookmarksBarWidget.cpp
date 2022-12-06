@@ -186,8 +186,8 @@ void BookmarksBarWidget::model_did_update(unsigned)
     int width = 0;
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto title = model()->index(item_index, 0).data().to_string();
-        auto url = model()->index(item_index, 1).data().to_string();
+        auto title = model()->index(item_index, 0).data().to_deprecated_string();
+        auto url = model()->index(item_index, 1).data().to_deprecated_string();
 
         Gfx::IntRect rect { width, 0, font().width(title) + 32, height() };
 
@@ -263,8 +263,8 @@ bool BookmarksBarWidget::contains_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_title = model()->index(item_index, 0).data().to_string();
-        auto item_url = model()->index(item_index, 1).data().to_string();
+        auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
+        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
         if (item_url == url) {
             return true;
         }
@@ -276,8 +276,8 @@ bool BookmarksBarWidget::remove_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_title = model()->index(item_index, 0).data().to_string();
-        auto item_url = model()->index(item_index, 1).data().to_string();
+        auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
+        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
         if (item_url == url) {
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
 
@@ -309,8 +309,8 @@ bool BookmarksBarWidget::add_bookmark(DeprecatedString const& url, DeprecatedStr
 bool BookmarksBarWidget::edit_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
-        auto item_title = model()->index(item_index, 0).data().to_string();
-        auto item_url = model()->index(item_index, 1).data().to_string();
+        auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
+        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
 
         if (item_url == url) {
             auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url);

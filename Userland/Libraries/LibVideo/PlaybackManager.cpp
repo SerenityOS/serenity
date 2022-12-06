@@ -176,7 +176,7 @@ void PlaybackManager::update_presented_frame()
             debug_string_builder.append("a future frame"sv);
         }
         debug_string_builder.append(", checking for error and buffering"sv);
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, debug_string_builder.to_string());
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, debug_string_builder.to_deprecated_string());
 #endif
         if (future_frame_item.has_value()) {
             if (future_frame_item->is_error()) {

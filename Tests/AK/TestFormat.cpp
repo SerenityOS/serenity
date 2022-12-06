@@ -64,7 +64,7 @@ TEST_CASE(string_builder)
     builder.appendff(" {}  ", 42);
     builder.appendff("{1}{0} ", 1, 2);
 
-    EXPECT_EQ(builder.to_string(), " 42  21 ");
+    EXPECT_EQ(builder.to_deprecated_string(), " 42  21 ");
 }
 
 TEST_CASE(format_without_arguments)

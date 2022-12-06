@@ -81,7 +81,7 @@ static u32 hash_tokens(Vector<Token> const& tokens)
 {
     StringBuilder builder;
     for (auto& token : tokens)
-        builder.append(token.to_string());
+        builder.append(token.to_deprecated_string());
     return (u32)builder.string_view().hash();
 }
 

@@ -963,7 +963,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
         if (module_or_errors.is_error()) {
             VERIFY(module_or_errors.error().size() > 0);
-            return throw_completion<SyntaxError>(module_or_errors.error().first().to_string());
+            return throw_completion<SyntaxError>(module_or_errors.error().first().to_deprecated_string());
         }
         return module_or_errors.release_value();
     }());

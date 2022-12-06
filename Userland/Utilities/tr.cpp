@@ -88,7 +88,7 @@ static ErrorOr<DeprecatedString> build_set(StringView specification)
             TRY(out.try_append(lexer.consume(1)));
     }
 
-    return out.to_string();
+    return out.to_deprecated_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -134,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!from_str.contains(static_cast<char>(ch)))
                 TRY(complement_set.try_append(static_cast<char>(ch)));
         }
-        from_str = complement_set.to_string();
+        from_str = complement_set.to_deprecated_string();
     }
 
     auto to_str = TRY(build_set(to_chars));

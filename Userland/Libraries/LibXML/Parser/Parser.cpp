@@ -547,7 +547,7 @@ ErrorOr<Name, ParseError> Parser::parse_name()
     builder.append(rest);
 
     rollback.disarm();
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // 2.8.28. doctypedecl, https://www.w3.org/TR/2006/REC-xml11-20060816/#NT-doctypedecl
@@ -732,7 +732,7 @@ ErrorOr<DeprecatedString, ParseError> Parser::parse_attribute_value_inner(String
             builder.append(m_lexer.consume());
         }
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // Char ::= [#x1-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
@@ -781,7 +781,7 @@ ErrorOr<Variant<Parser::EntityReference, DeprecatedString>, ParseError> Parser::
         builder.append_code_point(*code_point);
 
         rollback.disarm();
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     auto name = name_result.release_value();
@@ -1637,7 +1637,7 @@ ErrorOr<DeprecatedString, ParseError> Parser::parse_entity_value()
     TRY(expect(quote));
 
     rollback.disarm();
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // 2.7.18 CDSect, https://www.w3.org/TR/2006/REC-xml11-20060816/#NT-CDSect

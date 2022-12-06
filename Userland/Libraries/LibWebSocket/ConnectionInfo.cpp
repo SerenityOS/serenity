@@ -35,7 +35,7 @@ DeprecatedString ConnectionInfo::resource_name() const
         builder.append('?');
     // the query component
     builder.append(m_url.query());
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

@@ -69,7 +69,7 @@ void verify_table_contents(SQL::Database& db, int expected_count)
     for (auto& row : rows_or_error.value()) {
         StringBuilder builder;
         builder.appendff("Test{}", row["IntColumn"].to_int().value());
-        EXPECT_EQ(row["TextColumn"].to_string(), builder.build());
+        EXPECT_EQ(row["TextColumn"].to_deprecated_string(), builder.build());
         count++;
         sum += row["IntColumn"].to_int().value();
     }

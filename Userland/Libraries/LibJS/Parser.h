@@ -184,7 +184,7 @@ public:
                 if (!hint.is_empty())
                     warnln("{}", hint);
             }
-            warnln("SyntaxError: {}", error.to_string());
+            warnln("SyntaxError: {}", error.to_deprecated_string());
         }
     }
 

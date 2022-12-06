@@ -57,7 +57,7 @@ enum class ValueID {
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name.to_string()));
+        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
@@ -95,8 +95,8 @@ ValueID value_id_from_string(StringView string)
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name", name.to_string());
-        member_generator.set("name:titlecase", title_casify(name.to_string()));
+        member_generator.set("name", name.to_deprecated_string());
+        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
         member_generator.append(R"~~~(
     if (string.equals_ignoring_case("@name@"sv))
         return ValueID::@name:titlecase@;
@@ -113,8 +113,8 @@ const char* string_from_value_id(ValueID value_id) {
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name", name.to_string());
-        member_generator.set("name:titlecase", title_casify(name.to_string()));
+        member_generator.set("name", name.to_deprecated_string());
+        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
         member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
         return "@name@";

@@ -49,7 +49,7 @@ UnregisteredWidget::UnregisteredWidget(DeprecatedString const& class_name)
     StringBuilder builder;
     builder.append(class_name);
     builder.append("\nnot registered"sv);
-    m_text = builder.to_string();
+    m_text = builder.to_deprecated_string();
 }
 
 void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             builder.append("[*]"sv);
 
         builder.append(" - GML Playground"sv);
-        window->set_title(builder.to_string());
+        window->set_title(builder.to_deprecated_string());
     };
 
     editor->on_change = [&] {

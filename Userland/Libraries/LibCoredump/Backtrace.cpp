@@ -128,7 +128,7 @@ void Backtrace::add_entry(Reader const& coredump, FlatPtr ip)
     m_entries.append({ ip, object_name, function_name, source_position });
 }
 
-DeprecatedString Backtrace::Entry::to_string(bool color) const
+DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
 {
     StringBuilder builder;
     builder.appendff("{:p}: ", eip);

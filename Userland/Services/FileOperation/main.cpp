@@ -359,5 +359,5 @@ DeprecatedString deduplicate_destination_file_name(DeprecatedString const& desti
         basename.append(destination_path.extension());
     }
 
-    return LexicalPath::join(destination_path.dirname(), basename.to_string()).string();
+    return LexicalPath::join(destination_path.dirname(), basename.to_deprecated_string()).string();
 }

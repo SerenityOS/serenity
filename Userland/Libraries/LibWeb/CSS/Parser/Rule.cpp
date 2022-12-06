@@ -20,7 +20,7 @@ Rule::Rule(Rule::Type type, FlyString name, Vector<ComponentValue> prelude, RefP
 
 Rule::~Rule() = default;
 
-DeprecatedString Rule::to_string() const
+DeprecatedString Rule::to_deprecated_string() const
 {
     StringBuilder builder;
 
@@ -32,11 +32,11 @@ DeprecatedString Rule::to_string() const
     builder.join(' ', m_prelude);
 
     if (m_block)
-        builder.append(m_block->to_string());
+        builder.append(m_block->to_deprecated_string());
     else
         builder.append(';');
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

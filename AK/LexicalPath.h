@@ -49,7 +49,7 @@ public:
         builder.append(first);
         ((builder.append('/'), builder.append(forward<S>(rest))), ...);
 
-        return LexicalPath { builder.to_string() };
+        return LexicalPath { builder.to_deprecated_string() };
     }
 
     [[nodiscard]] static DeprecatedString dirname(DeprecatedString path)

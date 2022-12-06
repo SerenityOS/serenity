@@ -36,7 +36,7 @@ DeprecatedString URL::path() const
         builder.append('/');
         builder.append(path);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 URL URL::complete_url(DeprecatedString const& string) const
@@ -226,7 +226,7 @@ DeprecatedString URL::serialize_data_url() const
     // NOTE: The specification does not say anything about encoding this, but we should encode at least control and non-ASCII
     //       characters (since this is also a valid representation of the same data URL).
     builder.append(URL::percent_encode(m_data_payload, PercentEncodeSet::C0Control));
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://url.spec.whatwg.org/#concept-url-serializer
@@ -276,7 +276,7 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
         builder.append(percent_encode(m_fragment, PercentEncodeSet::Fragment));
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://url.spec.whatwg.org/#url-rendering
@@ -320,7 +320,7 @@ DeprecatedString URL::serialize_for_display() const
         builder.append(percent_encode(m_fragment, PercentEncodeSet::Fragment));
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
@@ -429,7 +429,7 @@ DeprecatedString URL::percent_encode(StringView input, URL::PercentEncodeSet set
         else
             append_percent_encoded_if_necessary(builder, code_point, set);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString URL::percent_decode(StringView input)
@@ -451,7 +451,7 @@ DeprecatedString URL::percent_decode(StringView input)
             builder.append(byte);
         }
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

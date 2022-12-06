@@ -55,7 +55,7 @@ MailWidget::MailWidget()
 
     m_web_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
-            m_statusbar->set_text(url.to_string());
+            m_statusbar->set_text(url.to_deprecated_string());
         else
             m_statusbar->set_text("");
     };
@@ -68,7 +68,7 @@ MailWidget::MailWidget()
     m_link_context_menu_default_action = link_default_action;
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("&Copy URL", [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_string());
+        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
     }));
 
     m_web_view->on_link_context_menu_request = [this](auto& url, auto& screen_position) {
@@ -82,7 +82,7 @@ MailWidget::MailWidget()
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
     m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_string());
+        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_deprecated_string());
     }));
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(GUI::Action::create("&Open Image in Browser", [this](auto&) {
@@ -347,7 +347,7 @@ void MailWidget::selected_mailbox()
                     break;
             }
 
-            return builder.to_string();
+            return builder.to_deprecated_string();
         };
 
         auto& subject_iterator_value = subject_iterator->get<1>().value();

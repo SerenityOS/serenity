@@ -53,7 +53,7 @@ JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename,
     // 11. If result is a list of errors, then:
     if (result.is_error()) {
         auto& parse_error = result.error().first();
-        dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Failed to parse: {}", parse_error.to_string());
+        dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Failed to parse: {}", parse_error.to_deprecated_string());
 
         // FIXME: 1. Set script's parse error and its error to rethrow to result[0].
         //           We do not have parse error as it would currently go unused.
@@ -90,7 +90,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
 
     // 5. If script's error to rethrow is not null, then set evaluationStatus to Completion { [[Type]]: throw, [[Value]]: script's error to rethrow, [[Target]]: empty }.
     if (m_error_to_rethrow.has_value()) {
-        evaluation_status = vm.throw_completion<JS::SyntaxError>(m_error_to_rethrow.value().to_string());
+        evaluation_status = vm.throw_completion<JS::SyntaxError>(m_error_to_rethrow.value().to_deprecated_string());
     } else {
         auto timer = Core::ElapsedTimer::start_new();
 

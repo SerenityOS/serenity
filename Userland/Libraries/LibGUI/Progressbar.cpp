@@ -67,7 +67,7 @@ void Progressbar::paint_event(PaintEvent& event)
         } else if (m_format == Format::ValueSlashMax) {
             builder.appendff("{}/{}", m_value, m_max);
         }
-        progress_text = builder.to_string();
+        progress_text = builder.to_deprecated_string();
     }
 
     Gfx::StylePainter::paint_progressbar(painter, rect, palette(), m_min, m_max, m_value, progress_text, m_orientation);

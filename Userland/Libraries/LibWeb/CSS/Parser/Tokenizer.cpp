@@ -237,7 +237,7 @@ Tokenizer::Tokenizer(StringView input, DeprecatedString const& encoding)
                 last_was_carriage_return = false;
             }
         });
-        return builder.to_string();
+        return builder.to_deprecated_string();
     };
 
     m_decoded_input = filter_code_points(input, encoding);
@@ -367,7 +367,7 @@ Token Tokenizer::create_value_token(Token::Type type, u32 value)
     // FIXME: Avoid temporary StringBuilder here
     StringBuilder builder;
     builder.append_code_point(value);
-    token.m_value = builder.to_string();
+    token.m_value = builder.to_deprecated_string();
     return token;
 }
 
@@ -400,7 +400,7 @@ u32 Tokenizer::consume_escaped_code_point()
         }
 
         // Interpret the hex digits as a hexadecimal number.
-        auto unhexed = strtoul(builder.to_string().characters(), nullptr, 16);
+        auto unhexed = strtoul(builder.to_deprecated_string().characters(), nullptr, 16);
         // If this number is zero, or is for a surrogate, or is greater than the maximum allowed
         // code point, return U+FFFD REPLACEMENT CHARACTER (�).
         if (unhexed == 0 || is_unicode_surrogate(unhexed) || is_greater_than_maximum_allowed_code_point(unhexed)) {
@@ -617,7 +617,7 @@ DeprecatedString Tokenizer::consume_an_ident_sequence()
         break;
     }
 
-    return result.to_string();
+    return result.to_deprecated_string();
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-url-token
@@ -640,7 +640,7 @@ Token Tokenizer::consume_a_url_token()
     consume_as_much_whitespace_as_possible();
 
     auto make_token = [&]() {
-        token.m_value = builder.to_string();
+        token.m_value = builder.to_deprecated_string();
         return token;
     };
 
@@ -931,7 +931,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
     StringBuilder builder;
 
     auto make_token = [&]() {
-        token.m_value = builder.to_string();
+        token.m_value = builder.to_deprecated_string();
         return token;
     };
 

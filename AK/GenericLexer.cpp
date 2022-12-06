@@ -138,7 +138,7 @@ DeprecatedString GenericLexer::consume_and_unescape_string(char escape_char)
     StringBuilder builder;
     for (size_t i = 0; i < view.length(); ++i)
         builder.append(consume_escaped_character(escape_char));
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 auto GenericLexer::consume_escaped_code_point(bool combine_surrogate_pairs) -> Result<u32, UnicodeEscapeError>

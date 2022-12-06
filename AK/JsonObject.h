@@ -166,7 +166,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
 
 private:
     OrderedHashMap<DeprecatedString, JsonValue> m_members;

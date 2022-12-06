@@ -40,7 +40,7 @@ private:
         static SymbolName create(StringView, Vector<StringView>&&);
         static SymbolName create(StringView);
         DeprecatedString scope_as_string() const;
-        DeprecatedString to_string() const;
+        DeprecatedString to_deprecated_string() const;
 
         bool operator==(SymbolName const&) const = default;
     };

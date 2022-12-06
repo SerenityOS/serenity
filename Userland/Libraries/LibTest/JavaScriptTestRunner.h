@@ -353,7 +353,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     auto result = parse_script(m_common_path, interpreter->realm());
     if (result.is_error()) {
         warnln("Unable to parse test-common.js");
-        warnln("{}", result.error().error.to_string());
+        warnln("{}", result.error().error.to_deprecated_string());
         warnln("{}", result.error().hint);
         cleanup_and_exit();
     }
@@ -487,7 +487,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 detail_builder.append(error_as_error.stack_string());
             }
 
-            test_case.details = detail_builder.to_string();
+            test_case.details = detail_builder.to_deprecated_string();
         } else {
             test_case.details = error.to_string_without_side_effects();
         }
@@ -567,7 +567,7 @@ inline void TestRunner::print_file_result(JSFileResult const& file_result) const
             outln("         {}", message);
         }
         print_modifiers({ FG_RED });
-        outln("         {}", test_error.error.to_string());
+        outln("         {}", test_error.error.to_deprecated_string());
         outln();
         return;
     }

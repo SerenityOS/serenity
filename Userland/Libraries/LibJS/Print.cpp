@@ -82,7 +82,7 @@ DeprecatedString strip_ansi(StringView format_string)
     }
     if (i < format_string.length())
         builder.append(format_string[i]);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 template<typename... Args>

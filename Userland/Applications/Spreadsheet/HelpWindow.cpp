@@ -142,12 +142,12 @@ DeprecatedString HelpWindow::render(StringView key)
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get(key).as_object();
 
-    auto name = doc.get("name"sv).to_string();
+    auto name = doc.get("name"sv).to_deprecated_string();
     auto argc = doc.get("argc"sv).to_u32(0);
     VERIFY(doc.has_array("argnames"sv));
     auto& argnames = doc.get("argnames"sv).as_array();
 
-    auto docstring = doc.get("doc"sv).to_string();
+    auto docstring = doc.get("doc"sv).to_deprecated_string();
 
     StringBuilder markdown_builder;
 
@@ -162,7 +162,7 @@ DeprecatedString HelpWindow::render(StringView key)
         markdown_builder.append("No required arguments.\n"sv);
 
     for (size_t i = 0; i < argc; ++i)
-        markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
+        markdown_builder.appendff("- `{}`\n", argnames.at(i).to_deprecated_string());
 
     if (argc > 0)
         markdown_builder.append("\n"sv);
@@ -171,7 +171,7 @@ DeprecatedString HelpWindow::render(StringView key)
         auto opt_count = argnames.size() - argc;
         markdown_builder.appendff("{} optional argument(s):\n", opt_count);
         for (size_t i = argc; i < (size_t)argnames.size(); ++i)
-            markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
+            markdown_builder.appendff("- `{}`\n", argnames.at(i).to_deprecated_string());
         markdown_builder.append("\n"sv);
     }
 
@@ -184,8 +184,8 @@ DeprecatedString HelpWindow::render(StringView key)
         VERIFY(examples.is_object());
         markdown_builder.append("# EXAMPLES\n"sv);
         examples.as_object().for_each_member([&](auto& text, auto& description_value) {
-            dbgln("```js\n{}\n```\n\n- {}\n", text, description_value.to_string());
-            markdown_builder.appendff("```js\n{}\n```\n\n- {}\n", text, description_value.to_string());
+            dbgln("```js\n{}\n```\n\n- {}\n", text, description_value.to_deprecated_string());
+            markdown_builder.appendff("```js\n{}\n```\n\n- {}\n", text, description_value.to_deprecated_string());
         });
     }
 

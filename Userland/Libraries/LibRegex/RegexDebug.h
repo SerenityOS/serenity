@@ -61,13 +61,13 @@ public:
             system.characters(),
             state.instruction_position,
             recursion,
-            opcode.to_string().characters(),
+            opcode.to_deprecated_string().characters(),
             opcode.arguments_string().characters(),
             DeprecatedString::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position));
         if (newline)
             outln();
         if (newline && is<OpCode_Compare>(opcode)) {
-            for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_string())
+            for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_deprecated_string())
                 outln(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}", "", "", "", "", line, "");
         }
     }
@@ -85,10 +85,10 @@ public:
             builder.appendff(", next ip: {}", state.instruction_position + opcode.size());
         }
 
-        outln(m_file, " | {:20}", builder.to_string());
+        outln(m_file, " | {:20}", builder.to_deprecated_string());
 
         if (is<OpCode_Compare>(opcode)) {
-            for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_string(input)) {
+            for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_deprecated_string(input)) {
                 outln(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}", "", "", "", "", line, "");
             }
         }
@@ -104,7 +104,7 @@ public:
         for (size_t i = 0; i < length; ++i) {
             builder.append('=');
         }
-        auto str = builder.to_string();
+        auto str = builder.to_deprecated_string();
         VERIFY(!str.is_empty());
 
         outln(m_file, "{}", str);
@@ -115,7 +115,7 @@ public:
             builder.append('-');
         }
         builder.append('\n');
-        m_debug_stripline = builder.to_string();
+        m_debug_stripline = builder.to_deprecated_string();
     }
 
 private:

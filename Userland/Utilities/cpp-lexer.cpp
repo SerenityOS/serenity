@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Cpp::Lexer lexer(content);
     lexer.lex_iterable([](auto token) {
-        outln("{}", token.to_string());
+        outln("{}", token.to_deprecated_string());
     });
 
     return 0;

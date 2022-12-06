@@ -54,7 +54,7 @@ void GitFilesView::mousedown_event(GUI::MouseEvent& event)
     auto data = model()->index(item_index, model_column()).data();
 
     VERIFY(data.is_string());
-    m_action_callback(data.to_string());
+    m_action_callback(data.to_deprecated_string());
 }
 
 };

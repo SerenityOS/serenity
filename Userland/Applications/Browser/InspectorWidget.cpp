@@ -32,7 +32,7 @@ void InspectorWidget::set_selection(Selection selection)
     auto* model = verify_cast<WebView::DOMTreeModel>(m_dom_tree_view->model());
     auto index = model->index_for_node(selection.dom_node_id, selection.pseudo_element);
     if (!index.is_valid()) {
-        dbgln("InspectorWidget told to inspect non-existent node: {}", selection.to_string());
+        dbgln("InspectorWidget told to inspect non-existent node: {}", selection.to_deprecated_string());
         return;
     }
 
@@ -151,7 +151,7 @@ void InspectorWidget::clear_dom_json()
 void InspectorWidget::set_dom_node_properties_json(Selection selection, DeprecatedString specified_values_json, DeprecatedString computed_values_json, DeprecatedString custom_properties_json, DeprecatedString node_box_sizing_json)
 {
     if (selection != m_selection) {
-        dbgln("Got data for the wrong node id! Wanted ({}), got ({})", m_selection.to_string(), selection.to_string());
+        dbgln("Got data for the wrong node id! Wanted ({}), got ({})", m_selection.to_deprecated_string(), selection.to_deprecated_string());
         return;
     }
 

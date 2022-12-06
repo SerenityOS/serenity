@@ -337,7 +337,7 @@ void Job::on_socket_connected()
                 }
                 if (on_headers_received) {
                     if (!m_set_cookie_headers.is_empty())
-                        m_headers.set("Set-Cookie", JsonArray { m_set_cookie_headers }.to_string());
+                        m_headers.set("Set-Cookie", JsonArray { m_set_cookie_headers }.to_deprecated_string());
                     on_headers_received(m_headers, m_code > 0 ? m_code : Optional<u32> {});
                 }
                 m_state = State::InBody;

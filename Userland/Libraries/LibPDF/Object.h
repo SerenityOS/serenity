@@ -75,7 +75,7 @@ public:
     }
 
     virtual char const* type_name() const = 0;
-    virtual DeprecatedString to_string(int indent) const = 0;
+    virtual DeprecatedString to_deprecated_string(int indent) const = 0;
 
 protected:
 #define ENUMERATE_TYPE(_, name)    \
@@ -98,7 +98,7 @@ template<PDF::IsObject T>
 struct Formatter<T> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, T const& object)
     {
-        return Formatter<StringView>::format(builder, object.to_string(0));
+        return Formatter<StringView>::format(builder, object.to_deprecated_string(0));
     }
 };
 

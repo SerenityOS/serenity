@@ -288,7 +288,7 @@ public:
     constexpr bool operator>=(StringView other) const { return compare(other) >= 0; }
 
 #ifndef KERNEL
-    [[nodiscard]] DeprecatedString to_string() const;
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
 #endif
 
     [[nodiscard]] bool is_whitespace() const

@@ -334,7 +334,7 @@ void DebugInfo::add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegi
                 array_type_name.append(DeprecatedString::formatted("{:d}", array_size));
                 array_type_name.append(']');
             }
-            parent_variable->type_name = array_type_name.to_string();
+            parent_variable->type_name = array_type_name.to_deprecated_string();
         }
         parent_variable->type = move(type_info);
         parent_variable->type->type_tag = type_die.tag();

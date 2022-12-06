@@ -105,7 +105,7 @@ bool Value::is_null() const
     return !m_value.has_value();
 }
 
-DeprecatedString Value::to_string() const
+DeprecatedString Value::to_deprecated_string() const
 {
     if (is_null())
         return "(null)"sv;
@@ -346,7 +346,7 @@ int Value::compare(Value const& other) const
         return 1;
 
     return m_value->visit(
-        [&](DeprecatedString const& value) -> int { return value.view().compare(other.to_string()); },
+        [&](DeprecatedString const& value) -> int { return value.view().compare(other.to_deprecated_string()); },
         [&](int value) -> int {
             auto casted = other.to_int();
             if (!casted.has_value())
@@ -407,7 +407,7 @@ bool Value::operator==(Value const& value) const
 
 bool Value::operator==(StringView value) const
 {
-    return to_string() == value;
+    return to_deprecated_string() == value;
 }
 
 bool Value::operator==(int value) const

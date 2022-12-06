@@ -352,7 +352,7 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
             if (ch != '\r' && ch != '\n')
                 builder.append(ch);
         }
-        placeholder = builder.to_string();
+        placeholder = builder.to_deprecated_string();
     }
 
     return placeholder;
@@ -477,7 +477,7 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
                 if (!(c == '\r' || c == '\n'))
                     builder.append(c);
             }
-            return builder.to_string();
+            return builder.to_deprecated_string();
         }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::URL) {
         // Strip newlines from the value, then strip leading and trailing ASCII whitespace from the value.

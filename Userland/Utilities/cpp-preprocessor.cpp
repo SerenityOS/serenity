@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     for (auto& token : tokens) {
-        outln("{}", token.to_string());
+        outln("{}", token.to_deprecated_string());
     }
 
     return 0;

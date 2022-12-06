@@ -87,7 +87,7 @@ DeprecatedString Shell::prompt() const
             StringBuilder builder;
             builder.appendff("\033]0;{}@{}:{}\007", username, hostname, cwd);
             builder.appendff("\033[31;1m{}\033[0m@\033[37;1m{}\033[0m:\033[32;1m{}\033[0m$> ", username, hostname, cwd);
-            return builder.to_string();
+            return builder.to_deprecated_string();
         }
 
         StringBuilder builder;
@@ -130,7 +130,7 @@ DeprecatedString Shell::prompt() const
             }
             builder.append(*ptr);
         }
-        return builder.to_string();
+        return builder.to_deprecated_string();
     };
 
     return build_prompt();
@@ -159,17 +159,17 @@ DeprecatedString Shell::expand_tilde(StringView expression)
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
-            return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_string());
+            return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_deprecated_string());
         }
-        return DeprecatedString::formatted("{}/{}", home, path.to_string());
+        return DeprecatedString::formatted("{}/{}", home, path.to_deprecated_string());
     }
 
-    auto passwd = getpwnam(login_name.to_string().characters());
+    auto passwd = getpwnam(login_name.to_deprecated_string().characters());
     if (!passwd)
         return expression;
     VERIFY(passwd->pw_dir);
 
-    return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_string());
+    return DeprecatedString::formatted("{}/{}", passwd->pw_dir, path.to_deprecated_string());
 }
 
 bool Shell::is_glob(StringView s)
@@ -391,7 +391,7 @@ DeprecatedString Shell::local_variable_or(StringView name, DeprecatedString cons
     if (value) {
         StringBuilder builder;
         builder.join(' ', value->resolve_as_list(*this));
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
     return replacement;
 }
@@ -520,7 +520,7 @@ DeprecatedString Shell::resolve_alias(StringView name) const
 Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
 {
     auto parts = name.split_view('/');
-    auto path = name.to_string();
+    auto path = name.to_deprecated_string();
     if (parts.size() > 1) {
         auto file = Core::File::open(path.characters(), Core::OpenMode::ReadOnly);
         if (!file.is_error() && !file.value()->is_directory() && access(path.characters(), X_OK) == 0)
@@ -914,7 +914,7 @@ void Shell::execute_process(Vector<char const*>&& argv)
                 if (!line.starts_with("#!"sv))
                     break;
                 GenericLexer shebang_lexer { line.substring_view(2) };
-                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r"sv)).to_string();
+                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r"sv)).to_deprecated_string();
                 argv.prepend(shebang.characters());
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
                 if (rc < 0) {
@@ -1911,7 +1911,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     dbgln("LibLine: Unhandled completion kind: {}", kind);
                 }
             } else {
-                suggestions.append(parsed.to_string());
+                suggestions.append(parsed.to_deprecated_string());
             }
 
             return IterationDecision::Continue;
@@ -2172,7 +2172,7 @@ Shell::Shell()
         if (path.length())
             path.append(":"sv);
         path.append(DEFAULT_PATH_SV);
-        setenv("PATH", path.to_string().characters(), true);
+        setenv("PATH", path.to_deprecated_string().characters(), true);
     }
 
     cache_path();

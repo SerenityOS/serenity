@@ -23,7 +23,7 @@ public:
     DeprecatedString description() const { return m_description.value_or(""); }
     Optional<DeprecatedString> const& raw_description() const { return m_description; }
     bool is_global() const { return m_is_global; }
-    DeprecatedString to_string() const { return DeprecatedString::formatted("Symbol({})", description()); }
+    DeprecatedString to_deprecated_string() const { return DeprecatedString::formatted("Symbol({})", description()); }
 
 private:
     Symbol(Optional<DeprecatedString>, bool);

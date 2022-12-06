@@ -1556,7 +1556,7 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
         syntax_error(DeprecatedString::formatted("RegExp compile error: {}", Regex<ECMA262>(parsed_regex, parsed_pattern, parsed_flags).error_string()), rule_start.position());
 
     SourceRange range { m_source_code, rule_start.position(), position() };
-    return create_ast_node<RegExpLiteral>(move(range), move(parsed_regex), move(parsed_pattern), move(parsed_flags), pattern.to_string(), move(flags));
+    return create_ast_node<RegExpLiteral>(move(range), move(parsed_regex), move(parsed_pattern), move(parsed_flags), pattern.to_deprecated_string(), move(flags));
 }
 
 static bool is_simple_assignment_target(Expression const& expression, bool allow_web_reality_call_expression = true)
@@ -4104,7 +4104,7 @@ ModuleRequest Parser::parse_module_request()
     while (!done() && !match(TokenType::CurlyClose)) {
         DeprecatedString key;
         if (match(TokenType::StringLiteral)) {
-            key = parse_string_literal(m_state.current_token)->value().to_string();
+            key = parse_string_literal(m_state.current_token)->value().to_deprecated_string();
             consume();
         } else if (match_identifier_name()) {
             key = consume().value();
@@ -4120,7 +4120,7 @@ ModuleRequest Parser::parse_module_request()
                 if (entries.key == key)
                     syntax_error(DeprecatedString::formatted("Duplicate assertion clauses with name: {}", key));
             }
-            request.add_assertion(move(key), parse_string_literal(m_state.current_token)->value().to_string());
+            request.add_assertion(move(key), parse_string_literal(m_state.current_token)->value().to_deprecated_string());
         }
         consume(TokenType::StringLiteral);
 

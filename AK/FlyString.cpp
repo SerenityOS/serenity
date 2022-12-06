@@ -63,7 +63,7 @@ FlyString::FlyString(StringView string)
         return string == candidate;
     });
     if (it == fly_impls().end()) {
-        auto new_string = string.to_string();
+        auto new_string = string.to_deprecated_string();
         fly_impls().set(new_string.impl());
         new_string.impl()->set_fly({}, true);
         m_impl = new_string.impl();

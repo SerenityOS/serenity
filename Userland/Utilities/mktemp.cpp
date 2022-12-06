@@ -27,7 +27,7 @@ static DeprecatedString generate_random_filename(DeprecatedString const& pattern
             new_filename.append(pattern[i]);
     }
 
-    return new_filename.to_string();
+    return new_filename.to_deprecated_string();
 }
 
 static ErrorOr<DeprecatedString> make_temp(DeprecatedString const& pattern, bool directory, bool dry_run)

@@ -49,7 +49,7 @@ public:
     }
 
 #ifndef KERNEL
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 #endif
 
 private:
@@ -65,7 +65,7 @@ struct AESCipherKey : public CipherKey {
     static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; };
 
 #ifndef KERNEL
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 #endif
 
     u32 const* round_keys() const

@@ -17,7 +17,7 @@ Block::Block(Token token, Vector<ComponentValue>&& values)
 
 Block::~Block() = default;
 
-DeprecatedString Block::to_string() const
+DeprecatedString Block::to_deprecated_string() const
 {
     StringBuilder builder;
 
@@ -25,7 +25,7 @@ DeprecatedString Block::to_string() const
     builder.join(' ', m_values);
     builder.append(m_token.bracket_mirror_string());
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

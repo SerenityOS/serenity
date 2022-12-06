@@ -75,7 +75,7 @@ void log_that_can_not_fail(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
     MUST(vformat(builder, fmtstr, params));
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 ```
 

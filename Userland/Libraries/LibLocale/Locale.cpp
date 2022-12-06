@@ -560,7 +560,7 @@ void canonicalize_unicode_extension_values(StringView key, DeprecatedString& val
             // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
             //        Implement the spec's recommendation of using just the first alias for now,
             //        but we should determine if there's anything else needed here.
-            value = aliases[0].to_string();
+            value = aliases[0].to_deprecated_string();
         }
     }
 }
@@ -903,10 +903,10 @@ DeprecatedString resolve_most_likely_territory_alias(LanguageID const& language_
             return territory.release_value();
     }
 
-    return aliases[0].to_string();
+    return aliases[0].to_deprecated_string();
 }
 
-DeprecatedString LanguageID::to_string() const
+DeprecatedString LanguageID::to_deprecated_string() const
 {
     StringBuilder builder;
 
@@ -927,7 +927,7 @@ DeprecatedString LanguageID::to_string() const
     return builder.build();
 }
 
-DeprecatedString LocaleID::to_string() const
+DeprecatedString LocaleID::to_deprecated_string() const
 {
     StringBuilder builder;
 
@@ -939,7 +939,7 @@ DeprecatedString LocaleID::to_string() const
         builder.append(*segment);
     };
 
-    append_segment(language_id.to_string());
+    append_segment(language_id.to_deprecated_string());
 
     for (auto const& extension : extensions) {
         extension.visit(
@@ -955,7 +955,7 @@ DeprecatedString LocaleID::to_string() const
             [&](TransformedExtension const& ext) {
                 builder.append("-t"sv);
                 if (ext.language.has_value())
-                    append_segment(ext.language->to_string());
+                    append_segment(ext.language->to_deprecated_string());
                 for (auto const& field : ext.fields) {
                     append_segment(field.key);
                     append_segment(field.value);

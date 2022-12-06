@@ -193,7 +193,7 @@ ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_
             break;
         }
 
-        auto const formatted_time = Core::DateTime::from_timestamp(time).to_string();
+        auto const formatted_time = Core::DateTime::from_timestamp(time).to_deprecated_string();
         outln("\t{}\t{}", formatted_time, path);
     }
 

@@ -193,7 +193,7 @@ struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
         }
 
         builder.appendff("] {}", pattern.phase);
-        return format_builder.put_string(builder.to_string());
+        return format_builder.put_string(builder.to_deprecated_string());
     }
 };
 
@@ -237,7 +237,7 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    rise={}\n", state.rise);
         builder.appendff("    knockout={}\n", state.knockout);
         builder.append(" }"sv);
-        return format_builder.put_string(builder.to_string());
+        return format_builder.put_string(builder.to_deprecated_string());
     }
 };
 
@@ -257,7 +257,7 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.appendff("  line_dash_pattern={}\n", state.line_dash_pattern);
         builder.appendff("  text_state={}\n", state.text_state);
         builder.append('}');
-        return format_builder.put_string(builder.to_string());
+        return format_builder.put_string(builder.to_deprecated_string());
     }
 };
 

@@ -562,7 +562,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             }
             // FIXME: Support multiple, comma-separated, language ranges.
             Vector<FlyString> languages;
-            languages.append(pseudo_function.values().first().token().to_string());
+            languages.append(pseudo_function.values().first().token().to_deprecated_string());
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
                 .value = Selector::SimpleSelector::PseudoClass {
@@ -1395,7 +1395,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_string() }
+                Supports::Declaration { declaration->to_deprecated_string() }
             };
         }
     }
@@ -1405,10 +1405,10 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
-            builder.append(item.to_string());
+            builder.append(item.to_deprecated_string());
         transaction.commit();
         return Supports::Feature {
-            Supports::Selector { builder.to_string() }
+            Supports::Selector { builder.to_deprecated_string() }
         };
     }
 
@@ -1425,13 +1425,13 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
     // `[ <function-token> <any-value>? ) ]`
     if (first_token.is_function()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_string() };
+        return GeneralEnclosed { first_token.to_deprecated_string() };
     }
 
     // `( <any-value>? )`
     if (first_token.is_block() && first_token.block().is_paren()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_string() };
+        return GeneralEnclosed { first_token.to_deprecated_string() };
     }
 
     return {};
@@ -3385,7 +3385,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
             return DeprecatedString::formatted("{:+}", int_value);
         }
 
-        return component_value.to_string();
+        return component_value.to_deprecated_string();
     };
 
     auto create_unicode_range = [&](StringView text, auto& local_transaction) -> Optional<UnicodeRange> {
@@ -3920,13 +3920,13 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
                 serialization_builder.append(cv.token().dimension_unit());
 
             // 5. If serialization consists of fewer than six characters, prepend zeros (U+0030) so that it becomes six characters.
-            serialization = serialization_builder.to_string();
+            serialization = serialization_builder.to_deprecated_string();
             if (serialization_builder.length() < 6) {
                 StringBuilder builder;
                 for (size_t i = 0; i < (6 - serialization_builder.length()); i++)
                     builder.append('0');
                 builder.append(serialization_builder.string_view());
-                serialization = builder.to_string();
+                serialization = builder.to_deprecated_string();
             }
         }
         // 3. Otherwise, cv is an <ident-token>; let serialization be cv’s value.

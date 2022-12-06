@@ -11,7 +11,7 @@
 
 namespace Web::CSS::Parser {
 
-DeprecatedString Token::to_string() const
+DeprecatedString Token::to_deprecated_string() const
 {
     StringBuilder builder;
 

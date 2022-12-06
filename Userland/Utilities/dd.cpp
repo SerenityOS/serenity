@@ -54,7 +54,7 @@ static int handle_io_file_arguments(int& fd, int flags, StringView argument)
         return -1;
     }
 
-    fd = open(value.to_string().characters(), flags, 0666);
+    fd = open(value.to_deprecated_string().characters(), flags, 0666);
     if (fd == -1) {
         warnln("Unable to open: {}", value);
         return -1;

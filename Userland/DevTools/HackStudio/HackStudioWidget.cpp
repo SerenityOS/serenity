@@ -279,7 +279,7 @@ void HackStudioWidget::open_project(DeprecatedString const& root_path)
     if (recent_projects.size() > recent_projects_history_size)
         recent_projects.shrink(recent_projects_history_size);
 
-    Config::write_string("HackStudio"sv, "Global"sv, "RecentProjects"sv, JsonArray(recent_projects).to_string());
+    Config::write_string("HackStudio"sv, "Global"sv, "RecentProjects"sv, JsonArray(recent_projects).to_deprecated_string());
     update_recent_projects_submenu();
 }
 
@@ -1088,7 +1088,7 @@ DeprecatedString HackStudioWidget::get_full_path_of_serenity_source(DeprecatedSt
     relative_path_builder.join('/', path_parts);
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
     LexicalPath serenity_sources_base(SERENITY_LIBS_PREFIX);
-    return DeprecatedString::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
+    return DeprecatedString::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_deprecated_string());
 }
 
 DeprecatedString HackStudioWidget::get_absolute_path(DeprecatedString const& path) const
@@ -1246,7 +1246,7 @@ void HackStudioWidget::create_open_files_view(GUI::Widget& parent)
     m_open_files_view->set_model(open_files_model);
 
     m_open_files_view->on_activation = [this](auto& index) {
-        open_file(index.data().to_string());
+        open_file(index.data().to_deprecated_string());
     };
 }
 
@@ -1559,7 +1559,7 @@ void HackStudioWidget::update_statusbar()
         builder.appendff("Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
-    m_statusbar->set_text(0, builder.to_string());
+    m_statusbar->set_text(0, builder.to_deprecated_string());
     m_statusbar->set_text(1, current_editor_wrapper().editor().code_document().language_name());
     m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
 }

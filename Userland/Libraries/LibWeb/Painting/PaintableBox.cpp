@@ -201,7 +201,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         else
             builder.append(layout_box().debug_description());
         builder.appendff(" {}x{} @ {},{}", border_rect.width(), border_rect.height(), border_rect.x(), border_rect.y());
-        auto size_text = builder.to_string();
+        auto size_text = builder.to_deprecated_string();
         auto size_text_rect = border_rect;
         size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());

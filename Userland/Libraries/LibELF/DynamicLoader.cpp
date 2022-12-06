@@ -408,7 +408,7 @@ void DynamicLoader::load_program_headers()
             MAP_FILE | MAP_SHARED | MAP_FIXED,
             m_image_fd,
             VirtualAddress { region.offset() }.page_base().get(),
-            builder.to_string().characters());
+            builder.to_deprecated_string().characters());
 
         if (segment_base == MAP_FAILED) {
             perror("mmap non-writable");

@@ -36,7 +36,7 @@ public:
         set<NonnullRefPtr<Object>>(*refptr);
     }
 
-    [[nodiscard]] DeprecatedString to_string(int indent = 0) const;
+    [[nodiscard]] DeprecatedString to_deprecated_string(int indent = 0) const;
 
     [[nodiscard]] ALWAYS_INLINE bool has_number() const { return has<int>() || has<float>(); }
 
@@ -95,7 +95,7 @@ template<>
 struct Formatter<PDF::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, PDF::Value const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 

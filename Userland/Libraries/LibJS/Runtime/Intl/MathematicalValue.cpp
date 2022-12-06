@@ -293,7 +293,7 @@ bool MathematicalValue::is_zero() const
         [](auto) { return false; });
 }
 
-DeprecatedString MathematicalValue::to_string() const
+DeprecatedString MathematicalValue::to_deprecated_string() const
 {
     return m_value.visit(
         [](double value) { return number_to_string(value, NumberToStringMode::WithoutExponent); },

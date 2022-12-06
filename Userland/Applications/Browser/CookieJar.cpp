@@ -92,9 +92,9 @@ void CookieJar::dump_cookies() const
         builder.appendff("{}{}{}\n", key_color, cookie.key.path, no_color);
 
         builder.appendff("\t{}Value{} = {}\n", attribute_color, no_color, cookie.value.value);
-        builder.appendff("\t{}CreationTime{} = {}\n", attribute_color, no_color, cookie.value.creation_time.to_string());
-        builder.appendff("\t{}LastAccessTime{} = {}\n", attribute_color, no_color, cookie.value.last_access_time.to_string());
-        builder.appendff("\t{}ExpiryTime{} = {}\n", attribute_color, no_color, cookie.value.expiry_time.to_string());
+        builder.appendff("\t{}CreationTime{} = {}\n", attribute_color, no_color, cookie.value.creation_time.to_deprecated_string());
+        builder.appendff("\t{}LastAccessTime{} = {}\n", attribute_color, no_color, cookie.value.last_access_time.to_deprecated_string());
+        builder.appendff("\t{}ExpiryTime{} = {}\n", attribute_color, no_color, cookie.value.expiry_time.to_deprecated_string());
         builder.appendff("\t{}Secure{} = {:s}\n", attribute_color, no_color, cookie.value.secure);
         builder.appendff("\t{}HttpOnly{} = {:s}\n", attribute_color, no_color, cookie.value.http_only);
         builder.appendff("\t{}HostOnly{} = {:s}\n", attribute_color, no_color, cookie.value.host_only);

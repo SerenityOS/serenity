@@ -109,12 +109,12 @@ RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
         auto text_data = index.data();
         if (!first)
             text_builder.append(", "sv);
-        text_builder.append(text_data.to_string());
+        text_builder.append(text_data.to_deprecated_string());
 
         if (!first)
             data_builder.append('\n');
         auto data = index.data(ModelRole::MimeData);
-        data_builder.append(data.to_string());
+        data_builder.append(data.to_deprecated_string());
 
         first = false;
 
@@ -126,7 +126,7 @@ RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
     });
 
     mime_data->set_data(drag_data_type(), data_builder.to_byte_buffer());
-    mime_data->set_text(text_builder.to_string());
+    mime_data->set_text(text_builder.to_deprecated_string());
     if (bitmap)
         mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer());
 

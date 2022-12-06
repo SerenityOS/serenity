@@ -331,7 +331,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
         m_page_view = web_view_container.add<WebView::OutOfProcessWebView>();
         m_page_view->on_link_hover = [this](auto& url) {
             if (url.is_valid())
-                m_statusbar->set_text(url.to_string());
+                m_statusbar->set_text(url.to_deprecated_string());
             else
                 update_statusbar();
         };
@@ -711,7 +711,7 @@ void MainWidget::update_title()
     else
         builder.append(m_path);
     builder.append("[*] - Text Editor"sv);
-    window()->set_title(builder.to_string());
+    window()->set_title(builder.to_deprecated_string());
 }
 
 bool MainWidget::read_file(Core::File& file)
@@ -855,7 +855,7 @@ void MainWidget::update_statusbar()
         auto word_count = m_editor->number_of_words();
         builder.appendff("{} {} ({} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
-    m_statusbar->set_text(0, builder.to_string());
+    m_statusbar->set_text(0, builder.to_deprecated_string());
 
     if (m_editor && m_editor->syntax_highlighter()) {
         auto language = m_editor->syntax_highlighter()->language();

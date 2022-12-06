@@ -774,7 +774,7 @@ DeprecatedString CppComprehensionEngine::SymbolName::scope_as_string() const
         builder.appendff("{}::", scope[i]);
     }
     builder.append(scope.last());
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(StringView name, Vector<StringView>&& scope)
@@ -790,7 +790,7 @@ CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(St
     return SymbolName::create(name, move(parts));
 }
 
-DeprecatedString CppComprehensionEngine::SymbolName::to_string() const
+DeprecatedString CppComprehensionEngine::SymbolName::to_deprecated_string() const
 {
     if (scope.is_empty())
         return name;

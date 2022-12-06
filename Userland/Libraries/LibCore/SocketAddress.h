@@ -51,7 +51,7 @@ public:
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     u16 port() const { return m_port; }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         switch (m_type) {
         case Type::IPv4:
@@ -97,6 +97,6 @@ template<>
 struct AK::Formatter<Core::SocketAddress> : Formatter<DeprecatedString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::SocketAddress const& value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_string());
+        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
     }
 };

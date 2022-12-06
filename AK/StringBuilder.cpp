@@ -104,7 +104,7 @@ ByteBuffer StringBuilder::to_byte_buffer() const
 }
 
 #ifndef KERNEL
-DeprecatedString StringBuilder::to_string() const
+DeprecatedString StringBuilder::to_deprecated_string() const
 {
     if (is_empty())
         return DeprecatedString::empty();
@@ -113,7 +113,7 @@ DeprecatedString StringBuilder::to_string() const
 
 DeprecatedString StringBuilder::build() const
 {
-    return to_string();
+    return to_deprecated_string();
 }
 #endif
 

@@ -1789,7 +1789,7 @@ DeprecatedString temporal_duration_to_string(double years, double months, double
     }
 
     // 20. Return result.
-    return result.to_string();
+    return result.to_deprecated_string();
 }
 
 // 7.5.28 AddDurationToOrSubtractDurationFromDuration ( operation, duration, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromduration

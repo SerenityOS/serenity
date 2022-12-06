@@ -176,7 +176,7 @@ DeprecatedString ProjectBuilder::generate_cmake_file_content() const
         builder.appendff("target_link_libraries({} INTERFACE {})\n", library.key, DeprecatedString::join(' ', library.value->dependencies));
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 HashMap<DeprecatedString, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> ProjectBuilder::get_defined_libraries()

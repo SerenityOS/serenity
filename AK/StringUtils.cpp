@@ -473,7 +473,7 @@ DeprecatedString to_snakecase(StringView str)
             builder.append('_');
         builder.append_as_lowercase(ch);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString to_titlecase(StringView str)
@@ -489,7 +489,7 @@ DeprecatedString to_titlecase(StringView str)
         next_is_upper = ch == ' ';
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString invert_case(StringView str)
@@ -503,7 +503,7 @@ DeprecatedString invert_case(StringView str)
             builder.append(to_ascii_lowercase(ch));
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)

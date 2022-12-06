@@ -116,8 +116,8 @@ struct Token {
         VERIFY_NOT_REACHED();
     }
 
-    DeprecatedString to_string() const;
-    DeprecatedString type_as_string() const;
+    DeprecatedString to_deprecated_string() const;
+    DeprecatedString type_as_deprecated_string() const;
 
     Position const& start() const { return m_start; }
     Position const& end() const { return m_end; }

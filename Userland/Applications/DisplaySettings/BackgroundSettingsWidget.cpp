@@ -72,7 +72,7 @@ void BackgroundSettingsWidget::create_frame()
     m_context_menu->add_separator();
     m_copy_action = GUI::CommonActions::make_copy_action(
         [this](auto&) {
-            auto url = URL::create_with_file_scheme(m_monitor_widget->wallpaper()).to_string();
+            auto url = URL::create_with_file_scheme(m_monitor_widget->wallpaper()).to_deprecated_string();
             GUI::Clipboard::the().set_data(url.bytes(), "text/uri-list");
         },
         this);

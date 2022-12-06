@@ -158,7 +158,7 @@ DeprecatedString HTMLFormElement::action() const
 
     // Return the current URL if the action attribute is null or an empty string
     if (value.is_null() || value.is_empty()) {
-        return document().url().to_string();
+        return document().url().to_deprecated_string();
     }
 
     return value;

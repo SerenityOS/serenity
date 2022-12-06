@@ -630,7 +630,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
                 auto name = shell.help_path_for({}, *runnable);
                 if (name.has_value()) {
                     auto url = URL::create_with_help_scheme(name.release_value(), shell.hostname);
-                    style = bold.unified_with(Line::Style::Hyperlink(url.to_string()));
+                    style = bold.unified_with(Line::Style::Hyperlink(url.to_deprecated_string()));
                 }
             }
 #endif
@@ -662,7 +662,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
         auto realpath = shell.resolve_path(m_text);
         auto url = URL::create_with_file_scheme(realpath);
         url.set_host(shell.hostname);
-        editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_string()) });
+        editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
     }
 }
 
@@ -966,7 +966,7 @@ RefPtr<Value> DoubleQuotedString::run(RefPtr<Shell> shell)
 
     builder.join(""sv, values);
 
-    return make_ref_counted<StringValue>(builder.to_string());
+    return make_ref_counted<StringValue>(builder.to_deprecated_string());
 }
 
 void DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1397,7 +1397,7 @@ RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
         builder.append('\n');
     }
 
-    return make_ref_counted<StringValue>(builder.to_string());
+    return make_ref_counted<StringValue>(builder.to_deprecated_string());
 }
 
 void Heredoc::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2171,7 +2171,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
             spans.ensure_capacity(match.n_capture_groups);
             for (size_t i = 0; i < match.n_capture_groups; ++i) {
                 auto& capture = match.capture_group_matches[0][i];
-                spans.append(capture.view.to_string());
+                spans.append(capture.view.to_deprecated_string());
             }
             return true;
         } else {
@@ -2498,7 +2498,7 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
             path = DeprecatedString::formatted("{}/{}", shell.cwd, path);
         auto url = URL::create_with_file_scheme(path);
         url.set_host(shell.hostname);
-        editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_string()) });
+        editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
     }
 }
 
@@ -2558,12 +2558,12 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                     for (u32 code_point = start_code_point; code_point != end_code_point; code_point += step) {
                         builder.clear();
                         builder.append_code_point(code_point);
-                        values.append(make_ref_counted<StringValue>(builder.to_string()));
+                        values.append(make_ref_counted<StringValue>(builder.to_deprecated_string()));
                     }
                     // Append the ending code point too, most shells treat this as inclusive.
                     builder.clear();
                     builder.append_code_point(end_code_point);
-                    values.append(make_ref_counted<StringValue>(builder.to_string()));
+                    values.append(make_ref_counted<StringValue>(builder.to_deprecated_string()));
                 } else {
                     // Could be two numbers?
                     auto start_int = start_str.to_int();
@@ -2667,7 +2667,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Read));
+    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::Read));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -2697,7 +2697,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::ReadWrite));
+    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::ReadWrite));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3016,7 +3016,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         builder.append(left[0]);
         builder.append(right[0]);
 
-        return make_ref_counted<StringValue>(builder.to_string());
+        return make_ref_counted<StringValue>(builder.to_deprecated_string());
     }
 
     // Otherwise, treat them as lists and create a list product.
@@ -3031,7 +3031,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         for (auto& right_element : right) {
             builder.append(left_element);
             builder.append(right_element);
-            result.append(builder.to_string());
+            result.append(builder.to_deprecated_string());
             builder.clear();
         }
     }
@@ -3054,13 +3054,13 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
         path_builder.append(tilde_value);
         path_builder.append('/');
         path_builder.append(bareword_value);
-        auto path = path_builder.to_string();
+        auto path = path_builder.to_deprecated_string();
 
         if (Core::File::exists(path)) {
             auto realpath = shell.resolve_path(path);
             auto url = URL::create_with_file_scheme(realpath);
             url.set_host(shell.hostname);
-            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_string()) });
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
         }
 
     } else {
@@ -3186,7 +3186,7 @@ RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
     builder.join(' ', left);
     builder.join(' ', right);
 
-    return make_ref_counted<StringValue>(builder.to_string());
+    return make_ref_counted<StringValue>(builder.to_deprecated_string());
 }
 
 void StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3319,7 +3319,7 @@ DeprecatedString Tilde::text() const
     StringBuilder builder;
     builder.append('~');
     builder.append(m_username);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Tilde::Tilde(Position position, DeprecatedString username)
@@ -3349,7 +3349,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::WriteAppend));
+    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::WriteAppend));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3379,7 +3379,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Write));
+    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::Write));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3728,9 +3728,9 @@ Vector<DeprecatedString> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     builder.append(m_username);
 
     if (!shell)
-        return { resolve_slices(shell, builder.to_string(), m_slices) };
+        return { resolve_slices(shell, builder.to_deprecated_string(), m_slices) };
 
-    return { resolve_slices(shell, shell->expand_tilde(builder.to_string()), m_slices) };
+    return { resolve_slices(shell, shell->expand_tilde(builder.to_deprecated_string()), m_slices) };
 }
 
 ErrorOr<NonnullRefPtr<Rewiring>> CloseRedirection::apply() const

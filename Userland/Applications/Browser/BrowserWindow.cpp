@@ -51,7 +51,7 @@ static DeprecatedString bookmarks_file_path()
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
     builder.append("/bookmarks.json"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 static DeprecatedString search_engines_file_path()
@@ -59,7 +59,7 @@ static DeprecatedString search_engines_file_path()
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
     builder.append("/SearchEngines.json"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
@@ -479,8 +479,8 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                 if (!json_item.is_object())
                     continue;
                 auto search_engine = json_item.as_object();
-                auto name = search_engine.get("title"sv).to_string();
-                auto url_format = search_engine.get("url_format"sv).to_string();
+                auto name = search_engine.get("title"sv).to_deprecated_string();
+                auto url_format = search_engine.get("url_format"sv).to_deprecated_string();
 
                 auto action = GUI::Action::create_checkable(
                     name, [&, url_format](auto&) {
@@ -543,7 +543,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 {
     auto& title = tab.title();
     auto url = tab.url();
-    set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_string() : title));
+    set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_deprecated_string() : title));
 }
 
 void BrowserWindow::create_new_tab(URL url, bool activate)
@@ -742,7 +742,7 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
         return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
 
     LexicalPath path { Core::StandardPaths::downloads_directory() };
-    path = path.append(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv));
+    path = path.append(Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv));
 
     auto encoded = Gfx::PNGWriter::encode(*bitmap.bitmap());
 

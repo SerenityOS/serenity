@@ -70,14 +70,14 @@ Link::Link(DeprecatedString text, Document const& document)
     }
     m_url = document.url().complete_url(url);
     if (m_name.is_null())
-        m_name = m_url.to_string();
+        m_name = m_url.to_deprecated_string();
 }
 
 DeprecatedString Link::render_to_html() const
 {
     StringBuilder builder;
     builder.append("<a href=\""sv);
-    builder.append(escape_html_entities(m_url.to_string()));
+    builder.append(escape_html_entities(m_url.to_deprecated_string()));
     builder.append("\">"sv);
     builder.append(escape_html_entities(m_name));
     builder.append("</a><br>\n"sv);

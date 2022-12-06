@@ -83,7 +83,7 @@ ErrorOr<DeprecatedString> WebSocketImplSerenity::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     auto line = TRY(m_socket->read_line(buffer));
-    return line.to_string();
+    return line.to_deprecated_string();
 }
 
 }

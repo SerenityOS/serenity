@@ -149,7 +149,7 @@ void Game::show_score_card(bool game_over)
     title_builder.append("Score Card"sv);
     if (game_over)
         title_builder.append(" - Game Over"sv);
-    score_dialog->set_title(title_builder.to_string());
+    score_dialog->set_title(title_builder.to_deprecated_string());
 
     RefPtr<Core::Timer> close_timer;
     if (!m_players[0].is_human) {

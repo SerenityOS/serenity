@@ -111,7 +111,7 @@ DeprecatedString Crypto::random_uuid() const
     builder.appendff("{:02x}{:02x}-", bytes[6], bytes[7]);
     builder.appendff("{:02x}{:02x}-", bytes[8], bytes[9]);
     builder.appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Crypto::visit_edges(Cell::Visitor& visitor)

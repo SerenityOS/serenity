@@ -24,19 +24,19 @@ public:
     struct Declaration {
         DeprecatedString declaration;
         bool evaluate() const;
-        DeprecatedString to_string() const;
+        DeprecatedString to_deprecated_string() const;
     };
 
     struct Selector {
         DeprecatedString selector;
         bool evaluate() const;
-        DeprecatedString to_string() const;
+        DeprecatedString to_deprecated_string() const;
     };
 
     struct Feature {
         Variant<Declaration, Selector> value;
         bool evaluate() const;
-        DeprecatedString to_string() const;
+        DeprecatedString to_deprecated_string() const;
     };
 
     struct Condition;
@@ -44,7 +44,7 @@ public:
         Variant<NonnullOwnPtr<Condition>, Feature, GeneralEnclosed> value;
 
         bool evaluate() const;
-        DeprecatedString to_string() const;
+        DeprecatedString to_deprecated_string() const;
     };
 
     struct Condition {
@@ -57,7 +57,7 @@ public:
         Vector<InParens> children;
 
         bool evaluate() const;
-        DeprecatedString to_string() const;
+        DeprecatedString to_deprecated_string() const;
     };
 
     static NonnullRefPtr<Supports> create(NonnullOwnPtr<Condition>&& condition)
@@ -66,7 +66,7 @@ public:
     }
 
     bool matches() const { return m_matches; }
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     Supports(NonnullOwnPtr<Condition>&&);
@@ -81,6 +81,6 @@ template<>
 struct AK::Formatter<Web::CSS::Supports::InParens> : AK::Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Supports::InParens const& in_parens)
     {
-        return Formatter<StringView>::format(builder, in_parens.to_string());
+        return Formatter<StringView>::format(builder, in_parens.to_deprecated_string());
     }
 };

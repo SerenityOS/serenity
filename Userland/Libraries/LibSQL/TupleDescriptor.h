@@ -39,7 +39,7 @@ struct TupleElementDescriptor {
         return (sizeof(u32) + name.length()) + 2 * sizeof(u8);
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         return DeprecatedString::formatted("  name: {} type: {} order: {}", name, SQLType_name(type), Order_name(order));
     }
@@ -91,11 +91,11 @@ public:
         return len;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         Vector<DeprecatedString> elements;
         for (auto& element : *this) {
-            elements.append(element.to_string());
+            elements.append(element.to_deprecated_string());
         }
         return DeprecatedString::formatted("[\n{}\n]", DeprecatedString::join('\n', elements));
     }

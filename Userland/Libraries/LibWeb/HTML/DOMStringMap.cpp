@@ -74,7 +74,7 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
             builder.append(current_character);
         }
 
-        list.append({ builder.to_string(), value });
+        list.append({ builder.to_deprecated_string(), value });
     });
 
     // 4. Return list.
@@ -139,7 +139,7 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(Deprecat
         builder.append(current_character);
     }
 
-    auto data_name = builder.to_string();
+    auto data_name = builder.to_deprecated_string();
 
     // FIXME: 4. If name does not match the XML Name production, throw an "InvalidCharacterError" DOMException.
 
@@ -176,7 +176,7 @@ bool DOMStringMap::delete_existing_named_property(DeprecatedString const& name)
     }
 
     // Remove an attribute by name given name and the DOMStringMap's associated element.
-    auto data_name = builder.to_string();
+    auto data_name = builder.to_deprecated_string();
     m_associated_element->remove_attribute(data_name);
 
     // The spec doesn't have the step. This indicates that the deletion was successful.

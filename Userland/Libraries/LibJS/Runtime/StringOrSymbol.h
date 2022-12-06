@@ -79,7 +79,7 @@ public:
         if (is_string())
             return as_string();
         if (is_symbol())
-            return as_symbol()->to_string();
+            return as_symbol()->to_deprecated_string();
         VERIFY_NOT_REACHED();
     }
 

@@ -261,7 +261,7 @@ void VideoPlayerWidget::update_title()
     }
 
     string_builder.append("[*] - Video Player"sv);
-    window()->set_title(string_builder.to_string());
+    window()->set_title(string_builder.to_deprecated_string());
 }
 
 Video::PlaybackManager::SeekMode VideoPlayerWidget::seek_mode()

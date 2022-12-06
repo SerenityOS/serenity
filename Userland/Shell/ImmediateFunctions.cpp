@@ -450,7 +450,7 @@ RefPtr<AST::Node> Shell::immediate_join(AST::ImmediateExpression& invoking_node,
     StringBuilder builder;
     builder.join(delimiter_str, value->resolve_as_list(*this));
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_string(), AST::StringLiteral::EnclosureType::None);
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_deprecated_string(), AST::StringLiteral::EnclosureType::None);
 }
 
 RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)

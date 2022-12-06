@@ -36,7 +36,7 @@ public:
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const;
 #else
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 #endif
     bool is_zero() const;
 

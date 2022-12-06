@@ -377,7 +377,7 @@ TEST_CASE(ini_file_entries)
 
     if constexpr (REGEX_DEBUG) {
         for (auto& v : result.matches)
-            fprintf(stderr, "%s\n", v.view.to_string().characters());
+            fprintf(stderr, "%s\n", v.view.to_deprecated_string().characters());
     }
 
     EXPECT_EQ(result.matches.at(0).view, "[Window]");
@@ -1084,7 +1084,7 @@ TEST_CASE(single_match_flag)
         auto result = re.match("ABC"sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_string(), "A"sv);
+        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), "A"sv);
     }
 }
 
@@ -1097,7 +1097,7 @@ TEST_CASE(inversion_state_in_char_class)
         auto result = re.match("hello"sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_string(), "h"sv);
+        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), "h"sv);
     }
     {
         Regex<ECMA262> re("^(?:([^\\s!\"#%-,\\./;->@\\[-\\^`\\{-~]+(?=([=~}\\s/.)|]))))"sv, ECMAScriptFlags::Global);
@@ -1105,8 +1105,8 @@ TEST_CASE(inversion_state_in_char_class)
         auto result = re.match("slideNumbers}}"sv);
         EXPECT_EQ(result.success, true);
         EXPECT_EQ(result.matches.size(), 1u);
-        EXPECT_EQ(result.matches.first().view.to_string(), "slideNumbers"sv);
-        EXPECT_EQ(result.capture_group_matches.first()[0].view.to_string(), "slideNumbers"sv);
-        EXPECT_EQ(result.capture_group_matches.first()[1].view.to_string(), "}"sv);
+        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), "slideNumbers"sv);
+        EXPECT_EQ(result.capture_group_matches.first()[0].view.to_deprecated_string(), "slideNumbers"sv);
+        EXPECT_EQ(result.capture_group_matches.first()[1].view.to_deprecated_string(), "}"sv);
     }
 }

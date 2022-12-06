@@ -45,7 +45,7 @@ static bool read_number(Streamer& streamer, TValue* value)
         sb.append(byte);
     }
 
-    auto const opt_value = sb.to_string().to_uint();
+    auto const opt_value = sb.to_deprecated_string().to_uint();
     if (!opt_value.has_value()) {
         *value = 0;
         return false;

@@ -40,8 +40,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("DocTypeVersion is {}", reader.header().doc_type_version);
     auto segment_information = TRY_PARSE(reader.segment_information());
     outln("Timestamp scale is {}", segment_information.timestamp_scale());
-    outln("Muxing app is \"{}\"", segment_information.muxing_app().as_string().to_string().characters());
-    outln("Writing app is \"{}\"", segment_information.writing_app().as_string().to_string().characters());
+    outln("Muxing app is \"{}\"", segment_information.muxing_app().as_string().to_deprecated_string().characters());
+    outln("Writing app is \"{}\"", segment_information.writing_app().as_string().to_deprecated_string().characters());
 
     outln("Document has {} tracks", TRY_PARSE(reader.track_count()));
     TRY_PARSE(reader.for_each_track([&](Video::Matroska::TrackEntry const& track_entry) -> Video::DecoderErrorOr<IterationDecision> {

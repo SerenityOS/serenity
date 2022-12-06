@@ -575,13 +575,13 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         .in_class_field_initializer = in_class_field_initializer,
     };
 
-    Parser parser { Lexer { code_string.string() }, Program::Type::Script, move(initial_state) };
+    Parser parser { Lexer { code_string.deprecated_string() }, Program::Type::Script, move(initial_state) };
     auto program = parser.parse_program(strict_caller == CallerMode::Strict);
 
     //     b. If script is a List of errors, throw a SyntaxError exception.
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_string());
+        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
     }
 
     bool strict_eval = false;
@@ -683,7 +683,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable_result = Bytecode::Generator::generate(program);
         if (executable_result.is_error())
-            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_string());
+            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_deprecated_string());
 
         auto executable = executable_result.release_value();
         executable->name = "eval"sv;

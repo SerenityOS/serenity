@@ -45,7 +45,7 @@ public:
     {
         auto body_hash = string_hash((char const*)m_body.data(), m_body.size());
         auto body_and_headers_hash = pair_int_hash(body_hash, m_headers.hash());
-        auto url_and_method_hash = pair_int_hash(m_url.to_string().hash(), m_method.hash());
+        auto url_and_method_hash = pair_int_hash(m_url.to_deprecated_string().hash(), m_method.hash());
         return pair_int_hash(body_and_headers_hash, url_and_method_hash);
     }
 

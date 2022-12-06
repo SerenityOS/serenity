@@ -23,7 +23,7 @@ DeprecatedString HorizontalRule::render_for_terminal(size_t view_width) const
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
     builder.append("\n\n"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 RecursionDecision HorizontalRule::walk(Visitor& visitor) const

@@ -32,7 +32,7 @@ public:
     void set_string(DeprecatedString string) { m_string = move(string); }
 
     char const* type_name() const override { return "string"; }
-    DeprecatedString to_string(int indent) const override;
+    DeprecatedString to_deprecated_string(int indent) const override;
 
 protected:
     bool is_string() const override { return true; }
@@ -54,7 +54,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE FlyString const& name() const { return m_name; }
 
     char const* type_name() const override { return "name"; }
-    DeprecatedString to_string(int indent) const override;
+    DeprecatedString to_deprecated_string(int indent) const override;
 
 protected:
     bool is_name() const override { return true; }
@@ -90,7 +90,7 @@ public:
     {
         return "array";
     }
-    DeprecatedString to_string(int indent) const override;
+    DeprecatedString to_deprecated_string(int indent) const override;
 
 protected:
     bool is_array() const override { return true; }
@@ -136,7 +136,7 @@ public:
     {
         return "dict";
     }
-    DeprecatedString to_string(int indent) const override;
+    DeprecatedString to_deprecated_string(int indent) const override;
 
 protected:
     bool is_dict() const override { return true; }
@@ -160,7 +160,7 @@ public:
     [[nodiscard]] ByteBuffer& buffer() { return m_buffer; };
 
     char const* type_name() const override { return "stream"; }
-    DeprecatedString to_string(int indent) const override;
+    DeprecatedString to_deprecated_string(int indent) const override;
 
 private:
     bool is_stream() const override { return true; }
@@ -184,7 +184,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE Value const& value() const { return m_value; }
 
     char const* type_name() const override { return "indirect_object"; }
-    DeprecatedString to_string(int indent) const override;
+    DeprecatedString to_deprecated_string(int indent) const override;
 
 protected:
     bool is_indirect_value() const override { return true; }

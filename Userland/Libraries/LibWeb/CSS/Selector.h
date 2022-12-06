@@ -80,7 +80,7 @@ public:
                     result.appendff("{}", offset);
 
                 // 5. Return result.
-                return result.to_string();
+                return result.to_deprecated_string();
             }
         };
 

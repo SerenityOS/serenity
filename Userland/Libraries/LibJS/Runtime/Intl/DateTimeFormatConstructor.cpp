@@ -106,11 +106,11 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 7. If calendar is not undefined, then
     if (!calendar.is_undefined()) {
         // a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!::Locale::is_type_identifier(calendar.as_string().string()))
+        if (!::Locale::is_type_identifier(calendar.as_string().deprecated_string()))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
 
         // 8. Set opt.[[ca]] to calendar.
-        opt.ca = calendar.as_string().string();
+        opt.ca = calendar.as_string().deprecated_string();
     }
 
     // 9. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
@@ -119,11 +119,11 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 10. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!::Locale::is_type_identifier(numbering_system.as_string().string()))
+        if (!::Locale::is_type_identifier(numbering_system.as_string().deprecated_string()))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 11. Set opt.[[nu]] to numberingSystem.
-        opt.nu = numbering_system.as_string().string();
+        opt.nu = numbering_system.as_string().deprecated_string();
     }
 
     // 12. Let hour12 be ? GetOption(options, "hour12", "boolean", undefined, undefined).
@@ -140,7 +140,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 15. Set opt.[[hc]] to hourCycle.
     if (!hour_cycle.is_nullish())
-        opt.hc = hour_cycle.as_string().string();
+        opt.hc = hour_cycle.as_string().deprecated_string();
 
     // 16. Let localeData be %DateTimeFormat%.[[LocaleData]].
     // 17. Let r be ResolveLocale(%DateTimeFormat%.[[AvailableLocales]], requestedLocales, opt, %DateTimeFormat%.[[RelevantExtensionKeys]], localeData).
@@ -275,7 +275,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
             // d. Set formatOptions.[[<prop>]] to value.
             if (!value.is_undefined()) {
-                option = ::Locale::calendar_pattern_style_from_string(value.as_string().string());
+                option = ::Locale::calendar_pattern_style_from_string(value.as_string().deprecated_string());
 
                 // e. If value is not undefined, then
                 //     i. Set hasExplicitFormatComponents to true.
@@ -294,14 +294,14 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 39. Set dateTimeFormat.[[DateStyle]] to dateStyle.
     if (!date_style.is_undefined())
-        date_time_format.set_date_style(date_style.as_string().string());
+        date_time_format.set_date_style(date_style.as_string().deprecated_string());
 
     // 40. Let timeStyle be ? GetOption(options, "timeStyle", "string", « "full", "long", "medium", "short" », undefined).
     auto time_style = TRY(get_option(vm, *options, vm.names.timeStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
     // 41. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
     if (!time_style.is_undefined())
-        date_time_format.set_time_style(time_style.as_string().string());
+        date_time_format.set_time_style(time_style.as_string().deprecated_string());
 
     Optional<::Locale::CalendarPattern> best_format {};
 
@@ -323,7 +323,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         auto formats = ::Locale::get_calendar_available_formats(data_locale, date_time_format.calendar());
 
         // b. If matcher is "basic", then
-        if (matcher.as_string().string() == "basic"sv) {
+        if (matcher.as_string().deprecated_string() == "basic"sv) {
             // i. Let bestFormat be BasicFormatMatcher(formatOptions, formats).
             best_format = basic_format_matcher(format_options, move(formats));
         }

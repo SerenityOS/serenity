@@ -33,12 +33,12 @@ GridTrackPlacement::GridTrackPlacement()
 {
 }
 
-DeprecatedString GridTrackPlacement::to_string() const
+DeprecatedString GridTrackPlacement::to_deprecated_string() const
 {
     StringBuilder builder;
     if (is_auto()) {
         builder.append("auto"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
     if (is_span()) {
         builder.append("span"sv);
@@ -51,7 +51,7 @@ DeprecatedString GridTrackPlacement::to_string() const
     if (has_line_name()) {
         builder.append(m_line_name);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

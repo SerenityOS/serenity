@@ -145,8 +145,8 @@ public:
         NotFinished,
     };
 
-    static DeprecatedString result_to_string(Result, Color turn);
-    static DeprecatedString result_to_points(Result, Color turn);
+    static DeprecatedString result_to_deprecated_string(Result, Color turn);
+    static DeprecatedString result_to_points_deprecated_string(Result, Color turn);
 
     template<typename Callback>
     void generate_moves(Callback callback, Color color = Color::None) const;

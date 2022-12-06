@@ -20,7 +20,7 @@ DropEvent::DropEvent(Gfx::IntPoint const& position, DeprecatedString const& text
 {
 }
 
-DeprecatedString KeyEvent::to_string() const
+DeprecatedString KeyEvent::to_deprecated_string() const
 {
     Vector<DeprecatedString, 8> parts;
 
@@ -44,7 +44,7 @@ DeprecatedString KeyEvent::to_string() const
         if (i != parts.size() - 1)
             builder.append('+');
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 ActionEvent::ActionEvent(Type type, Action& action)

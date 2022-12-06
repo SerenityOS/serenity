@@ -36,21 +36,21 @@ static void append_indent(StringBuilder& builder, int indent)
         builder.append("  "sv);
 }
 
-DeprecatedString StringObject::to_string(int) const
+DeprecatedString StringObject::to_deprecated_string(int) const
 {
     if (is_binary())
         return DeprecatedString::formatted("<{}>", encode_hex(string().bytes()).to_uppercase());
     return DeprecatedString::formatted("({})", string());
 }
 
-DeprecatedString NameObject::to_string(int) const
+DeprecatedString NameObject::to_deprecated_string(int) const
 {
     StringBuilder builder;
     builder.appendff("/{}", this->name());
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString ArrayObject::to_string(int indent) const
+DeprecatedString ArrayObject::to_deprecated_string(int indent) const
 {
     StringBuilder builder;
     builder.append("[\n"sv);
@@ -61,16 +61,16 @@ DeprecatedString ArrayObject::to_string(int indent) const
             builder.append(",\n"sv);
         first = false;
         append_indent(builder, indent + 1);
-        builder.appendff("{}", element.to_string(indent));
+        builder.appendff("{}", element.to_deprecated_string(indent));
     }
 
     builder.append('\n');
     append_indent(builder, indent);
     builder.append(']');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString DictObject::to_string(int indent) const
+DeprecatedString DictObject::to_deprecated_string(int indent) const
 {
     StringBuilder builder;
     builder.append("<<\n"sv);
@@ -82,21 +82,21 @@ DeprecatedString DictObject::to_string(int indent) const
         first = false;
         append_indent(builder, indent + 1);
         builder.appendff("/{} ", key);
-        builder.appendff("{}", value.to_string(indent + 1));
+        builder.appendff("{}", value.to_deprecated_string(indent + 1));
     }
 
     builder.append('\n');
     append_indent(builder, indent);
     builder.append(">>"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString StreamObject::to_string(int indent) const
+DeprecatedString StreamObject::to_deprecated_string(int indent) const
 {
     StringBuilder builder;
     builder.append("stream\n"sv);
     append_indent(builder, indent);
-    builder.appendff("{}\n", dict()->to_string(indent + 1));
+    builder.appendff("{}\n", dict()->to_deprecated_string(indent + 1));
     append_indent(builder, indent + 1);
 
     auto string = encode_hex(bytes());
@@ -114,19 +114,19 @@ DeprecatedString StreamObject::to_string(int indent) const
 
     append_indent(builder, indent);
     builder.append("endstream"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString IndirectValue::to_string(int indent) const
+DeprecatedString IndirectValue::to_deprecated_string(int indent) const
 {
     StringBuilder builder;
     builder.appendff("{} {} obj\n", index(), generation_index());
     append_indent(builder, indent + 1);
-    builder.append(value().to_string(indent + 1));
+    builder.append(value().to_deprecated_string(indent + 1));
     builder.append('\n');
     append_indent(builder, indent);
     builder.append("endobj"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

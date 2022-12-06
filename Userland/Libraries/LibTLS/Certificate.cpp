@@ -446,7 +446,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                 // IP Address
                                 READ_OBJECT_OR_FAIL(OctetString, StringView, ip_addr_sv, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::IPAddress");
                                 IPv4Address ip_addr { ip_addr_sv.bytes().data() };
-                                certificate.SAN.append(ip_addr.to_string());
+                                certificate.SAN.append(ip_addr.to_deprecated_string());
                                 break;
                             }
                             case 8:

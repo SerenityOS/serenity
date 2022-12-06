@@ -36,13 +36,13 @@ template<typename T>
 }
 
 template<>
-DeprecatedString IntPoint::to_string() const
+DeprecatedString IntPoint::to_deprecated_string() const
 {
     return DeprecatedString::formatted("[{},{}]", x(), y());
 }
 
 template<>
-DeprecatedString FloatPoint::to_string() const
+DeprecatedString FloatPoint::to_deprecated_string() const
 {
     return DeprecatedString::formatted("[{},{}]", x(), y());
 }

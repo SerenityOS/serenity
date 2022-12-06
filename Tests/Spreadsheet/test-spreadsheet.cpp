@@ -21,7 +21,7 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const&, JS::Interpreter& interpreter, 
         auto result = Test::JS::parse_script(name, interpreter.realm());
         if (result.is_error()) {
             warnln("Unable to parse {}", name);
-            warnln("{}", result.error().error.to_string());
+            warnln("{}", result.error().error.to_deprecated_string());
             warnln("{}", result.error().hint);
             Test::cleanup_and_exit();
         }

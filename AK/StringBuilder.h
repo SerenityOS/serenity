@@ -61,7 +61,7 @@ public:
 
 #ifndef KERNEL
     [[nodiscard]] DeprecatedString build() const;
-    [[nodiscard]] DeprecatedString to_string() const;
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
 #endif
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
 

@@ -270,7 +270,7 @@ private:
                 m_repl_line_level = last_token_ended_statement ? 0 : (m_repl_line_level > 0 ? m_repl_line_level : 1);
         } while ((m_repl_line_level > 0) || piece.is_empty());
 
-        return piece.to_string();
+        return piece.to_deprecated_string();
     }
 
     void read_sql()

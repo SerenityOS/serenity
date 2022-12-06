@@ -137,7 +137,7 @@ DeprecatedString encode_base64(ReadonlyBytes input)
         output.append(out3);
     }
 
-    return output.to_string();
+    return output.to_deprecated_string();
 }
 
 }

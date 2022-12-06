@@ -107,7 +107,7 @@ ThrowCompletionOr<Value> Console::trace()
         StringBuilder builder;
         auto data = vm_arguments();
         auto formatted_data = TRY(m_client->formatter(data));
-        trace.label = TRY(value_vector_to_string(formatted_data));
+        trace.label = TRY(value_vector_to_deprecated_string(formatted_data));
     }
 
     // 3. Perform Printer("trace", « trace »).
@@ -212,7 +212,7 @@ ThrowCompletionOr<Value> Console::assert_()
         // 3. Otherwise:
         else {
             // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = js_string(vm, DeprecatedString::formatted("{}: {}", message->string(), first.to_string(vm).value()));
+            auto concat = js_string(vm, DeprecatedString::formatted("{}: {}", message->deprecated_string(), first.to_string(vm).value()));
             // 2. Set data[0] to concat.
             data[0] = concat;
         }
@@ -235,7 +235,7 @@ ThrowCompletionOr<Value> Console::group()
     auto data = vm_arguments();
     if (!data.is_empty()) {
         auto formatted_data = TRY(m_client->formatter(data));
-        group_label = TRY(value_vector_to_string(formatted_data));
+        group_label = TRY(value_vector_to_deprecated_string(formatted_data));
     }
     // ... Otherwise, let groupLabel be an implementation-chosen label representing a group.
     else {
@@ -269,7 +269,7 @@ ThrowCompletionOr<Value> Console::group_collapsed()
     auto data = vm_arguments();
     if (!data.is_empty()) {
         auto formatted_data = TRY(m_client->formatter(data));
-        group_label = TRY(value_vector_to_string(formatted_data));
+        group_label = TRY(value_vector_to_deprecated_string(formatted_data));
     }
     // ... Otherwise, let groupLabel be an implementation-chosen label representing a group.
     else {
@@ -457,7 +457,7 @@ void Console::report_exception(JS::Error const& exception, bool in_promise) cons
         m_client->report_exception(exception, in_promise);
 }
 
-ThrowCompletionOr<DeprecatedString> Console::value_vector_to_string(MarkedVector<Value> const& values)
+ThrowCompletionOr<DeprecatedString> Console::value_vector_to_deprecated_string(MarkedVector<Value> const& values)
 {
     auto& vm = realm().vm();
     StringBuilder builder;
@@ -466,7 +466,7 @@ ThrowCompletionOr<DeprecatedString> Console::value_vector_to_string(MarkedVector
             builder.append(' ');
         builder.append(TRY(item.to_string(vm)));
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 ThrowCompletionOr<DeprecatedString> Console::format_time_since(Core::ElapsedTimer timer)
@@ -493,7 +493,7 @@ ThrowCompletionOr<DeprecatedString> Console::format_time_since(Core::ElapsedTime
         append(builder, "{:.3} seconds"sv, combined_seconds);
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger

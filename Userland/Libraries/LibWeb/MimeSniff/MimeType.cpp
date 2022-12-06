@@ -220,7 +220,7 @@ DeprecatedString MimeType::serialized() const
     }
 
     // 3. Return serialization.
-    return serialization.to_string();
+    return serialization.to_deprecated_string();
 }
 
 void MimeType::set_parameter(DeprecatedString const& name, DeprecatedString const& value)

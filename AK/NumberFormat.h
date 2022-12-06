@@ -60,7 +60,7 @@ static inline DeprecatedString human_readable_time(i64 time_in_seconds)
 
     builder.appendff("{} second{}", time_in_seconds, time_in_seconds == 1 ? "" : "s");
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 static inline DeprecatedString human_readable_digital_time(i64 time_in_seconds)
@@ -78,7 +78,7 @@ static inline DeprecatedString human_readable_digital_time(i64 time_in_seconds)
     builder.appendff("{:02}:", minutes);
     builder.appendff("{:02}", time_in_seconds);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

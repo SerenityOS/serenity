@@ -245,7 +245,7 @@ public:
 
     Path copy_transformed(AffineTransform const&) const;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     void invalidate_split_lines()

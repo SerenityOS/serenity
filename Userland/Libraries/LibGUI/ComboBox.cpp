@@ -182,7 +182,7 @@ void ComboBox::selection_updated(ModelIndex const& index)
         m_selected_index = index;
     else
         m_selected_index.clear();
-    auto new_value = index.data().to_string();
+    auto new_value = index.data().to_deprecated_string();
     m_editor->set_text(new_value);
     if (!m_only_allow_values_from_model)
         m_editor->select_all();

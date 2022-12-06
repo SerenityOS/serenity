@@ -15,13 +15,13 @@
 namespace Gfx {
 
 template<>
-DeprecatedString IntRect::to_string() const
+DeprecatedString IntRect::to_deprecated_string() const
 {
     return DeprecatedString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 template<>
-DeprecatedString FloatRect::to_string() const
+DeprecatedString FloatRect::to_deprecated_string() const
 {
     return DeprecatedString::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }

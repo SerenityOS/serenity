@@ -241,7 +241,7 @@ void WindowGeometryOverlay::update_rect()
             int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
             m_label = DeprecatedString::formatted("{} ({}x{})", window->rect(), width_steps, height_steps);
         } else {
-            m_label = window->rect().to_string();
+            m_label = window->rect().to_deprecated_string();
         }
         m_label_rect = Gfx::IntRect { 0, 0, wm.font().width(m_label) + 16, wm.font().glyph_height() + 10 };
 

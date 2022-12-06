@@ -333,7 +333,7 @@ DeprecatedString Board::to_fen() const
     // 6. Fullmove number
     builder.append(DeprecatedString::number(1 + m_moves.size() / 2));
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Piece Board::get_piece(Square const& square) const
@@ -886,7 +886,7 @@ void Board::set_resigned(Chess::Color c)
     m_resigned = c;
 }
 
-DeprecatedString Board::result_to_string(Result result, Color turn)
+DeprecatedString Board::result_to_deprecated_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
@@ -915,7 +915,7 @@ DeprecatedString Board::result_to_string(Result result, Color turn)
     }
 }
 
-DeprecatedString Board::result_to_points(Result result, Color turn)
+DeprecatedString Board::result_to_points_deprecated_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:

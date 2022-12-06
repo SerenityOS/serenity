@@ -48,7 +48,7 @@ public:
     delete_from_document();
     bool contains_node(JS::NonnullGCPtr<DOM::Node>, bool allow_partial_containment) const;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     Selection(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);

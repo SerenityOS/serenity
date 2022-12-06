@@ -112,10 +112,10 @@ void Keypad::set_to_0()
     m_state = State::External;
 }
 
-DeprecatedString Keypad::to_string() const
+DeprecatedString Keypad::to_deprecated_string() const
 {
     if (m_state == State::External)
-        return m_internal_value.to_string(m_displayed_fraction_length);
+        return m_internal_value.to_deprecated_string(m_displayed_fraction_length);
 
     StringBuilder builder;
 
@@ -133,7 +133,7 @@ DeprecatedString Keypad::to_string() const
             builder.append(frac_value);
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Keypad::set_rounding_length(unsigned rounding_threshold)

@@ -53,8 +53,8 @@ void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
         auto remote_object = make<RemoteObject>();
         remote_object->address = object.get("address"sv).to_number<FlatPtr>();
         remote_object->parent_address = object.get("parent"sv).to_number<FlatPtr>();
-        remote_object->name = object.get("name"sv).to_string();
-        remote_object->class_name = object.get("class_name"sv).to_string();
+        remote_object->name = object.get("name"sv).to_deprecated_string();
+        remote_object->class_name = object.get("class_name"sv).to_deprecated_string();
         remote_object->json = object;
         objects_by_address.set(remote_object->address, remote_object);
         remote_objects.append(move(remote_object));
@@ -84,7 +84,7 @@ void RemoteProcess::set_inspected_object(FlatPtr address)
 
 void RemoteProcess::set_property(FlatPtr object, StringView name, JsonValue const& value)
 {
-    m_client->async_set_object_property(m_pid, object, name, value.to_string());
+    m_client->async_set_object_property(m_pid, object, name, value.to_deprecated_string());
 }
 
 bool RemoteProcess::is_inspectable()

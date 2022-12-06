@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(1);
     }
 
-    auto hash_name = program_name.substring_view(0, program_name.length() - 3).to_string().to_uppercase();
+    auto hash_name = program_name.substring_view(0, program_name.length() - 3).to_deprecated_string().to_uppercase();
     auto paths_help_string = DeprecatedString::formatted("File(s) to print {} checksum of", hash_name);
 
     bool verify_from_paths = false;

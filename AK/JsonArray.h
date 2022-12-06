@@ -71,7 +71,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
 
     template<typename Callback>
     void for_each(Callback callback) const

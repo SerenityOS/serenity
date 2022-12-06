@@ -204,7 +204,7 @@ TEST_CASE(character_class2)
         fprintf(stderr, "Matches[%i].rm_so: %li, .rm_eo: %li .rm_cnt: %li: ", i, matches[i].rm_so, matches[i].rm_eo, matches[i].rm_cnt);
         fprintf(stderr, "haystack length: %lu\n", haystack.length());
         if (matches[i].rm_so != -1)
-            fprintf(stderr, "%s\n", haystack.substring_view(matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so).to_string().characters());
+            fprintf(stderr, "%s\n", haystack.substring_view(matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so).to_deprecated_string().characters());
     }
 #endif
 

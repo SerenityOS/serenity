@@ -361,7 +361,7 @@ void HTMLScriptElement::prepare_script()
         if (m_script_type == ScriptType::Classic) {
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
             // FIXME: Pass options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, settings_object, base_url, m_source_line_number);
+            auto script = ClassicScript::create(m_document->url().to_deprecated_string(), source_text, settings_object, base_url, m_source_line_number);
 
             // 2. Mark as ready el given script.
             mark_as_ready(Result(move(script)));
@@ -373,7 +373,7 @@ void HTMLScriptElement::prepare_script()
 
             // 2. Fetch an inline module script graph, given source text, base URL, settings object, options, and with the following steps given result:
             // FIXME: Pass options
-            fetch_inline_module_script_graph(m_document->url().to_string(), source_text, base_url, document().relevant_settings_object(), [this](auto const* result) {
+            fetch_inline_module_script_graph(m_document->url().to_deprecated_string(), source_text, base_url, document().relevant_settings_object(), [this](auto const* result) {
                 // 1. Mark as ready el given result.
                 if (!result)
                     mark_as_ready(ResultState::Null {});
@@ -510,7 +510,7 @@ void HTMLScriptElement::resource_did_load()
         }
     }
 
-    auto script = ClassicScript::create(resource()->url().to_string(), data, document().relevant_settings_object(), AK::URL());
+    auto script = ClassicScript::create(resource()->url().to_deprecated_string(), data, document().relevant_settings_object(), AK::URL());
 
     // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
     mark_as_ready(Result(script));

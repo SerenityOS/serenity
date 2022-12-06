@@ -62,9 +62,9 @@ Gfx::IntRect SlideObject::transformed_bounding_box(Gfx::IntRect clip_rect, Gfx::
 GraphicsObject::GraphicsObject()
 {
     register_property(
-        "color", [this]() { return this->color().to_string(); },
+        "color", [this]() { return this->color().to_deprecated_string(); },
         [this](auto& value) {
-            auto color = Color::from_string(value.to_string());
+            auto color = Color::from_string(value.to_deprecated_string());
             if (color.has_value()) {
                 this->set_color(color.value());
                 return true;

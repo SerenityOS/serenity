@@ -122,13 +122,13 @@ private:
         auto json = JsonValue::from_string(file_contents_or_error.value());
 
         if (json.is_error())
-            return adapter_info.to_string();
+            return adapter_info.to_deprecated_string();
 
         int connected_adapters = 0;
         json.value().as_array().for_each([&adapter_info, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
             auto ip_address = if_object.get("ipv4_address"sv).as_string_or("no IP");
-            auto ifname = if_object.get("name"sv).to_string();
+            auto ifname = if_object.get("name"sv).to_deprecated_string();
             auto link_up = if_object.get("link_up"sv).as_bool();
             auto link_speed = if_object.get("link_speed"sv).to_i32();
 
@@ -151,7 +151,7 @@ private:
         // show connected icon so long as at least one adapter is connected
         connected_adapters ? set_connected(true) : set_connected(false);
 
-        return adapter_info.to_string();
+        return adapter_info.to_deprecated_string();
     }
 
     DeprecatedString m_adapter_info;

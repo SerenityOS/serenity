@@ -57,7 +57,7 @@ JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(DeprecatedStrin
     // 8. If result is a list of errors, then:
     if (result.is_error()) {
         auto& parse_error = result.error().first();
-        dbgln("JavaScriptModuleScript: Failed to parse: {}", parse_error.to_string());
+        dbgln("JavaScriptModuleScript: Failed to parse: {}", parse_error.to_deprecated_string());
 
         // FIXME: 1. Set script's parse error to result[0].
 

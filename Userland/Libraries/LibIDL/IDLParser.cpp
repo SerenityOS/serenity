@@ -218,9 +218,9 @@ NonnullRefPtr<Type> Parser::parse_type()
     builder.append(name);
 
     if (is_parameterized_type)
-        return adopt_ref(*new ParameterizedType(builder.to_string(), nullable, move(parameters)));
+        return adopt_ref(*new ParameterizedType(builder.to_deprecated_string(), nullable, move(parameters)));
 
-    return adopt_ref(*new Type(builder.to_string(), nullable));
+    return adopt_ref(*new Type(builder.to_deprecated_string(), nullable));
 }
 
 void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
@@ -243,7 +243,7 @@ void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extend
 
     assert_specific(';');
 
-    auto name_as_string = name.to_string();
+    auto name_as_string = name.to_deprecated_string();
     auto getter_callback_name = DeprecatedString::formatted("{}_getter", name_as_string.to_snakecase());
     auto setter_callback_name = DeprecatedString::formatted("{}_setter", name_as_string.to_snakecase());
 

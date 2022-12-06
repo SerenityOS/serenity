@@ -15,7 +15,7 @@ namespace GUI::GML {
 
 inline ErrorOr<DeprecatedString> format_gml(StringView string)
 {
-    return TRY(parse_gml(string))->to_string();
+    return TRY(parse_gml(string))->to_deprecated_string();
 }
 
 }

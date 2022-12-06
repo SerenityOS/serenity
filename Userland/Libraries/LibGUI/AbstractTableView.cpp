@@ -72,7 +72,7 @@ void AbstractTableView::auto_resize_column(int column)
         } else if (cell_data.is_bitmap()) {
             cell_width = cell_data.as_bitmap().width();
         } else if (cell_data.is_valid()) {
-            cell_width = font().width(cell_data.to_string());
+            cell_width = font().width(cell_data.to_deprecated_string());
         }
         if (is_empty && cell_width > 0)
             is_empty = false;
@@ -110,7 +110,7 @@ void AbstractTableView::update_column_sizes()
             } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
             } else if (cell_data.is_valid()) {
-                cell_width = font().width(cell_data.to_string());
+                cell_width = font().width(cell_data.to_deprecated_string());
             }
             column_width = max(column_width, cell_width);
         }

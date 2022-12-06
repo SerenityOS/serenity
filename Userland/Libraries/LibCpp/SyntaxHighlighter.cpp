@@ -63,7 +63,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     Vector<GUI::TextDocumentSpan> spans;
     lexer.lex_iterable([&](auto token) {
         // FIXME: The +1 for the token end column is a quick hack due to not wanting to modify the lexer (which is also used by the parser). Maybe there's a better way to do this.
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.type_as_string(), token.start().line, token.start().column, token.end().line, token.end().column + 1);
+        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.type_as_deprecated_string(), token.start().line, token.start().column, token.end().line, token.end().column + 1);
         GUI::TextDocumentSpan span;
         span.range.set_start({ token.start().line, token.start().column });
         span.range.set_end({ token.end().line, token.end().column + 1 });

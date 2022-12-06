@@ -20,13 +20,13 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
     return adopt_ref(*media_query);
 }
 
-DeprecatedString MediaFeatureValue::to_string() const
+DeprecatedString MediaFeatureValue::to_deprecated_string() const
 {
     return m_value.visit(
         [](ValueID const& ident) { return DeprecatedString { string_from_value_id(ident) }; },
-        [](Length const& length) { return length.to_string(); },
-        [](Ratio const& ratio) { return ratio.to_string(); },
-        [](Resolution const& resolution) { return resolution.to_string(); },
+        [](Length const& length) { return length.to_deprecated_string(); },
+        [](Ratio const& ratio) { return ratio.to_deprecated_string(); },
+        [](Resolution const& resolution) { return resolution.to_deprecated_string(); },
         [](float number) { return DeprecatedString::number(number); });
 }
 
@@ -40,7 +40,7 @@ bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
         [&](float) { return other.is_number(); });
 }
 
-DeprecatedString MediaFeature::to_string() const
+DeprecatedString MediaFeature::to_deprecated_string() const
 {
     auto comparison_string = [](Comparison comparison) -> StringView {
         switch (comparison) {
@@ -62,16 +62,16 @@ DeprecatedString MediaFeature::to_string() const
     case Type::IsTrue:
         return string_from_media_feature_id(m_id);
     case Type::ExactValue:
-        return DeprecatedString::formatted("{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
+        return DeprecatedString::formatted("{}:{}", string_from_media_feature_id(m_id), m_value->to_deprecated_string());
     case Type::MinValue:
-        return DeprecatedString::formatted("min-{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
+        return DeprecatedString::formatted("min-{}:{}", string_from_media_feature_id(m_id), m_value->to_deprecated_string());
     case Type::MaxValue:
-        return DeprecatedString::formatted("max-{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
+        return DeprecatedString::formatted("max-{}:{}", string_from_media_feature_id(m_id), m_value->to_deprecated_string());
     case Type::Range:
         if (!m_range->right_comparison.has_value())
-            return DeprecatedString::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id));
+            return DeprecatedString::formatted("{} {} {}", m_range->left_value.to_deprecated_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id));
 
-        return DeprecatedString::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id), comparison_string(*m_range->right_comparison), m_range->right_value->to_string());
+        return DeprecatedString::formatted("{} {} {} {} {}", m_range->left_value.to_deprecated_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id), comparison_string(*m_range->right_comparison), m_range->right_value->to_deprecated_string());
     }
 
     VERIFY_NOT_REACHED();
@@ -275,17 +275,17 @@ NonnullOwnPtr<MediaCondition> MediaCondition::from_or_list(NonnullOwnPtrVector<M
     return adopt_own(*result);
 }
 
-DeprecatedString MediaCondition::to_string() const
+DeprecatedString MediaCondition::to_deprecated_string() const
 {
     StringBuilder builder;
     builder.append('(');
     switch (type) {
     case Type::Single:
-        builder.append(feature->to_string());
+        builder.append(feature->to_deprecated_string());
         break;
     case Type::Not:
         builder.append("not "sv);
-        builder.append(conditions.first().to_string());
+        builder.append(conditions.first().to_deprecated_string());
         break;
     case Type::And:
         builder.join(" and "sv, conditions);
@@ -298,7 +298,7 @@ DeprecatedString MediaCondition::to_string() const
         break;
     }
     builder.append(')');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 MatchResult MediaCondition::evaluate(HTML::Window const& window) const
@@ -318,7 +318,7 @@ MatchResult MediaCondition::evaluate(HTML::Window const& window) const
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString MediaQuery::to_string() const
+DeprecatedString MediaQuery::to_deprecated_string() const
 {
     StringBuilder builder;
 
@@ -332,10 +332,10 @@ DeprecatedString MediaQuery::to_string() const
     }
 
     if (m_media_condition) {
-        builder.append(m_media_condition->to_string());
+        builder.append(m_media_condition->to_deprecated_string());
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 bool MediaQuery::evaluate(HTML::Window const& window)
@@ -389,7 +389,7 @@ DeprecatedString serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> co
     // appear in the media query list, and then serialize the list.
     StringBuilder builder;
     builder.join(", "sv, media_queries);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 bool is_media_feature_name(StringView name)

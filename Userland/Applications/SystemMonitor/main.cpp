@@ -132,7 +132,7 @@ public:
                     size_builder.append(' ');
                     size_builder.append(human_readable_size(object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64()));
                     size_builder.append(' ');
-                    return size_builder.to_string();
+                    return size_builder.to_deprecated_string();
                 },
                 [](const JsonObject& object) {
                     return object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
@@ -194,7 +194,7 @@ public:
                 check(MS_NOREGULAR, "noregular"sv);
                 if (builder.string_view().is_empty())
                     return DeprecatedString("defaults");
-                return builder.to_string();
+                return builder.to_deprecated_string();
             });
             df_fields.empend("free_block_count", "Free blocks", Gfx::TextAlignment::CenterRight);
             df_fields.empend("total_block_count", "Total blocks", Gfx::TextAlignment::CenterRight);
@@ -339,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (process_table_view.selection().is_empty())
             return {};
         auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column, process_table_view.selection().first().parent());
-        return pid_index.data().to_string();
+        return pid_index.data().to_deprecated_string();
     };
 
     auto kill_action = GUI::Action::create(
@@ -528,7 +528,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
         main_widget->find_descendant_of_type_named<GUI::Label>("icon_label")->set_icon(icon_data.as_icon().bitmap_for_size(32));
     }
 
-    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(DeprecatedString::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_string(), pid));
+    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(DeprecatedString::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_deprecated_string(), pid));
 
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessStateWidget>("process_state")->set_pid(pid);
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessFileDescriptorMapWidget>("open_files")->set_pid(pid);

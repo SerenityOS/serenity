@@ -35,9 +35,9 @@ public:
 
     Tuple& operator=(Tuple const&);
 
-    [[nodiscard]] DeprecatedString to_string() const;
-    explicit operator DeprecatedString() const { return to_string(); }
-    [[nodiscard]] Vector<DeprecatedString> to_string_vector() const;
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    explicit operator DeprecatedString() const { return to_deprecated_string(); }
+    [[nodiscard]] Vector<DeprecatedString> to_deprecated_string_vector() const;
 
     bool operator<(Tuple const& other) const { return compare(other) < 0; }
     bool operator<=(Tuple const& other) const { return compare(other) <= 0; }

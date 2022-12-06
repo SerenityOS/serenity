@@ -46,7 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
     builder.append_code_point(*utf8_iterator);
     ++utf8_iterator;
 
-    return create_iterator_result_object(vm, js_string(vm, builder.to_string()), false);
+    return create_iterator_result_object(vm, js_string(vm, builder.to_deprecated_string()), false);
 }
 
 }

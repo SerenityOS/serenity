@@ -29,7 +29,7 @@ template<typename T>
 struct Formatter<Gfx::Vector3<T>> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::Vector3<T> const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 

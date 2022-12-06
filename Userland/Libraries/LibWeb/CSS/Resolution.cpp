@@ -21,7 +21,7 @@ Resolution::Resolution(float value, Type type)
 {
 }
 
-DeprecatedString Resolution::to_string() const
+DeprecatedString Resolution::to_deprecated_string() const
 {
     return DeprecatedString::formatted("{}{}", m_value, unit_name());
 }

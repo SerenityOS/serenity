@@ -174,7 +174,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             builder.append_code_point(*code_point);
             code_points.append(*code_point);
         });
-        auto text = builder.to_string();
+        auto text = builder.to_deprecated_string();
 
         auto emoji = Unicode::find_emoji_for_code_points(code_points);
         if (!emoji.has_value()) {

@@ -122,7 +122,7 @@ static DeprecatedString sanitized_url_for_logging(AK::URL const& url)
 {
     if (url.scheme() == "data"sv)
         return DeprecatedString::formatted("[data URL, mime-type={}, size={}]", url.data_mime_type(), url.data_payload().length());
-    return url.to_string();
+    return url.to_deprecated_string();
 }
 
 static void emit_signpost(DeprecatedString const& message, int id)
@@ -307,7 +307,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                     error_builder.append("Load failed"sv);
                 log_failure(request, error_builder.string_view());
                 if (error_callback)
-                    error_callback(error_builder.to_string(), status_code);
+                    error_callback(error_builder.to_deprecated_string(), status_code);
                 return;
             }
             log_success(request);

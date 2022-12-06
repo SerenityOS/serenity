@@ -155,24 +155,24 @@ static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
     if (!shortcut.is_valid())
         return nullptr;
 
-    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_string());
+    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_deprecated_string());
 
     for (auto* widget = window.focused_widget(); widget; widget = widget->parent_widget()) {
         if (auto* action = widget->action_for_shortcut(shortcut)) {
-            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", *widget, action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", *widget, action, action->text(), action->is_enabled(), action->shortcut().to_deprecated_string(), action->alternate_shortcut().to_deprecated_string());
             return action;
         }
     }
 
     if (auto* action = window.action_for_shortcut(shortcut)) {
-        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", window, action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
+        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", window, action, action->text(), action->is_enabled(), action->shortcut().to_deprecated_string(), action->alternate_shortcut().to_deprecated_string());
         return action;
     }
 
     // NOTE: Application-global shortcuts are ignored while a blocking modal window is up.
     if (!window.is_blocking() && !window.is_popup()) {
         if (auto* action = Application::the()->action_for_shortcut(shortcut)) {
-            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_deprecated_string(), action->alternate_shortcut().to_deprecated_string());
             return action;
         }
     }

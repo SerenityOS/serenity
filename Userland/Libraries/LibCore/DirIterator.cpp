@@ -92,7 +92,7 @@ DeprecatedString DirIterator::next_full_path()
     if (!m_path.ends_with('/'))
         builder.append('/');
     builder.append(next_path());
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 int DirIterator::fd() const

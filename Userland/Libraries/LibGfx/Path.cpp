@@ -177,7 +177,7 @@ void Path::close_all_subpaths()
     }
 }
 
-DeprecatedString Path::to_string() const
+DeprecatedString Path::to_deprecated_string() const
 {
     StringBuilder builder;
     builder.append("Path { "sv);
@@ -207,19 +207,19 @@ DeprecatedString Path::to_string() const
         switch (segment.type()) {
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append(", "sv);
-            builder.append(static_cast<QuadraticBezierCurveSegment const&>(segment).through().to_string());
+            builder.append(static_cast<QuadraticBezierCurveSegment const&>(segment).through().to_deprecated_string());
             break;
         case Segment::Type::CubicBezierCurveTo:
             builder.append(", "sv);
-            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_0().to_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_0().to_deprecated_string());
             builder.append(", "sv);
-            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_1().to_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_1().to_deprecated_string());
             break;
         case Segment::Type::EllipticalArcTo: {
             auto& arc = static_cast<EllipticalArcSegment const&>(segment);
             builder.appendff(", {}, {}, {}, {}, {}",
-                arc.radii().to_string().characters(),
-                arc.center().to_string().characters(),
+                arc.radii().to_deprecated_string().characters(),
+                arc.center().to_deprecated_string().characters(),
                 arc.x_axis_rotation(),
                 arc.theta_1(),
                 arc.theta_delta());
@@ -232,7 +232,7 @@ DeprecatedString Path::to_string() const
         builder.append(") "sv);
     }
     builder.append('}');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Path::segmentize_path()

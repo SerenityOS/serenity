@@ -702,7 +702,7 @@ ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
 static ALWAYS_INLINE ErrorOr<pid_t> posix_spawn_wrapper(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[], StringView function_name, decltype(::posix_spawn) spawn_function)
 {
     pid_t child_pid;
-    if ((errno = spawn_function(&child_pid, path.to_string().characters(), file_actions, attr, arguments, envp)))
+    if ((errno = spawn_function(&child_pid, path.to_deprecated_string().characters(), file_actions, attr, arguments, envp)))
         return Error::from_syscall(function_name, -errno);
     return child_pid;
 }
@@ -1082,7 +1082,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
 
         exec_filename = maybe_executable.release_value();
     } else {
-        exec_filename = filename.to_string();
+        exec_filename = filename.to_deprecated_string();
     }
 
     params.path = { exec_filename.characters(), exec_filename.length() };
@@ -1094,7 +1094,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
     auto argument_strings = TRY(FixedArray<DeprecatedString>::try_create(arguments.size()));
     auto argv = TRY(FixedArray<char*>::try_create(arguments.size() + 1));
     for (size_t i = 0; i < arguments.size(); ++i) {
-        argument_strings[i] = arguments[i].to_string();
+        argument_strings[i] = arguments[i].to_deprecated_string();
         argv[i] = const_cast<char*>(argument_strings[i].characters());
     }
     argv[arguments.size()] = nullptr;
@@ -1104,7 +1104,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
         auto environment_strings = TRY(FixedArray<DeprecatedString>::try_create(environment->size()));
         auto envp = TRY(FixedArray<char*>::try_create(environment->size() + 1));
         for (size_t i = 0; i < environment->size(); ++i) {
-            environment_strings[i] = environment->at(i).to_string();
+            environment_strings[i] = environment->at(i).to_deprecated_string();
             envp[i] = const_cast<char*>(environment_strings[i].characters());
         }
         envp[environment->size()] = nullptr;

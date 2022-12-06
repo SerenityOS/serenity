@@ -81,7 +81,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
             builder.append(bpp_for_format_resilient(data_and_type.metadata.get("format").value_or("0")));
             builder.append(']');
             builder.append(" bitmap"sv);
-            return builder.to_string();
+            return builder.to_deprecated_string();
         }
         if (data_and_type.mime_type.starts_with("glyph/"sv)) {
             StringBuilder builder;
@@ -96,7 +96,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
                 builder.append_code_point(start);
                 builder.appendff(") [{}x{}]", width, height);
             }
-            return builder.to_string();
+            return builder.to_deprecated_string();
         }
         return "<...>";
     case Column::Type:
@@ -104,7 +104,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     case Column::Size:
         return AK::human_readable_size(data_and_type.data.size());
     case Column::Time:
-        return time.to_string();
+        return time.to_deprecated_string();
     default:
         VERIFY_NOT_REACHED();
     }

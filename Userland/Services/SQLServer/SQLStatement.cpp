@@ -99,7 +99,7 @@ SQL::ResultOr<void> SQLStatement::parse()
     m_statement = parser.next_statement();
 
     if (parser.has_errors())
-        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::SyntaxError, parser.errors()[0].to_string() };
+        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::SyntaxError, parser.errors()[0].to_deprecated_string() };
     return {};
 }
 
@@ -129,7 +129,7 @@ void SQLStatement::next()
     }
     if (m_index < m_result->size()) {
         auto& tuple = m_result->at(m_index++).row;
-        client_connection->async_next_result(statement_id(), tuple.to_string_vector());
+        client_connection->async_next_result(statement_id(), tuple.to_deprecated_string_vector());
         deferred_invoke([this]() {
             next();
         });

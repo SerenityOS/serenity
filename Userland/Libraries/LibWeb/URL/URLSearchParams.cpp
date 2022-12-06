@@ -38,7 +38,7 @@ DeprecatedString url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEnc
         if (i != pairs.size() - 1)
             builder.append('&');
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Vector<QueryParam> url_decode(StringView input)
@@ -156,7 +156,7 @@ void URLSearchParams::update()
     if (!m_url)
         return;
     // 2. Let serializedQuery be the serialization of query’s list.
-    auto serialized_query = to_string();
+    auto serialized_query = to_deprecated_string();
     // 3. If serializedQuery is the empty string, then set serializedQuery to null.
     if (serialized_query.is_empty())
         serialized_query = {};
@@ -255,7 +255,7 @@ void URLSearchParams::sort()
     update();
 }
 
-DeprecatedString URLSearchParams::to_string() const
+DeprecatedString URLSearchParams::to_deprecated_string() const
 {
     // return the serialization of this’s list.
     return url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded);

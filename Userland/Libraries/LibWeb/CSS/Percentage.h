@@ -31,7 +31,7 @@ public:
     float value() const { return m_value; }
     float as_fraction() const { return m_value * 0.01f; }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         return DeprecatedString::formatted("{}%", m_value);
     }
@@ -128,12 +128,12 @@ public:
             });
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         if (is_percentage())
-            return m_value.template get<Percentage>().to_string();
+            return m_value.template get<Percentage>().to_deprecated_string();
 
-        return m_value.template get<T>().to_string();
+        return m_value.template get<T>().to_deprecated_string();
     }
 
     bool operator==(PercentageOr<T> const& other) const
@@ -231,7 +231,7 @@ template<>
 struct AK::Formatter<Web::CSS::Percentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Percentage const& percentage)
     {
-        return Formatter<StringView>::format(builder, percentage.to_string());
+        return Formatter<StringView>::format(builder, percentage.to_deprecated_string());
     }
 };
 
@@ -239,7 +239,7 @@ template<>
 struct AK::Formatter<Web::CSS::AnglePercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::AnglePercentage const& angle_percentage)
     {
-        return Formatter<StringView>::format(builder, angle_percentage.to_string());
+        return Formatter<StringView>::format(builder, angle_percentage.to_deprecated_string());
     }
 };
 
@@ -247,7 +247,7 @@ template<>
 struct AK::Formatter<Web::CSS::FrequencyPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::FrequencyPercentage const& frequency_percentage)
     {
-        return Formatter<StringView>::format(builder, frequency_percentage.to_string());
+        return Formatter<StringView>::format(builder, frequency_percentage.to_deprecated_string());
     }
 };
 
@@ -255,7 +255,7 @@ template<>
 struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
     {
-        return Formatter<StringView>::format(builder, length_percentage.to_string());
+        return Formatter<StringView>::format(builder, length_percentage.to_deprecated_string());
     }
 };
 
@@ -263,6 +263,6 @@ template<>
 struct AK::Formatter<Web::CSS::TimePercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::TimePercentage const& time_percentage)
     {
-        return Formatter<StringView>::format(builder, time_percentage.to_string());
+        return Formatter<StringView>::format(builder, time_percentage.to_deprecated_string());
     }
 };

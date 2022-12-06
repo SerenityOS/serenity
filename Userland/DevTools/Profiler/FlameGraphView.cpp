@@ -180,7 +180,7 @@ DeprecatedString FlameGraphView::bar_label(StackBar const& bar) const
     auto label_index = bar.index.sibling_at_column(m_text_column);
     DeprecatedString label = "All";
     if (label_index.is_valid()) {
-        label = m_model.data(label_index).to_string();
+        label = m_model.data(label_index).to_deprecated_string();
     }
     return label;
 }

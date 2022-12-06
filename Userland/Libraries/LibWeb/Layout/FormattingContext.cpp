@@ -160,7 +160,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
     // The child box is a block container that doesn't create its own BFC.
     // It will be formatted by this BFC.
     if (!child_display.is_flow_inside()) {
-        dbgln("FIXME: Child box doesn't create BFC, but inside is also not flow! display={}", child_display.to_string());
+        dbgln("FIXME: Child box doesn't create BFC, but inside is also not flow! display={}", child_display.to_deprecated_string());
         // HACK: Instead of crashing, create a dummy formatting context that does nothing.
         // FIXME: Remove this once it's no longer needed. It currently swallows problem with standalone
         //        table-related boxes that don't get fixed up by CSS anonymous table box generation.

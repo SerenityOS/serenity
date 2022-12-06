@@ -89,7 +89,7 @@ static DeprecatedString union_type_to_variant(UnionType const& union_type, Inter
         builder.append(", Empty"sv);
 
     builder.append('>');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
@@ -174,7 +174,7 @@ static DeprecatedString make_input_acceptable_cpp(DeprecatedString const& input)
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     return input.replace("-"sv, "_"sv, ReplaceMode::All);
@@ -893,7 +893,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (dictionary_type)
             to_variant_captures.append(DeprecatedString::formatted(", &{}{}_to_dictionary", js_name, js_suffix));
 
-        union_generator.set("to_variant_captures", to_variant_captures.to_string());
+        union_generator.set("to_variant_captures", to_variant_captures.to_deprecated_string());
 
         union_generator.append(R"~~~(
     auto @js_name@@js_suffix@_to_variant = [@to_variant_captures@](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@union_type@> {
@@ -1527,7 +1527,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 )~~~");
     } else if (interface.enumerations.contains(type.name())) {
         scoped_generator.append(R"~~~(
-    @result_expression@ JS::js_string(vm, Bindings::idl_enum_to_string(@value@));
+    @result_expression@ JS::js_string(vm, Bindings::idl_enum_to_deprecated_string(@value@));
 )~~~");
     } else if (interface.callback_functions.contains(type.name())) {
         // https://webidl.spec.whatwg.org/#es-callback-function
@@ -1837,7 +1837,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
         builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
         append_type_list(builder, parameterized_type.parameters());
         builder.append("})"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
     case Type::Kind::Union: {
         auto const& union_type = type.as_union();
@@ -1845,7 +1845,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
         builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
         append_type_list(builder, union_type.member_types());
         builder.append("})"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
     }
 
@@ -1931,8 +1931,8 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
             optionality_builder.append("}"sv);
 
             function_generator.set("overload.callable_id", DeprecatedString::number(overload.callable_id));
-            function_generator.set("overload.types", types_builder.to_string());
-            function_generator.set("overload.optionality_values", optionality_builder.to_string());
+            function_generator.set("overload.types", types_builder.to_deprecated_string());
+            function_generator.set("overload.optionality_values", optionality_builder.to_deprecated_string());
 
             function_generator.appendln("        overloads.empend(@overload.callable_id@, @overload.types@, @overload.optionality_values@);");
         }
@@ -2326,7 +2326,7 @@ enum class @enum.type.name@ {
 
         enum_generator.append(R"~~~(
 };
-inline DeprecatedString idl_enum_to_string(@enum.type.name@ value) {
+inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
     switch(value) {
 )~~~");
         for (auto& entry : it.value.translated_cpp_names) {
@@ -2730,7 +2730,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 )~~~");
         } else {
             stringifier_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_string(); }));
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_deprecated_string(); }));
 )~~~");
         }
         stringifier_generator.append(R"~~~(

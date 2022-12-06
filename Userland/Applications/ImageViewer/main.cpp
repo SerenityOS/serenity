@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_string(), (int)(scale * 100)));
+        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_deprecated_string(), (int)(scale * 100)));
 
         if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);

@@ -29,7 +29,7 @@ AvailableSize AvailableSize::make_max_content()
     return AvailableSize { Type::MaxContent, INFINITY };
 }
 
-DeprecatedString AvailableSize::to_string() const
+DeprecatedString AvailableSize::to_deprecated_string() const
 {
     switch (m_type) {
     case Type::Definite:
@@ -44,7 +44,7 @@ DeprecatedString AvailableSize::to_string() const
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString AvailableSpace::to_string() const
+DeprecatedString AvailableSpace::to_deprecated_string() const
 {
     return DeprecatedString::formatted("{} x {}", width, height);
 }

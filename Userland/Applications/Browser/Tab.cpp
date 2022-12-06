@@ -77,7 +77,7 @@ void Tab::view_source(const URL& url, DeprecatedString const& source)
     editor.set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
     editor.set_ruler_visible(true);
     window->resize(640, 480);
-    window->set_title(url.to_string());
+    window->set_title(url.to_deprecated_string());
     window->set_icon(g_icon_bag.filetype_text);
     window->set_window_mode(GUI::WindowMode::Modeless);
     window->show();
@@ -137,7 +137,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_back_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_back_title_history()) {
             i++;
-            m_go_back_context_menu->add_action(GUI::Action::create(url.to_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
+            m_go_back_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
         }
         m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left());
     };
@@ -150,7 +150,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_forward_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_forward_title_history()) {
             i++;
-            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
+            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
         }
         m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left());
     };
@@ -215,7 +215,7 @@ Tab::Tab(BrowserWindow& window)
         update_status();
 
         m_location_box->set_icon(nullptr);
-        m_location_box->set_text(url.to_string());
+        m_location_box->set_text(url.to_deprecated_string());
 
         // don't add to history if back or forward is pressed
         if (!m_is_history_navigation)
@@ -223,7 +223,7 @@ Tab::Tab(BrowserWindow& window)
         m_is_history_navigation = false;
 
         update_actions();
-        update_bookmark_button(url.to_string());
+        update_bookmark_button(url.to_deprecated_string());
 
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->clear_dom_json();
@@ -309,7 +309,7 @@ Tab::Tab(BrowserWindow& window)
     }));
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("&Copy URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_string());
+        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
     }));
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
@@ -336,7 +336,7 @@ Tab::Tab(BrowserWindow& window)
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
     m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_string());
+        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_deprecated_string());
     }));
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
@@ -357,8 +357,8 @@ Tab::Tab(BrowserWindow& window)
 
     view().on_title_change = [this](auto& title) {
         if (title.is_null()) {
-            m_history.update_title(url().to_string());
-            m_title = url().to_string();
+            m_history.update_title(url().to_deprecated_string());
+            m_title = url().to_deprecated_string();
         } else {
             m_history.update_title(title);
             m_title = title;
@@ -436,7 +436,7 @@ Tab::Tab(BrowserWindow& window)
 
     view().on_link_hover = [this](auto& url) {
         if (url.is_valid())
-            update_status(url.to_string());
+            update_status(url.to_deprecated_string());
         else
             update_status();
     };
@@ -495,7 +495,7 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
             builder.append(".com"sv);
         }
     }
-    DeprecatedString final_text = builder.to_string();
+    DeprecatedString final_text = builder.to_deprecated_string();
 
     auto url = url_from_user_input(final_text);
     return url;
@@ -543,7 +543,7 @@ void Tab::update_actions()
 
 void Tab::bookmark_current_url()
 {
-    auto url = this->url().to_string();
+    auto url = this->url().to_deprecated_string();
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         BookmarksBarWidget::the().remove_bookmark(url);
     } else {

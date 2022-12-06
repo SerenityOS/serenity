@@ -63,7 +63,7 @@ double Token::double_value() const
         builder.append(ch);
     }
 
-    DeprecatedString value_string = builder.to_string();
+    DeprecatedString value_string = builder.to_deprecated_string();
     if (value_string[0] == '0' && value_string.length() >= 2) {
         if (value_string[1] == 'x' || value_string[1] == 'X') {
             // hexadecimal
@@ -209,7 +209,7 @@ DeprecatedString Token::string_value(StringValueStatus& status) const
         lexer.retreat();
         builder.append(lexer.consume_escaped_character('\\', "b\bf\fn\nr\rt\tv\v"sv));
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/#sec-static-semantics-trv

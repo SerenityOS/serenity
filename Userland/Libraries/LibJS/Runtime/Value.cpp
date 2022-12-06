@@ -153,7 +153,7 @@ DeprecatedString number_to_string(double d, NumberToStringMode mode)
             builder.append(mantissa_digits.data(), k);
         }
 
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     // 7. NOTE: In this case, the input will be represented using scientific E notation, such as 1.2e+3.
@@ -180,7 +180,7 @@ DeprecatedString number_to_string(double d, NumberToStringMode mode)
         // the code units of the decimal representation of abs(n - 1)
         builder.append(exponent_digits.data(), exponent_length);
 
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     // 12. Return the string-concatenation of:
@@ -197,7 +197,7 @@ DeprecatedString number_to_string(double d, NumberToStringMode mode)
     // the code units of the decimal representation of abs(n - 1)
     builder.append(exponent_digits.data(), exponent_length);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // 7.2.2 IsArray ( argument ), https://tc39.es/ecma262/#sec-isarray
@@ -315,11 +315,11 @@ DeprecatedString Value::to_string_without_side_effects() const
     case INT32_TAG:
         return DeprecatedString::number(as_i32());
     case STRING_TAG:
-        return as_string().string();
+        return as_string().deprecated_string();
     case SYMBOL_TAG:
-        return as_symbol().to_string();
+        return as_symbol().to_deprecated_string();
     case BIGINT_TAG:
-        return as_bigint().to_string();
+        return as_bigint().to_deprecated_string();
     case OBJECT_TAG:
         return DeprecatedString::formatted("[object {}]", as_object().class_name());
     case ACCESSOR_TAG:
@@ -353,7 +353,7 @@ ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
     case INT32_TAG:
         return DeprecatedString::number(as_i32());
     case STRING_TAG:
-        return as_string().string();
+        return as_string().deprecated_string();
     case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");
     case BIGINT_TAG:
@@ -576,7 +576,7 @@ ThrowCompletionOr<Value> Value::to_number(VM& vm) const
     case BOOLEAN_TAG:
         return Value(as_bool() ? 1 : 0);
     case STRING_TAG:
-        return string_to_number(as_string().string().view());
+        return string_to_number(as_string().deprecated_string().view());
     case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "number");
     case BIGINT_TAG:
@@ -614,7 +614,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
         return &primitive.as_bigint();
     case STRING_TAG: {
         // 1. Let n be ! StringToBigInt(prim).
-        auto bigint = string_to_bigint(vm, primitive.as_string().string());
+        auto bigint = string_to_bigint(vm, primitive.as_string().deprecated_string());
 
         // 2. If n is undefined, throw a SyntaxError exception.
         if (!bigint.has_value())
@@ -1428,7 +1428,7 @@ bool same_value_non_numeric(Value lhs, Value rhs)
     VERIFY(same_type_for_equality(lhs, rhs));
 
     if (lhs.is_string())
-        return lhs.as_string().string() == rhs.as_string().string();
+        return lhs.as_string().deprecated_string() == rhs.as_string().deprecated_string();
 
     return lhs.m_value.encoded == rhs.m_value.encoded;
 }
@@ -1491,7 +1491,7 @@ ThrowCompletionOr<bool> is_loosely_equal(VM& vm, Value lhs, Value rhs)
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
         // a. Let n be StringToBigInt(y).
-        auto bigint = string_to_bigint(vm, rhs.as_string().string());
+        auto bigint = string_to_bigint(vm, rhs.as_string().deprecated_string());
 
         // b. If n is undefined, return false.
         if (!bigint.has_value())
@@ -1562,8 +1562,8 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     }
 
     if (x_primitive.is_string() && y_primitive.is_string()) {
-        auto x_string = x_primitive.as_string().string();
-        auto y_string = y_primitive.as_string().string();
+        auto x_string = x_primitive.as_string().deprecated_string();
+        auto y_string = y_primitive.as_string().deprecated_string();
 
         Utf8View x_code_points { x_string };
         Utf8View y_code_points { y_string };
@@ -1588,7 +1588,7 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
-        auto y_bigint = string_to_bigint(vm, y_primitive.as_string().string());
+        auto y_bigint = string_to_bigint(vm, y_primitive.as_string().deprecated_string());
         if (!y_bigint.has_value())
             return TriState::Unknown;
 
@@ -1598,7 +1598,7 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     }
 
     if (x_primitive.is_string() && y_primitive.is_bigint()) {
-        auto x_bigint = string_to_bigint(vm, x_primitive.as_string().string());
+        auto x_bigint = string_to_bigint(vm, x_primitive.as_string().deprecated_string());
         if (!x_bigint.has_value())
             return TriState::Unknown;
 

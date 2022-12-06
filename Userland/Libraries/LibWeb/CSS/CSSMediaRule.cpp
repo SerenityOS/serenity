@@ -63,7 +63,7 @@ DeprecatedString CSSMediaRule::serialized() const
     // 5. A newline, followed by the string "}", i.e., RIGHT CURLY BRACKET (U+007D)
     builder.append("\n}"sv);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

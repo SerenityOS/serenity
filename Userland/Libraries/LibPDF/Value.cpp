@@ -9,7 +9,7 @@
 
 namespace PDF {
 
-DeprecatedString Value::to_string(int indent) const
+DeprecatedString Value::to_deprecated_string(int indent) const
 {
     return visit(
         [&](Empty const&) -> DeprecatedString {
@@ -32,7 +32,7 @@ DeprecatedString Value::to_string(int indent) const
             return DeprecatedString::formatted("{} {} R", ref.as_ref_index(), ref.as_ref_generation_index());
         },
         [&](NonnullRefPtr<Object> const& object) {
-            return object->to_string(indent);
+            return object->to_deprecated_string(indent);
         });
 }
 

@@ -260,7 +260,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     HashMap<FlatPtr, DeprecatedString> profile_strings;
     for (FlatPtr string_id = 0; string_id < strings_value->as_array().size(); ++string_id) {
         auto const& value = strings_value->as_array().at(string_id);
-        profile_strings.set(string_id, value.to_string());
+        profile_strings.set(string_id, value.to_deprecated_string());
     }
 
     auto const* events_value = object.get_ptr("events"sv);
@@ -286,7 +286,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         event.pid = perf_event.get("pid"sv).to_i32();
         event.tid = perf_event.get("tid"sv).to_i32();
 
-        auto type_string = perf_event.get("type"sv).to_string();
+        auto type_string = perf_event.get("type"sv).to_deprecated_string();
 
         if (type_string == "sample"sv) {
             event.data = Event::SampleData {};
@@ -308,7 +308,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         } else if (type_string == "mmap"sv) {
             auto ptr = perf_event.get("ptr"sv).to_number<FlatPtr>();
             auto size = perf_event.get("size"sv).to_number<size_t>();
-            auto name = perf_event.get("name"sv).to_string();
+            auto name = perf_event.get("name"sv).to_deprecated_string();
 
             event.data = Event::MmapData {
                 .ptr = ptr,
@@ -328,7 +328,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             continue;
         } else if (type_string == "process_create"sv) {
             auto parent_pid = perf_event.get("parent_pid"sv).to_number<pid_t>();
-            auto executable = perf_event.get("executable"sv).to_string();
+            auto executable = perf_event.get("executable"sv).to_deprecated_string();
             event.data = Event::ProcessCreateData {
                 .parent_pid = parent_pid,
                 .executable = executable,
@@ -346,7 +346,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             all_processes.append(move(sampled_process));
             continue;
         } else if (type_string == "process_exec"sv) {
-            auto executable = perf_event.get("executable"sv).to_string();
+            auto executable = perf_event.get("executable"sv).to_deprecated_string();
             event.data = Event::ProcessExecData {
                 .executable = executable,
             };

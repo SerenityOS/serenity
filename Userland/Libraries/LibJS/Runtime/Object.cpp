@@ -1246,7 +1246,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
         for (auto& key : own_keys) {
             if (!key.is_string())
                 continue;
-            FlyString property_key = key.as_string().string();
+            FlyString property_key = key.as_string().deprecated_string();
             if (visited.contains(property_key))
                 continue;
             auto descriptor = TRY(target->internal_get_own_property(property_key));

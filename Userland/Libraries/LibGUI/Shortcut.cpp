@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-DeprecatedString Shortcut::to_string() const
+DeprecatedString Shortcut::to_deprecated_string() const
 {
     Vector<DeprecatedString, 8> parts;
 
@@ -41,7 +41,7 @@ DeprecatedString Shortcut::to_string() const
 
     StringBuilder builder;
     builder.join('+', parts);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

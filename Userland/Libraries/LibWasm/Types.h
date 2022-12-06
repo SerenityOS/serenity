@@ -43,7 +43,7 @@ enum class ParseError {
     NotImplemented,
 };
 
-DeprecatedString parse_error_to_string(ParseError);
+DeprecatedString parse_error_to_deprecated_string(ParseError);
 
 template<typename T>
 using ParseResult = Result<T, ParseError>;

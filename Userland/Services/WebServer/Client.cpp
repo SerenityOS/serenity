@@ -127,7 +127,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     StringBuilder path_builder;
     path_builder.append(Configuration::the().root_path());
     path_builder.append(requested_path);
-    auto real_path = path_builder.to_string();
+    auto real_path = path_builder.to_deprecated_string();
 
     if (Core::File::is_directory(real_path)) {
 
@@ -137,14 +137,14 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
             red.append(requested_path);
             red.append("/"sv);
 
-            TRY(send_redirect(red.to_string(), request));
+            TRY(send_redirect(red.to_deprecated_string(), request));
             return true;
         }
 
         StringBuilder index_html_path_builder;
         index_html_path_builder.append(real_path);
         index_html_path_builder.append("/index.html"sv);
-        auto index_html_path = index_html_path_builder.to_string();
+        auto index_html_path = index_html_path_builder.to_deprecated_string();
         if (!Core::File::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
@@ -295,7 +295,7 @@ ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested
 
         struct stat st;
         memset(&st, 0, sizeof(st));
-        int rc = stat(path_builder.to_string().characters(), &st);
+        int rc = stat(path_builder.to_deprecated_string().characters(), &st);
         if (rc < 0) {
             perror("stat");
         }
@@ -316,7 +316,7 @@ ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested
 
         builder.appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size);
         builder.append("<td>"sv);
-        builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_string());
+        builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string());
         builder.append("</td>"sv);
         builder.append("</tr>\n"sv);
     }
@@ -327,7 +327,7 @@ ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested
     builder.append("</body>\n"sv);
     builder.append("</html>\n"sv);
 
-    auto response = builder.to_string();
+    auto response = builder.to_deprecated_string();
     InputMemoryStream stream { response.bytes() };
     return send_response(stream, request, { .type = "text/html", .length = response.length() });
 }
@@ -363,7 +363,7 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
 
 void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
-    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, request.method_name(), request.url().serialize().substring(1));
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_deprecated_string(), code, request.method_name(), request.url().serialize().substring(1));
 }
 
 bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers)

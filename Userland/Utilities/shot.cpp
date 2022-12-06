@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (output_path.is_empty()) {
-        output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
+        output_path = Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
     }
 
     auto app = TRY(GUI::Application::try_create(arguments));
@@ -157,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
     if (edit_image)
-        output_path = Core::DateTime::now().to_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
+        output_path = Core::DateTime::now().to_deprecated_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
 
     auto file_or_error = Core::Stream::File::open(output_path, Core::Stream::OpenMode::ReadWrite);
     if (file_or_error.is_error()) {

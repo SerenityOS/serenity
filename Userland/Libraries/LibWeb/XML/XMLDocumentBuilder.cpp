@@ -132,7 +132,7 @@ void XMLDocumentBuilder::text(DeprecatedString const& data)
         auto& text_node = static_cast<DOM::Text&>(*last);
         text_builder.append(text_node.data());
         text_builder.append(data);
-        text_node.set_data(text_builder.to_string());
+        text_node.set_data(text_builder.to_deprecated_string());
         text_builder.clear();
     } else {
         auto node = m_document.create_text_node(data);

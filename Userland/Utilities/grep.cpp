@@ -178,7 +178,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                         auto pre_match_length = match.global_offset - last_printed_char_pos;
                         out(colored_output ? "{}\x1B[32m{}\x1B[0m"sv : "{}{}"sv,
                             pre_match_length > 0 ? StringView(&str[last_printed_char_pos], pre_match_length) : ""sv,
-                            match.view.to_string());
+                            match.view.to_deprecated_string());
                         last_printed_char_pos = match.global_offset + match.view.length();
                     }
                     auto remaining_length = str.length() - last_printed_char_pos;

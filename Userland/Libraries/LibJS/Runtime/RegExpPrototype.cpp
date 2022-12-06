@@ -510,7 +510,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 #undef __JS_ENUMERATE
 
     // 18. Return result.
-    return js_string(vm, builder.to_string());
+    return js_string(vm, builder.to_deprecated_string());
 }
 
 // 22.2.5.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match

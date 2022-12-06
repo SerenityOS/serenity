@@ -94,7 +94,7 @@ DeprecatedString HTMLBaseElement::href() const
         return url;
 
     // 5. Return the serialization of urlRecord.
-    return url_record.to_string();
+    return url_record.to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-base-href

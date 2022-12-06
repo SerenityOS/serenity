@@ -71,7 +71,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    DeprecatedString inspector_value_type_to_string(ValueType type) const
+    DeprecatedString inspector_value_type_to_deprecated_string(ValueType type) const
     {
         switch (type) {
         case SignedByte:
@@ -112,7 +112,7 @@ public:
         if (role == GUI::ModelRole::Display) {
             switch (index.column()) {
             case Column::Type:
-                return inspector_value_type_to_string(static_cast<ValueType>(index.row()));
+                return inspector_value_type_to_deprecated_string(static_cast<ValueType>(index.row()));
             case Column::Value:
                 return m_values.at(index.row());
             }

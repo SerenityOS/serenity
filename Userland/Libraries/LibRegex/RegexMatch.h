@@ -381,16 +381,16 @@ public:
         return view;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         return m_view.visit(
-            [](StringView view) { return view.to_string(); },
+            [](StringView view) { return view.to_deprecated_string(); },
             [](Utf16View view) { return view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes); },
             [](auto& view) {
                 StringBuilder builder;
                 for (auto it = view.begin(); it != view.end(); ++it)
                     builder.append_code_point(*it);
-                return builder.to_string();
+                return builder.to_deprecated_string();
             });
     }
 
@@ -434,8 +434,8 @@ public:
     bool operator==(char const* cstring) const
     {
         return m_view.visit(
-            [&](Utf32View) { return to_string() == cstring; },
-            [&](Utf16View) { return to_string() == cstring; },
+            [&](Utf32View) { return to_deprecated_string() == cstring; },
+            [&](Utf16View) { return to_deprecated_string() == cstring; },
             [&](Utf8View const& view) { return view.as_string() == cstring; },
             [&](StringView view) { return view == cstring; });
     }
@@ -443,8 +443,8 @@ public:
     bool operator==(DeprecatedString const& string) const
     {
         return m_view.visit(
-            [&](Utf32View) { return to_string() == string; },
-            [&](Utf16View) { return to_string() == string; },
+            [&](Utf32View) { return to_deprecated_string() == string; },
+            [&](Utf16View) { return to_deprecated_string() == string; },
             [&](Utf8View const& view) { return view.as_string() == string; },
             [&](StringView view) { return view == string; });
     }
@@ -452,8 +452,8 @@ public:
     bool operator==(StringView string) const
     {
         return m_view.visit(
-            [&](Utf32View) { return to_string() == string; },
-            [&](Utf16View) { return to_string() == string; },
+            [&](Utf32View) { return to_deprecated_string() == string; },
+            [&](Utf16View) { return to_deprecated_string() == string; },
             [&](Utf8View const& view) { return view.as_string() == string; },
             [&](StringView view) { return view == string; });
     }
@@ -464,25 +464,25 @@ public:
             [&](Utf32View view) {
                 return view.length() == other.length() && __builtin_memcmp(view.code_points(), other.code_points(), view.length() * sizeof(u32)) == 0;
             },
-            [&](Utf16View) { return to_string() == RegexStringView { other }.to_string(); },
-            [&](Utf8View const& view) { return view.as_string() == RegexStringView { other }.to_string(); },
-            [&](StringView view) { return view == RegexStringView { other }.to_string(); });
+            [&](Utf16View) { return to_deprecated_string() == RegexStringView { other }.to_deprecated_string(); },
+            [&](Utf8View const& view) { return view.as_string() == RegexStringView { other }.to_deprecated_string(); },
+            [&](StringView view) { return view == RegexStringView { other }.to_deprecated_string(); });
     }
 
     bool operator==(Utf16View const& other) const
     {
         return m_view.visit(
-            [&](Utf32View) { return to_string() == RegexStringView { other }.to_string(); },
+            [&](Utf32View) { return to_deprecated_string() == RegexStringView { other }.to_deprecated_string(); },
             [&](Utf16View const& view) { return view == other; },
-            [&](Utf8View const& view) { return view.as_string() == RegexStringView { other }.to_string(); },
-            [&](StringView view) { return view == RegexStringView { other }.to_string(); });
+            [&](Utf8View const& view) { return view.as_string() == RegexStringView { other }.to_deprecated_string(); },
+            [&](StringView view) { return view == RegexStringView { other }.to_deprecated_string(); });
     }
 
     bool operator==(Utf8View const& other) const
     {
         return m_view.visit(
-            [&](Utf32View) { return to_string() == other.as_string(); },
-            [&](Utf16View) { return to_string() == other.as_string(); },
+            [&](Utf32View) { return to_deprecated_string() == other.as_string(); },
+            [&](Utf16View) { return to_deprecated_string() == other.as_string(); },
             [&](Utf8View const& view) { return view.as_string() == other.as_string(); },
             [&](StringView view) { return other.as_string() == view; });
     }
@@ -653,7 +653,7 @@ template<>
 struct AK::Formatter<regex::RegexStringView> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, regex::RegexStringView value)
     {
-        auto string = value.to_string();
+        auto string = value.to_deprecated_string();
         return Formatter<StringView>::format(builder, string);
     }
 };

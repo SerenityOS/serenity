@@ -42,7 +42,7 @@ TabWidget::TabWidget()
         "text_alignment",
         [this] { return Gfx::to_string(text_alignment()); },
         [this](auto& value) {
-            auto alignment = Gfx::text_alignment_from_string(value.to_string());
+            auto alignment = Gfx::text_alignment_from_string(value.to_deprecated_string());
             if (alignment.has_value()) {
                 set_text_alignment(alignment.value());
                 return true;

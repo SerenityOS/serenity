@@ -30,7 +30,7 @@ public:
     bool is_calculated() const { return m_type == Type::Calculated; }
     NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
     float to_hertz() const;
 
     bool operator==(Frequency const& other) const
@@ -54,6 +54,6 @@ template<>
 struct AK::Formatter<Web::CSS::Frequency> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Frequency const& frequency)
     {
-        return Formatter<StringView>::format(builder, frequency.to_string());
+        return Formatter<StringView>::format(builder, frequency.to_deprecated_string());
     }
 };

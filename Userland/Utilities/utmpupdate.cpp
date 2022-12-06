@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
     TRY(file->truncate(0));
-    TRY(file->write(json.to_string().bytes()));
+    TRY(file->write(json.to_deprecated_string().bytes()));
 
     return 0;
 }

@@ -80,7 +80,7 @@ TEST_CASE(should_equality_compare)
 TEST_CASE(should_string_format)
 {
     MACAddress sut(1, 2, 3, 4, 5, 6);
-    EXPECT_EQ("01:02:03:04:05:06", sut.to_string());
+    EXPECT_EQ("01:02:03:04:05:06", sut.to_deprecated_string());
 }
 
 TEST_CASE(should_make_mac_address_from_string_numbers)

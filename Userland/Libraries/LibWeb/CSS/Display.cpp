@@ -8,7 +8,7 @@
 
 namespace Web::CSS {
 
-DeprecatedString Display::to_string() const
+DeprecatedString Display::to_deprecated_string() const
 {
     StringBuilder builder;
     switch (m_type) {
@@ -99,7 +99,7 @@ DeprecatedString Display::to_string() const
         }
         break;
     };
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

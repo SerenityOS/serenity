@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         [[maybe_unused]] auto pid = entry.get("pid"sv).to_i32();
 
         auto login_time = Core::DateTime::from_timestamp(entry.get("login_at"sv).to_number<time_t>());
-        auto login_at = login_time.to_string("%b%d %H:%M:%S"sv);
+        auto login_at = login_time.to_deprecated_string("%b%d %H:%M:%S"sv);
 
         auto* pw = getpwuid(uid);
         DeprecatedString username;
@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             auto idle_time = now - st.st_mtime;
             if (idle_time >= 0) {
                 builder.appendff("{}s", idle_time);
-                idle_string = builder.to_string();
+                idle_string = builder.to_deprecated_string();
             }
         }
 

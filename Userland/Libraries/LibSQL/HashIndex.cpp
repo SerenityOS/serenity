@@ -102,7 +102,7 @@ void HashBucket::deserialize(Serializer& serializer)
     dbgln_if(SQL_DEBUG, "Bucket has {} keys", size);
     for (auto ix = 0u; ix < size; ix++) {
         auto key = serializer.deserialize<Key>(m_hash_index.descriptor());
-        dbgln_if(SQL_DEBUG, "Key {}: {}", ix, key.to_string());
+        dbgln_if(SQL_DEBUG, "Key {}: {}", ix, key.to_deprecated_string());
         m_entries.append(key);
     }
     m_inflated = true;
@@ -136,7 +136,7 @@ bool HashBucket::insert(Key const& key)
         return false;
     }
     if ((length() + key.length()) > BLOCKSIZE) {
-        dbgln_if(SQL_DEBUG, "Adding key {} would make length exceed block size", key.to_string());
+        dbgln_if(SQL_DEBUG, "Adding key {} would make length exceed block size", key.to_deprecated_string());
         return false;
     }
     m_entries.append(key);
@@ -202,7 +202,7 @@ void HashBucket::list_bucket()
     warnln("Bucket #{} size {} local depth {} pointer {}{}",
         index(), size(), local_depth(), pointer(), (pointer() ? "" : " (VIRTUAL)"));
     for (auto& key : entries()) {
-        warnln("  {} hash {}", key.to_string(), key.hash());
+        warnln("  {} hash {}", key.to_deprecated_string(), key.hash());
     }
 }
 
@@ -253,7 +253,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
     auto key_hash = key.hash();
 
     do {
-        dbgln_if(SQL_DEBUG, "HashIndex::get_bucket_for_insert({}) bucket {} of {}", key.to_string(), key_hash % size(), size());
+        dbgln_if(SQL_DEBUG, "HashIndex::get_bucket_for_insert({}) bucket {} of {}", key.to_deprecated_string(), key_hash % size(), size());
         auto bucket = get_bucket(key_hash % size());
         if (bucket->length() + key.length() < BLOCKSIZE) {
             return bucket;
@@ -349,7 +349,7 @@ Optional<u32> HashIndex::get(Key& key)
 {
     auto hash = key.hash();
     auto bucket_index = hash % size();
-    dbgln_if(SQL_DEBUG, "HashIndex::get({}) bucket_index {}", key.to_string(), bucket_index);
+    dbgln_if(SQL_DEBUG, "HashIndex::get({}) bucket_index {}", key.to_deprecated_string(), bucket_index);
     auto bucket = get_bucket(bucket_index);
     if constexpr (SQL_DEBUG)
         bucket->list_bucket();
@@ -358,7 +358,7 @@ Optional<u32> HashIndex::get(Key& key)
 
 bool HashIndex::insert(Key const& key)
 {
-    dbgln_if(SQL_DEBUG, "HashIndex::insert({})", key.to_string());
+    dbgln_if(SQL_DEBUG, "HashIndex::insert({})", key.to_deprecated_string());
     auto bucket = get_bucket_for_insert(key);
     bucket->insert(key);
     if constexpr (SQL_DEBUG)

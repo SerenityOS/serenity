@@ -41,7 +41,7 @@ public:
 
     virtual ~WebSocket() override;
 
-    DeprecatedString url() const { return m_url.to_string(); }
+    DeprecatedString url() const { return m_url.to_deprecated_string(); }
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \

@@ -198,7 +198,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     if (verbose) {
         StringBuilder builder;
         builder.join(' ', child_argv);
-        warnln("xargs: {}", builder.to_string());
+        warnln("xargs: {}", builder.to_deprecated_string());
     }
 
     auto pid = fork();
@@ -266,6 +266,6 @@ void ParsedInitialArguments::for_each_joined_argument(StringView separator, Func
     for (auto& parts : m_all_parts) {
         builder.clear();
         builder.join(separator, parts);
-        callback(builder.to_string());
+        callback(builder.to_deprecated_string());
     }
 }

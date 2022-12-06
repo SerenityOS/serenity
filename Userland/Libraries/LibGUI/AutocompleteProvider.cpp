@@ -183,7 +183,7 @@ CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying Autoco
         return hide_when_done;
 
     auto suggestion_index = m_suggestion_view->model()->index(selected_index.row());
-    auto completion = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Completion).to_string();
+    auto completion = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Completion).to_deprecated_string();
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
     auto hide_after_applying = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::HideAutocompleteAfterApplying).to_bool();
 

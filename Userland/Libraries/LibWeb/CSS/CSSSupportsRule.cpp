@@ -25,7 +25,7 @@ CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& sup
 
 DeprecatedString CSSSupportsRule::condition_text() const
 {
-    return m_supports->to_string();
+    return m_supports->to_deprecated_string();
 }
 
 void CSSSupportsRule::set_condition_text(DeprecatedString text)
@@ -54,7 +54,7 @@ DeprecatedString CSSSupportsRule::serialized() const
     }
     builder.append("\n}"sv);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

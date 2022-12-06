@@ -12,7 +12,7 @@
 
 namespace JS {
 
-DeprecatedString ParserError::to_string() const
+DeprecatedString ParserError::to_deprecated_string() const
 {
     if (!position.has_value())
         return message;

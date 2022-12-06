@@ -164,7 +164,7 @@ DeprecatedString UnsignedBigInteger::to_base(u16 N) const
         temp.set_to(quotient);
     }
 
-    return builder.to_string().reverse();
+    return builder.to_deprecated_string().reverse();
 }
 
 u64 UnsignedBigInteger::to_u64() const

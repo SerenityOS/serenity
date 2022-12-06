@@ -301,7 +301,7 @@ requires IsBaseOf<Object, T>
         property_name,                                          \
         [this] { return this->getter(); },                      \
         [this](auto& value) {                                   \
-            this->setter(value.to_string());                    \
+            this->setter(value.to_deprecated_string());         \
             return true;                                        \
         });
 

@@ -313,16 +313,16 @@ BackgroundStyleValue::BackgroundStyleValue(
     VERIFY(!m_color->is_value_list());
 }
 
-DeprecatedString BackgroundStyleValue::to_string() const
+DeprecatedString BackgroundStyleValue::to_deprecated_string() const
 {
     if (m_layer_count == 1) {
-        return DeprecatedString::formatted("{} {} {} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_size->to_string(), m_repeat->to_string(), m_attachment->to_string(), m_origin->to_string(), m_clip->to_string());
+        return DeprecatedString::formatted("{} {} {} {} {} {} {} {}", m_color->to_deprecated_string(), m_image->to_deprecated_string(), m_position->to_deprecated_string(), m_size->to_deprecated_string(), m_repeat->to_deprecated_string(), m_attachment->to_deprecated_string(), m_origin->to_deprecated_string(), m_clip->to_deprecated_string());
     }
 
     auto get_layer_value_string = [](NonnullRefPtr<StyleValue> const& style_value, size_t index) {
         if (style_value->is_value_list())
-            return style_value->as_value_list().value_at(index, true)->to_string();
-        return style_value->to_string();
+            return style_value->as_value_list().value_at(index, true)->to_deprecated_string();
+        return style_value->to_deprecated_string();
     };
 
     StringBuilder builder;
@@ -330,11 +330,11 @@ DeprecatedString BackgroundStyleValue::to_string() const
         if (i)
             builder.append(", "sv);
         if (i == m_layer_count - 1)
-            builder.appendff("{} ", m_color->to_string());
+            builder.appendff("{} ", m_color->to_deprecated_string());
         builder.appendff("{} {} {} {} {} {} {}", get_layer_value_string(m_image, i), get_layer_value_string(m_position, i), get_layer_value_string(m_size, i), get_layer_value_string(m_repeat, i), get_layer_value_string(m_attachment, i), get_layer_value_string(m_origin, i), get_layer_value_string(m_clip, i));
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 bool BackgroundStyleValue::equals(StyleValue const& other) const
@@ -352,7 +352,7 @@ bool BackgroundStyleValue::equals(StyleValue const& other) const
         && m_clip->equals(typed_other.m_clip);
 }
 
-DeprecatedString BackgroundRepeatStyleValue::to_string() const
+DeprecatedString BackgroundRepeatStyleValue::to_deprecated_string() const
 {
     return DeprecatedString::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
 }
@@ -365,9 +365,9 @@ bool BackgroundRepeatStyleValue::equals(StyleValue const& other) const
     return m_repeat_x == typed_other.m_repeat_x && m_repeat_y == typed_other.m_repeat_y;
 }
 
-DeprecatedString BackgroundSizeStyleValue::to_string() const
+DeprecatedString BackgroundSizeStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {}", m_size_x.to_string(), m_size_y.to_string());
+    return DeprecatedString::formatted("{} {}", m_size_x.to_deprecated_string(), m_size_y.to_deprecated_string());
 }
 
 bool BackgroundSizeStyleValue::equals(StyleValue const& other) const
@@ -378,9 +378,9 @@ bool BackgroundSizeStyleValue::equals(StyleValue const& other) const
     return m_size_x == typed_other.m_size_x && m_size_y == typed_other.m_size_y;
 }
 
-DeprecatedString BorderStyleValue::to_string() const
+DeprecatedString BorderStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {} {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
+    return DeprecatedString::formatted("{} {} {}", m_border_width->to_deprecated_string(), m_border_style->to_deprecated_string(), m_border_color->to_deprecated_string());
 }
 
 bool BorderStyleValue::equals(StyleValue const& other) const
@@ -393,11 +393,11 @@ bool BorderStyleValue::equals(StyleValue const& other) const
         && m_border_color->equals(typed_other.m_border_color);
 }
 
-DeprecatedString BorderRadiusStyleValue::to_string() const
+DeprecatedString BorderRadiusStyleValue::to_deprecated_string() const
 {
     if (m_horizontal_radius == m_vertical_radius)
-        return m_horizontal_radius.to_string();
-    return DeprecatedString::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
+        return m_horizontal_radius.to_deprecated_string();
+    return DeprecatedString::formatted("{} / {}", m_horizontal_radius.to_deprecated_string(), m_vertical_radius.to_deprecated_string());
 }
 
 bool BorderRadiusStyleValue::equals(StyleValue const& other) const
@@ -410,9 +410,9 @@ bool BorderRadiusStyleValue::equals(StyleValue const& other) const
         && m_vertical_radius == typed_other.m_vertical_radius;
 }
 
-DeprecatedString BorderRadiusShorthandStyleValue::to_string() const
+DeprecatedString BorderRadiusShorthandStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+    return DeprecatedString::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_deprecated_string(), m_top_right->horizontal_radius().to_deprecated_string(), m_bottom_right->horizontal_radius().to_deprecated_string(), m_bottom_left->horizontal_radius().to_deprecated_string(), m_top_left->vertical_radius().to_deprecated_string(), m_top_right->vertical_radius().to_deprecated_string(), m_bottom_right->vertical_radius().to_deprecated_string(), m_bottom_left->vertical_radius().to_deprecated_string());
 }
 
 bool BorderRadiusShorthandStyleValue::equals(StyleValue const& other) const
@@ -615,9 +615,9 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         });
 }
 
-DeprecatedString CalculatedStyleValue::to_string() const
+DeprecatedString CalculatedStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("calc({})", m_expression->to_string());
+    return DeprecatedString::formatted("calc({})", m_expression->to_deprecated_string());
 }
 
 bool CalculatedStyleValue::equals(StyleValue const& other) const
@@ -625,81 +625,81 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     // This is a case where comparing the strings actually makes sense.
-    return to_string() == other.to_string();
+    return to_deprecated_string() == other.to_deprecated_string();
 }
 
-DeprecatedString CalculatedStyleValue::CalcNumberValue::to_string() const
+DeprecatedString CalculatedStyleValue::CalcNumberValue::to_deprecated_string() const
 {
     return value.visit(
         [](Number const& number) { return DeprecatedString::number(number.value()); },
-        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return DeprecatedString::formatted("({})", sum->to_string()); });
+        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return DeprecatedString::formatted("({})", sum->to_deprecated_string()); });
 }
 
-DeprecatedString CalculatedStyleValue::CalcValue::to_string() const
+DeprecatedString CalculatedStyleValue::CalcValue::to_deprecated_string() const
 {
     return value.visit(
         [](Number const& number) { return DeprecatedString::number(number.value()); },
-        [](NonnullOwnPtr<CalcSum> const& sum) { return DeprecatedString::formatted("({})", sum->to_string()); },
-        [](auto const& v) { return v.to_string(); });
+        [](NonnullOwnPtr<CalcSum> const& sum) { return DeprecatedString::formatted("({})", sum->to_deprecated_string()); },
+        [](auto const& v) { return v.to_deprecated_string(); });
 }
 
-DeprecatedString CalculatedStyleValue::CalcSum::to_string() const
+DeprecatedString CalculatedStyleValue::CalcSum::to_deprecated_string() const
 {
     StringBuilder builder;
-    builder.append(first_calc_product->to_string());
+    builder.append(first_calc_product->to_deprecated_string());
     for (auto const& item : zero_or_more_additional_calc_products)
-        builder.append(item.to_string());
-    return builder.to_string();
+        builder.append(item.to_deprecated_string());
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString CalculatedStyleValue::CalcNumberSum::to_string() const
+DeprecatedString CalculatedStyleValue::CalcNumberSum::to_deprecated_string() const
 {
     StringBuilder builder;
-    builder.append(first_calc_number_product->to_string());
+    builder.append(first_calc_number_product->to_deprecated_string());
     for (auto const& item : zero_or_more_additional_calc_number_products)
-        builder.append(item.to_string());
-    return builder.to_string();
+        builder.append(item.to_deprecated_string());
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString CalculatedStyleValue::CalcProduct::to_string() const
+DeprecatedString CalculatedStyleValue::CalcProduct::to_deprecated_string() const
 {
     StringBuilder builder;
-    builder.append(first_calc_value.to_string());
+    builder.append(first_calc_value.to_deprecated_string());
     for (auto const& item : zero_or_more_additional_calc_values)
-        builder.append(item.to_string());
-    return builder.to_string();
+        builder.append(item.to_deprecated_string());
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString CalculatedStyleValue::CalcSumPartWithOperator::to_string() const
+DeprecatedString CalculatedStyleValue::CalcSumPartWithOperator::to_deprecated_string() const
 {
-    return DeprecatedString::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
+    return DeprecatedString::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_deprecated_string());
 }
 
-DeprecatedString CalculatedStyleValue::CalcProductPartWithOperator::to_string() const
+DeprecatedString CalculatedStyleValue::CalcProductPartWithOperator::to_deprecated_string() const
 {
     auto value_string = value.visit(
-        [](CalcValue const& v) { return v.to_string(); },
-        [](CalcNumberValue const& v) { return v.to_string(); });
+        [](CalcValue const& v) { return v.to_deprecated_string(); },
+        [](CalcNumberValue const& v) { return v.to_deprecated_string(); });
     return DeprecatedString::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value_string);
 }
 
-DeprecatedString CalculatedStyleValue::CalcNumberProduct::to_string() const
+DeprecatedString CalculatedStyleValue::CalcNumberProduct::to_deprecated_string() const
 {
     StringBuilder builder;
-    builder.append(first_calc_number_value.to_string());
+    builder.append(first_calc_number_value.to_deprecated_string());
     for (auto const& item : zero_or_more_additional_calc_number_values)
-        builder.append(item.to_string());
-    return builder.to_string();
+        builder.append(item.to_deprecated_string());
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString CalculatedStyleValue::CalcNumberProductPartWithOperator::to_string() const
+DeprecatedString CalculatedStyleValue::CalcNumberProductPartWithOperator::to_deprecated_string() const
 {
-    return DeprecatedString::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value.to_string());
+    return DeprecatedString::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value.to_deprecated_string());
 }
 
-DeprecatedString CalculatedStyleValue::CalcNumberSumPartWithOperator::to_string() const
+DeprecatedString CalculatedStyleValue::CalcNumberSumPartWithOperator::to_deprecated_string() const
 {
-    return DeprecatedString::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
+    return DeprecatedString::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_deprecated_string());
 }
 
 Optional<Angle> CalculatedStyleValue::resolve_angle() const
@@ -1149,7 +1149,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
     return value->resolve(layout_node, percentage_basis);
 }
 
-DeprecatedString ColorStyleValue::to_string() const
+DeprecatedString ColorStyleValue::to_deprecated_string() const
 {
     return serialize_a_srgb_value(m_color);
 }
@@ -1161,11 +1161,11 @@ bool ColorStyleValue::equals(StyleValue const& other) const
     return m_color == other.as_color().m_color;
 }
 
-DeprecatedString ContentStyleValue::to_string() const
+DeprecatedString ContentStyleValue::to_deprecated_string() const
 {
     if (has_alt_text())
-        return DeprecatedString::formatted("{} / {}", m_content->to_string(), m_alt_text->to_string());
-    return m_content->to_string();
+        return DeprecatedString::formatted("{} / {}", m_content->to_deprecated_string(), m_alt_text->to_deprecated_string());
+    return m_content->to_deprecated_string();
 }
 
 bool ContentStyleValue::equals(StyleValue const& other) const
@@ -1223,7 +1223,7 @@ float Filter::Color::resolved_amount() const
     return 1.0f;
 }
 
-DeprecatedString FilterValueListStyleValue::to_string() const
+DeprecatedString FilterValueListStyleValue::to_deprecated_string() const
 {
     StringBuilder builder {};
     bool first = true;
@@ -1234,13 +1234,13 @@ DeprecatedString FilterValueListStyleValue::to_string() const
             [&](Filter::Blur const& blur) {
                 builder.append("blur("sv);
                 if (blur.radius.has_value())
-                    builder.append(blur.radius->to_string());
+                    builder.append(blur.radius->to_deprecated_string());
             },
             [&](Filter::DropShadow const& drop_shadow) {
                 builder.appendff("drop-shadow({} {}"sv,
                     drop_shadow.offset_x, drop_shadow.offset_y);
                 if (drop_shadow.radius.has_value())
-                    builder.appendff(" {}", drop_shadow.radius->to_string());
+                    builder.appendff(" {}", drop_shadow.radius->to_deprecated_string());
                 if (drop_shadow.color.has_value()) {
                     builder.append(' ');
                     serialize_a_srgb_value(builder, *drop_shadow.color);
@@ -1251,7 +1251,7 @@ DeprecatedString FilterValueListStyleValue::to_string() const
                 if (hue_rotate.angle.has_value()) {
                     hue_rotate.angle->visit(
                         [&](Angle const& angle) {
-                            builder.append(angle.to_string());
+                            builder.append(angle.to_deprecated_string());
                         },
                         [&](auto&) {
                             builder.append('0');
@@ -1281,12 +1281,12 @@ DeprecatedString FilterValueListStyleValue::to_string() const
                         }
                     }());
                 if (color.amount.has_value())
-                    builder.append(color.amount->to_string());
+                    builder.append(color.amount->to_deprecated_string());
             });
         builder.append(')');
         first = false;
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 static bool operator==(Filter::Blur const& a, Filter::Blur const& b)
@@ -1347,9 +1347,9 @@ bool FilterValueListStyleValue::equals(StyleValue const& other) const
     return true;
 }
 
-DeprecatedString FlexStyleValue::to_string() const
+DeprecatedString FlexStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {} {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
+    return DeprecatedString::formatted("{} {} {}", m_grow->to_deprecated_string(), m_shrink->to_deprecated_string(), m_basis->to_deprecated_string());
 }
 
 bool FlexStyleValue::equals(StyleValue const& other) const
@@ -1362,9 +1362,9 @@ bool FlexStyleValue::equals(StyleValue const& other) const
         && m_basis->equals(typed_other.m_basis);
 }
 
-DeprecatedString FlexFlowStyleValue::to_string() const
+DeprecatedString FlexFlowStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
+    return DeprecatedString::formatted("{} {}", m_flex_direction->to_deprecated_string(), m_flex_wrap->to_deprecated_string());
 }
 
 bool FlexFlowStyleValue::equals(StyleValue const& other) const
@@ -1376,9 +1376,9 @@ bool FlexFlowStyleValue::equals(StyleValue const& other) const
         && m_flex_wrap->equals(typed_other.m_flex_wrap);
 }
 
-DeprecatedString FontStyleValue::to_string() const
+DeprecatedString FontStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {} {} / {} {}", m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
+    return DeprecatedString::formatted("{} {} {} / {} {}", m_font_style->to_deprecated_string(), m_font_weight->to_deprecated_string(), m_font_size->to_deprecated_string(), m_line_height->to_deprecated_string(), m_font_families->to_deprecated_string());
 }
 
 bool FontStyleValue::equals(StyleValue const& other) const
@@ -1400,11 +1400,11 @@ bool FrequencyStyleValue::equals(StyleValue const& other) const
     return m_frequency == other.as_frequency().m_frequency;
 }
 
-DeprecatedString GridTrackPlacementShorthandStyleValue::to_string() const
+DeprecatedString GridTrackPlacementShorthandStyleValue::to_deprecated_string() const
 {
     if (m_end->grid_track_placement().is_auto())
-        return DeprecatedString::formatted("{}", m_start->grid_track_placement().to_string());
-    return DeprecatedString::formatted("{} / {}", m_start->grid_track_placement().to_string(), m_end->grid_track_placement().to_string());
+        return DeprecatedString::formatted("{}", m_start->grid_track_placement().to_deprecated_string());
+    return DeprecatedString::formatted("{} / {}", m_start->grid_track_placement().to_deprecated_string(), m_end->grid_track_placement().to_deprecated_string());
 }
 
 bool GridTrackPlacementShorthandStyleValue::equals(StyleValue const& other) const
@@ -1416,9 +1416,9 @@ bool GridTrackPlacementShorthandStyleValue::equals(StyleValue const& other) cons
         && m_end->equals(typed_other.m_end);
 }
 
-DeprecatedString GridTrackPlacementStyleValue::to_string() const
+DeprecatedString GridTrackPlacementStyleValue::to_deprecated_string() const
 {
-    return m_grid_track_placement.to_string();
+    return m_grid_track_placement.to_deprecated_string();
 }
 
 bool GridTrackPlacementStyleValue::equals(StyleValue const& other) const
@@ -1429,9 +1429,9 @@ bool GridTrackPlacementStyleValue::equals(StyleValue const& other) const
     return m_grid_track_placement == typed_other.grid_track_placement();
 }
 
-DeprecatedString GridTrackSizeStyleValue::to_string() const
+DeprecatedString GridTrackSizeStyleValue::to_deprecated_string() const
 {
-    return m_grid_track_size_list.to_string();
+    return m_grid_track_size_list.to_deprecated_string();
 }
 
 bool GridTrackSizeStyleValue::equals(StyleValue const& other) const
@@ -1442,7 +1442,7 @@ bool GridTrackSizeStyleValue::equals(StyleValue const& other) const
     return m_grid_track_size_list == typed_other.grid_track_size_list();
 }
 
-DeprecatedString IdentifierStyleValue::to_string() const
+DeprecatedString IdentifierStyleValue::to_deprecated_string() const
 {
     return CSS::string_from_value_id(m_id);
 }
@@ -1706,9 +1706,9 @@ Gfx::Bitmap const* ImageStyleValue::bitmap(size_t frame_index) const
     return resource()->bitmap(frame_index);
 }
 
-DeprecatedString ImageStyleValue::to_string() const
+DeprecatedString ImageStyleValue::to_deprecated_string() const
 {
-    return serialize_a_url(m_url.to_string());
+    return serialize_a_url(m_url.to_deprecated_string());
 }
 
 bool ImageStyleValue::equals(StyleValue const& other) const
@@ -1746,22 +1746,22 @@ static void serialize_color_stop_list(StringBuilder& builder, auto const& color_
             builder.append(", "sv);
 
         if (element.transition_hint.has_value()) {
-            builder.appendff("{}, "sv, element.transition_hint->value.to_string());
+            builder.appendff("{}, "sv, element.transition_hint->value.to_deprecated_string());
         }
 
         serialize_a_srgb_value(builder, element.color_stop.color);
         for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
             if (position->has_value())
-                builder.appendff(" {}"sv, (*position)->to_string());
+                builder.appendff(" {}"sv, (*position)->to_deprecated_string());
         }
         first = false;
     }
 }
 
-DeprecatedString LinearGradientStyleValue::to_string() const
+DeprecatedString LinearGradientStyleValue::to_deprecated_string() const
 {
     StringBuilder builder;
-    auto side_or_corner_to_string = [](SideOrCorner value) {
+    auto side_or_corner_to_deprecated_string = [](SideOrCorner value) {
         switch (value) {
         case SideOrCorner::Top:
             return "top"sv;
@@ -1791,15 +1791,15 @@ DeprecatedString LinearGradientStyleValue::to_string() const
     builder.append("linear-gradient("sv);
     m_direction.visit(
         [&](SideOrCorner side_or_corner) {
-            builder.appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
+            builder.appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_deprecated_string(side_or_corner));
         },
         [&](Angle const& angle) {
-            builder.appendff("{}, "sv, angle.to_string());
+            builder.appendff("{}, "sv, angle.to_deprecated_string());
         });
 
     serialize_color_stop_list(builder, m_color_stop_list);
     builder.append(")"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 static bool operator==(LinearGradientStyleValue::GradientDirection const& a, LinearGradientStyleValue::GradientDirection const& b)
@@ -1947,7 +1947,7 @@ void PositionValue::serialize(StringBuilder& builder) const
             }());
         },
         [&](LengthPercentage length_percentage) {
-            builder.append(length_percentage.to_string());
+            builder.append(length_percentage.to_deprecated_string());
         });
     builder.append(' ');
     if (has_relative_edges)
@@ -1968,7 +1968,7 @@ void PositionValue::serialize(StringBuilder& builder) const
             }());
         },
         [&](LengthPercentage length_percentage) {
-            builder.append(length_percentage.to_string());
+            builder.append(length_percentage.to_deprecated_string());
         });
 }
 
@@ -1981,7 +1981,7 @@ bool PositionValue::operator==(PositionValue const& other) const
         && variant_equals(vertical_position, other.vertical_position));
 }
 
-DeprecatedString RadialGradientStyleValue::to_string() const
+DeprecatedString RadialGradientStyleValue::to_deprecated_string() const
 {
     StringBuilder builder;
     if (is_repeating())
@@ -2006,8 +2006,8 @@ DeprecatedString RadialGradientStyleValue::to_string() const
                 }
             }());
         },
-        [&](CircleSize const& circle_size) { builder.append(circle_size.radius.to_string()); },
-        [&](EllipseSize const& ellipse_size) { builder.appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string()); });
+        [&](CircleSize const& circle_size) { builder.append(circle_size.radius.to_deprecated_string()); },
+        [&](EllipseSize const& ellipse_size) { builder.appendff("{} {}", ellipse_size.radius_a.to_deprecated_string(), ellipse_size.radius_b.to_deprecated_string()); });
 
     if (m_position != PositionValue::center()) {
         builder.appendff(" at "sv);
@@ -2017,7 +2017,7 @@ DeprecatedString RadialGradientStyleValue::to_string() const
     builder.append(", "sv);
     serialize_color_stop_list(builder, m_color_stop_list);
     builder.append(')');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, Gfx::FloatPoint center, Gfx::FloatRect const& size) const
@@ -2181,7 +2181,7 @@ void RadialGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& 
     Painting::paint_radial_gradient(context, dest_rect, m_resolved->data, m_resolved->center.to_rounded<int>(), m_resolved->gradient_size);
 }
 
-DeprecatedString ConicGradientStyleValue::to_string() const
+DeprecatedString ConicGradientStyleValue::to_deprecated_string() const
 {
     StringBuilder builder;
     if (is_repeating())
@@ -2190,7 +2190,7 @@ DeprecatedString ConicGradientStyleValue::to_string() const
     bool has_from_angle = false;
     bool has_at_position = false;
     if ((has_from_angle = m_from_angle.to_degrees() != 0))
-        builder.appendff("from {}", m_from_angle.to_string());
+        builder.appendff("from {}", m_from_angle.to_deprecated_string());
     if ((has_at_position = m_position != PositionValue::center())) {
         if (has_from_angle)
             builder.append(' ');
@@ -2201,7 +2201,7 @@ DeprecatedString ConicGradientStyleValue::to_string() const
         builder.append(", "sv);
     serialize_color_stop_list(builder, m_color_stop_list);
     builder.append(')');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& size) const
@@ -2250,9 +2250,9 @@ bool LengthStyleValue::equals(StyleValue const& other) const
     return m_length == other.as_length().m_length;
 }
 
-DeprecatedString ListStyleStyleValue::to_string() const
+DeprecatedString ListStyleStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {} {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
+    return DeprecatedString::formatted("{} {} {}", m_position->to_deprecated_string(), m_image->to_deprecated_string(), m_style_type->to_deprecated_string());
 }
 
 bool ListStyleStyleValue::equals(StyleValue const& other) const
@@ -2265,7 +2265,7 @@ bool ListStyleStyleValue::equals(StyleValue const& other) const
         && m_style_type->equals(typed_other.m_style_type);
 }
 
-DeprecatedString NumericStyleValue::to_string() const
+DeprecatedString NumericStyleValue::to_deprecated_string() const
 {
     return m_value.visit(
         [](float value) {
@@ -2287,9 +2287,9 @@ bool NumericStyleValue::equals(StyleValue const& other) const
     return m_value.get<float>() == other.as_numeric().m_value.get<float>();
 }
 
-DeprecatedString OverflowStyleValue::to_string() const
+DeprecatedString OverflowStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {}", m_overflow_x->to_string(), m_overflow_y->to_string());
+    return DeprecatedString::formatted("{} {}", m_overflow_x->to_deprecated_string(), m_overflow_y->to_deprecated_string());
 }
 
 bool OverflowStyleValue::equals(StyleValue const& other) const
@@ -2301,9 +2301,9 @@ bool OverflowStyleValue::equals(StyleValue const& other) const
         && m_overflow_y->equals(typed_other.m_overflow_y);
 }
 
-DeprecatedString PercentageStyleValue::to_string() const
+DeprecatedString PercentageStyleValue::to_deprecated_string() const
 {
-    return m_percentage.to_string();
+    return m_percentage.to_deprecated_string();
 }
 
 bool PercentageStyleValue::equals(StyleValue const& other) const
@@ -2313,9 +2313,9 @@ bool PercentageStyleValue::equals(StyleValue const& other) const
     return m_percentage == other.as_percentage().m_percentage;
 }
 
-DeprecatedString PositionStyleValue::to_string() const
+DeprecatedString PositionStyleValue::to_deprecated_string() const
 {
-    auto to_string = [](PositionEdge edge) {
+    auto to_deprecated_string = [](PositionEdge edge) {
         switch (edge) {
         case PositionEdge::Left:
             return "left";
@@ -2329,7 +2329,7 @@ DeprecatedString PositionStyleValue::to_string() const
         VERIFY_NOT_REACHED();
     };
 
-    return DeprecatedString::formatted("{} {} {} {}", to_string(m_edge_x), m_offset_x.to_string(), to_string(m_edge_y), m_offset_y.to_string());
+    return DeprecatedString::formatted("{} {} {} {}", to_deprecated_string(m_edge_x), m_offset_x.to_deprecated_string(), to_deprecated_string(m_edge_y), m_offset_y.to_deprecated_string());
 }
 
 bool PositionStyleValue::equals(StyleValue const& other) const
@@ -2343,7 +2343,7 @@ bool PositionStyleValue::equals(StyleValue const& other) const
         && m_offset_y == typed_other.m_offset_y;
 }
 
-DeprecatedString RectStyleValue::to_string() const
+DeprecatedString RectStyleValue::to_deprecated_string() const
 {
     return DeprecatedString::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
 }
@@ -2363,13 +2363,13 @@ bool ResolutionStyleValue::equals(StyleValue const& other) const
     return m_resolution == other.as_resolution().m_resolution;
 }
 
-DeprecatedString ShadowStyleValue::to_string() const
+DeprecatedString ShadowStyleValue::to_deprecated_string() const
 {
     StringBuilder builder;
-    builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
+    builder.appendff("{} {} {} {} {}", m_color.to_deprecated_string(), m_offset_x.to_deprecated_string(), m_offset_y.to_deprecated_string(), m_blur_radius.to_deprecated_string(), m_spread_distance.to_deprecated_string());
     if (m_placement == ShadowPlacement::Inner)
         builder.append(" inset"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 bool ShadowStyleValue::equals(StyleValue const& other) const
@@ -2392,9 +2392,9 @@ bool StringStyleValue::equals(StyleValue const& other) const
     return m_string == other.as_string().m_string;
 }
 
-DeprecatedString TextDecorationStyleValue::to_string() const
+DeprecatedString TextDecorationStyleValue::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("{} {} {} {}", m_line->to_string(), m_thickness->to_string(), m_style->to_string(), m_color->to_string());
+    return DeprecatedString::formatted("{} {} {} {}", m_line->to_deprecated_string(), m_thickness->to_deprecated_string(), m_style->to_deprecated_string(), m_color->to_deprecated_string());
 }
 
 bool TextDecorationStyleValue::equals(StyleValue const& other) const
@@ -2415,7 +2415,7 @@ bool TimeStyleValue::equals(StyleValue const& other) const
     return m_time == other.as_time().m_time;
 }
 
-DeprecatedString TransformationStyleValue::to_string() const
+DeprecatedString TransformationStyleValue::to_deprecated_string() const
 {
     StringBuilder builder;
     builder.append(CSS::to_string(m_transform_function));
@@ -2423,7 +2423,7 @@ DeprecatedString TransformationStyleValue::to_string() const
     builder.join(", "sv, m_values);
     builder.append(')');
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 bool TransformationStyleValue::equals(StyleValue const& other) const
@@ -2442,12 +2442,12 @@ bool TransformationStyleValue::equals(StyleValue const& other) const
     return true;
 }
 
-DeprecatedString UnresolvedStyleValue::to_string() const
+DeprecatedString UnresolvedStyleValue::to_deprecated_string() const
 {
     StringBuilder builder;
     for (auto& value : m_values)
-        builder.append(value.to_string());
-    return builder.to_string();
+        builder.append(value.to_deprecated_string());
+    return builder.to_deprecated_string();
 }
 
 bool UnresolvedStyleValue::equals(StyleValue const& other) const
@@ -2455,7 +2455,7 @@ bool UnresolvedStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     // This is a case where comparing the strings actually makes sense.
-    return to_string() == other.to_string();
+    return to_deprecated_string() == other.to_deprecated_string();
 }
 
 bool UnsetStyleValue::equals(StyleValue const& other) const
@@ -2463,7 +2463,7 @@ bool UnsetStyleValue::equals(StyleValue const& other) const
     return type() == other.type();
 }
 
-DeprecatedString StyleValueList::to_string() const
+DeprecatedString StyleValueList::to_deprecated_string() const
 {
     DeprecatedString separator = "";
     switch (m_separator) {

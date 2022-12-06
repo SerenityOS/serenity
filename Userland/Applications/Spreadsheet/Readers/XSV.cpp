@@ -240,7 +240,7 @@ XSV::Field XSV::read_one_quoted_field()
         set_error(ReadError::QuoteFailure);
 
     if (is_copy)
-        return { {}, builder.to_string(), false };
+        return { {}, builder.to_deprecated_string(), false };
 
     return { m_source.substring_view(start, end - start), {}, true };
 }

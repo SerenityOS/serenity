@@ -329,13 +329,13 @@ bool Selection::contains_node(JS::NonnullGCPtr<DOM::Node> node, bool allow_parti
         && (end_relative_position == DOM::RelativeBoundaryPointPosition::Equal || end_relative_position == DOM::RelativeBoundaryPointPosition::After);
 }
 
-DeprecatedString Selection::to_string() const
+DeprecatedString Selection::to_deprecated_string() const
 {
     // FIXME: This needs more work to be compatible with other engines.
     //        See https://www.w3.org/Bugs/Public/show_bug.cgi?id=10583
     if (!m_range)
         return DeprecatedString::empty();
-    return m_range->to_string();
+    return m_range->to_deprecated_string();
 }
 
 }

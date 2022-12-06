@@ -90,12 +90,12 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
             first_entry = false;
         else
             builder.append('\n');
-        builder.append(entry.to_string());
+        builder.append(entry.to_deprecated_string());
     }
 
     dbgln("--- Backtrace for thread #{} (TID {}) ---", thread_index, thread_info.tid);
     for (auto& entry : backtrace.entries()) {
-        dbgln("{}", entry.to_string(true));
+        dbgln("{}", entry.to_deprecated_string(true));
     }
 
     return {
@@ -290,7 +290,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         auto file = file_or_error.value();
-        if (!file->write(full_backtrace.to_string()))
+        if (!file->write(full_backtrace.to_deprecated_string()))
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
 

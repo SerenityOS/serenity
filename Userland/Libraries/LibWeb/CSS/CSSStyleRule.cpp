@@ -55,7 +55,7 @@ DeprecatedString CSSStyleRule::serialized() const
     // 4. If decls and rules are both null, append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)) and return s.
     if (decls.is_null() && rules.is_null()) {
         builder.append(" }"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     // 5. If rules is null:
@@ -67,7 +67,7 @@ DeprecatedString CSSStyleRule::serialized() const
         //    3. Append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)).
         builder.append(" }"sv);
         //    4. Return s.
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     // FIXME: 6. Otherwise:

@@ -455,7 +455,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
     }
 
     // 4. Return the value of result.
-    return result.to_string();
+    return result.to_deprecated_string();
 }
 
 // https://w3c.github.io/DOM-Parsing/#xml-serializing-an-element-node
@@ -524,7 +524,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
             qualified_name.append(element.local_name());
 
         // 4. Append the value of qualified name to markup.
-        markup.append(qualified_name.to_string());
+        markup.append(qualified_name.to_deprecated_string());
     }
 
     // 12. Otherwise, inherited ns is not equal to ns (the node's own namespace is different from the context namespace of its parent). Run these sub-steps:
@@ -561,7 +561,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
             }
 
             // 3. Append the value of qualified name to markup.
-            markup.append(qualified_name.to_string());
+            markup.append(qualified_name.to_deprecated_string());
         }
 
         // 5. Otherwise, if prefix is not null, then:
@@ -577,7 +577,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
             qualified_name.appendff("{}:{}", prefix, element.local_name());
 
             // 4. Append the value of qualified name to markup.
-            markup.append(qualified_name.to_string());
+            markup.append(qualified_name.to_deprecated_string());
 
             // 5. Append the following to markup, in the order listed:
             // 1. " " (U+0020 SPACE);
@@ -618,7 +618,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
             inherited_ns = ns;
 
             // 4. Append the value of qualified name to markup.
-            markup.append(qualified_name.to_string());
+            markup.append(qualified_name.to_deprecated_string());
 
             // 5. Append the following to markup, in the order listed:
             // 1. " " (U+0020 SPACE);
@@ -641,7 +641,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
 
             qualified_name.append(element.local_name());
             inherited_ns = ns;
-            markup.append(qualified_name.to_string());
+            markup.append(qualified_name.to_deprecated_string());
         }
     }
 
@@ -671,7 +671,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
 
     // 17. If the value of skip end tag is true, then return the value of markup and skip the remaining steps. The node is a leaf-node.
     if (skip_end_tag)
-        return markup.to_string();
+        return markup.to_deprecated_string();
 
     // 18. If ns is the HTML namespace, and the node's localName matches the string "template", then this is a template element.
     if (ns == Namespace::HTML && element.local_name() == HTML::TagNames::template_) {
@@ -691,13 +691,13 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
     markup.append("</"sv);
 
     // 2. The value of qualified name;
-    markup.append(qualified_name.to_string());
+    markup.append(qualified_name.to_deprecated_string());
 
     // 3. ">" (U+003E GREATER-THAN SIGN).
     markup.append('>');
 
     // 21. Return the value of markup.
-    return markup.to_string();
+    return markup.to_deprecated_string();
 }
 
 // https://w3c.github.io/DOM-Parsing/#xml-serializing-a-document-node
@@ -717,7 +717,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_document(DOM::Document co
         serialized_document.append(TRY(serialize_node_to_xml_string_impl(*child, namespace_, namespace_prefix_map, prefix_index, require_well_formed)));
 
     // 3. Return the value of serialized document.
-    return serialized_document.to_string();
+    return serialized_document.to_deprecated_string();
 }
 
 // https://w3c.github.io/DOM-Parsing/#xml-serializing-a-comment-node
@@ -774,7 +774,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_document_fragment(DOM::Do
         markup.append(TRY(serialize_node_to_xml_string_impl(*child, namespace_, namespace_prefix_map, prefix_index, require_well_formed)));
 
     // 3. Return the value of markup.
-    return markup.to_string();
+    return markup.to_deprecated_string();
 }
 
 // https://w3c.github.io/DOM-Parsing/#xml-serializing-a-documenttype-node
@@ -840,7 +840,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_document_type(DOM::Docume
     markup.append('>');
 
     // 11. Return the value of markup.
-    return markup.to_string();
+    return markup.to_deprecated_string();
 }
 
 // https://w3c.github.io/DOM-Parsing/#dfn-xml-serializing-a-processinginstruction-node
@@ -881,7 +881,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_processing_instruction(DO
     markup.append("?>"sv);
 
     // 4. Return the value of markup.
-    return markup.to_string();
+    return markup.to_deprecated_string();
 }
 
 }

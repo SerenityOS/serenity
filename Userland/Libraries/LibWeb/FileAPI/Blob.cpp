@@ -63,7 +63,7 @@ ErrorOr<DeprecatedString> convert_line_endings_to_native(DeprecatedString const&
         TRY(result.try_append(lexer.consume_until(is_any_of("\n\r"sv))));
     }
     // 5. Return result.
-    return result.to_string();
+    return result.to_deprecated_string();
 }
 
 // https://w3c.github.io/FileAPI/#process-blob-parts

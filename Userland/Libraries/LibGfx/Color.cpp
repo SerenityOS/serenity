@@ -18,12 +18,12 @@
 
 namespace Gfx {
 
-DeprecatedString Color::to_string() const
+DeprecatedString Color::to_deprecated_string() const
 {
     return DeprecatedString::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha());
 }
 
-DeprecatedString Color::to_string_without_alpha() const
+DeprecatedString Color::to_deprecated_string_without_alpha() const
 {
     return DeprecatedString::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
@@ -384,5 +384,5 @@ ErrorOr<void> IPC::decode(Decoder& decoder, Color& color)
 
 ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color const& value)
 {
-    return Formatter<StringView>::format(builder, value.to_string());
+    return Formatter<StringView>::format(builder, value.to_deprecated_string());
 }

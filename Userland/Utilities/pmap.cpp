@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
         auto address = map.get("address"sv).to_addr();
-        auto size = map.get("size"sv).to_string();
+        auto size = map.get("size"sv).to_deprecated_string();
 
         auto access = DeprecatedString::formatted("{}{}{}{}{}",
             (map.get("readable"sv).to_bool() ? "r" : "-"),
@@ -65,13 +65,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         out("{:p}  ", address);
         out("{:>10} ", size);
         if (extended) {
-            auto resident = map.get("amount_resident"sv).to_string();
-            auto dirty = map.get("amount_dirty"sv).to_string();
-            auto vmobject = map.get("vmobject"sv).to_string();
+            auto resident = map.get("amount_resident"sv).to_deprecated_string();
+            auto dirty = map.get("amount_dirty"sv).to_deprecated_string();
+            auto vmobject = map.get("vmobject"sv).to_deprecated_string();
             if (vmobject.ends_with("VMObject"sv))
                 vmobject = vmobject.substring(0, vmobject.length() - 8);
-            auto purgeable = map.get("purgeable"sv).to_string();
-            auto cow_pages = map.get("cow_pages"sv).to_string();
+            auto purgeable = map.get("purgeable"sv).to_deprecated_string();
+            auto cow_pages = map.get("cow_pages"sv).to_deprecated_string();
             out("{:>10} ", resident);
             out("{:>10} ", dirty);
             out("{:6} ", access);
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             out("{:6} ", access);
         }
-        auto name = map.get("name"sv).to_string();
+        auto name = map.get("name"sv).to_deprecated_string();
         out("{:20}", name);
         outln();
     }

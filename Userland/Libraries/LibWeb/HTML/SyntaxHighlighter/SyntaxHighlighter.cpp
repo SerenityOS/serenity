@@ -71,7 +71,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         auto token = tokenizer.next_token();
         if (!token.has_value() || token.value().is_end_of_file())
             break;
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) got token of type {}", token->to_string());
+        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) got token of type {}", token->to_deprecated_string());
 
         if (token->is_start_tag()) {
             if (token->tag_name() == "script"sv) {

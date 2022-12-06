@@ -264,7 +264,7 @@ inline void TestRunner::print_test_results_as_json() const
         root.set("files_total", m_counts.files_total);
         root.set("duration", m_total_elapsed_time_in_ms / 1000.0);
     }
-    outln("{}", root.to_string());
+    outln("{}", root.to_deprecated_string());
 }
 
 }

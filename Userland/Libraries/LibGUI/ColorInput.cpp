@@ -43,7 +43,7 @@ void ColorInput::set_color_internal(Color color, AllowCallback allow_callback, b
         return;
     m_color = color;
     if (change_text)
-        set_text(m_color_has_alpha_channel ? color.to_string() : color.to_string_without_alpha(), AllowCallback::No);
+        set_text(m_color_has_alpha_channel ? color.to_deprecated_string() : color.to_deprecated_string_without_alpha(), AllowCallback::No);
     update();
     if (allow_callback == AllowCallback::Yes && on_change)
         on_change();
