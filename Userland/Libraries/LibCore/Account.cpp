@@ -231,6 +231,8 @@ ErrorOr<DeprecatedString> Account::generate_passwd_file() const
             break;
 
         if (pwd->pw_name == m_username) {
+            if (m_deleted)
+                continue;
             builder.appendff("{}:!:{}:{}:{}:{}:{}\n",
                 m_username,
                 m_uid, m_gid,
@@ -259,9 +261,11 @@ ErrorOr<DeprecatedString> Account::generate_shadow_file() const
     struct spwd* p;
     errno = 0;
     while ((p = getspent())) {
-        if (p->sp_namp == m_username)
+        if (p->sp_namp == m_username) {
+            if (m_deleted)
+                continue;
             builder.appendff("{}:{}", m_username, m_password_hash);
-        else
+        } else
             builder.appendff("{}:{}", p->sp_namp, p->sp_pwdp);
 
         builder.appendff(":{}:{}:{}:{}:{}:{}:{}\n",

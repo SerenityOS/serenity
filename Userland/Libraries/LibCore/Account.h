@@ -52,6 +52,7 @@ public:
     void set_gid(gid_t gid) { m_gid = gid; }
     void set_shell(StringView shell) { m_shell = shell; }
     void set_gecos(StringView gecos) { m_gecos = gecos; }
+    void set_deleted() { m_deleted = true; };
     void delete_password();
 
     // A null password means that this account was missing from /etc/shadow.
@@ -86,6 +87,7 @@ private:
     DeprecatedString m_home_directory;
     DeprecatedString m_shell;
     Vector<gid_t> m_extra_gids;
+    bool m_deleted { false };
 };
 
 }
