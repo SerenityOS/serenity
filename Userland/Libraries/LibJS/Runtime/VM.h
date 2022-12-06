@@ -184,8 +184,6 @@ public:
 
     Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedVector<Value>> arguments);
 
-    DeprecatedString join_arguments(size_t start_index = 0) const;
-
     Value get_new_target();
 
     Object& get_global_object();

@@ -631,17 +631,6 @@ ThrowCompletionOr<Value> VM::resolve_this_binding()
     return TRY(environment.get_this_binding(vm));
 }
 
-DeprecatedString VM::join_arguments(size_t start_index) const
-{
-    StringBuilder joined_arguments;
-    for (size_t i = start_index; i < argument_count(); ++i) {
-        joined_arguments.append(argument(i).to_string_without_side_effects().view());
-        if (i != argument_count() - 1)
-            joined_arguments.append(' ');
-    }
-    return joined_arguments.build();
-}
-
 // 9.4.5 GetNewTarget ( ), https://tc39.es/ecma262/#sec-getnewtarget
 Value VM::get_new_target()
 {
