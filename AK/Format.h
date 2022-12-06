@@ -11,6 +11,7 @@
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
+#include <AK/Concepts.h>
 #include <AK/Error.h>
 #include <AK/FixedPoint.h>
 #include <AK/Forward.h>
@@ -667,8 +668,8 @@ struct Formatter<FormatString> : Formatter<StringView> {
     ErrorOr<void> vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params);
 };
 
-template<>
-struct Formatter<Error> : Formatter<FormatString> {
+template<Concepts::DerivedFrom<Error> AnyError>
+struct Formatter<AnyError> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
     {
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
