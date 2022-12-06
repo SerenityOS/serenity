@@ -27,7 +27,7 @@ BucketTool::BucketTool()
     m_cursor = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
-static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position, Color fill_color, int threshold)
+static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint start_position, Color fill_color, int threshold)
 {
     VERIFY(bitmap.bpp() == 32);
 

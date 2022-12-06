@@ -64,7 +64,7 @@ private:
     void pass_cards();
     PassingDirection passing_direction() const;
 
-    void start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const& end, Function<void()> did_finish_callback, int initial_delay_ms, int steps = 30);
+    void start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, Function<void()> did_finish_callback, int initial_delay_ms, int steps = 30);
     void stop_animation();
 
     virtual void paint_event(GUI::PaintEvent&) override;

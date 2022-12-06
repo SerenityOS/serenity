@@ -59,7 +59,7 @@ public:
     void update_scrollbar_ranges();
 
     void set_automatic_scrolling_timer(bool active);
-    virtual Gfx::IntPoint automatic_scroll_delta_from_position(Gfx::IntPoint const&) const;
+    virtual Gfx::IntPoint automatic_scroll_delta_from_position(Gfx::IntPoint) const;
 
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
@@ -70,8 +70,8 @@ public:
     void set_should_hide_unnecessary_scrollbars(bool);
     bool should_hide_unnecessary_scrollbars() const { return m_should_hide_unnecessary_scrollbars; }
 
-    Gfx::IntPoint to_content_position(Gfx::IntPoint const& widget_position) const;
-    Gfx::IntPoint to_widget_position(Gfx::IntPoint const& content_position) const;
+    Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const;
+    Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const;
 
     Gfx::IntRect to_content_rect(Gfx::IntRect const& widget_rect) const { return { to_content_position(widget_rect.location()), widget_rect.size() }; }
     Gfx::IntRect to_widget_rect(Gfx::IntRect const& content_rect) const { return { to_widget_position(content_rect.location()), content_rect.size() }; }

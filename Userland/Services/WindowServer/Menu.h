@@ -76,10 +76,10 @@ public:
     void set_rect_in_window_menubar(Gfx::IntRect const& rect) { m_rect_in_window_menubar = rect; }
 
     Gfx::IntPoint unadjusted_position() const { return m_unadjusted_position; }
-    void set_unadjusted_position(Gfx::IntPoint const& position) { m_unadjusted_position = position; }
+    void set_unadjusted_position(Gfx::IntPoint position) { m_unadjusted_position = position; }
 
     Window* menu_window() { return m_menu_window.ptr(); }
-    Window& ensure_menu_window(Gfx::IntPoint const&);
+    Window& ensure_menu_window(Gfx::IntPoint);
 
     Window* window_menu_of() { return m_window_menu_of; }
     void set_window_menu_of(Window& window) { m_window_menu_of = window; }
@@ -118,9 +118,9 @@ public:
 
     void set_visible(bool);
 
-    void popup(Gfx::IntPoint const&);
-    void do_popup(Gfx::IntPoint const&, bool make_input, bool as_submenu = false);
-    void open_button_menu(Gfx::IntPoint const& position, Gfx::IntRect const& button_rect);
+    void popup(Gfx::IntPoint);
+    void do_popup(Gfx::IntPoint, bool make_input, bool as_submenu = false);
+    void open_button_menu(Gfx::IntPoint position, Gfx::IntRect const& button_rect);
 
     bool is_menu_ancestor_of(Menu const&) const;
 
@@ -143,7 +143,7 @@ private:
     size_t visible_item_count() const;
     Gfx::IntRect stripe_rect();
 
-    int item_index_at(Gfx::IntPoint const&);
+    int item_index_at(Gfx::IntPoint);
     static constexpr int padding_between_text_and_shortcut() { return 50; }
     void did_activate(MenuItem&, bool leave_menu_open);
     void update_for_new_hovered_item(bool make_input = false);

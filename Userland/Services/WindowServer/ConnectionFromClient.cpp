@@ -145,7 +145,7 @@ void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submen
     menu.add_item(move(menu_item));
 }
 
-void ConnectionFromClient::popup_menu(i32 menu_id, Gfx::IntPoint const& screen_position, Gfx::IntRect const& button_rect)
+void ConnectionFromClient::popup_menu(i32 menu_id, Gfx::IntPoint screen_position, Gfx::IntRect const& button_rect)
 {
     auto position = screen_position;
     auto it = m_menus.find(menu_id);
@@ -1040,7 +1040,7 @@ void ConnectionFromClient::pong()
     set_unresponsive(false);
 }
 
-void ConnectionFromClient::set_global_cursor_position(Gfx::IntPoint const& position)
+void ConnectionFromClient::set_global_cursor_position(Gfx::IntPoint position)
 {
     if (!Screen::main().rect().contains(position)) {
         did_misbehave("SetGlobalCursorPosition with bad position");

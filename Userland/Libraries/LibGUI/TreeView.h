@@ -53,7 +53,7 @@ protected:
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
 private:
-    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&, bool& is_toggle) const override;
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint, bool& is_toggle) const override;
 
     int row_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }

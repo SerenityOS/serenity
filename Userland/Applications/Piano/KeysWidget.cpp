@@ -214,7 +214,7 @@ static inline int note_from_white_keys(int white_keys)
     return note;
 }
 
-int KeysWidget::note_for_event_position(Gfx::IntPoint const& a_point) const
+int KeysWidget::note_for_event_position(Gfx::IntPoint a_point) const
 {
     if (!frame_inner_rect().contains(a_point))
         return -1;

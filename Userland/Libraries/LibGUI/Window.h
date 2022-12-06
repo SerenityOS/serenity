@@ -117,7 +117,7 @@ public:
     void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
-    void move_to(Gfx::IntPoint const& point) { set_rect({ point, size() }); }
+    void move_to(Gfx::IntPoint point) { set_rect({ point, size() }); }
 
     void resize(int width, int height) { resize({ width, height }); }
     void resize(Gfx::IntSize const& size) { set_rect({ position(), size }); }

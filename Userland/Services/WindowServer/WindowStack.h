@@ -35,7 +35,7 @@ public:
         Yes,
         No,
     };
-    Window* window_at(Gfx::IntPoint const&, IncludeWindowFrame = IncludeWindowFrame::Yes) const;
+    Window* window_at(Gfx::IntPoint, IncludeWindowFrame = IncludeWindowFrame::Yes) const;
     Window* highlight_window() const;
 
     template<typename Callback>
@@ -56,13 +56,13 @@ public:
     Window const* active_window() const { return m_active_window; }
     void set_active_window(Window*);
 
-    Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
+    Optional<HitTestResult> hit_test(Gfx::IntPoint) const;
 
     unsigned row() const { return m_row; }
     unsigned column() const { return m_column; }
 
-    void set_transition_offset(Badge<Compositor>, Gfx::IntPoint const& transition_offset) { m_transition_offset = transition_offset; }
-    Gfx::IntPoint const& transition_offset() const { return m_transition_offset; }
+    void set_transition_offset(Badge<Compositor>, Gfx::IntPoint transition_offset) { m_transition_offset = transition_offset; }
+    Gfx::IntPoint transition_offset() const { return m_transition_offset; }
 
     void set_stationary_window_stack(WindowStack& window_stack) { m_stationary_window_stack = &window_stack; }
     WindowStack& stationary_window_stack()

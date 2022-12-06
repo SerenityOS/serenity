@@ -125,7 +125,7 @@ MainWidget::MainWidget()
             open_external(url);
         }
     };
-    m_web_view->on_context_menu_request = [this](auto& screen_position) {
+    m_web_view->on_context_menu_request = [this](auto screen_position) {
         m_copy_action->set_enabled(!m_web_view->selected_text().is_empty());
         m_context_menu->popup(screen_position);
     };

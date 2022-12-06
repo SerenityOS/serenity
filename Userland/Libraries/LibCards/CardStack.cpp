@@ -15,7 +15,7 @@ CardStack::CardStack()
 {
 }
 
-CardStack::CardStack(Gfx::IntPoint const& position, Type type, RefPtr<CardStack> covered_stack)
+CardStack::CardStack(Gfx::IntPoint position, Type type, RefPtr<CardStack> covered_stack)
     : m_covered_stack(move(covered_stack))
     , m_position(position)
     , m_type(type)
@@ -98,7 +98,7 @@ void CardStack::rebound_cards()
         card.set_position(m_stack_positions.at(card_index++));
 }
 
-void CardStack::add_all_grabbed_cards(Gfx::IntPoint const& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
+void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
 {
     VERIFY(grabbed.is_empty());
 

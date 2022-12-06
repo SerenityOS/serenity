@@ -155,7 +155,7 @@ void Tray::leave_event(Core::Event&)
     update();
 }
 
-Tray::Item* Tray::item_at(Gfx::IntPoint const& position)
+Tray::Item* Tray::item_at(Gfx::IntPoint position)
 {
     for (auto& item : m_items) {
         if (item.rect(*this).contains(position))

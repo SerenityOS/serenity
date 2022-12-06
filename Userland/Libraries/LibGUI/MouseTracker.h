@@ -19,10 +19,10 @@ public:
     MouseTracker();
     virtual ~MouseTracker();
 
-    static void track_mouse_move(Badge<ConnectionToWindowServer>, Gfx::IntPoint const&);
+    static void track_mouse_move(Badge<ConnectionToWindowServer>, Gfx::IntPoint);
 
 protected:
-    virtual void track_mouse_move(Gfx::IntPoint const&) = 0;
+    virtual void track_mouse_move(Gfx::IntPoint) = 0;
 
 private:
     IntrusiveListNode<MouseTracker> m_list_node;

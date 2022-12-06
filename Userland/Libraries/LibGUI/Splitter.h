@@ -70,7 +70,7 @@ private:
         WeakPtr<Widget> second_widget;
     };
 
-    Grabbable* grabbable_at(Gfx::IntPoint const&);
+    Grabbable* grabbable_at(Gfx::IntPoint);
     void set_hovered_grabbable(Grabbable*);
 
     Vector<Grabbable> m_grabbables;

@@ -217,7 +217,7 @@ public:
     template<StorageFormat>
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
-    [[nodiscard]] Color get_pixel(IntPoint const& physical_position) const
+    [[nodiscard]] Color get_pixel(IntPoint physical_position) const
     {
         return get_pixel(physical_position.x(), physical_position.y());
     }
@@ -225,7 +225,7 @@ public:
     template<StorageFormat>
     void set_pixel(int physical_x, int physical_y, Color);
     void set_pixel(int physical_x, int physical_y, Color);
-    void set_pixel(IntPoint const& physical_position, Color color)
+    void set_pixel(IntPoint physical_position, Color color)
     {
         set_pixel(physical_position.x(), physical_position.y(), color);
     }
@@ -244,7 +244,7 @@ public:
 
     [[nodiscard]] Optional<Color> solid_color(u8 alpha_threshold = 0) const;
 
-    void flood_visit_from_point(Gfx::IntPoint const& start_point, int threshold, Function<void(Gfx::IntPoint location)> pixel_reached);
+    void flood_visit_from_point(Gfx::IntPoint start_point, int threshold, Function<void(Gfx::IntPoint location)> pixel_reached);
 
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);

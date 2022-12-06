@@ -132,7 +132,7 @@ Gfx::IntRect ValueSlider::knob_rect() const
     return knob_rect;
 }
 
-int ValueSlider::value_at(Gfx::IntPoint const& position) const
+int ValueSlider::value_at(Gfx::IntPoint position) const
 {
     if (position.x() < bar_rect().left())
         return min();

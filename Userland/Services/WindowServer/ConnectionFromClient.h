@@ -140,7 +140,7 @@ private:
     virtual void show_screen_numbers(bool) override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;
-    virtual void popup_menu(i32, Gfx::IntPoint const&, Gfx::IntRect const&) override;
+    virtual void popup_menu(i32, Gfx::IntPoint, Gfx::IntRect const&) override;
     virtual void dismiss_menu(i32) override;
     virtual void set_window_icon_bitmap(i32, Gfx::ShareableBitmap const&) override;
     virtual Messages::WindowServer::StartDragResponse start_drag(DeprecatedString const&, HashMap<DeprecatedString, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;
@@ -166,7 +166,7 @@ private:
     virtual void set_window_progress(i32, Optional<i32> const&) override;
     virtual void refresh_system_theme() override;
     virtual void pong() override;
-    virtual void set_global_cursor_position(Gfx::IntPoint const&) override;
+    virtual void set_global_cursor_position(Gfx::IntPoint) override;
     virtual Messages::WindowServer::GetGlobalCursorPositionResponse get_global_cursor_position() override;
     virtual void set_mouse_acceleration(float) override;
     virtual Messages::WindowServer::GetMouseAccelerationResponse get_mouse_acceleration() override;

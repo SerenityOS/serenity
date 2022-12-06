@@ -214,7 +214,7 @@ static HashMap<DeprecatedString, DeprecatedString>& man_paths()
     return paths;
 }
 
-void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hovered_token, Gfx::IntPoint const& screen_location)
+void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hovered_token, Gfx::IntPoint screen_location)
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {

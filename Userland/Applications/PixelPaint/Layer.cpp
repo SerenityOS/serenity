@@ -221,7 +221,7 @@ void Layer::crop(Gfx::IntRect const& rect)
     did_modify_bitmap();
 }
 
-void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode)
+void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode)
 {
     auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
     auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);

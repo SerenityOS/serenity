@@ -293,7 +293,7 @@ Screen& Screen::closest_to_rect(Gfx::IntRect const& rect)
     return *best_screen;
 }
 
-Screen& Screen::closest_to_location(Gfx::IntPoint const& point)
+Screen& Screen::closest_to_location(Gfx::IntPoint point)
 {
     for (auto& screen : s_screens) {
         if (screen.rect().contains(point))

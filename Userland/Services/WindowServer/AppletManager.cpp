@@ -31,7 +31,7 @@ AppletManager& AppletManager::the()
     return *s_the;
 }
 
-void AppletManager::set_position(Gfx::IntPoint const& position)
+void AppletManager::set_position(Gfx::IntPoint position)
 {
     m_window->move_to(position);
     m_window->set_visible(true);

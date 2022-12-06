@@ -787,7 +787,7 @@ void Window::handle_window_menu_action(WindowMenuAction action)
     }
 }
 
-void Window::popup_window_menu(Gfx::IntPoint const& position, WindowMenuDefaultAction default_action)
+void Window::popup_window_menu(Gfx::IntPoint position, WindowMenuDefaultAction default_action)
 {
     ensure_window_menu();
     if (default_action == WindowMenuDefaultAction::BasedOnWindowState) {
@@ -999,7 +999,7 @@ bool Window::is_descendant_of(Window& window) const
     return false;
 }
 
-Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool include_frame)
+Optional<HitTestResult> Window::hit_test(Gfx::IntPoint position, bool include_frame)
 {
     if (!m_hit_testing_enabled)
         return {};

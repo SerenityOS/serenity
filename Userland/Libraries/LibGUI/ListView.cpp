@@ -80,7 +80,7 @@ Gfx::IntRect ListView::content_rect(ModelIndex const& index) const
     return content_rect(index.row());
 }
 
-ModelIndex ListView::index_at_event_position(Gfx::IntPoint const& point) const
+ModelIndex ListView::index_at_event_position(Gfx::IntPoint point) const
 {
     VERIFY(model());
 
@@ -93,7 +93,7 @@ ModelIndex ListView::index_at_event_position(Gfx::IntPoint const& point) const
     return {};
 }
 
-Gfx::IntPoint ListView::adjusted_position(Gfx::IntPoint const& position) const
+Gfx::IntPoint ListView::adjusted_position(Gfx::IntPoint position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }

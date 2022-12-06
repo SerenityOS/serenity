@@ -222,7 +222,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     AbstractView::mousedown_event(event);
 }
 
-ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint const& position, bool& is_toggle) const
+ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint position, bool& is_toggle) const
 {
     is_toggle = false;
     if (!model())
@@ -242,7 +242,7 @@ ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint const& posit
     return {};
 }
 
-ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint const& position) const
+ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint position) const
 {
     bool is_toggle;
     auto index = index_at_event_position(position, is_toggle);
@@ -343,7 +343,7 @@ Gfx::IntRect AbstractTableView::row_rect(int item_index) const
         row_height() };
 }
 
-Gfx::IntPoint AbstractTableView::adjusted_position(Gfx::IntPoint const& position) const
+Gfx::IntPoint AbstractTableView::adjusted_position(Gfx::IntPoint position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
@@ -477,7 +477,7 @@ bool AbstractTableView::is_navigation(GUI::KeyEvent& event)
     }
 }
 
-Gfx::IntPoint AbstractTableView::automatic_scroll_delta_from_position(Gfx::IntPoint const& pos) const
+Gfx::IntPoint AbstractTableView::automatic_scroll_delta_from_position(Gfx::IntPoint pos) const
 {
     if (pos.y() > column_header().height() + autoscroll_threshold())
         return AbstractScrollableWidget::automatic_scroll_delta_from_position(pos);

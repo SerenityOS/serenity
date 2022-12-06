@@ -37,7 +37,7 @@ private:
     }
 
     virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void track_mouse_move(Gfx::IntPoint const&) override;
+    virtual void track_mouse_move(Gfx::IntPoint) override;
 
     void render_eyeball(int row, int column, Gfx::AntiAliasingPainter& aa_painter) const;
     Gfx::IntPoint pupil_center(Gfx::IntRect& eyeball_bounds) const;

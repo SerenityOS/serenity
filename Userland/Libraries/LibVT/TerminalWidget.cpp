@@ -591,7 +591,7 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
     return position >= normalized_selection.start() && position <= normalized_selection.end();
 }
 
-VT::Position TerminalWidget::buffer_position_at(Gfx::IntPoint const& position) const
+VT::Position TerminalWidget::buffer_position_at(Gfx::IntPoint position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;

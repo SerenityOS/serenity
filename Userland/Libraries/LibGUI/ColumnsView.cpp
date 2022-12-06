@@ -238,7 +238,7 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-Optional<ColumnsView::Column> ColumnsView::column_at_event_position(Gfx::IntPoint const& a_position) const
+Optional<ColumnsView::Column> ColumnsView::column_at_event_position(Gfx::IntPoint a_position) const
 {
     if (!model())
         return {};
@@ -275,7 +275,7 @@ void ColumnsView::select_range(ModelIndex const& index)
     }
 }
 
-ModelIndex ColumnsView::index_at_event_position_in_column(Gfx::IntPoint const& position, Column const& column) const
+ModelIndex ColumnsView::index_at_event_position_in_column(Gfx::IntPoint position, Column const& column) const
 {
     int row = position.y() / item_height();
     int row_count = model()->row_count(column.parent_index);
@@ -285,7 +285,7 @@ ModelIndex ColumnsView::index_at_event_position_in_column(Gfx::IntPoint const& p
     return model()->index(row, m_model_column, column.parent_index);
 }
 
-ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& position) const
+ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint position) const
 {
     auto const& column = column_at_event_position(position);
     if (!column.has_value())

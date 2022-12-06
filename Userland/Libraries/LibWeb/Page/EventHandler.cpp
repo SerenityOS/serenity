@@ -102,7 +102,7 @@ static Gfx::StandardCursor cursor_css_to_gfx(Optional<CSS::Cursor> cursor)
     }
 }
 
-static Gfx::IntPoint compute_mouse_event_offset(Gfx::IntPoint const& position, Layout::Node const& layout_node)
+static Gfx::IntPoint compute_mouse_event_offset(Gfx::IntPoint position, Layout::Node const& layout_node)
 {
     auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
     return {
@@ -147,7 +147,7 @@ Painting::PaintableBox const* EventHandler::paint_root() const
     return const_cast<Painting::PaintableBox*>(m_browsing_context.active_document()->paint_box());
 }
 
-bool EventHandler::handle_mousewheel(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
+bool EventHandler::handle_mousewheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -198,7 +198,7 @@ bool EventHandler::handle_mousewheel(Gfx::IntPoint const& position, unsigned but
     return handled_event;
 }
 
-bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mouseup(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -313,7 +313,7 @@ after_node_use:
     return handled_event;
 }
 
-bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousedown(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -404,7 +404,7 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
     return true;
 }
 
-bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousemove(Gfx::IntPoint position, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -516,7 +516,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
     return true;
 }
 
-bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_doubleclick(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();

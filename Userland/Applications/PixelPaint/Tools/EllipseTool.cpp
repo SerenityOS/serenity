@@ -23,7 +23,7 @@
 
 namespace PixelPaint {
 
-void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness)
+void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint start_position, Gfx::IntPoint end_position, int thickness)
 {
     Gfx::IntRect ellipse_intersecting_rect;
     if (m_draw_mode == DrawMode::FromCenter) {

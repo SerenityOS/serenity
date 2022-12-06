@@ -60,7 +60,7 @@ public:
     DeprecatedString selected_text() const;
     VT::Range normalized_selection() const { return m_selection.normalized(); }
     void set_selection(const VT::Range& selection);
-    VT::Position buffer_position_at(Gfx::IntPoint const&) const;
+    VT::Position buffer_position_at(Gfx::IntPoint) const;
 
     VT::Range find_next(StringView, const VT::Position& start = {}, bool case_sensitivity = false, bool should_wrap = false);
     VT::Range find_previous(StringView, const VT::Position& start = {}, bool case_sensitivity = false, bool should_wrap = false);

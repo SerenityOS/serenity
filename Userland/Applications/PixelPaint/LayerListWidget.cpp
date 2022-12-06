@@ -186,7 +186,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
     Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
 }
 
-Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint const& position)
+Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint position)
 {
     for (size_t i = 0; i < m_gadgets.size(); ++i) {
         if (m_gadgets[i].rect.contains(position))

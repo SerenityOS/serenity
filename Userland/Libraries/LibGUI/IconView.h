@@ -39,7 +39,7 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
-    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&) const override;
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint) const override;
     virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect editing_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const&) const override;
@@ -93,7 +93,7 @@ private:
             return hot_icon_rect().intersects(rect) || hot_text_rect().intersects(rect);
         }
 
-        bool is_containing(Gfx::IntPoint const& point) const
+        bool is_containing(Gfx::IntPoint point) const
         {
             VERIFY(valid);
             return hot_icon_rect().contains(point) || hot_text_rect().contains(point);
@@ -113,7 +113,7 @@ private:
     template<typename Function>
     IterationDecision for_each_item_intersecting_rects(Vector<Gfx::IntRect> const&, Function) const;
 
-    void column_row_from_content_position(Gfx::IntPoint const& content_position, int& row, int& column) const
+    void column_row_from_content_position(Gfx::IntPoint content_position, int& row, int& column) const
     {
         row = max(0, min(m_visual_row_count - 1, content_position.y() / effective_item_size().height()));
         column = max(0, min(m_visual_column_count - 1, content_position.x() / effective_item_size().width()));
@@ -124,7 +124,7 @@ private:
     void update_content_size();
     void update_item_rects(int item_index, ItemData& item_data) const;
     void get_item_rects(int item_index, ItemData& item_data, Gfx::Font const&) const;
-    bool update_rubber_banding(Gfx::IntPoint const&);
+    bool update_rubber_banding(Gfx::IntPoint);
     int items_per_page() const;
 
     void rebuild_item_cache() const;
@@ -141,7 +141,7 @@ private:
     virtual void toggle_selection(ModelIndex const& new_index) override;
 
     ItemData& get_item_data(int) const;
-    ItemData* item_data_from_content_position(Gfx::IntPoint const&) const;
+    ItemData* item_data_from_content_position(Gfx::IntPoint) const;
     void do_clear_selection();
     bool do_add_selection(ItemData&);
     void add_selection(ItemData&);

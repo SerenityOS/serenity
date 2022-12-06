@@ -48,7 +48,7 @@ public:
     Menu& add_submenu(DeprecatedString name);
     void remove_all_actions();
 
-    void popup(Gfx::IntPoint const& screen_position, RefPtr<Action> const& default_action = nullptr, Gfx::IntRect const& button_rect = {});
+    void popup(Gfx::IntPoint screen_position, RefPtr<Action> const& default_action = nullptr, Gfx::IntRect const& button_rect = {});
     void dismiss();
 
     void visibility_did_change(Badge<ConnectionToWindowServer>, bool visible);

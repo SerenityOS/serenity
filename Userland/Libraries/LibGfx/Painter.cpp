@@ -429,7 +429,7 @@ void Painter::fill_rounded_corner(IntRect const& a_rect, int radius, Color color
     }
 }
 
-void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint const& center, int radius, Color color, int thickness)
+void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint center, int radius, Color color, int thickness)
 {
     if (thickness <= 0 || radius <= 0)
         return;
@@ -651,7 +651,7 @@ void Painter::draw_rect_with_thickness(IntRect const& rect, Color color, int thi
     draw_line(p4, p1, color, thickness);
 }
 
-void Painter::draw_bitmap(IntPoint const& p, CharacterBitmap const& bitmap, Color color)
+void Painter::draw_bitmap(IntPoint p, CharacterBitmap const& bitmap, Color color)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -679,7 +679,7 @@ void Painter::draw_bitmap(IntPoint const& p, CharacterBitmap const& bitmap, Colo
     }
 }
 
-void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color color)
+void Painter::draw_bitmap(IntPoint p, GlyphBitmap const& bitmap, Color color)
 {
     auto dst_rect = IntRect(p, bitmap.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -718,13 +718,13 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
     }
 }
 
-void Painter::draw_triangle(IntPoint const& offset, Span<IntPoint const> control_points, Color color)
+void Painter::draw_triangle(IntPoint offset, Span<IntPoint const> control_points, Color color)
 {
     VERIFY(control_points.size() == 3);
     draw_triangle(control_points[0] + offset, control_points[1] + offset, control_points[2] + offset, color);
 }
 
-void Painter::draw_triangle(IntPoint const& a, IntPoint const& b, IntPoint const& c, Color color)
+void Painter::draw_triangle(IntPoint a, IntPoint b, IntPoint c, Color color)
 {
     IntPoint p0(to_physical(a));
     IntPoint p1(to_physical(b));
@@ -884,7 +884,7 @@ static void do_blit_with_opacity(BlitState& state)
     }
 }
 
-void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
+void Painter::blit_with_opacity(IntPoint position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
 {
     VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
@@ -934,7 +934,7 @@ void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& sou
     }
 }
 
-void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> filter)
+void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> filter)
 {
     VERIFY((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
 
@@ -999,14 +999,14 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
     }
 }
 
-void Painter::blit_brightened(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect)
+void Painter::blit_brightened(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect)
 {
     return blit_filtered(position, source, src_rect, [](Color src) {
         return src.lightened();
     });
 }
 
-void Painter::blit_dimmed(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect)
+void Painter::blit_dimmed(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect)
 {
     return blit_filtered(position, source, src_rect, [](Color src) {
         return src.to_grayscale().lightened();
@@ -1059,7 +1059,7 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
     VERIFY_NOT_REACHED();
 }
 
-void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source, IntRect const& a_src_rect, IntPoint const& offset)
+void Painter::blit_offset(IntPoint a_position, Gfx::Bitmap const& source, IntRect const& a_src_rect, IntPoint offset)
 {
     auto src_rect = IntRect { a_src_rect.location() - offset, a_src_rect.size() };
     auto position = a_position;
@@ -1074,7 +1074,7 @@ void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source,
     blit(position, source, src_rect);
 }
 
-void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
+void Painter::blit(IntPoint position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
 {
     VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
@@ -1356,12 +1356,12 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
     }
 }
 
-FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Color color)
+FLATTEN void Painter::draw_glyph(IntPoint point, u32 code_point, Color color)
 {
     draw_glyph(point, code_point, font(), color);
 }
 
-FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Font const& font, Color color)
+FLATTEN void Painter::draw_glyph(IntPoint point, u32 code_point, Font const& font, Color color)
 {
     auto glyph = font.glyph(code_point);
     auto top_left = point + IntPoint(glyph.left_bearing(), 0);
@@ -1375,7 +1375,7 @@ FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Font con
     }
 }
 
-void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font const& font)
+void Painter::draw_emoji(IntPoint point, Gfx::Bitmap const& emoji, Font const& font)
 {
     IntRect dst_rect {
         point.x(),
@@ -1386,7 +1386,7 @@ void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font c
     draw_scaled_bitmap(dst_rect, emoji, emoji.rect());
 }
 
-void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font const& font, Color color)
+void Painter::draw_glyph_or_emoji(IntPoint point, u32 code_point, Font const& font, Color color)
 {
     StringBuilder builder;
     builder.append_code_point(code_point);
@@ -1394,7 +1394,7 @@ void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font co
     return draw_glyph_or_emoji(point, it, font, color);
 }
 
-void Painter::draw_glyph_or_emoji(IntPoint const& point, Utf8CodePointIterator& it, Font const& font, Color color)
+void Painter::draw_glyph_or_emoji(IntPoint point, Utf8CodePointIterator& it, Font const& font, Color color)
 {
     // FIXME: These should live somewhere else.
     constexpr u32 text_variation_selector = 0xFE0E;
@@ -1823,7 +1823,7 @@ void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> d
     });
 }
 
-void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
+void Painter::set_pixel(IntPoint p, Color color, bool blend)
 {
     auto point = p;
     point.translate_by(state().translation);
@@ -1838,7 +1838,7 @@ void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
         dst = Color::from_argb(dst).blend(color).value();
 }
 
-Optional<Color> Painter::get_pixel(IntPoint const& p)
+Optional<Color> Painter::get_pixel(IntPoint p)
 {
     auto point = p;
     point.translate_by(state().translation);
@@ -1904,7 +1904,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
     }
 }
 
-void Painter::draw_physical_pixel(IntPoint const& physical_position, Color color, int thickness)
+void Painter::draw_physical_pixel(IntPoint physical_position, Color color, int thickness)
 {
     // This always draws a single physical pixel, independent of scale().
     // This should only be called by routines that already handle scale
@@ -1924,7 +1924,7 @@ void Painter::draw_physical_pixel(IntPoint const& physical_position, Color color
     fill_physical_rect(rect, color);
 }
 
-void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int thickness, LineStyle style, Color alternate_color)
+void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness, LineStyle style, Color alternate_color)
 {
     if (thickness <= 0)
         return;
@@ -2061,7 +2061,7 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
     }
 }
 
-void Painter::draw_triangle_wave(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int amplitude, int thickness)
+void Painter::draw_triangle_wave(IntPoint a_p1, IntPoint a_p2, Color color, int amplitude, int thickness)
 {
     // FIXME: Support more than horizontal waves
     VERIFY(a_p1.y() == a_p2.y());
@@ -2137,7 +2137,7 @@ void Painter::for_each_line_segment_on_bezier_curve(FloatPoint const& control_po
     for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
 }
 
-void Painter::draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoint const& p1, IntPoint const& p2, Color color, int thickness, LineStyle style)
+void Painter::draw_quadratic_bezier_curve(IntPoint control_point, IntPoint p1, IntPoint p2, Color color, int thickness, LineStyle style)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -2212,7 +2212,7 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& cont
     }
 }
 
-void Painter::draw_cubic_bezier_curve(IntPoint const& control_point_0, IntPoint const& control_point_1, IntPoint const& p1, IntPoint const& p2, Color color, int thickness, Painter::LineStyle style)
+void Painter::draw_cubic_bezier_curve(IntPoint control_point_0, IntPoint control_point_1, IntPoint p1, IntPoint p2, Color color, int thickness, Painter::LineStyle style)
 {
     for_each_line_segment_on_cubic_bezier_curve(FloatPoint(control_point_0), FloatPoint(control_point_1), FloatPoint(p1), FloatPoint(p2), [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
@@ -2277,7 +2277,7 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, Floa
     for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
 }
 
-void Painter::draw_elliptical_arc(IntPoint const& p1, IntPoint const& p2, IntPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
+void Painter::draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -2361,7 +2361,7 @@ void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
     Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(*this, path, color, winding_rule);
 }
 
-void Painter::blit_disabled(IntPoint const& location, Gfx::Bitmap const& bitmap, IntRect const& rect, Palette const& palette)
+void Painter::blit_disabled(IntPoint location, Gfx::Bitmap const& bitmap, IntRect const& rect, Palette const& palette)
 {
     auto bright_color = palette.threed_highlight();
     auto dark_color = palette.threed_shadow1();

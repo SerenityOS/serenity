@@ -232,7 +232,7 @@ static MouseButton to_mouse_button(u32 button)
     }
 }
 
-void ConnectionToWindowServer::mouse_down(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
+void ConnectionToWindowServer::mouse_down(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
 {
     auto* window = Window::from_window_id(window_id);
     if (!window)
@@ -253,13 +253,13 @@ void ConnectionToWindowServer::mouse_down(i32 window_id, Gfx::IntPoint const& mo
     Core::EventLoop::current().post_event(*window, move(mouse_event));
 }
 
-void ConnectionToWindowServer::mouse_up(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
+void ConnectionToWindowServer::mouse_up(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
 {
     if (auto* window = Window::from_window_id(window_id))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
 }
 
-void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<DeprecatedString> const& mime_types)
+void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<DeprecatedString> const& mime_types)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         if (is_drag)
@@ -269,13 +269,13 @@ void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint const& mo
     }
 }
 
-void ConnectionToWindowServer::mouse_double_click(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
+void ConnectionToWindowServer::mouse_double_click(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
 {
     if (auto* window = Window::from_window_id(window_id))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDoubleClick, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
 }
 
-void ConnectionToWindowServer::mouse_wheel(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
+void ConnectionToWindowServer::mouse_wheel(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
 {
     if (auto* window = Window::from_window_id(window_id))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseWheel, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
@@ -349,7 +349,7 @@ void ConnectionToWindowServer::applet_area_rect_changed(Gfx::IntRect const& rect
     });
 }
 
-void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint const& mouse_position, DeprecatedString const& text, HashMap<DeprecatedString, ByteBuffer> const& mime_data)
+void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, DeprecatedString const& text, HashMap<DeprecatedString, ByteBuffer> const& mime_data)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         auto mime_data_obj = Core::MimeData::construct(mime_data);
@@ -386,7 +386,7 @@ void ConnectionToWindowServer::display_link_notification()
     });
 }
 
-void ConnectionToWindowServer::track_mouse_move(Gfx::IntPoint const& mouse_position)
+void ConnectionToWindowServer::track_mouse_move(Gfx::IntPoint mouse_position)
 {
     MouseTracker::track_mouse_move({}, mouse_position);
 }

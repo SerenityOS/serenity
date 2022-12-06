@@ -39,7 +39,7 @@ private:
     explicit ValueSlider(Gfx::Orientation = Gfx::Orientation::Horizontal, DeprecatedString suffix = "");
 
     DeprecatedString formatted_value() const;
-    int value_at(Gfx::IntPoint const& position) const;
+    int value_at(Gfx::IntPoint position) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect knob_rect() const;
 

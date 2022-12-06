@@ -180,7 +180,7 @@ public:
 
     Gfx::Bitmap const* cursor_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen&) const;
     Gfx::Bitmap const& front_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen&) const;
-    Gfx::Color color_at_position(Badge<ConnectionFromClient>, Screen&, Gfx::IntPoint const&) const;
+    Gfx::Color color_at_position(Badge<ConnectionFromClient>, Screen&, Gfx::IntPoint) const;
 
     void register_animation(Badge<Animation>, Animation&);
     void unregister_animation(Badge<Animation>, Animation&);

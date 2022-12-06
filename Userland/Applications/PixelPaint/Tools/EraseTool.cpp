@@ -28,7 +28,7 @@ Color EraseTool::color_for(GUI::MouseEvent const&)
     return Color(255, 255, 255, 0);
 }
 
-void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint const& point)
+void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint point)
 {
     if (m_draw_mode == DrawMode::Pencil) {
         int radius = size() / 2;

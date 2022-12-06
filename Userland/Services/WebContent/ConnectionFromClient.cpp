@@ -155,27 +155,27 @@ void ConnectionFromClient::flush_pending_paint_requests()
     m_pending_paint_requests.clear();
 }
 
-void ConnectionFromClient::mouse_down(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_down(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     report_finished_handling_input_event(page().handle_mousedown(position, button, buttons, modifiers));
 }
 
-void ConnectionFromClient::mouse_move(Gfx::IntPoint const& position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_move(Gfx::IntPoint position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     report_finished_handling_input_event(page().handle_mousemove(position, buttons, modifiers));
 }
 
-void ConnectionFromClient::mouse_up(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_up(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     report_finished_handling_input_event(page().handle_mouseup(position, button, buttons, modifiers));
 }
 
-void ConnectionFromClient::mouse_wheel(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
+void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
     report_finished_handling_input_event(page().handle_mousewheel(position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y));
 }
 
-void ConnectionFromClient::doubleclick(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::doubleclick(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     report_finished_handling_input_event(page().handle_doubleclick(position, button, buttons, modifiers));
 }
@@ -530,7 +530,7 @@ void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
     m_page_host->set_is_scripting_enabled(is_scripting_enabled);
 }
 
-void ConnectionFromClient::set_window_position(Gfx::IntPoint const& position)
+void ConnectionFromClient::set_window_position(Gfx::IntPoint position)
 {
     m_page_host->set_window_position(position);
 }

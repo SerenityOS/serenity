@@ -35,8 +35,8 @@ public:
 
     ~Layer() = default;
 
-    Gfx::IntPoint const& location() const { return m_location; }
-    void set_location(Gfx::IntPoint const& location) { m_location = location; }
+    Gfx::IntPoint location() const { return m_location; }
+    void set_location(Gfx::IntPoint location) { m_location = location; }
 
     Gfx::Bitmap const& display_bitmap() const { return m_cached_display_bitmap; }
     Gfx::Bitmap const& content_bitmap() const { return m_content_bitmap; }
@@ -61,7 +61,7 @@ public:
     void crop(Gfx::IntRect const& rect);
     void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
     void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
-    void resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode);
+    void resize(Gfx::IntSize const& new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 

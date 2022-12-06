@@ -140,7 +140,7 @@ public:
     void set_needs_display();
     void set_needs_display(Gfx::IntRect const&);
 
-    Gfx::IntPoint const& viewport_scroll_offset() const { return m_viewport_scroll_offset; }
+    Gfx::IntPoint viewport_scroll_offset() const { return m_viewport_scroll_offset; }
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
     void set_viewport_rect(Gfx::IntRect const&);
 
@@ -150,7 +150,7 @@ public:
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
-    void scroll_to(Gfx::IntPoint const&);
+    void scroll_to(Gfx::IntPoint);
     void scroll_to_anchor(DeprecatedString const&);
 
     BrowsingContext& top_level_browsing_context()
@@ -183,7 +183,7 @@ public:
     HTML::BrowsingContextContainer* container() { return m_container; }
     HTML::BrowsingContextContainer const* container() const { return m_container; }
 
-    Gfx::IntPoint to_top_level_position(Gfx::IntPoint const&);
+    Gfx::IntPoint to_top_level_position(Gfx::IntPoint);
     Gfx::IntRect to_top_level_rect(Gfx::IntRect const&);
 
     DOM::Position const& cursor_position() const { return m_cursor_position; }

@@ -37,7 +37,7 @@ public:
 
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void paint_event(GUI::PaintEvent& event) override;
-    virtual void track_mouse_move(Gfx::IntPoint const& point) override;
+    virtual void track_mouse_move(Gfx::IntPoint point) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override;
 

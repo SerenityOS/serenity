@@ -33,7 +33,7 @@ void WMConnectionFromClient::die()
     });
 }
 
-void WMConnectionFromClient::set_applet_area_position(Gfx::IntPoint const& position)
+void WMConnectionFromClient::set_applet_area_position(Gfx::IntPoint position)
 {
     if (m_window_id < 0) {
         did_misbehave("SetAppletAreaPosition: WM didn't assign window as manager yet");
@@ -66,7 +66,7 @@ void WMConnectionFromClient::set_active_window(i32 client_id, i32 window_id)
     WindowManager::the().move_to_front_and_make_active(window);
 }
 
-void WMConnectionFromClient::popup_window_menu(i32 client_id, i32 window_id, Gfx::IntPoint const& screen_position)
+void WMConnectionFromClient::popup_window_menu(i32 client_id, i32 window_id, Gfx::IntPoint screen_position)
 {
     auto* client = WindowServer::ConnectionFromClient::from_client_id(client_id);
     if (!client) {

@@ -680,7 +680,7 @@ void WindowFrame::layout_buttons()
         m_buttons[i].set_relative_rect(button_rects[i]);
 }
 
-Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position)
+Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint position)
 {
     if (m_window.is_frameless() || m_window.is_fullscreen())
         return {};
@@ -706,7 +706,7 @@ Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position)
     return cached->hit_test(*this, position, window_relative_position);
 }
 
-Optional<HitTestResult> WindowFrame::PerScaleRenderedCache::hit_test(WindowFrame& frame, Gfx::IntPoint const& position, Gfx::IntPoint const& window_relative_position)
+Optional<HitTestResult> WindowFrame::PerScaleRenderedCache::hit_test(WindowFrame& frame, Gfx::IntPoint position, Gfx::IntPoint window_relative_position)
 {
     HitTestResult result {
         .window = frame.window(),

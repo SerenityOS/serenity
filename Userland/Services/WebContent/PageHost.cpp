@@ -79,7 +79,7 @@ void PageHost::set_is_scripting_enabled(bool is_scripting_enabled)
     page().set_is_scripting_enabled(is_scripting_enabled);
 }
 
-void PageHost::set_window_position(Gfx::IntPoint const& position)
+void PageHost::set_window_position(Gfx::IntPoint position)
 {
     page().set_window_position(position);
 }
@@ -183,7 +183,7 @@ Gfx::IntSize PageHost::page_did_request_resize_window(Gfx::IntSize const& size)
     return m_client.did_request_resize_window(size);
 }
 
-Gfx::IntPoint PageHost::page_did_request_reposition_window(Gfx::IntPoint const& position)
+Gfx::IntPoint PageHost::page_did_request_reposition_window(Gfx::IntPoint position)
 {
     return m_client.did_request_reposition_window(position);
 }
@@ -213,7 +213,7 @@ void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
     m_client.async_did_request_scroll(x_delta, y_delta);
 }
 
-void PageHost::page_did_request_scroll_to(Gfx::IntPoint const& scroll_position)
+void PageHost::page_did_request_scroll_to(Gfx::IntPoint scroll_position)
 {
     m_client.async_did_request_scroll_to(scroll_position);
 }
@@ -223,7 +223,7 @@ void PageHost::page_did_request_scroll_into_view(Gfx::IntRect const& rect)
     m_client.async_did_request_scroll_into_view(rect);
 }
 
-void PageHost::page_did_enter_tooltip_area(Gfx::IntPoint const& content_position, DeprecatedString const& title)
+void PageHost::page_did_enter_tooltip_area(Gfx::IntPoint content_position, DeprecatedString const& title)
 {
     m_client.async_did_enter_tooltip_area(content_position, title);
 }
@@ -268,12 +268,12 @@ void PageHost::page_did_finish_loading(const URL& url)
     m_client.async_did_finish_loading(url);
 }
 
-void PageHost::page_did_request_context_menu(Gfx::IntPoint const& content_position)
+void PageHost::page_did_request_context_menu(Gfx::IntPoint content_position)
 {
     m_client.async_did_request_context_menu(content_position);
 }
 
-void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_position, const URL& url, DeprecatedString const& target, unsigned modifiers)
+void PageHost::page_did_request_link_context_menu(Gfx::IntPoint content_position, const URL& url, DeprecatedString const& target, unsigned modifiers)
 {
     m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
@@ -328,7 +328,7 @@ void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
-void PageHost::page_did_request_image_context_menu(Gfx::IntPoint const& content_position, const URL& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
+void PageHost::page_did_request_image_context_menu(Gfx::IntPoint content_position, const URL& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
 {
     auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
     m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap);

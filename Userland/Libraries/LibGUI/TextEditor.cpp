@@ -144,7 +144,7 @@ void TextEditor::update_content_size()
     set_size_occupied_by_fixed_elements({ ruler_width() + gutter_width(), 0 });
 }
 
-TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint const& content_position) const
+TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content_position) const
 {
     auto position = content_position;
     if (is_single_line() && icon())
@@ -205,7 +205,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint const& 
     return { line_index, column_index };
 }
 
-TextPosition TextEditor::text_position_at(Gfx::IntPoint const& widget_position) const
+TextPosition TextEditor::text_position_at(Gfx::IntPoint widget_position) const
 {
     auto content_position = widget_position;
     content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());

@@ -630,7 +630,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
-bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (!layout_box().is_scrollable())
         return false;

@@ -31,7 +31,7 @@ public:
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
 
     template<Arithmetic T>
-    Point<T> map(Point<T> const&) const;
+    Point<T> map(Point<T>) const;
 
     template<Arithmetic T>
     Size<T> map(Size<T> const&) const;
