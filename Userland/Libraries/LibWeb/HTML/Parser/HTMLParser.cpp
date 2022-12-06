@@ -170,7 +170,7 @@ void HTMLParser::run()
             break;
         auto& token = optional_token.value();
 
-        dbgln_if(HTML_PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_string());
+        dbgln_if(HTML_PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_deprecated_string());
 
         // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction-dispatcher
         // As each token is emitted from the tokenizer, the user agent must follow the appropriate steps from the following list, known as the tree construction dispatcher:
@@ -954,7 +954,7 @@ void HTMLParser::flush_character_insertions()
 {
     if (m_character_insertion_builder.is_empty())
         return;
-    m_character_insertion_node->set_data(m_character_insertion_builder.to_string());
+    m_character_insertion_node->set_data(m_character_insertion_builder.to_deprecated_string());
     m_character_insertion_node->parent()->children_changed();
     m_character_insertion_builder.clear();
 }
@@ -3604,7 +3604,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
             else
                 builder.append(ch);
         }
-        return builder.to_string();
+        return builder.to_deprecated_string();
     };
 
     // 2. Let s be a string, and initialize it to the empty string.
@@ -3752,7 +3752,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
     });
 
     // 5. Return s.
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#current-dimension-value

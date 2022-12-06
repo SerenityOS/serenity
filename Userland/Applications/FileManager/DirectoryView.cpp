@@ -533,7 +533,7 @@ Vector<DeprecatedString> DirectoryView::selected_file_paths() const
     view.selection().for_each_index([&](GUI::ModelIndex const& index) {
         auto parent_index = model.parent_index(index);
         auto name_index = model.index(index.row(), GUI::FileSystemModel::Column::Name, parent_index);
-        auto path = name_index.data(GUI::ModelRole::Custom).to_string();
+        auto path = name_index.data(GUI::ModelRole::Custom).to_deprecated_string();
         paths.append(path);
     });
     return paths;

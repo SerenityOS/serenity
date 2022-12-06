@@ -256,7 +256,7 @@ static Optional<Wasm::Module> parse(StringView filename)
     auto parse_result = Wasm::Module::parse(stream);
     if (parse_result.is_error()) {
         warnln("Something went wrong, either the file is invalid, or there's a bug with LibWasm!");
-        warnln("The parse error was {}", Wasm::parse_error_to_string(parse_result.error()));
+        warnln("The parse error was {}", Wasm::parse_error_to_deprecated_string(parse_result.error()));
         return {};
     }
     return parse_result.release_value();
@@ -405,7 +405,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                             ByteBuffer buffer = stream.copy_into_contiguous_buffer();
                             argument_builder.append(StringView(buffer).trim_whitespace());
                         }
-                        dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_string());
+                        dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_deprecated_string());
                         Vector<Wasm::Value> result;
                         result.ensure_capacity(type.results().size());
                         for (auto& result_type : type.results())

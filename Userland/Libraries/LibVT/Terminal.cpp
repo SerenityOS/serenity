@@ -1264,7 +1264,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
             // FIXME: the split breaks titles containing semicolons.
             // Should we expose the raw OSC string from the parser? Or join by semicolon?
 #ifndef KERNEL
-            m_current_window_title = stringview_ify(1).to_string();
+            m_current_window_title = stringview_ify(1).to_deprecated_string();
             m_client.set_window_title(m_current_window_title);
 #endif
         }

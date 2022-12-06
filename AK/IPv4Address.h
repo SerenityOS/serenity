@@ -65,7 +65,7 @@ public:
             octet(SubnetClass::D));
     }
 #else
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         return DeprecatedString::formatted("{}.{}.{}.{}",
             octet(SubnetClass::A),
@@ -74,7 +74,7 @@ public:
             octet(SubnetClass::D));
     }
 
-    DeprecatedString to_string_reversed() const
+    DeprecatedString to_deprecated_string_reversed() const
     {
         return DeprecatedString::formatted("{}.{}.{}.{}",
             octet(SubnetClass::D),
@@ -169,7 +169,7 @@ template<>
 struct Formatter<IPv4Address> : Formatter<DeprecatedString> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_string());
+        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
     }
 };
 #endif

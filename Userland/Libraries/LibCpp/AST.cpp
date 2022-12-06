@@ -72,10 +72,10 @@ void Type::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
     print_indent(output, indent + 1);
-    outln(output, "{}", to_string());
+    outln(output, "{}", to_deprecated_string());
 }
 
-DeprecatedString NamedType::to_string() const
+DeprecatedString NamedType::to_deprecated_string() const
 {
     DeprecatedString qualifiers_string;
     if (!qualifiers().is_empty())
@@ -90,33 +90,33 @@ DeprecatedString NamedType::to_string() const
     return DeprecatedString::formatted("{}{}", qualifiers_string, name);
 }
 
-DeprecatedString Pointer::to_string() const
+DeprecatedString Pointer::to_deprecated_string() const
 {
     if (!m_pointee)
         return {};
     StringBuilder builder;
-    builder.append(m_pointee->to_string());
+    builder.append(m_pointee->to_deprecated_string());
     builder.append('*');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString Reference::to_string() const
+DeprecatedString Reference::to_deprecated_string() const
 {
     if (!m_referenced_type)
         return {};
     StringBuilder builder;
-    builder.append(m_referenced_type->to_string());
+    builder.append(m_referenced_type->to_deprecated_string());
     if (m_kind == Kind::Lvalue)
         builder.append('&');
     else
         builder.append("&&"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
-DeprecatedString FunctionType::to_string() const
+DeprecatedString FunctionType::to_deprecated_string() const
 {
     StringBuilder builder;
-    builder.append(m_return_type->to_string());
+    builder.append(m_return_type->to_deprecated_string());
     builder.append('(');
     bool first = true;
     for (auto& parameter : m_parameters) {
@@ -125,14 +125,14 @@ DeprecatedString FunctionType::to_string() const
         else
             builder.append(", "sv);
         if (parameter.type())
-            builder.append(parameter.type()->to_string());
+            builder.append(parameter.type()->to_deprecated_string());
         if (parameter.name() && !parameter.full_name().is_empty()) {
             builder.append(' ');
             builder.append(parameter.full_name());
         }
     }
     builder.append(')');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Parameter::dump(FILE* output, size_t indent) const
@@ -552,7 +552,7 @@ StringView Name::full_name() const
             builder.appendff("{}::", scope.name());
         }
     }
-    m_full_name = DeprecatedString::formatted("{}{}", builder.to_string(), m_name.is_null() ? ""sv : m_name->name());
+    m_full_name = DeprecatedString::formatted("{}{}", builder.to_deprecated_string(), m_name.is_null() ? ""sv : m_name->name());
     return *m_full_name;
 }
 
@@ -565,10 +565,10 @@ StringView TemplatizedName::full_name() const
     name.append(Name::full_name());
     name.append('<');
     for (auto& type : m_template_arguments) {
-        name.append(type.to_string());
+        name.append(type.to_deprecated_string());
     }
     name.append('>');
-    m_full_name = name.to_string();
+    m_full_name = name.to_deprecated_string();
     return *m_full_name;
 }
 

@@ -39,7 +39,7 @@ ParseResult parse(StringView sql)
     auto expression = parser.parse();
 
     if (parser.has_errors()) {
-        return parser.errors()[0].to_string();
+        return parser.errors()[0].to_deprecated_string();
     }
 
     return expression;

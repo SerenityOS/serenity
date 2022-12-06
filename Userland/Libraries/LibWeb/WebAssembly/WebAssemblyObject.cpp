@@ -141,7 +141,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
     };
     if (module_result.is_error()) {
         // FIXME: Throw CompileError instead.
-        return vm.throw_completion<JS::TypeError>(Wasm::parse_error_to_string(module_result.error()));
+        return vm.throw_completion<JS::TypeError>(Wasm::parse_error_to_deprecated_string(module_result.error()));
     }
 
     if (auto validation_result = WebAssemblyObject::s_abstract_machine.validate(module_result.value()); validation_result.is_error()) {

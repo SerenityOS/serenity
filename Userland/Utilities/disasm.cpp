@@ -141,7 +141,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 builder.append("   "sv);
         }
         builder.append(" "sv);
-        builder.append(insn.value().to_string(virtual_offset, symbol_provider));
+        builder.append(insn.value().to_deprecated_string(virtual_offset, symbol_provider));
         outln("{}", builder.string_view());
 
         for (size_t bytes_printed = 7; bytes_printed < length; bytes_printed += 7) {

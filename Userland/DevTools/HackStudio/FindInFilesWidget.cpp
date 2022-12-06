@@ -105,7 +105,7 @@ static RefPtr<SearchResultsModel> find_in_files(StringView text)
             builder.append(file.document().text_in_range(range));
             builder.append(0x02);
             builder.append(right_part);
-            matches.append({ file.name(), range, builder.to_string() });
+            matches.append({ file.name(), range, builder.to_deprecated_string() });
         }
     });
 

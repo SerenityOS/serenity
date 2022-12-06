@@ -31,7 +31,7 @@ void EditEventHandler::handle_delete_character_after(const DOM::Position& cursor
     StringBuilder builder;
     builder.append(text.substring_view(0, cursor_position.offset()));
     builder.append(text.substring_view(cursor_position.offset() + code_point_length));
-    node.set_data(builder.to_string());
+    node.set_data(builder.to_deprecated_string());
 
     // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
@@ -52,7 +52,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         builder.append(start->data().substring_view(0, range.start_offset()));
         builder.append(end->data().substring_view(range.end_offset()));
 
-        start->set_data(builder.to_string());
+        start->set_data(builder.to_deprecated_string());
     } else {
         // Remove all the nodes that are fully enclosed in the range.
         HashTable<DOM::Node*> queued_for_deletion;
@@ -90,7 +90,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         builder.append(start->data().substring_view(0, range.start_offset()));
         builder.append(end->data().substring_view(range.end_offset()));
 
-        start->set_data(builder.to_string());
+        start->set_data(builder.to_deprecated_string());
         end->remove();
     }
 
@@ -111,7 +111,7 @@ void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
         builder.append(node.data().substring_view(0, position.offset()));
         builder.append_code_point(code_point);
         builder.append(node.data().substring_view(position.offset()));
-        node.set_data(builder.to_string());
+        node.set_data(builder.to_deprecated_string());
 
         node.invalidate_style();
     }

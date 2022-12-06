@@ -430,7 +430,7 @@ static void do_run_tests(XML::Document& document)
                 path_builder.append(entry);
                 path_builder.append('/');
             }
-            auto test_base_path = path_builder.to_string();
+            auto test_base_path = path_builder.to_deprecated_string();
 
             path_builder.append(suite.attributes.find("URI")->value);
             auto url = URL::create_with_file_scheme(path_builder.string_view());

@@ -118,7 +118,7 @@ ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
     if (!consume_specific('"'))
         return Error::from_string_literal("JsonParser: Expected '\"'");
 
-    return final_sb.to_string();
+    return final_sb.to_deprecated_string();
 }
 
 ErrorOr<JsonValue> JsonParser::parse_object()

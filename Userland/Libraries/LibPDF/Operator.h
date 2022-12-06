@@ -180,7 +180,7 @@ struct Formatter<PDF::Operator> : Formatter<StringView> {
             builder.append(" ]"sv);
         }
 
-        return Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
     }
 };
 

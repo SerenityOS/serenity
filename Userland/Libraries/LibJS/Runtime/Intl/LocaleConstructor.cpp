@@ -33,10 +33,10 @@ static ThrowCompletionOr<Optional<DeprecatedString>> get_string_option(VM& vm, O
     if (option.is_undefined())
         return Optional<DeprecatedString> {};
 
-    if (validator && !validator(option.as_string().string()))
+    if (validator && !validator(option.as_string().deprecated_string()))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
 
-    return option.as_string().string();
+    return option.as_string().deprecated_string();
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag
@@ -198,7 +198,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
 
     // 7. Let locale be the String value that is tag with any Unicode locale extension sequences removed.
     locale_id->remove_extension_type<::Locale::LocaleExtension>();
-    auto locale = locale_id->to_string();
+    auto locale = locale_id->to_deprecated_string();
 
     // 8. Let newExtension be a Unicode BCP 47 U Extension based on attributes and keywords.
     ::Locale::LocaleExtension new_extension { move(attributes), move(keywords) };

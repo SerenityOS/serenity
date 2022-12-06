@@ -960,7 +960,7 @@ static DeprecatedString cut_trailing_zeroes(StringView string, int cut)
         string = string.substring_view(0, string.length() - 1);
     }
 
-    return string.to_string();
+    return string.to_deprecated_string();
 }
 
 enum class PreferredResult {
@@ -996,7 +996,7 @@ static auto to_raw_precision_function(MathematicalValue const& number, int preci
         result.number = number.divided_by_power(result.exponent - precision);
 
         // FIXME: Can we do this without string conversion?
-        auto digits = result.number.to_string();
+        auto digits = result.number.to_deprecated_string();
         auto digit = digits.substring_view(digits.length() - 1);
 
         result.number = result.number.divided_by(10);
@@ -1067,7 +1067,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
         }
 
         // f. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        result.formatted_string = n.to_string();
+        result.formatted_string = n.to_deprecated_string();
     }
 
     // 4. If e ≥ p–1, then
@@ -1144,7 +1144,7 @@ static auto to_raw_fixed_function(MathematicalValue const& number, int fraction,
         result.number = number.multiplied_by_power(fraction - 1);
 
         // FIXME: Can we do this without string conversion?
-        auto digits = result.number.to_string();
+        auto digits = result.number.to_deprecated_string();
         auto digit = digits.substring_view(digits.length() - 1);
 
         result.number = result.number.multiplied_by(10);
@@ -1206,7 +1206,7 @@ RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, 
     }
 
     // 7. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-    result.formatted_string = n.is_zero() ? DeprecatedString("0"sv) : n.to_string();
+    result.formatted_string = n.is_zero() ? DeprecatedString("0"sv) : n.to_deprecated_string();
 
     // 8. If f ≠ 0, then
     if (fraction != 0) {
@@ -1592,7 +1592,7 @@ ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value va
 
     // 3. If Type(primValue) is String,
     // a.     Let str be primValue.
-    auto const& string = primitive_value.as_string().string();
+    auto const& string = primitive_value.as_string().deprecated_string();
 
     // Step 4 handled separately by the FIXME above.
 

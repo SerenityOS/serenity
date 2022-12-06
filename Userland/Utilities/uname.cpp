@@ -54,6 +54,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         parts.append(uts.machine);
     StringBuilder builder;
     builder.join(' ', parts);
-    puts(builder.to_string().characters());
+    puts(builder.to_deprecated_string().characters());
     return 0;
 }

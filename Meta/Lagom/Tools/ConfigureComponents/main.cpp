@@ -290,7 +290,7 @@ int main()
             }
 
             // NOTE: Required components will always be preselected.
-            WhiptailOption option { component.name, component.name, description_builder.to_string(), is_required };
+            WhiptailOption option { component.name, component.name, description_builder.to_deprecated_string(), is_required };
             if (build_type == "REQUIRED") {
                 // noop
             } else if (build_type == "RECOMMENDED") {

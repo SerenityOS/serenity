@@ -44,7 +44,7 @@ public:
     {
     }
 
-    virtual DeprecatedString to_string() const = 0;
+    virtual DeprecatedString to_deprecated_string() const = 0;
 
     virtual ~Command() = default;
 };
@@ -58,7 +58,7 @@ public:
 
     static UCICommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 };
 
 class DebugCommand : public Command {
@@ -76,7 +76,7 @@ public:
 
     static DebugCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Flag flag() const { return m_flag; }
 
@@ -93,7 +93,7 @@ public:
 
     static IsReadyCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 };
 
 class SetOptionCommand : public Command {
@@ -107,7 +107,7 @@ public:
 
     static SetOptionCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     DeprecatedString const& name() const { return m_name; }
     Optional<DeprecatedString> const& value() const { return m_value; }
@@ -128,7 +128,7 @@ public:
 
     static PositionCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Optional<DeprecatedString> const& fen() const { return m_fen; }
     Vector<Chess::Move> const& moves() const { return m_moves; }
@@ -147,7 +147,7 @@ public:
 
     static GoCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Optional<Vector<Chess::Move>> searchmoves;
     bool ponder { false };
@@ -172,7 +172,7 @@ public:
 
     static StopCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 };
 
 class IdCommand : public Command {
@@ -191,7 +191,7 @@ public:
 
     static IdCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Type field_type() const { return m_field_type; }
     DeprecatedString const& value() const { return m_value; }
@@ -210,7 +210,7 @@ public:
 
     static UCIOkCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 };
 
 class ReadyOkCommand : public Command {
@@ -222,7 +222,7 @@ public:
 
     static ReadyOkCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 };
 
 class BestMoveCommand : public Command {
@@ -235,7 +235,7 @@ public:
 
     static BestMoveCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Chess::Move move() const { return m_move; }
 
@@ -252,7 +252,7 @@ public:
 
     static InfoCommand from_string(StringView command);
 
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Optional<int> depth;
     Optional<int> seldepth;

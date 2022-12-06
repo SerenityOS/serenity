@@ -27,7 +27,7 @@ ParseResult parse(StringView sql)
     auto statement = parser.next_statement();
 
     if (parser.has_errors()) {
-        return parser.errors()[0].to_string();
+        return parser.errors()[0].to_deprecated_string();
     }
 
     return statement;

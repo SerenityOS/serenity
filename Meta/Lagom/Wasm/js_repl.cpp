@@ -125,7 +125,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_string());
+                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_deprecated_string());
                 return ReturnEarly::No;
             }
 
@@ -163,8 +163,8 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 displayln("{}", hint);
-            displayln("{}", error.to_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_string());
+            displayln("{}", error.to_deprecated_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
         } else {
             auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -177,8 +177,8 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 displayln("{}", hint);
-            displayln(error.to_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_string());
+            displayln(error.to_deprecated_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
         } else {
             auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)

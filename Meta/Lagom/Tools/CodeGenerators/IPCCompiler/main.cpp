@@ -36,7 +36,7 @@ static DeprecatedString pascal_case(DeprecatedString const& identifier)
         } else
             builder.append(ch);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 struct Message {
@@ -50,7 +50,7 @@ struct Message {
         StringBuilder builder;
         builder.append(pascal_case(name));
         builder.append("Response"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 };
 
@@ -75,7 +75,7 @@ static DeprecatedString message_name(DeprecatedString const& endpoint, Deprecate
     builder.append(pascal_case(message));
     if (is_response)
         builder.append("Response"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Vector<Endpoint> parse(ByteBuffer const& file_contents)
@@ -262,7 +262,7 @@ DeprecatedString constructor_for_message(DeprecatedString const& name, Vector<Pa
 
     if (parameters.is_empty()) {
         builder.append("() {}"sv);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
     builder.append('(');
     for (size_t i = 0; i < parameters.size(); ++i) {
@@ -279,7 +279,7 @@ DeprecatedString constructor_for_message(DeprecatedString const& name, Vector<Pa
             builder.append(", "sv);
     }
     builder.append(" {}"sv);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void do_message(SourceGenerator message_generator, DeprecatedString const& name, Vector<Parameter> const& parameters, DeprecatedString const& response_type = {})
@@ -683,7 +683,7 @@ public:
             message_generator.set("message.pascal_name", pascal_case(name));
             message_generator.set("message.response_type", pascal_case(message.response_name()));
             message_generator.set("handler_name", name);
-            message_generator.set("arguments", argument_generator.to_string());
+            message_generator.set("arguments", argument_generator.to_deprecated_string());
             message_generator.appendln(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@: {)~~~");
             if (returns_something) {
@@ -740,7 +740,7 @@ public:
                 if (const_ref)
                     builder.append(" const&"sv);
 
-                return builder.to_string();
+                return builder.to_deprecated_string();
             };
 
             for (size_t i = 0; i < parameters.size(); ++i) {

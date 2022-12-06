@@ -44,7 +44,7 @@ public:
         return m_value;
     }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     AvailableSize(Type type, float);
@@ -64,7 +64,7 @@ public:
     AvailableSize width;
     AvailableSize height;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 };
 
 }
@@ -73,7 +73,7 @@ template<>
 struct AK::Formatter<Web::Layout::AvailableSize> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::Layout::AvailableSize const& available_size)
     {
-        return Formatter<StringView>::format(builder, available_size.to_string());
+        return Formatter<StringView>::format(builder, available_size.to_deprecated_string());
     }
 };
 
@@ -81,6 +81,6 @@ template<>
 struct AK::Formatter<Web::Layout::AvailableSpace> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::Layout::AvailableSpace const& available_space)
     {
-        return Formatter<StringView>::format(builder, available_space.to_string());
+        return Formatter<StringView>::format(builder, available_space.to_deprecated_string());
     }
 };

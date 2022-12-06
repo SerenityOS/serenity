@@ -250,7 +250,7 @@ void SnakeGame::game_over()
         text.append("\nThat's a new high score!"sv);
     }
     GUI::MessageBox::show(window(),
-        text.to_string(),
+        text.to_deprecated_string(),
         "Game Over"sv,
         GUI::MessageBox::Type::Information);
 

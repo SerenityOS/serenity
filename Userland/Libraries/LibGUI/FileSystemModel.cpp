@@ -194,7 +194,7 @@ DeprecatedString FileSystemModel::Node::full_path() const
     }
     builder.append('/');
     builder.append(name);
-    return LexicalPath::canonicalized_path(builder.to_string());
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
 }
 
 ModelIndex FileSystemModel::index(DeprecatedString path, int column) const
@@ -325,7 +325,7 @@ static DeprecatedString permission_string(mode_t mode)
         builder.append('t');
     else
         builder.append(mode & S_IXOTH ? 'x' : '-');
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void FileSystemModel::Node::set_selected(bool selected)
@@ -761,7 +761,7 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
     VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
     auto dirname = LexicalPath::dirname(node.full_path());
-    auto new_full_path = DeprecatedString::formatted("{}/{}", dirname, data.to_string());
+    auto new_full_path = DeprecatedString::formatted("{}/{}", dirname, data.to_deprecated_string());
     int rc = rename(node.full_path().characters(), new_full_path.characters());
     if (rc < 0) {
         if (on_rename_error)

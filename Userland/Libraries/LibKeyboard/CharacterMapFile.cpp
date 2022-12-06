@@ -19,7 +19,7 @@ ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(DeprecatedString cons
         full_path.append("/res/keymaps/"sv);
         full_path.append(filename);
         full_path.append(".json"sv);
-        path = full_path.to_string();
+        path = full_path.to_deprecated_string();
     }
 
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));

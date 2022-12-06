@@ -40,7 +40,7 @@ TEST_CASE(load_form)
 
     EXPECT(form_json.is_object());
 
-    auto name = form_json.as_object().get("name"sv).to_string();
+    auto name = form_json.as_object().get("name"sv).to_deprecated_string();
 
     EXPECT_EQ(name, "Form1");
 
@@ -111,13 +111,13 @@ TEST_CASE(json_duplicate_keys)
     json.set("test", "foo");
     json.set("test", "bar");
     json.set("test", "baz");
-    EXPECT_EQ(json.to_string(), "{\"test\":\"baz\"}");
+    EXPECT_EQ(json.to_deprecated_string(), "{\"test\":\"baz\"}");
 }
 
 TEST_CASE(json_u64_roundtrip)
 {
     auto big_value = 0xffffffffffffffffull;
-    auto json = JsonValue(big_value).to_string();
+    auto json = JsonValue(big_value).to_deprecated_string();
     auto value = JsonValue::from_string(json);
     EXPECT_EQ_FORCE(value.is_error(), false);
     EXPECT_EQ(value.value().as_u64(), big_value);

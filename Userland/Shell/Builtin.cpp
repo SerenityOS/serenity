@@ -449,7 +449,7 @@ int Shell::builtin_export(int argc, char const** argv)
                 auto values = value->resolve_as_list(*this);
                 StringBuilder builder;
                 builder.join(' ', values);
-                parts.append(builder.to_string());
+                parts.append(builder.to_deprecated_string());
             } else {
                 // Ignore the export.
                 continue;
@@ -745,7 +745,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
         }
     }
 
-    auto real_path = LexicalPath::canonicalized_path(path_builder.to_string());
+    auto real_path = LexicalPath::canonicalized_path(path_builder.to_deprecated_string());
 
     struct stat st;
     int rc = stat(real_path.characters(), &st);

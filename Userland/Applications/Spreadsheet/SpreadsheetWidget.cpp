@@ -594,7 +594,7 @@ void SpreadsheetWidget::update_window_title()
         builder.append(current_filename());
     builder.append("[*] - Spreadsheet"sv);
 
-    window()->set_title(builder.to_string());
+    window()->set_title(builder.to_deprecated_string());
 }
 
 void SpreadsheetWidget::clipboard_action(bool is_cut)
@@ -617,17 +617,17 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
     auto cursor = current_selection_cursor();
     if (cursor) {
         Spreadsheet::Position position { (size_t)cursor->column(), (size_t)cursor->row() };
-        url_builder.append(position.to_url(worksheet).to_string());
+        url_builder.append(position.to_url(worksheet).to_deprecated_string());
         url_builder.append('\n');
     }
 
     for (auto& cell : cells) {
         if (first && !cursor) {
-            url_builder.append(cell.to_url(worksheet).to_string());
+            url_builder.append(cell.to_url(worksheet).to_deprecated_string());
             url_builder.append('\n');
         }
 
-        url_builder.append(cell.to_url(worksheet).to_string());
+        url_builder.append(cell.to_url(worksheet).to_deprecated_string());
         url_builder.append('\n');
 
         auto cell_data = worksheet.at(cell);
@@ -638,8 +638,8 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
         first = false;
     }
     HashMap<DeprecatedString, DeprecatedString> metadata;
-    metadata.set("text/x-spreadsheet-data", url_builder.to_string());
-    dbgln(url_builder.to_string());
+    metadata.set("text/x-spreadsheet-data", url_builder.to_deprecated_string());
+    dbgln(url_builder.to_deprecated_string());
 
     GUI::Clipboard::the().set_data(text_builder.string_view().bytes(), "text/plain", move(metadata));
 }

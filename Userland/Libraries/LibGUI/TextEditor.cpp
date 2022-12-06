@@ -1189,7 +1189,7 @@ void TextEditor::add_code_point(u32 code_point)
         else
             m_autocomplete_timer->start();
     }
-    insert_at_cursor_or_replace_selection(sb.to_string());
+    insert_at_cursor_or_replace_selection(sb.to_deprecated_string());
 };
 
 void TextEditor::reset_cursor_blink()
@@ -2047,7 +2047,7 @@ void TextEditor::document_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_string();
+        return builder.to_deprecated_string();
     };
 
     m_undo_action->set_enabled(can_undo() && !text_is_secret());

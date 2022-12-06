@@ -380,7 +380,7 @@ DeprecatedString BitmapFont::variant() const
             builder.append(' ');
         builder.append(slope_to_name(slope()));
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Font const& Font::bold_variant() const

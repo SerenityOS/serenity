@@ -306,7 +306,7 @@ private:
                 }
             }
             builder.append(']');
-            return { builder.to_string() };
+            return { builder.to_deprecated_string() };
         }
 
     private:

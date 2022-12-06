@@ -320,7 +320,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     html_label.set_text("HTML:");
 
     m_html_text = html_container.add<GUI::TextBox>();
-    m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_string() : m_color.to_string_without_alpha());
+    m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_deprecated_string() : m_color.to_deprecated_string_without_alpha());
     m_html_text->on_change = [this]() {
         auto color_name = m_html_text->text();
         auto optional_color = Color::from_string(color_name);
@@ -416,7 +416,7 @@ void ColorPicker::update_color_widgets()
 {
     m_preview_widget->set_color(m_color);
 
-    m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_string() : m_color.to_string_without_alpha());
+    m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_deprecated_string() : m_color.to_deprecated_string_without_alpha());
 
     m_red_spinbox->set_value(m_color.red());
     m_green_spinbox->set_value(m_color.green());

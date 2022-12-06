@@ -108,8 +108,8 @@ public:
     void update_base_element(Badge<HTML::HTMLBaseElement>);
     JS::GCPtr<HTML::HTMLBaseElement> first_base_element_with_href_in_tree_order() const;
 
-    DeprecatedString url_string() const { return m_url.to_string(); }
-    DeprecatedString document_uri() const { return m_url.to_string(); }
+    DeprecatedString url_string() const { return m_url.to_deprecated_string(); }
+    DeprecatedString document_uri() const { return m_url.to_deprecated_string(); }
 
     HTML::Origin origin() const;
     void set_origin(HTML::Origin const& origin);

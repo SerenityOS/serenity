@@ -32,7 +32,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register from, Register to)
     {
@@ -53,7 +53,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -70,7 +70,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -104,28 +104,28 @@ private:
     O(RightShift, right_shift)                \
     O(UnsignedRightShift, unsigned_right_shift)
 
-#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)             \
-    class OpTitleCase final : public Instruction {                          \
-    public:                                                                 \
-        explicit OpTitleCase(Register lhs_reg)                              \
-            : Instruction(Type::OpTitleCase)                                \
-            , m_lhs_reg(lhs_reg)                                            \
-        {                                                                   \
-        }                                                                   \
-                                                                            \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
-        DeprecatedString to_string_impl(Bytecode::Executable const&) const; \
-        void replace_references_impl(BasicBlock const&, BasicBlock const&)  \
-        {                                                                   \
-        }                                                                   \
-        void replace_references_impl(Register from, Register to)            \
-        {                                                                   \
-            if (m_lhs_reg == from)                                          \
-                m_lhs_reg = to;                                             \
-        }                                                                   \
-                                                                            \
-    private:                                                                \
-        Register m_lhs_reg;                                                 \
+#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                        \
+    class OpTitleCase final : public Instruction {                                     \
+    public:                                                                            \
+        explicit OpTitleCase(Register lhs_reg)                                         \
+            : Instruction(Type::OpTitleCase)                                           \
+            , m_lhs_reg(lhs_reg)                                                       \
+        {                                                                              \
+        }                                                                              \
+                                                                                       \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
+        DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
+        void replace_references_impl(BasicBlock const&, BasicBlock const&)             \
+        {                                                                              \
+        }                                                                              \
+        void replace_references_impl(Register from, Register to)                       \
+        {                                                                              \
+            if (m_lhs_reg == from)                                                     \
+                m_lhs_reg = to;                                                        \
+        }                                                                              \
+                                                                                       \
+    private:                                                                           \
+        Register m_lhs_reg;                                                            \
     };
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
@@ -138,22 +138,22 @@ JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
     O(UnaryMinus, unary_minus)           \
     O(Typeof, typeof_)
 
-#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)              \
-    class OpTitleCase final : public Instruction {                          \
-    public:                                                                 \
-        OpTitleCase()                                                       \
-            : Instruction(Type::OpTitleCase)                                \
-        {                                                                   \
-        }                                                                   \
-                                                                            \
-        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const; \
-        DeprecatedString to_string_impl(Bytecode::Executable const&) const; \
-        void replace_references_impl(BasicBlock const&, BasicBlock const&)  \
-        {                                                                   \
-        }                                                                   \
-        void replace_references_impl(Register, Register)                    \
-        {                                                                   \
-        }                                                                   \
+#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                         \
+    class OpTitleCase final : public Instruction {                                     \
+    public:                                                                            \
+        OpTitleCase()                                                                  \
+            : Instruction(Type::OpTitleCase)                                           \
+        {                                                                              \
+        }                                                                              \
+                                                                                       \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
+        DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
+        void replace_references_impl(BasicBlock const&, BasicBlock const&)             \
+        {                                                                              \
+        }                                                                              \
+        void replace_references_impl(Register, Register)                               \
+        {                                                                              \
+        }                                                                              \
     };
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
@@ -168,7 +168,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -184,7 +184,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -199,7 +199,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -221,7 +221,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register from, Register to);
 
@@ -242,7 +242,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -268,7 +268,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     // Note: The underlying element range shall never be changed item, by item
     //       shifting it may be done in the future
@@ -308,7 +308,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
     // Note: This should never do anything, the lhs should always be an array, that is currently being constructed
@@ -327,7 +327,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -341,7 +341,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     // Note: lhs should always be a string in construction, so this should never do anything
     void replace_references_impl(Register from, Register) { VERIFY(from != m_lhs); }
@@ -364,7 +364,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -380,7 +380,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -397,7 +397,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -424,7 +424,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -445,7 +445,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -466,7 +466,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -485,7 +485,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -512,7 +512,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register from, Register to)
     {
@@ -535,7 +535,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -552,7 +552,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register from, Register to)
     {
@@ -575,7 +575,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register from, Register to)
     {
@@ -598,7 +598,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register from, Register to)
     {
@@ -635,7 +635,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
     void replace_references_impl(Register, Register) { }
 
@@ -655,7 +655,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
 class JumpNullish final : public Jump {
@@ -666,7 +666,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
 class JumpUndefined final : public Jump {
@@ -677,7 +677,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
 // NOTE: This instruction is variable-width depending on the number of arguments!
@@ -698,7 +698,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register);
 
@@ -721,7 +721,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -738,7 +738,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -755,7 +755,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -773,7 +773,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -786,7 +786,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -799,7 +799,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -814,7 +814,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -832,7 +832,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
     void replace_references_impl(Register, Register) { }
 
@@ -855,7 +855,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -871,7 +871,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -887,7 +887,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
     void replace_references_impl(Register, Register) { }
 
@@ -908,7 +908,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
     void replace_references_impl(Register, Register) { }
 
@@ -934,7 +934,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
     void replace_references_impl(Register, Register) { }
 
@@ -953,7 +953,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
@@ -969,7 +969,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -982,7 +982,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -995,7 +995,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -1008,7 +1008,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -1021,7 +1021,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -1034,7 +1034,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -1047,7 +1047,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 };
@@ -1061,7 +1061,7 @@ public:
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_string_impl(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 

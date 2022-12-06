@@ -36,7 +36,7 @@ public:
     Type type() const { return m_type; }
     DeprecatedString line_name() const { return m_line_name; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
     bool operator==(GridTrackPlacement const& other) const
     {
         return m_type == other.type() && m_span_count_or_position == other.raw_value();

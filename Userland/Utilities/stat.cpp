@@ -73,7 +73,7 @@ static ErrorOr<int> stat(StringView file, bool should_follow_links)
     outln(")");
 
     auto print_time = [](timespec t) {
-        outln("{}.{:09}", Core::DateTime::from_timestamp(t.tv_sec).to_string(), t.tv_nsec);
+        outln("{}.{:09}", Core::DateTime::from_timestamp(t.tv_sec).to_deprecated_string(), t.tv_nsec);
     };
 
     out("Accessed: ");

@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto* symbol = TRY(this_symbol_value(vm, vm.this_value()));
-    return js_string(vm, symbol->to_string());
+    return js_string(vm, symbol->to_deprecated_string());
 }
 
 // 20.4.3.4 Symbol.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-symbol.prototype.valueof

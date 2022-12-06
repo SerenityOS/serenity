@@ -80,13 +80,13 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
 
     // 12. Set listFormat.[[Type]] to type.
-    list_format->set_type(type.as_string().string());
+    list_format->set_type(type.as_string().deprecated_string());
 
     // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 14. Set listFormat.[[Style]] to style.
-    list_format->set_style(style.as_string().string());
+    list_format->set_style(style.as_string().deprecated_string());
 
     // Note: The remaining steps are skipped in favor of deferring to LibUnicode.
 

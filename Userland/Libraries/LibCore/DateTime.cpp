@@ -84,7 +84,7 @@ void DateTime::set_time(int year, int month, int day, int hour, int minute, int 
     m_second = tm.tm_sec;
 }
 
-DeprecatedString DateTime::to_string(StringView format) const
+DeprecatedString DateTime::to_deprecated_string(StringView format) const
 {
     struct tm tm;
     localtime_r(&m_timestamp, &tm);

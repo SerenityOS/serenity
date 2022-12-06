@@ -495,7 +495,7 @@ void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, Gfx::IntRec
     auto text_color = index.data(GUI::ModelRole::ForegroundColor).to_color(palette.color(m_table_view.foreground_role()));
     auto data = index.data();
     auto text_alignment = index.data(GUI::ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterRight);
-    painter.draw_text(rect, data.to_string(), m_table_view.font_for_index(index), text_alignment, text_color, Gfx::TextElision::Right);
+    painter.draw_text(rect, data.to_deprecated_string(), m_table_view.font_for_index(index), text_alignment, text_color, Gfx::TextElision::Right);
 }
 
 }

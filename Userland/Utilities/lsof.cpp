@@ -89,7 +89,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
         open_file.pid = pid;
         open_file.fd = object.as_object().get("fd"sv).to_int();
 
-        DeprecatedString name = object.as_object().get("absolute_path"sv).to_string();
+        DeprecatedString name = object.as_object().get("absolute_path"sv).to_deprecated_string();
         VERIFY(parse_name(name, open_file));
         open_file.full_name = name;
 

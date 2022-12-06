@@ -275,7 +275,7 @@ GalleryWidget::GalleryWidget()
         StringBuilder sb;
         sb.append(m_wizard_output->get_text());
         sb.append("\nWizard started."sv);
-        m_wizard_output->set_text(sb.to_string());
+        m_wizard_output->set_text(sb.to_deprecated_string());
 
         auto wizard = DemoWizardDialog::try_create(window()).release_value_but_fixme_should_propagate_errors();
         auto result = wizard->exec();

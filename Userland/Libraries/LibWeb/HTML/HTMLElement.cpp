@@ -157,7 +157,7 @@ DeprecatedString HTMLElement::inner_text()
     };
     recurse(*layout_node());
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsettop

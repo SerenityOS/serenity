@@ -24,9 +24,9 @@ public:
         for (auto indent = m_depth++; indent > 0; indent--)
             sb.append(' ');
         if (m_extra.is_empty())
-            dbgln("\033[1;{}m{}entering {}\033[0m", m_depth % 8 + 30, sb.to_string(), m_location);
+            dbgln("\033[1;{}m{}entering {}\033[0m", m_depth % 8 + 30, sb.to_deprecated_string(), m_location);
         else
-            dbgln("\033[1;{}m{}entering {}\033[0m ({})", m_depth % 8 + 30, sb.to_string(), m_location, m_extra);
+            dbgln("\033[1;{}m{}entering {}\033[0m ({})", m_depth % 8 + 30, sb.to_deprecated_string(), m_location, m_extra);
     }
 
     ScopeLogger(SourceLocation location = SourceLocation::current())
@@ -42,9 +42,9 @@ public:
         for (auto indent = --m_depth; indent > 0; indent--)
             sb.append(' ');
         if (m_extra.is_empty())
-            dbgln("\033[1;{}m{}leaving {}\033[0m", depth % 8 + 30, sb.to_string(), m_location);
+            dbgln("\033[1;{}m{}leaving {}\033[0m", depth % 8 + 30, sb.to_deprecated_string(), m_location);
         else
-            dbgln("\033[1;{}m{}leaving {}\033[0m ({})", depth % 8 + 30, sb.to_string(), m_location, m_extra);
+            dbgln("\033[1;{}m{}leaving {}\033[0m ({})", depth % 8 + 30, sb.to_deprecated_string(), m_location, m_extra);
     }
 
 private:

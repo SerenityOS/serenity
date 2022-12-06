@@ -315,7 +315,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
             return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
         if (display.is_flex_inside())
             return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
-        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_string());
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_deprecated_string());
         return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
     }
 

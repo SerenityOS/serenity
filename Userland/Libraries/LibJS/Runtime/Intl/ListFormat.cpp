@@ -274,7 +274,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> string_list_from_iterable(VM& vm, Va
             }
 
             // iii. Append nextValue to the end of the List list.
-            list.append(next_value.as_string().string());
+            list.append(next_value.as_string().deprecated_string());
         }
     } while (next != nullptr);
 

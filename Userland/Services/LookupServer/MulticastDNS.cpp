@@ -127,7 +127,7 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
 
     json.as_array().for_each([&addresses](auto& value) {
         auto if_object = value.as_object();
-        auto address = if_object.get("ipv4_address"sv).to_string();
+        auto address = if_object.get("ipv4_address"sv).to_deprecated_string();
         auto ipv4_address = IPv4Address::from_string(address);
         // Skip unconfigured interfaces.
         if (!ipv4_address.has_value())

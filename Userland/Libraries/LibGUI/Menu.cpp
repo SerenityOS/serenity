@@ -197,7 +197,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         break;
     case MenuItem::Type::Action: {
         auto& action = *item.action();
-        auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : DeprecatedString();
+        auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_deprecated_string() : DeprecatedString();
         bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
         bool is_default = (m_current_default_action.ptr() == &action);
         auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();

@@ -1459,7 +1459,7 @@ RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
             continue;
         }
         if (peek() == '$') {
-            auto string_literal = create<AST::StringLiteral>(builder.to_string(), AST::StringLiteral::EnclosureType::DoubleQuotes); // String Literal
+            auto string_literal = create<AST::StringLiteral>(builder.to_deprecated_string(), AST::StringLiteral::EnclosureType::DoubleQuotes); // String Literal
             auto read_concat = [&](auto&& node) {
                 auto inner = create<AST::StringPartCompose>(
                     move(string_literal),
@@ -1485,7 +1485,7 @@ RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
         builder.append(consume());
     }
 
-    return create<AST::StringLiteral>(builder.to_string(), AST::StringLiteral::EnclosureType::DoubleQuotes); // String Literal
+    return create<AST::StringLiteral>(builder.to_deprecated_string(), AST::StringLiteral::EnclosureType::DoubleQuotes); // String Literal
 }
 
 RefPtr<AST::Node> Parser::parse_variable()
@@ -1895,7 +1895,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
 
     auto current_end = m_offset;
     auto current_line = line();
-    auto string = builder.to_string();
+    auto string = builder.to_deprecated_string();
     if (string.starts_with('~')) {
         DeprecatedString username;
         RefPtr<AST::Node> tilde, text;
@@ -1988,7 +1988,7 @@ RefPtr<AST::Node> Parser::parse_glob()
             }
         }
 
-        return create<AST::Glob>(textbuilder.to_string()); // Glob
+        return create<AST::Glob>(textbuilder.to_deprecated_string()); // Glob
     }
 
     return bareword_part;

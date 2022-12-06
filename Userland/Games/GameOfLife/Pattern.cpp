@@ -30,7 +30,7 @@ void Pattern::rotate_clockwise()
         for (int j = m_pattern.size() - 1; j >= 0; j--) {
             builder.append(m_pattern.at(j).substring(i, 1));
         }
-        rotated.append(builder.to_string());
+        rotated.append(builder.to_deprecated_string());
     }
     m_pattern = move(rotated);
 }

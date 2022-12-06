@@ -129,7 +129,7 @@ static void update_path_environment_variable()
     if (path.length())
         path.append(':');
     path.append(DEFAULT_PATH_SV);
-    setenv("PATH", path.to_string().characters(), true);
+    setenv("PATH", path.to_deprecated_string().characters(), true);
 }
 
 static Optional<DeprecatedString> last_opened_project_path()

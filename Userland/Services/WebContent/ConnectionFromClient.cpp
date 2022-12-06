@@ -306,11 +306,11 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             properties.for_each_property([&](auto property_id, auto& value) {
-                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string()));
+                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_deprecated_string()));
             });
             MUST(serializer.finish());
 
-            return builder.to_string();
+            return builder.to_deprecated_string();
         };
 
         auto serialize_custom_properties_json = [](Web::DOM::Element const& element) -> DeprecatedString {
@@ -323,7 +323,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
                 for (auto const& property : element_to_check->custom_properties()) {
                     if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
-                        MUST(serializer.add(property.key, property.value.value->to_string()));
+                        MUST(serializer.add(property.key, property.value.value->to_deprecated_string()));
                     }
                 }
 
@@ -332,7 +332,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             MUST(serializer.finish());
 
-            return builder.to_string();
+            return builder.to_deprecated_string();
         };
         auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> DeprecatedString {
             if (!layout_node || !layout_node->is_box()) {
@@ -363,7 +363,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             }
 
             MUST(serializer.finish());
-            return builder.to_string();
+            return builder.to_deprecated_string();
         };
 
         if (pseudo_element.has_value()) {
@@ -490,7 +490,7 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
         return DeprecatedString { "(no layout tree)" };
     StringBuilder builder;
     Web::dump_tree(builder, *layout_root);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void ConnectionFromClient::set_content_filters(Vector<DeprecatedString> const& filters)

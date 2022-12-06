@@ -263,7 +263,7 @@ Result<Vector<Color>, DeprecatedString> PaletteWidget::load_palette_path(Depreca
 Result<void, DeprecatedString> PaletteWidget::save_palette_file(Vector<Color> palette, Core::File& file)
 {
     for (auto& color : palette) {
-        file.write(color.to_string_without_alpha());
+        file.write(color.to_deprecated_string_without_alpha());
         file.write("\n"sv);
     }
     return {};

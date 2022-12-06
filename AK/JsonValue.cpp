@@ -186,7 +186,7 @@ JsonValue::JsonValue(DeprecatedString const& value)
 }
 
 JsonValue::JsonValue(StringView value)
-    : JsonValue(value.to_string())
+    : JsonValue(value.to_deprecated_string())
 {
 }
 

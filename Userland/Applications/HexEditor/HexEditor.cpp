@@ -172,7 +172,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
     for (size_t i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.appendff("{:02X} ", m_document->get(i).value);
 
-    GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_deprecated_string());
     return true;
 }
 
@@ -185,7 +185,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
     for (size_t i = m_selection_start; i < m_selection_end; i++)
         output_string_builder.append(isprint(m_document->get(i).value) ? m_document->get(i).value : '.');
 
-    GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_deprecated_string());
     return true;
 }
 
@@ -208,7 +208,7 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     }
     output_string_builder.append("\n};\n"sv);
 
-    GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_deprecated_string());
     return true;
 }
 
@@ -768,7 +768,7 @@ Vector<Match> HexEditor::find_all(ByteBuffer& needle, size_t start)
                 }
             }
             if (found) {
-                matches.append({ i, DeprecatedString::formatted("{}", StringView { needle }.to_string().characters()) });
+                matches.append({ i, DeprecatedString::formatted("{}", StringView { needle }.to_deprecated_string().characters()) });
                 i += needle.size() - 1;
             }
         }
@@ -803,7 +803,7 @@ Vector<Match> HexEditor::find_all_strings(size_t min_length)
             builder.append(c);
         } else {
             if (builder.length() >= min_length)
-                matches.append({ offset, builder.to_string() });
+                matches.append({ offset, builder.to_deprecated_string() });
             builder.clear();
             found_string = false;
         }

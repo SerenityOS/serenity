@@ -248,7 +248,7 @@ public:
         return Point<U>(ceil(x()), ceil(y()));
     }
 
-    [[nodiscard]] DeprecatedString to_string() const;
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
 
 private:
     T m_x { 0 };

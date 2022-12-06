@@ -126,7 +126,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& cale
 
     Vector<DeprecatedString> result;
     for (auto& value : list)
-        result.append(value.as_string().string());
+        result.append(value.as_string().deprecated_string());
     return result;
 }
 
@@ -791,7 +791,7 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
 
     // 6. Assert: Type(monthCode) is String.
     VERIFY(month_code.is_string());
-    auto& month_code_string = month_code.as_string().string();
+    auto& month_code_string = month_code.as_string().deprecated_string();
 
     // 7. If the length of monthCode is not 3, throw a RangeError exception.
     auto month_length = month_code_string.length();
@@ -953,7 +953,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     // 3. For each element key of fieldsKeys, do
     for (auto& key : fields_keys) {
         // a. If key is not "month" or "monthCode", then
-        if (key.as_string().string() != vm.names.month.as_string() && key.as_string().string() != vm.names.monthCode.as_string()) {
+        if (key.as_string().deprecated_string() != vm.names.month.as_string() && key.as_string().deprecated_string() != vm.names.monthCode.as_string()) {
             auto property_key = MUST(PropertyKey::from_value(vm, key));
 
             // i. Let propValue be ? Get(fields, key).
@@ -987,7 +987,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
         }
 
         // See comment above.
-        additional_fields_keys_contains_month_or_month_code_property |= key.as_string().string() == vm.names.month.as_string() || key.as_string().string() == vm.names.monthCode.as_string();
+        additional_fields_keys_contains_month_or_month_code_property |= key.as_string().deprecated_string() == vm.names.month.as_string() || key.as_string().deprecated_string() == vm.names.monthCode.as_string();
     }
 
     // 6. If additionalFieldsKeys does not contain either "month" or "monthCode", then

@@ -164,7 +164,7 @@ Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes
         return {};
 
     LittleEndian<u32> original_size = *reinterpret_cast<u32 const*>(bytes.offset(bytes.size() - sizeof(u32)));
-    return DeprecatedString::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time).to_string(), (u32)original_size);
+    return DeprecatedString::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time).to_deprecated_string(), (u32)original_size);
 }
 
 bool GzipDecompressor::read_or_error(Bytes bytes)

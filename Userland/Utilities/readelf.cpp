@@ -463,9 +463,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 found_dynamic_section = true;
 
                 if (section.entry_count()) {
-                    outln("Dynamic section '{}' at offset {:#08x} contains {} entries.", section.name().to_string(), section.offset(), section.entry_count());
+                    outln("Dynamic section '{}' at offset {:#08x} contains {} entries.", section.name().to_deprecated_string(), section.offset(), section.entry_count());
                 } else {
-                    outln("Dynamic section '{}' at offset {:#08x} contains zero entries.", section.name().to_string(), section.offset());
+                    outln("Dynamic section '{}' at offset {:#08x} contains zero entries.", section.name().to_deprecated_string(), section.offset());
                 }
 
                 return IterationDecision::Break;

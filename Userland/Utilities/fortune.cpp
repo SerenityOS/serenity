@@ -106,11 +106,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln(); // Tasteful spacing
 
-    out("\033]8;;{}\033\\", chosen_quote.url());         // Begin link
-    out("\033[34m({})\033[m", datetime.to_string());     // Datetime
-    out(" \033[34;1m<{}>\033[m", chosen_quote.author()); // Author
-    out(" \033[32m{}\033[m", chosen_quote.quote());      // Quote itself
-    out("\033]8;;\033\\");                               // End link
+    out("\033]8;;{}\033\\", chosen_quote.url());                // Begin link
+    out("\033[34m({})\033[m", datetime.to_deprecated_string()); // Datetime
+    out(" \033[34;1m<{}>\033[m", chosen_quote.author());        // Author
+    out(" \033[32m{}\033[m", chosen_quote.quote());             // Quote itself
+    out("\033]8;;\033\\");                                      // End link
     outln();
 
     if (chosen_quote.context().has_value())

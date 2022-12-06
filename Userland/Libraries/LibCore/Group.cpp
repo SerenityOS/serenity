@@ -45,7 +45,7 @@ ErrorOr<DeprecatedString> Group::generate_group_file() const
     if (errno)
         return Error::from_errno(errno);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 ErrorOr<void> Group::sync()

@@ -585,7 +585,7 @@ size_t property_maximum_value_count(PropertyID property_id)
             VERIFY(max_values.is_number() && !max_values.is_double());
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
-            property_generator.set("max_values", max_values.to_string());
+            property_generator.set("max_values", max_values.to_deprecated_string());
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return @max_values@;

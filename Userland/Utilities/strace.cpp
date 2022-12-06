@@ -602,7 +602,7 @@ struct Formatter<struct sockaddr> : StandardFormatter {
             builder.appendff(
                 ", sin_port={}, sin_addr={}",
                 address_in->sin_port,
-                IPv4Address(address_in->sin_addr.s_addr).to_string());
+                IPv4Address(address_in->sin_addr.s_addr).to_deprecated_string());
         } else if (address.sa_family == AF_UNIX) {
             auto* address_un = (const struct sockaddr_un*)&address;
             builder.appendff(

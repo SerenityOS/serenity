@@ -184,7 +184,7 @@ void BigFraction::reduce()
     m_denominator = denominator_divide.quotient;
 }
 
-DeprecatedString BigFraction::to_string(unsigned rounding_threshold) const
+DeprecatedString BigFraction::to_deprecated_string(unsigned rounding_threshold) const
 {
     StringBuilder builder;
     if (m_numerator.is_negative() && m_numerator != "0"_bigint)
@@ -239,7 +239,7 @@ DeprecatedString BigFraction::to_string(unsigned rounding_threshold) const
             builder.append(fractional_value);
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 BigFraction BigFraction::sqrt() const

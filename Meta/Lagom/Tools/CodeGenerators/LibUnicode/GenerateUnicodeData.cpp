@@ -174,7 +174,7 @@ static DeprecatedString sanitize_entry(DeprecatedString const& entry)
         next_is_upper = ch == '_';
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 static Vector<u32> parse_code_point_list(StringView list)
@@ -451,7 +451,7 @@ static ErrorOr<void> parse_normalization_props(Core::Stream::BufferedFile& file,
         VERIFY((segments.size() == 2) || (segments.size() == 3));
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
-        auto property = segments[1].trim_whitespace().to_string();
+        auto property = segments[1].trim_whitespace().to_deprecated_string();
 
         Vector<u32> value;
         QuickCheck quick_check = QuickCheck::Yes;

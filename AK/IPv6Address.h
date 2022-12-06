@@ -51,7 +51,7 @@ public:
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
 #else
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
 #endif
     {
         if (is_zero()) {
@@ -292,7 +292,7 @@ template<>
 struct Formatter<IPv6Address> : Formatter<DeprecatedString> {
     ErrorOr<void> format(FormatBuilder& builder, IPv6Address const& value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_string());
+        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
     }
 };
 #endif

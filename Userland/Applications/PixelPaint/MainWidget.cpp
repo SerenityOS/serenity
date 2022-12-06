@@ -130,7 +130,7 @@ void MainWidget::image_editor_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_string();
+        return builder.to_deprecated_string();
     };
 
     auto& undo_stack = image_editor->undo_stack();
@@ -1080,7 +1080,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         auto const& image_size = current_image_editor()->image().size();
         auto image_rectangle = Gfx::IntRect { 0, 0, image_size.width(), image_size.height() };
         if (image_rectangle.contains(mouse_position)) {
-            m_statusbar->set_override_text(mouse_position.to_string());
+            m_statusbar->set_override_text(mouse_position.to_deprecated_string());
             m_histogram_widget->set_color_at_mouseposition(current_image_editor()->image().color_at(mouse_position));
             m_vectorscope_widget->set_color_at_mouseposition(current_image_editor()->image().color_at(mouse_position));
         } else {

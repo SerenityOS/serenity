@@ -161,14 +161,14 @@ size_t Tuple::length() const
     return len;
 }
 
-DeprecatedString Tuple::to_string() const
+DeprecatedString Tuple::to_deprecated_string() const
 {
     StringBuilder builder;
     for (auto& part : m_data) {
         if (!builder.is_empty()) {
             builder.append('|');
         }
-        builder.append(part.to_string());
+        builder.append(part.to_deprecated_string());
     }
     if (pointer() != 0) {
         builder.appendff(":{}", pointer());
@@ -176,11 +176,11 @@ DeprecatedString Tuple::to_string() const
     return builder.build();
 }
 
-Vector<DeprecatedString> Tuple::to_string_vector() const
+Vector<DeprecatedString> Tuple::to_deprecated_string_vector() const
 {
     Vector<DeprecatedString> ret;
     for (auto& value : m_data) {
-        ret.append(value.to_string());
+        ret.append(value.to_deprecated_string());
     }
     return ret;
 }

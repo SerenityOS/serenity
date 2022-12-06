@@ -504,7 +504,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     auto url = source->active_document()->parse_url(href());
 
     // 10. If that is successful, let URL be the resulting URL string.
-    auto url_string = url.to_string();
+    auto url_string = url.to_deprecated_string();
 
     // 11. Otherwise, if parsing the URL failed, the user agent may report the
     // error to the user in a user-agent-specific manner, may queue an element
@@ -519,7 +519,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
         url_builder.append(url_string);
         url_builder.append(*hyperlink_suffix);
 
-        url_string = url_builder.to_string();
+        url_string = url_builder.to_deprecated_string();
     }
 
     // FIXME: 13. Let request be a new request whose URL is URL and whose

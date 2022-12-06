@@ -44,7 +44,7 @@ DeprecatedString Formatter::format()
     if (!string.ends_with(' '))
         current_builder().append(m_trivia);
 
-    return current_builder().to_string();
+    return current_builder().to_deprecated_string();
 }
 
 void Formatter::with_added_indent(int indent, Function<void()> callback)
@@ -70,7 +70,7 @@ DeprecatedString Formatter::in_new_builder(Function<void()> callback, StringBuil
 {
     m_builders.append(move(new_builder));
     callback();
-    return m_builders.take_last().to_string();
+    return m_builders.take_last().to_deprecated_string();
 }
 
 void Formatter::test_and_update_output_cursor(const AST::Node* node)

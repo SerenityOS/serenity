@@ -171,10 +171,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto bytes_in = if_object.get("bytes_in"sv).to_string();
-            auto bytes_out = if_object.get("bytes_out"sv).to_string();
+            auto bytes_in = if_object.get("bytes_in"sv).to_deprecated_string();
+            auto bytes_out = if_object.get("bytes_out"sv).to_deprecated_string();
 
-            auto peer_address = if_object.get("peer_address"sv).to_string();
+            auto peer_address = if_object.get("peer_address"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -186,7 +186,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get("peer_port"sv).to_string();
+            auto peer_port = if_object.get("peer_port"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("peer_port"sv).to_u32()), "tcp");
                 if (service != nullptr) {
@@ -196,7 +196,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_address = if_object.get("local_address"sv).to_string();
+            auto local_address = if_object.get("local_address"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -208,7 +208,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get("local_port"sv).to_string();
+            auto local_port = if_object.get("local_port"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("local_port"sv).to_u32()), "tcp");
                 if (service != nullptr) {
@@ -218,7 +218,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto state = if_object.get("state"sv).to_string();
+            auto state = if_object.get("state"sv).to_deprecated_string();
             auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get("origin_pid"sv).to_u32() : -1;
 
             if (!flag_all && ((state == "Listen" && !flag_list) || (state != "Listen" && flag_list)))
@@ -258,7 +258,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto local_address = if_object.get("local_address"sv).to_string();
+            auto local_address = if_object.get("local_address"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -270,7 +270,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get("local_port"sv).to_string();
+            auto local_port = if_object.get("local_port"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("local_port"sv).to_u32()), "udp");
                 if (service != nullptr) {
@@ -280,7 +280,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_address = if_object.get("peer_address"sv).to_string();
+            auto peer_address = if_object.get("peer_address"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -292,7 +292,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get("peer_port"sv).to_string();
+            auto peer_port = if_object.get("peer_port"sv).to_deprecated_string();
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("peer_port"sv).to_u32()), "udp");
                 if (service != nullptr) {

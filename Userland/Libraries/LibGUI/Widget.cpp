@@ -81,11 +81,11 @@ Widget::Widget()
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
         [this](auto& value) {
-            if (value.to_string() == "FixedWidth") {
+            if (value.to_deprecated_string() == "FixedWidth") {
                 set_font_fixed_width(true);
                 return true;
             }
-            if (value.to_string() == "Normal") {
+            if (value.to_deprecated_string() == "Normal") {
                 set_font_fixed_width(false);
                 return true;
             }
@@ -127,9 +127,9 @@ Widget::Widget()
         });
 
     register_property(
-        "foreground_color", [this]() -> JsonValue { return palette().color(foreground_role()).to_string(); },
+        "foreground_color", [this]() -> JsonValue { return palette().color(foreground_role()).to_deprecated_string(); },
         [this](auto& value) {
-            auto c = Color::from_string(value.to_string());
+            auto c = Color::from_string(value.to_deprecated_string());
             if (c.has_value()) {
                 auto _palette = palette();
                 _palette.set_color(foreground_role(), c.value());
@@ -140,9 +140,9 @@ Widget::Widget()
         });
 
     register_property(
-        "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_string(); },
+        "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_deprecated_string(); },
         [this](auto& value) {
-            auto c = Color::from_string(value.to_string());
+            auto c = Color::from_string(value.to_deprecated_string());
             if (c.has_value()) {
                 auto _palette = palette();
                 _palette.set_color(background_role(), c.value());
@@ -1188,12 +1188,12 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
         if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
             auto layout = registration->construct();
             if (!layout || !registration->is_derived_from(layout_class)) {
-                dbgln("Invalid layout class: '{}'", class_name.to_string());
+                dbgln("Invalid layout class: '{}'", class_name.to_deprecated_string());
                 return false;
             }
             set_layout(static_ptr_cast<Layout>(layout).release_nonnull());
         } else {
-            dbgln("Unknown layout class: '{}'", class_name.to_string());
+            dbgln("Unknown layout class: '{}'", class_name.to_deprecated_string());
             return false;
         }
 

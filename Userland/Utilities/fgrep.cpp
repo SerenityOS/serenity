@@ -25,6 +25,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             TRY(Core::System::write(1, str.bytes()));
         if (feof(stdin))
             return 0;
-        VERIFY(str.to_string().characters());
+        VERIFY(str.to_deprecated_string().characters());
     }
 }

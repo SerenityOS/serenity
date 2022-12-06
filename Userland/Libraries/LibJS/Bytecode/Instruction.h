@@ -106,7 +106,7 @@ public:
     bool is_terminator() const;
     Type type() const { return m_type; }
     size_t length() const;
-    DeprecatedString to_string(Bytecode::Executable const&) const;
+    DeprecatedString to_deprecated_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     void replace_references(BasicBlock const&, BasicBlock const&);
     void replace_references(Register, Register);

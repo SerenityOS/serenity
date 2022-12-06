@@ -89,7 +89,7 @@ static bool handle_disassemble_command(DeprecatedString const& command, FlatPtr 
         if (!insn.has_value())
             break;
 
-        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_string(offset));
+        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_deprecated_string(offset));
     }
 
     return true;

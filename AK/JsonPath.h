@@ -46,7 +46,7 @@ public:
         return m_index;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         switch (m_kind) {
         case Kind::Key:
@@ -90,7 +90,7 @@ private:
 class JsonPath : public Vector<JsonPathElement> {
 public:
     JsonValue resolve(JsonValue const&) const;
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 };
 
 }

@@ -140,7 +140,7 @@ public:
 
     static DeprecatedString timestamp_string(time_t timestamp)
     {
-        return Core::DateTime::from_timestamp(timestamp).to_string();
+        return Core::DateTime::from_timestamp(timestamp).to_deprecated_string();
     }
 
     bool should_show_dotfiles() const { return m_should_show_dotfiles; }

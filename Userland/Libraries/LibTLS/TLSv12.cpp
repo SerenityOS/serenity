@@ -102,12 +102,12 @@ bool Certificate::is_valid() const
     auto now = Core::DateTime::now();
 
     if (now < not_before) {
-        dbgln("certificate expired (not yet valid, signed for {})", not_before.to_string());
+        dbgln("certificate expired (not yet valid, signed for {})", not_before.to_deprecated_string());
         return false;
     }
 
     if (not_after < now) {
-        dbgln("certificate expired (expiry date {})", not_after.to_string());
+        dbgln("certificate expired (expiry date {})", not_after.to_deprecated_string());
         return false;
     }
 

@@ -199,7 +199,7 @@ bool Launcher::open_url(const URL& url, DeprecatedString const& handler_name)
     if (url.scheme() == "file")
         return open_file_url(url);
 
-    return open_with_user_preferences(m_protocol_handlers, url.scheme(), { url.to_string() });
+    return open_with_user_preferences(m_protocol_handlers, url.scheme(), { url.to_deprecated_string() });
 }
 
 bool Launcher::open_with_handler_name(const URL& url, DeprecatedString const& handler_name)
@@ -213,7 +213,7 @@ bool Launcher::open_with_handler_name(const URL& url, DeprecatedString const& ha
     if (url.scheme() == "file")
         argument = url.path();
     else
-        argument = url.to_string();
+        argument = url.to_deprecated_string();
     return spawn(handler.executable, { argument });
 }
 

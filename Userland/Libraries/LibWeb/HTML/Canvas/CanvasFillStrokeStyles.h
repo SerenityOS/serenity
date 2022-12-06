@@ -28,7 +28,7 @@ public:
 
     DeprecatedString fill_style() const
     {
-        return my_drawing_state().fill_style.to_string();
+        return my_drawing_state().fill_style.to_deprecated_string();
     }
 
     void set_stroke_style(DeprecatedString style)
@@ -39,7 +39,7 @@ public:
 
     DeprecatedString stroke_style() const
     {
-        return my_drawing_state().stroke_style.to_string();
+        return my_drawing_state().stroke_style.to_deprecated_string();
     }
 
     JS::NonnullGCPtr<CanvasGradient> create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1)

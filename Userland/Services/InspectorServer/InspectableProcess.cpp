@@ -75,7 +75,7 @@ DeprecatedString InspectableProcess::wait_for_response()
 
 void InspectableProcess::send_request(JsonObject const& request)
 {
-    auto serialized = request.to_string();
+    auto serialized = request.to_deprecated_string();
     u32 length = serialized.length();
 
     // FIXME: Propagate errors

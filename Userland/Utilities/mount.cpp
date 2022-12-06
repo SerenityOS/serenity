@@ -155,8 +155,8 @@ static ErrorOr<void> print_mounts()
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
-        auto class_name = fs_object.get("class_name"sv).to_string();
-        auto mount_point = fs_object.get("mount_point"sv).to_string();
+        auto class_name = fs_object.get("class_name"sv).to_deprecated_string();
+        auto mount_point = fs_object.get("mount_point"sv).to_deprecated_string();
         auto source = fs_object.get("source"sv).as_string_or("none");
         auto readonly = fs_object.get("readonly"sv).to_bool();
         auto mount_flags = fs_object.get("mount_flags"sv).to_int();

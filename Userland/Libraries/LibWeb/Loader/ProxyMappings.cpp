@@ -14,7 +14,7 @@ Web::ProxyMappings& Web::ProxyMappings::the()
 
 Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
 {
-    auto url_string = url.to_string();
+    auto url_string = url.to_deprecated_string();
     for (auto& it : m_mappings) {
         if (url_string.matches(it.key)) {
             auto result = Core::ProxyData::parse_url(m_proxies[it.value]);

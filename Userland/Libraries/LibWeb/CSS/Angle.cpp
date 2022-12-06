@@ -41,10 +41,10 @@ Angle Angle::percentage_of(Percentage const& percentage) const
     return Angle { percentage.as_fraction() * m_value, m_type };
 }
 
-DeprecatedString Angle::to_string() const
+DeprecatedString Angle::to_deprecated_string() const
 {
     if (is_calculated())
-        return m_calculated_style->to_string();
+        return m_calculated_style->to_deprecated_string();
     return DeprecatedString::formatted("{}{}", m_value, unit_name());
 }
 

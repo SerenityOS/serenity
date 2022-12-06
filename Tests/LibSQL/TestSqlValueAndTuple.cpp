@@ -17,7 +17,7 @@ TEST_CASE(null_value)
 {
     SQL::Value v(SQL::SQLType::Null);
     EXPECT_EQ(v.type(), SQL::SQLType::Null);
-    EXPECT_EQ(v.to_string(), "(null)"sv);
+    EXPECT_EQ(v.to_deprecated_string(), "(null)"sv);
     EXPECT(!v.to_bool().has_value());
     EXPECT(!v.to_int().has_value());
     EXPECT(!v.to_u32().has_value());
@@ -44,25 +44,25 @@ TEST_CASE(text_value)
 
         v = "Test"sv;
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
-        EXPECT_EQ(v.to_string(), "Test"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "Test"sv);
     }
     {
         SQL::Value v(DeprecatedString("String Test"sv));
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
-        EXPECT_EQ(v.to_string(), "String Test"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "String Test"sv);
 
         v = DeprecatedString("String Test 2"sv);
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
-        EXPECT_EQ(v.to_string(), "String Test 2"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "String Test 2"sv);
     }
     {
         SQL::Value v("const char * Test");
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
-        EXPECT_EQ(v.to_string(), "const char * Test"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "const char * Test"sv);
 
         v = "const char * Test 2";
         EXPECT_EQ(v.type(), SQL::SQLType::Text);
-        EXPECT_EQ(v.to_string(), "const char * Test 2"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "const char * Test 2"sv);
     }
 }
 
@@ -149,7 +149,7 @@ TEST_CASE(integer_value)
 
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 42);
-        EXPECT_EQ(v.to_string(), "42"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "42"sv);
 
         EXPECT(v.to_double().has_value());
         EXPECT((v.to_double().value() - 42.0) < NumericLimits<double>().epsilon());
@@ -215,7 +215,7 @@ TEST_CASE(float_value)
 
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 3);
-        EXPECT_EQ(v.to_string(), "3.14");
+        EXPECT_EQ(v.to_deprecated_string(), "3.14");
 
         EXPECT(v.to_bool().has_value());
         EXPECT(v.to_bool().value());
@@ -228,7 +228,7 @@ TEST_CASE(float_value)
 
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 0);
-        EXPECT_EQ(v.to_string(), "0"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "0"sv);
 
         EXPECT(v.to_bool().has_value());
         EXPECT(!v.to_bool().value());
@@ -307,7 +307,7 @@ TEST_CASE(bool_value)
 
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 1);
-        EXPECT_EQ(v.to_string(), "true"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "true"sv);
 
         EXPECT(v.to_double().has_value());
         EXPECT((v.to_double().value() - 1.0) < NumericLimits<double>().epsilon());
@@ -321,7 +321,7 @@ TEST_CASE(bool_value)
 
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 0);
-        EXPECT_EQ(v.to_string(), "false"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "false"sv);
 
         EXPECT(v.to_double().has_value());
         EXPECT(v.to_double().value() < NumericLimits<double>().epsilon());
@@ -335,7 +335,7 @@ TEST_CASE(bool_value)
 
         EXPECT(v.to_int().has_value());
         EXPECT_EQ(v.to_int().value(), 1);
-        EXPECT_EQ(v.to_string(), "true"sv);
+        EXPECT_EQ(v.to_deprecated_string(), "true"sv);
 
         EXPECT(v.to_double().has_value());
         EXPECT((v.to_double().value() - 1.0) < NumericLimits<double>().epsilon());

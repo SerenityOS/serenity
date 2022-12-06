@@ -26,7 +26,7 @@ public:
 
     bool is_empty() const;
 
-    DeprecatedString const& string() const;
+    DeprecatedString const& deprecated_string() const;
     bool has_utf8_string() const { return m_has_utf8_string; }
 
     Utf16String const& utf16_string() const;

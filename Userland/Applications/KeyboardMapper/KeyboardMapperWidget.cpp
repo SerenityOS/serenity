@@ -178,7 +178,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
             if (values[i])
                 sb.append_code_point(values[i]);
 
-            JsonValue val(sb.to_string());
+            JsonValue val(sb.to_deprecated_string());
             items.append(move(val));
         }
         map_json.set(name, move(items));
@@ -191,7 +191,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
     add_array("shift_altgr_map", m_character_map.shift_altgr_map);
 
     // Write to file.
-    DeprecatedString file_content = map_json.to_string();
+    DeprecatedString file_content = map_json.to_deprecated_string();
     auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Write));
     TRY(file->write(file_content.bytes()));
     file->close();
@@ -249,7 +249,7 @@ void KeyboardMapperWidget::set_current_map(const DeprecatedString current_map)
         StringBuilder sb;
         sb.append_code_point(map[index]);
 
-        m_keys.at(k)->set_text(sb.to_string());
+        m_keys.at(k)->set_text(sb.to_deprecated_string());
     }
 
     this->update();
@@ -261,7 +261,7 @@ void KeyboardMapperWidget::update_window_title()
     sb.append(m_filename);
     sb.append("[*] - Keyboard Mapper"sv);
 
-    window()->set_title(sb.to_string());
+    window()->set_title(sb.to_deprecated_string());
 }
 
 void KeyboardMapperWidget::show_error_to_user(Error error)

@@ -27,7 +27,7 @@ char const* inet_ntop(int af, void const* src, char* dst, socklen_t len)
             errno = ENOSPC;
             return nullptr;
         }
-        auto str = IPv6Address(((in6_addr const*)src)->s6_addr).to_string();
+        auto str = IPv6Address(((in6_addr const*)src)->s6_addr).to_deprecated_string();
         if (!str.copy_characters_to_buffer(dst, len)) {
             errno = ENOSPC;
             return nullptr;

@@ -21,7 +21,7 @@ SchemaDef::SchemaDef(DeprecatedString name)
 }
 
 SchemaDef::SchemaDef(Key const& key)
-    : Relation(key["schema_name"].to_string())
+    : Relation(key["schema_name"].to_deprecated_string())
 {
 }
 
@@ -186,7 +186,7 @@ void TableDef::append_column(Key const& column)
     auto column_type = column["column_type"].to_int();
     VERIFY(column_type.has_value());
 
-    append_column(column["column_name"].to_string(), static_cast<SQLType>(*column_type));
+    append_column(column["column_name"].to_deprecated_string(), static_cast<SQLType>(*column_type));
 }
 
 Key TableDef::make_key(SchemaDef const& schema_def)

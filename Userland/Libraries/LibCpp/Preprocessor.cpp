@@ -371,7 +371,7 @@ DeprecatedString Preprocessor::remove_escaped_newlines(StringView value)
         processed_value.append(lexer.consume_until(escaped_newline));
         lexer.ignore(escaped_newline.length());
     }
-    return processed_value.to_string();
+    return processed_value.to_deprecated_string();
 }
 
 DeprecatedString Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
@@ -401,7 +401,7 @@ DeprecatedString Preprocessor::evaluate_macro_call(MacroCall const& macro_call, 
         }
     });
 
-    return processed_value.to_string();
+    return processed_value.to_deprecated_string();
 }
 
 };

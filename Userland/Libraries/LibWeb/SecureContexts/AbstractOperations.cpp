@@ -30,7 +30,7 @@ Trustworthiness is_origin_potentially_trustworthy(HTML::Origin const& origin)
     // 4. If origin’s host matches one of the CIDR notations 127.0.0.0/8 or ::1/128 [RFC4632], return "Potentially Trustworthy".
     if (auto ipv4_address = IPv4Address::from_string(origin.host()); ipv4_address.has_value() && (ipv4_address->to_u32() & 0xff000000) != 0)
         return Trustworthiness::PotentiallyTrustworthy;
-    if (auto ipv6_address = IPv6Address::from_string(origin.host()); ipv6_address.has_value() && ipv6_address->to_string() == "::1")
+    if (auto ipv6_address = IPv6Address::from_string(origin.host()); ipv6_address.has_value() && ipv6_address->to_deprecated_string() == "::1")
         return Trustworthiness::PotentiallyTrustworthy;
 
     // 5. If the user agent conforms to the name resolution rules in [let-localhost-be-localhost] and one of the following is true:

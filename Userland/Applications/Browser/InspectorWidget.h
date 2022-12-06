@@ -29,7 +29,7 @@ public:
             return dom_node_id == other.dom_node_id && pseudo_element == other.pseudo_element;
         }
 
-        DeprecatedString to_string() const
+        DeprecatedString to_deprecated_string() const
         {
             if (pseudo_element.has_value())
                 return DeprecatedString::formatted("id: {}, pseudo: {}", dom_node_id, Web::CSS::pseudo_element_name(pseudo_element.value()));

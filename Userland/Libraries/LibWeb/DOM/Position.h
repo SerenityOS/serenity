@@ -35,7 +35,7 @@ public:
         return m_node.ptr() == other.m_node.ptr() && m_offset == other.m_offset;
     }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     JS::Handle<Node> m_node;
@@ -49,7 +49,7 @@ template<>
 struct Formatter<Web::DOM::Position> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::DOM::Position const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 

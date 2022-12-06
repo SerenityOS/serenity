@@ -325,7 +325,7 @@ ErrorOr<void> MainWidget::create_actions()
                 continue;
             builder.append_code_point(code_point);
         }
-        GUI::Clipboard::the().set_plain_text(builder.to_string());
+        GUI::Clipboard::the().set_plain_text(builder.to_deprecated_string());
     });
     m_copy_text_action->set_status_tip("Copy to clipboard as text");
 
@@ -879,7 +879,7 @@ void MainWidget::update_title()
     else
         title.append(m_path);
     title.append("[*] - Font Editor"sv);
-    window()->set_title(title.to_string());
+    window()->set_title(title.to_deprecated_string());
 }
 
 void MainWidget::did_modify_font()
@@ -920,7 +920,7 @@ void MainWidget::update_statusbar()
         builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
     else if (Gfx::Emoji::emoji_for_code_point(glyph))
         builder.appendff(" [emoji]");
-    m_statusbar->set_text(builder.to_string());
+    m_statusbar->set_text(builder.to_deprecated_string());
 }
 
 void MainWidget::update_preview()

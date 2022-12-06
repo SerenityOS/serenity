@@ -132,10 +132,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto copy_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors();
     auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {
-        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().data().to_string());
+        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().data().to_deprecated_string());
     });
     auto copy_property_value_action = GUI::Action::create("Copy Property Value", copy_bitmap, [&](auto&) {
-        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().sibling_at_column(1).data().to_string());
+        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().sibling_at_column(1).data().to_deprecated_string());
     });
 
     properties_tree_view_context_menu->add_action(copy_property_name_action);

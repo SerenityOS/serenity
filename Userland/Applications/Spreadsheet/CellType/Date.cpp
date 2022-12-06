@@ -22,7 +22,7 @@ JS::ThrowCompletionOr<DeprecatedString> DateCell::display(Cell& cell, CellTypeMe
     return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<DeprecatedString> {
         auto& vm = cell.sheet().global_object().vm();
         auto timestamp = TRY(js_value(cell, metadata));
-        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(vm))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
+        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(vm))).to_deprecated_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
 
         if (metadata.length >= 0)
             return string.substring(0, metadata.length);

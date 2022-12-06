@@ -91,7 +91,7 @@ static void fill_mounts(Vector<MountInfo>& output)
     json.as_array().for_each([&output](JsonValue const& value) {
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
-        mount_info.mount_point = filesystem_object.get("mount_point"sv).to_string();
+        mount_info.mount_point = filesystem_object.get("mount_point"sv).to_deprecated_string();
         mount_info.source = filesystem_object.get("source"sv).as_string_or("none"sv);
         output.append(mount_info);
     });
@@ -178,7 +178,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
     StringBuilder builder = StringBuilder();
     builder.append(root.m_name);
     builder.append('/');
-    MountInfo* root_mount_info = find_mount_for_path(builder.to_string(), mounts);
+    MountInfo* root_mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
     if (!root_mount_info) {
         return;
     }
@@ -189,12 +189,12 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
         builder.append(queue_entry.path);
         builder.append('/');
 
-        MountInfo* mount_info = find_mount_for_path(builder.to_string(), mounts);
+        MountInfo* mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
         if (!mount_info || (mount_info != root_mount_info && mount_info->source != root_mount_info->source)) {
             continue;
         }
 
-        Core::DirIterator dir_iterator(builder.to_string(), Core::DirIterator::SkipParentAndBaseDir);
+        Core::DirIterator dir_iterator(builder.to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
         if (dir_iterator.has_error()) {
             int error_sum = error_accumulator.get(dir_iterator.error()).value_or(0);
             error_accumulator.set(dir_iterator.error(), error_sum + 1);
@@ -218,7 +218,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
                     error_accumulator.set(errno, error_sum + 1);
                 } else {
                     if (S_ISDIR(st.st_mode)) {
-                        queue.enqueue(QueueEntry(builder.to_string(), &child));
+                        queue.enqueue(QueueEntry(builder.to_deprecated_string(), &child));
                     } else {
                         child.m_area = st.st_size;
                     }
@@ -272,7 +272,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
             builder.append(')');
             first = false;
         }
-        statusbar.set_text(builder.to_string());
+        statusbar.set_text(builder.to_deprecated_string());
     } else {
         statusbar.set_text("No errors");
     }

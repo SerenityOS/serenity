@@ -76,10 +76,10 @@ private:
         builder.append(action.text());
         if (action.shortcut().is_valid()) {
             builder.append(" ("sv);
-            builder.append(action.shortcut().to_string());
+            builder.append(action.shortcut().to_deprecated_string());
             builder.append(')');
         }
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     virtual void enter_event(Core::Event& event) override

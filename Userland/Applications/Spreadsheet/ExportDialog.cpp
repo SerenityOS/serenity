@@ -276,7 +276,7 @@ Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, C
         for (auto& sheet : workbook.sheets())
             array.append(sheet.to_json());
 
-        auto file_content = array.to_string();
+        auto file_content = array.to_deprecated_string();
         bool result = file.write(file_content);
         if (!result) {
             int error_number = errno;
@@ -286,7 +286,7 @@ Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, C
             sb.append("Unable to save file. Error: "sv);
             sb.append({ error, strlen(error) });
 
-            return sb.to_string();
+            return sb.to_deprecated_string();
         }
 
         return {};

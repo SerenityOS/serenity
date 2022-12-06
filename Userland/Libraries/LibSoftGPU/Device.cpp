@@ -1579,7 +1579,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
             num_rendertarget_pixels > 0 ? g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100 : 0));
         builder.append(DeprecatedString::formatted("Sampler calls: {}\n", g_num_sampler_calls));
 
-        debug_string = builder.to_string();
+        debug_string = builder.to_deprecated_string();
 
         frame_counter = 0;
         timer.start();

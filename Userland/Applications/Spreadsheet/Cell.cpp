@@ -162,7 +162,7 @@ DeprecatedString Cell::source() const
     if (m_kind == Formula)
         builder.append('=');
     builder.append(m_data);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // FIXME: Find a better way to figure out dependencies

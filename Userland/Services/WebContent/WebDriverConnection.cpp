@@ -369,7 +369,7 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     TRY(handle_any_user_prompts());
 
     // 3. Let url be the serialization of the current top-level browsing context’s active document’s document URL.
-    auto url = m_page_client.page().top_level_browsing_context().active_document()->url().to_string();
+    auto url = m_page_client.page().top_level_browsing_context().active_document()->url().to_deprecated_string();
 
     // 4. Return success with data url.
     return url;
@@ -1063,7 +1063,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
         auto property = Web::CSS::property_id_from_string(name);
 
         if (auto* computed_values = element->computed_css_values())
-            computed_value = computed_values->property(property)->to_string();
+            computed_value = computed_values->property(property)->to_deprecated_string();
     }
     // -> Otherwise
     else {

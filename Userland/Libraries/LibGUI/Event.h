@@ -390,11 +390,11 @@ public:
     {
         StringBuilder sb;
         sb.append_code_point(m_code_point);
-        return sb.to_string();
+        return sb.to_deprecated_string();
     }
     u32 scancode() const { return m_scancode; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
     bool is_arrow_key() const
     {

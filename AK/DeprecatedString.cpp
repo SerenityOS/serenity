@@ -320,7 +320,7 @@ DeprecatedString DeprecatedString::roman_number_from(size_t value)
         }
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 bool DeprecatedString::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
@@ -354,7 +354,7 @@ DeprecatedString DeprecatedString::reverse() const
     for (size_t i = length(); i-- > 0;) {
         reversed_string.append(characters()[i]);
     }
-    return reversed_string.to_string();
+    return reversed_string.to_deprecated_string();
 }
 
 DeprecatedString escape_html_entities(StringView html)
@@ -372,7 +372,7 @@ DeprecatedString escape_html_entities(StringView html)
         else
             builder.append(html[i]);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString::DeprecatedString(FlyString const& string)
@@ -431,7 +431,7 @@ InputStream& operator>>(InputStream& stream, DeprecatedString& string)
         if (next_char) {
             builder.append(next_char);
         } else {
-            string = builder.to_string();
+            string = builder.to_deprecated_string();
             return stream;
         }
     }
@@ -441,7 +441,7 @@ DeprecatedString DeprecatedString::vformatted(StringView fmtstr, TypeErasedForma
 {
     StringBuilder builder;
     MUST(vformat(builder, fmtstr, params));
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 Vector<size_t> DeprecatedString::find_all(StringView needle) const

@@ -12,7 +12,7 @@
 
 namespace HTTP {
 
-DeprecatedString to_string(HttpRequest::Method method)
+DeprecatedString to_deprecated_string(HttpRequest::Method method)
 {
     switch (method) {
     case HttpRequest::Method::GET:
@@ -40,7 +40,7 @@ DeprecatedString to_string(HttpRequest::Method method)
 
 DeprecatedString HttpRequest::method_name() const
 {
-    return to_string(m_method);
+    return to_deprecated_string(m_method);
 }
 
 ByteBuffer HttpRequest::to_raw_request() const
@@ -242,11 +242,11 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
     builder.append(url.username());
     builder.append(':');
     builder.append(url.password());
-    auto token = encode_base64(builder.to_string().bytes());
+    auto token = encode_base64(builder.to_deprecated_string().bytes());
     builder.clear();
     builder.append("Basic "sv);
     builder.append(token);
-    return Header { "Authorization", builder.to_string() };
+    return Header { "Authorization", builder.to_deprecated_string() };
 }
 
 Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(DeprecatedString const& value)

@@ -259,7 +259,7 @@ DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
     //    a. Let post be the empty String.
 
     // 14. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // 11.6.6 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring

@@ -73,7 +73,7 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
     builder.append(this->data().substring_view(0, offset));
     builder.append(data);
     builder.append(this->data().substring_view(offset + count));
-    m_data = builder.to_string();
+    m_data = builder.to_deprecated_string();
 
     // 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
     for (auto& range : Range::live_ranges()) {

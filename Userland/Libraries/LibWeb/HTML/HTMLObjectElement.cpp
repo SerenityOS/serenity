@@ -36,7 +36,7 @@ void HTMLObjectElement::parse_attribute(FlyString const& name, DeprecatedString 
 DeprecatedString HTMLObjectElement::data() const
 {
     auto data = attribute(HTML::AttributeNames::data);
-    return document().parse_url(data).to_string();
+    return document().parse_url(data).to_deprecated_string();
 }
 
 JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

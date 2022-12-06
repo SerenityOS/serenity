@@ -233,7 +233,7 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
 
     m_reader.consume_whitespace();
 
-    return make_object<NameObject>(builder.to_string());
+    return make_object<NameObject>(builder.to_deprecated_string());
 }
 
 NonnullRefPtr<StringObject> Parser::parse_string()
@@ -347,7 +347,7 @@ DeprecatedString Parser::parse_literal_string()
         }
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Parser::parse_hex_string()
@@ -359,7 +359,7 @@ DeprecatedString Parser::parse_hex_string()
     while (true) {
         if (m_reader.matches('>')) {
             m_reader.consume();
-            return builder.to_string();
+            return builder.to_deprecated_string();
         } else {
             int hex_value = 0;
 
@@ -372,7 +372,7 @@ DeprecatedString Parser::parse_hex_string()
                     m_reader.consume();
                     hex_value *= 16;
                     builder.append(static_cast<char>(hex_value));
-                    return builder.to_string();
+                    return builder.to_deprecated_string();
                 }
                 VERIFY(isxdigit(ch));
 

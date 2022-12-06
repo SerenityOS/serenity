@@ -25,7 +25,7 @@ DeprecatedString title_casify(DeprecatedString const& dashy_name)
             continue;
         builder.append(part.substring_view(1, part.length() - 1));
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString camel_casify(StringView dashy_name)
@@ -46,7 +46,7 @@ DeprecatedString camel_casify(StringView dashy_name)
             continue;
         builder.append(part.substring_view(1, part.length() - 1));
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString snake_casify(DeprecatedString const& dashy_name)

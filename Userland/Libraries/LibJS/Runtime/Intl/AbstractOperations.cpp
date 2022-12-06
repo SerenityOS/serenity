@@ -306,7 +306,7 @@ static MatcherResult lookup_matcher(Vector<DeprecatedString> const& requested_lo
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
         auto extensions = locale_id->remove_extension_type<::Locale::LocaleExtension>();
-        auto no_extensions_locale = locale_id->to_string();
+        auto no_extensions_locale = locale_id->to_deprecated_string();
 
         // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -383,7 +383,7 @@ LocaleResult resolve_locale(Vector<DeprecatedString> const& requested_locales, L
     MatcherResult matcher_result;
 
     // 2. If matcher is "lookup", then
-    if (matcher.is_string() && (matcher.as_string().string() == "lookup"sv)) {
+    if (matcher.is_string() && (matcher.as_string().deprecated_string() == "lookup"sv)) {
         // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
         matcher_result = lookup_matcher(requested_locales);
     }
@@ -538,7 +538,7 @@ Vector<DeprecatedString> lookup_supported_locales(Vector<DeprecatedString> const
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
         locale_id->remove_extension_type<::Locale::LocaleExtension>();
-        auto no_extensions_locale = locale_id->to_string();
+        auto no_extensions_locale = locale_id->to_deprecated_string();
 
         // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -578,7 +578,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     Vector<DeprecatedString> supported_locales;
 
     // 3. If matcher is "best fit", then
-    if (matcher.as_string().string() == "best fit"sv) {
+    if (matcher.as_string().deprecated_string() == "best fit"sv) {
         // a. Let supportedLocales be BestFitSupportedLocales(availableLocales, requestedLocales).
         supported_locales = best_fit_supported_locales(requested_locales);
     }

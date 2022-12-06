@@ -148,7 +148,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
 
 #if 0
     if (!m_desktop_resolution.is_null()) {
-        auto displayed_resolution_string = Gfx::IntSize { m_desktop_resolution.width(), m_desktop_resolution.height() }.to_string();
+        auto displayed_resolution_string = Gfx::IntSize { m_desktop_resolution.width(), m_desktop_resolution.height() }.to_deprecated_string();
 
         // Render text label scaled with scale factor to hint at its effect.
         // FIXME: Once bitmaps have intrinsic scale factors, we could create a bitmap with an intrinsic scale factor of m_desktop_scale_factor

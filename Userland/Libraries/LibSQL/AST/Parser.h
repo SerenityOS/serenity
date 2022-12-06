@@ -26,7 +26,7 @@ class Parser {
         DeprecatedString message;
         SourcePosition position;
 
-        DeprecatedString to_string() const
+        DeprecatedString to_deprecated_string() const
         {
             return DeprecatedString::formatted("{} (line: {}, column: {})", message, position.line, position.column);
         }

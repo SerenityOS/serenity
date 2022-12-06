@@ -85,7 +85,7 @@ public:
     void report_exception(JS::Error const&, bool) const;
 
 private:
-    ThrowCompletionOr<DeprecatedString> value_vector_to_string(MarkedVector<Value> const&);
+    ThrowCompletionOr<DeprecatedString> value_vector_to_deprecated_string(MarkedVector<Value> const&);
     ThrowCompletionOr<DeprecatedString> format_time_since(Core::ElapsedTimer timer);
 
     Realm& m_realm;

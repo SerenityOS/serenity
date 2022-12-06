@@ -180,7 +180,7 @@ public:
     bool is_anchored() const { return m_is_anchored; }
     bool is_empty() const { return m_is_empty; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     bool m_underline { false };

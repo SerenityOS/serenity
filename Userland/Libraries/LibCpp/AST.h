@@ -228,7 +228,7 @@ public:
     virtual bool is_type() const override { return true; }
     virtual bool is_templatized() const { return false; }
     virtual bool is_named_type() const { return false; }
-    virtual DeprecatedString to_string() const = 0;
+    virtual DeprecatedString to_deprecated_string() const = 0;
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
     bool is_auto() const { return m_is_auto; }
@@ -251,7 +251,7 @@ class NamedType : public Type {
 public:
     virtual ~NamedType() override = default;
     virtual StringView class_name() const override { return "NamedType"sv; }
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
     virtual bool is_named_type() const override { return true; }
 
     NamedType(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
@@ -271,7 +271,7 @@ public:
     virtual ~Pointer() override = default;
     virtual StringView class_name() const override { return "Pointer"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     Pointer(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Type(parent, start, end, filename)
@@ -290,7 +290,7 @@ public:
     virtual ~Reference() override = default;
     virtual StringView class_name() const override { return "Reference"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     enum class Kind {
         Lvalue,
@@ -317,7 +317,7 @@ public:
     virtual ~FunctionType() override = default;
     virtual StringView class_name() const override { return "FunctionType"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual DeprecatedString to_string() const override;
+    virtual DeprecatedString to_deprecated_string() const override;
 
     FunctionType(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Type(parent, start, end, filename)

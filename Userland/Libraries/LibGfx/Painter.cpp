@@ -2417,7 +2417,7 @@ DeprecatedString parse_ampersand_string(StringView raw_text, Optional<size_t>* u
         }
         builder.append(raw_text[i]);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::Font const& font, Gfx::TextAlignment text_alignment, Gfx::Color color)

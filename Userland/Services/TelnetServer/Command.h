@@ -21,7 +21,7 @@ struct Command {
     u8 command;
     u8 subcommand;
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         StringBuilder builder;
 
@@ -57,6 +57,6 @@ struct Command {
             break;
         }
 
-        return builder.to_string();
+        return builder.to_deprecated_string();
     };
 };

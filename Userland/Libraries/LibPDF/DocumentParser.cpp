@@ -741,7 +741,7 @@ struct Formatter<PDF::DocumentParser::LinearizationDictionary> : Formatter<Strin
         builder.appendff("  offset_of_main_xref_table={}\n", dict.offset_of_main_xref_table);
         builder.appendff("  first_page={}\n", dict.first_page);
         builder.append('}');
-        return Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
     }
 };
 
@@ -765,7 +765,7 @@ struct Formatter<PDF::DocumentParser::PageOffsetHintTable> : Formatter<StringVie
         builder.appendff("  bits_required_for_fraction_numerator={}\n", table.bits_required_for_fraction_numerator);
         builder.appendff("  shared_object_reference_fraction_denominator={}\n", table.shared_object_reference_fraction_denominator);
         builder.append('}');
-        return Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
     }
 };
 
@@ -789,7 +789,7 @@ struct Formatter<PDF::DocumentParser::PageOffsetHintTableEntry> : Formatter<Stri
         builder.appendff("  page_content_stream_offset_number={}\n", entry.page_content_stream_offset_number);
         builder.appendff("  page_content_stream_length_number={}\n", entry.page_content_stream_length_number);
         builder.append('}');
-        return Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_deprecated_string());
     }
 };
 

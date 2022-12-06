@@ -199,7 +199,7 @@ public:
         return default_value;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         return visit(
             [](Empty) -> DeprecatedString { return "[null]"; },

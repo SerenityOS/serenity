@@ -33,7 +33,7 @@ public:
     Token const& token() const { return m_value.get<Token>(); }
     operator Token() const { return m_value.get<Token>(); }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
     DeprecatedString to_debug_string() const;
 
 private:
@@ -45,6 +45,6 @@ template<>
 struct AK::Formatter<Web::CSS::Parser::ComponentValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Parser::ComponentValue const& component_value)
     {
-        return Formatter<StringView>::format(builder, component_value.to_string());
+        return Formatter<StringView>::format(builder, component_value.to_deprecated_string());
     }
 };

@@ -118,9 +118,9 @@ void LookupServer::load_etc_hosts()
         add_answer(name, RecordType::A, DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) });
 
         StringBuilder builder;
-        builder.append(maybe_address->to_string_reversed());
+        builder.append(maybe_address->to_deprecated_string_reversed());
         builder.append(".in-addr.arpa"sv);
-        add_answer(builder.to_string(), RecordType::PTR, name.as_string());
+        add_answer(builder.to_deprecated_string(), RecordType::PTR, name.as_string());
     }
 }
 

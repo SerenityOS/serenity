@@ -150,7 +150,7 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     MUST(html_element->append_child(body_element));
 
     auto image_element = document.create_element("img").release_value();
-    MUST(image_element->set_attribute(HTML::AttributeNames::src, document.url().to_string()));
+    MUST(image_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
     MUST(body_element->append_child(image_element));
 
     return true;
@@ -342,7 +342,7 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString co
             VERIFY(!data.is_null());
             StringBuilder builder;
             SourceGenerator generator { builder };
-            generator.set("failed_url", escape_html_entities(failed_url.to_string()));
+            generator.set("failed_url", escape_html_entities(failed_url.to_deprecated_string()));
             generator.set("error", escape_html_entities(error));
             generator.append(data);
             load_html(generator.as_string_view(), failed_url);

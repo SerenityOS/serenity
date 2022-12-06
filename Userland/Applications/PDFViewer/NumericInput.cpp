@@ -26,7 +26,7 @@ NumericInput::NumericInput()
             first = false;
         }
 
-        auto new_number_opt = builder.to_string().to_int();
+        auto new_number_opt = builder.to_deprecated_string().to_int();
         if (!new_number_opt.has_value()) {
             m_needs_text_reset = true;
             return;
@@ -34,7 +34,7 @@ NumericInput::NumericInput()
             m_needs_text_reset = false;
         }
 
-        set_text(builder.to_string());
+        set_text(builder.to_deprecated_string());
         set_current_number(new_number_opt.value(), GUI::AllowCallback::No);
     };
 

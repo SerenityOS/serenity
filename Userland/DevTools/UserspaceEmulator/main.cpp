@@ -104,7 +104,7 @@ int main(int argc, char** argv, char** env)
         perror("set_process_name");
         return 1;
     }
-    int rc = pthread_setname_np(pthread_self(), builder.to_string().characters());
+    int rc = pthread_setname_np(pthread_self(), builder.to_deprecated_string().characters());
     if (rc != 0) {
         reportln("pthread_setname_np: {}"sv, strerror(rc));
         return 1;

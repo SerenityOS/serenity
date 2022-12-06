@@ -980,7 +980,7 @@ DeprecatedString TerminalWidget::selected_text() const
         }
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 int TerminalWidget::first_selection_column_on_row(int row) const
@@ -1153,7 +1153,7 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
             if (url.scheme() == "file")
                 send_non_user_input(url.path().bytes());
             else
-                send_non_user_input(url.to_string().bytes());
+                send_non_user_input(url.to_deprecated_string().bytes());
 
             first = false;
         }

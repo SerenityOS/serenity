@@ -27,10 +27,10 @@ void SemanticSyntaxHighlighter::rehighlight(Palette const& palette)
         StringBuilder previous_tokens_as_lines;
 
         for (auto& token : current_tokens)
-            current_tokens_as_lines.appendff("{}\n", token.type_as_string());
+            current_tokens_as_lines.appendff("{}\n", token.type_as_deprecated_string());
 
         for (Cpp::Token const& token : m_saved_tokens)
-            previous_tokens_as_lines.appendff("{}\n", token.type_as_string());
+            previous_tokens_as_lines.appendff("{}\n", token.type_as_deprecated_string());
 
         auto previous = previous_tokens_as_lines.build();
         auto current = current_tokens_as_lines.build();

@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-analog-clock"sv));
     auto window = TRY(GUI::Window::try_create());
-    window->set_title(Core::DateTime::now().to_string("%Y-%m-%d"sv));
+    window->set_title(Core::DateTime::now().to_deprecated_string("%Y-%m-%d"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(170, 170);
     window->set_resizable(false);

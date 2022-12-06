@@ -104,7 +104,7 @@ int main(int argc, char** argv)
         builder.append(namespace_);
         builder.append("::"sv);
         builder.append(interface.name);
-        interface.fully_qualified_name = builder.to_string();
+        interface.fully_qualified_name = builder.to_deprecated_string();
     } else {
         interface.fully_qualified_name = interface.name;
     }

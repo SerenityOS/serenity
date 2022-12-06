@@ -44,6 +44,6 @@ TEST_CASE(test_decode)
             illegal_character_builder.append(byte);
     }
 
-    auto illegal_character_decode = IMAP::decode_quoted_printable(illegal_character_builder.to_string());
+    auto illegal_character_decode = IMAP::decode_quoted_printable(illegal_character_builder.to_deprecated_string());
     EXPECT(illegal_character_decode.is_empty());
 }

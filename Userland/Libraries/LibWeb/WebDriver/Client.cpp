@@ -106,7 +106,7 @@ static constexpr auto s_webdriver_endpoints = Array {
 // https://w3c.github.io/webdriver/#dfn-match-a-request
 static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request)
 {
-    dbgln_if(WEBDRIVER_DEBUG, "match_route({}, {})", HTTP::to_string(request.method()), request.resource());
+    dbgln_if(WEBDRIVER_DEBUG, "match_route({}, {})", HTTP::to_deprecated_string(request.method()), request.resource());
 
     auto request_path = request.resource().view();
     Vector<StringView> parameters;
@@ -125,7 +125,7 @@ static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request
     };
 
     for (auto const& route : s_webdriver_endpoints) {
-        dbgln_if(WEBDRIVER_DEBUG, "- Checking {} {}", HTTP::to_string(route.method), route.path);
+        dbgln_if(WEBDRIVER_DEBUG, "- Checking {} {}", HTTP::to_deprecated_string(route.method), route.path);
         if (route.method != request.method())
             continue;
 
@@ -252,7 +252,7 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
     if constexpr (WEBDRIVER_DEBUG) {
         dbgln("Got HTTP request: {} {}", m_request->method_name(), m_request->resource());
         if (!body.is_null())
-            dbgln("Body: {}", body.to_string());
+            dbgln("Body: {}", body.to_deprecated_string());
     }
 
     auto const& [handler, parameters] = TRY(match_route(*m_request));
@@ -325,7 +325,7 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
 
 void Client::log_response(unsigned code)
 {
-    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, m_request->method_name(), m_request->resource());
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_deprecated_string(), code, m_request->method_name(), m_request->resource());
 }
 
 }

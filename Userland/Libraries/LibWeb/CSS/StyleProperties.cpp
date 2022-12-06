@@ -81,7 +81,7 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
     }
 
     // FIXME: Support `fit-content(<length>)`
-    dbgln("FIXME: Unsupported size value: `{}`, treating as `auto`", value->to_string());
+    dbgln("FIXME: Unsupported size value: `{}`, treating as `auto`", value->to_deprecated_string());
     return CSS::Size::make_auto();
 }
 
@@ -201,13 +201,13 @@ float StyleProperties::opacity() const
             if (maybe_percentage.has_value())
                 unclamped_opacity = maybe_percentage->as_fraction();
             else
-                dbgln("Unable to resolve calc() as opacity (percentage): {}", value->to_string());
+                dbgln("Unable to resolve calc() as opacity (percentage): {}", value->to_deprecated_string());
         } else {
             auto maybe_number = value->as_calculated().resolve_number();
             if (maybe_number.has_value())
                 unclamped_opacity = maybe_number.value();
             else
-                dbgln("Unable to resolve calc() as opacity (number): {}", value->to_string());
+                dbgln("Unable to resolve calc() as opacity (number): {}", value->to_deprecated_string());
         }
     } else if (value->is_percentage()) {
         unclamped_opacity = value->as_percentage().percentage().as_fraction();
@@ -498,24 +498,24 @@ CSS::ContentData StyleProperties::content() const
         StringBuilder builder;
         for (auto const& item : content_style_value.content().values()) {
             if (item.is_string()) {
-                builder.append(item.to_string());
+                builder.append(item.to_deprecated_string());
             } else {
                 // TODO: Implement quotes, counters, images, and other things.
             }
         }
         content_data.type = ContentData::Type::String;
-        content_data.data = builder.to_string();
+        content_data.data = builder.to_deprecated_string();
 
         if (content_style_value.has_alt_text()) {
             StringBuilder alt_text_builder;
             for (auto const& item : content_style_value.alt_text()->values()) {
                 if (item.is_string()) {
-                    alt_text_builder.append(item.to_string());
+                    alt_text_builder.append(item.to_deprecated_string());
                 } else {
                     // TODO: Implement counters
                 }
             }
-            content_data.alt_text = alt_text_builder.to_string();
+            content_data.alt_text = alt_text_builder.to_deprecated_string();
         }
 
         return content_data;
@@ -608,7 +608,7 @@ Vector<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
     if (value->is_identifier() && value->to_identifier() == ValueID::None)
         return {};
 
-    dbgln("FIXME: Unsupported value for text-decoration-line: {}", value->to_string());
+    dbgln("FIXME: Unsupported value for text-decoration-line: {}", value->to_deprecated_string());
     return {};
 }
 

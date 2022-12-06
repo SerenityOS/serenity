@@ -40,10 +40,10 @@ Time Time::percentage_of(Percentage const& percentage) const
     return Time { percentage.as_fraction() * m_value, m_type };
 }
 
-DeprecatedString Time::to_string() const
+DeprecatedString Time::to_deprecated_string() const
 {
     if (is_calculated())
-        return m_calculated_style->to_string();
+        return m_calculated_style->to_deprecated_string();
     return DeprecatedString::formatted("{}{}", m_value, unit_name());
 }
 

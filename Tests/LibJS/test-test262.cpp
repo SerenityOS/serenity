@@ -427,7 +427,7 @@ void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<Deprec
     complete_results.set("duration", time_taken_in_ms / 1000.);
     complete_results.set("results", result_object);
 
-    if (!file->write_or_error(complete_results.to_string().bytes()))
+    if (!file->write_or_error(complete_results.to_deprecated_string().bytes()))
         warnln("Failed to write per-file");
     file->close();
 }

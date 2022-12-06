@@ -88,7 +88,7 @@ void TextNode::compute_text_for_rendering(bool collapse)
         }
     }
 
-    m_text_for_rendering = builder.to_string();
+    m_text_for_rendering = builder.to_deprecated_string();
 }
 
 TextNode::ChunkIterator::ChunkIterator(StringView text, bool wrap_lines, bool respect_linebreaks, bool is_generated_empty_string)

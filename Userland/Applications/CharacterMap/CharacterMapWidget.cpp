@@ -54,7 +54,7 @@ CharacterMapWidget::CharacterMapWidget()
                 continue;
             builder.append_code_point(code_point);
         }
-        GUI::Clipboard::the().set_plain_text(builder.to_string());
+        GUI::Clipboard::the().set_plain_text(builder.to_deprecated_string());
     });
     m_copy_selection_action->set_status_tip("Copy the highlighted characters to the clipboard");
 
@@ -179,5 +179,5 @@ void CharacterMapWidget::update_statusbar()
     builder.appendff("U+{:04X}", code_point);
     if (auto display_name = Unicode::code_point_display_name(code_point); display_name.has_value())
         builder.appendff(" - {}", display_name.value());
-    m_statusbar->set_text(builder.to_string());
+    m_statusbar->set_text(builder.to_deprecated_string());
 }

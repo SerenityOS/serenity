@@ -89,7 +89,7 @@ public:
             result.append(DeprecatedString::number(port()));
         }
         // 6. Return result
-        return result.to_string();
+        return result.to_deprecated_string();
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain

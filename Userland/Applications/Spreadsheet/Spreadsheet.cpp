@@ -57,7 +57,7 @@ Sheet::Sheet(Workbook& workbook)
             warnln("Spreadsheet: Failed to parse runtime code");
             for (auto& error : script_or_error.error()) {
                 // FIXME: This doesn't print hints anymore
-                warnln("SyntaxError: {}", error.to_string());
+                warnln("SyntaxError: {}", error.to_deprecated_string());
             }
         } else {
             auto result = interpreter().run(script_or_error.value());
@@ -172,7 +172,7 @@ JS::ThrowCompletionOr<JS::Value> Sheet::evaluate(StringView source, Cell* on_beh
         name);
 
     if (script_or_error.is_error())
-        return interpreter().vm().throw_completion<JS::SyntaxError>(script_or_error.error().first().to_string());
+        return interpreter().vm().throw_completion<JS::SyntaxError>(script_or_error.error().first().to_deprecated_string());
 
     return interpreter().run(script_or_error.value());
 }
@@ -260,12 +260,12 @@ Cell* Sheet::from_url(const URL& url)
 Optional<Position> Sheet::position_from_url(const URL& url) const
 {
     if (!url.is_valid()) {
-        dbgln("Invalid url: {}", url.to_string());
+        dbgln("Invalid url: {}", url.to_deprecated_string());
         return {};
     }
 
     if (url.scheme() != "spreadsheet" || url.host() != "cell") {
-        dbgln("Bad url: {}", url.to_string());
+        dbgln("Bad url: {}", url.to_deprecated_string());
         return {};
     }
 
@@ -422,7 +422,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
             OwnPtr<Cell> cell;
             switch (kind) {
             case Cell::LiteralString:
-                cell = make<Cell>(obj.get("value"sv).to_string(), position, *sheet);
+                cell = make<Cell>(obj.get("value"sv).to_deprecated_string(), position, *sheet);
                 break;
             case Cell::Formula: {
                 auto& vm = sheet->interpreter().vm();
@@ -431,12 +431,12 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();
                 }
-                cell = make<Cell>(obj.get("source"sv).to_string(), value_or_error.release_value(), position, *sheet);
+                cell = make<Cell>(obj.get("source"sv).to_deprecated_string(), value_or_error.release_value(), position, *sheet);
                 break;
             }
             }
 
-            auto type_name = obj.has("type"sv) ? obj.get("type"sv).to_string() : "Numeric";
+            auto type_name = obj.has("type"sv) ? obj.get("type"sv).to_deprecated_string() : "Numeric";
             cell->set_type(type_name);
 
             auto type_meta = obj.get("type_metadata"sv);
@@ -465,7 +465,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                         return IterationDecision::Continue;
 
                     auto& fmt_obj = fmt_val.as_object();
-                    auto fmt_cond = fmt_obj.get("condition"sv).to_string();
+                    auto fmt_cond = fmt_obj.get("condition"sv).to_deprecated_string();
                     if (fmt_cond.is_empty())
                         return IterationDecision::Continue;
 
@@ -532,9 +532,9 @@ JsonObject Sheet::to_json() const
 
     auto save_format = [](auto const& format, auto& obj) {
         if (format.foreground_color.has_value())
-            obj.set("foreground_color", format.foreground_color.value().to_string());
+            obj.set("foreground_color", format.foreground_color.value().to_deprecated_string());
         if (format.background_color.has_value())
-            obj.set("background_color", format.background_color.value().to_string());
+            obj.set("background_color", format.background_color.value().to_deprecated_string());
     };
 
     auto bottom_right = written_data_bounds();
@@ -552,7 +552,7 @@ JsonObject Sheet::to_json() const
         StringBuilder builder;
         builder.append(column(it.key.column));
         builder.appendff("{}", it.key.row);
-        auto key = builder.to_string();
+        auto key = builder.to_deprecated_string();
 
         JsonObject data;
         data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
@@ -737,7 +737,7 @@ DeprecatedString Sheet::generate_inline_documentation_for(StringView function, s
             builder.append('<');
         else if (i >= argc)
             builder.append('[');
-        builder.append(argnames[i].to_string());
+        builder.append(argnames[i].to_deprecated_string());
         if (i == argument_index)
             builder.append('>');
         else if (i >= argc)

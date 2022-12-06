@@ -663,7 +663,7 @@ DeprecatedString Document::title() const
             last_was_space = false;
         }
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Document::set_title(DeprecatedString const& title)
@@ -1595,7 +1595,7 @@ DeprecatedString Document::dump_dom_tree_as_json() const
     serialize_tree_as_json(json);
 
     MUST(json.finish());
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#has-a-style-sheet-that-is-blocking-scripts

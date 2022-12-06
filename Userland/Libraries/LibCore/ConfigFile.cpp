@@ -113,7 +113,7 @@ ErrorOr<void> ConfigFile::reparse()
                 builder.append(line[i]);
                 ++i;
             }
-            current_group = &m_groups.ensure(builder.to_string());
+            current_group = &m_groups.ensure(builder.to_deprecated_string());
             break;
         }
         default: { // Start of key
@@ -132,8 +132,8 @@ ErrorOr<void> ConfigFile::reparse()
                 // We're not in a group yet, create one with the name ""...
                 current_group = &m_groups.ensure("");
             }
-            auto value_string = value_builder.to_string();
-            current_group->set(key_builder.to_string(), value_string.trim_whitespace(TrimMode::Right));
+            auto value_string = value_builder.to_deprecated_string();
+            current_group->set(key_builder.to_deprecated_string(), value_string.trim_whitespace(TrimMode::Right));
         }
         }
     }

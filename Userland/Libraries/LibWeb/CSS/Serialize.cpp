@@ -113,7 +113,7 @@ void serialize_a_url(StringBuilder& builder, StringView url)
     // To serialize a URL means to create a string represented by "url(",
     // followed by the serialization of the URL as a string, followed by ")".
     builder.append("url("sv);
-    serialize_a_string(builder, url.to_string());
+    serialize_a_string(builder, url.to_deprecated_string());
     builder.append(')');
 }
 
@@ -123,7 +123,7 @@ void serialize_a_local(StringBuilder& builder, StringView path)
     // To serialize a LOCAL means to create a string represented by "local(",
     // followed by the serialization of the LOCAL as a string, followed by ")".
     builder.append("local("sv);
-    serialize_a_string(builder, path.to_string());
+    serialize_a_string(builder, path.to_deprecated_string());
     builder.append(')');
 }
 
@@ -131,7 +131,7 @@ void serialize_a_local(StringBuilder& builder, StringView path)
 void serialize_unicode_ranges(StringBuilder& builder, Vector<UnicodeRange> const& unicode_ranges)
 {
     serialize_a_comma_separated_list(builder, unicode_ranges, [&](UnicodeRange unicode_range) {
-        serialize_a_string(builder, unicode_range.to_string());
+        serialize_a_string(builder, unicode_range.to_deprecated_string());
     });
 }
 
@@ -151,42 +151,42 @@ DeprecatedString escape_a_character(u32 character)
 {
     StringBuilder builder;
     escape_a_character(builder, character);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString escape_a_character_as_code_point(u32 character)
 {
     StringBuilder builder;
     escape_a_character_as_code_point(builder, character);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString serialize_an_identifier(StringView ident)
 {
     StringBuilder builder;
     serialize_an_identifier(builder, ident);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString serialize_a_string(StringView string)
 {
     StringBuilder builder;
     serialize_a_string(builder, string);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString serialize_a_url(StringView url)
 {
     StringBuilder builder;
     serialize_a_url(builder, url);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString serialize_a_srgb_value(Color color)
 {
     StringBuilder builder;
     serialize_a_srgb_value(builder, color);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

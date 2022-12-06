@@ -439,7 +439,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
             body_with_type = TRY(Fetch::extract_body(realm, body->downcast<Fetch::BodyInitOrReadableBytes>()));
     }
 
-    AK::URL request_url = m_window->associated_document().parse_url(m_request_url.to_string());
+    AK::URL request_url = m_window->associated_document().parse_url(m_request_url.to_deprecated_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
@@ -587,7 +587,7 @@ DeprecatedString XMLHttpRequest::get_all_response_headers() const
         builder.append(m_response_headers.get(key).value());
         builder.append("\r\n"sv);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-overridemimetype

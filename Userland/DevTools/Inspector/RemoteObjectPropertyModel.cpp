@@ -53,7 +53,7 @@ GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Name:
-            return path->last().to_string();
+            return path->last().to_deprecated_string();
         case Column::Value: {
             auto data = path->resolve(m_object.json);
             if (data.is_array())
@@ -77,7 +77,7 @@ void RemoteObjectPropertyModel::set_data(const GUI::ModelIndex& index, const GUI
         return;
 
     FlatPtr address = m_object.address;
-    RemoteProcess::the().set_property(address, path->first().to_string(), new_value.to_string());
+    RemoteProcess::the().set_property(address, path->first().to_deprecated_string(), new_value.to_deprecated_string());
     did_update();
 }
 
@@ -164,7 +164,7 @@ GUI::ModelIndex RemoteObjectPropertyModel::parent_index(const GUI::ModelIndex& i
         return create_index(index_in_parent, 0, cpath);
     }
 
-    dbgln("No cached path found for path {}", path.to_string());
+    dbgln("No cached path found for path {}", path.to_deprecated_string());
     return {};
 }
 

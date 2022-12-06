@@ -997,7 +997,7 @@ public:
         };
     }
 
-    [[nodiscard]] DeprecatedString to_string() const;
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
 
 private:
     Point<T> m_location;

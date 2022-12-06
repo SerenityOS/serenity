@@ -17,7 +17,7 @@ struct ParserError {
     DeprecatedString message;
     Optional<Position> position;
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
     DeprecatedString source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
 };
 

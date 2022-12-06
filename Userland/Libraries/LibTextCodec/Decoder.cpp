@@ -211,7 +211,7 @@ DeprecatedString Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
     process(input, [&builder](u32 c) { builder.append_code_point(c); });
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void UTF8Decoder::process(StringView input, Function<void(u32)> on_code_point)
@@ -250,7 +250,7 @@ DeprecatedString UTF16BEDecoder::to_utf8(StringView input)
 
     StringBuilder builder(bomless_input.length() / 2);
     process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void UTF16LEDecoder::process(StringView input, Function<void(u32)> on_code_point)
@@ -271,7 +271,7 @@ DeprecatedString UTF16LEDecoder::to_utf8(StringView input)
 
     StringBuilder builder(bomless_input.length() / 2);
     process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 void Latin1Decoder::process(StringView input, Function<void(u32)> on_code_point)

@@ -1364,7 +1364,7 @@ bool Module::populate_sections()
     return is_ok;
 }
 
-DeprecatedString parse_error_to_string(ParseError error)
+DeprecatedString parse_error_to_deprecated_string(ParseError error)
 {
     switch (error) {
     case ParseError::UnexpectedEof:

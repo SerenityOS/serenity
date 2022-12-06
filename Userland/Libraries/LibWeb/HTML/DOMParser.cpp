@@ -31,7 +31,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
     auto document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
-    document->set_content_type(Bindings::idl_enum_to_string(type));
+    document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
 
     // 2. Switch on type:
     if (type == Bindings::DOMParserSupportedType::Text_Html) {

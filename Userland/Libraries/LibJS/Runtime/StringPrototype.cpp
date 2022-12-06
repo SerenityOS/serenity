@@ -578,7 +578,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     StringBuilder builder;
     for (size_t i = 0; i < n; ++i)
         builder.append(string);
-    return js_string(vm, builder.to_string());
+    return js_string(vm, builder.to_deprecated_string());
 }
 
 // 22.1.3.18 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
@@ -897,7 +897,7 @@ static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView str
 
     // 4. Let noExtensionsLocale be the String value that is requestedLocale with any Unicode locale extension sequences (6.2.1) removed.
     requested_locale->remove_extension_type<Locale::LocaleExtension>();
-    auto no_extensions_locale = requested_locale->to_string();
+    auto no_extensions_locale = requested_locale->to_deprecated_string();
 
     // 5. Let availableLocales be a List with language tags that includes the languages for which the Unicode Character Database contains language sensitive case mappings. Implementations may add additional language tags if they support case mapping for additional locales.
     // 6. Let locale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).

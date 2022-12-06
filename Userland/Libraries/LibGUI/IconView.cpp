@@ -100,7 +100,7 @@ auto IconView::get_item_data(int item_index) const -> ItemData&
         return item_data;
 
     item_data.index = model()->index(item_index, model_column());
-    item_data.text = item_data.index.data().to_string();
+    item_data.text = item_data.index.data().to_deprecated_string();
     get_item_rects(item_index, item_data, font_for_index(item_data.index));
     item_data.valid = true;
     return item_data;

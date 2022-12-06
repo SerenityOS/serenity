@@ -95,13 +95,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get("ip_address"sv).to_string() < b.as_object().get("ip_address"sv).to_string();
+            return a.as_object().get("ip_address"sv).to_deprecated_string() < b.as_object().get("ip_address"sv).to_deprecated_string();
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto ip_address = if_object.get("ip_address"sv).to_string();
+            auto ip_address = if_object.get("ip_address"sv).to_deprecated_string();
 
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(ip_address);
@@ -114,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto mac_address = if_object.get("mac_address"sv).to_string();
+            auto mac_address = if_object.get("mac_address"sv).to_deprecated_string();
 
             if (proto_address_column != -1)
                 columns[proto_address_column].buffer = ip_address;

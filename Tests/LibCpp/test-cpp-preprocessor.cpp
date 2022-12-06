@@ -48,7 +48,7 @@ TEST_CASE(test_regression)
 
         EXPECT_EQ(tokens.size(), target_lines.size());
         for (size_t i = 0; i < tokens.size(); ++i) {
-            EXPECT_EQ(tokens[i].to_string(), target_lines[i]);
+            EXPECT_EQ(tokens[i].to_deprecated_string(), target_lines[i]);
         }
     }
 }

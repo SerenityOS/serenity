@@ -10,14 +10,14 @@
 
 namespace PDF {
 
-DeprecatedString OutlineItem::to_string(int indent) const
+DeprecatedString OutlineItem::to_deprecated_string(int indent) const
 {
     auto indent_str = DeprecatedString::repeated("  "sv, indent + 1);
 
     StringBuilder child_builder;
     child_builder.append('[');
     for (auto& child : children)
-        child_builder.appendff("{}\n", child.to_string(indent + 1));
+        child_builder.appendff("{}\n", child.to_deprecated_string(indent + 1));
     child_builder.appendff("{}]", indent_str);
 
     StringBuilder builder;
@@ -28,10 +28,10 @@ DeprecatedString OutlineItem::to_string(int indent) const
     builder.appendff("{}color={}\n", indent_str, color);
     builder.appendff("{}italic={}\n", indent_str, italic);
     builder.appendff("{}bold={}\n", indent_str, bold);
-    builder.appendff("{}children={}\n", indent_str, child_builder.to_string());
+    builder.appendff("{}children={}\n", indent_str, child_builder.to_deprecated_string());
     builder.appendff("{}}}", DeprecatedString::repeated("  "sv, indent));
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)

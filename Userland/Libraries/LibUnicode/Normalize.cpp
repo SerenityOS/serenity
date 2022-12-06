@@ -307,7 +307,7 @@ DeprecatedString normalize(StringView string, NormalizationForm form)
         builder.append_code_point(code_point);
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

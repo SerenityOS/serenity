@@ -1498,14 +1498,14 @@ void Editor::refresh_display()
             dbgln("Drawn Spans:");
             for (auto& sentry : m_drawn_spans.m_spans_starting) {
                 for (auto& entry : sentry.value) {
-                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_string());
+                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_deprecated_string());
                 }
             }
             dbgln("==========================================================================");
             dbgln("Current Spans:");
             for (auto& sentry : m_current_spans.m_spans_starting) {
                 for (auto& entry : sentry.value) {
-                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_string());
+                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_deprecated_string());
                 }
             }
         }
@@ -1680,7 +1680,7 @@ void Style::unify_with(Style const& other, bool prefer_other)
         m_hyperlink = other.hyperlink();
 }
 
-DeprecatedString Style::to_string() const
+DeprecatedString Style::to_deprecated_string() const
 {
     StringBuilder builder;
     builder.append("Style { "sv);
@@ -2277,11 +2277,11 @@ bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) con
                     if constexpr (LINE_EDITOR_DEBUG) {
                         dbgln("Compare for {}-{} failed, no entry", entry.key, left_entry.key);
                         for (auto& x : entry.value)
-                            dbgln("Have: {}-{} = {}", entry.key, x.key, x.value.to_string());
+                            dbgln("Have: {}-{} = {}", entry.key, x.key, x.value.to_deprecated_string());
                     }
                     return false;
                 } else if (value_it->value != left_entry.value) {
-                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value_it->value.to_string(), left_entry.value.to_string());
+                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value_it->value.to_deprecated_string(), left_entry.value.to_deprecated_string());
                     return false;
                 }
             }

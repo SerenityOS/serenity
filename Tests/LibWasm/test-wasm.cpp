@@ -113,7 +113,7 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     };
     auto result = Wasm::Module::parse(stream);
     if (result.is_error())
-        return vm.throw_completion<JS::SyntaxError>(Wasm::parse_error_to_string(result.error()));
+        return vm.throw_completion<JS::SyntaxError>(Wasm::parse_error_to_deprecated_string(result.error()));
 
     if (stream.handle_any_error())
         return vm.throw_completion<JS::SyntaxError>("Binary stream contained errors");

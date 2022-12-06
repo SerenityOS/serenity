@@ -24,20 +24,20 @@ DeclarationOrAtRule::DeclarationOrAtRule(Declaration declaration)
 
 DeclarationOrAtRule::~DeclarationOrAtRule() = default;
 
-DeprecatedString DeclarationOrAtRule::to_string() const
+DeprecatedString DeclarationOrAtRule::to_deprecated_string() const
 {
     StringBuilder builder;
     switch (m_type) {
     default:
     case DeclarationType::At:
-        builder.append(m_at->to_string());
+        builder.append(m_at->to_deprecated_string());
         break;
     case DeclarationType::Declaration:
-        builder.append(m_declaration->to_string());
+        builder.append(m_declaration->to_deprecated_string());
         break;
     }
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

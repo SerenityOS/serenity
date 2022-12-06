@@ -17,7 +17,7 @@
 namespace Locale {
 
 struct LanguageID {
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
     bool operator==(LanguageID const&) const = default;
 
     bool is_root { false };
@@ -55,7 +55,7 @@ struct OtherExtension {
 using Extension = AK::Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
     template<typename ExtensionType>
     Vector<Extension> remove_extension_type()

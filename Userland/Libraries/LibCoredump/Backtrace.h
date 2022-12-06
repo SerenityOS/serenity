@@ -35,7 +35,7 @@ public:
         DeprecatedString function_name;
         Debug::DebugInfo::SourcePositionWithInlines source_position_with_inlines;
 
-        DeprecatedString to_string(bool color = false) const;
+        DeprecatedString to_deprecated_string(bool color = false) const;
     };
 
     Backtrace(Reader const&, const ELF::Core::ThreadInfo&, Function<void(size_t, size_t)> on_progress = {});

@@ -32,7 +32,7 @@ public:
 
     Vector<ComponentValue> const& values() const { return m_values; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     Block(Token, Vector<ComponentValue>&&);

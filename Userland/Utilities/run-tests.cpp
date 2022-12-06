@@ -159,7 +159,7 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
                         auto tid = thread_info.tid; // Note: Yoinking this out of the struct because we can't pass a reference to it (as it's a misaligned field in a packed struct)
                         dbgln("Thread {}", tid);
                         for (auto const& entry : thread_backtrace.entries())
-                            dbgln("- {}", entry.to_string(true));
+                            dbgln("- {}", entry.to_deprecated_string(true));
                         return IterationDecision::Continue;
                     });
                     break;

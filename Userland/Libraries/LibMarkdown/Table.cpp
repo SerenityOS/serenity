@@ -65,7 +65,7 @@ DeprecatedString Table::render_for_terminal(size_t view_width) const
 
     builder.append('\n');
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Table::render_to_html(bool) const
@@ -108,7 +108,7 @@ DeprecatedString Table::render_to_html(bool) const
     builder.append("</tbody>"sv);
     builder.append("</table>"sv);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 RecursionDecision Table::walk(Visitor& visitor) const

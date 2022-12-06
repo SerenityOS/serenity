@@ -54,7 +54,7 @@ public:
     //      - m_denominator = 10000
     BigFraction rounded(unsigned rounding_threshold) const;
 
-    DeprecatedString to_string(unsigned rounding_threshold) const;
+    DeprecatedString to_deprecated_string(unsigned rounding_threshold) const;
     double to_double() const;
 
 private:

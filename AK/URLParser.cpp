@@ -148,7 +148,7 @@ static DeprecatedString percent_encode_after_encoding(StringView input, URL::Per
     }
 
     // 6. Return output.
-    return output.to_string();
+    return output.to_deprecated_string();
 }
 
 // https://fetch.spec.whatwg.org/#data-urls
@@ -293,7 +293,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
             if (is_ascii_alphanumeric(code_point) || code_point == '+' || code_point == '-' || code_point == '.') {
                 buffer.append_as_lowercase(code_point);
             } else if (code_point == ':') {
-                url->m_scheme = buffer.to_string();
+                url->m_scheme = buffer.to_deprecated_string();
                 buffer.clear();
                 if (url->scheme() == "file") {
                     if (!get_remaining().starts_with("//"sv)) {
@@ -425,7 +425,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
             if (code_point == '@') {
                 report_validation_error();
                 if (at_sign_seen) {
-                    auto content = buffer.to_string();
+                    auto content = buffer.to_deprecated_string();
                     buffer.clear();
                     buffer.append("%40"sv);
                     buffer.append(content);

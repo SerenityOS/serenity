@@ -98,7 +98,7 @@ hostent* gethostbyname(char const* name)
     auto ipv4_address = IPv4Address::from_string({ name, strlen(name) });
 
     if (ipv4_address.has_value()) {
-        gethostbyname_name_buffer = ipv4_address.value().to_string();
+        gethostbyname_name_buffer = ipv4_address.value().to_deprecated_string();
         __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
         __gethostbyname_alias_list_buffer[0] = nullptr;
         __gethostbyname_buffer.h_aliases = __gethostbyname_alias_list_buffer;

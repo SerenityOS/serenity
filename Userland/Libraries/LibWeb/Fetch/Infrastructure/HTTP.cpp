@@ -69,7 +69,7 @@ DeprecatedString collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedSt
 
     // 6. If the extract-value flag is set, then return value.
     if (extract_value == HttpQuotedStringExtractValue::Yes)
-        return value.to_string();
+        return value.to_deprecated_string();
 
     // 7. Return the code points from positionStart to position, inclusive, within input.
     auto position = lexer.tell();

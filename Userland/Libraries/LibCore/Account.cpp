@@ -252,7 +252,7 @@ ErrorOr<DeprecatedString> Account::generate_passwd_file() const
     if (errno)
         return Error::from_errno(errno);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 #ifndef AK_OS_BSD_GENERIC
@@ -293,7 +293,7 @@ ErrorOr<DeprecatedString> Account::generate_shadow_file() const
     if (errno)
         return Error::from_errno(errno);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 #endif
 

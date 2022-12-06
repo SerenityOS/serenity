@@ -34,15 +34,15 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     json.as_array().for_each([cpu_count](JsonValue const& value) {
         auto& handler = value.as_object();
-        auto purpose = handler.get("purpose"sv).to_string();
-        auto interrupt = handler.get("interrupt_line"sv).to_string();
-        auto controller = handler.get("controller"sv).to_string();
+        auto purpose = handler.get("purpose"sv).to_deprecated_string();
+        auto interrupt = handler.get("interrupt_line"sv).to_deprecated_string();
+        auto controller = handler.get("controller"sv).to_deprecated_string();
         auto call_counts = handler.get("per_cpu_call_counts"sv).as_array();
 
         out("{:>4}: ", interrupt);
 
         for (size_t i = 0; i < cpu_count; ++i)
-            out("{:>10}", call_counts[i].to_string());
+            out("{:>10}", call_counts[i].to_deprecated_string());
 
         outln("  {:10}  {:30}", controller, purpose);
     });

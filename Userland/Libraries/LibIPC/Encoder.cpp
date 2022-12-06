@@ -169,7 +169,7 @@ Encoder& Encoder::operator<<(JsonValue const& value)
 
 Encoder& Encoder::operator<<(URL const& value)
 {
-    return *this << value.to_string();
+    return *this << value.to_deprecated_string();
 }
 
 Encoder& Encoder::operator<<(Dictionary const& dictionary)

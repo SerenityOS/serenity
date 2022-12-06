@@ -127,7 +127,7 @@ public:
     ThrowCompletionOr<Value> get_value(VM&) const;
     ThrowCompletionOr<bool> delete_(VM&);
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
     bool is_valid_reference() const { return m_name.is_valid() || m_is_private; }
 

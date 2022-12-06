@@ -129,7 +129,7 @@ public:
         case Column::Shortcut:
             if (!action.shortcut().is_valid())
                 return "";
-            return action.shortcut().to_string();
+            return action.shortcut().to_deprecated_string();
         }
 
         VERIFY_NOT_REACHED();

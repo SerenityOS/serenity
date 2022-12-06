@@ -212,7 +212,7 @@ void print_human_readable(termios const& modes, winsize const& ws, bool verbose_
         } else {
             sb.append(ch);
         }
-        return sb.to_string();
+        return sb.to_deprecated_string();
     };
 
     auto print_control_characters = [&] {

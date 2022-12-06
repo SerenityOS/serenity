@@ -97,7 +97,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url, serialized.
-    return JS::js_string(vm, location_object->url().to_string());
+    return JS::js_string(vm, location_object->url().to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2

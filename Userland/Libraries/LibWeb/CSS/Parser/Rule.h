@@ -41,7 +41,7 @@ public:
     RefPtr<Block const> block() const { return m_block; }
     StringView at_rule_name() const { return m_at_rule_name; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     Rule(Type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);

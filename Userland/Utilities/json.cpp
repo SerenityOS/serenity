@@ -110,7 +110,7 @@ void print(JsonValue const& value, int spaces_per_indent, int indent, bool use_c
     }
     if (value.is_string())
         out("\"");
-    out("{}", value.to_string());
+    out("{}", value.to_deprecated_string());
     if (value.is_string())
         out("\"");
     if (use_color)

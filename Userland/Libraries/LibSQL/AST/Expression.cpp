@@ -56,9 +56,9 @@ ResultOr<Value> BinaryOperatorExpression::evaluate(ExecutionContext& context) co
             return Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()) };
 
         AK::StringBuilder builder;
-        builder.append(lhs_value.to_string());
-        builder.append(rhs_value.to_string());
-        return Value(builder.to_string());
+        builder.append(lhs_value.to_deprecated_string());
+        builder.append(rhs_value.to_deprecated_string());
+        return Value(builder.to_deprecated_string());
     }
     case BinaryOperator::Multiplication:
         return lhs_value.multiply(rhs_value);
@@ -181,7 +181,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
 
         char escape_char = '\0';
         if (escape()) {
-            auto escape_str = TRY(escape()->evaluate(context)).to_string();
+            auto escape_str = TRY(escape()->evaluate(context)).to_deprecated_string();
             if (escape_str.length() != 1)
                 return Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, "ESCAPE should be a single character" };
             escape_char = escape_str[0];
@@ -192,7 +192,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
         bool escaped = false;
         AK::StringBuilder builder;
         builder.append('^');
-        for (auto c : rhs_value.to_string()) {
+        for (auto c : rhs_value.to_deprecated_string()) {
             if (escape() && c == escape_char && !escaped) {
                 escaped = true;
             } else if (s_posix_basic_metacharacters.contains(c)) {
@@ -212,14 +212,14 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
 
         // FIXME: We should probably cache this regex.
         auto regex = Regex<PosixBasic>(builder.build());
-        auto result = regex.match(lhs_value.to_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
+        auto result = regex.match(lhs_value.to_deprecated_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
         return Value(invert_expression() ? !result.success : result.success);
     }
     case MatchOperator::Regexp: {
         Value lhs_value = TRY(lhs()->evaluate(context));
         Value rhs_value = TRY(rhs()->evaluate(context));
 
-        auto regex = Regex<PosixExtended>(rhs_value.to_string());
+        auto regex = Regex<PosixExtended>(rhs_value.to_deprecated_string());
         auto err = regex.parser_result.error;
         if (err != regex::Error::NoError) {
             StringBuilder builder;
@@ -229,7 +229,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
             return Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, builder.build() };
         }
 
-        auto result = regex.match(lhs_value.to_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
+        auto result = regex.match(lhs_value.to_deprecated_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
         return Value(invert_expression() ? !result.success : result.success);
     }
     case MatchOperator::Glob:

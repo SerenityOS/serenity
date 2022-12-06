@@ -67,7 +67,7 @@ struct [[gnu::packed]] MemoryRegionInfo {
         auto maybe_colon_index = memory_region_name.find(':');
         if (!maybe_colon_index.has_value())
             return {};
-        return memory_region_name.substring_view(0, *maybe_colon_index).to_string();
+        return memory_region_name.substring_view(0, *maybe_colon_index).to_deprecated_string();
     }
 #endif
 };

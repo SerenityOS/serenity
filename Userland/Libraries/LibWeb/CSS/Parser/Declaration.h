@@ -22,7 +22,7 @@ public:
     Vector<ComponentValue> const& values() const { return m_values; }
     Important importance() const { return m_important; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     FlyString m_name;

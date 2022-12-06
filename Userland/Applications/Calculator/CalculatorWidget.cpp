@@ -146,7 +146,7 @@ void CalculatorWidget::mimic_pressed_button(RefPtr<GUI::Button> button)
 
 void CalculatorWidget::update_display()
 {
-    m_entry->set_text(m_keypad.to_string());
+    m_entry->set_text(m_keypad.to_deprecated_string());
     if (m_calculator.has_error())
         m_label->set_text("E");
     else

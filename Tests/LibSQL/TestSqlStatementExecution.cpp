@@ -27,7 +27,7 @@ SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database,
     auto statement = parser.next_statement();
     EXPECT(!parser.has_errors());
     if (parser.has_errors())
-        outln("{}", parser.errors()[0].to_string());
+        outln("{}", parser.errors()[0].to_deprecated_string());
     return statement->execute(move(database));
 }
 
@@ -98,7 +98,7 @@ TEST_CASE(insert_into_table)
     auto rows_or_error = database->select_all(*table);
     EXPECT(!rows_or_error.is_error());
     for (auto& row : rows_or_error.value()) {
-        EXPECT_EQ(row["TEXTCOLUMN"].to_string(), "Test");
+        EXPECT_EQ(row["TEXTCOLUMN"].to_deprecated_string(), "Test");
         EXPECT_EQ(row["INTCOLUMN"].to_int().value(), 42);
         count++;
     }
@@ -325,8 +325,8 @@ TEST_CASE(select_inner_join)
     EXPECT_EQ(result.size(), 1u);
     EXPECT_EQ(result[0].row.size(), 3u);
     EXPECT_EQ(result[0].row[0].to_int().value(), 42);
-    EXPECT_EQ(result[0].row[1].to_string(), "Test_1");
-    EXPECT_EQ(result[0].row[2].to_string(), "Test_12");
+    EXPECT_EQ(result[0].row[1].to_deprecated_string(), "Test_1");
+    EXPECT_EQ(result[0].row[2].to_deprecated_string(), "Test_12");
 }
 
 TEST_CASE(select_with_like)
@@ -412,11 +412,11 @@ TEST_CASE(select_with_order)
 
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[0].to_string(), "Test_1");
-    EXPECT_EQ(result[1].row[0].to_string(), "Test_2");
-    EXPECT_EQ(result[2].row[0].to_string(), "Test_3");
-    EXPECT_EQ(result[3].row[0].to_string(), "Test_4");
-    EXPECT_EQ(result[4].row[0].to_string(), "Test_5");
+    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_1");
+    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_2");
+    EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_3");
+    EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_4");
+    EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_5");
 }
 
 TEST_CASE(select_with_regexp)
@@ -487,15 +487,15 @@ TEST_CASE(select_with_order_two_columns)
 
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn, IntColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[0].to_string(), "Test_1");
+    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_1");
     EXPECT_EQ(result[0].row[1].to_int().value(), 47);
-    EXPECT_EQ(result[1].row[0].to_string(), "Test_2");
+    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_2");
     EXPECT_EQ(result[1].row[1].to_int().value(), 40);
-    EXPECT_EQ(result[2].row[0].to_string(), "Test_2");
+    EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_2");
     EXPECT_EQ(result[2].row[1].to_int().value(), 42);
-    EXPECT_EQ(result[3].row[0].to_string(), "Test_4");
+    EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_4");
     EXPECT_EQ(result[3].row[1].to_int().value(), 41);
-    EXPECT_EQ(result[4].row[0].to_string(), "Test_5");
+    EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_5");
     EXPECT_EQ(result[4].row[1].to_int().value(), 44);
 }
 
@@ -516,11 +516,11 @@ TEST_CASE(select_with_order_by_column_not_in_result)
 
     result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[0].to_string(), "Test_3");
-    EXPECT_EQ(result[1].row[0].to_string(), "Test_4");
-    EXPECT_EQ(result[2].row[0].to_string(), "Test_2");
-    EXPECT_EQ(result[3].row[0].to_string(), "Test_5");
-    EXPECT_EQ(result[4].row[0].to_string(), "Test_1");
+    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_3");
+    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_4");
+    EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_2");
+    EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_5");
+    EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_1");
 }
 
 TEST_CASE(select_with_limit)
@@ -618,11 +618,11 @@ TEST_CASE(describe_table)
     auto result = execute(database, "DESCRIBE TABLE TestSchema.TestTable;");
     EXPECT_EQ(result.size(), 2u);
 
-    EXPECT_EQ(result[0].row[0].to_string(), "TEXTCOLUMN");
-    EXPECT_EQ(result[0].row[1].to_string(), "text");
+    EXPECT_EQ(result[0].row[0].to_deprecated_string(), "TEXTCOLUMN");
+    EXPECT_EQ(result[0].row[1].to_deprecated_string(), "text");
 
-    EXPECT_EQ(result[1].row[0].to_string(), "INTCOLUMN");
-    EXPECT_EQ(result[1].row[1].to_string(), "int");
+    EXPECT_EQ(result[1].row[0].to_deprecated_string(), "INTCOLUMN");
+    EXPECT_EQ(result[1].row[1].to_deprecated_string(), "int");
 }
 
 TEST_CASE(binary_operator_execution)

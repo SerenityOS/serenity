@@ -51,7 +51,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
         // Copy the rest of our command-line args.
         StringBuilder builder;
         builder.join(' ', text);
-        options.data = builder.to_string();
+        options.data = builder.to_deprecated_string();
     }
 
     return options;

@@ -118,7 +118,7 @@ DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
     if (is_absolute)
         builder.append('/');
     builder.join('/', canonical_parts);
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString LexicalPath::absolute_path(DeprecatedString dir_path, DeprecatedString target)

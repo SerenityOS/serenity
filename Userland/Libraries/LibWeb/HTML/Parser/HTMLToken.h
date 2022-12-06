@@ -315,7 +315,7 @@ public:
 
     Type type() const { return m_type; }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }

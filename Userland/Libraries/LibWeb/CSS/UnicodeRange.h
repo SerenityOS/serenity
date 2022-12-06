@@ -29,7 +29,7 @@ public:
         return m_min_code_point <= code_point && code_point <= m_max_code_point;
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         if (m_min_code_point == m_max_code_point)
             return DeprecatedString::formatted("U+{:x}", m_min_code_point);

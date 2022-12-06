@@ -243,7 +243,7 @@ public:
         return VectorN<3, T>(x(), y(), z());
     }
 
-    [[nodiscard]] DeprecatedString to_string() const
+    [[nodiscard]] DeprecatedString to_deprecated_string() const
     {
         if constexpr (N == 2)
             return DeprecatedString::formatted("[{},{}]", x(), y());

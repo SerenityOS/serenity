@@ -26,9 +26,9 @@ FileArgument::FileArgument(DeprecatedString file_argument)
     // Match 0 group 2: column number
     if (groups.size() > 2) {
         // Both a line and column number were specified.
-        auto filename = groups.at(0).view.to_string();
-        auto initial_line_number = groups.at(1).view.to_string().to_int();
-        auto initial_column_number = groups.at(2).view.to_string().to_int();
+        auto filename = groups.at(0).view.to_deprecated_string();
+        auto initial_line_number = groups.at(1).view.to_deprecated_string().to_int();
+        auto initial_column_number = groups.at(2).view.to_deprecated_string().to_int();
 
         m_filename = filename;
         if (initial_line_number.has_value() && initial_line_number.value() > 0)
@@ -37,15 +37,15 @@ FileArgument::FileArgument(DeprecatedString file_argument)
             m_column = initial_column_number.value();
     } else if (groups.size() == 2) {
         // Only a line number was specified.
-        auto filename = groups.at(0).view.to_string();
-        auto initial_line_number = groups.at(1).view.to_string().to_int();
+        auto filename = groups.at(0).view.to_deprecated_string();
+        auto initial_line_number = groups.at(1).view.to_deprecated_string().to_int();
 
         m_filename = filename;
         if (initial_line_number.has_value() && initial_line_number.value() > 0)
             m_line = initial_line_number.value();
     } else {
         // A colon was found at the end of the file name but no values were found after it.
-        m_filename = groups.at(0).view.to_string();
+        m_filename = groups.at(0).view.to_deprecated_string();
     }
 }
 }

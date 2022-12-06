@@ -56,9 +56,9 @@ DeprecatedString CSSFontFaceRule::serialized() const
         // 2. The result of invoking serialize a comma-separated list on performing serialize a URL or serialize a LOCAL for each source on the source list.
         serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](FontFace::Source source) {
             if (source.url.cannot_be_a_base_url()) {
-                serialize_a_url(builder, source.url.to_string());
+                serialize_a_url(builder, source.url.to_deprecated_string());
             } else {
-                serialize_a_local(builder, source.url.to_string());
+                serialize_a_local(builder, source.url.to_deprecated_string());
             }
 
             // NOTE: No spec currently exists for format()
@@ -106,7 +106,7 @@ DeprecatedString CSSFontFaceRule::serialized() const
     // 12. A single SPACE (U+0020), followed by the string "}", i.e., RIGHT CURLY BRACKET (U+007D).
     builder.append(" }"sv);
 
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 }

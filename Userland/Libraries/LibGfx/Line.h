@@ -141,7 +141,7 @@ public:
         return Line<U>(*this);
     }
 
-    DeprecatedString to_string() const;
+    DeprecatedString to_deprecated_string() const;
 
 private:
     Point<T> m_a;
@@ -149,13 +149,13 @@ private:
 };
 
 template<>
-inline DeprecatedString IntLine::to_string() const
+inline DeprecatedString IntLine::to_deprecated_string() const
 {
     return DeprecatedString::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }
 
 template<>
-inline DeprecatedString FloatLine::to_string() const
+inline DeprecatedString FloatLine::to_deprecated_string() const
 {
     return DeprecatedString::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }

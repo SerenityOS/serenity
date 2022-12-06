@@ -38,7 +38,7 @@ void Editor::search_forwards()
     ScopedValueRollback inline_search_cursor_rollback { m_inline_search_cursor };
     StringBuilder builder;
     builder.append(Utf32View { m_buffer.data(), m_inline_search_cursor });
-    DeprecatedString search_phrase = builder.to_string();
+    DeprecatedString search_phrase = builder.to_deprecated_string();
     if (m_search_offset_state == SearchOffsetState::Backwards)
         --m_search_offset;
     if (m_search_offset > 0) {
@@ -65,7 +65,7 @@ void Editor::search_backwards()
     ScopedValueRollback inline_search_cursor_rollback { m_inline_search_cursor };
     StringBuilder builder;
     builder.append(Utf32View { m_buffer.data(), m_inline_search_cursor });
-    DeprecatedString search_phrase = builder.to_string();
+    DeprecatedString search_phrase = builder.to_deprecated_string();
     if (m_search_offset_state == SearchOffsetState::Forwards)
         ++m_search_offset;
     if (search(search_phrase, true)) {

@@ -18,6 +18,6 @@ DeprecatedString generate_only_additions(DeprecatedString const& text)
     for (auto const& line : lines) {
         builder.appendff("+{}\n", line);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 };

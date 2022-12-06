@@ -237,7 +237,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto flamegraph_hovered_index = flamegraph_view->hovered_index();
         if (flamegraph_hovered_index.is_valid()) {
-            auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_string();
+            auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_deprecated_string();
             auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount));
             auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount));
             builder.appendff("{}, ", stack);
@@ -255,7 +255,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 builder.appendff(", Duration: {} ms", end - start);
             }
         }
-        statusbar->set_text(builder.to_string());
+        statusbar->set_text(builder.to_deprecated_string());
     };
     timeline_view->on_selection_change = [&] { statusbar_update(); };
     flamegraph_view->on_hover_change = [&] { statusbar_update(); };

@@ -162,7 +162,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
     // 4. Let steps be to return the result of package data with the first argument given, type, and object’s MIME type.
     auto steps = [&realm, &object, type](JS::Value value) -> WebIDL::ExceptionOr<JS::Value> {
         VERIFY(value.is_string());
-        auto bytes = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value.as_string().string().bytes()));
+        auto bytes = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value.as_string().deprecated_string().bytes()));
         return package_data(realm, move(bytes), type, object.mime_type_impl());
     };
 

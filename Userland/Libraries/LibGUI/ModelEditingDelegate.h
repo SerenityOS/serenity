@@ -96,7 +96,7 @@ public:
     virtual void set_value(Variant const& value, SelectionBehavior selection_behavior) override
     {
         auto& textbox = static_cast<TextBox&>(*widget());
-        textbox.set_text(value.to_string());
+        textbox.set_text(value.to_deprecated_string());
         if (selection_behavior == SelectionBehavior::SelectAll)
             textbox.select_all();
     }

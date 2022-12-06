@@ -164,8 +164,8 @@ private:
         }
         StringBuilder bytes_builder;
         bytes_builder.join(' ', bytes);
-        builder.append(bytes_builder.to_string());
-        dbgln(builder.to_string());
+        builder.append(bytes_builder.to_deprecated_string());
+        dbgln(builder.to_deprecated_string());
     }
 
     ByteBuffer m_buffer {};

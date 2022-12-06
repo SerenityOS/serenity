@@ -49,7 +49,7 @@ public:
     [[nodiscard]] StringView type_name() const;
     [[nodiscard]] bool is_null() const;
 
-    [[nodiscard]] DeprecatedString to_string() const;
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
     [[nodiscard]] Optional<int> to_int() const;
     [[nodiscard]] Optional<u32> to_u32() const;
     [[nodiscard]] Optional<double> to_double() const;
@@ -125,6 +125,6 @@ template<>
 struct AK::Formatter<SQL::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, SQL::Value const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };

@@ -81,7 +81,7 @@ public:
 
     DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
     DeprecatedString serialize_for_display() const;
-    DeprecatedString to_string() const { return serialize(); }
+    DeprecatedString to_deprecated_string() const { return serialize(); }
 
     // HTML origin
     DeprecatedString serialize_origin() const;
@@ -160,7 +160,7 @@ struct Formatter<URL> : Formatter<StringView> {
 
 template<>
 struct Traits<URL> : public GenericTraits<URL> {
-    static unsigned hash(URL const& url) { return url.to_string().hash(); }
+    static unsigned hash(URL const& url) { return url.to_deprecated_string().hash(); }
 };
 
 }

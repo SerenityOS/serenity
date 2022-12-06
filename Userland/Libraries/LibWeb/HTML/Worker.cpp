@@ -247,7 +247,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
             // Asynchronously complete the perform the fetch steps with response.
             dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Script ready!");
-            auto script = ClassicScript::create(url.to_string(), data, *m_inner_settings, AK::URL());
+            auto script = ClassicScript::create(url.to_deprecated_string(), data, *m_inner_settings, AK::URL());
 
             // NOTE: Steps 15-31 below pick up after step 14 in the main context, steps 1-10 above
             //       are only for validation when used in a top-level case (ie: from a Window)

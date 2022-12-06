@@ -37,11 +37,11 @@ public:
         return try_make_ref_counted<NodeT>(token.m_view);
     }
 
-    DeprecatedString to_string() const
+    DeprecatedString to_deprecated_string() const
     {
         StringBuilder builder;
         format(builder, 0, false);
-        return builder.to_string();
+        return builder.to_deprecated_string();
     }
 
     // Format this AST node with the builder at the given indentation level.

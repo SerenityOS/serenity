@@ -25,7 +25,7 @@ static void parse_sockets_from_system_server()
 
     for (auto& socket : StringView { sockets, strlen(sockets) }.split_view(' ')) {
         auto params = socket.split_view(':');
-        s_overtaken_sockets.set(params[0].to_string(), strtol(params[1].to_string().characters(), nullptr, 10));
+        s_overtaken_sockets.set(params[0].to_deprecated_string(), strtol(params[1].to_deprecated_string().characters(), nullptr, 10));
     }
 
     s_overtaken_sockets_parsed = true;

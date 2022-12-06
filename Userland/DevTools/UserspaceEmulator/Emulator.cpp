@@ -237,7 +237,7 @@ int Emulator::exec()
             auto insn = X86::Instruction::from_stream(*m_cpu, X86::OperandSize::Size32, X86::AddressSize::Size32);
             // Exec cycle
             if constexpr (trace) {
-                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_string(m_cpu->base_eip(), symbol_provider));
+                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_deprecated_string(m_cpu->base_eip(), symbol_provider));
             }
 
             (m_cpu->*insn.handler())(insn);
@@ -529,9 +529,9 @@ DeprecatedString Emulator::create_instruction_line(FlatPtr address, X86::Instruc
 {
     auto symbol = symbol_at(address);
     if (!symbol.has_value() || !symbol->source_position.has_value())
-        return DeprecatedString::formatted("{:p}: {}", address, insn.to_string(address));
+        return DeprecatedString::formatted("{:p}: {}", address, insn.to_deprecated_string(address));
 
-    return DeprecatedString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
+    return DeprecatedString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_deprecated_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum, siginfo_t* signal_info, void* context)

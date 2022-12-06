@@ -601,7 +601,7 @@ DeprecatedString Node::debug_description() const
     } else {
         builder.append("(anonymous)"sv);
     }
-    return builder.to_string();
+    return builder.to_deprecated_string();
 }
 
 CSS::Display Node::display() const

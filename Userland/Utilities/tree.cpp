@@ -73,7 +73,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
             builder.append('/');
         }
         builder.append(name);
-        DeprecatedString full_path = builder.to_string();
+        DeprecatedString full_path = builder.to_deprecated_string();
 
         struct stat st;
         int rc = lstat(full_path.characters(), &st);

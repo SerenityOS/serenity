@@ -62,7 +62,7 @@ static Result<ScriptOrModuleProgram, TestError> parse_program(JS::Realm& realm, 
         return TestError {
             NegativePhase::ParseOrEarly,
             "SyntaxError",
-            script_or_error.error()[0].to_string(),
+            script_or_error.error()[0].to_deprecated_string(),
             ""
         };
     }
@@ -93,7 +93,7 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
 
         auto unit_result = JS::Bytecode::Generator::generate(program_node);
         if (unit_result.is_error()) {
-            result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), DeprecatedString::formatted("TODO({})", unit_result.error().to_string())));
+            result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), DeprecatedString::formatted("TODO({})", unit_result.error().to_deprecated_string())));
         } else {
             auto unit = unit_result.release_value();
             auto optimization_level = s_enable_bytecode_optimizations ? JS::Bytecode::Interpreter::OptimizationLevel::Optimize : JS::Bytecode::Interpreter::OptimizationLevel::Default;
@@ -160,7 +160,7 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
         }
 
         StringView contents_view = contents_or_error.value();
-        s_cached_harness_files.set(harness_file, contents_view.to_string());
+        s_cached_harness_files.set(harness_file, contents_view.to_deprecated_string());
         cache = s_cached_harness_files.find(harness_file);
         VERIFY(cache != s_cached_harness_files.end());
     }
@@ -219,7 +219,7 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
             return TestError {
                 NegativePhase::ParseOrEarly,
                 "SyntaxError",
-                parser.errors()[0].to_string(),
+                parser.errors()[0].to_deprecated_string(),
                 ""
             };
         }
@@ -483,7 +483,7 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
 
     JsonObject expected_error_object;
     expected_error_object.set("phase", phase_to_string(metadata.phase));
-    expected_error_object.set("type", metadata.type.to_string());
+    expected_error_object.set("type", metadata.type.to_deprecated_string());
 
     expected_error = expected_error_object;
 
@@ -548,7 +548,7 @@ static bool g_in_assert = false;
         assert_fail_result.set("assert_fail", true);
         assert_fail_result.set("result", "assert_fail");
         assert_fail_result.set("output", assert_failed_message);
-        outln(saved_stdout_fd, "RESULT {}{}", assert_fail_result.to_string(), '\0');
+        outln(saved_stdout_fd, "RESULT {}{}", assert_fail_result.to_deprecated_string(), '\0');
         // (Attempt to) Ensure that messages are written before quitting.
         fflush(saved_stdout_fd);
         fflush(stderr);
@@ -728,7 +728,7 @@ int main(int argc, char** argv)
             StringBuilder builder { contents.size() + strict_length };
             builder.append(use_strict);
             builder.append(contents);
-            source_with_strict = builder.to_string();
+            source_with_strict = builder.to_deprecated_string();
         }
 
         StringView with_strict = source_with_strict.view();
@@ -738,7 +738,7 @@ int main(int argc, char** argv)
         result_object.set("test", path);
 
         ScopeGuard output_guard = [&] {
-            outln(saved_stdout_fd, "RESULT {}{}", result_object.to_string(), '\0');
+            outln(saved_stdout_fd, "RESULT {}{}", result_object.to_deprecated_string(), '\0');
             fflush(saved_stdout_fd);
         };
 

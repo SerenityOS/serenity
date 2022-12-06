@@ -550,7 +550,7 @@ void ChessWidget::import_pgn(Core::File& file)
     DeprecatedString movetext;
 
     for (size_t j = i; j < lines.size(); j++)
-        movetext = DeprecatedString::formatted("{}{}", movetext, lines.at(i).to_string());
+        movetext = DeprecatedString::formatted("{}{}", movetext, lines.at(i).to_deprecated_string());
 
     for (auto token : movetext.split(' ')) {
         token = token.trim_whitespace();
@@ -626,7 +626,7 @@ void ChessWidget::export_pgn(Core::File& file) const
     // Tag Pair Section
     file.write("[Event \"Casual Game\"]\n"sv);
     file.write("[Site \"SerenityOS Chess\"]\n"sv);
-    file.write(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d"sv)));
+    file.write(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)));
     file.write("[Round \"1\"]\n"sv);
 
     DeprecatedString username(getlogin());
@@ -635,7 +635,7 @@ void ChessWidget::export_pgn(Core::File& file) const
     file.write(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
     file.write(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
 
-    file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
+    file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn())));
     file.write("[WhiteElo \"?\"]\n"sv);
     file.write("[BlackElo \"?\"]\n"sv);
     file.write("[Variant \"Standard\"]\n"sv);
@@ -656,9 +656,9 @@ void ChessWidget::export_pgn(Core::File& file) const
     }
 
     file.write("{ "sv);
-    file.write(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()));
+    file.write(Chess::Board::result_to_deprecated_string(m_board.game_result(), m_board.turn()));
     file.write(" } "sv);
-    file.write(Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
+    file.write(Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn()));
     file.write("\n"sv);
 }
 
@@ -688,7 +688,7 @@ int ChessWidget::resign()
 
     set_drag_enabled(false);
     update();
-    const DeprecatedString msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
+    const DeprecatedString msg = Chess::Board::result_to_deprecated_string(m_board.game_result(), m_board.turn());
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;

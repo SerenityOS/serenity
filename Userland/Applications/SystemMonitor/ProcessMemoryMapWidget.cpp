@@ -25,7 +25,7 @@ public:
     virtual void paint(GUI::Painter& painter, Gfx::IntRect const& a_rect, Gfx::Palette const&, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto pagemap = index.data(GUI::ModelRole::Custom).to_string();
+        auto pagemap = index.data(GUI::ModelRole::Custom).to_deprecated_string();
 
         float scale_factor = (float)pagemap.length() / (float)rect.width();
 
@@ -76,10 +76,10 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             builder.append('C');
         if (object.get("stack"sv).to_bool())
             builder.append('T');
-        return builder.to_string();
+        return builder.to_deprecated_string();
     });
     pid_vm_fields.empend("VMObject type", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        auto type = object.get("vmobject"sv).to_string();
+        auto type = object.get("vmobject"sv).to_deprecated_string();
         if (type.ends_with("VMObject"sv))
             type = type.substring(0, type.length() - 8);
         return type;

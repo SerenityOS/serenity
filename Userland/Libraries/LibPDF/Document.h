@@ -66,7 +66,7 @@ struct OutlineItem final : public RefCounted<OutlineItem> {
 
     OutlineItem() = default;
 
-    DeprecatedString to_string(int indent) const;
+    DeprecatedString to_deprecated_string(int indent) const;
 };
 
 struct OutlineDict final : public RefCounted<OutlineDict> {
@@ -185,8 +185,8 @@ struct Formatter<PDF::Page> : Formatter<FormatString> {
     {
         return Formatter<FormatString>::format(builder,
             "Page {{\n  resources={}\n  contents={}\n  media_box={}\n  crop_box={}\n  user_unit={}\n  rotate={}\n}}"sv,
-            page.resources->to_string(1),
-            page.contents->to_string(1),
+            page.resources->to_deprecated_string(1),
+            page.contents->to_deprecated_string(1),
             page.media_box,
             page.crop_box,
             page.user_unit,
@@ -230,7 +230,7 @@ struct Formatter<PDF::Destination> : Formatter<FormatString> {
         for (auto& param : destination.parameters)
             param_builder.appendff("{} ", param);
 
-        return Formatter<FormatString>::format(builder, "{{ type={} page={} params={} }}"sv, type_str, destination.page, param_builder.to_string());
+        return Formatter<FormatString>::format(builder, "{{ type={} page={} params={} }}"sv, type_str, destination.page, param_builder.to_deprecated_string());
     }
 };
 
@@ -238,7 +238,7 @@ template<>
 struct Formatter<PDF::OutlineItem> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, PDF::OutlineItem const& item)
     {
-        return builder.put_string(item.to_string(0));
+        return builder.put_string(item.to_deprecated_string(0));
     }
 };
 
@@ -249,11 +249,11 @@ struct Formatter<PDF::OutlineDict> : Formatter<FormatString> {
         StringBuilder child_builder;
         child_builder.append('[');
         for (auto& child : dict.children)
-            child_builder.appendff("{}\n", child.to_string(2));
+            child_builder.appendff("{}\n", child.to_deprecated_string(2));
         child_builder.append("  ]"sv);
 
         return Formatter<FormatString>::format(builder,
-            "OutlineDict {{\n  count={}\n  children={}\n}}"sv, dict.count, child_builder.to_string());
+            "OutlineDict {{\n  count={}\n  children={}\n}}"sv, dict.count, child_builder.to_deprecated_string());
     }
 };
 

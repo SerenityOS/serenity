@@ -80,7 +80,7 @@ GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     case Column::Value:
         return cookie.value;
     case Column::ExpiryTime:
-        return cookie.expiry_time.to_string();
+        return cookie.expiry_time.to_deprecated_string();
     case Column::SameSite:
         return Web::Cookie::same_site_to_string(cookie.same_site);
     }
