@@ -45,6 +45,9 @@ concept OneOfIgnoringCV = IsOneOfIgnoringCV<U, Ts...>;
 template<typename T, template<typename...> typename S>
 concept SpecializationOf = IsSpecializationOf<T, S>;
 
+template<typename T, typename S>
+concept DerivedFrom = IsBaseOf<S, T>;
+
 template<typename T>
 concept AnyString = Detail::IsConstructible<StringView, T>;
 
