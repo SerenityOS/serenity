@@ -56,7 +56,7 @@ public:
     DOM::Document const& document() const { return m_document; }
 
     NonnullRefPtr<StyleProperties> create_document_style() const;
-    NonnullRefPtr<StyleProperties> compute_style(DOM::Element&, Optional<CSS::Selector::PseudoElement> = {}) const;
+    ErrorOr<NonnullRefPtr<StyleProperties>> compute_style(DOM::Element&, Optional<CSS::Selector::PseudoElement> = {}) const;
 
     // https://www.w3.org/TR/css-cascade/#origin
     enum class CascadeOrigin {
@@ -78,7 +78,7 @@ public:
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
 private:
-    void compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>) const;
+    ErrorOr<void> compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>) const;
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
     void compute_defaulted_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
     void absolutize_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;

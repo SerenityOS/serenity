@@ -400,7 +400,9 @@ Element::NeedsRelayout Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
-    auto new_computed_css_values = document().style_computer().compute_style(*this);
+
+    // FIXME propagate errors
+    auto new_computed_css_values = MUST(document().style_computer().compute_style(*this));
 
     auto required_invalidation = RequiredInvalidation::Relayout;
 

@@ -7,6 +7,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
@@ -806,7 +807,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static void cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
+static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
 {
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
@@ -815,7 +816,7 @@ static void cascade_custom_properties(DOM::Element& element, Vector<MatchingRule
         needed_capacity += inline_style->custom_properties().size();
 
     HashMap<FlyString, StyleProperty> custom_properties;
-    custom_properties.ensure_capacity(needed_capacity);
+    TRY(custom_properties.try_ensure_capacity(needed_capacity));
 
     for (auto const& matching_rule : matching_rules) {
         for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
@@ -828,10 +829,12 @@ static void cascade_custom_properties(DOM::Element& element, Vector<MatchingRule
     }
 
     element.set_custom_properties(move(custom_properties));
+
+    return {};
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
-void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
     MatchingRuleSet matching_rule_set;
@@ -843,7 +846,7 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // Then we resolve all the CSS custom properties ("variables") for this element:
     // FIXME: Look into how custom properties should interact with pseudo elements and support that properly.
     if (!pseudo_element.has_value())
-        cascade_custom_properties(element, matching_rule_set.author_rules);
+        TRY(cascade_custom_properties(element, matching_rule_set.author_rules));
 
     // Then we apply the declarations from the matched rules in cascade order:
 
@@ -869,6 +872,8 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes);
 
     // FIXME: Transition declarations [css-transitions-1]
+
+    return {};
 }
 
 static DOM::Element const* element_to_inherit_style_from(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
@@ -1293,13 +1298,13 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     return style;
 }
 
-NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+ErrorOr<NonnullRefPtr<StyleProperties>> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     build_rule_cache_if_needed();
 
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
-    compute_cascaded_values(style, element, pseudo_element);
+    TRY(compute_cascaded_values(style, element, pseudo_element));
 
     // 2. Compute the font, since that may be needed for font-relative CSS units
     compute_font(style, &element, pseudo_element);
