@@ -5,14 +5,18 @@
  */
 
 #include "TreeMapWidget.h"
+#include <AK/Error.h>
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/IODevice.h>
+#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -25,6 +29,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
+#include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -76,25 +81,24 @@ struct MountInfo {
     DeprecatedString source;
 };
 
-static void fill_mounts(Vector<MountInfo>& output)
+static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
 {
     // Output info about currently mounted filesystems.
-    auto file = Core::File::construct("/sys/kernel/df");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", file->name(), file->error_string());
-        return;
-    }
+    auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
 
-    auto content = file->read_all();
-    auto json = JsonValue::from_string(content).release_value_but_fixme_should_propagate_errors();
+    auto content = TRY(file->read_all());
+    auto json = TRY(JsonValue::from_string(content));
 
-    json.as_array().for_each([&output](JsonValue const& value) {
+    TRY(json.as_array().try_for_each([&output](JsonValue const& value) -> ErrorOr<void> {
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
         mount_info.mount_point = filesystem_object.get("mount_point"sv).to_deprecated_string();
         mount_info.source = filesystem_object.get("source"sv).as_string_or("none"sv);
-        output.append(mount_info);
-    });
+        TRY(output.try_append(mount_info));
+        return {};
+    }));
+
+    return {};
 }
 
 static MountInfo* find_mount_for_path(DeprecatedString path, Vector<MountInfo>& mounts)
@@ -231,7 +235,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
     update_totals(root);
 }
 
-static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
+static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
     statusbar.set_text("");
     auto progress_window = create_progress_window();
@@ -244,7 +248,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     // calculate the sum of the file size for all its descendants.
     TreeNode* root = &tree->m_root;
     Vector<MountInfo> mounts;
-    fill_mounts(mounts);
+    TRY(fill_mounts(mounts));
     HashMap<int, int> error_accumulator;
     populate_filesize_tree(*root, mounts, error_accumulator, progresslabel);
 
@@ -277,6 +281,8 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
         statusbar.set_text("No errors");
     }
     treemapwidget.set_tree(tree);
+
+    return {};
 }
 
 static bool is_removable(DeprecatedString const& absolute_path)
@@ -325,7 +331,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Analyze", [&](auto&) {
-        analyze(tree, treemapwidget, statusbar);
+        if (auto result = analyze(tree, treemapwidget, statusbar); result.is_error()) {
+            GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
+        }
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -336,15 +344,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
 
+    auto open_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the nodes context menu.
-    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme(get_absolute_path_to_selected_node(treemapwidget)));
     });
-    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         LexicalPath path { get_absolute_path_to_selected_node(treemapwidget) };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
-    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+
+    auto copy_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv));
+    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(treemapwidget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
@@ -376,7 +387,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // TODO: Refreshing data always causes resetting the viewport back to "/".
         // It would be great if we found a way to preserve viewport across refreshes.
-        analyze(tree, treemapwidget, statusbar);
+        if (auto result = analyze(tree, treemapwidget, statusbar); result.is_error()) {
+            GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
+        }
     });
     // TODO: Both these menus could've been implemented as one, but it's impossible to change action text after it's shown once.
     auto folder_node_context_menu = GUI::Menu::construct();
@@ -425,7 +438,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     // At startup automatically do an analysis of root.
-    analyze(tree, treemapwidget, statusbar);
+    TRY(analyze(tree, treemapwidget, statusbar));
 
     window->show();
     return app->exec();
