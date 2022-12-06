@@ -156,3 +156,29 @@ void MagnifierWidget::second_paint_event(GUI::PaintEvent&)
 
     m_color_filter->apply(*target, rect, *clone, rect);
 }
+
+void MagnifierWidget::mousemove_event(GUI::MouseEvent& event)
+{
+    if (m_locked_location.has_value() && m_currently_dragging && !m_pause_capture) {
+        auto current_position = event.position();
+        auto difference = current_position - m_last_drag_position;
+        Gfx::IntPoint remainder = { difference.x() % m_scale_factor, difference.y() % m_scale_factor };
+        auto moved_by = difference / m_scale_factor;
+        m_locked_location = m_locked_location.value() - moved_by;
+        m_last_drag_position = current_position - remainder;
+    }
+}
+
+void MagnifierWidget::mousedown_event(GUI::MouseEvent& event)
+{
+    if (event.button() == GUI::MouseButton::Primary && !m_pause_capture) {
+        m_currently_dragging = true;
+        m_last_drag_position = event.position();
+    }
+}
+
+void MagnifierWidget::mouseup_event(GUI::MouseEvent& event)
+{
+    if (event.button() == GUI::MouseButton::Primary)
+        m_currently_dragging = false;
+}

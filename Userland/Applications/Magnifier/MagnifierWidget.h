@@ -47,6 +47,10 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;
 
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+
     void sync();
 
     int m_scale_factor { 2 };
@@ -55,6 +59,8 @@ private:
     CircularQueue<RefPtr<Gfx::Bitmap>, 512> m_grabbed_bitmaps {};
     ssize_t m_frame_offset_from_head { 0 };
     bool m_pause_capture { false };
+    bool m_currently_dragging { false };
+    Gfx::IntPoint m_last_drag_position {};
     Optional<Gfx::IntPoint> m_locked_location {};
     bool m_show_grid { false };
     Gfx::Color m_grid_color { 255, 0, 255, 100 };
