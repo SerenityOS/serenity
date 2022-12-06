@@ -34,7 +34,7 @@ public:
 
     HashMap(std::initializer_list<Entry> list)
     {
-        ensure_capacity(list.size());
+        MUST(try_ensure_capacity(list.size()));
         for (auto& item : list)
             set(item.key, item.value);
     }
@@ -124,7 +124,6 @@ public:
         return m_table.find(Traits<Key>::hash(key), [&](auto& entry) { return Traits<K>::equals(key, entry.key); });
     }
 
-    void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
     ErrorOr<void> try_ensure_capacity(size_t capacity) { return m_table.try_ensure_capacity(capacity); }
 
     Optional<typename Traits<V>::ConstPeekType> get(K const& key) const
