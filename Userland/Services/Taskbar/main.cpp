@@ -227,7 +227,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     g_themes_menu = &system_menu->add_submenu("&Themes");
     g_themes_menu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/themes.png"sv).release_value_but_fixme_should_propagate_errors());
 
-    g_themes = Gfx::list_installed_system_themes();
+    g_themes = TRY(Gfx::list_installed_system_themes());
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
 
     {

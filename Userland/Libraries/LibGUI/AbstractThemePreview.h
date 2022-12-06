@@ -24,7 +24,7 @@ public:
 
     Gfx::Palette const& preview_palette() const { return m_preview_palette; }
     void set_preview_palette(Gfx::Palette const&);
-    void set_theme_from_file(Core::File&);
+    ErrorOr<void> set_theme_from_file(Core::File&);
     void set_theme(Core::AnonymousBuffer const&);
 
     void paint_window(StringView title, Gfx::IntRect const& rect, Gfx::WindowTheme::WindowState, Gfx::Bitmap const& icon, int button_count = 3);

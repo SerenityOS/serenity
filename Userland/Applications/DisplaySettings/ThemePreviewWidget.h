@@ -18,7 +18,7 @@ class ThemePreviewWidget final : public GUI::AbstractThemePreview {
     C_OBJECT(ThemePreviewWidget);
 
 public:
-    void set_theme(DeprecatedString path);
+    ErrorOr<void> set_theme(DeprecatedString path);
 
 private:
     explicit ThemePreviewWidget(Gfx::Palette const& palette);

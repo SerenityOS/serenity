@@ -160,7 +160,10 @@ void PreviewWidget::drop_event(GUI::DropEvent& event)
         auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
-        set_theme_from_file(*response.value());
+
+        auto set_theme_from_file_result = set_theme_from_file(response.release_value());
+        if (set_theme_from_file_result.is_error())
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Setting theme from file has failed: {}", set_theme_from_file_result.error()));
     }
 }
 

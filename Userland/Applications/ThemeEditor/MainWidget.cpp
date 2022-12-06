@@ -208,7 +208,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes"sv);
         if (response.is_error())
             return;
-        load_from_file(*response.value());
+        auto load_from_file_result = load_from_file(*response.value());
+        if (load_from_file_result.is_error()) {
+            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value()->filename(), load_from_file_result.error()));
+            return;
+        }
     })));
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -557,10 +561,10 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     path_input.set_text(*result);
 }
 
-void MainWidget::load_from_file(Core::File& file)
+ErrorOr<void> MainWidget::load_from_file(Core::File& file)
 {
-    auto config_file = Core::ConfigFile::open(file.filename(), file.leak_fd()).release_value_but_fixme_should_propagate_errors();
-    auto theme = Gfx::load_system_theme(config_file);
+    auto config_file = TRY(Core::ConfigFile::open(file.filename(), file.leak_fd()));
+    auto theme = TRY(Gfx::load_system_theme(config_file));
     VERIFY(theme.is_valid());
 
     auto new_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
@@ -599,6 +603,7 @@ void MainWidget::load_from_file(Core::File& file)
 
     m_last_modified_time = Time::now_monotonic();
     window()->set_modified(false);
+    return {};
 }
 
 }

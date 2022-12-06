@@ -271,15 +271,15 @@ struct SystemTheme {
 
 Core::AnonymousBuffer& current_system_theme_buffer();
 void set_system_theme(Core::AnonymousBuffer);
-Core::AnonymousBuffer load_system_theme(Core::ConfigFile const&);
-Core::AnonymousBuffer load_system_theme(DeprecatedString const& path);
+ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const&);
+ErrorOr<Core::AnonymousBuffer> load_system_theme(DeprecatedString const& path);
 
 struct SystemThemeMetaData {
     DeprecatedString name;
     DeprecatedString path;
 };
 
-Vector<SystemThemeMetaData> list_installed_system_themes();
+ErrorOr<Vector<SystemThemeMetaData>> list_installed_system_themes();
 
 }
 

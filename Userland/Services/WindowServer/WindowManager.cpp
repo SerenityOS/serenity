@@ -2064,9 +2064,12 @@ void WindowManager::invalidate_after_theme_or_font_change()
 
 bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background)
 {
-    auto new_theme = Gfx::load_system_theme(theme_path);
-    if (!new_theme.is_valid())
+    auto error_or_new_theme = Gfx::load_system_theme(theme_path);
+    if (error_or_new_theme.is_error()) {
+        dbgln("WindowManager: Updating theme failed, error {}", error_or_new_theme.error());
         return false;
+    }
+    auto new_theme = error_or_new_theme.release_value();
     m_theme_overridden = false;
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
@@ -2101,8 +2104,7 @@ void WindowManager::clear_theme_override()
 {
     m_theme_overridden = false;
     auto previous_theme_name = m_config->read_entry("Theme", "Name");
-    auto previous_theme = Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name));
-    VERIFY(previous_theme.is_valid());
+    auto previous_theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name)));
     Gfx::set_system_theme(previous_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
     invalidate_after_theme_or_font_change();
