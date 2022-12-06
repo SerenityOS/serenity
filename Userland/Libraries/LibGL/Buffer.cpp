@@ -51,8 +51,7 @@ void GLContext::gl_buffer_data(GLenum target, GLsizeiptr size, void const* data,
     auto& target_buffer = target == GL_ELEMENT_ARRAY_BUFFER ? m_element_array_buffer : m_array_buffer;
     RETURN_WITH_ERROR_IF(!target_buffer, GL_INVALID_OPERATION);
 
-    // FIXME: Report GL_OUT_OF_MEMORY or other errors as needed here
-    MUST(target_buffer->set_data(data, size));
+    RETURN_WITH_ERROR_IF(target_buffer->set_data(data, size).is_error(), GL_OUT_OF_MEMORY);
 }
 
 void GLContext::gl_buffer_sub_data(GLenum target, GLintptr offset, GLsizeiptr size, void const* data)
