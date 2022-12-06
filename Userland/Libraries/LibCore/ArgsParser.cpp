@@ -5,8 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/JsonObject.h"
 #include <AK/Format.h>
+#include <AK/JsonObject.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Version.h>
@@ -603,6 +604,21 @@ void ArgsParser::add_positional_argument(char const*& value, char const* help_st
         1,
         [&value](char const* s) {
             value = s;
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
+void ArgsParser::add_positional_argument(Optional<String>& value, char const* help_string, char const* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](char const* s) {
+            value = String::from_utf8({ s, strlen(s) }).release_value_but_fixme_should_propagate_errors();
             return true;
         }
     };
