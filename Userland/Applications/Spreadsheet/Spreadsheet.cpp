@@ -426,7 +426,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 break;
             case Cell::Formula: {
                 auto& vm = sheet->interpreter().vm();
-                auto value_or_error = JS::call(vm, parse_function, json, JS::js_string(vm, obj.get("value"sv).as_string()));
+                auto value_or_error = JS::call(vm, parse_function, json, JS::PrimitiveString::create(vm, obj.get("value"sv).as_string()));
                 if (value_or_error.is_error()) {
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();

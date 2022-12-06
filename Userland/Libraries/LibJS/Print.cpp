@@ -425,7 +425,7 @@ ErrorOr<void> print_temporal_calendar(JS::PrintContext& print_context, JS::Tempo
 {
     TRY(print_type(print_context, "Temporal.Calendar"));
     TRY(js_out(print_context, " "));
-    TRY(print_value(print_context, JS::js_string(calendar.vm(), calendar.identifier()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(calendar.vm(), calendar.identifier()), seen_objects));
     return {};
 }
 
@@ -496,7 +496,7 @@ ErrorOr<void> print_temporal_time_zone(JS::PrintContext& print_context, JS::Temp
 {
     TRY(print_type(print_context, "Temporal.TimeZone"));
     TRY(js_out(print_context, " "));
-    TRY(print_value(print_context, JS::js_string(time_zone.vm(), time_zone.identifier()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(time_zone.vm(), time_zone.identifier()), seen_objects));
     if (time_zone.offset_nanoseconds().has_value()) {
         TRY(js_out(print_context, "\n  offset (ns): "));
         TRY(print_value(print_context, JS::Value(*time_zone.offset_nanoseconds()), seen_objects));
@@ -520,16 +520,16 @@ ErrorOr<void> print_intl_display_names(JS::PrintContext& print_context, JS::Intl
 {
     TRY(print_type(print_context, "Intl.DisplayNames"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(display_names.vm(), display_names.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(display_names.vm(), display_names.locale()), seen_objects));
     TRY(js_out(print_context, "\n  type: "));
-    TRY(print_value(print_context, js_string(display_names.vm(), display_names.type_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(display_names.vm(), display_names.type_string()), seen_objects));
     TRY(js_out(print_context, "\n  style: "));
-    TRY(print_value(print_context, js_string(display_names.vm(), display_names.style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(display_names.vm(), display_names.style_string()), seen_objects));
     TRY(js_out(print_context, "\n  fallback: "));
-    TRY(print_value(print_context, js_string(display_names.vm(), display_names.fallback_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(display_names.vm(), display_names.fallback_string()), seen_objects));
     if (display_names.has_language_display()) {
         TRY(js_out(print_context, "\n  languageDisplay: "));
-        TRY(print_value(print_context, js_string(display_names.vm(), display_names.language_display_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(display_names.vm(), display_names.language_display_string()), seen_objects));
     }
     return {};
 }
@@ -538,26 +538,26 @@ ErrorOr<void> print_intl_locale(JS::PrintContext& print_context, JS::Intl::Local
 {
     TRY(print_type(print_context, "Intl.Locale"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(locale.vm(), locale.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(locale.vm(), locale.locale()), seen_objects));
     if (locale.has_calendar()) {
         TRY(js_out(print_context, "\n  calendar: "));
-        TRY(print_value(print_context, js_string(locale.vm(), locale.calendar()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(locale.vm(), locale.calendar()), seen_objects));
     }
     if (locale.has_case_first()) {
         TRY(js_out(print_context, "\n  caseFirst: "));
-        TRY(print_value(print_context, js_string(locale.vm(), locale.case_first()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(locale.vm(), locale.case_first()), seen_objects));
     }
     if (locale.has_collation()) {
         TRY(js_out(print_context, "\n  collation: "));
-        TRY(print_value(print_context, js_string(locale.vm(), locale.collation()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(locale.vm(), locale.collation()), seen_objects));
     }
     if (locale.has_hour_cycle()) {
         TRY(js_out(print_context, "\n  hourCycle: "));
-        TRY(print_value(print_context, js_string(locale.vm(), locale.hour_cycle()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(locale.vm(), locale.hour_cycle()), seen_objects));
     }
     if (locale.has_numbering_system()) {
         TRY(js_out(print_context, "\n  numberingSystem: "));
-        TRY(print_value(print_context, js_string(locale.vm(), locale.numbering_system()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(locale.vm(), locale.numbering_system()), seen_objects));
     }
     TRY(js_out(print_context, "\n  numeric: "));
     TRY(print_value(print_context, JS::Value(locale.numeric()), seen_objects));
@@ -568,11 +568,11 @@ ErrorOr<void> print_intl_list_format(JS::PrintContext& print_context, JS::Intl::
 {
     TRY(print_type(print_context, "Intl.ListFormat"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(list_format.vm(), list_format.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(list_format.vm(), list_format.locale()), seen_objects));
     TRY(js_out(print_context, "\n  type: "));
-    TRY(print_value(print_context, js_string(list_format.vm(), list_format.type_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(list_format.vm(), list_format.type_string()), seen_objects));
     TRY(js_out(print_context, "\n  style: "));
-    TRY(print_value(print_context, js_string(list_format.vm(), list_format.style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(list_format.vm(), list_format.style_string()), seen_objects));
     return {};
 }
 
@@ -580,32 +580,32 @@ ErrorOr<void> print_intl_number_format(JS::PrintContext& print_context, JS::Intl
 {
     TRY(print_type(print_context, "Intl.NumberFormat"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.locale()), seen_objects));
     TRY(js_out(print_context, "\n  dataLocale: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.data_locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.data_locale()), seen_objects));
     TRY(js_out(print_context, "\n  numberingSystem: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.numbering_system()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.numbering_system()), seen_objects));
     TRY(js_out(print_context, "\n  style: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.style_string()), seen_objects));
     if (number_format.has_currency()) {
         TRY(js_out(print_context, "\n  currency: "));
-        TRY(print_value(print_context, js_string(number_format.vm(), number_format.currency()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.currency()), seen_objects));
     }
     if (number_format.has_currency_display()) {
         TRY(js_out(print_context, "\n  currencyDisplay: "));
-        TRY(print_value(print_context, js_string(number_format.vm(), number_format.currency_display_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.currency_display_string()), seen_objects));
     }
     if (number_format.has_currency_sign()) {
         TRY(js_out(print_context, "\n  currencySign: "));
-        TRY(print_value(print_context, js_string(number_format.vm(), number_format.currency_sign_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.currency_sign_string()), seen_objects));
     }
     if (number_format.has_unit()) {
         TRY(js_out(print_context, "\n  unit: "));
-        TRY(print_value(print_context, js_string(number_format.vm(), number_format.unit()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.unit()), seen_objects));
     }
     if (number_format.has_unit_display()) {
         TRY(js_out(print_context, "\n  unitDisplay: "));
-        TRY(print_value(print_context, js_string(number_format.vm(), number_format.unit_display_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.unit_display_string()), seen_objects));
     }
     TRY(js_out(print_context, "\n  minimumIntegerDigits: "));
     TRY(print_value(print_context, JS::Value(number_format.min_integer_digits()), seen_objects));
@@ -628,21 +628,21 @@ ErrorOr<void> print_intl_number_format(JS::PrintContext& print_context, JS::Intl
     TRY(js_out(print_context, "\n  useGrouping: "));
     TRY(print_value(print_context, number_format.use_grouping_to_value(number_format.vm()), seen_objects));
     TRY(js_out(print_context, "\n  roundingType: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.rounding_type_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.rounding_type_string()), seen_objects));
     TRY(js_out(print_context, "\n  roundingMode: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.rounding_mode_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.rounding_mode_string()), seen_objects));
     TRY(js_out(print_context, "\n  roundingIncrement: "));
     TRY(print_value(print_context, JS::Value(number_format.rounding_increment()), seen_objects));
     TRY(js_out(print_context, "\n  notation: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.notation_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.notation_string()), seen_objects));
     if (number_format.has_compact_display()) {
         TRY(js_out(print_context, "\n  compactDisplay: "));
-        TRY(print_value(print_context, js_string(number_format.vm(), number_format.compact_display_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.compact_display_string()), seen_objects));
     }
     TRY(js_out(print_context, "\n  signDisplay: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.sign_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.sign_display_string()), seen_objects));
     TRY(js_out(print_context, "\n  trailingZeroDisplay: "));
-    TRY(print_value(print_context, js_string(number_format.vm(), number_format.trailing_zero_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(number_format.vm(), number_format.trailing_zero_display_string()), seen_objects));
     return {};
 }
 
@@ -650,26 +650,26 @@ ErrorOr<void> print_intl_date_time_format(JS::PrintContext& print_context, JS::I
 {
     TRY(print_type(print_context, "Intl.DateTimeFormat"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.locale()), seen_objects));
     TRY(js_out(print_context, "\n  pattern: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.pattern()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.pattern()), seen_objects));
     TRY(js_out(print_context, "\n  calendar: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.calendar()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.calendar()), seen_objects));
     TRY(js_out(print_context, "\n  numberingSystem: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.numbering_system()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.numbering_system()), seen_objects));
     if (date_time_format.has_hour_cycle()) {
         TRY(js_out(print_context, "\n  hourCycle: "));
-        TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.hour_cycle_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.hour_cycle_string()), seen_objects));
     }
     TRY(js_out(print_context, "\n  timeZone: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.time_zone()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.time_zone()), seen_objects));
     if (date_time_format.has_date_style()) {
         TRY(js_out(print_context, "\n  dateStyle: "));
-        TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.date_style_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.date_style_string()), seen_objects));
     }
     if (date_time_format.has_time_style()) {
         TRY(js_out(print_context, "\n  timeStyle: "));
-        TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.time_style_string()), seen_objects));
+        TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.time_style_string()), seen_objects));
     }
 
     auto result = JS::Intl::for_each_calendar_field(date_time_format.vm(), date_time_format, [&](auto& option, auto const& property, auto const&) -> JS::ThrowCompletionOr<void> {
@@ -688,7 +688,7 @@ ErrorOr<void> print_intl_date_time_format(JS::PrintContext& print_context, JS::I
                 return JS::throw_completion(JS::js_null());
         } else {
             auto name = Locale::calendar_pattern_style_to_string(*option);
-            if (print_value(print_context, js_string(date_time_format.vm(), name), seen_objects).is_error())
+            if (print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), name), seen_objects).is_error())
                 return JS::throw_completion(JS::js_null());
         }
 
@@ -705,13 +705,13 @@ ErrorOr<void> print_intl_relative_time_format(JS::PrintContext& print_context, J
 {
     TRY(print_type(print_context, "Intl.RelativeTimeFormat"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.locale()), seen_objects));
     TRY(js_out(print_context, "\n  numberingSystem: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.numbering_system()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.numbering_system()), seen_objects));
     TRY(js_out(print_context, "\n  style: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.style_string()), seen_objects));
     TRY(js_out(print_context, "\n  numeric: "));
-    TRY(print_value(print_context, js_string(date_time_format.vm(), date_time_format.numeric_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(date_time_format.vm(), date_time_format.numeric_string()), seen_objects));
     return {};
 }
 
@@ -719,9 +719,9 @@ ErrorOr<void> print_intl_plural_rules(JS::PrintContext& print_context, JS::Intl:
 {
     TRY(print_type(print_context, "Intl.PluralRules"));
     TRY(js_out(print_context, "\n  locale: "));
-    TRY(print_value(print_context, js_string(plural_rules.vm(), plural_rules.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(plural_rules.vm(), plural_rules.locale()), seen_objects));
     TRY(js_out(print_context, "\n  type: "));
-    TRY(print_value(print_context, js_string(plural_rules.vm(), plural_rules.type_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(plural_rules.vm(), plural_rules.type_string()), seen_objects));
     TRY(js_out(print_context, "\n  minimumIntegerDigits: "));
     TRY(print_value(print_context, JS::Value(plural_rules.min_integer_digits()), seen_objects));
     if (plural_rules.has_min_fraction_digits()) {
@@ -741,7 +741,7 @@ ErrorOr<void> print_intl_plural_rules(JS::PrintContext& print_context, JS::Intl:
         TRY(print_value(print_context, JS::Value(plural_rules.max_significant_digits()), seen_objects));
     }
     TRY(js_out(print_context, "\n  roundingType: "));
-    TRY(print_value(print_context, js_string(plural_rules.vm(), plural_rules.rounding_type_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(plural_rules.vm(), plural_rules.rounding_type_string()), seen_objects));
     return {};
 }
 
@@ -749,15 +749,15 @@ ErrorOr<void> print_intl_collator(JS::PrintContext& print_context, JS::Intl::Col
 {
     TRY(print_type(print_context, "Intl.Collator"));
     out("\n  locale: ");
-    TRY(print_value(print_context, js_string(collator.vm(), collator.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(collator.vm(), collator.locale()), seen_objects));
     out("\n  usage: ");
-    TRY(print_value(print_context, js_string(collator.vm(), collator.usage_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(collator.vm(), collator.usage_string()), seen_objects));
     out("\n  sensitivity: ");
-    TRY(print_value(print_context, js_string(collator.vm(), collator.sensitivity_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(collator.vm(), collator.sensitivity_string()), seen_objects));
     out("\n  caseFirst: ");
-    TRY(print_value(print_context, js_string(collator.vm(), collator.case_first_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(collator.vm(), collator.case_first_string()), seen_objects));
     out("\n  collation: ");
-    TRY(print_value(print_context, js_string(collator.vm(), collator.collation()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(collator.vm(), collator.collation()), seen_objects));
     out("\n  ignorePunctuation: ");
     TRY(print_value(print_context, JS::Value(collator.ignore_punctuation()), seen_objects));
     out("\n  numeric: ");
@@ -769,9 +769,9 @@ ErrorOr<void> print_intl_segmenter(JS::PrintContext& print_context, JS::Intl::Se
 {
     TRY(print_type(print_context, "Intl.Segmenter"));
     out("\n  locale: ");
-    TRY(print_value(print_context, js_string(segmenter.vm(), segmenter.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(segmenter.vm(), segmenter.locale()), seen_objects));
     out("\n  granularity: ");
-    TRY(print_value(print_context, js_string(segmenter.vm(), segmenter.segmenter_granularity_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(segmenter.vm(), segmenter.segmenter_granularity_string()), seen_objects));
     return {};
 }
 
@@ -779,7 +779,7 @@ ErrorOr<void> print_intl_segments(JS::PrintContext& print_context, JS::Intl::Seg
 {
     TRY(print_type(print_context, "Segments"));
     out("\n  string: ");
-    TRY(print_value(print_context, js_string(segments.vm(), segments.segments_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(segments.vm(), segments.segments_string()), seen_objects));
     out("\n  segmenter: ");
     TRY(print_value(print_context, &segments.segments_segmenter(), seen_objects));
     return {};
@@ -789,53 +789,53 @@ ErrorOr<void> print_intl_duration_format(JS::PrintContext& print_context, JS::In
 {
     TRY(print_type(print_context, "Intl.DurationFormat"));
     out("\n  locale: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.locale()), seen_objects));
     out("\n  dataLocale: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.data_locale()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.data_locale()), seen_objects));
     out("\n  numberingSystem: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.numbering_system()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.numbering_system()), seen_objects));
     out("\n  style: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.style_string()), seen_objects));
     out("\n  years: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.years_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.years_style_string()), seen_objects));
     out("\n  yearsDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.years_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.years_display_string()), seen_objects));
     out("\n  months: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.months_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.months_style_string()), seen_objects));
     out("\n  monthsDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.months_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.months_display_string()), seen_objects));
     out("\n  weeks: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.weeks_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.weeks_style_string()), seen_objects));
     out("\n  weeksDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.weeks_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.weeks_display_string()), seen_objects));
     out("\n  days: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.days_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.days_style_string()), seen_objects));
     out("\n  daysDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.days_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.days_display_string()), seen_objects));
     out("\n  hours: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.hours_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.hours_style_string()), seen_objects));
     out("\n  hoursDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.hours_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.hours_display_string()), seen_objects));
     out("\n  minutes: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.minutes_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.minutes_style_string()), seen_objects));
     out("\n  minutesDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.minutes_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.minutes_display_string()), seen_objects));
     out("\n  seconds: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.seconds_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.seconds_style_string()), seen_objects));
     out("\n  secondsDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.seconds_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.seconds_display_string()), seen_objects));
     out("\n  milliseconds: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.milliseconds_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.milliseconds_style_string()), seen_objects));
     out("\n  millisecondsDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.milliseconds_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.milliseconds_display_string()), seen_objects));
     out("\n  microseconds: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.microseconds_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.microseconds_style_string()), seen_objects));
     out("\n  microsecondsDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.microseconds_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.microseconds_display_string()), seen_objects));
     out("\n  nanoseconds: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.nanoseconds_style_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.nanoseconds_style_string()), seen_objects));
     out("\n  nanosecondsDisplay: ");
-    TRY(print_value(print_context, js_string(duration_format.vm(), duration_format.nanoseconds_display_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(duration_format.vm(), duration_format.nanoseconds_display_string()), seen_objects));
     if (duration_format.has_fractional_digits()) {
         out("\n  fractionalDigits: ");
         TRY(print_value(print_context, JS::Value(duration_format.fractional_digits()), seen_objects));

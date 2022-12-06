@@ -27,7 +27,7 @@ void ModuleNamespaceObject::initialize(Realm& realm)
     Object::initialize(realm);
 
     // 28.3.1 @@toStringTag, https://tc39.es/ecma262/#sec-@@tostringtag
-    define_direct_property(*vm().well_known_symbol_to_string_tag(), js_string(vm(), "Module"sv), 0);
+    define_direct_property(*vm().well_known_symbol_to_string_tag(), PrimitiveString::create(vm(), "Module"sv), 0);
 }
 
 // 10.4.6.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-getprototypeof
@@ -219,7 +219,7 @@ ThrowCompletionOr<MarkedVector<Value>> ModuleNamespaceObject::internal_own_prope
     // 3. Return the list-concatenation of exports and symbolKeys.
     exports.ensure_capacity(m_exports.size() + symbol_keys.size());
     for (auto const& export_name : m_exports)
-        exports.unchecked_append(js_string(vm(), export_name));
+        exports.unchecked_append(PrimitiveString::create(vm(), export_name));
     exports.extend(symbol_keys);
 
     return exports;

@@ -1412,7 +1412,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 
     if (type.is_string()) {
         scoped_generator.append(R"~~~(
-    @result_expression@ JS::js_string(vm, @value@);
+    @result_expression@ JS::PrimitiveString::create(vm, @value@);
 )~~~");
     } else if (type.name() == "sequence") {
         // https://webidl.spec.whatwg.org/#es-sequence
@@ -1527,7 +1527,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 )~~~");
     } else if (interface.enumerations.contains(type.name())) {
         scoped_generator.append(R"~~~(
-    @result_expression@ JS::js_string(vm, Bindings::idl_enum_to_deprecated_string(@value@));
+    @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
 )~~~");
     } else if (interface.callback_functions.contains(type.name())) {
         // https://webidl.spec.whatwg.org/#es-callback-function
@@ -2574,7 +2574,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "@name@"), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@name@"), JS::Attribute::Configurable);
 
     Object::initialize(realm);
 }
@@ -2735,7 +2735,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
         }
         stringifier_generator.append(R"~~~(
 
-    return JS::js_string(vm, move(retval));
+    return JS::PrimitiveString::create(vm, move(retval));
 }
 )~~~");
     }
@@ -2893,7 +2893,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
     Object::initialize(realm);
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "Iterator"), JS::Attribute::Configurable);
 }
 
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)

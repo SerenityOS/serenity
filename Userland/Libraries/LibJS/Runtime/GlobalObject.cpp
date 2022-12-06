@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
     if (vm.argument(0).is_number())
         return vm.argument(0);
     auto input_string = TRY(vm.argument(0).to_string(vm));
-    auto trimmed_string = MUST(trim_string(vm, js_string(vm, input_string), TrimMode::Left));
+    auto trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
     if (trimmed_string.is_empty())
         return js_nan();
 
@@ -253,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     auto input_string = TRY(vm.argument(0).to_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
-    auto string = MUST(trim_string(vm, js_string(vm, input_string), TrimMode::Left));
+    auto string = MUST(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
 
     // 3. Let sign be 1.
     auto sign = 1;
@@ -458,7 +458,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 {
     auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto encoded = TRY(encode(vm, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv));
-    return js_string(vm, move(encoded));
+    return PrimitiveString::create(vm, move(encoded));
 }
 
 // 19.2.6.2 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
@@ -466,7 +466,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
     auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto decoded = TRY(decode(vm, uri_string, ";/?:@&=+$,#"sv));
-    return js_string(vm, move(decoded));
+    return PrimitiveString::create(vm, move(decoded));
 }
 
 // 19.2.6.5 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
@@ -474,7 +474,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
     auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto encoded = TRY(encode(vm, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv));
-    return js_string(vm, move(encoded));
+    return PrimitiveString::create(vm, move(encoded));
 }
 
 // 19.2.6.3 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
@@ -482,7 +482,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
     auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto decoded = TRY(decode(vm, uri_string, ""sv));
-    return js_string(vm, move(decoded));
+    return PrimitiveString::create(vm, move(decoded));
 }
 
 // B.2.1.1 escape ( string ), https://tc39.es/ecma262/#sec-escape-string
@@ -500,7 +500,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
         }
         escaped.appendff("%u{:04X}", code_point);
     }
-    return js_string(vm, escaped.build());
+    return PrimitiveString::create(vm, escaped.build());
 }
 
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
@@ -522,7 +522,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
         }
         unescaped.append_code_point(code_point);
     }
-    return js_string(vm, unescaped.build());
+    return PrimitiveString::create(vm, unescaped.build());
 }
 
 }

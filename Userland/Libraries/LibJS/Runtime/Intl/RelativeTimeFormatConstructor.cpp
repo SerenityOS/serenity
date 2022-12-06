@@ -138,11 +138,11 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     relative_time_format.set_numeric(numeric.as_string().deprecated_string());
 
     // 19. Let relativeTimeFormat.[[NumberFormat]] be ! Construct(%NumberFormat%, « locale »).
-    auto* number_format = MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, locale)));
+    auto* number_format = MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale)));
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    auto* plural_rules = MUST(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), js_string(vm, locale)));
+    auto* plural_rules = MUST(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), PrimitiveString::create(vm, locale)));
     relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules));
 
     // 21. Return relativeTimeFormat.

@@ -117,7 +117,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
             [](Empty) { return js_undefined(); },
             [](bool b) { return Value(b); },
             [](double d) { return Value(d); },
-            [&vm](StringView s) { return Value(js_string(vm, s)); });
+            [&vm](StringView s) { return Value(PrimitiveString::create(vm, s)); });
     }
 
     // 5. If type is "boolean", then
@@ -603,7 +603,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         auto* date_options = Object::create(realm, nullptr);
 
         // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
-        MUST(date_options->create_data_property_or_throw(vm.names.overflow, js_string(vm, "constrain"sv)));
+        MUST(date_options->create_data_property_or_throw(vm.names.overflow, PrimitiveString::create(vm, "constrain"sv)));
 
         // h. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, dateOptions).
         result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, *date_options));
@@ -635,10 +635,10 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         result = TRY(parse_temporal_relative_to_string(vm, string));
 
         // c. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-        calendar = TRY(to_temporal_calendar_with_iso_default(vm, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
+        calendar = TRY(to_temporal_calendar_with_iso_default(vm, result.calendar.has_value() ? PrimitiveString::create(vm, *result.calendar) : js_undefined()));
 
         // d. Let offsetString be result.[[TimeZone]].[[OffsetString]].
-        offset_string = result.time_zone.offset_string.has_value() ? js_string(vm, *result.time_zone.offset_string) : js_undefined();
+        offset_string = result.time_zone.offset_string.has_value() ? PrimitiveString::create(vm, *result.time_zone.offset_string) : js_undefined();
 
         // e. Let timeZoneName be result.[[TimeZone]].[[Name]].
         auto time_zone_name = result.time_zone.name;
@@ -757,7 +757,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& optio
     }
 
     // 4. Perform ! CreateDataPropertyOrThrow(merged, "largestUnit", largestUnit).
-    MUST(merged->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, move(largest_unit))));
+    MUST(merged->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, move(largest_unit))));
 
     // 5. Return merged.
     return merged;

@@ -1252,7 +1252,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
     auto response = impl->prompt_impl(message, default_);
     if (response.is_null())
         return JS::js_null();
-    return JS::js_string(vm, response);
+    return JS::PrimitiveString::create(vm, response);
 }
 
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
@@ -1406,7 +1406,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
     auto decoder = TextCodec::decoder_for("windows-1252");
     VERIFY(decoder);
-    return JS::js_string(vm, decoder->to_utf8(decoded.value()));
+    return JS::PrimitiveString::create(vm, decoder->to_utf8(decoded.value()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
@@ -1424,7 +1424,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
     }
 
     auto encoded = encode_base64(byte_string.span());
-    return JS::js_string(vm, move(encoded));
+    return JS::PrimitiveString::create(vm, move(encoded));
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus
@@ -1752,7 +1752,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
         options = JS::Object::create(realm, nullptr);
         MUST(options->set("left", vm.argument(0), ShouldThrowExceptions::No));
         MUST(options->set("top", vm.argument(1), ShouldThrowExceptions::No));
-        MUST(options->set("behavior", JS::js_string(vm, "auto"), ShouldThrowExceptions::No));
+        MUST(options->set("behavior", JS::PrimitiveString::create(vm, "auto"), ShouldThrowExceptions::No));
     }
 
     auto left_value = TRY(options->get("left"));
@@ -1845,7 +1845,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
 JS_DEFINE_NATIVE_FUNCTION(Window::origin_getter)
 {
     auto* impl = TRY(impl_from(vm));
-    return JS::js_string(vm, impl->associated_document().origin().serialize());
+    return JS::PrimitiveString::create(vm, impl->associated_document().origin().serialize());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::local_storage_getter)
@@ -1863,7 +1863,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::session_storage_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::name_getter)
 {
     auto* impl = TRY(impl_from(vm));
-    return JS::js_string(vm, impl->name());
+    return JS::PrimitiveString::create(vm, impl->name());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)

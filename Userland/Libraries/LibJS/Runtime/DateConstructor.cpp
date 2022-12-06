@@ -202,7 +202,7 @@ ThrowCompletionOr<Value> DateConstructor::call()
     auto now = AK::Time::now_realtime().to_milliseconds();
 
     //     b. Return ToDateString(now).
-    return js_string(vm(), to_date_string(now));
+    return PrimitiveString::create(vm(), to_date_string(now));
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date

@@ -67,7 +67,7 @@ static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> li
 
     // 2. Return ! CreateArrayFromList( list ).
     return Array::create_from<StringView>(realm, list, [&vm](auto value) {
-        return js_string(vm, value);
+        return PrimitiveString::create(vm, value);
     });
 }
 
@@ -163,7 +163,7 @@ Array* time_zones_of_locale(VM& vm, StringView region)
 
     // 5. Return ! CreateArrayFromList( list ).
     return Array::create_from<StringView>(realm, list, [&vm](auto value) {
-        return js_string(vm, value);
+        return PrimitiveString::create(vm, value);
     });
 }
 

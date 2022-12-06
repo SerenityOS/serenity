@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,11 @@ class PrimitiveString final : public Cell {
     JS_CELL(PrimitiveString, Cell);
 
 public:
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16View const&);
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16String);
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedString);
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, PrimitiveString&, PrimitiveString&);
+
     virtual ~PrimitiveString();
 
     PrimitiveString(PrimitiveString const&) = delete;
@@ -55,16 +61,5 @@ private:
 
     mutable Utf16String m_utf16_string;
 };
-
-PrimitiveString* js_string(Heap&, Utf16View const&);
-PrimitiveString* js_string(VM&, Utf16View const&);
-
-PrimitiveString* js_string(Heap&, Utf16String);
-PrimitiveString* js_string(VM&, Utf16String);
-
-PrimitiveString* js_string(Heap&, DeprecatedString);
-PrimitiveString* js_string(VM&, DeprecatedString);
-
-PrimitiveString* js_rope_string(VM&, PrimitiveString&, PrimitiveString&);
 
 }

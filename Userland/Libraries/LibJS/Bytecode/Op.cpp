@@ -150,7 +150,7 @@ static ThrowCompletionOr<Value> not_(VM&, Value value)
 
 static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 {
-    return Value(js_string(vm, value.typeof()));
+    return Value(PrimitiveString::create(vm, value.typeof()));
 }
 
 #define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                   \
@@ -296,7 +296,7 @@ ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& int
 
 ThrowCompletionOr<void> NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = js_string(interpreter.vm(), interpreter.current_executable().get_string(m_string));
+    interpreter.accumulator() = PrimitiveString::create(interpreter.vm(), interpreter.current_executable().get_string(m_string));
     return {};
 }
 
@@ -316,7 +316,7 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
     auto source = interpreter.current_executable().get_string(m_source_index);
     auto flags = interpreter.current_executable().get_string(m_flags_index);
 
-    interpreter.accumulator() = TRY(regexp_create(vm, js_string(vm, source), js_string(vm, flags)));
+    interpreter.accumulator() = TRY(regexp_create(vm, PrimitiveString::create(vm, source), PrimitiveString::create(vm, flags)));
     return {};
 }
 
@@ -923,7 +923,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                     if (key.is_number())
                         result_object->define_direct_property(vm.names.value, JS::Value(key.as_number()), default_attributes);
                     else if (key.is_string())
-                        result_object->define_direct_property(vm.names.value, js_string(vm, key.as_string()), default_attributes);
+                        result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, key.as_string()), default_attributes);
                     else
                         VERIFY_NOT_REACHED(); // We should not have non-string/number keys.
 
@@ -992,7 +992,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     // 2. If val is a Reference Record, then
     //    a. If IsUnresolvableReference(val) is true, return "undefined".
     if (reference.is_unresolvable()) {
-        interpreter.accumulator() = js_string(vm, "undefined"sv);
+        interpreter.accumulator() = PrimitiveString::create(vm, "undefined"sv);
         return {};
     }
 
@@ -1001,7 +1001,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 
     // 4. NOTE: This step is replaced in section B.3.6.3.
     // 5. Return a String according to Table 41.
-    interpreter.accumulator() = js_string(vm, value.typeof());
+    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
     return {};
 }
 

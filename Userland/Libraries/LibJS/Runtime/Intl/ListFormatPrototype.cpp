@@ -25,7 +25,7 @@ void ListFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 13.3.2 Intl.ListFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype-toStringTag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.ListFormat"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.ListFormat"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.format, format, 1, attr);
@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
 
     // 4. Return ! FormatList(lf, stringList).
     auto formatted = format_list(*list_format, string_list);
-    return js_string(vm, move(formatted));
+    return PrimitiveString::create(vm, move(formatted));
 }
 
 // 13.3.4 Intl.ListFormat.prototype.formatToParts ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.formatToParts
@@ -83,9 +83,9 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
     //     b. Let v be the value of lf's internal slot whose name is the Internal Slot value of the current row.
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
-    MUST(options->create_data_property_or_throw(vm.names.locale, js_string(vm, list_format->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.type, js_string(vm, list_format->type_string())));
-    MUST(options->create_data_property_or_throw(vm.names.style, js_string(vm, list_format->style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, list_format->locale())));
+    MUST(options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, list_format->type_string())));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, list_format->style_string())));
 
     // 5. Return options.
     return options;

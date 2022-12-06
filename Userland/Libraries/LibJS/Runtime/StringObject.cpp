@@ -71,7 +71,7 @@ static Optional<PropertyDescriptor> string_get_own_property(StringObject const& 
         return {};
 
     // 10. Let resultStr be the String value of length 1, containing one code unit from str, specifically the code unit at index ℝ(index).
-    auto result_str = js_string(string.vm(), str.substring_view(index.as_index(), 1));
+    auto result_str = PrimitiveString::create(string.vm(), str.substring_view(index.as_index(), 1));
 
     // 11. Return the PropertyDescriptor { [[Value]]: resultStr, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }.
     return PropertyDescriptor {
@@ -138,14 +138,14 @@ ThrowCompletionOr<MarkedVector<Value>> StringObject::internal_own_property_keys(
     // 5. For each integer i starting with 0 such that i < len, in ascending order, do
     for (size_t i = 0; i < length; ++i) {
         // a. Add ! ToString(𝔽(i)) as the last element of keys.
-        keys.append(js_string(vm, DeprecatedString::number(i)));
+        keys.append(PrimitiveString::create(vm, DeprecatedString::number(i)));
     }
 
     // 6. For each own property key P of O such that P is an array index and ! ToIntegerOrInfinity(P) ≥ len, in ascending numeric index order, do
     for (auto& entry : indexed_properties()) {
         if (entry.index() >= length) {
             // a. Add P as the last element of keys.
-            keys.append(js_string(vm, DeprecatedString::number(entry.index())));
+            keys.append(PrimitiveString::create(vm, DeprecatedString::number(entry.index())));
         }
     }
 

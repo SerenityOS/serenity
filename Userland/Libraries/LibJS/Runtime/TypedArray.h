@@ -390,7 +390,7 @@ public:
             // a. For each integer i starting with 0 such that i < O.[[ArrayLength]], in ascending order, do
             for (size_t i = 0; i < m_array_length; ++i) {
                 // i. Add ! ToString(𝔽(i)) as the last element of keys.
-                keys.append(js_string(vm, DeprecatedString::number(i)));
+                keys.append(PrimitiveString::create(vm, DeprecatedString::number(i)));
             }
         }
 

@@ -97,7 +97,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url, serialized.
-    return JS::js_string(vm, location_object->url().to_deprecated_string());
+    return JS::PrimitiveString::create(vm, location_object->url().to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
@@ -127,7 +127,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::pathname_getter)
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return the result of URL path serializing this Location object's url.
-    return JS::js_string(vm, location_object->url().path());
+    return JS::PrimitiveString::create(vm, location_object->url().path());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-hostname
@@ -139,10 +139,10 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::hostname_getter)
 
     // 2. If this's url's host is null, return the empty string.
     if (location_object->url().host().is_null())
-        return JS::js_string(vm, DeprecatedString::empty());
+        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 3. Return this's url's host, serialized.
-    return JS::js_string(vm, location_object->url().host());
+    return JS::PrimitiveString::create(vm, location_object->url().host());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-host
@@ -157,14 +157,14 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::host_getter)
 
     // 3. If url's host is null, return the empty string.
     if (url.host().is_null())
-        return JS::js_string(vm, DeprecatedString::empty());
+        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 4. If url's port is null, return url's host, serialized.
     if (!url.port().has_value())
-        return JS::js_string(vm, url.host());
+        return JS::PrimitiveString::create(vm, url.host());
 
     // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
-    return JS::js_string(vm, DeprecatedString::formatted("{}:{}", url.host(), *url.port()));
+    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("{}:{}", url.host(), *url.port()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-hash
@@ -176,10 +176,10 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::hash_getter)
 
     // 2. If this's url's fragment is either null or the empty string, return the empty string.
     if (location_object->url().fragment().is_empty())
-        return JS::js_string(vm, DeprecatedString::empty());
+        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 3. Return "#", followed by this's url's fragment.
-    return JS::js_string(vm, DeprecatedString::formatted("#{}", location_object->url().fragment()));
+    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("#{}", location_object->url().fragment()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-search
@@ -191,10 +191,10 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::search_getter)
 
     // 2. If this's url's query is either null or the empty string, return the empty string.
     if (location_object->url().query().is_empty())
-        return JS::js_string(vm, DeprecatedString::empty());
+        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 3. Return "?", followed by this's url's query.
-    return JS::js_string(vm, DeprecatedString::formatted("?{}", location_object->url().query()));
+    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("?{}", location_object->url().query()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
@@ -205,7 +205,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url's scheme, followed by ":".
-    return JS::js_string(vm, DeprecatedString::formatted("{}:", location_object->url().scheme()));
+    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("{}:", location_object->url().scheme()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-port
@@ -217,10 +217,10 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 
     // 2. If this's url's port is null, return the empty string.
     if (!location_object->url().port().has_value())
-        return JS::js_string(vm, DeprecatedString::empty());
+        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 3. Return this's url's port, serialized.
-    return JS::js_string(vm, DeprecatedString::number(*location_object->url().port()));
+    return JS::PrimitiveString::create(vm, DeprecatedString::number(*location_object->url().port()));
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-origin
@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::origin_getter)
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return the serialization of this's url's origin.
-    return JS::js_string(vm, location_object->url().serialize_origin());
+    return JS::PrimitiveString::create(vm, location_object->url().serialize_origin());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
@@ -297,7 +297,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal
         // 2. If the value of the [[DefaultProperties]] internal slot of this contains P, then set desc.[[Configurable]] to true.
         auto property_key_value = property_key.is_symbol()
             ? JS::Value { property_key.as_symbol() }
-            : JS::js_string(vm, property_key.to_string());
+            : JS::PrimitiveString::create(vm, property_key.to_string());
         if (m_default_properties.contains_slow(property_key_value))
             descriptor->configurable = true;
 

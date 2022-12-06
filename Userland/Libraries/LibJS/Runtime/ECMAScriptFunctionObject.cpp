@@ -108,7 +108,7 @@ void ECMAScriptFunctionObject::initialize(Realm& realm)
     //       are defined in the spec.
 
     MUST(define_property_or_throw(vm.names.length, { .value = Value(m_function_length), .writable = false, .enumerable = false, .configurable = true }));
-    MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
+    MUST(define_property_or_throw(vm.names.name, { .value = PrimitiveString::create(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
 
     if (!m_is_arrow_function) {
         Object* prototype = nullptr;
@@ -911,7 +911,7 @@ void ECMAScriptFunctionObject::set_name(FlyString const& name)
     VERIFY(!name.is_null());
     auto& vm = this->vm();
     m_name = name;
-    MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
+    MUST(define_property_or_throw(vm.names.name, { .value = PrimitiveString::create(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
 }
 
 }

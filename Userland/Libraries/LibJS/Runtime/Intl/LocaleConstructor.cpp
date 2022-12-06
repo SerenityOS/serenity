@@ -346,7 +346,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     // 35. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv)) {
         // a. If SameValue(r.[[kn]], "true") is true or r.[[kn]] is the empty String, then
-        if (result.kn.has_value() && (same_value(js_string(vm, *result.kn), js_string(vm, "true")) || result.kn->is_empty())) {
+        if (result.kn.has_value() && (same_value(PrimitiveString::create(vm, *result.kn), PrimitiveString::create(vm, "true")) || result.kn->is_empty())) {
             // i. Set locale.[[Numeric]] to true.
             locale->set_numeric(true);
         }

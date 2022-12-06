@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> get_legacy_regexp_static_property(VM& vm, RegExpConstru
         return vm.throw_completion<TypeError>(ErrorType::GetLegacyRegExpStaticPropertyValueEmpty);
 
     // 5. Return val.
-    return js_string(vm, val.release_value());
+    return PrimitiveString::create(vm, val.release_value());
 }
 
 // SetLegacyRegExpStaticProperty( C, thisValue, internalSlotName, val ), https://github.com/tc39/proposal-regexp-legacy-features#setlegacyregexpstaticproperty-c-thisvalue-internalslotname-val-

@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
 
     // 4. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
-        return js_string(vm, MUST(number_value.to_string(vm)));
+        return PrimitiveString::create(vm, MUST(number_value.to_string(vm)));
 
     // 5. If f < 0 or f > 100, throw a RangeError exception.
     if (fraction_digits < 0 || fraction_digits > 100)
@@ -195,7 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
 
     // 14. Set m to the string-concatenation of m, "e", c, and d.
     // 15. Return the string-concatenation of s and m.
-    return js_string(vm, DeprecatedString::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
+    return PrimitiveString::create(vm, DeprecatedString::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
@@ -218,7 +218,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 6. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
-        return js_string(vm, TRY(number_value.to_string(vm)));
+        return PrimitiveString::create(vm, TRY(number_value.to_string(vm)));
 
     // 7. Set x to ℝ(x).
     auto number = number_value.as_double();
@@ -233,7 +233,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 10. If x ≥ 10^21, then
     if (fabs(number) >= 1e+21)
-        return js_string(vm, MUST(number_value.to_string(vm)));
+        return PrimitiveString::create(vm, MUST(number_value.to_string(vm)));
 
     // 11. Else,
     // a. Let n be an integer for which n / (10^f) - x is as close to zero as possible. If there are two such n, pick the larger n.
@@ -269,7 +269,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     }
 
     // 12. Return the string-concatenation of s and m.
-    return js_string(vm, DeprecatedString::formatted("{}{}", s, m));
+    return PrimitiveString::create(vm, DeprecatedString::formatted("{}{}", s, m));
 }
 
 // 19.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring
@@ -289,7 +289,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
     // 3. Return ? FormatNumeric(numberFormat, x).
     // Note: Our implementation of FormatNumeric does not throw.
     auto formatted = Intl::format_numeric(vm, *number_format, number_value);
-    return js_string(vm, move(formatted));
+    return PrimitiveString::create(vm, move(formatted));
 }
 
 // 21.1.3.5 Number.prototype.toPrecision ( precision ), https://tc39.es/ecma262/#sec-number.prototype.toprecision
@@ -302,14 +302,14 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
 
     // 2. If precision is undefined, return ! ToString(x).
     if (precision_value.is_undefined())
-        return js_string(vm, MUST(number_value.to_string(vm)));
+        return PrimitiveString::create(vm, MUST(number_value.to_string(vm)));
 
     // 3. Let p be ? ToIntegerOrInfinity(precision).
     auto precision = TRY(precision_value.to_integer_or_infinity(vm));
 
     // 4. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
-        return js_string(vm, MUST(number_value.to_string(vm)));
+        return PrimitiveString::create(vm, MUST(number_value.to_string(vm)));
 
     // 5. If p < 1 or p > 100, throw a RangeError exception.
     if ((precision < 1) || (precision > 100))
@@ -391,13 +391,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
             auto exponent_string = DeprecatedString::number(exponent);
 
             // vi. Return the string-concatenation of s, m, the code unit 0x0065 (LATIN SMALL LETTER E), c, and d.
-            return js_string(vm, DeprecatedString::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
+            return PrimitiveString::create(vm, DeprecatedString::formatted("{}{}e{}{}", sign, number_string, exponent_sign, exponent_string));
         }
     }
 
     // 11. If e = p - 1, return the string-concatenation of s and m.
     if (exponent == precision - 1)
-        return js_string(vm, DeprecatedString::formatted("{}{}", sign, number_string));
+        return PrimitiveString::create(vm, DeprecatedString::formatted("{}{}", sign, number_string));
 
     // 12. If e ≥ 0, then
     if (exponent >= 0) {
@@ -417,7 +417,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     }
 
     // 14. Return the string-concatenation of s and m.
-    return js_string(vm, DeprecatedString::formatted("{}{}", sign, number_string));
+    return PrimitiveString::create(vm, DeprecatedString::formatted("{}{}", sign, number_string));
 }
 
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
@@ -441,17 +441,17 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
     // 5. If radixMV = 10, return ! ToString(x).
     if (radix_mv == 10)
-        return js_string(vm, MUST(number_value.to_string(vm)));
+        return PrimitiveString::create(vm, MUST(number_value.to_string(vm)));
 
     // 6. Return the String representation of this Number value using the radix specified by radixMV. Letters a-z are used for digits with values 10 through 35. The precise algorithm is implementation-defined, however the algorithm should be a generalization of that specified in 6.1.6.1.20.
     if (number_value.is_positive_infinity())
-        return js_string(vm, "Infinity");
+        return PrimitiveString::create(vm, "Infinity");
     if (number_value.is_negative_infinity())
-        return js_string(vm, "-Infinity");
+        return PrimitiveString::create(vm, "-Infinity");
     if (number_value.is_nan())
-        return js_string(vm, "NaN");
+        return PrimitiveString::create(vm, "NaN");
     if (number_value.is_positive_zero() || number_value.is_negative_zero())
-        return js_string(vm, "0");
+        return PrimitiveString::create(vm, "0");
 
     double number = number_value.as_double();
     bool negative = number < 0;
@@ -499,7 +499,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
             characters.take_last();
     }
 
-    return js_string(vm, DeprecatedString(characters.data(), characters.size()));
+    return PrimitiveString::create(vm, DeprecatedString(characters.data(), characters.size()));
 }
 
 // 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof

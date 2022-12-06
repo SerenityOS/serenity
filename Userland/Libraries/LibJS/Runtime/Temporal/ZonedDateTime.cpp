@@ -227,7 +227,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 
         // k. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
         auto temporal_calendar_like = result.calendar.has_value()
-            ? js_string(vm, result.calendar.value())
+            ? PrimitiveString::create(vm, result.calendar.value())
             : js_undefined();
         calendar = TRY(to_temporal_calendar_with_iso_default(vm, temporal_calendar_like));
 

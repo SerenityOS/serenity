@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
         auto msg = TRY(message.to_string(vm));
 
         // b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
-        error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg)));
+        error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, move(msg)));
     }
 
     // 4. Perform ? InstallErrorCause(O, options).
@@ -104,7 +104,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
             auto msg = TRY(message.to_string(vm));                                                                              \
                                                                                                                                 \
             /* b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                         \
-            error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg)));                    \
+            error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, move(msg)));      \
         }                                                                                                                       \
                                                                                                                                 \
         /* 4. Perform ? InstallErrorCause(O, options). */                                                                       \

@@ -126,7 +126,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(VM& vm, Value item, Obje
     auto result = TRY(parse_temporal_month_day_string(vm, string));
 
     // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-    auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, result.calendar.has_value() ? js_string(vm, move(*result.calendar)) : js_undefined()));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, result.calendar.has_value() ? PrimitiveString::create(vm, move(*result.calendar)) : js_undefined()));
 
     // 9. If result.[[Year]] is undefined, then
     if (!result.year.has_value()) {

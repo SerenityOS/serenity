@@ -29,7 +29,7 @@ void PlainYearMonthPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 9.3.2 Temporal.PlainYearMonth.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.PlainYearMonth"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.PlainYearMonth"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.year, year_getter, {}, Attribute::Configurable);
@@ -107,7 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
     auto& calendar = year_month->calendar();
 
     // 4. Return ? CalendarMonthCode(calendar, yearMonth).
-    return js_string(vm, TRY(calendar_month_code(vm, calendar, *year_month)));
+    return PrimitiveString::create(vm, TRY(calendar_month_code(vm, calendar, *year_month)));
 }
 
 // 9.3.7 get Temporal.PlainYearMonth.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear
@@ -333,7 +333,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
     auto show_calendar = TRY(to_calendar_name_option(vm, *options));
 
     // 5. Return ? TemporalYearMonthToString(yearMonth, showCalendar).
-    return js_string(vm, TRY(temporal_year_month_to_string(vm, *year_month, show_calendar)));
+    return PrimitiveString::create(vm, TRY(temporal_year_month_to_string(vm, *year_month, show_calendar)));
 }
 
 // 9.3.18 Temporal.PlainYearMonth.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring
@@ -345,7 +345,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
     auto* year_month = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
-    return js_string(vm, TRY(temporal_year_month_to_string(vm, *year_month, "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_year_month_to_string(vm, *year_month, "auto"sv)));
 }
 
 // 9.3.19 Temporal.PlainYearMonth.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tojson
@@ -356,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_json)
     auto* year_month = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
-    return js_string(vm, TRY(temporal_year_month_to_string(vm, *year_month, "auto"sv)));
+    return PrimitiveString::create(vm, TRY(temporal_year_month_to_string(vm, *year_month, "auto"sv)));
 }
 
 // 9.3.20 Temporal.PlainYearMonth.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     auto* options = Object::create(realm, nullptr);
 
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
-    MUST(options->create_data_property_or_throw(vm.names.overflow, js_string(vm, vm.names.reject.as_string())));
+    MUST(options->create_data_property_or_throw(vm.names.overflow, PrimitiveString::create(vm, vm.names.reject.as_string())));
 
     // 14. Return ? CalendarDateFromFields(calendar, mergedFields, options).
     return TRY(calendar_date_from_fields(vm, calendar, *merged_fields, options));

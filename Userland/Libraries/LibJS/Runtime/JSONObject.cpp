@@ -40,7 +40,7 @@ void JSONObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.parse, parse, 2, attr);
 
     // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "JSON"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "JSON"), Attribute::Configurable);
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
     if (string.is_null())
         return js_undefined();
 
-    return js_string(vm, string);
+    return PrimitiveString::create(vm, string);
 }
 
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
@@ -138,14 +138,14 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_property(VM& vm, 
         // b. If IsCallable(toJSON) is true, then
         if (to_json.is_function()) {
             // i. Set value to ? Call(toJSON, value, « key »).
-            value = TRY(call(vm, to_json.as_function(), value, js_string(vm, key.to_string())));
+            value = TRY(call(vm, to_json.as_function(), value, PrimitiveString::create(vm, key.to_string())));
         }
     }
 
     // 3. If state.[[ReplacerFunction]] is not undefined, then
     if (state.replacer_function) {
         // a. Set value to ? Call(state.[[ReplacerFunction]], holder, « key, value »).
-        value = TRY(call(vm, *state.replacer_function, holder, js_string(vm, key.to_string()), value));
+        value = TRY(call(vm, *state.replacer_function, holder, PrimitiveString::create(vm, key.to_string()), value));
     }
 
     // 4. If Type(value) is Object, then
@@ -422,7 +422,7 @@ Value JSONObject::parse_json_value(VM& vm, JsonValue const& value)
     if (value.is_number())
         return Value(value.to_double(0));
     if (value.is_string())
-        return js_string(vm, value.to_deprecated_string());
+        return PrimitiveString::create(vm, value.to_deprecated_string());
     if (value.is_bool())
         return Value(static_cast<bool>(value.as_bool()));
     VERIFY_NOT_REACHED();
@@ -477,7 +477,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(VM& vm, Object* h
         }
     }
 
-    return TRY(call(vm, reviver, holder, js_string(vm, name.to_string()), value));
+    return TRY(call(vm, reviver, holder, PrimitiveString::create(vm, name.to_string()), value));
 }
 
 }

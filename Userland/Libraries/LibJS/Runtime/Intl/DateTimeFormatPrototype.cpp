@@ -26,7 +26,7 @@ void DateTimeFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 11.3.2 Intl.DateTimeFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DateTimeFormat"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.DateTimeFormat"), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.format, format, nullptr, Attribute::Configurable);
 
@@ -114,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
 
     // 6. Return ? FormatDateTimeRange(dtf, x, y).
     auto formatted = TRY(format_date_time_range(vm, *date_time_format, start_date_number, end_date_number));
-    return js_string(vm, move(formatted));
+    return PrimitiveString::create(vm, move(formatted));
 }
 
 // 11.3.6 Intl.DateTimeFormat.prototype.formatRangeToParts ( startDate, endDate ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatRangeToParts
@@ -171,13 +171,13 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     //             1. Let v be undefined.
     //     e. If v is not undefined, then
     //         i. Perform ! CreateDataPropertyOrThrow(options, p, v).
-    MUST(options->create_data_property_or_throw(vm.names.locale, js_string(vm, date_time_format->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.calendar, js_string(vm, date_time_format->calendar())));
-    MUST(options->create_data_property_or_throw(vm.names.numberingSystem, js_string(vm, date_time_format->numbering_system())));
-    MUST(options->create_data_property_or_throw(vm.names.timeZone, js_string(vm, date_time_format->time_zone())));
+    MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, date_time_format->locale())));
+    MUST(options->create_data_property_or_throw(vm.names.calendar, PrimitiveString::create(vm, date_time_format->calendar())));
+    MUST(options->create_data_property_or_throw(vm.names.numberingSystem, PrimitiveString::create(vm, date_time_format->numbering_system())));
+    MUST(options->create_data_property_or_throw(vm.names.timeZone, PrimitiveString::create(vm, date_time_format->time_zone())));
 
     if (date_time_format->has_hour_cycle()) {
-        MUST(options->create_data_property_or_throw(vm.names.hourCycle, js_string(vm, date_time_format->hour_cycle_string())));
+        MUST(options->create_data_property_or_throw(vm.names.hourCycle, PrimitiveString::create(vm, date_time_format->hour_cycle_string())));
 
         switch (date_time_format->hour_cycle()) {
         case ::Locale::HourCycle::H11:
@@ -202,7 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
                 TRY(options->create_data_property_or_throw(property, Value(*option)));
             } else {
                 auto name = ::Locale::calendar_pattern_style_to_string(*option);
-                TRY(options->create_data_property_or_throw(property, js_string(vm, name)));
+                TRY(options->create_data_property_or_throw(property, PrimitiveString::create(vm, name)));
             }
 
             return {};
@@ -210,9 +210,9 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     }
 
     if (date_time_format->has_date_style())
-        MUST(options->create_data_property_or_throw(vm.names.dateStyle, js_string(vm, date_time_format->date_style_string())));
+        MUST(options->create_data_property_or_throw(vm.names.dateStyle, PrimitiveString::create(vm, date_time_format->date_style_string())));
     if (date_time_format->has_time_style())
-        MUST(options->create_data_property_or_throw(vm.names.timeStyle, js_string(vm, date_time_format->time_style_string())));
+        MUST(options->create_data_property_or_throw(vm.names.timeStyle, PrimitiveString::create(vm, date_time_format->time_style_string())));
 
     // 6. Return options.
     return options;

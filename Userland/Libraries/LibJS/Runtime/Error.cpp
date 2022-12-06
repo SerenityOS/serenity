@@ -24,7 +24,7 @@ Error* Error::create(Realm& realm, DeprecatedString const& message)
     auto& vm = realm.vm();
     auto* error = Error::create(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    error->define_direct_property(vm.names.message, js_string(vm, message), attr);
+    error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);
     return error;
 }
 
@@ -109,7 +109,7 @@ DeprecatedString Error::stack_string() const
         auto& vm = realm.vm();                                                                        \
         auto* error = ClassName::create(realm);                                                       \
         u8 attr = Attribute::Writable | Attribute::Configurable;                                      \
-        error->define_direct_property(vm.names.message, js_string(vm, message), attr);                \
+        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);  \
         return error;                                                                                 \
     }                                                                                                 \
                                                                                                       \

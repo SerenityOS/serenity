@@ -780,7 +780,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     }
 
     // 9. Return R.
-    return js_string(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 23.2.3.19 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
@@ -1565,7 +1565,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     }
 
     // 7. Return R.
-    return js_string(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 1.2.2.1.3 %TypedArray%.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toReversed
@@ -1733,7 +1733,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
     auto& this_object = this_value.as_object();
     if (!this_object.is_typed_array())
         return js_undefined();
-    return js_string(vm, static_cast<TypedArrayBase&>(this_object).element_name());
+    return PrimitiveString::create(vm, static_cast<TypedArrayBase&>(this_object).element_name());
 }
 
 }

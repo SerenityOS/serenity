@@ -207,7 +207,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     if (is_text) {
         auto text_message = DeprecatedString(ReadonlyBytes(message));
         HTML::MessageEventInit event_init;
-        event_init.data = JS::js_string(vm(), text_message);
+        event_init.data = JS::PrimitiveString::create(vm(), text_message);
         event_init.origin = url();
         dispatch_event(*HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
         return;

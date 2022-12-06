@@ -42,7 +42,7 @@ void TimeZonePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
 
     // 11.4.2 Temporal.TimeZone.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.TimeZone"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.TimeZone"), Attribute::Configurable);
 }
 
 // 11.4.3 get Temporal.TimeZone.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.timezone.prototype.id
@@ -53,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
     auto* time_zone = TRY(typed_this_object(vm));
 
     // 3. Return timeZone.[[Identifier]].
-    return js_string(vm, time_zone->identifier());
+    return PrimitiveString::create(vm, time_zone->identifier());
 }
 
 // 11.4.4 Temporal.TimeZone.prototype.getOffsetNanosecondsFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetnanosecondsfor
@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
     auto offset_string = TRY(builtin_time_zone_get_offset_string_for(vm, time_zone, *instant));
-    return js_string(vm, move(offset_string));
+    return PrimitiveString::create(vm, move(offset_string));
 }
 
 // 11.4.6 Temporal.TimeZone.prototype.getPlainDateTimeFor ( instant [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getplaindatetimefor
@@ -233,7 +233,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
     auto* time_zone = TRY(typed_this_object(vm));
 
     // 3. Return timeZone.[[Identifier]].
-    return js_string(vm, time_zone->identifier());
+    return PrimitiveString::create(vm, time_zone->identifier());
 }
 
 // 11.4.12 Temporal.TimeZone.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tojson
@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
     auto* time_zone = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(timeZone).
-    return js_string(vm, TRY(Value(time_zone).to_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(time_zone).to_string(vm)));
 }
 
 }

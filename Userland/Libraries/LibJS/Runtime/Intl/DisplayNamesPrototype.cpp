@@ -26,7 +26,7 @@ void DisplayNamesPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 12.3.2 Intl.DisplayNames.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DisplayNames"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.DisplayNames"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.of, of, 1, attr);
@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 
     // 3. Let code be ? ToString(code).
     auto code_string = TRY(code.to_string(vm));
-    code = js_string(vm, move(code_string));
+    code = PrimitiveString::create(vm, move(code_string));
 
     // 4. Let code be ? CanonicalCodeForDisplayNames(displayNames.[[Type]], code).
     code = TRY(canonical_code_for_display_names(vm, display_names->type(), code.as_string().deprecated_string()));
@@ -109,9 +109,9 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     }
 
     if (result.has_value())
-        return js_string(vm, result.release_value());
+        return PrimitiveString::create(vm, result.release_value());
     if (formatted_result.has_value())
-        return js_string(vm, formatted_result.release_value());
+        return PrimitiveString::create(vm, formatted_result.release_value());
 
     // 7. If displayNames.[[Fallback]] is "code", return code.
     if (display_names->fallback() == DisplayNames::Fallback::Code)
@@ -138,14 +138,14 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
     //     b. Let v be the value of displayNames's internal slot whose name is the Internal Slot value of the current row.
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
-    MUST(options->create_data_property_or_throw(vm.names.locale, js_string(vm, display_names->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.style, js_string(vm, display_names->style_string())));
-    MUST(options->create_data_property_or_throw(vm.names.type, js_string(vm, display_names->type_string())));
-    MUST(options->create_data_property_or_throw(vm.names.fallback, js_string(vm, display_names->fallback_string())));
+    MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, display_names->locale())));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, display_names->style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, display_names->type_string())));
+    MUST(options->create_data_property_or_throw(vm.names.fallback, PrimitiveString::create(vm, display_names->fallback_string())));
 
     // NOTE: Step 4c indicates languageDisplay must not be undefined, but it is only set when the type option is language.
     if (display_names->has_language_display())
-        MUST(options->create_data_property_or_throw(vm.names.languageDisplay, js_string(vm, display_names->language_display_string())));
+        MUST(options->create_data_property_or_throw(vm.names.languageDisplay, PrimitiveString::create(vm, display_names->language_display_string())));
 
     // 5. Return options.
     return options;

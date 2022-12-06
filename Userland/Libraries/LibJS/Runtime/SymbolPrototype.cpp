@@ -34,7 +34,7 @@ void SymbolPrototype::initialize(Realm& realm)
     define_native_function(realm, *vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
     // 20.4.3.6 Symbol.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-symbol.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Symbol"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Symbol"), Attribute::Configurable);
 }
 
 // thisSymbolValue ( value ), https://tc39.es/ecma262/#thissymbolvalue
@@ -54,14 +54,14 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
     auto& description = symbol->raw_description();
     if (!description.has_value())
         return js_undefined();
-    return js_string(vm, *description);
+    return PrimitiveString::create(vm, *description);
 }
 
 // 20.4.3.3 Symbol.prototype.toString ( ), https://tc39.es/ecma262/#sec-symbol.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto* symbol = TRY(this_symbol_value(vm, vm.this_value()));
-    return js_string(vm, symbol->to_deprecated_string());
+    return PrimitiveString::create(vm, symbol->to_deprecated_string());
 }
 
 // 20.4.3.4 Symbol.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-symbol.prototype.valueof
