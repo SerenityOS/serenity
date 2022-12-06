@@ -743,7 +743,7 @@ void WebContentView::notify_server_did_request_scroll(Badge<WebContentClient>, i
     verticalScrollBar()->setValue(verticalScrollBar()->value() + y_delta);
 }
 
-void WebContentView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const& scroll_position)
+void WebContentView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint scroll_position)
 {
     horizontalScrollBar()->setValue(scroll_position.x());
     verticalScrollBar()->setValue(scroll_position.y());
@@ -761,7 +761,7 @@ void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContent
     }
 }
 
-void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const& content_position, DeprecatedString const& tooltip)
+void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint content_position, DeprecatedString const& tooltip)
 {
     auto widget_position = to_widget(content_position);
     QToolTip::showText(
@@ -828,20 +828,20 @@ void WebContentView::notify_server_did_request_refresh(Badge<WebContentClient>)
     emit refresh();
 }
 
-void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
+void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position)
 {
     // FIXME
     (void)content_position;
 }
 
-void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const&, unsigned)
+void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned)
 {
     // FIXME
     (void)content_position;
     (void)url;
 }
 
-void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
+void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     // FIXME
     (void)content_position;
@@ -991,7 +991,7 @@ void WebContentView::notify_server_did_request_restore_window()
     emit restore_window();
 }
 
-Gfx::IntPoint WebContentView::notify_server_did_request_reposition_window(Gfx::IntPoint const& position)
+Gfx::IntPoint WebContentView::notify_server_did_request_reposition_window(Gfx::IntPoint position)
 {
     return emit reposition_window(position);
 }
