@@ -12,6 +12,7 @@
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>
+#    include <AK/String.h>
 #endif
 
 namespace AK {
@@ -89,6 +90,13 @@ public:
         if (is_string())
             return as_string();
         return serialized<StringBuilder>();
+    }
+
+    ErrorOr<String> to_string() const
+    {
+        if (is_string())
+            return String::from_deprecated_string(as_string());
+        return String::from_deprecated_string(serialized<StringBuilder>());
     }
 #endif
 
