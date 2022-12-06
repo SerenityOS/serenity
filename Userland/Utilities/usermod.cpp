@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         Core::File::AddDuplicateFileMarker::No);
 
                     if (result.is_error()) {
-                        warnln("usermod: could not move directory {} : {}", target_account.home_directory().characters(), static_cast<Error const&>(result.error()));
+                        warnln("usermod: could not move directory {} : {}", target_account.home_directory().characters(), result.error());
                         return 1;
                     }
                     maybe_error = Core::System::unlink(target_account.home_directory());

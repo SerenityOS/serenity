@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     Core::File::AddDuplicateFileMarker::No);
 
                 if (result.is_error()) {
-                    warnln("mv: could not move '{}': {}", old_path, static_cast<Error const&>(result.error()));
+                    warnln("mv: could not move '{}': {}", old_path, result.error());
                     return 1;
                 }
                 rc = unlink(old_path.characters());

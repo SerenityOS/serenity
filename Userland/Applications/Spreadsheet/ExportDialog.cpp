@@ -232,7 +232,7 @@ Result<void, DeprecatedString> CSVExportDialogPage::move_into(DeprecatedString c
             Core::File::AddDuplicateFileMarker::No);
 
         if (result.is_error())
-            return DeprecatedString::formatted("{}", static_cast<Error const&>(result.error()));
+            return DeprecatedString::formatted("{}", result.error());
 
         return {};
     }

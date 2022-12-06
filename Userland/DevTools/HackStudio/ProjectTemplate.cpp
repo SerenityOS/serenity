@@ -75,7 +75,7 @@ Result<void, DeprecatedString> ProjectTemplate::create_project(DeprecatedString 
         auto result = Core::File::copy_file_or_directory(path, content_path());
         dbgln("Copying {} -> {}", content_path(), path);
         if (result.is_error())
-            return DeprecatedString::formatted("Failed to copy template contents. Error code: {}", static_cast<Error const&>(result.error()));
+            return DeprecatedString::formatted("Failed to copy template contents. Error code: {}", result.error());
     } else {
         dbgln("No template content directory found for '{}', creating an empty directory for the project.", m_id);
         int rc;

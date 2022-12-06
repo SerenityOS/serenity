@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto result = Core::File::remove(path, recursive ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed, force);
 
         if (result.is_error()) {
-            warnln("rm: cannot remove '{}': {}", path, static_cast<Error const&>(result.error()));
+            warnln("rm: cannot remove '{}': {}", path, result.error());
             had_errors = true;
         }
 
