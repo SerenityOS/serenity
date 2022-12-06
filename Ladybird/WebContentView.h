@@ -108,7 +108,7 @@ public:
 
     void set_color_scheme(ColorScheme);
 
-    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size) override;
+    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) override;
     virtual void notify_server_did_change_selection(Badge<WebContentClient>) override;
@@ -151,7 +151,7 @@ public:
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
     virtual void notify_server_did_request_restore_window() override;
     virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint const&) override;
-    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) override;
+    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize) override;
     virtual Gfx::IntRect notify_server_did_request_maximize_window() override;
     virtual Gfx::IntRect notify_server_did_request_minimize_window() override;
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() override;
@@ -172,7 +172,7 @@ signals:
     void refresh();
     void restore_window();
     Gfx::IntPoint reposition_window(Gfx::IntPoint const&);
-    Gfx::IntSize resize_window(Gfx::IntSize const&);
+    Gfx::IntSize resize_window(Gfx::IntSize);
     Gfx::IntRect maximize_window();
     Gfx::IntRect minimize_window();
     Gfx::IntRect fullscreen_window();

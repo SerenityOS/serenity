@@ -722,7 +722,7 @@ void WebContentView::notify_server_did_request_cursor_change(Badge<WebContentCli
     }
 }
 
-void WebContentView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size)
+void WebContentView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size)
 {
     verticalScrollBar()->setMinimum(0);
     verticalScrollBar()->setMaximum(content_size.height() - m_viewport_rect.height());
@@ -996,7 +996,7 @@ Gfx::IntPoint WebContentView::notify_server_did_request_reposition_window(Gfx::I
     return emit reposition_window(position);
 }
 
-Gfx::IntSize WebContentView::notify_server_did_request_resize_window(Gfx::IntSize const& size)
+Gfx::IntSize WebContentView::notify_server_did_request_resize_window(Gfx::IntSize size)
 {
     return emit resize_window(size);
 }
