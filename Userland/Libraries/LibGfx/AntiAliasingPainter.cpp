@@ -154,7 +154,7 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     }
 }
 
-void AntiAliasingPainter::draw_line_for_path(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_line_for_path(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
     draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::Yes>(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
@@ -201,7 +201,7 @@ void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Col
     }
 }
 
-void AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
     if (style == Painter::LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
@@ -240,15 +240,15 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
             cursor = segment.point();
             break;
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto& through = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
+            auto through = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
             draw_quadratic_bezier_curve(through, cursor, segment.point(), color, thickness);
             cursor = segment.point();
             break;
         }
         case Segment::Type::CubicBezierCurveTo: {
             auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
-            auto& through_0 = curve.through_0();
-            auto& through_1 = curve.through_1();
+            auto through_0 = curve.through_0();
+            auto through_1 = curve.through_1();
             draw_cubic_bezier_curve(through_0, through_1, cursor, segment.point(), color, thickness);
             cursor = segment.point();
             break;
@@ -268,23 +268,23 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
         stroke_segment_intersection(first_line.value().a(), first_line.value().b(), last_line, color, thickness);
 }
 
-void AntiAliasingPainter::draw_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
 {
-    Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+    Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint fp1, FloatPoint fp2) {
         draw_line_for_path(fp1, fp2, color, thickness, style);
     });
 }
 
-void AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint control_point, FloatPoint p1, FloatPoint p2, Color color, float thickness, Painter::LineStyle style)
 {
-    Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+    Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint fp1, FloatPoint fp2) {
         draw_line_for_path(fp1, fp2, color, thickness, style);
     });
 }
 
-void AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2, Color color, float thickness, Painter::LineStyle style)
 {
-    Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+    Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint fp1, FloatPoint fp2) {
         draw_line_for_path(fp1, fp2, color, thickness, style);
     });
 }
@@ -685,7 +685,7 @@ void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, 
         fill_corner(bottom_right_corner, bounding_rect.bottom_right(), bottom_right);
 }
 
-void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color color, float thickness)
+void AntiAliasingPainter::stroke_segment_intersection(FloatPoint current_line_a, FloatPoint current_line_b, FloatLine const& previous_line, Color color, float thickness)
 {
     // FIXME: This is currently drawn in slightly the wrong place most of the time.
     // FIXME: This is sometimes drawn when the intersection would not be visible anyway.

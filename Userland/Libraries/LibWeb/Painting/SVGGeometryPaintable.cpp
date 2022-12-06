@@ -56,7 +56,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         auto scaling = layout_box().viewbox_scaling();
         auto origin = layout_box().viewbox_origin();
 
-        auto transform_point = [&scaling, &origin](Gfx::FloatPoint const& point) -> Gfx::FloatPoint {
+        auto transform_point = [&scaling, &origin](Gfx::FloatPoint point) -> Gfx::FloatPoint {
             auto new_point = point;
             new_point.translate_by({ -origin.x(), -origin.y() });
             new_point.scale_by(scaling);

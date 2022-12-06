@@ -60,7 +60,7 @@ AffineTransform& AffineTransform::scale(float sx, float sy)
     return *this;
 }
 
-AffineTransform& AffineTransform::scale(FloatPoint const& s)
+AffineTransform& AffineTransform::scale(FloatPoint s)
 {
     return scale(s.x(), s.y());
 }
@@ -74,7 +74,7 @@ AffineTransform& AffineTransform::set_scale(float sx, float sy)
     return *this;
 }
 
-AffineTransform& AffineTransform::set_scale(FloatPoint const& s)
+AffineTransform& AffineTransform::set_scale(FloatPoint s)
 {
     return set_scale(s.x(), s.y());
 }
@@ -86,7 +86,7 @@ AffineTransform& AffineTransform::translate(float tx, float ty)
     return *this;
 }
 
-AffineTransform& AffineTransform::translate(FloatPoint const& t)
+AffineTransform& AffineTransform::translate(FloatPoint t)
 {
     return translate(t.x(), t.y());
 }
@@ -98,7 +98,7 @@ AffineTransform& AffineTransform::set_translation(float tx, float ty)
     return *this;
 }
 
-AffineTransform& AffineTransform::set_translation(FloatPoint const& t)
+AffineTransform& AffineTransform::set_translation(FloatPoint t)
 {
     return set_translation(t.x(), t.y());
 }

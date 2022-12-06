@@ -218,7 +218,7 @@ GUI::Widget* PolygonalSelectTool::get_properties_widget()
     return m_properties_widget.ptr();
 }
 
-Gfx::IntPoint PolygonalSelectTool::point_position_to_preferred_cell(Gfx::FloatPoint const& position) const
+Gfx::IntPoint PolygonalSelectTool::point_position_to_preferred_cell(Gfx::FloatPoint position) const
 {
     return position.to_type<int>();
 }

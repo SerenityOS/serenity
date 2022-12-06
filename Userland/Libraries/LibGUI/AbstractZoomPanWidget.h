@@ -46,7 +46,7 @@ public:
 
     void set_original_rect(Gfx::IntRect const& rect) { m_original_rect = rect; }
     void set_content_rect(Gfx::IntRect const& content_rect);
-    void set_origin(Gfx::FloatPoint const& origin) { m_origin = origin; }
+    void set_origin(Gfx::FloatPoint origin) { m_origin = origin; }
 
     void reset_view();
 

@@ -22,7 +22,7 @@ public:
         Trailing,
     };
 
-    LineBoxFragment(Node const& layout_node, int start, int length, Gfx::FloatPoint const& offset, Gfx::FloatSize const& size, float border_box_top, float border_box_bottom, Type type)
+    LineBoxFragment(Node const& layout_node, int start, int length, Gfx::FloatPoint offset, Gfx::FloatSize const& size, float border_box_top, float border_box_bottom, Type type)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -40,8 +40,8 @@ public:
     const Gfx::FloatRect absolute_rect() const;
     Type type() const { return m_type; }
 
-    Gfx::FloatPoint const& offset() const { return m_offset; }
-    void set_offset(Gfx::FloatPoint const& offset) { m_offset = offset; }
+    Gfx::FloatPoint offset() const { return m_offset; }
+    void set_offset(Gfx::FloatPoint offset) { m_offset = offset; }
 
     // The baseline of a fragment is the number of pixels from the top to the text baseline.
     void set_baseline(float y) { m_baseline = y; }

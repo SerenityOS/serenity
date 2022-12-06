@@ -53,7 +53,7 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
-void PaintableBox::set_offset(Gfx::FloatPoint const& offset)
+void PaintableBox::set_offset(Gfx::FloatPoint offset)
 {
     m_offset = offset;
     // FIXME: This const_cast is gross.
@@ -655,7 +655,7 @@ void PaintableBox::set_stacking_context(NonnullOwnPtr<StackingContext> stacking_
     m_stacking_context = move(stacking_context);
 }
 
-Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
+Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint position, HitTestType type) const
 {
     if (!is_visible())
         return {};
@@ -679,7 +679,7 @@ Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, 
     return HitTestResult { *this };
 }
 
-Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
+Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint position, HitTestType type) const
 {
     if (!layout_box().children_are_inline())
         return PaintableBox::hit_test(position, type);

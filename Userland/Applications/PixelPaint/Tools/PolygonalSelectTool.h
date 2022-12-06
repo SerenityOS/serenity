@@ -24,7 +24,7 @@ public:
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
-    virtual Gfx::IntPoint point_position_to_preferred_cell(Gfx::FloatPoint const& position) const override;
+    virtual Gfx::IntPoint point_position_to_preferred_cell(Gfx::FloatPoint position) const override;
 
 private:
     virtual void flood_polygon_selection(Gfx::Bitmap&, Gfx::IntPoint);

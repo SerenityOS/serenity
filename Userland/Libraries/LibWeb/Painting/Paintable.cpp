@@ -41,7 +41,7 @@ bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned, 
     return false;
 }
 
-Optional<HitTestResult> Paintable::hit_test(Gfx::FloatPoint const&, HitTestType) const
+Optional<HitTestResult> Paintable::hit_test(Gfx::FloatPoint, HitTestType) const
 {
     return {};
 }
