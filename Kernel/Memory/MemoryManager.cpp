@@ -291,7 +291,18 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                 global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
                 break;
             case (MULTIBOOT_MEMORY_RESERVED):
-                global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length });
+#if ARCH(I386) || ARCH(X86_64)
+                // Workaround for https://gitlab.com/qemu-project/qemu/-/commit/8504f129450b909c88e199ca44facd35d38ba4de
+                // That commit added a reserved 12GiB entry for the benefit of virtual firmware.
+                // We can safely ignore this block as it isn't actually reserved on any real hardware.
+                // From: https://lore.kernel.org/all/20220701161014.3850-1-joao.m.martins@oracle.com/
+                // "Always add the HyperTransport range into e820 even when the relocation isn't
+                // done *and* there's >= 40 phys bit that would put max phyusical boundary to 1T
+                // This should allow virtual firmware to avoid the reserved range at the
+                // 1T boundary on VFs with big bars."
+                if (address != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
+#endif
+                    global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length });
                 break;
             case (MULTIBOOT_MEMORY_ACPI_RECLAIMABLE):
                 global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_address, length });
