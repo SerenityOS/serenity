@@ -7,6 +7,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
+#include <AK/String.h>
 #include <LibCore/Command.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
@@ -43,52 +44,62 @@ ErrorOr<int> serenity_main(Main::Arguments)
     struct InterfaceConfig {
         bool enabled = false;
         bool dhcp_enabled = false;
-        DeprecatedString ipv4_address = "0.0.0.0"sv;
-        DeprecatedString ipv4_netmask = "0.0.0.0"sv;
-        DeprecatedString ipv4_gateway = "0.0.0.0"sv;
+        String ipv4_address;
+        String ipv4_netmask;
+        String ipv4_gateway;
     };
 
-    Vector<DeprecatedString> interfaces_with_dhcp_enabled;
-    proc_net_adapters_json.as_array().for_each([&](auto& value) {
+    Vector<String> interfaces_with_dhcp_enabled;
+    TRY(proc_net_adapters_json.as_array().try_for_each([&](JsonValue const& value) -> ErrorOr<void> {
         auto& if_object = value.as_object();
-        auto ifname = if_object.get("name"sv).to_deprecated_string();
+        auto ifname = TRY(if_object.get("name"sv).to_string());
 
         if (ifname == "loop"sv)
-            return;
+            return {};
 
         InterfaceConfig config;
-        if (!groups.contains_slow(ifname)) {
+        if (!groups.contains_slow(ifname.to_deprecated_string())) {
             dbgln("Config for interface {} doesn't exist, enabling DHCP for it", ifname);
             interfaces_with_dhcp_enabled.append(ifname);
         } else {
-            config.enabled = config_file->read_bool_entry(ifname, "Enabled"sv, true);
-            config.dhcp_enabled = config_file->read_bool_entry(ifname, "DHCP"sv, false);
+            config.enabled = config_file->read_bool_entry(ifname.to_deprecated_string(), "Enabled"sv, true);
+            config.dhcp_enabled = config_file->read_bool_entry(ifname.to_deprecated_string(), "DHCP"sv, false);
             if (!config.dhcp_enabled) {
-                config.ipv4_address = config_file->read_entry(ifname, "IPv4Address"sv, "0.0.0.0"sv);
-                config.ipv4_netmask = config_file->read_entry(ifname, "IPv4Netmask"sv, "0.0.0.0"sv);
-                config.ipv4_gateway = config_file->read_entry(ifname, "IPv4Gateway"sv, "0.0.0.0"sv);
+                config.ipv4_address = TRY(String::from_deprecated_string(config_file->read_entry(ifname.to_deprecated_string(), "IPv4Address"sv, "0.0.0.0"sv)));
+                config.ipv4_netmask = TRY(String::from_deprecated_string(config_file->read_entry(ifname.to_deprecated_string(), "IPv4Netmask"sv, "0.0.0.0"sv)));
+                config.ipv4_gateway = TRY(String::from_deprecated_string(config_file->read_entry(ifname.to_deprecated_string(), "IPv4Gateway"sv, "0.0.0.0"sv)));
             }
         }
+
+        if (config.ipv4_address.is_empty()) {
+            config.ipv4_address = TRY(String::from_utf8("0.0.0.0"sv));
+        }
+        if (config.ipv4_netmask.is_empty()) {
+            config.ipv4_netmask = TRY(String::from_utf8("0.0.0.0"sv));
+        }
+        if (config.ipv4_gateway.is_empty()) {
+            config.ipv4_gateway = TRY(String::from_utf8("0.0.0.0"sv));
+        }
+
         if (config.enabled) {
             if (config.dhcp_enabled)
                 interfaces_with_dhcp_enabled.append(ifname);
             else {
-                // FIXME: Propagate errors
                 // FIXME: Do this asynchronously
-                dbgln("Setting up interface {} statically ({}/{})", ifname, config.ipv4_address, config.ipv4_netmask);
-                MUST(Core::command("ifconfig"sv, { "-a", ifname.characters(), "-i", config.ipv4_address.characters(), "-m", config.ipv4_netmask.characters() }, {}));
+                dbgln("Setting up interface {} statically ({}/{})", ifname.to_deprecated_string(), config.ipv4_address.to_deprecated_string(), config.ipv4_netmask.to_deprecated_string());
+                TRY(Core::command("ifconfig"sv, { "-a", ifname.to_deprecated_string(), "-i", config.ipv4_address.to_deprecated_string(), "-m", config.ipv4_netmask.to_deprecated_string() }, {}));
                 if (config.ipv4_gateway != "0.0.0.0") {
-                    MUST(Core::command("route"sv, { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
-                    MUST(Core::command("route"sv, { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway, "-i", ifname }, {}));
+                    TRY(Core::command("route"sv, { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname.to_deprecated_string() }, {}));
+                    TRY(Core::command("route"sv, { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway.to_deprecated_string(), "-i", ifname.to_deprecated_string() }, {}));
                 }
             }
         } else {
-            // FIXME: Propagate errors
             dbgln("Disabling interface {}", ifname);
-            MUST(Core::command("route"sv, { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
-            MUST(Core::command("ifconfig"sv, { "-a", ifname.characters(), "-i", "0.0.0.0", "-m", "0.0.0.0" }, {}));
+            TRY(Core::command("route"sv, { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname.to_deprecated_string() }, {}));
+            TRY(Core::command("ifconfig"sv, { "-a", ifname.to_deprecated_string(), "-i", "0.0.0.0", "-m", "0.0.0.0" }, {}));
         }
-    });
+        return {};
+    }));
 
     if (!interfaces_with_dhcp_enabled.is_empty()) {
         dbgln("Running DHCPClient for interfaces: {}", interfaces_with_dhcp_enabled);
@@ -96,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         char dhcp_client_arg[] = "DHCPClient";
         args.append(dhcp_client_arg);
         for (auto& iface : interfaces_with_dhcp_enabled)
-            args.append(const_cast<char*>(iface.characters()));
+            args.append(const_cast<char*>(reinterpret_cast<char const*>(iface.bytes().data())));
         args.append(nullptr);
 
         auto dhcp_client_pid = TRY(Core::System::posix_spawnp("DHCPClient"sv, nullptr, nullptr, args.data(), environ));
