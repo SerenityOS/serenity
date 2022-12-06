@@ -391,7 +391,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
     auto us = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000 }).quotient;
 
     // 5. Return ℤ(µs).
-    return js_bigint(vm, move(us));
+    return BigInt::create(vm, move(us));
 }
 
 // 6.3.18 get Temporal.ZonedDateTime.prototype.epochNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochnanoseconds

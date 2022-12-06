@@ -608,7 +608,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
         return vm.throw_completion<TypeError>(ErrorType::Convert, "null", "BigInt");
     case BOOLEAN_TAG: {
         auto value = primitive.as_bool() ? 1 : 0;
-        return js_bigint(vm, Crypto::SignedBigInteger { value });
+        return BigInt::create(vm, Crypto::SignedBigInteger { value }).ptr();
     }
     case BIGINT_TAG:
         return &primitive.as_bigint();
@@ -695,7 +695,7 @@ static Optional<BigInt*> string_to_bigint(VM& vm, StringView string)
         bigint.negate();
 
     // 6. Return ℤ(mv).
-    return js_bigint(vm, move(bigint));
+    return BigInt::create(vm, move(bigint));
 }
 
 // 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/#sec-tobigint64
@@ -1012,7 +1012,7 @@ ThrowCompletionOr<Value> bitwise_and(VM& vm, Value lhs, Value rhs)
         return Value(TRY(lhs_numeric.to_i32(vm)) & TRY(rhs_numeric.to_i32(vm)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
 }
 
@@ -1031,7 +1031,7 @@ ThrowCompletionOr<Value> bitwise_or(VM& vm, Value lhs, Value rhs)
         return Value(TRY(lhs_numeric.to_i32(vm)) | TRY(rhs_numeric.to_i32(vm)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
 }
 
@@ -1050,7 +1050,7 @@ ThrowCompletionOr<Value> bitwise_xor(VM& vm, Value lhs, Value rhs)
         return Value(TRY(lhs_numeric.to_i32(vm)) ^ TRY(rhs_numeric.to_i32(vm)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
 }
 
@@ -1060,7 +1060,7 @@ ThrowCompletionOr<Value> bitwise_not(VM& vm, Value lhs)
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
     if (lhs_numeric.is_number())
         return Value(~TRY(lhs_numeric.to_i32(vm)));
-    return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_not()));
+    return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().bitwise_not());
 }
 
 // 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator
@@ -1079,10 +1079,10 @@ ThrowCompletionOr<Value> unary_minus(VM& vm, Value lhs)
         return Value(-lhs_numeric.as_double());
     }
     if (lhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
-        return Value(js_bigint(vm, BIGINT_ZERO));
+        return BigInt::create(vm, BIGINT_ZERO);
     auto big_integer_negated = lhs_numeric.as_bigint().big_integer();
     big_integer_negated.negate();
-    return Value(js_bigint(vm, big_integer_negated));
+    return BigInt::create(vm, big_integer_negated);
 }
 
 // 13.9.1 The Left Shift Operator ( << ), https://tc39.es/ecma262/#sec-left-shift-operator
@@ -1113,12 +1113,12 @@ ThrowCompletionOr<Value> left_shift(VM& vm, Value lhs, Value rhs)
 
             // For positive initial values and no remainder just return quotient
             if (division_result.remainder.is_zero() || !big_integer.is_negative())
-                return js_bigint(vm, division_result.quotient);
+                return BigInt::create(vm, division_result.quotient);
             // For negative round "down" to the next negative number
-            return js_bigint(vm, division_result.quotient.minus(Crypto::SignedBigInteger { 1 }));
+            return BigInt::create(vm, division_result.quotient.minus(Crypto::SignedBigInteger { 1 }));
         }
         // 2. Return the BigInt value that represents ℝ(x) × 2^y.
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor)));
+        return Value(BigInt::create(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor)));
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "left-shift");
 }
@@ -1140,7 +1140,7 @@ ThrowCompletionOr<Value> right_shift(VM& vm, Value lhs, Value rhs)
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         auto rhs_negated = rhs_numeric.as_bigint().big_integer();
         rhs_negated.negate();
-        return left_shift(vm, lhs, js_bigint(vm, rhs_negated));
+        return left_shift(vm, lhs, BigInt::create(vm, rhs_negated));
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "right-shift");
 }
@@ -1190,7 +1190,7 @@ ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "addition");
 }
 
@@ -1206,7 +1206,7 @@ ThrowCompletionOr<Value> sub(VM& vm, Value lhs, Value rhs)
         return Value(interm);
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "subtraction");
 }
 
@@ -1218,7 +1218,7 @@ ThrowCompletionOr<Value> mul(VM& vm, Value lhs, Value rhs)
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "multiplication");
 }
 
@@ -1232,7 +1232,7 @@ ThrowCompletionOr<Value> div(VM& vm, Value lhs, Value rhs)
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
             return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "division");
 }
@@ -1253,7 +1253,7 @@ ThrowCompletionOr<Value> mod(VM& vm, Value lhs, Value rhs)
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
             return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
-        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder));
+        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "modulo");
 }
@@ -1320,7 +1320,7 @@ ThrowCompletionOr<Value> exp(VM& vm, Value lhs, Value rhs)
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer().is_negative())
             return vm.throw_completion<RangeError>(ErrorType::NegativeExponent);
-        return Value(js_bigint(vm, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer())));
+        return BigInt::create(vm, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "exponentiation");
 }

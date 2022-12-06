@@ -1642,7 +1642,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(VM& vm, double ye
     }
 
     // 10. Set timeRemainderNs to ! RoundTemporalInstant(ℤ(timeRemainderNs - dayLengthNs), increment, unit, roundingMode).
-    time_remainder_ns = round_temporal_instant(vm, *js_bigint(vm, time_remainder_ns.minus(day_length_ns)), increment, unit, rounding_mode)->big_integer();
+    time_remainder_ns = round_temporal_instant(vm, BigInt::create(vm, time_remainder_ns.minus(day_length_ns)), increment, unit, rounding_mode)->big_integer();
 
     // 11. Let adjustedDateDuration be ? AddDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, relativeTo).
     auto adjusted_date_duration = TRY(add_duration(vm, years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, &relative_to));
