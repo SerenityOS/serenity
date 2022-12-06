@@ -165,4 +165,31 @@ StringView language_to_string(Language language)
     VERIFY_NOT_REACHED();
 }
 
+StringView common_language_extension(Language language)
+{
+    switch (language) {
+    case Language::Cpp:
+        return "cpp"sv;
+    case Language::CSS:
+        return "css"sv;
+    case Language::GitCommit:
+        return {};
+    case Language::GML:
+        return "gml"sv;
+    case Language::HTML:
+        return "html"sv;
+    case Language::INI:
+        return "ini"sv;
+    case Language::JavaScript:
+        return "js"sv;
+    case Language::PlainText:
+        return "txt"sv;
+    case Language::Shell:
+        return "sh"sv;
+    case Language::SQL:
+        return "sql"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 }

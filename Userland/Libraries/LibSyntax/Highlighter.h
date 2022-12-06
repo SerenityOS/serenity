@@ -33,6 +33,7 @@ struct TextStyle {
 };
 
 StringView language_to_string(Language);
+StringView common_language_extension(Language);
 
 class Highlighter {
     AK_MAKE_NONCOPYABLE(Highlighter);
