@@ -11,6 +11,7 @@
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/OpacitySlider.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
@@ -189,7 +190,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, DeprecatedString ti
     set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
     set_title(title);
     set_resizable(false);
-    resize(458, 326);
+    resize(480, 326);
 
     build_ui();
 }
@@ -227,7 +228,7 @@ void ColorPicker::build_ui()
     build_ui_custom(tab_custom_color);
 
     auto& button_container = root_container.add<Widget>();
-    button_container.set_fixed_height(22);
+    button_container.set_preferred_height(GUI::SpecialDimension::Fit);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
@@ -280,7 +281,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
 
     // Left Side
     m_custom_color = horizontal_container.add<CustomColorWidget>(m_color);
-    m_custom_color->set_fixed_size(299, 260);
+    m_custom_color->set_preferred_size(299, 260);
     m_custom_color->on_pick = [this](Color color) {
         if (m_color == color)
             return;
@@ -289,11 +290,28 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         update_color_widgets();
     };
 
+    m_alpha = horizontal_container.add<GUI::VerticalOpacitySlider>();
+    m_alpha->set_visible(m_color_has_alpha_channel);
+    m_alpha->set_min(0);
+    m_alpha->set_max(255);
+    m_alpha->set_value(m_color.alpha());
+    m_alpha->on_change = [this](auto value) {
+        auto color = m_color;
+        color.set_alpha(value);
+
+        if (m_color == color)
+            return;
+
+        m_color = color;
+        m_custom_color->set_color(color);
+        update_color_widgets();
+    };
+
     // Right Side
     auto& vertical_container = horizontal_container.add<Widget>();
     vertical_container.set_layout<VerticalBoxLayout>();
     vertical_container.layout()->set_margins({ 0, 0, 0, 8 });
-    vertical_container.set_fixed_width(128);
+    vertical_container.set_min_width(120);
 
     auto& preview_container = vertical_container.add<Frame>();
     preview_container.set_layout<VerticalBoxLayout>();
@@ -312,11 +330,11 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // HTML
     auto& html_container = vertical_container.add<GUI::Widget>();
     html_container.set_layout<GUI::HorizontalBoxLayout>();
-    html_container.set_fixed_height(22);
+    html_container.set_preferred_height(GUI::SpecialDimension::Fit);
 
     auto& html_label = html_container.add<GUI::Label>();
     html_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    html_label.set_fixed_width(48);
+    html_label.set_preferred_width(48);
     html_label.set_text("HTML:");
 
     m_html_text = html_container.add<GUI::TextBox>();
@@ -341,14 +359,13 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
         auto& rgb_container = vertical_container.add<GUI::Widget>();
         rgb_container.set_layout<GUI::HorizontalBoxLayout>();
-        rgb_container.set_fixed_height(22);
+        rgb_container.set_preferred_height(GUI::SpecialDimension::Fit);
 
         auto& rgb_label = rgb_container.add<GUI::Label>();
         rgb_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        rgb_label.set_fixed_width(48);
+        rgb_label.set_preferred_width(48);
 
         auto& spinbox = rgb_container.add<SpinBox>();
-        spinbox.set_fixed_height(20);
         spinbox.set_min(0);
         spinbox.set_max(255);
         spinbox.set_value(initial_value);
@@ -423,6 +440,8 @@ void ColorPicker::update_color_widgets()
     m_blue_spinbox->set_value(m_color.blue());
     m_alpha_spinbox->set_value(m_color.alpha());
     m_alpha_spinbox->set_enabled(m_color_has_alpha_channel);
+    m_alpha->set_value(m_color.alpha());
+    m_alpha->set_visible(m_color_has_alpha_channel);
 }
 
 void ColorPicker::create_color_button(Widget& container, unsigned rgb)
