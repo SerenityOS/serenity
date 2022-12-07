@@ -29,7 +29,7 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
     USBInterfaceDescriptor* interface_descriptor = reinterpret_cast<USBInterfaceDescriptor*>(interface_descriptors_base);
     Vector<USBEndpointDescriptor> endpoint_descriptors;
     for (auto interface = 0u; interface < m_descriptor.number_of_interfaces; interface++) {
-        endpoint_descriptors.ensure_capacity(interface_descriptor->number_of_endpoints);
+        TRY(endpoint_descriptors.try_ensure_capacity(interface_descriptor->number_of_endpoints));
 
         if constexpr (USB_DEBUG) {
             dbgln("Interface Descriptor {}", interface);

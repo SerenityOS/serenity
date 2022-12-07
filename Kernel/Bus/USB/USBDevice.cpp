@@ -120,7 +120,7 @@ ErrorOr<void> Device::enumerate_device()
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
 
     // Fetch the configuration descriptors from the device
-    m_configurations.ensure_capacity(m_device_descriptor.num_configurations);
+    TRY(m_configurations.try_ensure_capacity(m_device_descriptor.num_configurations));
     for (auto configuration = 0u; configuration < m_device_descriptor.num_configurations; configuration++) {
         USBConfigurationDescriptor configuration_descriptor;
         transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
