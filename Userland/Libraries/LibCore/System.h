@@ -9,10 +9,14 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Noncopyable.h>
+#include <AK/OwnPtrWithCustomDeleter.h>
 #include <AK/StringView.h>
+#include <AK/Vector.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <netdb.h>
 #include <poll.h>
 #include <pwd.h>
 #include <signal.h>
@@ -209,6 +213,30 @@ ErrorOr<void> unlockpt(int fildes);
 ErrorOr<void> access(StringView pathname, int mode);
 ErrorOr<DeprecatedString> readlink(StringView pathname);
 ErrorOr<int> poll(Span<struct pollfd>, int timeout);
+
+class AddressInfoVector {
+    AK_MAKE_NONCOPYABLE(AddressInfoVector);
+
+public:
+    AddressInfoVector(AddressInfoVector&&) = default;
+    ~AddressInfoVector() = default;
+
+    Span<struct addrinfo const> addresses() const { return m_addresses; }
+
+private:
+    friend ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servname, struct addrinfo const& hints);
+
+    AddressInfoVector(Vector<struct addrinfo>&& addresses, struct addrinfo* ptr, AK::Function<void(struct addrinfo*)> deleter)
+        : m_addresses(move(addresses))
+        , m_ptr(ptr, move(deleter))
+    {
+    }
+
+    Vector<struct addrinfo> m_addresses {};
+    OwnPtrWithCustomDeleter<struct addrinfo> m_ptr;
+};
+
+ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servname, struct addrinfo const& hints);
 
 #ifdef AK_OS_SERENITY
 ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length);
