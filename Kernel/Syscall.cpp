@@ -127,7 +127,7 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
     MutexLocker mutex_locker;
     auto const needs_big_lock = syscall_metadata.needs_lock == NeedsBigProcessLock::Yes;
     if (needs_big_lock) {
-        mutex_locker.attach_and_lock(process.big_lock());
+        TRY(mutex_locker.attach_and_lock(process.big_lock()));
     };
 
     if (function == SC_exit || function == SC_exit_thread) {

@@ -466,7 +466,7 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
         if (TRY(Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags)).was_interrupted())
             return set_so_error(EINTR);
-        locker.lock();
+        TRY(locker.lock());
         VERIFY(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
             set_role(Role::None);

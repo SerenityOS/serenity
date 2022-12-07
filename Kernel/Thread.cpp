@@ -534,7 +534,7 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
-        process().big_lock().restore_exclusive_lock(lock_count_to_restore);
+        MUST(process().big_lock().restore_exclusive_lock(lock_count_to_restore)); // FIXME propagate this error
     }
 }
 

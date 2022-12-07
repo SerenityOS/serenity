@@ -16,7 +16,7 @@ extern bool g_in_early_boot;
 
 namespace Kernel {
 
-void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
+ErrorOr<void> Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
@@ -55,12 +55,12 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
             current_thread->holding_lock(*this, 1, location);
         }
 #endif
-        return;
+        return {};
     }
     case Mode::Exclusive: {
         VERIFY(m_holder);
         if (m_holder != current_thread) {
-            block(*current_thread, mode, lock, 1);
+            TRY(block(*current_thread, mode, lock, 1));
             did_block = true;
             // If we blocked then m_mode should have been updated to what we requested
             VERIFY(m_mode == mode);
@@ -92,7 +92,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
 #if LOCK_DEBUG
         current_thread->holding_lock(*this, 1, location);
 #endif
-        return;
+        return {};
     }
     case Mode::Shared: {
         VERIFY(m_behavior == MutexBehavior::Regular);
@@ -106,7 +106,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
             // and is asking to upgrade the lock to be exclusive without first releasing the shared lock. We have no
             // allocation-free way to detect such a scenario, so if you suspect that this is the cause of your deadlock,
             // try turning on LOCK_SHARED_UPGRADE_DEBUG.
-            block(*current_thread, mode, lock, 1);
+            TRY(block(*current_thread, mode, lock, 1));
             did_block = true;
             VERIFY(m_mode == mode);
         }
@@ -141,7 +141,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
 #if LOCK_DEBUG
         current_thread->holding_lock(*this, 1, location);
 #endif
-        return;
+        return {};
     }
     default:
         VERIFY_NOT_REACHED();
@@ -211,7 +211,7 @@ void Mutex::unlock()
     }
 }
 
-void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& lock, u32 requested_locks)
+ErrorOr<void> Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& lock, u32 requested_locks)
 {
     if constexpr (LOCK_IN_CRITICAL_DEBUG) {
         // There are no interrupts enabled in early boot.
@@ -231,7 +231,7 @@ void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& l
     });
 
     dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waiting...", this, m_name);
-    MUST(current_thread.block(*this, lock, requested_locks)); // FIXME propagate this error
+    TRY(current_thread.block(*this, lock, requested_locks));
     dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waited", this, m_name);
 
     m_blocked_thread_lists.with([&](auto& lists) {
@@ -245,6 +245,8 @@ void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& l
         else
             remove_from_list(lists.list_for_mode(mode));
     });
+
+    return {};
 }
 
 void Mutex::unblock_waiters(Mode previous_mode)
@@ -330,7 +332,7 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
     return current_mode;
 }
 
-void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation const& location)
+ErrorOr<void> Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation const& location)
 {
     VERIFY(m_behavior == MutexBehavior::BigLock);
     VERIFY(lock_count > 0);
@@ -341,7 +343,7 @@ void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation
     SpinlockLocker lock(m_lock);
     [[maybe_unused]] auto previous_mode = m_mode;
     if (m_mode == Mode::Exclusive && m_holder != current_thread) {
-        block(*current_thread, Mode::Exclusive, lock, lock_count);
+        TRY(block(*current_thread, Mode::Exclusive, lock, lock_count));
         did_block = true;
         // If we blocked then m_mode should have been updated to what we requested
         VERIFY(m_mode == Mode::Exclusive);
@@ -372,6 +374,7 @@ void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation
 #if LOCK_DEBUG
     m_holder->holding_lock(*this, (int)lock_count, location);
 #endif
+    return {};
 }
 
 }

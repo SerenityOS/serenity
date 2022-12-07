@@ -213,7 +213,7 @@ ErrorOr<void> ProcFSProcessPropertyInode::refresh_data(OpenFileDescription& desc
     auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return Error::from_errno(ESRCH);
-    process->ptrace_lock().lock();
+    TRY(process->ptrace_lock().lock());
     if (!process->is_dumpable()) {
         process->ptrace_lock().unlock();
         return EPERM;

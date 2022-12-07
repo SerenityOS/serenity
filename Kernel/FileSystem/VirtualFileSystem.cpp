@@ -138,7 +138,7 @@ void VirtualFileSystem::lock_all_filesystems()
     });
 
     for (auto& fs : file_systems)
-        fs.m_lock.lock();
+        MUST(fs.m_lock.lock()); // FIXME propagate this error
 }
 
 ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
