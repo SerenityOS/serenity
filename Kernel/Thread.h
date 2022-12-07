@@ -462,7 +462,7 @@ public:
             void* data;
         };
 
-        Vector<BlockerInfo, 4> do_take_blockers(size_t count)
+        ErrorOr<Vector<BlockerInfo, 4>> do_take_blockers(size_t count)
         {
             if (m_blockers.size() <= count)
                 return move(m_blockers);
@@ -471,25 +471,26 @@ public:
             VERIFY(move_count > 0);
 
             Vector<BlockerInfo, 4> taken_blockers;
-            taken_blockers.ensure_capacity(move_count);
+            TRY(taken_blockers.try_ensure_capacity(move_count));
             for (size_t i = 0; i < move_count; i++)
-                taken_blockers.append(m_blockers.take(i));
+                TRY(taken_blockers.try_append(m_blockers.take(i)));
             m_blockers.remove(0, move_count);
             return taken_blockers;
         }
 
-        void do_append_blockers(Vector<BlockerInfo, 4>&& blockers_to_append)
+        ErrorOr<void> do_append_blockers(Vector<BlockerInfo, 4>&& blockers_to_append)
         {
             if (blockers_to_append.is_empty())
-                return;
+                return {};
             if (m_blockers.is_empty()) {
                 m_blockers = move(blockers_to_append);
-                return;
+                return {};
             }
-            m_blockers.ensure_capacity(m_blockers.size() + blockers_to_append.size());
+            TRY(m_blockers.try_ensure_capacity(m_blockers.size() + blockers_to_append.size()));
             for (size_t i = 0; i < blockers_to_append.size(); i++)
-                m_blockers.append(blockers_to_append.take(i));
+                TRY(m_blockers.try_append(blockers_to_append.take(i)));
             blockers_to_append.clear();
+            return {};
         }
 
         // FIXME: Check whether this can be Thread.

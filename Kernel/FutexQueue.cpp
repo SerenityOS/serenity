@@ -53,7 +53,7 @@ ErrorOr<u32> FutexQueue::wake_n_requeue(u32 wake_count, Function<ErrorOr<FutexQu
     });
     is_empty = is_empty_and_no_imminent_waits_locked();
     if (requeue_count > 0) {
-        auto blockers_to_requeue = do_take_blockers(requeue_count);
+        auto blockers_to_requeue = TRY(do_take_blockers(requeue_count));
         if (!blockers_to_requeue.is_empty()) {
             if (auto* target_futex_queue = TRY(get_target_queue())) {
                 dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue requeueing {} blockers to {}", this, blockers_to_requeue.size(), target_futex_queue);
@@ -76,11 +76,11 @@ ErrorOr<u32> FutexQueue::wake_n_requeue(u32 wake_count, Function<ErrorOr<FutexQu
                     auto& blocker = *static_cast<Thread::FutexBlocker*>(info.blocker);
                     blocker.finish_requeue(*target_futex_queue);
                 }
-                target_futex_queue->do_append_blockers(move(blockers_to_requeue));
+                TRY(target_futex_queue->do_append_blockers(move(blockers_to_requeue)));
                 is_empty_target = target_futex_queue->is_empty_and_no_imminent_waits_locked();
             } else {
                 dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue could not get target queue to requeue {} blockers", this, blockers_to_requeue.size());
-                do_append_blockers(move(blockers_to_requeue));
+                TRY(do_append_blockers(move(blockers_to_requeue)));
             }
         }
     }
