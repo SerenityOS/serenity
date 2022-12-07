@@ -13,7 +13,7 @@
             spacing: 16
         }
 
-        @GUI::OpacitySlider {
+        @GUI::HorizontalOpacitySlider {
             name: "background_opacity_slider"
             min: 0
             max: 255

@@ -215,7 +215,7 @@ GalleryWidget::GalleryWidget()
     m_opacity_imagewidget = sliders_tab->find_descendant_of_type_named<GUI::ImageWidget>("opacity_imagewidget");
     m_opacity_imagewidget->load_from_file("/res/graphics/brand-banner.png"sv);
 
-    m_opacity_slider = sliders_tab->find_descendant_of_type_named<GUI::OpacitySlider>("opacity_slider");
+    m_opacity_slider = sliders_tab->find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("opacity_slider");
 
     m_opacity_slider->on_change = [&](auto percent) {
         m_opacity_imagewidget->set_opacity_percent(percent);

@@ -16,7 +16,7 @@
                 margins: [8]
             }
 
-            @GUI::OpacitySlider {
+            @GUI::HorizontalOpacitySlider {
                 name: "opacity_slider"
                 tooltip: "Opacity Slider"
             }

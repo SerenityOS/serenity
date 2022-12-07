@@ -104,7 +104,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
 {
     load_from_gml(terminal_settings_view_gml);
 
-    auto& slider = *find_descendant_of_type_named<GUI::OpacitySlider>("background_opacity_slider");
+    auto& slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
     m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv);
     m_original_opacity = m_opacity;
     slider.set_value(m_opacity);

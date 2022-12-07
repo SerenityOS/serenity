@@ -51,7 +51,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     opacity_label.set_fixed_size(80, 20);
 
-    m_opacity_slider = opacity_container.add<GUI::OpacitySlider>();
+    m_opacity_slider = opacity_container.add<GUI::HorizontalOpacitySlider>();
     m_opacity_slider->set_range(0, 100);
     m_opacity_slider->on_change = [this](int value) {
         if (m_layer)
