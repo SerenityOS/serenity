@@ -105,7 +105,10 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
     auto* access = new Access();
     if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
         return false;
-    access->rescan_hardware();
+    if (auto rescan_error = access->rescan_hardware(); rescan_error.is_error()) {
+        dbgln("PCI: rescan failed {}", rescan_error.release_error());
+        return false;
+    }
     dbgln_if(PCI_DEBUG, "PCI: access for multiple PCI domain initialised.");
     return true;
 }
@@ -117,7 +120,10 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     auto* access = new Access();
     auto host_bridge = HostBridge::must_create_with_io_access();
     access->add_host_controller(move(host_bridge));
-    access->rescan_hardware();
+    if (auto rescan_error = access->rescan_hardware(); rescan_error.is_error()) {
+        dbgln("PCI: rescan failed {}", rescan_error.release_error());
+        return false;
+    }
     dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
     return true;
 }
@@ -139,15 +145,20 @@ ErrorOr<void> Access::add_host_controller_and_enumerate_attached_devices(Nonnull
         // definitely before enumerating devices behind that.
         m_host_controllers.set(domain_number, move(controller));
         ErrorOr<void> expansion_result;
-        m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> IterationDecision {
-            m_device_identifiers.append(device_identifier);
+        TRY(m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> IterationDecision {
+            auto append_result = m_device_identifiers.try_append(device_identifier);
+            if (append_result.is_error()) {
+                expansion_result = append_result;
+                return IterationDecision::Break;
+            }
+
             auto result = device_identifiers_behind_host_controller.try_append(device_identifier);
             if (result.is_error()) {
                 expansion_result = result;
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;
-        });
+        }));
         if (expansion_result.is_error())
             return expansion_result;
     }
@@ -169,17 +180,26 @@ UNMAP_AFTER_INIT Access::Access()
     s_access = this;
 }
 
-UNMAP_AFTER_INIT void Access::rescan_hardware()
+UNMAP_AFTER_INIT ErrorOr<void> Access::rescan_hardware()
 {
     SpinlockLocker locker(m_access_lock);
     SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
     for (auto it = m_host_controllers.begin(); it != m_host_controllers.end(); ++it) {
-        (*it).value->enumerate_attached_devices([this](DeviceIdentifier device_identifier) -> IterationDecision {
-            m_device_identifiers.append(device_identifier);
+        ErrorOr<void> rescan_result;
+        TRY((*it).value->enumerate_attached_devices([this, &rescan_result](DeviceIdentifier device_identifier) -> IterationDecision {
+            auto append_result = m_device_identifiers.try_append(device_identifier);
+            if (append_result.is_error()) {
+                rescan_result = append_result;
+                return IterationDecision::Break;
+            }
             return IterationDecision::Continue;
-        });
+        }));
+
+        if (rescan_result.is_error())
+            return rescan_result;
     }
+    return {};
 }
 
 ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const

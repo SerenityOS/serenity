@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/Error.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -31,18 +32,18 @@ public:
 
     u32 domain_number() const { return m_domain.domain_number(); }
 
-    void enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback);
+    ErrorOr<void> enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback);
 
 private:
-    void enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, bool recursive);
-    void enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
-    void enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
+    ErrorOr<void> enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, bool recursive);
+    ErrorOr<void> enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
+    ErrorOr<void> enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
 
     u8 read8_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
     u16 read16_field(BusNumber, DeviceNumber, FunctionNumber, RegisterOffset field);
 
     Optional<u8> get_capabilities_pointer_for_function(BusNumber, DeviceNumber, FunctionNumber);
-    Vector<Capability> get_capabilities_for_function(BusNumber, DeviceNumber, FunctionNumber);
+    ErrorOr<Vector<Capability>> get_capabilities_for_function(BusNumber, DeviceNumber, FunctionNumber);
 
 protected:
     explicit HostController(PCI::Domain const& domain);

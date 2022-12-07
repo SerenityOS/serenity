@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
@@ -26,11 +27,11 @@ UNMAP_AFTER_INIT Optional<u8> HostController::get_capabilities_pointer_for_funct
     return {};
 }
 
-UNMAP_AFTER_INIT Vector<Capability> HostController::get_capabilities_for_function(BusNumber bus, DeviceNumber device, FunctionNumber function)
+UNMAP_AFTER_INIT ErrorOr<Vector<Capability>> HostController::get_capabilities_for_function(BusNumber bus, DeviceNumber device, FunctionNumber function)
 {
     auto capabilities_pointer = get_capabilities_pointer_for_function(bus, device, function);
     if (!capabilities_pointer.has_value()) {
-        return {};
+        return Vector<Capability> {};
     }
     Vector<Capability> capabilities;
     auto capability_pointer = capabilities_pointer.value();
@@ -39,7 +40,7 @@ UNMAP_AFTER_INIT Vector<Capability> HostController::get_capabilities_for_functio
         u8 capability_id = capability_header & 0xff;
 
         // FIXME: Don't attach a PCI address to a capability object
-        capabilities.append({ Address(domain_number(), bus.value(), device.value(), function.value()), capability_id, capability_pointer });
+        TRY(capabilities.try_append({ Address(domain_number(), bus.value(), device.value(), function.value()), capability_id, capability_pointer }));
         capability_pointer = capability_header >> 8;
     }
     return capabilities;
@@ -54,7 +55,7 @@ u16 HostController::read16_field(BusNumber bus, DeviceNumber device, FunctionNum
     return read16_field(bus, device, function, to_underlying(field));
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT ErrorOr<void> HostController::enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, FunctionNumber function, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating function, bus={}, device={}, function={}", bus, device, function);
     Address address(domain_number(), bus.value(), device.value(), function.value());
@@ -69,7 +70,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<IterationDeci
     SubsystemVendorID subsystem_vendor_id = read16_field(bus, device, function, PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID);
     InterruptLine interrupt_line = read8_field(bus, device, function, PCI::RegisterOffset::INTERRUPT_LINE);
     InterruptPin interrupt_pin = read8_field(bus, device, function, PCI::RegisterOffset::INTERRUPT_PIN);
-    auto capabilities = get_capabilities_for_function(bus, device, function);
+    auto capabilities = TRY(get_capabilities_for_function(bus, device, function));
     callback(DeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, interrupt_line, interrupt_pin, capabilities });
 
     if (pci_class == (to_underlying(PCI::ClassID::Bridge) << 8 | to_underlying(PCI::Bridge::SubclassID::PCI_TO_PCI))
@@ -79,39 +80,42 @@ UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<IterationDeci
         dbgln_if(PCI_DEBUG, "PCI: Found secondary bus: {}", secondary_bus);
         VERIFY(secondary_bus != bus);
         m_enumerated_buses.set(secondary_bus, true);
-        enumerate_bus(callback, secondary_bus, recursive_search_into_bridges);
+        TRY(enumerate_bus(callback, secondary_bus, recursive_search_into_bridges));
     }
+    return {};
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT ErrorOr<void> HostController::enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating device in bus={}, device={}", bus, device);
     if (read16_field(bus, device, 0, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
-        return;
-    enumerate_functions(callback, bus, device, 0, recursive_search_into_bridges);
+        return {};
+    TRY(enumerate_functions(callback, bus, device, 0, recursive_search_into_bridges));
     if (!(read8_field(bus, device, 0, PCI::RegisterOffset::HEADER_TYPE) & 0x80))
-        return;
+        return {};
     for (u8 function = 1; function < 8; ++function) {
         if (read16_field(bus, device, function, PCI::RegisterOffset::VENDOR_ID) != PCI::none_value)
-            enumerate_functions(callback, bus, device, function, recursive_search_into_bridges);
+            TRY(enumerate_functions(callback, bus, device, function, recursive_search_into_bridges));
     }
+    return {};
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, bool recursive_search_into_bridges)
+UNMAP_AFTER_INIT ErrorOr<void> HostController::enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating bus {}", bus);
     for (u8 device = 0; device < 32; ++device)
-        enumerate_device(callback, bus, device, recursive_search_into_bridges);
+        TRY(enumerate_device(callback, bus, device, recursive_search_into_bridges));
+    return {};
 }
 
-UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback)
+UNMAP_AFTER_INIT ErrorOr<void> HostController::enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback)
 {
     VERIFY(Access::the().access_lock().is_locked());
     VERIFY(Access::the().scan_lock().is_locked());
     // First scan bus 0. Find any device on that bus, and if it's a PCI-to-PCI
     // bridge, recursively scan it too.
     m_enumerated_buses.set(m_domain.start_bus(), true);
-    enumerate_bus(callback, m_domain.start_bus(), true);
+    TRY(enumerate_bus(callback, m_domain.start_bus(), true));
 
     // Handle Multiple PCI host bridges on bus 0, device 0, functions 1-7 (function 0
     // is the main host bridge).
@@ -127,10 +131,11 @@ UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<Iterat
                 break;
             if (m_enumerated_buses.get(m_domain.start_bus() + bus_as_function_number))
                 continue;
-            enumerate_bus(callback, m_domain.start_bus() + bus_as_function_number, false);
+            TRY(enumerate_bus(callback, m_domain.start_bus() + bus_as_function_number, false));
             m_enumerated_buses.set(m_domain.start_bus() + bus_as_function_number, true);
         }
     }
+    return {};
 }
 
 }

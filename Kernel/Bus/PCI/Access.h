@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Try.h>
@@ -26,7 +27,7 @@ public:
 #endif
 
     ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
-    void rescan_hardware();
+    ErrorOr<void> rescan_hardware();
 
     static Access& the();
     static bool is_initialized();
