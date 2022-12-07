@@ -695,7 +695,7 @@ public:
         virtual Type blocker_type() const override { return Type::Signal; }
         ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual ErrorOr<bool> setup_blocker() override;
-        bool check_pending_signals(bool from_add_blocker);
+        ErrorOr<bool> check_pending_signals(bool from_add_blocker);
 
     private:
         sigset_t m_pending_set { 0 };
@@ -719,7 +719,7 @@ public:
         {
             VERIFY(b.blocker_type() == Blocker::Type::Signal);
             auto& blocker = static_cast<Thread::SignalBlocker&>(b);
-            return !blocker.check_pending_signals(true);
+            return !TRY(blocker.check_pending_signals(true));
         }
     };
 

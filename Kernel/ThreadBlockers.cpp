@@ -481,7 +481,7 @@ ErrorOr<void> Thread::SignalBlocker::will_unblock_immediately_without_blocking(U
         return {};
     // If the specified timeout is 0 the caller is simply trying to poll once for pending signals,
     // so simply calling check_pending_signals should populate the requested information.
-    check_pending_signals(false);
+    TRY(check_pending_signals(false));
     return {};
 }
 
@@ -490,7 +490,7 @@ ErrorOr<bool> Thread::SignalBlocker::setup_blocker()
     return add_to_blocker_set(thread().m_signal_blocker_set);
 }
 
-bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
+ErrorOr<bool> Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
 {
     {
         SpinlockLocker lock(m_lock);
@@ -516,7 +516,7 @@ bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
     }
 
     if (!from_add_blocker)
-        MUST(unblock_from_blocker()); // FIXME propagate this error
+        TRY(unblock_from_blocker());
     return true;
 }
 
