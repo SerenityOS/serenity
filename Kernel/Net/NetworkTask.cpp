@@ -25,7 +25,7 @@
 
 namespace Kernel {
 
-static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
+static ErrorOr<void> handle_arp(EthernetFrameHeader const&, size_t frame_size);
 static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, Time const& packet_timestamp);
 static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, Time const& packet_timestamp);
 static void handle_udp(IPv4Packet const&, Time const& packet_timestamp);
@@ -116,7 +116,7 @@ void NetworkTask_main(void*)
 
         switch (eth.ether_type()) {
         case EtherType::ARP:
-            handle_arp(eth, packet_size);
+            MUST(handle_arp(eth, packet_size)); // FIXME propagate this error
             break;
         case EtherType::IPv4:
             handle_ipv4(eth, packet_size, packet_timestamp);
@@ -130,21 +130,21 @@ void NetworkTask_main(void*)
     }
 }
 
-void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
+ErrorOr<void> handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
 {
     constexpr size_t minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     if (frame_size < minimum_arp_frame_size) {
         dbgln("handle_arp: Frame too small ({}, need {})", frame_size, minimum_arp_frame_size);
-        return;
+        return {};
     }
     auto& packet = *static_cast<ARPPacket const*>(eth.payload());
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
         dbgln("handle_arp: Hardware type not ethernet ({:#04x}, len={})", packet.hardware_type(), packet.hardware_address_length());
-        return;
+        return {};
     }
     if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
         dbgln("handle_arp: Protocol type not IPv4 ({:#04x}, len={})", packet.protocol_type(), packet.protocol_address_length());
-        return;
+        return {};
     }
 
     dbgln_if(ARP_DEBUG, "handle_arp: operation={:#04x}, sender={}/{}, target={}/{}",
@@ -157,7 +157,7 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
     if (!packet.sender_hardware_address().is_zero() && !packet.sender_protocol_address().is_zero()) {
         // Someone has this IPv4 address. I guess we can try to remember that.
         // FIXME: Protect against ARP spamming.
-        update_arp_table(packet.sender_protocol_address(), packet.sender_hardware_address(), UpdateTable::Set);
+        TRY(update_arp_table(packet.sender_protocol_address(), packet.sender_hardware_address(), UpdateTable::Set));
     }
 
     if (packet.operation() == ARPOperation::Request) {
@@ -174,8 +174,9 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
 
             adapter->send(packet.sender_hardware_address(), response);
         }
-        return;
+        return {};
     }
+    return {};
 }
 
 void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& packet_timestamp)
@@ -207,7 +208,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& 
         auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();
         auto their_net = packet.source().to_u32() & adapter.ipv4_netmask().to_u32();
         if (my_net == their_net)
-            update_arp_table(packet.source(), eth.source(), UpdateTable::Set);
+            MUST(update_arp_table(packet.source(), eth.source(), UpdateTable::Set)); // FIXME propagate this error
     });
 
     switch ((IPv4Protocol)packet.protocol()) {

@@ -30,7 +30,7 @@ public:
 
     virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
-    bool unblock_if_matching_ip_address(bool from_add_blocker, IPv4Address const& ip_address, MACAddress const& mac_address)
+    ErrorOr<bool> unblock_if_matching_ip_address(bool from_add_blocker, IPv4Address const& ip_address, MACAddress const& mac_address)
     {
         if (m_ip_address != ip_address)
             return false;
@@ -44,7 +44,7 @@ public:
         }
 
         if (!from_add_blocker)
-            MUST(unblock_from_blocker()); // FIXME propagate error
+            TRY(unblock_from_blocker());
         return true;
     }
 
@@ -58,14 +58,14 @@ private:
 
 class ARPTableBlockerSet final : public Thread::BlockerSet {
 public:
-    void unblock_blockers_waiting_for_ipv4_address(IPv4Address const& ipv4_address, MACAddress const& mac_address)
+    ErrorOr<void> unblock_blockers_waiting_for_ipv4_address(IPv4Address const& ipv4_address, MACAddress const& mac_address)
     {
-        // FIXME propagate this error
-        MUST(BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
+        TRY(BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
             return blocker.unblock_if_matching_ip_address(false, ipv4_address, mac_address);
         }));
+        return {};
     }
 
 protected:
@@ -78,7 +78,7 @@ protected:
         });
         if (!maybe_mac_address.has_value())
             return true;
-        return !blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value());
+        return !TRY(blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value()));
     }
 };
 
@@ -114,7 +114,7 @@ SpinlockProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *s_arp_table;
 }
 
-void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, UpdateTable update)
+ErrorOr<void> update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, UpdateTable update)
 {
     arp_table().with([&](auto& table) {
         if (update == UpdateTable::Set)
@@ -122,7 +122,7 @@ void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, Update
         if (update == UpdateTable::Delete)
             table.remove(ip_addr);
     });
-    s_arp_table_blocker_set->unblock_blockers_waiting_for_ipv4_address(ip_addr, addr);
+    TRY(s_arp_table_blocker_set->unblock_blockers_waiting_for_ipv4_address(ip_addr, addr));
 
     if constexpr (ARP_DEBUG) {
         arp_table().with([&](auto const& table) {
@@ -131,6 +131,7 @@ void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, Update
                 dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
         });
     }
+    return {};
 }
 
 SpinlockProtected<Route::RouteList>& routing_table()

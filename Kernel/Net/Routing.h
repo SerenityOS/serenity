@@ -56,7 +56,7 @@ enum class UpdateTable {
     Delete,
 };
 
-void update_arp_table(IPv4Address const&, MACAddress const&, UpdateTable update);
+ErrorOr<void> update_arp_table(IPv4Address const&, MACAddress const&, UpdateTable update);
 ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, u16 flags, LockRefPtr<NetworkAdapter> const adapter, UpdateTable update);
 
 enum class AllowUsingGateway {
