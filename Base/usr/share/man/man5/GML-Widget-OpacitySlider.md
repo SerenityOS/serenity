@@ -8,12 +8,13 @@ Defines a GUI opacity slider widget.
 
 ## Synopsis
 
-`@GUI::OpacitySlider`
+`@GUI::HorizontalOpacitySlider`
+`@GUI::VerticalOpacitySlider`
 
 ## Examples
 
 ```gml
-@GUI::OpacitySlider {
+@GUI::HorizontalOpacitySlider {
     name: "opacity_slider"
     tooltip: "Opacity Slider"
 }

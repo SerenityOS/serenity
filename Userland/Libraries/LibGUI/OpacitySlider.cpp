@@ -10,7 +10,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
-REGISTER_WIDGET(GUI, OpacitySlider)
+REGISTER_WIDGET(GUI, HorizontalOpacitySlider)
+REGISTER_WIDGET(GUI, VerticalOpacitySlider)
 
 namespace GUI {
 
@@ -20,7 +21,6 @@ OpacitySlider::OpacitySlider(Gfx::Orientation orientation)
     set_min(0);
     set_max(100);
     set_value(100);
-    set_fixed_height(20);
 }
 
 Gfx::IntRect OpacitySlider::frame_inner_rect() const
@@ -180,6 +180,22 @@ void OpacitySlider::mouseup_event(MouseEvent& event)
 void OpacitySlider::mousewheel_event(MouseEvent& event)
 {
     decrease_slider_by(event.wheel_delta_y());
+}
+
+Optional<UISize> OpacitySlider::calculated_min_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { 20, 40 } };
+    else
+        return { { 40, 20 } };
+}
+
+Optional<UISize> OpacitySlider::calculated_preferred_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { SpecialDimension::Shrink, SpecialDimension::OpportunisticGrow } };
+    else
+        return { { SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink } };
 }
 
 }
