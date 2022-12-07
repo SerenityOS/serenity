@@ -10,10 +10,10 @@
 
 namespace SQLServer {
 
-static HashMap<u64, NonnullRefPtr<DatabaseConnection>> s_connections;
-static u64 s_next_connection_id = 0;
+static HashMap<SQL::ConnectionID, NonnullRefPtr<DatabaseConnection>> s_connections;
+static SQL::ConnectionID s_next_connection_id = 0;
 
-RefPtr<DatabaseConnection> DatabaseConnection::connection_for(u64 connection_id)
+RefPtr<DatabaseConnection> DatabaseConnection::connection_for(SQL::ConnectionID connection_id)
 {
     if (s_connections.contains(connection_id))
         return *s_connections.get(connection_id).value();
@@ -54,7 +54,7 @@ void DatabaseConnection::disconnect()
     s_connections.remove(connection_id());
 }
 
-SQL::ResultOr<u64> DatabaseConnection::prepare_statement(StringView sql)
+SQL::ResultOr<SQL::StatementID> DatabaseConnection::prepare_statement(StringView sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::prepare_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
 

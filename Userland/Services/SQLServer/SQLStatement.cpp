@@ -12,10 +12,10 @@
 
 namespace SQLServer {
 
-static HashMap<u64, NonnullRefPtr<SQLStatement>> s_statements;
-static u64 s_next_statement_id = 0;
+static HashMap<SQL::StatementID, NonnullRefPtr<SQLStatement>> s_statements;
+static SQL::StatementID s_next_statement_id = 0;
 
-RefPtr<SQLStatement> SQLStatement::statement_for(u64 statement_id)
+RefPtr<SQLStatement> SQLStatement::statement_for(SQL::StatementID statement_id)
 {
     if (s_statements.contains(statement_id))
         return *s_statements.get(statement_id).value();
@@ -43,7 +43,7 @@ SQLStatement::SQLStatement(DatabaseConnection& connection, NonnullRefPtr<SQL::AS
     s_statements.set(m_statement_id, *this);
 }
 
-void SQLStatement::report_error(SQL::Result result, u64 execution_id)
+void SQLStatement::report_error(SQL::Result result, SQL::ExecutionID execution_id)
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::report_error(statement_id {}, error {}", statement_id(), result.error_string());
 
@@ -58,7 +58,7 @@ void SQLStatement::report_error(SQL::Result result, u64 execution_id)
         warnln("Cannot return execution error. Client disconnected");
 }
 
-Optional<u64> SQLStatement::execute(Vector<SQL::Value> placeholder_values)
+Optional<SQL::ExecutionID> SQLStatement::execute(Vector<SQL::Value> placeholder_values)
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::execute(statement_id {}", statement_id());
 
@@ -122,7 +122,7 @@ bool SQLStatement::should_send_result_rows(SQL::ResultSet const& result) const
     }
 }
 
-void SQLStatement::next(u64 execution_id, SQL::ResultSet result, size_t result_size)
+void SQLStatement::next(SQL::ExecutionID execution_id, SQL::ResultSet result, size_t result_size)
 {
     auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
     if (!client_connection) {
