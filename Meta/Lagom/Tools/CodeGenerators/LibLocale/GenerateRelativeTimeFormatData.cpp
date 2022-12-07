@@ -100,7 +100,7 @@ static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR&
         format.style = style.to_titlecase_string();
         format.plurality = plurality.to_titlecase_string();
         format.tense_or_number = cldr.unique_strings.ensure(tense_or_number);
-        format.pattern = cldr.unique_strings.ensure(pattern.as_string());
+        format.pattern = cldr.unique_strings.ensure(pattern.as_deprecated_string());
 
         locale.time_units.append(cldr.unique_formats.ensure(move(format)));
     };

@@ -21,7 +21,7 @@ Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString ti
 ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window)
 {
     // FIXME: Use the text with the "title" role for a title, if there is no title given.
-    auto title = slide_json.get("title"sv).as_string_or("Untitled slide");
+    auto title = slide_json.get("title"sv).as_deprecated_string_or("Untitled slide");
 
     auto const& maybe_slide_objects = slide_json.get("objects"sv);
     if (!maybe_slide_objects.is_array())

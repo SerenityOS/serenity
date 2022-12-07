@@ -98,7 +98,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             return GUI::Variant(0);
         },
         [](JsonObject const& object) {
-            auto pagemap = object.get("pagemap"sv).as_string_or({});
+            auto pagemap = object.get("pagemap"sv).as_deprecated_string_or({});
             return pagemap;
         });
     pid_vm_fields.empend("cow_pages", "# CoW", Gfx::TextAlignment::CenterRight);

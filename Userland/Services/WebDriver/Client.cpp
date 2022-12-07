@@ -81,7 +81,7 @@ static void initialize_session_from_capabilities(WebContentConnection& web_conte
 
     // 2. If strategy is a string, set the current session’s page loading strategy to strategy. Otherwise, set the page loading strategy to normal and set a property of capabilities with name "pageLoadStrategy" and value "normal".
     if (strategy && strategy->is_string())
-        web_content_connection.async_set_page_load_strategy(Web::WebDriver::page_load_strategy_from_string(strategy->as_string()));
+        web_content_connection.async_set_page_load_strategy(Web::WebDriver::page_load_strategy_from_string(strategy->as_deprecated_string()));
     else
         capabilities.set("pageLoadStrategy"sv, "normal"sv);
 
@@ -115,7 +115,7 @@ static void initialize_session_from_capabilities(WebContentConnection& web_conte
     // 8. Apply changes to the user agent for any implementation-defined capabilities selected during the capabilities processing step.
     auto const* behavior = capabilities.get_ptr("unhandledPromptBehavior"sv);
     if (behavior && behavior->is_string())
-        web_content_connection.async_set_unhandled_prompt_behavior(Web::WebDriver::unhandled_prompt_behavior_from_string(behavior->as_string()));
+        web_content_connection.async_set_unhandled_prompt_behavior(Web::WebDriver::unhandled_prompt_behavior_from_string(behavior->as_deprecated_string()));
     else
         capabilities.set("unhandledPromptBehavior"sv, "dismiss and notify"sv);
 }

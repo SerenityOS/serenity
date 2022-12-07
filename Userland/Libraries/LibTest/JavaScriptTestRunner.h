@@ -424,7 +424,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
 
             auto result = test_value.as_object().get("result"sv);
             VERIFY(result.is_string());
-            auto result_string = result.as_string();
+            auto result_string = result.as_deprecated_string();
             if (result_string == "pass") {
                 test.result = Test::Result::Pass;
                 m_counts.tests_passed++;
@@ -435,7 +435,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 VERIFY(test_value.as_object().has("details"sv));
                 auto details = test_value.as_object().get("details"sv);
                 VERIFY(result.is_string());
-                test.details = details.as_string();
+                test.details = details.as_deprecated_string();
             } else {
                 test.result = Test::Result::Skip;
                 if (suite.most_severe_test_result == Test::Result::Pass)

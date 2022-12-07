@@ -270,7 +270,7 @@ static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString
             if (!result_object_or_error.is_error() && result_object_or_error.value().is_object()) {
                 auto& result_object = result_object_or_error.value().as_object();
                 if (auto result_string = result_object.get_ptr("result"sv); result_string && result_string->is_string()) {
-                    auto const& view = result_string->as_string();
+                    auto const& view = result_string->as_deprecated_string();
                     // Timeout and assert fail already are the result of the stopping test
                     if (view == "timeout"sv || view == "assert_fail"sv) {
                         failed = false;

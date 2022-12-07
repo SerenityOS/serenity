@@ -85,17 +85,17 @@ public:
     void serialize(Builder&) const;
 
 #ifndef KERNEL
-    DeprecatedString as_string_or(DeprecatedString const& alternative) const
+    DeprecatedString as_deprecated_string_or(DeprecatedString const& alternative) const
     {
         if (is_string())
-            return as_string();
+            return as_deprecated_string();
         return alternative;
     }
 
     DeprecatedString to_deprecated_string() const
     {
         if (is_string())
-            return as_string();
+            return as_deprecated_string();
         return serialized<StringBuilder>();
     }
 #endif
@@ -165,10 +165,10 @@ public:
     }
 
 #ifndef KERNEL
-    DeprecatedString as_string() const
+    DeprecatedString as_deprecated_string() const
     {
         VERIFY(is_string());
-        return *m_value.as_string;
+        return *m_value.as_deprecated_string;
     }
 #endif
 
@@ -271,7 +271,7 @@ private:
 
     union {
 #ifndef KERNEL
-        StringImpl* as_string { nullptr };
+        StringImpl* as_deprecated_string { nullptr };
 #endif
         JsonArray* as_array;
         JsonObject* as_object;

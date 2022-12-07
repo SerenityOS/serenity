@@ -196,7 +196,7 @@ inline void JsonValue::serialize(Builder& builder) const
     switch (m_type) {
     case Type::String: {
         builder.append('\"');
-        builder.append_escaped_for_json({ m_value.as_string->characters(), m_value.as_string->length() });
+        builder.append_escaped_for_json({ m_value.as_deprecated_string->characters(), m_value.as_deprecated_string->length() });
         builder.append('\"');
     } break;
     case Type::Array:

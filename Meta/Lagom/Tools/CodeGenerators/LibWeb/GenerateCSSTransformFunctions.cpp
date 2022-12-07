@@ -169,7 +169,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
         const JsonArray& parameters = value.as_object().get("parameters"sv).as_array();
         bool first = true;
         parameters.for_each([&](JsonValue const& value) {
-            GenericLexer lexer { value.as_object().get("type"sv).as_string() };
+            GenericLexer lexer { value.as_object().get("type"sv).as_deprecated_string() };
             VERIFY(lexer.consume_specific('<'));
             auto parameter_type_name = lexer.consume_until('>');
             VERIFY(lexer.consume_specific('>'));

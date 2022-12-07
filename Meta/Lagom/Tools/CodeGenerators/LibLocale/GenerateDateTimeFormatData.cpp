@@ -588,7 +588,7 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
     };
 
     time_data_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto allowed_hour_cycles_string = value.as_object().get("_allowed"sv).as_string();
+        auto allowed_hour_cycles_string = value.as_object().get("_allowed"sv).as_deprecated_string();
         auto allowed_hour_cycles = allowed_hour_cycles_string.split_view(' ');
 
         Vector<Locale::HourCycle> hour_cycles;
@@ -653,7 +653,7 @@ static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
     auto const& weekend_end_object = week_data_object.as_object().get("weekendEnd"sv);
 
     minimum_days_object.as_object().for_each_member([&](auto const& region, auto const& value) {
-        auto minimum_days = value.as_string().template to_uint<u8>();
+        auto minimum_days = value.as_deprecated_string().template to_uint<u8>();
         cldr.minimum_days.set(region, *minimum_days);
 
         if (!cldr.minimum_days_regions.contains_slow(region))
@@ -661,13 +661,13 @@ static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
     });
 
     first_day_object.as_object().for_each_member([&](auto const& region, auto const& value) {
-        parse_regional_weekdays(region, value.as_string(), cldr.first_day, cldr.first_day_regions);
+        parse_regional_weekdays(region, value.as_deprecated_string(), cldr.first_day, cldr.first_day_regions);
     });
     weekend_start_object.as_object().for_each_member([&](auto const& region, auto const& value) {
-        parse_regional_weekdays(region, value.as_string(), cldr.weekend_start, cldr.weekend_start_regions);
+        parse_regional_weekdays(region, value.as_deprecated_string(), cldr.weekend_start, cldr.weekend_start_regions);
     });
     weekend_end_object.as_object().for_each_member([&](auto const& region, auto const& value) {
-        parse_regional_weekdays(region, value.as_string(), cldr.weekend_end, cldr.weekend_end_regions);
+        parse_regional_weekdays(region, value.as_deprecated_string(), cldr.weekend_end, cldr.weekend_end_regions);
     });
 
     return {};
@@ -690,8 +690,8 @@ static ErrorOr<void> parse_meta_zones(DeprecatedString core_path, CLDR& cldr)
         auto const& meta_zone = mapping.as_object().get("_other"sv);
         auto const& golden_zone = mapping.as_object().get("_type"sv);
 
-        if (auto time_zone = TimeZone::time_zone_from_string(golden_zone.as_string()); time_zone.has_value()) {
-            auto& golden_zones = cldr.meta_zones.ensure(meta_zone.as_string());
+        if (auto time_zone = TimeZone::time_zone_from_string(golden_zone.as_deprecated_string()); time_zone.has_value()) {
+            auto& golden_zones = cldr.meta_zones.ensure(meta_zone.as_deprecated_string());
             golden_zones.append(*time_zone);
         }
     });
@@ -1099,7 +1099,7 @@ static void parse_interval_patterns(Calendar& calendar, JsonObject const& interv
 
     interval_formats_object.for_each_member([&](auto const& skeleton, auto const& value) {
         if (skeleton == "intervalFormatFallback"sv) {
-            auto range_format = split_default_range_pattern(skeleton, value.as_string());
+            auto range_format = split_default_range_pattern(skeleton, value.as_deprecated_string());
             calendar.default_range_format = cldr.unique_range_patterns.ensure(move(range_format));
             return;
         }
@@ -1111,7 +1111,7 @@ static void parse_interval_patterns(Calendar& calendar, JsonObject const& interv
             VERIFY(field.length() == 1);
             auto name = name_of_field(field[0]);
 
-            auto format = parse_date_time_pattern_raw(pattern.as_string(), skeleton, cldr).release_value();
+            auto format = parse_date_time_pattern_raw(pattern.as_deprecated_string(), skeleton, cldr).release_value();
 
             auto range_format = split_range_pattern(skeleton, name, format.pattern, format);
             range_formats.append(cldr.unique_range_patterns.ensure(move(range_format)));
@@ -1274,13 +1274,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         };
 
         narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[0], key, value.as_string());
+            append_symbol(symbol_lists[0], key, value.as_deprecated_string());
         });
         short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[1], key, value.as_string());
+            append_symbol(symbol_lists[1], key, value.as_deprecated_string());
         });
         long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[2], key, value.as_string());
+            append_symbol(symbol_lists[2], key, value.as_deprecated_string());
         });
 
         store_symbol_lists(Locale::CalendarSymbol::Era, move(symbol_lists));
@@ -1298,13 +1298,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         };
 
         narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[0], key, value.as_string());
+            append_symbol(symbol_lists[0], key, value.as_deprecated_string());
         });
         short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[1], key, value.as_string());
+            append_symbol(symbol_lists[1], key, value.as_deprecated_string());
         });
         long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[2], key, value.as_string());
+            append_symbol(symbol_lists[2], key, value.as_deprecated_string());
         });
 
         store_symbol_lists(Locale::CalendarSymbol::Month, move(symbol_lists));
@@ -1334,13 +1334,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         };
 
         narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[0], key, value.as_string());
+            append_symbol(symbol_lists[0], key, value.as_deprecated_string());
         });
         short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[1], key, value.as_string());
+            append_symbol(symbol_lists[1], key, value.as_deprecated_string());
         });
         long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[2], key, value.as_string());
+            append_symbol(symbol_lists[2], key, value.as_deprecated_string());
         });
 
         store_symbol_lists(Locale::CalendarSymbol::Weekday, move(symbol_lists));
@@ -1358,13 +1358,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         };
 
         narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[0], key, value.as_string());
+            append_symbol(symbol_lists[0], key, value.as_deprecated_string());
         });
         short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[1], key, value.as_string());
+            append_symbol(symbol_lists[1], key, value.as_deprecated_string());
         });
         long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
-            append_symbol(symbol_lists[2], key, value.as_string());
+            append_symbol(symbol_lists[2], key, value.as_deprecated_string());
         });
 
         store_symbol_lists(Locale::CalendarSymbol::DayPeriod, move(symbol_lists));
@@ -1395,7 +1395,7 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
             auto format = patterns_object.get(name);
             auto skeleton = skeletons_object.get(name);
 
-            auto format_index = parse_date_time_pattern(format.as_string(), skeleton.as_string_or(DeprecatedString::empty()), cldr).value();
+            auto format_index = parse_date_time_pattern(format.as_deprecated_string(), skeleton.as_deprecated_string_or(DeprecatedString::empty()), cldr).value();
 
             if (patterns)
                 patterns->append(cldr.unique_patterns.get(format_index));
@@ -1441,7 +1441,7 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
         auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
         auto const& available_formats_object = date_time_formats_object.as_object().get("availableFormats"sv);
         available_formats_object.as_object().for_each_member([&](auto const& skeleton, JsonValue const& pattern) {
-            auto pattern_index = parse_date_time_pattern(pattern.as_string(), skeleton, cldr);
+            auto pattern_index = parse_date_time_pattern(pattern.as_deprecated_string(), skeleton, cldr);
             if (!pattern_index.has_value())
                 return;
 
@@ -1494,7 +1494,7 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
 
         auto const& name = names.as_object().get(key);
         if (name.is_string())
-            return cldr.unique_strings.ensure(name.as_string());
+            return cldr.unique_strings.ensure(name.as_deprecated_string());
 
         return {};
     };
@@ -1525,9 +1525,9 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
     TimeZoneNamesList time_zones;
 
     TimeZoneFormat time_zone_formats {};
-    parse_hour_format(hour_format_string.as_string(), time_zone_formats);
-    time_zone_formats.gmt_format = cldr.unique_strings.ensure(gmt_format_string.as_string());
-    time_zone_formats.gmt_zero_format = cldr.unique_strings.ensure(gmt_zero_format_string.as_string());
+    parse_hour_format(hour_format_string.as_deprecated_string(), time_zone_formats);
+    time_zone_formats.gmt_format = cldr.unique_strings.ensure(gmt_format_string.as_deprecated_string());
+    time_zone_formats.gmt_zero_format = cldr.unique_strings.ensure(gmt_zero_format_string.as_deprecated_string());
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
         auto golden_zones = cldr.meta_zones.find(meta_zone);
@@ -1608,8 +1608,8 @@ static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
         if (!day_period.has_value())
             return {};
 
-        auto begin = parse_hour(ranges.get("_from"sv).as_string());
-        auto end = parse_hour(ranges.get("_before"sv).as_string());
+        auto begin = parse_hour(ranges.get("_from"sv).as_deprecated_string());
+        auto end = parse_hour(ranges.get("_before"sv).as_deprecated_string());
 
         return DayPeriod { *day_period, begin, end };
     };

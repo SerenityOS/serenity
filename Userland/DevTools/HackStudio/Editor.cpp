@@ -202,7 +202,7 @@ static HashMap<DeprecatedString, DeprecatedString>& man_paths()
             if (!json_value.is_string())
                 continue;
 
-            Core::DirIterator it(json_value.as_string(), Core::DirIterator::Flags::SkipDots);
+            Core::DirIterator it(json_value.as_deprecated_string(), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();
                 auto title = LexicalPath::title(path);

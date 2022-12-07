@@ -26,7 +26,7 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
     if (!maybe_type.is_string())
         return Error::from_string_view("Slide object must have a type"sv);
 
-    auto type = maybe_type.as_string();
+    auto type = maybe_type.as_deprecated_string();
     RefPtr<SlideObject> object;
     if (type == "text"sv)
         object = TRY(try_make_ref_counted<Text>());

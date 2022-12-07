@@ -228,7 +228,7 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     if constexpr (IsSame<PropertyType, DeprecatedString>) {
         if (!property->is_string())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a String", key));
-        return property->as_string();
+        return property->as_deprecated_string();
     } else if constexpr (IsSame<PropertyType, bool>) {
         if (!property->is_bool())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Boolean", key));
@@ -333,7 +333,7 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // 2. Let url be the result of getting the property url from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv))
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string `url`"sv);
-    URL url(payload.as_object().get_ptr("url"sv)->as_string());
+    URL url(payload.as_object().get_ptr("url"sv)->as_deprecated_string());
 
     // FIXME: 3. If url is not an absolute URL or is not an absolute URL with fragment or not a local scheme, return error with error code invalid argument.
 

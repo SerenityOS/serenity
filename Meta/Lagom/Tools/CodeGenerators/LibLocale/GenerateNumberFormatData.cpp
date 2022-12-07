@@ -249,11 +249,11 @@ static ErrorOr<void> parse_number_system_digits(DeprecatedString core_supplement
     auto const& number_systems_object = supplemental_object.as_object().get("numberingSystems"sv);
 
     number_systems_object.as_object().for_each_member([&](auto const& number_system, auto const& digits_object) {
-        auto type = digits_object.as_object().get("_type"sv).as_string();
+        auto type = digits_object.as_object().get("_type"sv).as_deprecated_string();
         if (type != "numeric"sv)
             return;
 
-        auto digits = digits_object.as_object().get("_digits"sv).as_string();
+        auto digits = digits_object.as_object().get("_digits"sv).as_deprecated_string();
 
         Utf8View utf8_digits { digits };
         VERIFY(utf8_digits.length() == 10);
@@ -443,7 +443,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             if (split_key.size() != 3)
                 return;
 
-            auto patterns = value.as_string().split(';');
+            auto patterns = value.as_deprecated_string().split(';');
             NumberFormat format {};
 
             if (auto type = split_key[0].template to_uint<u64>(); type.has_value()) {
@@ -516,7 +516,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
                 if (to_underlying(*numeric_symbol) >= symbols.size())
                     symbols.resize(to_underlying(*numeric_symbol) + 1);
 
-                auto symbol_index = cldr.unique_strings.ensure(localization.as_string());
+                auto symbol_index = cldr.unique_strings.ensure(localization.as_deprecated_string());
                 symbols[to_underlying(*numeric_symbol)] = symbol_index;
             });
 
@@ -524,7 +524,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             // the range pattern.
             auto misc_patterns_key = DeprecatedString::formatted("{}{}", misc_patterns_prefix, system);
             auto misc_patterns = locale_numbers_object.as_object().get(misc_patterns_key);
-            auto range_separator = misc_patterns.as_object().get("range"sv).as_string();
+            auto range_separator = misc_patterns.as_object().get("range"sv).as_deprecated_string();
 
             auto begin_index = range_separator.find("{0}"sv).value() + "{0}"sv.length();
             auto end_index = range_separator.find("{1}"sv).value();
@@ -542,7 +542,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.decimal_format, &number_system);
+            parse_number_pattern(format_object.as_deprecated_string().split(';'), cldr, NumberFormatType::Standard, number_system.decimal_format, &number_system);
 
             auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
@@ -554,10 +554,10 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.currency_format);
+            parse_number_pattern(format_object.as_deprecated_string().split(';'), cldr, NumberFormatType::Standard, number_system.currency_format);
 
             format_object = value.as_object().get("accounting"sv);
-            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.accounting_format);
+            parse_number_pattern(format_object.as_deprecated_string().split(';'), cldr, NumberFormatType::Standard, number_system.accounting_format);
 
             number_system.currency_unit_formats = parse_number_format(value.as_object());
 
@@ -570,13 +570,13 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.percent_format);
+            parse_number_pattern(format_object.as_deprecated_string().split(';'), cldr, NumberFormatType::Standard, number_system.percent_format);
         } else if (key.starts_with(scientific_formats_prefix)) {
             auto system = key.substring(scientific_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.scientific_format);
+            parse_number_pattern(format_object.as_deprecated_string().split(';'), cldr, NumberFormatType::Standard, number_system.scientific_format);
         }
     });
 
@@ -590,7 +590,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
         locale.number_systems.append(system_index);
     }
 
-    locale.minimum_grouping_digits = minimum_grouping_digits.as_string().template to_uint<u8>().value();
+    locale.minimum_grouping_digits = minimum_grouping_digits.as_deprecated_string().template to_uint<u8>().value();
     return {};
 }
 
@@ -657,7 +657,7 @@ static ErrorOr<void> parse_units(DeprecatedString locale_units_path, CLDR& cldr,
                 auto plurality = unit_key.substring_view(unit_pattern_prefix.length());
                 format.plurality = Locale::plural_category_from_string(plurality);
 
-                auto zero_format = pattern_value.as_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
+                auto zero_format = pattern_value.as_deprecated_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
                 zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, cldr, format);
 
                 format.positive_format_index = cldr.unique_strings.ensure(zero_format.replace("{number}"sv, "{plusSign}{number}"sv, ReplaceMode::FirstOnly));

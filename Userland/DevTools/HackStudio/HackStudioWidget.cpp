@@ -229,7 +229,7 @@ Vector<DeprecatedString> HackStudioWidget::read_recent_projects()
     for (auto& json_value : value.as_array().values()) {
         if (!json_value.is_string())
             return {};
-        paths.append(json_value.as_string());
+        paths.append(json_value.as_deprecated_string());
     }
 
     return paths;

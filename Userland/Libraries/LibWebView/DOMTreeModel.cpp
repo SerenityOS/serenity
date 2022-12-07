@@ -119,8 +119,8 @@ static DeprecatedString with_whitespace_collapsed(StringView string)
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto node_name = node.get("name"sv).as_string();
-    auto type = node.get("type"sv).as_string_or("unknown"sv);
+    auto node_name = node.get("name"sv).as_deprecated_string();
+    auto type = node.get("type"sv).as_deprecated_string_or("unknown"sv);
 
     // FIXME: This FIXME can go away when we fix the one below.
 #ifdef AK_OS_SERENITY
@@ -151,9 +151,9 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
-            return with_whitespace_collapsed(node.get("text"sv).as_string());
+            return with_whitespace_collapsed(node.get("text"sv).as_deprecated_string());
         if (type == "comment"sv)
-            return DeprecatedString::formatted("<!--{}-->", node.get("data"sv).as_string());
+            return DeprecatedString::formatted("<!--{}-->", node.get("data"sv).as_deprecated_string());
         if (type != "element")
             return node_name;
 

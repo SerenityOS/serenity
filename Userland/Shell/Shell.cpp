@@ -1880,28 +1880,28 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto parsed = parsed_result.release_value();
             if (parsed.is_object()) {
                 auto& object = parsed.as_object();
-                auto kind = object.get("kind"sv).as_string_or("plain");
+                auto kind = object.get("kind"sv).as_deprecated_string_or("plain");
                 if (kind == "path") {
-                    auto base = object.get("base"sv).as_string_or("");
-                    auto part = object.get("part"sv).as_string_or("");
+                    auto base = object.get("base"sv).as_deprecated_string_or("");
+                    auto part = object.get("part"sv).as_deprecated_string_or("");
                     auto executable_only = object.get("executable_only"sv).to_bool(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
                     suggestions.extend(complete_path(base, part, part.length(), executable_only, nullptr, nullptr));
                 } else if (kind == "program") {
-                    auto name = object.get("name"sv).as_string_or("");
+                    auto name = object.get("name"sv).as_deprecated_string_or("");
                     suggestions.extend(complete_program_name(name, name.length()));
                 } else if (kind == "proxy") {
                     if (m_completion_stack_info.size_free() < 4 * KiB) {
                         dbgln("Not enough stack space, recursion?");
                         return IterationDecision::Continue;
                     }
-                    auto argv = object.get("argv"sv).as_string_or("");
+                    auto argv = object.get("argv"sv).as_deprecated_string_or("");
                     dbgln("Proxy completion for {}", argv);
                     suggestions.extend(complete(argv));
                 } else if (kind == "plain") {
                     Line::CompletionSuggestion suggestion {
-                        object.get("completion"sv).as_string_or(""),
-                        object.get("trailing_trivia"sv).as_string_or(""),
-                        object.get("display_trivia"sv).as_string_or(""),
+                        object.get("completion"sv).as_deprecated_string_or(""),
+                        object.get("trailing_trivia"sv).as_deprecated_string_or(""),
+                        object.get("display_trivia"sv).as_deprecated_string_or(""),
                     };
                     suggestion.static_offset = object.get("static_offset"sv).to_u64(0);
                     suggestion.invariant_offset = object.get("invariant_offset"sv).to_u64(0);

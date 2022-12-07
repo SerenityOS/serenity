@@ -434,7 +434,7 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
     if (metadata.is_async && output.has("output"sv)) {
         auto& output_messages = output.get("output"sv);
         VERIFY(output_messages.is_string());
-        if (output_messages.as_string().contains("AsyncTestFailure:InternalError: TODO("sv)) {
+        if (output_messages.as_deprecated_string().contains("AsyncTestFailure:InternalError: TODO("sv)) {
             output.set("todo_error", true);
             output.set("result", "todo_error");
         }

@@ -35,8 +35,8 @@ TEST_SETUP
             testcase.get("start_line"sv),
             testcase.get("end_line"sv));
 
-        DeprecatedString markdown = testcase.get("markdown"sv).as_string();
-        DeprecatedString html = testcase.get("html"sv).as_string();
+        DeprecatedString markdown = testcase.get("markdown"sv).as_deprecated_string();
+        DeprecatedString html = testcase.get("html"sv).as_deprecated_string();
 
         Test::TestSuite::the().add_case(adopt_ref(*new Test::TestCase(
             name, [markdown, html]() {

@@ -140,7 +140,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
         VERIFY(feature.has("type"sv));
         auto feature_type = feature.get("type"sv);
         VERIFY(feature_type.is_string());
-        member_generator.set("is_range", feature_type.as_string() == "range" ? "true" : "false");
+        member_generator.set("is_range", feature_type.as_deprecated_string() == "range" ? "true" : "false");
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
         return @is_range@;)~~~");
@@ -178,7 +178,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
             auto& values_array = values.as_array();
             for (auto& type : values_array.values()) {
                 VERIFY(type.is_string());
-                auto type_name = type.as_string();
+                auto type_name = type.as_deprecated_string();
                 // Skip identifiers.
                 if (type_name[0] != '<')
                     continue;
@@ -256,7 +256,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
             auto& values_array = values.as_array();
             for (auto& identifier : values_array.values()) {
                 VERIFY(identifier.is_string());
-                auto identifier_name = identifier.as_string();
+                auto identifier_name = identifier.as_deprecated_string();
                 // Skip types.
                 if (identifier_name[0] == '<')
                     continue;

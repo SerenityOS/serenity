@@ -225,7 +225,7 @@ public:
 
     void handle_request(JsonObject const& request)
     {
-        auto type = request.get("type"sv).as_string_or({});
+        auto type = request.get("type"sv).as_deprecated_string_or({});
 
         if (type.is_null()) {
             dbgln("RPC client sent request without type field");

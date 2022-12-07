@@ -39,9 +39,9 @@ void JsonValue::copy_from(JsonValue const& other)
     m_type = other.m_type;
     switch (m_type) {
     case Type::String:
-        VERIFY(!m_value.as_string);
-        m_value.as_string = other.m_value.as_string;
-        m_value.as_string->ref();
+        VERIFY(!m_value.as_deprecated_string);
+        m_value.as_deprecated_string = other.m_value.as_deprecated_string;
+        m_value.as_deprecated_string->ref();
         break;
     case Type::Object:
         m_value.as_object = new JsonObject(*other.m_value.as_object);
@@ -79,7 +79,7 @@ bool JsonValue::equals(JsonValue const& other) const
     if (is_bool() && other.is_bool() && as_bool() == other.as_bool())
         return true;
 
-    if (is_string() && other.is_string() && as_string() == other.as_string())
+    if (is_string() && other.is_string() && as_deprecated_string() == other.as_deprecated_string())
         return true;
 
 #if !defined(KERNEL)
@@ -174,8 +174,8 @@ JsonValue::JsonValue(DeprecatedString const& value)
         m_type = Type::Null;
     } else {
         m_type = Type::String;
-        m_value.as_string = const_cast<StringImpl*>(value.impl());
-        m_value.as_string->ref();
+        m_value.as_deprecated_string = const_cast<StringImpl*>(value.impl());
+        m_value.as_deprecated_string->ref();
     }
 }
 
@@ -212,7 +212,7 @@ void JsonValue::clear()
 {
     switch (m_type) {
     case Type::String:
-        m_value.as_string->unref();
+        m_value.as_deprecated_string->unref();
         break;
     case Type::Object:
         delete m_value.as_object;
@@ -224,7 +224,7 @@ void JsonValue::clear()
         break;
     }
     m_type = Type::Null;
-    m_value.as_string = nullptr;
+    m_value.as_deprecated_string = nullptr;
 }
 
 #ifndef KERNEL

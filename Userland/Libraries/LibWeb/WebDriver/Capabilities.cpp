@@ -23,7 +23,7 @@ static Response deserialize_as_a_page_load_strategy(JsonValue value)
         return Error::from_code(ErrorCode::InvalidArgument, "Capability pageLoadStrategy must be a string"sv);
 
     // 2. If there is no entry in the table of page load strategies with keyword value return an error with error code invalid argument.
-    if (!value.as_string().is_one_of("none"sv, "eager"sv, "normal"sv))
+    if (!value.as_deprecated_string().is_one_of("none"sv, "eager"sv, "normal"sv))
         return Error::from_code(ErrorCode::InvalidArgument, "Invalid pageLoadStrategy capability"sv);
 
     // 3. Return success with data value.
@@ -38,7 +38,7 @@ static Response deserialize_as_an_unhandled_prompt_behavior(JsonValue value)
         return Error::from_code(ErrorCode::InvalidArgument, "Capability unhandledPromptBehavior must be a string"sv);
 
     // 2. If value is not present as a keyword in the known prompt handling approaches table return an error with error code invalid argument.
-    if (!value.as_string().is_one_of("dismiss"sv, "accept"sv, "dismiss and notify"sv, "accept and notify"sv, "ignore"sv))
+    if (!value.as_deprecated_string().is_one_of("dismiss"sv, "accept"sv, "dismiss and notify"sv, "accept and notify"sv, "ignore"sv))
         return Error::from_code(ErrorCode::InvalidArgument, "Invalid pageLoadStrategy capability"sv);
 
     // 3. Return success with data value.
@@ -267,20 +267,20 @@ static JsonValue match_capabilities(JsonObject const& capabilities)
         // -> "browserName"
         if (name == "browserName"sv) {
             // If value is not a string equal to the "browserName" entry in matched capabilities, return success with data null.
-            if (value.as_string() != matched_capabilities.get(name).as_string())
+            if (value.as_deprecated_string() != matched_capabilities.get(name).as_deprecated_string())
                 return AK::Error::from_string_view("browserName"sv);
         }
         // -> "browserVersion"
         else if (name == "browserVersion"sv) {
             // Compare value to the "browserVersion" entry in matched capabilities using an implementation-defined comparison algorithm. The comparison is to accept a value that places constraints on the version using the "<", "<=", ">", and ">=" operators.
             // If the two values do not match, return success with data null.
-            if (!matches_browser_version(value.as_string(), matched_capabilities.get(name).as_string()))
+            if (!matches_browser_version(value.as_deprecated_string(), matched_capabilities.get(name).as_deprecated_string()))
                 return AK::Error::from_string_view("browserVersion"sv);
         }
         // -> "platformName"
         else if (name == "platformName"sv) {
             // If value is not a string equal to the "platformName" entry in matched capabilities, return success with data null.
-            if (!matches_platform_name(value.as_string(), matched_capabilities.get(name).as_string()))
+            if (!matches_platform_name(value.as_deprecated_string(), matched_capabilities.get(name).as_deprecated_string()))
                 return AK::Error::from_string_view("platformName"sv);
         }
         // -> "acceptInsecureCerts"

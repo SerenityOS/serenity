@@ -93,7 +93,7 @@ static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
         mount_info.mount_point = filesystem_object.get("mount_point"sv).to_deprecated_string();
-        mount_info.source = filesystem_object.get("source"sv).as_string_or("none"sv);
+        mount_info.source = filesystem_object.get("source"sv).as_deprecated_string_or("none"sv);
         TRY(output.try_append(mount_info));
         return {};
     }));

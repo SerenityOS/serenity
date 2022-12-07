@@ -32,7 +32,7 @@ void RemoteProcess::handle_identify_response(JsonObject const& response)
     int pid = response.get("pid"sv).to_int();
     VERIFY(pid == m_pid);
 
-    m_process_name = response.get("process_name"sv).as_string_or({});
+    m_process_name = response.get("process_name"sv).as_deprecated_string_or({});
 
     if (on_update)
         on_update();

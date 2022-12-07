@@ -214,7 +214,7 @@ DeprecatedString Reader::process_executable_path() const
 {
     auto process_info = this->process_info();
     auto executable_path = process_info.get("executable_path"sv);
-    return executable_path.as_string_or({});
+    return executable_path.as_deprecated_string_or({});
 }
 
 Vector<DeprecatedString> Reader::process_arguments() const
@@ -226,7 +226,7 @@ Vector<DeprecatedString> Reader::process_arguments() const
     Vector<DeprecatedString> vector;
     arguments.as_array().for_each([&](auto& value) {
         if (value.is_string())
-            vector.append(value.as_string());
+            vector.append(value.as_deprecated_string());
     });
     return vector;
 }
@@ -240,7 +240,7 @@ Vector<DeprecatedString> Reader::process_environment() const
     Vector<DeprecatedString> vector;
     environment.as_array().for_each([&](auto& value) {
         if (value.is_string())
-            vector.append(value.as_string());
+            vector.append(value.as_deprecated_string());
     });
     return vector;
 }
@@ -265,7 +265,7 @@ HashMap<DeprecatedString, DeprecatedString> Reader::metadata() const
         return {};
     HashMap<DeprecatedString, DeprecatedString> metadata;
     metadata_json_value.value().as_object().for_each_member([&](auto& key, auto& value) {
-        metadata.set(key, value.as_string_or({}));
+        metadata.set(key, value.as_deprecated_string_or({}));
     });
     return metadata;
 }

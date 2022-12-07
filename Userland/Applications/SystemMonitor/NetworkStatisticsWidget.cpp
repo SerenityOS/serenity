@@ -50,7 +50,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
                 if (!object.get("link_up"sv).as_bool())
                     return *m_network_link_down_bitmap;
                 else
-                    return object.get("ipv4_address"sv).as_string_or(""sv).is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
+                    return object.get("ipv4_address"sv).as_deprecated_string_or(""sv).is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
             });
         net_adapters_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
@@ -65,7 +65,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
             });
         net_adapters_fields.empend("IPv4", Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> DeprecatedString {
-                return object.get("ipv4_address"sv).as_string_or(""sv);
+                return object.get("ipv4_address"sv).as_deprecated_string_or(""sv);
             });
         net_adapters_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("packets_out", "Pkt Out", Gfx::TextAlignment::CenterRight);

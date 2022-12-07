@@ -455,7 +455,7 @@ void DebugSession::update_loaded_libs()
 
     vm_entries.for_each([&](auto& entry) {
         // TODO: check that region is executable
-        auto vm_name = entry.as_object().get("name"sv).as_string();
+        auto vm_name = entry.as_object().get("name"sv).as_deprecated_string();
 
         auto object_path = get_path_to_object(vm_name);
         if (!object_path.has_value())

@@ -1126,7 +1126,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             if (!offset_value.is_number())
                 return;
 
-            auto orientation_string = orientation_value.as_string();
+            auto orientation_string = orientation_value.as_deprecated_string();
             PixelPaint::Guide::Orientation orientation;
             if (orientation_string == "horizontal"sv)
                 orientation = PixelPaint::Guide::Orientation::Horizontal;

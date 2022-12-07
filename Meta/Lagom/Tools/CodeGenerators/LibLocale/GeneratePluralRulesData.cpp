@@ -348,7 +348,7 @@ static ErrorOr<void> parse_plural_rules(DeprecatedString core_supplemental_path,
                 VERIFY(key.starts_with(rule_prefix));
 
                 auto category = key.substring_view(rule_prefix.length());
-                parse_condition(category, condition.as_string(), locale->rules_for_form(form));
+                parse_condition(category, condition.as_deprecated_string(), locale->rules_for_form(form));
             });
         });
     });
@@ -386,7 +386,7 @@ static ErrorOr<void> parse_plural_ranges(DeprecatedString core_supplemental_path
             auto start = range.substring(*start_index, *end_index - *start_index);
             auto end = range.substring(*end_index + end_segment.length());
 
-            locale->plural_ranges.empend(move(start), move(end), category.as_string());
+            locale->plural_ranges.empend(move(start), move(end), category.as_deprecated_string());
         });
     });
 

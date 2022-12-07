@@ -377,7 +377,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     auto sheet = adopt_ref(*new Sheet(workbook));
     auto rows = object.get("rows"sv).to_u32(default_row_count);
     auto columns = object.get("columns"sv);
-    auto name = object.get("name"sv).as_string_or("Sheet");
+    auto name = object.get("name"sv).as_deprecated_string_or("Sheet");
     if (object.has("cells"sv) && !object.has_object("cells"sv))
         return {};
 
@@ -389,7 +389,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     // FIXME: Better error checking.
     if (columns.is_array()) {
         columns.as_array().for_each([&](auto& value) {
-            sheet->m_columns.append(value.as_string());
+            sheet->m_columns.append(value.as_deprecated_string());
             return IterationDecision::Continue;
         });
     }
@@ -404,9 +404,9 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
 
     auto read_format = [](auto& format, auto const& obj) {
         if (auto value = obj.get("foreground_color"sv); value.is_string())
-            format.foreground_color = Color::from_string(value.as_string());
+            format.foreground_color = Color::from_string(value.as_deprecated_string());
         if (auto value = obj.get("background_color"sv); value.is_string())
-            format.background_color = Color::from_string(value.as_string());
+            format.background_color = Color::from_string(value.as_deprecated_string());
     };
 
     if (object.has_object("cells"sv)) {
@@ -417,7 +417,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
 
             auto position = position_option.value();
             auto& obj = value.as_object();
-            auto kind = obj.get("kind"sv).as_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
+            auto kind = obj.get("kind"sv).as_deprecated_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
 
             OwnPtr<Cell> cell;
             switch (kind) {
@@ -426,7 +426,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 break;
             case Cell::Formula: {
                 auto& vm = sheet->interpreter().vm();
-                auto value_or_error = JS::call(vm, parse_function, json, JS::PrimitiveString::create(vm, obj.get("value"sv).as_string()));
+                auto value_or_error = JS::call(vm, parse_function, json, JS::PrimitiveString::create(vm, obj.get("value"sv).as_deprecated_string()));
                 if (value_or_error.is_error()) {
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();
@@ -446,9 +446,9 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 if (auto value = meta_obj.get("length"sv); value.is_number())
                     meta.length = value.to_i32();
                 if (auto value = meta_obj.get("format"sv); value.is_string())
-                    meta.format = value.as_string();
+                    meta.format = value.as_deprecated_string();
                 if (auto value = meta_obj.get("alignment"sv); value.is_string()) {
-                    auto alignment = Gfx::text_alignment_from_string(value.as_string());
+                    auto alignment = Gfx::text_alignment_from_string(value.as_deprecated_string());
                     if (alignment.has_value())
                         meta.alignment = alignment.value();
                 }

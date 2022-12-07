@@ -43,7 +43,7 @@ Variant& Variant::operator=(JsonValue const& value)
     }
 
     if (value.is_string()) {
-        set(value.as_string());
+        set(value.as_deprecated_string());
         return *this;
     }
 

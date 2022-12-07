@@ -328,7 +328,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
         }
         auto& initial_value = object.get("initial"sv);
         VERIFY(initial_value.is_string());
-        auto initial_value_string = initial_value.as_string();
+        auto initial_value_string = initial_value.as_deprecated_string();
 
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
@@ -384,7 +384,7 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
                 for (auto& quirk : quirks.values()) {
                     VERIFY(quirk.is_string());
                     auto quirk_generator = property_generator.fork();
-                    quirk_generator.set("quirk:titlecase", title_casify(quirk.as_string()));
+                    quirk_generator.set("quirk:titlecase", title_casify(quirk.as_deprecated_string()));
                     quirk_generator.append(R"~~~(
         case Quirk::@quirk:titlecase@:
             return true;
@@ -467,7 +467,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                 if (!valid_types.is_empty()) {
                     for (auto& type : valid_types.values()) {
                         VERIFY(type.is_string());
-                        auto type_parts = type.as_string().split_view(' ');
+                        auto type_parts = type.as_deprecated_string().split_view(' ');
                         auto type_name = type_parts.first();
                         auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
                         StringView min_value;
@@ -546,7 +546,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                     for (auto& identifier : valid_identifiers.values()) {
                         VERIFY(identifier.is_string());
                         auto identifier_generator = generator.fork();
-                        identifier_generator.set("identifier:titlecase", title_casify(identifier.as_string()));
+                        identifier_generator.set("identifier:titlecase", title_casify(identifier.as_deprecated_string()));
                         identifier_generator.append(R"~~~(
         case ValueID::@identifier:titlecase@:
 )~~~");

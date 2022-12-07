@@ -23,10 +23,10 @@ static void print_cache_info(StringView description, JsonObject const& cache_obj
 static void print_cpu_info(JsonObject const& value)
 {
     outln("CPU {}:", value.get("processor"sv).as_u32());
-    outln("\tVendor ID: {}", value.get("vendor_id"sv).as_string());
+    outln("\tVendor ID: {}", value.get("vendor_id"sv).as_deprecated_string());
     if (value.has("hypervisor_vendor_id"sv))
-        outln("\tHypervisor Vendor ID: {}", value.get("hypervisor_vendor_id"sv).as_string());
-    outln("\tBrand: {}", value.get("brand"sv).as_string());
+        outln("\tHypervisor Vendor ID: {}", value.get("hypervisor_vendor_id"sv).as_deprecated_string());
+    outln("\tBrand: {}", value.get("brand"sv).as_deprecated_string());
     outln("\tFamily: {}", value.get("family"sv).as_u32());
     outln("\tModel: {}", value.get("model"sv).as_u32());
     outln("\tStepping: {}", value.get("stepping"sv).as_u32());
@@ -47,7 +47,7 @@ static void print_cpu_info(JsonObject const& value)
     auto& features = value.get("features"sv).as_array();
 
     for (auto const& feature : features.values())
-        out("{} ", feature.as_string());
+        out("{} ", feature.as_deprecated_string());
 
     outln();
 }

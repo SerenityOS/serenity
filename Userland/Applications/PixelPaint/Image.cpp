@@ -90,15 +90,15 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
     auto layers_value = json.get("layers"sv);
     for (auto& layer_value : layers_value.as_array().values()) {
         auto& layer_object = layer_value.as_object();
-        auto name = layer_object.get("name"sv).as_string();
+        auto name = layer_object.get("name"sv).as_deprecated_string();
 
-        auto bitmap_base64_encoded = layer_object.get("bitmap"sv).as_string();
+        auto bitmap_base64_encoded = layer_object.get("bitmap"sv).as_deprecated_string();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
         auto bitmap = TRY(try_decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
         if (auto mask_object = layer_object.get("mask"sv); !mask_object.is_null()) {
-            auto mask_base64_encoded = mask_object.as_string();
+            auto mask_base64_encoded = mask_object.as_deprecated_string();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(try_decode_bitmap(mask_data));
             TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));

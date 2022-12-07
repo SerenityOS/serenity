@@ -375,7 +375,7 @@ void FrameLoader::store_response_cookies(AK::URL const& url, DeprecatedString co
     for (auto const& set_cookie_entry : set_cookie_json_value.as_array().values()) {
         VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
 
-        auto cookie = Cookie::parse_cookie(set_cookie_entry.as_string());
+        auto cookie = Cookie::parse_cookie(set_cookie_entry.as_deprecated_string());
         if (!cookie.has_value())
             continue;
 

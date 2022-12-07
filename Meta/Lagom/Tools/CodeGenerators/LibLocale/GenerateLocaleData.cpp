@@ -258,7 +258,7 @@ static ErrorOr<void> parse_core_aliases(DeprecatedString core_supplemental_path,
 
     auto append_aliases = [&](auto& alias_object, auto& alias_map) {
         alias_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-            auto alias = value.as_object().get("_replacement"sv).as_string();
+            auto alias = value.as_object().get("_replacement"sv).as_deprecated_string();
 
             if (key.contains('-')) {
                 auto mapping = TRY_OR_DISCARD(parse_language_mapping(cldr, key, alias));
@@ -290,7 +290,7 @@ static ErrorOr<void> parse_likely_subtags(DeprecatedString core_supplemental_pat
     auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
 
     likely_subtags_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto mapping = TRY_OR_DISCARD(parse_language_mapping(cldr, key, value.as_string()));
+        auto mapping = TRY_OR_DISCARD(parse_language_mapping(cldr, key, value.as_deprecated_string()));
         cldr.max_variant_size = max(mapping.key.variants.size(), cldr.max_variant_size);
         cldr.max_variant_size = max(mapping.alias.variants.size(), cldr.max_variant_size);
         cldr.likely_subtags.append(move(mapping));
@@ -313,22 +313,22 @@ static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, Lo
     auto const& script_string = identity_object.as_object().get("script"sv);
     auto const& variant_string = identity_object.as_object().get("variant"sv);
 
-    locale.language = language_string.as_string();
+    locale.language = language_string.as_deprecated_string();
 
     if (territory_string.is_string()) {
-        locale.territory = territory_string.as_string();
+        locale.territory = territory_string.as_deprecated_string();
         if (!cldr.territories.contains_slow(*locale.territory))
             cldr.territories.append(*locale.territory);
     }
 
     if (script_string.is_string()) {
-        auto script = script_string.as_string();
+        auto script = script_string.as_deprecated_string();
         if (!cldr.scripts.contains_slow(script))
             cldr.scripts.append(script);
     }
 
     if (variant_string.is_string()) {
-        locale.variant = variant_string.as_string();
+        locale.variant = variant_string.as_deprecated_string();
         if (!cldr.variants.contains_slow(*locale.variant))
             cldr.variants.append(*locale.variant);
     }
@@ -350,8 +350,8 @@ static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path,
     auto const& locale_separator = locale_display_patterns_object.as_object().get("localeSeparator"sv);
 
     DisplayPattern patterns {};
-    patterns.locale_pattern = cldr.unique_strings.ensure(locale_pattern.as_string());
-    patterns.locale_separator = cldr.unique_strings.ensure(locale_separator.as_string());
+    patterns.locale_pattern = cldr.unique_strings.ensure(locale_pattern.as_deprecated_string());
+    patterns.locale_separator = cldr.unique_strings.ensure(locale_separator.as_deprecated_string());
 
     locale.display_patterns = cldr.unique_display_patterns.ensure(move(patterns));
     return {};
@@ -391,7 +391,7 @@ static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_pat
             return;
 
         auto const& name = value.as_object().get("_alias"sv);
-        cldr.keyword_names.set(key, name.as_string());
+        cldr.keyword_names.set(key, name.as_deprecated_string());
 
         auto& keywords = cldr.keywords.ensure(key);
 
@@ -413,12 +413,12 @@ static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_pat
                 return;
 
             if (auto const& preferred = properties.as_object().get("_preferred"sv); preferred.is_string()) {
-                cldr.keyword_aliases.ensure(key).append({ preferred.as_string(), keyword });
+                cldr.keyword_aliases.ensure(key).append({ preferred.as_deprecated_string(), keyword });
                 return;
             }
 
             if (auto const& alias = properties.as_object().get("_alias"sv); alias.is_string())
-                cldr.keyword_aliases.ensure(key).append({ keyword, alias.as_string() });
+                cldr.keyword_aliases.ensure(key).append({ keyword, alias.as_deprecated_string() });
 
             keywords.append(keyword);
         });
@@ -459,7 +459,7 @@ static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& 
             return;
 
         auto index = cldr.languages.find_first_index(key).value();
-        languages[index] = cldr.unique_strings.ensure(value.as_string());
+        languages[index] = cldr.unique_strings.ensure(value.as_deprecated_string());
     });
 
     locale.languages = cldr.unique_language_lists.ensure(move(languages));
@@ -482,7 +482,7 @@ static ErrorOr<void> parse_locale_territories(DeprecatedString locale_path, CLDR
 
     territories_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         if (auto index = cldr.territories.find_first_index(key); index.has_value())
-            territories[*index] = cldr.unique_strings.ensure(value.as_string());
+            territories[*index] = cldr.unique_strings.ensure(value.as_deprecated_string());
     });
 
     locale.territories = cldr.unique_territory_lists.ensure(move(territories));
@@ -505,7 +505,7 @@ static ErrorOr<void> parse_locale_scripts(DeprecatedString locale_path, CLDR& cl
 
     scripts_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         if (auto index = cldr.scripts.find_first_index(key); index.has_value())
-            scripts[*index] = cldr.unique_strings.ensure(value.as_string());
+            scripts[*index] = cldr.unique_strings.ensure(value.as_deprecated_string());
     });
 
     locale.scripts = cldr.unique_script_lists.ensure(move(scripts));
@@ -547,10 +547,10 @@ static ErrorOr<void> parse_locale_list_patterns(DeprecatedString misc_path, CLDR
         auto type = list_pattern_type(key);
         auto style = list_pattern_style(key);
 
-        auto start = cldr.unique_strings.ensure(value.as_object().get("start"sv).as_string());
-        auto middle = cldr.unique_strings.ensure(value.as_object().get("middle"sv).as_string());
-        auto end = cldr.unique_strings.ensure(value.as_object().get("end"sv).as_string());
-        auto pair = cldr.unique_strings.ensure(value.as_object().get("2"sv).as_string());
+        auto start = cldr.unique_strings.ensure(value.as_object().get("start"sv).as_deprecated_string());
+        auto middle = cldr.unique_strings.ensure(value.as_object().get("middle"sv).as_deprecated_string());
+        auto end = cldr.unique_strings.ensure(value.as_object().get("end"sv).as_deprecated_string());
+        auto pair = cldr.unique_strings.ensure(value.as_object().get("2"sv).as_deprecated_string());
 
         if (!cldr.list_pattern_types.contains_slow(type))
             cldr.list_pattern_types.append(type);
@@ -583,7 +583,7 @@ static ErrorOr<void> parse_locale_layout(DeprecatedString misc_path, CLDR& cldr,
     };
 
     auto const& character_order_string = orientation_object.as_object().get("characterOrder"sv);
-    auto const& character_order = character_order_string.as_string();
+    auto const& character_order = character_order_string.as_deprecated_string();
 
     TextLayout layout {};
     layout.character_order = text_layout_character_order(character_order);
@@ -630,10 +630,10 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
         auto const& numeric_name = value.as_object().get("displayName-count-other"sv);
 
         auto index = cldr.currencies.find_first_index(key).value();
-        long_currencies[index] = cldr.unique_strings.ensure(long_name.as_string());
-        short_currencies[index] = cldr.unique_strings.ensure(short_name.as_string());
-        narrow_currencies[index] = narrow_name.is_null() ? 0 : cldr.unique_strings.ensure(narrow_name.as_string());
-        numeric_currencies[index] = cldr.unique_strings.ensure(numeric_name.is_null() ? long_name.as_string() : numeric_name.as_string());
+        long_currencies[index] = cldr.unique_strings.ensure(long_name.as_deprecated_string());
+        short_currencies[index] = cldr.unique_strings.ensure(short_name.as_deprecated_string());
+        narrow_currencies[index] = narrow_name.is_null() ? 0 : cldr.unique_strings.ensure(narrow_name.as_deprecated_string());
+        numeric_currencies[index] = cldr.unique_strings.ensure(numeric_name.is_null() ? long_name.as_deprecated_string() : numeric_name.as_deprecated_string());
     });
 
     locale.long_currencies = cldr.unique_currency_lists.ensure(move(long_currencies));
@@ -667,7 +667,7 @@ static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& 
             index = supported_calendars.find_first_index(*alias);
         }
 
-        calendars[*index] = cldr.unique_strings.ensure(calendar.as_string());
+        calendars[*index] = cldr.unique_strings.ensure(calendar.as_deprecated_string());
     });
 
     locale.calendars = cldr.unique_calendar_lists.ensure(move(calendars));
@@ -719,9 +719,9 @@ static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR&
         auto const& narrow_name = fields_object.as_object().get(DeprecatedString::formatted("{}-narrow", key)).as_object().get("displayName"sv);
 
         auto index = cldr.date_fields.find_first_index(key).value();
-        long_date_fields[index] = cldr.unique_strings.ensure(long_name.as_string());
-        short_date_fields[index] = cldr.unique_strings.ensure(short_name.as_string());
-        narrow_date_fields[index] = cldr.unique_strings.ensure(narrow_name.as_string());
+        long_date_fields[index] = cldr.unique_strings.ensure(long_name.as_deprecated_string());
+        short_date_fields[index] = cldr.unique_strings.ensure(short_name.as_deprecated_string());
+        narrow_date_fields[index] = cldr.unique_strings.ensure(narrow_name.as_deprecated_string());
     });
 
     locale.long_date_fields = cldr.unique_date_field_lists.ensure(move(long_date_fields));
@@ -753,16 +753,16 @@ static ErrorOr<void> parse_number_system_keywords(DeprecatedString locale_number
             keywords.append(move(index));
     };
 
-    append_numbering_system(default_numbering_system_object.as_string());
+    append_numbering_system(default_numbering_system_object.as_deprecated_string());
 
     other_numbering_systems_object.as_object().for_each_member([&](auto const&, JsonValue const& value) {
-        append_numbering_system(value.as_string());
+        append_numbering_system(value.as_deprecated_string());
     });
 
     locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         if (!key.starts_with("defaultNumberingSystem-alt-"sv))
             return;
-        append_numbering_system(value.as_string());
+        append_numbering_system(value.as_deprecated_string());
     });
 
     locale.number_system_keywords = cldr.unique_keyword_lists.ensure(move(keywords));
@@ -843,7 +843,7 @@ static ErrorOr<void> parse_default_content_locales(DeprecatedString core_path, C
     auto const& default_content_array = default_content.as_object().get("defaultContent"sv);
 
     default_content_array.as_array().for_each([&](JsonValue const& value) {
-        auto locale = value.as_string();
+        auto locale = value.as_deprecated_string();
         StringView default_locale = locale;
 
         while (true) {

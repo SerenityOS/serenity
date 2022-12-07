@@ -40,7 +40,7 @@ Optional<DeprecatedString> ProjectConfig::read_key(DeprecatedString key_name) co
     if (!value.is_string())
         return {};
 
-    return { value.as_string() };
+    return { value.as_deprecated_string() };
 }
 
 }

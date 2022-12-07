@@ -128,7 +128,7 @@ ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& me
 
     // We intentionally discard floating-point data here. If you need more resolution, just use a larger width.
     auto const width = maybe_width.to_int();
-    auto const aspect_parts = maybe_aspect.as_string().split_view(':');
+    auto const aspect_parts = maybe_aspect.as_deprecated_string().split_view(':');
     if (aspect_parts.size() != 2)
         return Error::from_string_view("Aspect specification must have the exact format `width:height`"sv);
     auto aspect_width = aspect_parts[0].to_int<int>();
