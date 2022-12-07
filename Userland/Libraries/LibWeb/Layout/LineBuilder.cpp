@@ -174,8 +174,18 @@ void LineBuilder::update_last_line()
         break;
     }
 
+    auto strut_baseline = [&] {
+        auto& font = m_context.containing_block().font();
+        auto const line_height = m_context.containing_block().line_height();
+        auto const font_metrics = font.pixel_metrics();
+        auto const typographic_height = font_metrics.ascent + font_metrics.descent;
+        auto const leading = line_height - typographic_height;
+        auto const half_leading = leading / 2;
+        return font_metrics.ascent + half_leading;
+    }();
+
     auto line_box_baseline = [&] {
-        float line_box_baseline = 0;
+        float line_box_baseline = strut_baseline;
         for (auto& fragment : line_box.fragments()) {
             auto const& font = fragment.layout_node().font();
             auto const line_height = fragment.layout_node().line_height();
