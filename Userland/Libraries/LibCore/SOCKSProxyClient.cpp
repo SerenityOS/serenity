@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibCore/SOCKSProxyClient.h>
 
 enum class Method : u8 {
@@ -122,7 +122,7 @@ ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Stream:
 
 ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::Version version, Core::SOCKSProxyClient::HostOrIPV4 target, int port, Core::SOCKSProxyClient::Command command)
 {
-    DuplexMemoryStream stream;
+    Core::Stream::AllocatingMemoryStream stream;
 
     Socks5ConnectRequestHeader header {
         .version_identifier = to_underlying(version),
@@ -133,7 +133,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
         .port = htons(port),
     };
 
-    auto size = stream.write({ &header, sizeof(header) });
+    auto size = TRY(stream.write({ &header, sizeof(header) }));
     if (size != sizeof(header))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request header");
 
@@ -142,10 +142,10 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
             u8 address_data[2];
             address_data[0] = to_underlying(AddressType::DomainName);
             address_data[1] = hostname.length();
-            auto size = stream.write({ address_data, sizeof(address_data) });
+            auto size = TRY(stream.write({ address_data, sizeof(address_data) }));
             if (size != array_size(address_data))
                 return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request address data");
-            stream.write({ hostname.characters(), hostname.length() });
+            TRY(stream.write({ hostname.characters(), hostname.length() }));
             return {};
         },
         [&](u32 ipv4) -> ErrorOr<void> {
@@ -153,17 +153,19 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
             address_data[0] = to_underlying(AddressType::IPV4);
             u32 network_ordered_ipv4 = NetworkOrdered<u32>(ipv4);
             memcpy(address_data + 1, &network_ordered_ipv4, sizeof(network_ordered_ipv4));
-            auto size = stream.write({ address_data, sizeof(address_data) });
+            auto size = TRY(stream.write({ address_data, sizeof(address_data) }));
             if (size != array_size(address_data))
                 return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request address data");
             return {};
         }));
 
-    size = stream.write({ &trailer, sizeof(trailer) });
+    size = TRY(stream.write({ &trailer, sizeof(trailer) }));
     if (size != sizeof(trailer))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request trailer");
 
-    auto buffer = stream.copy_into_contiguous_buffer();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
+    TRY(stream.read_entire_buffer(buffer.bytes()));
+
     size = TRY(socket.write({ buffer.data(), buffer.size() }));
     if (size != buffer.size())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request");
@@ -216,32 +218,34 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
 
 ErrorOr<u8> send_username_password_authentication_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::UsernamePasswordAuthenticationData const& auth_data)
 {
-    DuplexMemoryStream stream;
+    Core::Stream::AllocatingMemoryStream stream;
 
     u8 version = 0x01;
-    auto size = stream.write({ &version, sizeof(version) });
+    auto size = TRY(stream.write({ &version, sizeof(version) }));
     if (size != sizeof(version))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     u8 username_length = auth_data.username.length();
-    size = stream.write({ &username_length, sizeof(username_length) });
+    size = TRY(stream.write({ &username_length, sizeof(username_length) }));
     if (size != sizeof(username_length))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
-    size = stream.write({ auth_data.username.characters(), auth_data.username.length() });
+    size = TRY(stream.write({ auth_data.username.characters(), auth_data.username.length() }));
     if (size != auth_data.username.length())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     u8 password_length = auth_data.password.length();
-    size = stream.write({ &password_length, sizeof(password_length) });
+    size = TRY(stream.write({ &password_length, sizeof(password_length) }));
     if (size != sizeof(password_length))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
-    size = stream.write({ auth_data.password.characters(), auth_data.password.length() });
+    size = TRY(stream.write({ auth_data.password.characters(), auth_data.password.length() }));
     if (size != auth_data.password.length())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
-    auto buffer = stream.copy_into_contiguous_buffer();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
+    TRY(stream.read_entire_buffer(buffer.bytes()));
+
     size = TRY(socket.write(buffer));
     if (size != buffer.size())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
