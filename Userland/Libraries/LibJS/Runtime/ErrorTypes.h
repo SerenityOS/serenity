@@ -296,6 +296,7 @@
     M(TypedArrayInvalidBufferLength, "Invalid buffer length for {}: must be a multiple of {}, got {}")                                  \
     M(TypedArrayInvalidByteOffset, "Invalid byte offset for {}: must be a multiple of {}, got {}")                                      \
     M(TypedArrayInvalidCopy, "Copy between arrays of different content types ({} and {}) is prohibited")                                \
+    M(TypedArrayInvalidIntegerIndex, "Invalid integer index: {}")                                                                       \
     M(TypedArrayInvalidTargetOffset, "Invalid target offset: must be {}")                                                               \
     M(TypedArrayOutOfRangeByteOffset, "Typed array byte offset {} is out of range for buffer with length {}")                           \
     M(TypedArrayOutOfRangeByteOffsetOrLength, "Typed array range {}:{} is out of range for buffer with length {}")                      \

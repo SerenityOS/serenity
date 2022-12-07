@@ -1680,7 +1680,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
 
     // 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
     if (!is_valid_integer_index(*typed_array, CanonicalIndex(CanonicalIndex::Type::Index, actual_index)))
-        return vm.throw_completion<RangeError>(ErrorType::InvalidIndex);
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidIntegerIndex, actual_index);
 
     // 10. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());
