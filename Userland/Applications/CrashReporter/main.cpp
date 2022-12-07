@@ -278,7 +278,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
         LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
-        auto file_or_error = FileSystemAccessClient::Client::the().try_save_file(window, lexical_path.title(), lexical_path.extension());
+        auto file_or_error = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, lexical_path.title(), lexical_path.extension());
         if (file_or_error.is_error())
             return;
 

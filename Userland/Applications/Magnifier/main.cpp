@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
-            auto response = FileSystemAccessClient::Client::the().try_save_file(window, "Capture", "png");
+            auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, "Capture", "png");
             if (response.is_error())
                 return {};
             auto file = response.release_value();

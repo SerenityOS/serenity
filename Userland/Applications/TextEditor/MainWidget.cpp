@@ -280,7 +280,7 @@ MainWidget::MainWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_name, m_extension);
+        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_name, m_extension);
         if (response.is_error())
             return;
 

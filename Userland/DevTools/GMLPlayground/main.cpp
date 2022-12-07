@@ -134,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file(window, "Untitled", "gml");
+        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, "Untitled", "gml");
         if (response.is_error())
             return;
 
