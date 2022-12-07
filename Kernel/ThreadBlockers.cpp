@@ -210,7 +210,7 @@ ErrorOr<bool> Thread::OpenFileDescriptionBlocker::setup_blocker()
     return add_to_blocker_set(m_blocked_description->blocker_set());
 }
 
-bool Thread::OpenFileDescriptionBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void*)
+ErrorOr<bool> Thread::OpenFileDescriptionBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void*)
 {
     auto unblock_flags = m_blocked_description->should_unblock(m_flags);
     if (unblock_flags == BlockFlags::None)
@@ -225,7 +225,7 @@ bool Thread::OpenFileDescriptionBlocker::unblock_if_conditions_are_met(bool from
     }
 
     if (!from_add_blocker)
-        MUST(unblock_from_blocker()); // FIXME propagate this error
+        TRY(unblock_from_blocker());
     return true;
 }
 
@@ -246,7 +246,7 @@ ErrorOr<void> Thread::OpenFileDescriptionBlocker::will_unblock_immediately_witho
     // may call us at any given time, so our call to unblock here may fail.
     // Either way, unblock will be called at least once, which provides
     // all the data we need.
-    unblock_if_conditions_are_met(false, nullptr);
+    TRY(unblock_if_conditions_are_met(false, nullptr));
 
     return {};
 }
@@ -403,7 +403,7 @@ ErrorOr<void> Thread::SelectBlocker::will_unblock_immediately_without_blocking(U
     return {};
 }
 
-bool Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void* data)
+ErrorOr<bool> Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker, void* data)
 {
     VERIFY(data); // data is a pointer to an entry in the m_fds vector
     auto& fd_info = *static_cast<FDInfo*>(data);
@@ -428,7 +428,7 @@ bool Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker,
 
     // Only do this once for the first one
     if (!from_add_blocker)
-        MUST(unblock_from_blocker()); // FIXME propagate this error
+        TRY(unblock_from_blocker());
     return true;
 }
 

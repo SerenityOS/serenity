@@ -29,7 +29,7 @@ public:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
         auto& blocker = static_cast<Thread::FileBlocker&>(b);
-        return !blocker.unblock_if_conditions_are_met(true, data);
+        return !TRY(blocker.unblock_if_conditions_are_met(true, data));
     }
 
     ErrorOr<bool> unblock_all_blockers_whose_conditions_are_met()
