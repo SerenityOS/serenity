@@ -1022,7 +1022,7 @@ ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_ph
             return ENOMEM;
 
         for (auto& physical_region : global_data.physical_regions) {
-            auto physical_pages = physical_region.take_contiguous_free_pages(page_count);
+            auto physical_pages = TRY(physical_region.take_contiguous_free_pages(page_count));
             if (!physical_pages.is_empty()) {
                 global_data.system_memory_info.physical_pages_uncommitted -= page_count;
                 global_data.system_memory_info.physical_pages_used += page_count;
