@@ -263,7 +263,8 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
 ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue result)
 {
     result = make_success_response(move(result));
-    auto content = result.serialized<StringBuilder>();
+    // FIXME: switch away from deprecated string
+    auto content = result.serialized<StringBuilder>().to_deprecated_string();
 
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);

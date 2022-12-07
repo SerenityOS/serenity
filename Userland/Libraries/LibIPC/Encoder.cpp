@@ -163,7 +163,8 @@ Encoder& Encoder::operator<<(ByteBuffer const& value)
 
 Encoder& Encoder::operator<<(JsonValue const& value)
 {
-    *this << value.serialized<StringBuilder>();
+    // FIXME: Switch away from deprecated string
+    *this << value.serialized<StringBuilder>().to_deprecated_string();
     return *this;
 }
 

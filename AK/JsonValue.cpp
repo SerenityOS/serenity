@@ -42,20 +42,35 @@ void JsonValue::copy_from(JsonValue const& other)
 {
     m_type = other.m_type;
     switch (m_type) {
-    case Type::Null:
-        m_value.set(Empty {});
-        break;
     case Type::String:
         m_value.set(String(other.m_value.get<String>()));
         break;
-    case Type::Object:
-        m_value.set(new JsonObject(*other.m_value.get<JsonObject*>()));
+    case Type::Double:
+        m_value.set(other.m_value.get<double>());
         break;
     case Type::Array:
         m_value.set(new JsonArray(*other.m_value.get<JsonArray*>()));
         break;
-    default:
+    case Type::Object:
+        m_value.set(new JsonObject(*other.m_value.get<JsonObject*>()));
+        break;
+    case Type::Int32:
+        m_value.set(other.m_value.get<i32>());
+        break;
+    case Type::UnsignedInt32:
+        m_value.set(other.m_value.get<u32>());
+        break;
+    case Type::Int64:
+        m_value.set(other.m_value.get<i64>());
+        break;
+    case Type::UnsignedInt64:
         m_value.set(other.m_value.get<u64>());
+        break;
+    case Type::Bool:
+        m_value.set(other.m_value.get<bool>());
+        break;
+    default:
+        m_value.set(Empty {});
         break;
     }
 }

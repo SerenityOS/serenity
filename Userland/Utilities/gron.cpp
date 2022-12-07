@@ -102,5 +102,6 @@ static void print(StringView name, JsonValue const& value, Vector<DeprecatedStri
         break;
     }
 
-    outln("{}{};", value.serialized<StringBuilder>(), color_off);
+    // FIXME: move to new String class
+    outln("{}{};", value.serialized<StringBuilder>().to_deprecated_string(), color_off);
 }
