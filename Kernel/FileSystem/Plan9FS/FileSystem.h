@@ -55,8 +55,8 @@ private:
         {
         }
 
-        void unblock_completed(u16);
-        void unblock_all();
+        ErrorOr<void> unblock_completed(u16);
+        ErrorOr<void> unblock_all();
         ErrorOr<void> try_unblock(Blocker&);
 
     protected:
@@ -123,8 +123,8 @@ private:
     ProtocolVersion parse_protocol_version(StringView) const;
     size_t adjust_buffer_size(size_t size) const;
 
-    void thread_main();
-    void ensure_thread();
+    ErrorOr<void> thread_main();
+    ErrorOr<void> ensure_thread();
 
     LockRefPtr<Plan9FSInode> m_root_inode;
     Atomic<u16> m_next_tag { (u16)-1 };

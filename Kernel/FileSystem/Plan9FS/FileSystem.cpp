@@ -48,7 +48,7 @@ ErrorOr<void> Plan9FS::initialize_while_locked()
     VERIFY(m_lock.is_locked());
     VERIFY(!is_initialized_while_locked());
 
-    ensure_thread();
+    TRY(ensure_thread());
 
     Plan9FSMessage version_message { *this, Plan9FSMessage::Type::Tversion };
     version_message << (u32)m_max_message_size << "9P2000.L"sv;
@@ -145,24 +145,24 @@ bool Plan9FS::Plan9FSBlockerSet::should_add_blocker(Thread::Blocker& b, void*)
     return !blocker.is_completed();
 }
 
-void Plan9FS::Plan9FSBlockerSet::unblock_completed(u16 tag)
+ErrorOr<void> Plan9FS::Plan9FSBlockerSet::unblock_completed(u16 tag)
 {
-    // FIXME propagate this error
-    MUST(unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
+    TRY(unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock(tag);
     }));
+    return {};
 }
 
-void Plan9FS::Plan9FSBlockerSet::unblock_all()
+ErrorOr<void> Plan9FS::Plan9FSBlockerSet::unblock_all()
 {
-    // FIXME propagate this error
-    MUST(unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
+    TRY(unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock();
     }));
+    return {};
 }
 
 ErrorOr<void> Plan9FS::Plan9FSBlockerSet::try_unblock(Plan9FS::Blocker& blocker)
@@ -269,7 +269,7 @@ ErrorOr<void> Plan9FS::read_and_dispatch_one_message()
         completion->completed = true;
 
         m_completions.remove(header.tag);
-        m_completion_blocker.unblock_completed(header.tag);
+        TRY(m_completion_blocker.unblock_completed(header.tag));
     } else {
         dbgln("Received a 9p message of type {} with an unexpected tag {}, dropping", header.type, header.tag);
     }
@@ -329,7 +329,7 @@ size_t Plan9FS::adjust_buffer_size(size_t size) const
     return min(size, max_size);
 }
 
-void Plan9FS::thread_main()
+ErrorOr<void> Plan9FS::thread_main()
 {
     dbgln("Plan9FS: Thread running");
     do {
@@ -343,26 +343,26 @@ void Plan9FS::thread_main()
                 it.value->completed = true;
             }
             m_completions.clear();
-            m_completion_blocker.unblock_all();
+            TRY(m_completion_blocker.unblock_all());
             dbgln("Plan9FS: Thread terminating, error reading");
-            return;
+            return {};
         }
     } while (!m_thread_shutdown);
     dbgln("Plan9FS: Thread terminating");
+    return {};
 }
 
-void Plan9FS::ensure_thread()
+ErrorOr<void> Plan9FS::ensure_thread()
 {
     SpinlockLocker lock(m_thread_lock);
     if (!m_thread_running.exchange(true, AK::MemoryOrder::memory_order_acq_rel)) {
-        auto process_name = KString::try_create("Plan9FS"sv);
-        if (process_name.is_error())
-            TODO();
-        (void)Process::create_kernel_process(m_thread, process_name.release_value(), [&]() {
-            thread_main();
+        auto process_name = TRY(KString::try_create("Plan9FS"sv));
+        (void)TRY(Process::create_kernel_process(m_thread, move(process_name), [&]() {
+            MUST(thread_main()); // FIXME propagate this error
             m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
-        }).release_value_but_fixme_should_propagate_errors();
+        }));
     }
+    return {};
 }
 
 }
