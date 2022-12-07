@@ -933,6 +933,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
     auto page = find_free_physical_page(true);
+    VERIFY(page);
     if (should_zero_fill == ShouldZeroFill::Yes) {
         InterruptDisabler disabler;
         auto* ptr = quickmap_page(*page);
