@@ -41,7 +41,20 @@ TEST_CASE(operator_incr)
     EXPECT_EQ(a++, 8);
     EXPECT_EQ(a++, 9);
     EXPECT_EQ(a, 10);
-    // TODO: If decrementing gets supported, test it.
+}
+
+TEST_CASE(operator_decr)
+{
+    Checked<u32> a = 5;
+    EXPECT_EQ(--a, 4u);
+    EXPECT_EQ(--a, 3u);
+    EXPECT_EQ(a--, 3u);
+    EXPECT_EQ(a--, 2u);
+    EXPECT_EQ(a--, 1u);
+    EXPECT_EQ(a, 0u);
+    EXPECT(!a.has_overflow());
+    a--;
+    EXPECT(a.has_overflow());
 }
 
 TEST_CASE(operator_cmp)
