@@ -41,6 +41,7 @@ private:
 
     Vector<ColorButton&> m_color_widgets;
     RefPtr<CustomColorWidget> m_custom_color;
+    RefPtr<GUI::VerticalOpacitySlider> m_alpha;
     RefPtr<ColorPreview> m_preview_widget;
     RefPtr<Button> m_selector_button;
     RefPtr<TextBox> m_html_text;
