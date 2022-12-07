@@ -16,6 +16,7 @@
 #include <LibRegex/Regex.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/Infra/ByteSequences.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -90,37 +91,46 @@ ErrorOr<Optional<Vector<DeprecatedString>>> HeaderList::get_decode_and_split(Rea
 {
     // To get, decode, and split a header name name from header list list, run these steps:
 
-    // 1. Let initialValue be the result of getting name from list.
-    auto initial_value = TRY(get(name));
+    // 1. Let value be the result of getting name from list.
+    auto value = TRY(get(name));
 
-    // 2. If initialValue is null, then return null.
-    if (!initial_value.has_value())
+    // 2. If value is null, then return null.
+    if (!value.has_value())
         return Optional<Vector<DeprecatedString>> {};
 
-    // 3. Let input be the result of isomorphic decoding initialValue.
-    auto input = StringView { *initial_value };
+    // 3. Return the result of getting, decoding, and splitting value.
+    return get_decode_and_split_header_value(*value);
+}
 
-    // 4. Let position be a position variable for input, initially pointing at the start of input.
+// https://fetch.spec.whatwg.org/#header-value-get-decode-and-split
+ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(ReadonlyBytes value)
+{
+    // To get, decode, and split a header value value, run these steps:
+
+    // 1. Let input be the result of isomorphic decoding value.
+    auto input = StringView { value };
+
+    // 2. Let position be a position variable for input, initially pointing at the start of input.
     auto lexer = GenericLexer { input };
 
-    // 5. Let values be a list of strings, initially empty.
+    // 3. Let values be a list of strings, initially empty.
     Vector<DeprecatedString> values;
 
-    // 6. Let value be the empty string.
-    StringBuilder value_builder;
+    // 4. Let temporaryValue be the empty string.
+    StringBuilder temporary_value_builder;
 
-    // 7. While position is not past the end of input:
+    // 5. While position is not past the end of input:
     while (!lexer.is_eof()) {
-        // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to value.
+        // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to temporaryValue.
         // NOTE: The result might be the empty string.
-        value_builder.append(lexer.consume_until(is_any_of("\","sv)));
+        temporary_value_builder.append(lexer.consume_until(is_any_of("\","sv)));
 
         // 2. If position is not past the end of input, then:
         if (!lexer.is_eof()) {
             // 1. If the code point at position within input is U+0022 ("), then:
             if (lexer.peek() == '"') {
-                // 1. Append the result of collecting an HTTP quoted string from input, given position, to value.
-                value_builder.append(collect_an_http_quoted_string(lexer));
+                // 1. Append the result of collecting an HTTP quoted string from input, given position, to temporaryValue.
+                temporary_value_builder.append(collect_an_http_quoted_string(lexer));
 
                 // 2. If position is not past the end of input, then continue.
                 if (!lexer.is_eof())
@@ -136,14 +146,14 @@ ErrorOr<Optional<Vector<DeprecatedString>>> HeaderList::get_decode_and_split(Rea
             }
         }
 
-        // 3. Remove all HTTP tab or space from the start and end of value.
-        auto value = value_builder.build().trim(HTTP_TAB_OR_SPACE, TrimMode::Both);
+        // 3. Remove all HTTP tab or space from the start and end of temporaryValue.
+        auto temporary_value = temporary_value_builder.build().trim(HTTP_TAB_OR_SPACE, TrimMode::Both);
 
-        // 4. Append value to values.
-        values.append(move(value));
+        // 4. Append temporaryValue to values.
+        values.append(move(temporary_value));
 
-        // 5. Set value to the empty string.
-        value_builder.clear();
+        // 5. Set temporaryValue to the empty string.
+        temporary_value_builder.clear();
     }
 
     // 8. Return values.
@@ -580,34 +590,63 @@ bool is_no_cors_safelisted_request_header(Header const& header)
 }
 
 // https://fetch.spec.whatwg.org/#forbidden-header-name
-bool is_forbidden_header_name(ReadonlyBytes header_name)
+ErrorOr<bool> is_forbidden_request_header(Header const& header)
 {
-    // A forbidden header name is a header name that is a byte-case-insensitive match for one of
+    // A header (name, value) is forbidden request-header if these steps return true:
+    auto name = StringView { header.name };
+
+    // 1. If name is a byte-case-insensitive match for one of:
     // [...]
-    // or a header name that when byte-lowercased starts with `proxy-` or `sec-`.
-    return StringView { header_name }.is_one_of_ignoring_case(
-               "Accept-Charset"sv,
-               "Accept-Encoding"sv,
-               "Access-Control-Request-Headers"sv,
-               "Access-Control-Request-Method"sv,
-               "Connection"sv,
-               "Content-Length"sv,
-               "Cookie"sv,
-               "Cookie2"sv,
-               "Date"sv,
-               "DNT"sv,
-               "Expect"sv,
-               "Host"sv,
-               "Keep-Alive"sv,
-               "Origin"sv,
-               "Referer"sv,
-               "TE"sv,
-               "Trailer"sv,
-               "Transfer-Encoding"sv,
-               "Upgrade"sv,
-               "Via"sv)
-        || StringView { header_name }.starts_with("proxy-"sv, CaseSensitivity::CaseInsensitive)
-        || StringView { header_name }.starts_with("sec-"sv, CaseSensitivity::CaseInsensitive);
+    // then return true.
+    if (name.is_one_of_ignoring_case(
+            "Accept-Charset"sv,
+            "Accept-Encoding"sv,
+            "Access-Control-Request-Headers"sv,
+            "Access-Control-Request-Method"sv,
+            "Connection"sv,
+            "Content-Length"sv,
+            "Cookie"sv,
+            "Cookie2"sv,
+            "Date"sv,
+            "DNT"sv,
+            "Expect"sv,
+            "Host"sv,
+            "Keep-Alive"sv,
+            "Origin"sv,
+            "Referer"sv,
+            "TE"sv,
+            "Trailer"sv,
+            "Transfer-Encoding"sv,
+            "Upgrade"sv,
+            "Via"sv)) {
+        return true;
+    }
+
+    // 2. If name when byte-lowercased starts with `proxy-` or `sec-`, then return true.
+    if (name.starts_with("proxy-"sv, CaseSensitivity::CaseInsensitive)
+        || name.starts_with("sec-"sv, CaseSensitivity::CaseInsensitive)) {
+        return true;
+    }
+
+    // 3. If name is a byte-case-insensitive match for one of:
+    // - `X-HTTP-Method`
+    // - `X-HTTP-Method-Override`
+    // - `X-Method-Override`
+    // then:
+    if (name.is_one_of_ignoring_case(
+            "X-HTTP-Method"sv,
+            "X-HTTP-Method-Override"sv,
+            "X-Method"sv)) {
+        // 1. Let parsedValues be the result of getting, decoding, and splitting value.
+        auto parsed_values = TRY(get_decode_and_split_header_value(header.value));
+
+        // 2. For each method in parsedValues: if the isomorphic encoding of method is a forbidden method, then return true.
+        if (parsed_values.has_value() && any_of(*parsed_values, [](auto method) { return is_forbidden_method(method.bytes()); }))
+            return true;
+    }
+
+    // 4. Return false.
+    return false;
 }
 
 // https://fetch.spec.whatwg.org/#forbidden-response-header-name

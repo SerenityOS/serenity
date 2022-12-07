@@ -62,7 +62,7 @@ private:
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    void remove_privileged_no_cors_headers();
+    void remove_privileged_no_cors_request_headers();
 
     // https://fetch.spec.whatwg.org/#concept-headers-header-list
     // A Headers object has an associated header list (a header list), which is initially empty.

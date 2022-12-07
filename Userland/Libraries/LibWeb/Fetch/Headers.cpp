@@ -59,6 +59,7 @@ WebIDL::ExceptionOr<void> Headers::append(DeprecatedString const& name_string, D
 WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
 {
     // The delete(name) method steps are:
+    auto& realm = this->realm();
     auto name = name_string.bytes();
 
     // 1. If name is not a header name, then throw a TypeError.
@@ -69,8 +70,10 @@ WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
     if (m_guard == Guard::Immutable)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
 
-    // 3. Otherwise, if this’s guard is "request" and name is a forbidden header name, return.
-    if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
+    // 3. Otherwise, if this's guard is "request" and (name, ``) is a forbidden request-header, return.
+    // NOTE: Passing a dummy header value to forbidden request-header ought not to have any negative repercussions.
+    auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair(name, ""sv));
+    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
         return {};
 
     // 4. Otherwise, if this’s guard is "request-no-cors", name is not a no-CORS-safelisted request-header name, and name is not a privileged no-CORS request-header name, return.
@@ -88,9 +91,9 @@ WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
     // 7. Delete name from this’s header list.
     m_header_list->delete_(name);
 
-    // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request headers from this.
+    // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request-headers from this.
     if (m_guard == Guard::RequestNoCORS)
-        remove_privileged_no_cors_headers();
+        remove_privileged_no_cors_request_headers();
 
     return {};
 }
@@ -129,14 +132,15 @@ WebIDL::ExceptionOr<bool> Headers::has(DeprecatedString const& name_string)
 WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, DeprecatedString const& value_string)
 {
     // The set(name, value) method steps are:
+    auto& realm = this->realm();
     auto name = name_string.bytes();
     auto value = value_string.bytes();
 
     // 1. Normalize value.
-    auto normalized_value = TRY_OR_RETURN_OOM(realm(), Infrastructure::normalize_header_value(value));
+    auto normalized_value = TRY_OR_RETURN_OOM(realm, Infrastructure::normalize_header_value(value));
 
     auto header = Infrastructure::Header {
-        .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(name)),
+        .name = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(name)),
         .value = move(normalized_value),
     };
 
@@ -150,8 +154,8 @@ WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, Depr
     if (m_guard == Guard::Immutable)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
 
-    // 4. Otherwise, if this’s guard is "request" and name is a forbidden header name, return.
-    if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
+    // 4. Otherwise, if this’s guard is "request" and (name, value) is a forbidden request-header, return.
+    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
         return {};
 
     // 5. Otherwise, if this’s guard is "request-no-cors" and (name, value) is not a no-CORS-safelisted request-header, return.
@@ -163,11 +167,11 @@ WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, Depr
         return {};
 
     // 7. Set (name, value) in this’s header list.
-    TRY_OR_RETURN_OOM(realm(), m_header_list->set(move(header)));
+    TRY_OR_RETURN_OOM(realm, m_header_list->set(move(header)));
 
-    // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request headers from this.
+    // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request-headers from this.
     if (m_guard == Guard::RequestNoCORS)
-        remove_privileged_no_cors_headers();
+        remove_privileged_no_cors_request_headers();
 
     return {};
 }
@@ -213,10 +217,11 @@ JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
 WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 {
     // To append a header (name, value) to a Headers object headers, run these steps:
+    auto& realm = this->realm();
     auto& [name, value] = header;
 
     // 1. Normalize value.
-    value = TRY_OR_RETURN_OOM(realm(), Infrastructure::normalize_header_value(value));
+    value = TRY_OR_RETURN_OOM(realm, Infrastructure::normalize_header_value(value));
 
     // 2. If name is not a header name or value is not a header value, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
@@ -228,28 +233,28 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     if (m_guard == Guard::Immutable)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
 
-    // 4. Otherwise, if headers’s guard is "request" and name is a forbidden header name, return.
-    if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
+    // 4. Otherwise, if headers’s guard is "request" and (name, value) is a forbidden request-header, return.
+    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
         return {};
 
     // 5. Otherwise, if headers’s guard is "request-no-cors":
     if (m_guard == Guard::RequestNoCORS) {
         // 1. Let temporaryValue be the result of getting name from headers’s header list.
-        auto temporary_value = TRY_OR_RETURN_OOM(realm(), m_header_list->get(name));
+        auto temporary_value = TRY_OR_RETURN_OOM(realm, m_header_list->get(name));
 
         // 2. If temporaryValue is null, then set temporaryValue to value.
         if (!temporary_value.has_value()) {
-            temporary_value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(value));
+            temporary_value = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value));
         }
         // 3. Otherwise, set temporaryValue to temporaryValue, followed by 0x2C 0x20, followed by value.
         else {
-            TRY_OR_RETURN_OOM(realm(), temporary_value->try_append(0x2c));
-            TRY_OR_RETURN_OOM(realm(), temporary_value->try_append(0x20));
-            TRY_OR_RETURN_OOM(realm(), temporary_value->try_append(value));
+            TRY_OR_RETURN_OOM(realm, temporary_value->try_append(0x2c));
+            TRY_OR_RETURN_OOM(realm, temporary_value->try_append(0x20));
+            TRY_OR_RETURN_OOM(realm, temporary_value->try_append(value));
         }
 
         auto temporary_header = Infrastructure::Header {
-            .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(name)),
+            .name = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(name)),
             .value = temporary_value.release_value(),
         };
 
@@ -263,11 +268,11 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
         return {};
 
     // 7. Append (name, value) to headers’s header list.
-    TRY_OR_RETURN_OOM(realm(), m_header_list->append(move(header)));
+    TRY_OR_RETURN_OOM(realm, m_header_list->append(move(header)));
 
-    // 8. If headers’s guard is "request-no-cors", then remove privileged no-CORS request headers from headers.
+    // 8. If headers’s guard is "request-no-cors", then remove privileged no-CORS request-headers from headers.
     if (m_guard == Guard::RequestNoCORS)
-        remove_privileged_no_cors_headers();
+        remove_privileged_no_cors_request_headers();
 
     return {};
 }
@@ -301,9 +306,9 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
 }
 
 // https://fetch.spec.whatwg.org/#concept-headers-remove-privileged-no-cors-request-headers
-void Headers::remove_privileged_no_cors_headers()
+void Headers::remove_privileged_no_cors_request_headers()
 {
-    // To remove privileged no-CORS request headers from a Headers object (headers), run these steps:
+    // To remove privileged no-CORS request-headers from a Headers object (headers), run these steps:
 
     static constexpr Array privileged_no_cors_request_header_names = {
         "Range"sv,

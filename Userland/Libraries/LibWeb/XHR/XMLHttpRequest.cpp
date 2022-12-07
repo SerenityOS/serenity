@@ -310,15 +310,16 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(DeprecatedString co
     if (!Fetch::Infrastructure::is_header_value(value))
         return WebIDL::SyntaxError::create(realm, "Header value contains invalid characters.");
 
-    // 5. If name is a forbidden header name, then return.
-    if (Fetch::Infrastructure::is_forbidden_header_name(name))
-        return {};
-
-    // 6. Combine (name, value) in this’s author request headers.
     auto header = Fetch::Infrastructure::Header {
         .name = move(name),
         .value = move(value),
     };
+
+    // 5. If (name, value) is a forbidden request-header, then return.
+    if (TRY_OR_RETURN_OOM(realm, Fetch::Infrastructure::is_forbidden_request_header(header)))
+        return {};
+
+    // 6. Combine (name, value) in this’s author request headers.
     TRY_OR_RETURN_OOM(realm, m_author_request_headers->combine(move(header)));
 
     return {};
