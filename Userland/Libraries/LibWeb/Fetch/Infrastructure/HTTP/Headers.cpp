@@ -261,7 +261,7 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
         names_list.append(header.name);
     auto names = TRY(convert_header_names_to_a_sorted_lowercase_set(names_list));
 
-    // 3. For each name in names:
+    // 3. For each name of names:
     for (auto& name : names) {
         // 1. Let value be the result of getting name from list.
         // 2. Assert: value is not null.
@@ -640,7 +640,7 @@ ErrorOr<bool> is_forbidden_request_header(Header const& header)
         // 1. Let parsedValues be the result of getting, decoding, and splitting value.
         auto parsed_values = TRY(get_decode_and_split_header_value(header.value));
 
-        // 2. For each method in parsedValues: if the isomorphic encoding of method is a forbidden method, then return true.
+        // 2. For each method of parsedValues: if the isomorphic encoding of method is a forbidden method, then return true.
         if (parsed_values.has_value() && any_of(*parsed_values, [](auto method) { return is_forbidden_method(method.bytes()); }))
             return true;
     }

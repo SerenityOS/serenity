@@ -153,7 +153,7 @@ bool Request::has_redirect_tainted_origin() const
     // 1. Let lastURL be null.
     Optional<AK::URL const&> last_url;
 
-    // 2. For each url in request’s URL list:
+    // 2. For each url of request’s URL list:
     for (auto const& url : m_url_list) {
         // 1. If lastURL is null, then set lastURL to url and continue.
         if (!last_url.has_value()) {
