@@ -170,7 +170,7 @@ void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
     m_lock.unlock(m_previous_interrupts_state);
 }
 
-bool Thread::FutexBlocker::unblock_bitset(u32 bitset)
+ErrorOr<bool> Thread::FutexBlocker::unblock_bitset(u32 bitset)
 {
     {
         SpinlockLocker lock(m_lock);
@@ -180,11 +180,11 @@ bool Thread::FutexBlocker::unblock_bitset(u32 bitset)
         m_did_unblock = true;
     }
 
-    MUST(unblock_from_blocker()); // FIXME propagate this error
+    TRY(unblock_from_blocker());
     return true;
 }
 
-bool Thread::FutexBlocker::unblock(bool force)
+ErrorOr<bool> Thread::FutexBlocker::unblock(bool force)
 {
     {
         SpinlockLocker lock(m_lock);
@@ -193,7 +193,7 @@ bool Thread::FutexBlocker::unblock(bool force)
         m_did_unblock = true;
     }
 
-    MUST(unblock_from_blocker()); // FIXME propagate this error
+    TRY(unblock_from_blocker());
     return true;
 }
 
@@ -539,7 +539,7 @@ void Thread::WaitBlockerSet::try_unblock(Thread::WaitBlocker& blocker)
         // so that we don't trigger a context switch by yielding!
         if (info.was_waited && blocker.is_wait())
             continue; // This state was already waited on, do not unblock
-        if (blocker.unblock(info.process, info.flags, info.signal, true)) {
+        if (blocker.unblock(info.process, info.flags, info.signal, true).release_value_but_fixme_should_propagate_errors()) {
             if (blocker.is_wait()) {
                 if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated) {
                     m_processes.remove(i);
@@ -566,7 +566,7 @@ void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
             MUST(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Wait);
                 auto& blocker = static_cast<WaitBlocker&>(b);
-                bool did_unblock = blocker.unblock(info.process, WaitBlocker::UnblockFlags::Disowned, 0, false);
+                bool did_unblock = blocker.unblock(info.process, WaitBlocker::UnblockFlags::Disowned, 0, false).release_value_but_fixme_should_propagate_errors();
                 VERIFY(did_unblock); // disowning must unblock everyone
                 return true;
             }));
@@ -600,12 +600,12 @@ ErrorOr<bool> Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::Unb
         }
     }
 
-    TRY(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
+    TRY(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) -> ErrorOr<bool> {
         VERIFY(b.blocker_type() == Blocker::Type::Wait);
         auto& blocker = static_cast<WaitBlocker&>(b);
         if (was_waited_already && blocker.is_wait())
             return false; // This state was already waited on, do not unblock
-        if (blocker.unblock(process, flags, signal, false)) {
+        if (TRY(blocker.unblock(process, flags, signal, false))) {
             did_wait |= blocker.is_wait(); // anyone requesting a wait
             did_unblock_any = true;
             return true;
@@ -646,7 +646,7 @@ ErrorOr<bool> Thread::WaitBlockerSet::should_add_blocker(Blocker& b, void*)
     // See if we can match any process immediately
     for (size_t i = 0; i < m_processes.size(); i++) {
         auto& info = m_processes[i];
-        if (blocker.unblock(info.process, info.flags, info.signal, true)) {
+        if (TRY(blocker.unblock(info.process, info.flags, info.signal, true))) {
             // Only remove the entry if UnblockFlags::Terminated
             if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated && blocker.is_wait())
                 m_processes.remove(i);
@@ -738,7 +738,7 @@ void Thread::WaitBlocker::do_set_result(siginfo_t const& result)
     }
 }
 
-bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker)
+ErrorOr<bool> Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker)
 {
     VERIFY(flags != UnblockFlags::Terminated || signal == 0); // signal argument should be ignored for Terminated
 
@@ -826,7 +826,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     if (!from_add_blocker) {
         // Only call unblock if we weren't called from within add_to_blocker_set!
         VERIFY(flags != UnblockFlags::Disowned);
-        MUST(unblock_from_blocker()); // FIXME propagate this error
+        TRY(unblock_from_blocker());
     }
     // Because this may be called from add_blocker, in which case we should
     // not be actually trying to unblock the thread (because it hasn't actually
@@ -851,7 +851,7 @@ ErrorOr<bool> Thread::FlockBlocker::setup_blocker()
     return add_to_blocker_set(m_inode->flock_blocker_set());
 }
 
-bool Thread::FlockBlocker::try_unblock(bool from_add_blocker)
+ErrorOr<bool> Thread::FlockBlocker::try_unblock(bool from_add_blocker)
 {
     if (!m_inode->can_apply_flock(m_flock))
         return false;
@@ -864,7 +864,7 @@ bool Thread::FlockBlocker::try_unblock(bool from_add_blocker)
     }
 
     if (!from_add_blocker)
-        MUST(unblock_from_blocker()); // FIXME propagate this error
+        TRY(unblock_from_blocker());
     return true;
 }
 

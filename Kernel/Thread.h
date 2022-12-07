@@ -560,8 +560,8 @@ public:
         }
         void finish_requeue(FutexQueue&);
 
-        bool unblock_bitset(u32 bitset);
-        bool unblock(bool force = false);
+        ErrorOr<bool> unblock_bitset(u32 bitset);
+        ErrorOr<bool> unblock(bool force = false);
 
     protected:
         FutexQueue& m_futex_queue;
@@ -739,7 +739,7 @@ public:
         virtual void was_unblocked(bool) override;
         virtual ErrorOr<bool> setup_blocker() override;
 
-        bool unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
+        ErrorOr<bool> unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
         bool is_wait() const { return (m_wait_options & WNOWAIT) != WNOWAIT; }
 
     private:
@@ -793,7 +793,7 @@ public:
         virtual Type blocker_type() const override { return Type::Flock; }
         virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual ErrorOr<bool> setup_blocker() override;
-        bool try_unblock(bool from_add_blocker);
+        ErrorOr<bool> try_unblock(bool from_add_blocker);
 
     private:
         NonnullLockRefPtr<Inode> m_inode;
@@ -817,7 +817,7 @@ public:
         {
             VERIFY(b.blocker_type() == Blocker::Type::Flock);
             auto& blocker = static_cast<Thread::FlockBlocker&>(b);
-            return !blocker.try_unblock(true);
+            return !TRY(blocker.try_unblock(true));
         }
     };
 
