@@ -12,6 +12,44 @@ const TYPED_ARRAYS = [
 
 const BIGINT_TYPED_ARRAYS = [BigUint64Array, BigInt64Array];
 
+describe("errors", () => {
+    test("index out of range", () => {
+        TYPED_ARRAYS.forEach(T => {
+            const array = new T([1, 2, 3]);
+
+            expect(() => {
+                array.with(3, 10);
+            }).toThrowWithMessage(RangeError, "Invalid integer index: 3");
+
+            expect(() => {
+                array.with(-4, 10);
+            }).toThrowWithMessage(RangeError, "Invalid integer index: -1");
+        });
+    });
+
+    test("invalid index", () => {
+        TYPED_ARRAYS.forEach(T => {
+            const array = new T([1, 2, 3]);
+
+            expect(() => {
+                array.with(2 ** 53, 10);
+            }).toThrowWithMessage(RangeError, "Invalid integer index: 9007199254740992");
+
+            expect(() => {
+                array.with(-(2 ** 53), 10);
+            }).toThrowWithMessage(RangeError, "Invalid integer index: -9007199254740989");
+
+            expect(() => {
+                array.with(Infinity, 10);
+            }).toThrowWithMessage(RangeError, "Invalid integer index: inf");
+
+            expect(() => {
+                array.with(-Infinity, 10);
+            }).toThrowWithMessage(RangeError, "Invalid integer index: -inf");
+        });
+    });
+});
+
 describe("normal behavior", () => {
     test("length is 2", () => {
         TYPED_ARRAYS.forEach(T => {
