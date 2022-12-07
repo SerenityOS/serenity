@@ -540,6 +540,10 @@ ErrorOr<int> run_in_desktop_mode()
         virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override
         {
             if (domain == "WindowManager" && group == "Background" && key == "Wallpaper") {
+                if (value.is_empty()) {
+                    GUI::Desktop::the().set_wallpaper(nullptr, {});
+                    return;
+                }
                 auto wallpaper_bitmap_or_error = Gfx::Bitmap::try_load_from_file(value);
                 if (wallpaper_bitmap_or_error.is_error())
                     dbgln("Failed to load wallpaper bitmap from path: {}", wallpaper_bitmap_or_error.error());
