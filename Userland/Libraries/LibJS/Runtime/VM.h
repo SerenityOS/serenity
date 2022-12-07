@@ -120,6 +120,8 @@ public:
     ExecutionContext& running_execution_context() { return *m_execution_context_stack.last(); }
     ExecutionContext const& running_execution_context() const { return *m_execution_context_stack.last(); }
 
+    // https://tc39.es/ecma262/#execution-context-stack
+    // The execution context stack is used to track execution contexts.
     Vector<ExecutionContext*> const& execution_context_stack() const { return m_execution_context_stack; }
     Vector<ExecutionContext*>& execution_context_stack() { return m_execution_context_stack; }
 
