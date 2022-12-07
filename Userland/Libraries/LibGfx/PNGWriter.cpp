@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
+#include <AK/FixedArray.h>
 #include <AK/SIMDExtras.h>
 #include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
@@ -174,8 +175,8 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     ByteBuffer uncompressed_block_data;
     TRY(uncompressed_block_data.try_ensure_capacity(bitmap.size_in_bytes() + bitmap.height()));
 
-    Pixel dummy_scanline[bitmap.width()];
-    auto const* scanline_minus_1 = dummy_scanline;
+    auto dummy_scanline = TRY(FixedArray<Pixel>::try_create(bitmap.width()));
+    auto const* scanline_minus_1 = dummy_scanline.data();
 
     for (int y = 0; y < bitmap.height(); ++y) {
         auto* scanline = reinterpret_cast<Pixel const*>(bitmap.scanline(y));
@@ -217,8 +218,8 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         Filter paeth_filter { .type = PNG::FilterType::Paeth };
         TRY(paeth_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.height()));
 
-        auto pixel_x_minus_1 = Pixel::gfx_to_png(*dummy_scanline);
-        auto pixel_xy_minus_1 = Pixel::gfx_to_png(*dummy_scanline);
+        auto pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
+        auto pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
 
         for (int x = 0; x < bitmap.width(); ++x) {
             auto pixel = Pixel::gfx_to_png(scanline[x]);
