@@ -28,6 +28,7 @@ static constexpr size_t CHUNK_SIZE = 64;
 static_assert(is_power_of_two(CHUNK_SIZE));
 
 static constexpr size_t INITIAL_KMALLOC_MEMORY_SIZE = 2 * MiB;
+static constexpr size_t KMALLOC_DEFAULT_ALIGNMENT = 16;
 
 // Treat the heap as logically separate from .bss
 __attribute__((section(".heap"))) static u8 initial_kmalloc_memory[INITIAL_KMALLOC_MEMORY_SIZE];
@@ -192,7 +193,7 @@ public:
             ++block;
             block_to_remove.list_node.remove();
             block_to_remove.~KmallocSlabBlock();
-            kfree_aligned(&block_to_remove);
+            kfree_sized(&block_to_remove, KmallocSlabBlock::block_size);
 
             did_purge = true;
         }
@@ -222,17 +223,17 @@ struct KmallocGlobalData {
         subheaps.append(*subheap);
     }
 
-    void* allocate(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
+    void* allocate(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory)
     {
         VERIFY(!expansion_in_progress);
 
         for (auto& slabheap : slabheaps) {
-            if (size <= slabheap.slab_size())
+            if (size <= slabheap.slab_size() && alignment <= slabheap.slab_size())
                 return slabheap.allocate(caller_will_initialize_memory);
         }
 
         for (auto& subheap : subheaps) {
-            if (auto* ptr = subheap.allocator.allocate(size, caller_will_initialize_memory))
+            if (auto* ptr = subheap.allocator.allocate(size, alignment, caller_will_initialize_memory))
                 return ptr;
         }
 
@@ -249,7 +250,7 @@ struct KmallocGlobalData {
                 }
             }
             if (did_purge)
-                return allocate(size, caller_will_initialize_memory);
+                return allocate(size, alignment, caller_will_initialize_memory);
         }
 
         if (!try_expand(size)) {
@@ -257,7 +258,7 @@ struct KmallocGlobalData {
             return nullptr;
         }
 
-        return allocate(size, caller_will_initialize_memory);
+        return allocate(size, alignment, caller_will_initialize_memory);
     }
 
     void deallocate(void* ptr, size_t size)
@@ -422,12 +423,15 @@ UNMAP_AFTER_INIT void kmalloc_init()
     s_lock.initialize();
 }
 
-static void* kmalloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
+static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory)
 {
     // Catch bad callers allocating under spinlock.
     if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
         Processor::verify_no_spinlocks_held();
     }
+
+    // Alignment must be a power of two.
+    VERIFY(popcount(alignment) == 1);
 
     SpinlockLocker lock(s_lock);
     ++g_kmalloc_call_count;
@@ -437,7 +441,7 @@ static void* kmalloc_impl(size_t size, CallerWillInitializeMemory caller_will_in
         Kernel::dump_backtrace();
     }
 
-    void* ptr = g_kmalloc_global->allocate(size, caller_will_initialize_memory);
+    void* ptr = g_kmalloc_global->allocate(size, alignment, caller_will_initialize_memory);
 
     Thread* current_thread = Thread::current();
     if (!current_thread)
@@ -454,7 +458,7 @@ static void* kmalloc_impl(size_t size, CallerWillInitializeMemory caller_will_in
 
 void* kmalloc(size_t size)
 {
-    return kmalloc_impl(size, CallerWillInitializeMemory::No);
+    return kmalloc_impl(size, KMALLOC_DEFAULT_ALIGNMENT, CallerWillInitializeMemory::No);
 }
 
 void* kcalloc(size_t count, size_t size)
@@ -462,7 +466,7 @@ void* kcalloc(size_t count, size_t size)
     if (Checked<size_t>::multiplication_would_overflow(count, size))
         return nullptr;
     size_t new_size = count * size;
-    auto* ptr = kmalloc_impl(new_size, CallerWillInitializeMemory::Yes);
+    auto* ptr = kmalloc_impl(new_size, KMALLOC_DEFAULT_ALIGNMENT, CallerWillInitializeMemory::Yes);
     if (ptr)
         memset(ptr, 0, new_size);
     return ptr;
@@ -511,17 +515,7 @@ size_t kmalloc_good_size(size_t size)
 
 void* kmalloc_aligned(size_t size, size_t alignment)
 {
-    Checked<size_t> real_allocation_size = size;
-    real_allocation_size += alignment;
-    real_allocation_size += sizeof(ptrdiff_t) + sizeof(size_t);
-    void* ptr = kmalloc(real_allocation_size.value());
-    if (ptr == nullptr)
-        return nullptr;
-    size_t max_addr = (size_t)ptr + alignment;
-    void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
-    ((ptrdiff_t*)aligned_ptr)[-1] = (ptrdiff_t)((u8*)aligned_ptr - (u8*)ptr);
-    ((size_t*)aligned_ptr)[-2] = real_allocation_size.value();
-    return aligned_ptr;
+    return kmalloc_impl(size, alignment, CallerWillInitializeMemory::No);
 }
 
 void* operator new(size_t size)
@@ -571,9 +565,9 @@ void operator delete(void* ptr, size_t size) noexcept
     return kfree_sized(ptr, size);
 }
 
-void operator delete(void* ptr, size_t, std::align_val_t) noexcept
+void operator delete(void* ptr, size_t size, std::align_val_t) noexcept
 {
-    return kfree_aligned(ptr);
+    return kfree_sized(ptr, size);
 }
 
 void operator delete[](void*) noexcept
