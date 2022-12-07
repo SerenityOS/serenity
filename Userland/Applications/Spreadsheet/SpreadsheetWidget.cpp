@@ -155,7 +155,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         DeprecatedString name = "workbook";
-        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), name, "sheets");
+        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), name, "sheets");
         if (response.is_error())
             return;
         save(*response.value());

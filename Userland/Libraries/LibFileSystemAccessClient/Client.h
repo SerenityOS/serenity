@@ -29,7 +29,7 @@ public:
     DeprecatedResult try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path);
     DeprecatedResult try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode);
     DeprecatedResult try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
-    DeprecatedResult try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
+    DeprecatedResult try_save_file_deprecated(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
 
     static Client& the();
 

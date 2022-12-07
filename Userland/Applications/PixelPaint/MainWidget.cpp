@@ -212,7 +212,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, editor->title(), "bmp");
+                auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, editor->title(), "bmp");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -227,7 +227,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, editor->title(), "png");
+                auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, editor->title(), "png");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -241,7 +241,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &QOI", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, editor->title(), "qoi");
+                auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, editor->title(), "qoi");
                 if (response.is_error())
                     return;
                 auto result = editor->image().export_qoi_to_file(response.value());
@@ -410,7 +410,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "Sa&ve Color Palette", g_icon_bag.save_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "palette");
+            auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, "untitled", "palette");
             if (response.is_error())
                 return;
 

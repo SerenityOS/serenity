@@ -93,7 +93,7 @@ DeprecatedResult Client::try_open_file(GUI::Window* parent_window, DeprecatedStr
     return handle_promise(id);
 }
 
-DeprecatedResult Client::try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access)
+DeprecatedResult Client::try_save_file_deprecated(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { Core::Promise<DeprecatedResult>::construct(), parent_window });

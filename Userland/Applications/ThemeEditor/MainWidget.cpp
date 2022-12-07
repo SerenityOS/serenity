@@ -222,7 +222,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             save_to_file(result.value());
         } else {
-            auto result = FileSystemAccessClient::Client::the().try_save_file(&window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value());
@@ -231,7 +231,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_action));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().try_save_file(&window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+        auto result = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
         if (result.is_error())
             return;
         save_to_file(result.value());

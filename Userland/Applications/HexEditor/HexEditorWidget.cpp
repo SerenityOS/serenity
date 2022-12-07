@@ -142,7 +142,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
         if (response.is_error())
             return;
         auto file = response.release_value();
