@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
@@ -90,7 +91,7 @@ public:
     [[nodiscard]] bool is_early_boot_console_disabled() const;
     [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
     [[nodiscard]] StringView userspace_init() const;
-    [[nodiscard]] NonnullOwnPtrVector<KString> userspace_init_args() const;
+    ErrorOr<NonnullOwnPtrVector<KString>> userspace_init_args() const;
     [[nodiscard]] StringView root_device() const;
     [[nodiscard]] bool is_nvme_polling_enabled() const;
     [[nodiscard]] size_t switch_to_tty() const;

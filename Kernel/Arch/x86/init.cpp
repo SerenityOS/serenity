@@ -378,7 +378,7 @@ void init_stage2(void*)
 
     LockRefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
-    auto init_args = kernel_command_line().userspace_init_args();
+    auto init_args = MUST(kernel_command_line().userspace_init_args());
 
     auto init_or_error = Process::try_create_user_process(thread, userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
     if (init_or_error.is_error())

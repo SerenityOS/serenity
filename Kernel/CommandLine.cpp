@@ -295,15 +295,15 @@ StringView CommandLine::userspace_init() const
     return lookup("init"sv).value_or("/bin/SystemServer"sv);
 }
 
-NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
+ErrorOr<NonnullOwnPtrVector<KString>> CommandLine::userspace_init_args() const
 {
     NonnullOwnPtrVector<KString> args;
 
     auto init_args = lookup("init_args"sv).value_or(""sv).split_view(';');
     if (!init_args.is_empty())
-        MUST(args.try_prepend(MUST(KString::try_create(userspace_init()))));
+        TRY(args.try_prepend(TRY(KString::try_create(userspace_init()))));
     for (auto& init_arg : init_args)
-        args.append(MUST(KString::try_create(init_arg)));
+        TRY(args.try_append(TRY(KString::try_create(init_arg))));
     return args;
 }
 
