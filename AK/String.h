@@ -67,6 +67,13 @@ public:
 
     ErrorOr<String> replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const;
 
+    [[nodiscard]] bool contains_bytes(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool starts_with_bytes(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool ends_with_bytes(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+
+    [[nodiscard]] ErrorOr<Vector<String>> split_bytes_limit(char separator, size_t limit, SplitBehavior = SplitBehavior::Nothing) const;
+    [[nodiscard]] ErrorOr<Vector<String>> split_bytes(char separator, SplitBehavior = SplitBehavior::Nothing) const;
+
     [[nodiscard]] Optional<size_t> find(u32 needle, size_t start = 0) const;
     [[nodiscard]] Optional<size_t> find_last(u32 needle) const;
 

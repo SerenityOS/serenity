@@ -9,7 +9,9 @@
 #include <AK/Memory.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringUtils.h>
 #include <AK/Utf8View.h>
+#include <AK/Vector.h>
 #include <stdlib.h>
 
 namespace AK {
@@ -309,6 +311,50 @@ ErrorOr<void> Formatter<String>::format(FormatBuilder& builder, String const& ut
 ErrorOr<String> String::replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const
 {
     return StringUtils::replace(*this, needle, replacement, replace_mode);
+}
+
+bool String::contains_bytes(StringView needle, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::contains(bytes_as_string_view(), needle, case_sensitivity);
+}
+
+bool String::starts_with_bytes(StringView string, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::starts_with(bytes_as_string_view(), string, case_sensitivity);
+}
+
+bool String::ends_with_bytes(StringView string, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::ends_with(bytes_as_string_view(), string, case_sensitivity);
+}
+
+ErrorOr<Vector<String>> String::split_bytes(char separator, SplitBehavior split_behavior) const
+{
+    return split_bytes_limit(separator, 0, split_behavior);
+}
+
+ErrorOr<Vector<String>> String::split_bytes_limit(char separator, size_t limit, SplitBehavior split_behavior) const
+{
+    if (is_empty())
+        return Vector<String> {};
+
+    Vector<String> v;
+    size_t substart = 0;
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+    bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
+    for (size_t i = 0; i < bytes().size() && (v.size() + 1) != limit; ++i) {
+        auto ch = bytes()[i];
+        if (ch == static_cast<unsigned char>(separator)) {
+            size_t sublen = i - substart;
+            if (sublen != 0 || keep_empty)
+                TRY(v.try_append(TRY(substring_from_byte_offset(substart, keep_separator ? sublen + 1 : sublen))));
+            substart = i + 1;
+        }
+    }
+    size_t taillen = bytes().size() - substart;
+    if (taillen != 0 || keep_empty)
+        TRY(v.try_append(TRY(substring_from_byte_offset(substart, taillen))));
+    return v;
 }
 
 Optional<size_t> String::find(u32 needle, size_t start) const
