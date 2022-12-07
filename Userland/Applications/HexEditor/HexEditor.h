@@ -36,7 +36,7 @@ public:
     size_t buffer_size() const { return m_document->size(); }
     ErrorOr<void> open_new_file(size_t size);
     void open_file(NonnullRefPtr<Core::File> file);
-    void fill_selection(u8 fill_byte);
+    ErrorOr<void> fill_selection(u8 fill_byte);
     Optional<u8> get_byte(size_t position);
     bool save_as(NonnullRefPtr<Core::File>);
     bool save();
@@ -101,14 +101,14 @@ private:
     size_t cell_width() const { return character_width() * 3; }
     size_t offset_margin_width() const { return 80; }
 
-    void hex_mode_keydown_event(GUI::KeyEvent&);
-    void text_mode_keydown_event(GUI::KeyEvent&);
+    ErrorOr<void> hex_mode_keydown_event(GUI::KeyEvent&);
+    ErrorOr<void> text_mode_keydown_event(GUI::KeyEvent&);
 
     void set_content_length(size_t); // I might make this public if I add fetching data on demand.
     void update_status();
     void did_change();
-    void did_complete_action(size_t position, u8 old_value, u8 new_value);
-    void did_complete_action(size_t position, ByteBuffer&& old_values, ByteBuffer&& new_values);
+    ErrorOr<void> did_complete_action(size_t position, u8 old_value, u8 new_value);
+    ErrorOr<void> did_complete_action(size_t position, ByteBuffer&& old_values, ByteBuffer&& new_values);
 
     void reset_cursor_blink_state();
 };

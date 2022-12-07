@@ -245,7 +245,9 @@ HexEditorWidget::HexEditorWidget()
         DeprecatedString value;
         if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
-            m_editor->fill_selection(fill_byte);
+            auto result = m_editor->fill_selection(fill_byte);
+            if (result.is_error())
+                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", result.error()));
         }
     });
     m_fill_selection_action->set_enabled(false);
