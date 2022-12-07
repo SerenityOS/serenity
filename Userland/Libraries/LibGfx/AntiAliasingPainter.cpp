@@ -201,6 +201,11 @@ void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Col
     }
 }
 
+void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+{
+    draw_line(actual_from.to_type<float>(), actual_to.to_type<float>(), color, thickness, style, alternate_color, line_length_mode);
+}
+
 void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
     if (style == Painter::LineStyle::Dotted)

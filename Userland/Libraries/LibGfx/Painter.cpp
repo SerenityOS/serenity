@@ -2446,6 +2446,11 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
     }
 }
 
+void Painter::draw_text_run(IntPoint baseline_start, Utf8View const& string, Font const& font, Color color)
+{
+    draw_text_run(baseline_start.to_type<float>(), string, font, color);
+}
+
 void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, Color color)
 {
     auto pixel_metrics = font.pixel_metrics();
@@ -2471,7 +2476,7 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
     }
 }
 
-void Painter::draw_scaled_bitmap_with_transform(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::FloatRect const& src_rect, Gfx::AffineTransform const& transform, float opacity, Gfx::Painter::ScalingMode scaling_mode)
+void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap const& bitmap, FloatRect const& src_rect, AffineTransform const& transform, float opacity, Painter::ScalingMode scaling_mode)
 {
     if (transform.is_identity_or_translation()) {
         translate(transform.e(), transform.f());

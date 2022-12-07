@@ -26,6 +26,7 @@ public:
         Distance
     };
 
+    void draw_line(IntPoint, IntPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
     void draw_line(FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
     void draw_line_for_path(FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
     void draw_line_for_fill_path(FloatPoint from, FloatPoint to, Color color, float thickness = 1)
