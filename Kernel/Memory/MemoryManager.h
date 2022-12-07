@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Concepts.h>
+#include <AK/Error.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -249,7 +250,7 @@ private:
     void unregister_kernel_region(Region&);
 
     void protect_kernel_image();
-    void parse_memory_map();
+    ErrorOr<void> parse_memory_map();
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 
