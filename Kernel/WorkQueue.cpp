@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
             }
             [[maybe_unused]] auto result = m_wait_queue.wait_on({});
         }
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     // If we can't create the thread we're in trouble...
     m_thread = thread.release_nonnull();
 }

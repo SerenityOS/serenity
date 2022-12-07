@@ -361,7 +361,7 @@ void Plan9FS::ensure_thread()
         (void)Process::create_kernel_process(m_thread, process_name.release_value(), [&]() {
             thread_main();
             m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
 }
 
