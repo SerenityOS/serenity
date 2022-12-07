@@ -23,7 +23,7 @@ public:
         Separator,
     };
 
-    MenuItem(Menu&, unsigned identifier, DeprecatedString const& text, DeprecatedString const& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, Gfx::Bitmap const* icon = nullptr);
+    MenuItem(Menu&, unsigned identifier, DeprecatedString const& text, DeprecatedString const& shortcut_text = {}, bool enabled = true, bool visible = true, bool checkable = false, bool checked = false, Gfx::Bitmap const* icon = nullptr);
     MenuItem(Menu&, Type);
     ~MenuItem() = default;
 
@@ -31,6 +31,9 @@ public:
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
+
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool);
 
     bool is_checkable() const { return m_checkable; }
     void set_checkable(bool checkable) { m_checkable = checkable; }
@@ -69,6 +72,7 @@ private:
     Menu& m_menu;
     Type m_type { None };
     bool m_enabled { true };
+    bool m_visible { true };
     bool m_checkable { false };
     bool m_checked { false };
     bool m_default { false };

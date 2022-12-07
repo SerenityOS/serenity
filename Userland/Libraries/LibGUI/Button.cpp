@@ -165,6 +165,7 @@ void Button::set_action(Action& action)
 {
     m_action = action;
     action.register_button({}, *this);
+    set_visible(action.is_visible());
     set_enabled(action.is_enabled());
     set_checkable(action.is_checkable());
     if (action.is_checkable())

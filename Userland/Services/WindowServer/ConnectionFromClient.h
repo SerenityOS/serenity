@@ -96,9 +96,9 @@ private:
     virtual void create_menu(i32, DeprecatedString const&) override;
     virtual void destroy_menu(i32) override;
     virtual void add_menu(i32, i32) override;
-    virtual void add_menu_item(i32, i32, i32, DeprecatedString const&, bool, bool, bool, bool, DeprecatedString const&, Gfx::ShareableBitmap const&, bool) override;
+    virtual void add_menu_item(i32, i32, i32, DeprecatedString const&, bool, bool, bool, bool, bool, DeprecatedString const&, Gfx::ShareableBitmap const&, bool) override;
     virtual void add_menu_separator(i32) override;
-    virtual void update_menu_item(i32, i32, i32, DeprecatedString const&, bool, bool, bool, bool, DeprecatedString const&, Gfx::ShareableBitmap const&) override;
+    virtual void update_menu_item(i32, i32, i32, DeprecatedString const&, bool, bool, bool, bool, bool, DeprecatedString const&, Gfx::ShareableBitmap const&) override;
     virtual void remove_menu_item(i32 menu_id, i32 identifier) override;
     virtual void flash_menubar_menu(i32, i32) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool,

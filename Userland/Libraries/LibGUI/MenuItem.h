@@ -45,6 +45,9 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool);
+
     bool is_default() const { return m_default; }
     void set_default(bool);
 
@@ -61,6 +64,7 @@ private:
     int m_menu_id { -1 };
     unsigned m_identifier { 0 };
     bool m_enabled { true };
+    bool m_visible { true };
     bool m_checkable { false };
     bool m_checked { false };
     bool m_default { false };
