@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>.
+ * Copyright (c) 2022, Tim Schumacher <timschumi@gmx.de>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -122,6 +123,125 @@ size_t FixedMemoryStream::offset() const
 size_t FixedMemoryStream::remaining() const
 {
     return m_bytes.size() - m_offset;
+}
+
+ErrorOr<Bytes> AllocatingMemoryStream::read(Bytes bytes)
+{
+    size_t read_bytes = 0;
+
+    while (read_bytes < bytes.size()) {
+        VERIFY(m_write_offset >= m_read_offset);
+
+        auto range = TRY(next_read_range());
+        if (range.size() == 0)
+            break;
+
+        auto copied_bytes = range.copy_trimmed_to(bytes.slice(read_bytes));
+
+        read_bytes += copied_bytes;
+        m_read_offset += copied_bytes;
+    }
+
+    cleanup_unused_chunks();
+
+    return bytes.trim(read_bytes);
+}
+
+ErrorOr<size_t> AllocatingMemoryStream::write(ReadonlyBytes bytes)
+{
+    size_t written_bytes = 0;
+
+    while (written_bytes < bytes.size()) {
+        VERIFY(m_write_offset >= m_read_offset);
+
+        auto range = TRY(next_write_range());
+
+        auto copied_bytes = bytes.slice(written_bytes).copy_trimmed_to(range);
+
+        written_bytes += copied_bytes;
+        m_write_offset += copied_bytes;
+    }
+
+    return written_bytes;
+}
+
+ErrorOr<void> AllocatingMemoryStream::discard(size_t count)
+{
+    VERIFY(m_write_offset >= m_read_offset);
+
+    if (count > used_buffer_size())
+        return Error::from_string_literal("Number of discarded bytes is higher than the number of allocated bytes");
+
+    m_read_offset += count;
+
+    cleanup_unused_chunks();
+
+    return {};
+}
+
+bool AllocatingMemoryStream::is_eof() const
+{
+    return used_buffer_size() == 0;
+}
+
+bool AllocatingMemoryStream::is_open() const
+{
+    return true;
+}
+
+void AllocatingMemoryStream::close()
+{
+}
+
+size_t AllocatingMemoryStream::used_buffer_size() const
+{
+    return m_write_offset - m_read_offset;
+}
+
+ErrorOr<ReadonlyBytes> AllocatingMemoryStream::next_read_range()
+{
+    VERIFY(m_write_offset >= m_read_offset);
+
+    size_t const chunk_index = m_read_offset / chunk_size;
+    size_t const chunk_offset = m_read_offset % chunk_size;
+    size_t const read_size = min(chunk_size - m_read_offset % chunk_size, m_write_offset - m_read_offset);
+
+    if (read_size == 0)
+        return ReadonlyBytes { static_cast<u8*>(nullptr), 0 };
+
+    VERIFY(chunk_index < m_chunks.size());
+
+    return ReadonlyBytes { m_chunks[chunk_index].data() + chunk_offset, read_size };
+}
+
+ErrorOr<Bytes> AllocatingMemoryStream::next_write_range()
+{
+    VERIFY(m_write_offset >= m_read_offset);
+
+    size_t const chunk_index = m_write_offset / chunk_size;
+    size_t const chunk_offset = m_write_offset % chunk_size;
+    size_t const write_size = chunk_size - m_write_offset % chunk_size;
+
+    if (chunk_index >= m_chunks.size())
+        TRY(m_chunks.try_append(TRY(Chunk::create_uninitialized(chunk_size))));
+
+    VERIFY(chunk_index < m_chunks.size());
+
+    return Bytes { m_chunks[chunk_index].data() + chunk_offset, write_size };
+}
+
+void AllocatingMemoryStream::cleanup_unused_chunks()
+{
+    // FIXME: Move these all at once.
+    while (m_read_offset >= chunk_size) {
+        VERIFY(m_write_offset >= m_read_offset);
+
+        auto buffer = m_chunks.take_first();
+        m_read_offset -= chunk_size;
+        m_write_offset -= chunk_size;
+
+        m_chunks.append(move(buffer));
+    }
 }
 
 }
