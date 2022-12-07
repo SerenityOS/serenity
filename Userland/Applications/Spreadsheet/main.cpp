@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (filename) {
-        if (!Core::File::exists(filename) || Core::File::is_directory(filename)) {
+        if (!Core::File::exists({ filename, strlen(filename) }) || Core::File::is_directory(filename)) {
             warnln("File does not exist or is a directory: {}", filename);
             return 1;
         }

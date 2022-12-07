@@ -9,6 +9,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -191,10 +192,9 @@ bool File::looks_like_shared_library(DeprecatedString const& filename)
     return filename.ends_with(".so"sv) || filename.contains(".so."sv);
 }
 
-bool File::exists(DeprecatedString const& filename)
+bool File::exists(StringView filename)
 {
-    struct stat st;
-    return stat(filename.characters(), &st) == 0;
+    return !Core::System::stat(filename).is_error();
 }
 
 ErrorOr<size_t> File::size(DeprecatedString const& filename)

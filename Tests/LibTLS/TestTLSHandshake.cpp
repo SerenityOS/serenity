@@ -12,7 +12,7 @@
 #include <LibTLS/TLSv12.h>
 #include <LibTest/TestCase.h>
 
-static char const* ca_certs_file = "./ca_certs.ini";
+static StringView ca_certs_file = "./ca_certs.ini"sv;
 static int port = 443;
 
 constexpr auto DEFAULT_SERVER = "www.google.com"sv;

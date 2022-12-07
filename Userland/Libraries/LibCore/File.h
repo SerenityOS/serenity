@@ -47,7 +47,7 @@ public:
     bool looks_like_shared_library() const;
     static bool looks_like_shared_library(DeprecatedString const& filename);
 
-    static bool exists(DeprecatedString const& filename);
+    static bool exists(StringView filename);
     static ErrorOr<size_t> size(DeprecatedString const& filename);
     static DeprecatedString current_working_directory();
     static DeprecatedString absolute_path(DeprecatedString const& path);

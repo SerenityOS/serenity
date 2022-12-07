@@ -9,7 +9,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/Time.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibTimeZone/TimeZone.h>
@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         atime.tv_nsec = UTIME_OMIT;
 
     for (auto path : paths) {
-        if (Core::Stream::File::exists(path)) {
+        if (Core::File::exists(path)) {
             if (utimensat(AT_FDCWD, path.characters(), times, 0) == -1)
                 err("failed to touch '{}': {}", path, strerror(errno));
         } else if (!no_create_file) {

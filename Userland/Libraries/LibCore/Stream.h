@@ -220,7 +220,6 @@ class File final : public SeekableStream {
 public:
     static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode, ShouldCloseFileDescriptor = ShouldCloseFileDescriptor::Yes);
-    static bool exists(StringView filename);
 
     static ErrorOr<NonnullOwnPtr<File>> standard_input();
     static ErrorOr<NonnullOwnPtr<File>> standard_output();
