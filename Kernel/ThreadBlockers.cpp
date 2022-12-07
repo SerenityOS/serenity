@@ -102,7 +102,7 @@ ErrorOr<void> Thread::JoinBlocker::will_unblock_immediately_without_blocking(Unb
     // to supply us the information. We cannot hold the lock as unblock
     // could be called by the BlockerSet at any time!
     if (reason == UnblockImmediatelyReason::TimeoutInThePast) {
-        m_joinee->m_join_blocker_set.try_unblock(*this);
+        TRY(m_joinee->m_join_blocker_set.try_unblock(*this));
     }
     return {};
 }

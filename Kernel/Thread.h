@@ -1186,18 +1186,20 @@ private:
 
     class JoinBlockerSet final : public BlockerSet {
     public:
-        void thread_did_exit(void* exit_value)
+        ErrorOr<void> thread_did_exit(void* exit_value)
         {
             SpinlockLocker lock(m_lock);
             VERIFY(!m_thread_did_exit);
             m_thread_did_exit = true;
             m_exit_value.store(exit_value, AK::MemoryOrder::memory_order_release);
-            do_unblock_joiner();
+            TRY(do_unblock_joiner());
+            return {};
         }
-        void thread_finalizing()
+        ErrorOr<void> thread_finalizing()
         {
             SpinlockLocker lock(m_lock);
-            do_unblock_joiner();
+            TRY(do_unblock_joiner());
+            return {};
         }
         void* exit_value() const
         {
@@ -1205,11 +1207,12 @@ private:
             return m_exit_value.load(AK::MemoryOrder::memory_order_acquire);
         }
 
-        void try_unblock(JoinBlocker& blocker)
+        ErrorOr<void> try_unblock(JoinBlocker& blocker)
         {
             SpinlockLocker lock(m_lock);
             if (m_thread_did_exit)
-                MUST(blocker.unblock(exit_value(), false)); // FIXME propagate this error
+                TRY(blocker.unblock(exit_value(), false));
+            return {};
         }
 
     protected:
@@ -1227,14 +1230,13 @@ private:
         }
 
     private:
-        void do_unblock_joiner()
+        ErrorOr<bool> do_unblock_joiner()
         {
-            // FIXME propagate this error
-            MUST(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
+            return unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Join);
                 auto& blocker = static_cast<JoinBlocker&>(b);
                 return blocker.unblock(exit_value(), false);
-            }));
+            });
         }
 
         Atomic<void*> m_exit_value { nullptr };
