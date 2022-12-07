@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/Types.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Time/HardwareTimer.h>
@@ -26,7 +27,7 @@ public:
 
     bool init_bsp();
     void eoi();
-    void setup_ap_boot_environment();
+    ErrorOr<void> setup_ap_boot_environment();
     void boot_aps();
     void enable(u32 cpu);
     void init_finished(u32 cpu);

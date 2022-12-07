@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Error.h>
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
@@ -319,7 +320,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     return true;
 }
 
-UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
+UNMAP_AFTER_INIT ErrorOr<void> APIC::setup_ap_boot_environment()
 {
     VERIFY(!m_ap_boot_environment);
     VERIFY(m_processor_enabled_cnt > 1);
@@ -330,19 +331,19 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     // * aps_to_enable u32 values for ap_cpu_init_stacks
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
     constexpr u64 apic_startup_region_base = 0x8000;
-    auto apic_startup_region_size = Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(FlatPtr))).release_value_but_fixme_should_propagate_errors();
+    auto apic_startup_region_size = TRY(Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(FlatPtr))));
     VERIFY(apic_startup_region_size < USER_RANGE_BASE);
-    auto apic_startup_region = MUST(MM.create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size));
+    auto apic_startup_region = TRY(MM.create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size));
     u8* apic_startup_region_ptr = apic_startup_region->vaddr().as_ptr();
     memcpy(apic_startup_region_ptr, reinterpret_cast<void const*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
-    m_ap_temporary_boot_stacks.ensure_capacity(aps_to_enable);
+    TRY(m_ap_temporary_boot_stacks.try_ensure_capacity(aps_to_enable));
     for (u32 i = 0; i < aps_to_enable; i++) {
         auto stack_region_or_error = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
         if (stack_region_or_error.is_error()) {
             dbgln("APIC: Failed to allocate stack for AP #{}", i);
-            return;
+            return ErrorOr<void>(stack_region_or_error.release_error());
         }
         auto stack_region = stack_region_or_error.release_value();
         stack_region->set_stack(true);
@@ -360,7 +361,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     // Allocate Processor structures for all APs and store the pointer to the data
     m_ap_processor_info.resize(aps_to_enable);
     for (size_t i = 0; i < aps_to_enable; i++)
-        m_ap_processor_info[i] = adopt_nonnull_own_or_enomem(new (nothrow) Processor()).release_value_but_fixme_should_propagate_errors();
+        m_ap_processor_info[i] = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Processor()));
     auto* ap_processor_info_array = &ap_stack_array[aps_to_enable];
     for (size_t i = 0; i < aps_to_enable; i++) {
         ap_processor_info_array[i] = FlatPtr(m_ap_processor_info[i].ptr());
@@ -388,6 +389,8 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr4) = read_cr4();
 
     m_ap_boot_environment = move(apic_startup_region);
+
+    return {};
 }
 
 UNMAP_AFTER_INIT void APIC::do_boot_aps()

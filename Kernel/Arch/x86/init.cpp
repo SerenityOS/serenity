@@ -246,7 +246,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
         // We must set up the AP boot environment before switching to a kernel process,
         // as pages below address USER_RANGE_BASE are only accessible through the kernel
         // page directory.
-        APIC::the().setup_ap_boot_environment();
+        MUST(APIC::the().setup_ap_boot_environment());
     }
 
     {
