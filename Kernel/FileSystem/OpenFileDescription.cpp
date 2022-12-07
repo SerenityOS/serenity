@@ -144,7 +144,7 @@ ErrorOr<off_t> OpenFileDescription::seek(off_t offset, int whence)
     m_file->did_seek(*this, new_offset);
     if (m_inode)
         m_inode->did_seek(*this, new_offset);
-    evaluate_block_conditions();
+    TRY(evaluate_block_conditions());
     return new_offset;
 }
 
@@ -172,7 +172,7 @@ ErrorOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, size_t cou
     auto nread = TRY(m_file->read(*this, offset, buffer, count));
     if (m_file->is_seekable())
         m_state.with([&](auto& state) { state.current_offset = offset + nread; });
-    evaluate_block_conditions();
+    TRY(evaluate_block_conditions());
     return nread;
 }
 
@@ -188,7 +188,7 @@ ErrorOr<size_t> OpenFileDescription::write(UserOrKernelBuffer const& data, size_
     if (m_file->is_seekable())
         m_state.with([&](auto& state) { state.current_offset = offset + nwritten; });
 
-    evaluate_block_conditions();
+    TRY(evaluate_block_conditions());
     return nwritten;
 }
 

@@ -13,7 +13,7 @@ namespace Kernel {
 ErrorOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, int options)
 {
     ErrorOr<siginfo_t> result = siginfo_t {};
-    if (Thread::current()->block<Thread::WaitBlocker>({}, options, move(waitee), result).was_interrupted())
+    if (TRY(Thread::current()->block<Thread::WaitBlocker>({}, options, move(waitee), result)).was_interrupted())
         return EINTR;
     VERIFY(!result.is_error() || (options & WNOHANG));
     return result;

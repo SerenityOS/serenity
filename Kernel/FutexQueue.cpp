@@ -38,7 +38,7 @@ ErrorOr<u32> FutexQueue::wake_n_requeue(u32 wake_count, Function<ErrorOr<FutexQu
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue({}, {})", this, wake_count, requeue_count);
 
     u32 did_wake = 0, did_requeue = 0;
-    unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
+    TRY(unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
 
@@ -50,7 +50,7 @@ ErrorOr<u32> FutexQueue::wake_n_requeue(u32 wake_count, Function<ErrorOr<FutexQu
             return true;
         }
         return false;
-    });
+    }));
     is_empty = is_empty_and_no_imminent_waits_locked();
     if (requeue_count > 0) {
         auto blockers_to_requeue = TRY(do_take_blockers(requeue_count));
@@ -96,7 +96,8 @@ u32 FutexQueue::wake_n(u32 wake_count, Optional<u32> const& bitset, bool& is_emp
     SpinlockLocker lock(m_lock);
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
-    unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
+    // FIXME propagate this error
+    MUST(unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
 
@@ -108,7 +109,7 @@ u32 FutexQueue::wake_n(u32 wake_count, Optional<u32> const& bitset, bool& is_emp
             return true;
         }
         return false;
-    });
+    }));
     is_empty = is_empty_and_no_imminent_waits_locked();
     return did_wake;
 }
@@ -118,7 +119,8 @@ u32 FutexQueue::wake_all(bool& is_empty)
     SpinlockLocker lock(m_lock);
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all", this);
     u32 did_wake = 0;
-    unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool&) {
+    // FIXME propagate this error
+    MUST(unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
         dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all unblocking {}", this, blocker.thread());
@@ -127,7 +129,7 @@ u32 FutexQueue::wake_all(bool& is_empty)
             return true;
         }
         return false;
-    });
+    }));
     is_empty = is_empty_and_no_imminent_waits_locked();
     return did_wake;
 }

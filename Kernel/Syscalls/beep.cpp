@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$beep()
         return ENODEV;
 #if ARCH(I386) || ARCH(X86_64)
     PCSpeaker::tone_on(440);
-    auto result = Thread::current()->sleep(Time::from_nanoseconds(200'000'000));
+    auto result = TRY(Thread::current()->sleep(Time::from_nanoseconds(200'000'000)));
     PCSpeaker::tone_off();
     if (result.was_interrupted())
         return EINTR;

@@ -32,10 +32,10 @@ public:
         return !blocker.unblock_if_conditions_are_met(true, data);
     }
 
-    void unblock_all_blockers_whose_conditions_are_met()
+    ErrorOr<bool> unblock_all_blockers_whose_conditions_are_met()
     {
         SpinlockLocker lock(m_lock);
-        BlockerSet::unblock_all_blockers_whose_conditions_are_met_locked([&](auto& b, void* data, bool&) {
+        return BlockerSet::unblock_all_blockers_whose_conditions_are_met_locked([&](auto& b, void* data, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
             auto& blocker = static_cast<Thread::FileBlocker&>(b);
             return blocker.unblock_if_conditions_are_met(false, data);
@@ -143,7 +143,8 @@ private:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
         VERIFY(!Processor::current_in_irq());
-        blocker_set().unblock_all_blockers_whose_conditions_are_met();
+        // TODO propagate this error
+        MUST(blocker_set().unblock_all_blockers_whose_conditions_are_met());
     }
 
     FileBlockerSet m_blocker_set;

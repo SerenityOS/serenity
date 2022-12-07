@@ -28,7 +28,7 @@ static ErrorOr<void> check_blocked_read(OpenFileDescription* description)
     if (description->is_blocking()) {
         if (!description->can_read()) {
             auto unblock_flags = BlockFlags::None;
-            if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
+            if (TRY(Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags)).was_interrupted())
                 return EINTR;
             if (!has_flag(unblock_flags, BlockFlags::Read))
                 return EAGAIN;

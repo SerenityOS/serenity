@@ -57,7 +57,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         TRY(peer_process.start_tracing_from(caller.pid()));
         SpinlockLocker lock(peer->get_lock());
         if (peer->state() != Thread::State::Stopped) {
-            peer->send_signal(SIGSTOP, &caller);
+            TRY(peer->send_signal(SIGSTOP, &caller));
         }
         return 0;
     }
@@ -77,17 +77,17 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
     switch (params.request) {
     case PT_CONTINUE:
-        peer->send_signal(SIGCONT, &caller);
+        TRY(peer->send_signal(SIGCONT, &caller));
         break;
 
     case PT_DETACH:
         peer_process.stop_tracing();
-        peer->send_signal(SIGCONT, &caller);
+        TRY(peer->send_signal(SIGCONT, &caller));
         break;
 
     case PT_SYSCALL:
         tracer->set_trace_syscalls(true);
-        peer->send_signal(SIGCONT, &caller);
+        TRY(peer->send_signal(SIGCONT, &caller));
         break;
 
     case PT_GETREGS: {

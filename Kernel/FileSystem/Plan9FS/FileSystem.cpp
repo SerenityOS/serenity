@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <Kernel/FileSystem/Plan9FS/FileSystem.h>
 #include <Kernel/FileSystem/Plan9FS/Inode.h>
 #include <Kernel/Process.h>
@@ -98,7 +99,7 @@ Plan9FS::ReceiveCompletion::ReceiveCompletion(u16 tag)
 
 Plan9FS::ReceiveCompletion::~ReceiveCompletion() = default;
 
-bool Plan9FS::Blocker::unblock(u16 tag)
+ErrorOr<bool> Plan9FS::Blocker::unblock(u16 tag)
 {
     {
         SpinlockLocker lock(m_lock);
@@ -114,20 +115,21 @@ bool Plan9FS::Blocker::unblock(u16 tag)
     return unblock();
 }
 
-bool Plan9FS::Blocker::setup_blocker()
+ErrorOr<bool> Plan9FS::Blocker::setup_blocker()
 {
     return add_to_blocker_set(m_fs.m_completion_blocker);
 }
 
-void Plan9FS::Blocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
+ErrorOr<void> Plan9FS::Blocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
     {
         SpinlockLocker lock(m_lock);
         if (m_did_unblock)
-            return;
+            return {};
     }
 
-    m_fs.m_completion_blocker.try_unblock(*this);
+    TRY(m_fs.m_completion_blocker.try_unblock(*this));
+    return {};
 }
 
 bool Plan9FS::Blocker::is_completed() const
@@ -145,28 +147,31 @@ bool Plan9FS::Plan9FSBlockerSet::should_add_blocker(Thread::Blocker& b, void*)
 
 void Plan9FS::Plan9FSBlockerSet::unblock_completed(u16 tag)
 {
-    unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
+    // FIXME propagate this error
+    MUST(unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock(tag);
-    });
+    }));
 }
 
 void Plan9FS::Plan9FSBlockerSet::unblock_all()
 {
-    unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
+    // FIXME propagate this error
+    MUST(unblock_all_blockers_whose_conditions_are_met([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock();
-    });
+    }));
 }
 
-void Plan9FS::Plan9FSBlockerSet::try_unblock(Plan9FS::Blocker& blocker)
+ErrorOr<void> Plan9FS::Plan9FSBlockerSet::try_unblock(Plan9FS::Blocker& blocker)
 {
     if (m_fs.is_complete(*blocker.completion())) {
         SpinlockLocker lock(m_lock);
-        blocker.unblock(blocker.completion()->tag);
+        TRY(blocker.unblock(blocker.completion()->tag));
     }
+    return {};
 }
 
 bool Plan9FS::is_complete(ReceiveCompletion const& completion)
@@ -207,7 +212,7 @@ ErrorOr<void> Plan9FS::post_message(Plan9FSMessage& message, LockRefPtr<ReceiveC
     while (size > 0) {
         if (!description.can_write()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted())
+            if (TRY(Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags)).was_interrupted())
                 return EINTR;
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
@@ -225,7 +230,7 @@ ErrorOr<void> Plan9FS::do_read(u8* data, size_t size)
     while (size > 0) {
         if (!description.can_read()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
+            if (TRY(Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags)).was_interrupted())
                 return EINTR;
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
@@ -283,7 +288,7 @@ ErrorOr<void> Plan9FS::post_message_and_wait_for_a_reply(Plan9FSMessage& message
     auto tag = message.tag();
     auto completion = adopt_lock_ref(*new ReceiveCompletion(tag));
     TRY(post_message(message, completion));
-    if (Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion).was_interrupted())
+    if (TRY(Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion)).was_interrupted())
         return EINTR;
 
     if (completion->result.is_error()) {

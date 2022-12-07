@@ -973,7 +973,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
         VERIFY(Processor::in_critical() == 1);
         g_scheduler_lock.lock();
-        current_thread->set_state(Thread::State::Running);
+        TRY(current_thread->set_state(Thread::State::Running));
         Processor::assume_context(*current_thread, prev_flags);
         VERIFY_NOT_REACHED();
     }

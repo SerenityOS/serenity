@@ -147,7 +147,7 @@ public:
     ~Thread();
 
     static LockRefPtr<Thread> from_tid(ThreadID);
-    static void finalize_dying_threads();
+    static ErrorOr<void> finalize_dying_threads();
 
     ThreadID tid() const { return m_tid; }
     ProcessID pid() const;
@@ -184,7 +184,7 @@ public:
         m_name = move(name);
     }
 
-    void finalize();
+    ErrorOr<void> finalize();
 
     enum class State : u8 {
         Invalid = 0,
@@ -282,7 +282,7 @@ public:
         virtual Type blocker_type() const = 0;
         virtual BlockTimeout const& override_timeout(BlockTimeout const& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
-        virtual bool setup_blocker();
+        virtual ErrorOr<bool> setup_blocker();
         virtual void finalize();
 
         Thread& thread() { return m_thread; }
@@ -292,7 +292,7 @@ public:
             TimeoutInThePast,
         };
 
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) = 0;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) = 0;
 
         virtual void was_unblocked(bool did_timeout)
         {
@@ -358,19 +358,20 @@ public:
         {
             return m_was_interrupted_by_death || m_was_interrupted_by_signal != 0;
         }
-        void unblock_from_blocker()
+        ErrorOr<void> unblock_from_blocker()
         {
             {
                 SpinlockLocker lock(m_lock);
                 if (!m_is_blocking)
-                    return;
+                    return {};
                 m_is_blocking = false;
             }
 
-            m_thread->unblock_from_blocker(*this);
+            TRY(m_thread->unblock_from_blocker(*this));
+            return {};
         }
 
-        bool add_to_blocker_set(BlockerSet&, void* = nullptr);
+        ErrorOr<bool> add_to_blocker_set(BlockerSet&, void* = nullptr);
         void set_blocker_set_raw_locked(BlockerSet* blocker_set) { m_blocker_set = blocker_set; }
 
         // FIXME: Figure out whether this can be Thread.
@@ -398,12 +399,12 @@ public:
             VERIFY(m_blockers.is_empty());
         }
 
-        bool add_blocker(Blocker& blocker, void* data)
+        ErrorOr<bool> add_blocker(Blocker& blocker, void* data)
         {
             SpinlockLocker lock(m_lock);
             if (!should_add_blocker(blocker, data))
                 return false;
-            m_blockers.append({ &blocker, data });
+            TRY(m_blockers.try_append({ &blocker, data }));
             return true;
         }
 
@@ -424,21 +425,23 @@ public:
 
     protected:
         template<typename Callback>
-        bool unblock_all_blockers_whose_conditions_are_met(Callback try_to_unblock_one)
+        ErrorOr<bool> unblock_all_blockers_whose_conditions_are_met(Callback try_to_unblock_one)
         {
             SpinlockLocker lock(m_lock);
             return unblock_all_blockers_whose_conditions_are_met_locked(try_to_unblock_one);
         }
 
         template<typename Callback>
-        bool unblock_all_blockers_whose_conditions_are_met_locked(Callback try_to_unblock_one)
+        ErrorOr<bool> unblock_all_blockers_whose_conditions_are_met_locked(Callback try_to_unblock_one)
         {
             VERIFY(m_lock.is_locked());
             bool stop_iterating = false;
             bool did_unblock_any = false;
             for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
                 auto& info = m_blockers[i];
-                if (bool did_unblock = try_to_unblock_one(*info.blocker, info.data, stop_iterating)) {
+                ErrorOr<bool> did_unblock_result = try_to_unblock_one(*info.blocker, info.data, stop_iterating);
+                bool did_unblock = TRY(did_unblock_result);
+                if (did_unblock) {
                     m_blockers.remove(i);
                     did_unblock_any = true;
                     continue;
@@ -507,11 +510,11 @@ public:
         virtual Type blocker_type() const override { return Type::Join; }
         virtual StringView state_string() const override { return "Joining"sv; }
         virtual bool can_be_interrupted() const override { return false; }
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<bool> setup_blocker() override;
 
-        bool unblock(void*, bool);
+        ErrorOr<bool> unblock(void*, bool);
 
     private:
         NonnullLockRefPtr<Thread> m_joinee;
@@ -527,10 +530,10 @@ public:
 
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { return {}; }
+        virtual ErrorOr<bool> setup_blocker() override;
 
-        bool unblock();
+        ErrorOr<bool> unblock();
 
     protected:
         WaitQueue& m_wait_queue;
@@ -545,8 +548,8 @@ public:
 
         virtual Type blocker_type() const override { return Type::Futex; }
         virtual StringView state_string() const override { return "Futex"sv; }
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { return {}; }
+        virtual ErrorOr<bool> setup_blocker() override;
 
         u32 bitset() const { return m_bitset; }
 
@@ -597,8 +600,8 @@ public:
         OpenFileDescription const& blocked_description() const;
 
         virtual bool unblock_if_conditions_are_met(bool, void*) override;
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<bool> setup_blocker() override;
 
     protected:
         explicit OpenFileDescriptionBlocker(OpenFileDescription&, BlockFlags, BlockFlags&);
@@ -648,7 +651,7 @@ public:
         virtual StringView state_string() const override { return "Sleeping"sv; }
         virtual Type blocker_type() const override { return Type::Sleep; }
         virtual BlockTimeout const& override_timeout(BlockTimeout const&) override;
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual Thread::BlockResult block_result() override;
 
@@ -672,10 +675,10 @@ public:
         virtual ~SelectBlocker();
 
         virtual bool unblock_if_conditions_are_met(bool, void*) override;
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual StringView state_string() const override { return "Selecting"sv; }
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<bool> setup_blocker() override;
         virtual void finalize() override;
 
     private:
@@ -690,8 +693,8 @@ public:
         explicit SignalBlocker(sigset_t pending_set, siginfo_t& result);
         virtual StringView state_string() const override { return "Pending Signal"sv; }
         virtual Type blocker_type() const override { return Type::Signal; }
-        void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
-        virtual bool setup_blocker() override;
+        ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<bool> setup_blocker() override;
         bool check_pending_signals(bool from_add_blocker);
 
     private:
@@ -702,9 +705,9 @@ public:
 
     class SignalBlockerSet final : public BlockerSet {
     public:
-        void unblock_all_blockers_whose_conditions_are_met()
+        ErrorOr<bool> unblock_all_blockers_whose_conditions_are_met()
         {
-            BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
+            return BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Signal);
                 auto& blocker = static_cast<Thread::SignalBlocker&>(b);
                 return blocker.check_pending_signals(false);
@@ -732,9 +735,9 @@ public:
         WaitBlocker(int wait_options, Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<bool> setup_blocker() override;
 
         bool unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
         bool is_wait() const { return (m_wait_options & WNOWAIT) != WNOWAIT; }
@@ -760,7 +763,7 @@ public:
         }
 
         void disowned_by_waiter(Process&);
-        bool unblock(Process&, WaitBlocker::UnblockFlags, u8);
+        ErrorOr<bool> unblock(Process&, WaitBlocker::UnblockFlags, u8);
         void try_unblock(WaitBlocker&);
         void finalize();
 
@@ -788,8 +791,8 @@ public:
         FlockBlocker(NonnullLockRefPtr<Inode>, flock const&);
         virtual StringView state_string() const override { return "Locking File"sv; }
         virtual Type blocker_type() const override { return Type::Flock; }
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<bool> setup_blocker() override;
         bool try_unblock(bool from_add_blocker);
 
     private:
@@ -800,9 +803,9 @@ public:
 
     class FlockBlockerSet final : public BlockerSet {
     public:
-        void unblock_all_blockers_whose_conditions_are_met()
+        ErrorOr<bool> unblock_all_blockers_whose_conditions_are_met()
         {
-            BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
+            return BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Flock);
                 auto& blocker = static_cast<Thread::FlockBlocker&>(b);
                 return blocker.try_unblock(false);
@@ -833,7 +836,7 @@ public:
         if (!m_is_joinable || state() == Thread::State::Invalid)
             return EINVAL;
 
-        add_blocker();
+        TRY(add_blocker());
 
         // From this point on the thread is no longer joinable by anyone
         // else. It also means that if the join is timed, it becomes
@@ -845,7 +848,7 @@ public:
     void did_schedule() { ++m_times_scheduled; }
     u32 times_scheduled() const { return m_times_scheduled; }
 
-    void resume_from_stopped();
+    ErrorOr<void> resume_from_stopped();
 
     [[nodiscard]] bool should_be_stopped() const;
     [[nodiscard]] bool is_stopped() const { return m_state == Thread::State::Stopped; }
@@ -889,18 +892,18 @@ public:
         }
     }
 
-    void block(Kernel::Mutex&, SpinlockLocker<Spinlock>&, u32);
+    ErrorOr<void> block(Kernel::Mutex&, SpinlockLocker<Spinlock>&, u32);
 
     template<typename BlockerType, class... Args>
-    BlockResult block(BlockTimeout const& timeout, Args&&... args)
+    ErrorOr<BlockResult> block(BlockTimeout const& timeout, Args&&... args)
     {
         BlockerType blocker(forward<Args>(args)...);
         return block_impl(timeout, blocker);
     }
 
-    u32 unblock_from_mutex(Kernel::Mutex&);
-    void unblock_from_blocker(Blocker&);
-    void unblock(u8 signal = 0);
+    ErrorOr<u32> unblock_from_mutex(Kernel::Mutex&);
+    ErrorOr<void> unblock_from_blocker(Blocker&);
+    ErrorOr<void> unblock(u8 signal = 0);
 
     template<class... Args>
     Thread::BlockResult wait_on(WaitQueue& wait_queue, Thread::BlockTimeout const& timeout, Args&&... args)
@@ -909,13 +912,13 @@ public:
         return block<Thread::WaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
-    BlockResult sleep(clockid_t, Time const&, Time* = nullptr);
-    BlockResult sleep(Time const& duration, Time* remaining_time = nullptr)
+    ErrorOr<BlockResult> sleep(clockid_t, Time const&, Time* = nullptr);
+    ErrorOr<BlockResult> sleep(Time const& duration, Time* remaining_time = nullptr)
     {
         return sleep(CLOCK_MONOTONIC_COARSE, duration, remaining_time);
     }
-    BlockResult sleep_until(clockid_t, Time const&);
-    BlockResult sleep_until(Time const& duration)
+    ErrorOr<BlockResult> sleep_until(clockid_t, Time const&);
+    ErrorOr<BlockResult> sleep_until(Time const& duration)
     {
         return sleep_until(CLOCK_MONOTONIC_COARSE, duration);
     }
@@ -936,13 +939,13 @@ public:
     FlatPtr kernel_stack_base() const { return m_kernel_stack_base; }
     FlatPtr kernel_stack_top() const { return m_kernel_stack_top; }
 
-    void set_state(State, u8 = 0);
+    ErrorOr<void> set_state(State, u8 = 0);
 
     [[nodiscard]] bool is_initialized() const { return m_initialized; }
     void set_initialized(bool initialized) { m_initialized = initialized; }
 
     void send_urgent_signal_to_self(u8 signal);
-    void send_signal(u8 signal, Process* sender);
+    ErrorOr<void> send_signal(u8 signal, Process* sender);
 
     u32 update_signal_mask(u32 signal_mask);
     u32 signal_mask_block(sigset_t signal_set, bool block);
@@ -956,7 +959,7 @@ public:
 
     DispatchSignalResult dispatch_one_pending_signal();
     DispatchSignalResult try_dispatch_one_pending_signal(u8 signal);
-    DispatchSignalResult dispatch_signal(u8 signal);
+    ErrorOr<DispatchSignalResult> dispatch_signal(u8 signal);
     void check_dispatch_pending_signal();
     [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
@@ -1174,7 +1177,7 @@ public:
 private:
     Thread(NonnullLockRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullLockRefPtr<Timer>, NonnullOwnPtr<KString>);
 
-    BlockResult block_impl(BlockTimeout const&, Blocker&);
+    ErrorOr<BlockResult> block_impl(BlockTimeout const&, Blocker&);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1206,7 +1209,7 @@ private:
         {
             SpinlockLocker lock(m_lock);
             if (m_thread_did_exit)
-                blocker.unblock(exit_value(), false);
+                MUST(blocker.unblock(exit_value(), false)); // FIXME propagate this error
         }
 
     protected:
@@ -1217,7 +1220,7 @@ private:
 
             // NOTE: m_lock is held already!
             if (m_thread_did_exit) {
-                blocker.unblock(exit_value(), true);
+                MUST(blocker.unblock(exit_value(), true)); // FIXME propagate this error
                 return false;
             }
             return true;
@@ -1226,11 +1229,12 @@ private:
     private:
         void do_unblock_joiner()
         {
-            unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
+            // FIXME propagate this error
+            MUST(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Join);
                 auto& blocker = static_cast<JoinBlocker&>(b);
                 return blocker.unblock(exit_value(), false);
-            });
+            }));
         }
 
         Atomic<void*> m_exit_value { nullptr };
@@ -1336,7 +1340,7 @@ private:
     };
 
     void yield_without_releasing_big_lock(VerifyLockNotHeld verify_lock_not_held = VerifyLockNotHeld::Yes);
-    void drop_thread_count();
+    ErrorOr<void> drop_thread_count();
 
     mutable IntrusiveListNode<Thread> m_global_thread_list_node;
 

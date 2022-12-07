@@ -191,7 +191,7 @@ UNMAP_AFTER_INIT void Scheduler::start()
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
     processor.init_context(idle_thread, false);
-    idle_thread.set_state(Thread::State::Running);
+    MUST(idle_thread.set_state(Thread::State::Running));
     VERIFY(idle_thread.affinity() == (1u << processor.id()));
     processor.initialize_context_switching(idle_thread);
     VERIFY_NOT_REACHED();
@@ -267,7 +267,7 @@ void Scheduler::context_switch(Thread* thread)
     // If the last process hasn't blocked (still marked as running),
     // mark it as runnable for the next round.
     if (from_thread->state() == Thread::State::Running)
-        from_thread->set_state(Thread::State::Runnable);
+        MUST(from_thread->set_state(Thread::State::Runnable));
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
     auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
@@ -282,7 +282,7 @@ void Scheduler::context_switch(Thread* thread)
         proc.init_context(*thread, false);
         thread->set_initialized(true);
     }
-    thread->set_state(Thread::State::Running);
+    MUST(thread->set_state(Thread::State::Running));
 
     PerformanceManager::add_context_switch_perf_event(*from_thread, *thread);
 
@@ -370,7 +370,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    s_colonel_process = Process::create_kernel_process(idle_thread, KString::must_create("colonel"sv), idle_loop, nullptr, 1, Process::RegisterProcess::No).leak_ref();
+    s_colonel_process = MUST(Process::create_kernel_process(idle_thread, KString::must_create("colonel"sv), idle_loop, nullptr, 1, Process::RegisterProcess::No)).leak_ref();
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
@@ -393,7 +393,7 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
     VERIFY(Processor::is_bootstrap_processor());
 
     VERIFY(s_colonel_process);
-    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, MUST(KString::formatted("idle thread #{}", cpu)), 1 << cpu, false);
+    Thread* idle_thread = MUST(s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, MUST(KString::formatted("idle thread #{}", cpu)), 1 << cpu, false));
     VERIFY(idle_thread);
     return idle_thread;
 }
@@ -430,7 +430,7 @@ void Scheduler::timer_tick(RegisterState const& regs)
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
-        current_thread->set_state(Thread::State::Dying);
+        MUST(current_thread->set_state(Thread::State::Dying));
         Processor::current().invoke_scheduler_async();
         return;
     }

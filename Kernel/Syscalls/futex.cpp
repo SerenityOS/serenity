@@ -193,7 +193,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         // We must not hold the lock before blocking. But we have a reference
         // to the FutexQueue so that we can keep it alive.
 
-        Thread::BlockResult block_result = futex_queue->wait_on(timeout, bitset);
+        Thread::BlockResult block_result = TRY(futex_queue->wait_on(timeout, bitset));
 
         if (futex_queue->is_empty_and_no_imminent_waits()) {
             // If there are no more waiters, we want to get rid of the futex!

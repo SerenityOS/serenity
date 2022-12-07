@@ -83,7 +83,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
     if constexpr (IO_DEBUG || POLL_SELECT_DEBUG)
         dbgln("polling on {} fds, timeout={}", fds_info.size(), params.timeout);
 
-    if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted())
+    if (TRY(current_thread->block<Thread::SelectBlocker>(timeout, fds_info)).was_interrupted())
         return EINTR;
 
     int fds_with_revents = 0;

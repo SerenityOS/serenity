@@ -112,7 +112,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
         if (!accepting_socket_description->is_blocking())
             return EAGAIN;
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-        if (Thread::current()->block<Thread::AcceptBlocker>({}, *accepting_socket_description, unblock_flags).was_interrupted())
+        if (TRY(Thread::current()->block<Thread::AcceptBlocker>({}, *accepting_socket_description, unblock_flags)).was_interrupted())
             return EINTR;
     }
 
@@ -196,7 +196,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
     auto& socket = *description->socket();
     if (socket.is_shut_down_for_writing()) {
         if ((flags & MSG_NOSIGNAL) == 0)
-            Thread::current()->send_signal(SIGPIPE, &Process::current());
+            TRY(Thread::current()->send_signal(SIGPIPE, &Process::current()));
         return EPIPE;
     }
     auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
@@ -208,7 +208,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
             }
 
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags).was_interrupted()) {
+            if (TRY(Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags)).was_interrupted()) {
                 return EINTR;
             }
             // TODO: handle exceptions in unblock_flags
@@ -217,7 +217,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
         auto bytes_sent_or_error = socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length);
         if (bytes_sent_or_error.is_error()) {
             if ((flags & MSG_NOSIGNAL) == 0 && bytes_sent_or_error.error().code() == EPIPE)
-                Thread::current()->send_signal(SIGPIPE, &Process::current());
+                TRY(Thread::current()->send_signal(SIGPIPE, &Process::current()));
             return bytes_sent_or_error.release_error();
         }
 

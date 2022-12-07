@@ -71,7 +71,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
 
     SpinlockLocker lock(g_scheduler_lock);
     thread->set_priority(requested_thread_priority);
-    thread->set_state(Thread::State::Runnable);
+    TRY(thread->set_state(Thread::State::Runnable));
     return thread->tid().value();
 }
 
@@ -139,7 +139,7 @@ ErrorOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_valu
     // NOTE: pthread_join() cannot be interrupted by signals. Only by death.
     for (;;) {
         ErrorOr<void> try_join_result;
-        auto result = current_thread->block<Thread::JoinBlocker>({}, *thread, try_join_result, joinee_exit_value);
+        auto result = TRY(current_thread->block<Thread::JoinBlocker>({}, *thread, try_join_result, joinee_exit_value));
         if (result == Thread::BlockResult::NotBlocked) {
             if (try_join_result.is_error())
                 return try_join_result.release_error();
@@ -169,7 +169,7 @@ ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
         return ESRCH;
 
     if (signal != 0)
-        thread->send_signal(signal, &Process::current());
+        TRY(thread->send_signal(signal, &Process::current()));
 
     return 0;
 }

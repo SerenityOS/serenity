@@ -106,7 +106,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
     if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
         return false;
     if (auto rescan_error = access->rescan_hardware(); rescan_error.is_error()) {
-        dbgln("PCI: rescan failed {}", rescan_error.release_error());
+        dbgln("PCI: rescan failed in initialize_for_multiple_pci_domains: {}", rescan_error.release_error());
         return false;
     }
     dbgln_if(PCI_DEBUG, "PCI: access for multiple PCI domain initialised.");
@@ -121,7 +121,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     auto host_bridge = HostBridge::must_create_with_io_access();
     access->add_host_controller(move(host_bridge));
     if (auto rescan_error = access->rescan_hardware(); rescan_error.is_error()) {
-        dbgln("PCI: rescan failed {}", rescan_error.release_error());
+        dbgln("PCI: rescan failed in initialize_for_one_pci_domain {}", rescan_error.release_error());
         return false;
     }
     dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");

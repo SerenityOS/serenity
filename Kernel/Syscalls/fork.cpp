@@ -23,7 +23,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         SpinlockLocker lock(g_scheduler_lock);
         if (child_first_thread) {
             child_first_thread->detach();
-            child_first_thread->set_state(Thread::State::Dying);
+            MUST(child_first_thread->set_state(Thread::State::Dying)); // FIXME propagate this error
         }
     };
 
@@ -175,7 +175,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     SpinlockLocker lock(g_scheduler_lock);
     child_first_thread->set_affinity(Thread::current()->affinity());
-    child_first_thread->set_state(Thread::State::Runnable);
+    TRY(child_first_thread->set_state(Thread::State::Runnable));
 
     auto child_pid = child->pid().value();
 

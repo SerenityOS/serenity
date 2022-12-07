@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveListRelaxedConst.h>
@@ -187,19 +188,19 @@ public:
     };
 
     template<typename EntryFunction>
-    static LockRefPtr<Process> create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes)
+    static ErrorOr<LockRefPtr<Process>> create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes)
     {
         auto* entry_func = new EntryFunction(move(entry));
         return create_kernel_process(first_thread, move(name), &Process::kernel_process_trampoline<EntryFunction>, entry_func, affinity, do_register);
     }
 
-    static LockRefPtr<Process> create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
+    static ErrorOr<LockRefPtr<Process>> create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
     static ErrorOr<NonnullLockRefPtr<Process>> try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID, GroupID, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, TTY*);
     static void register_new(Process&);
 
     ~Process();
 
-    LockRefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
+    ErrorOr<LockRefPtr<Thread>> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
@@ -276,7 +277,7 @@ public:
     IterationDecision for_each_thread(Callback callback) const;
 
     void die();
-    void finalize();
+    ErrorOr<void> finalize();
 
     ThreadTracer* tracer() { return m_tracer.ptr(); }
     bool is_traced() const { return !!m_tracer; }
@@ -543,7 +544,7 @@ public:
     ErrorOr<void> poke_user_data(Userspace<FlatPtr*> address, FlatPtr data);
 
     void disowned_by_waiter(Process& process);
-    void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
+    ErrorOr<void> unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_blocker_set; }
 
     template<typename Callback>

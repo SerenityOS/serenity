@@ -260,7 +260,7 @@ ErrorOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& descripti
 
         locker.unlock();
         auto unblocked_flags = BlockFlags::None;
-        auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
+        auto res = TRY(Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags));
         locker.lock();
 
         if (!has_flag(unblocked_flags, BlockFlags::Read)) {
@@ -325,7 +325,7 @@ ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descrip
 
         locker.unlock();
         auto unblocked_flags = BlockFlags::None;
-        auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
+        auto res = TRY(Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags));
         locker.lock();
 
         if (!has_flag(unblocked_flags, BlockFlags::Read)) {

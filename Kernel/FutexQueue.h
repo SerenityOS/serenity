@@ -24,7 +24,7 @@ public:
     u32 wake_all(bool&);
 
     template<class... Args>
-    Thread::BlockResult wait_on(Thread::BlockTimeout const& timeout, Args&&... args)
+    ErrorOr<Thread::BlockResult> wait_on(Thread::BlockTimeout const& timeout, Args&&... args)
     {
         return Thread::current()->block<Thread::FutexBlocker>(timeout, *this, forward<Args>(args)...);
     }

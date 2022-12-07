@@ -94,7 +94,7 @@ ErrorOr<void> Process::do_killself(int signal)
 
     auto* current_thread = Thread::current();
     if (!current_thread->should_ignore_signal(signal))
-        current_thread->send_signal(signal, this);
+        TRY(current_thread->send_signal(signal, this));
 
     return {};
 }

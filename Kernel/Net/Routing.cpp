@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
@@ -25,9 +26,9 @@ public:
 
     virtual StringView state_string() const override { return "Routing (ARP)"sv; }
     virtual Type blocker_type() const override { return Type::Routing; }
-    virtual bool setup_blocker() override;
+    virtual ErrorOr<bool> setup_blocker() override;
 
-    virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+    virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
     bool unblock_if_matching_ip_address(bool from_add_blocker, IPv4Address const& ip_address, MACAddress const& mac_address)
     {
@@ -43,7 +44,7 @@ public:
         }
 
         if (!from_add_blocker)
-            unblock_from_blocker();
+            MUST(unblock_from_blocker()); // FIXME propagate error
         return true;
     }
 
@@ -59,11 +60,12 @@ class ARPTableBlockerSet final : public Thread::BlockerSet {
 public:
     void unblock_blockers_waiting_for_ipv4_address(IPv4Address const& ipv4_address, MACAddress const& mac_address)
     {
-        BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
+        // FIXME propagate this error
+        MUST(BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
             return blocker.unblock_if_matching_ip_address(false, ipv4_address, mac_address);
-        });
+        }));
     }
 
 protected:
@@ -88,12 +90,12 @@ ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr
 {
 }
 
-bool ARPTableBlocker::setup_blocker()
+ErrorOr<bool> ARPTableBlocker::setup_blocker()
 {
     return add_to_blocker_set(*s_arp_table_blocker_set);
 }
 
-void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
+ErrorOr<void> ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
     auto addr = arp_table().with([&](auto const& table) -> auto{
         return table.get(ip_address());
@@ -104,6 +106,7 @@ void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediate
         m_did_unblock = true;
         m_mac_address = move(addr);
     }
+    return {};
 }
 
 SpinlockProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
@@ -328,7 +331,9 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, L
     }
 
     Optional<MACAddress> addr;
-    if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
+
+    // FIXME propagate this error
+    if (!MUST(Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr)).was_interrupted()) {
         if (addr.has_value()) {
             dbgln_if(ARP_DEBUG, "Routing: Got ARP response using adapter {} for {} ({})",
                 adapter->name(),

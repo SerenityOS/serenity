@@ -80,10 +80,10 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosl
 
     bool was_interrupted;
     if (is_absolute) {
-        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
+        was_interrupted = TRY(Thread::current()->sleep_until(params.clock_id, requested_sleep)).was_interrupted();
     } else {
         Time remaining_sleep;
-        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
+        was_interrupted = TRY(Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep)).was_interrupted();
         timespec remaining_sleep_ts = remaining_sleep.to_timespec();
         if (was_interrupted && params.remaining_sleep) {
             TRY(copy_to_user(params.remaining_sleep, &remaining_sleep_ts));

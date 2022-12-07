@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Atomic.h>
+#include <AK/Error.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/Plan9FS/Definitions.h>
@@ -56,7 +57,7 @@ private:
 
         void unblock_completed(u16);
         void unblock_all();
-        void try_unblock(Blocker&);
+        ErrorOr<void> try_unblock(Blocker&);
 
     protected:
         virtual bool should_add_blocker(Thread::Blocker&, void*) override;
@@ -85,22 +86,22 @@ private:
             , m_completion(move(completion))
         {
         }
-        virtual bool setup_blocker() override;
+        virtual ErrorOr<bool> setup_blocker() override;
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Plan9FS; }
-        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual ErrorOr<void> will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
         NonnullLockRefPtr<ReceiveCompletion> const& completion() const { return m_completion; }
         u16 tag() const { return m_completion->tag; }
         bool is_completed() const;
 
-        bool unblock()
+        ErrorOr<bool> unblock()
         {
-            unblock_from_blocker();
+            TRY(unblock_from_blocker());
             return true;
         }
 
-        bool unblock(u16 tag);
+        ErrorOr<bool> unblock(u16 tag);
 
     private:
         Plan9FS& m_fs;

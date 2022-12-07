@@ -231,7 +231,7 @@ void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& l
     });
 
     dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waiting...", this, m_name);
-    current_thread.block(*this, lock, requested_locks);
+    MUST(current_thread.block(*this, lock, requested_locks)); // FIXME propagate this error
     dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waited", this, m_name);
 
     m_blocked_thread_lists.with([&](auto& lists) {
@@ -259,7 +259,7 @@ void Mutex::unblock_waiters(Mode previous_mode)
             VERIFY(m_behavior == MutexBehavior::Regular);
             m_mode = Mode::Shared;
             for (auto& thread : lists.shared) {
-                auto requested_locks = thread.unblock_from_mutex(*this);
+                auto requested_locks = MUST(thread.unblock_from_mutex(*this)); // FIXME propagate this error
                 m_shared_holders += requested_locks;
 #if LOCK_SHARED_UPGRADE_DEBUG
                 auto set_result = m_shared_holders_map.set(&thread, requested_locks);
@@ -272,7 +272,7 @@ void Mutex::unblock_waiters(Mode previous_mode)
         auto unblock_exclusive = [&]<typename L>(L& list) {
             if (auto* next_exclusive_thread = list.first()) {
                 m_mode = Mode::Exclusive;
-                m_times_locked = next_exclusive_thread->unblock_from_mutex(*this);
+                m_times_locked = MUST(next_exclusive_thread->unblock_from_mutex(*this)); // FIXME propagate this error
                 m_holder = next_exclusive_thread;
                 return true;
             }

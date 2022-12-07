@@ -313,7 +313,7 @@ ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<sigset_t const*> set, Users
     }
 
     siginfo_t info_value = {};
-    auto block_result = Thread::current()->block<Thread::SignalBlocker>(block_timeout, set_value, info_value);
+    auto block_result = TRY(Thread::current()->block<Thread::SignalBlocker>(block_timeout, set_value, info_value));
     if (block_result.was_interrupted())
         return EINTR;
     // We check for an unset signal instead of directly checking for a timeout interruption
@@ -346,7 +346,7 @@ ErrorOr<FlatPtr> Process::sys$sigsuspend(Userspace<sigset_t const*> mask)
     // TODO: Ensure that/check if we only return after an eventual signal-catching function returns.
     Thread::BlockTimeout timeout = {};
     siginfo_t siginfo = {};
-    if (current_thread->block<Thread::SignalBlocker>(timeout, ~sigmask, siginfo).was_interrupted())
+    if (TRY(current_thread->block<Thread::SignalBlocker>(timeout, ~sigmask, siginfo)).was_interrupted())
         return EINTR;
 
     return 0;

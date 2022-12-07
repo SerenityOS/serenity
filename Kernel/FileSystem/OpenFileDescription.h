@@ -8,6 +8,7 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Badge.h>
+#include <AK/Error.h>
 #include <AK/RefPtr.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
@@ -135,9 +136,9 @@ private:
 
     ErrorOr<void> attach();
 
-    void evaluate_block_conditions()
+    ErrorOr<bool> evaluate_block_conditions()
     {
-        blocker_set().unblock_all_blockers_whose_conditions_are_met();
+        return blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 
     LockRefPtr<Inode> m_inode;

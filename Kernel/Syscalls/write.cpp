@@ -74,7 +74,7 @@ ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, UserOrKerne
                 return EAGAIN;
             }
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted()) {
+            if (TRY(Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags)).was_interrupted()) {
                 if (total_nwritten == 0)
                     return EINTR;
             }
@@ -89,7 +89,7 @@ ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, UserOrKerne
             if (nwritten_or_error.error().code() == EAGAIN)
                 continue;
             if (nwritten_or_error.error().code() == EPIPE)
-                Thread::current()->send_signal(SIGPIPE, &Process::current());
+                TRY(Thread::current()->send_signal(SIGPIPE, &Process::current()));
             return nwritten_or_error.release_error();
         }
         VERIFY(nwritten_or_error.value() > 0);

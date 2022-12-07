@@ -359,7 +359,7 @@ ErrorOr<bool> Inode::try_apply_flock(Process const& process, OpenFileDescription
             TRY(flocks.try_append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type }));
 
         if (did_manipulate_lock)
-            m_flock_blocker_set.unblock_all_blockers_whose_conditions_are_met();
+            TRY(m_flock_blocker_set.unblock_all_blockers_whose_conditions_are_met());
 
         // Judging by the Linux implementation, unlocking a non-existent lock
         // also works.
@@ -380,7 +380,7 @@ ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription con
         if (should_block == ShouldBlock::No)
             return EAGAIN;
 
-        if (Thread::current()->block<Thread::FlockBlocker>({}, *this, new_lock).was_interrupted())
+        if (TRY(Thread::current()->block<Thread::FlockBlocker>({}, *this, new_lock)).was_interrupted())
             return EINTR;
     }
 }

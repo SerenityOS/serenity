@@ -32,13 +32,13 @@ u32 WaitQueue::wake_one()
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one unblocking {}", this, blocker.thread());
-        if (blocker.unblock()) {
+        if (blocker.unblock().release_value_but_fixme_should_propagate_errors()) {
             stop_iterating = true;
             did_wake = 1;
             return true;
         }
         return false;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_wake_requested = !did_unblock_one;
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one woke {} threads", this, did_wake);
     return did_wake;
@@ -57,13 +57,13 @@ u32 WaitQueue::wake_n(u32 wake_count)
         auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n unblocking {}", this, blocker.thread());
         VERIFY(did_wake < wake_count);
-        if (blocker.unblock()) {
+        if (blocker.unblock().release_value_but_fixme_should_propagate_errors()) {
             if (++did_wake >= wake_count)
                 stop_iterating = true;
             return true;
         }
         return false;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_wake_requested = !did_unblock_some;
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n({}) woke {} threads", this, wake_count, did_wake);
     return did_wake;
@@ -82,12 +82,12 @@ u32 WaitQueue::wake_all()
 
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all unblocking {}", this, blocker.thread());
 
-        if (blocker.unblock()) {
+        if (blocker.unblock().release_value_but_fixme_should_propagate_errors()) {
             did_wake++;
             return true;
         }
         return false;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_wake_requested = !did_unblock_any;
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all woke {} threads", this, did_wake);
     return did_wake;

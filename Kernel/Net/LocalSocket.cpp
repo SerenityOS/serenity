@@ -206,7 +206,7 @@ ErrorOr<void> LocalSocket::connect(Credentials const& credentials, OpenFileDescr
     }
 
     auto unblock_flags = Thread::OpenFileDescriptionBlocker::BlockFlags::None;
-    if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted()) {
+    if (TRY(Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags)).was_interrupted()) {
         set_connect_side_role(Role::None);
         return set_so_error(EINTR);
     }
@@ -347,7 +347,7 @@ ErrorOr<size_t> LocalSocket::recvfrom(OpenFileDescription& description, UserOrKe
         }
     } else if (!can_read(description, 0)) {
         auto unblock_flags = Thread::OpenFileDescriptionBlocker::BlockFlags::None;
-        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
+        if (TRY(Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags)).was_interrupted())
             return set_so_error(EINTR);
     }
     if (!has_attached_peer(description) && socket_buffer->is_empty())

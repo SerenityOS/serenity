@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
@@ -260,17 +261,17 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create_user_process(LockRefPtr<
 
     {
         SpinlockLocker lock(g_scheduler_lock);
-        new_main_thread->set_state(Thread::State::Runnable);
+        TRY(new_main_thread->set_state(Thread::State::Runnable));
     }
 
     return process;
 }
 
-LockRefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
+ErrorOr<LockRefPtr<Process>> Process::create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
     auto process_or_error = Process::try_create(first_thread, move(name), UserID(0), GroupID(0), ProcessID(0), true);
     if (process_or_error.is_error())
-        return {};
+        return LockRefPtr<Process> {};
     auto process = process_or_error.release_value();
 
     first_thread->regs().set_ip((FlatPtr)entry);
@@ -290,7 +291,7 @@ LockRefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thr
 
     SpinlockLocker lock(g_scheduler_lock);
     first_thread->set_affinity(affinity);
-    first_thread->set_state(Thread::State::Runnable);
+    TRY(first_thread->set_state(Thread::State::Runnable));
     return process;
 }
 
@@ -749,7 +750,7 @@ ErrorOr<void> Process::dump_perfcore()
     return {};
 }
 
-void Process::finalize()
+ErrorOr<void> Process::finalize()
 {
     VERIFY(Thread::current() == g_finalizer);
 
@@ -807,7 +808,7 @@ void Process::finalize()
         }
     }
 
-    unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
+    TRY(unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated));
 
     m_space.with([](auto& space) { space->remove_all_regions({}); });
 
@@ -817,6 +818,7 @@ void Process::finalize()
     // waitable states are consumed. Unless there is no parent around
     // anymore, in which case we'll just drop it right away.
     m_wait_blocker_set.finalize();
+    return {};
 }
 
 void Process::disowned_by_waiter(Process& process)
@@ -824,7 +826,7 @@ void Process::disowned_by_waiter(Process& process)
     m_wait_blocker_set.disowned_by_waiter(process);
 }
 
-void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
+ErrorOr<void> Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
     LockRefPtr<Process> waiter_process;
     if (auto* my_tracer = tracer())
@@ -833,7 +835,8 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
         waiter_process = Process::from_pid_ignoring_jails(ppid());
 
     if (waiter_process)
-        waiter_process->m_wait_blocker_set.unblock(*this, flags, signal);
+        TRY(waiter_process->m_wait_blocker_set.unblock(*this, flags, signal));
+    return {};
 }
 
 void Process::die()
@@ -908,23 +911,19 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
         });
     }
     if (receiver_thread) {
-        receiver_thread->send_signal(signal, sender);
+        TRY(receiver_thread->send_signal(signal, sender));
         return {};
     }
     return ESRCH;
 }
 
-LockRefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity, bool joinable)
+ErrorOr<LockRefPtr<Thread>> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity, bool joinable)
 {
     VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
     // FIXME: Do something with guard pages?
 
-    auto thread_or_error = Thread::try_create(*this);
-    if (thread_or_error.is_error())
-        return {};
-
-    auto thread = thread_or_error.release_value();
+    auto thread = TRY(Thread::try_create(*this));
     thread->set_name(move(name));
     thread->set_affinity(affinity);
     thread->set_priority(priority);
@@ -936,7 +935,7 @@ LockRefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* ent
     regs.set_sp((FlatPtr)entry_data); // entry function argument is expected to be in the SP register
 
     SpinlockLocker lock(g_scheduler_lock);
-    thread->set_state(Thread::State::Runnable);
+    TRY(thread->set_state(Thread::State::Runnable));
     return thread;
 }
 
