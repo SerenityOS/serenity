@@ -282,20 +282,20 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
 {
     // To fill a Headers object headers with a given object object, run these steps:
     return object.visit(
-        // 1. If object is a sequence, then for each header in object:
+        // 1. If object is a sequence, then for each header of object:
         [this](Vector<Vector<DeprecatedString>> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
-                // 1. If header does not contain exactly two items, then throw a TypeError.
+                // 1. If header's size is not 2, then throw a TypeError.
                 if (entry.size() != 2)
                     return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Array must contain header key/value pair"sv };
 
-                // 2. Append (header’s first item, header’s second item) to headers.
+                // 2. Append (header[0], header[1]) to headers.
                 auto header = TRY_OR_RETURN_OOM(realm(), Infrastructure::Header::from_string_pair(entry[0], entry[1].bytes()));
                 TRY(append(move(header)));
             }
             return {};
         },
-        // 2. Otherwise, object is a record, then for each key → value in object, append (key, value) to headers.
+        // 2. Otherwise, object is a record, then for each key → value of object, append (key, value) to headers.
         [this](OrderedHashMap<DeprecatedString, DeprecatedString> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 auto header = TRY_OR_RETURN_OOM(realm(), Infrastructure::Header::from_string_pair(entry.key, entry.value));

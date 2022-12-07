@@ -413,7 +413,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         // 3. Empty this’s headers’s header list.
         request_object->headers()->header_list()->clear();
 
-        // 4. If headers is a Headers object, then for each header in its header list, append (header’s name, header’s value) to this’s headers.
+        // 4. If headers is a Headers object, then for each header of its header list, append header to this’s headers.
         if (auto* header_list = headers.get_pointer<JS::NonnullGCPtr<Infrastructure::HeaderList>>()) {
             for (auto& header : *header_list->ptr())
                 TRY(request_object->headers()->append(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value)));
