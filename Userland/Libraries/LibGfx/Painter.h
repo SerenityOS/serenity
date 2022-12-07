@@ -96,6 +96,7 @@ public:
     void draw_circle_arc_intersecting(IntRect const&, IntPoint, int radius, Color, int thickness);
 
     // Streamlined text drawing routine that does no wrapping/elision/alignment.
+    void draw_text_run(IntPoint baseline_start, Utf8View const&, Font const&, Color);
     void draw_text_run(FloatPoint baseline_start, Utf8View const&, Font const&, Color);
 
     enum class CornerOrientation {
