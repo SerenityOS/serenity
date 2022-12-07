@@ -127,7 +127,7 @@ void ConnectionFromClient::add_menu(i32 window_id, i32 menu_id)
 }
 
 void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submenu_id,
-    DeprecatedString const& text, bool enabled, bool checkable, bool checked, bool is_default,
+    DeprecatedString const& text, bool enabled, bool visible, bool checkable, bool checked, bool is_default,
     DeprecatedString const& shortcut, Gfx::ShareableBitmap const& icon, bool exclusive)
 {
     auto it = m_menus.find(menu_id);
@@ -142,6 +142,7 @@ void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submen
     menu_item->set_icon(icon.bitmap());
     menu_item->set_submenu_id(submenu_id);
     menu_item->set_exclusive(exclusive);
+    menu_item->set_visible(visible);
     menu.add_item(move(menu_item));
 }
 
@@ -172,7 +173,7 @@ void ConnectionFromClient::dismiss_menu(i32 menu_id)
 }
 
 void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unused]] i32 submenu_id,
-    DeprecatedString const& text, bool enabled, bool checkable, bool checked, bool is_default,
+    DeprecatedString const& text, bool enabled, bool visible, bool checkable, bool checked, bool is_default,
     DeprecatedString const& shortcut, Gfx::ShareableBitmap const& icon)
 {
     auto it = m_menus.find(menu_id);
@@ -190,6 +191,7 @@ void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe
     menu_item->set_text(text);
     menu_item->set_shortcut_text(shortcut);
     menu_item->set_enabled(enabled);
+    menu_item->set_visible(visible);
     menu_item->set_checkable(checkable);
     menu_item->set_default(is_default);
     if (checkable)

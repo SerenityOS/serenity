@@ -81,6 +81,9 @@ public:
     Window* menu_window() { return m_menu_window.ptr(); }
     Window& ensure_menu_window(Gfx::IntPoint);
 
+    // Invalidates the menu window so that it gets rebuilt the next time it's showed.
+    void invalidate_menu_window();
+
     Window* window_menu_of() { return m_window_menu_of; }
     void set_window_menu_of(Window& window) { m_window_menu_of = window; }
     bool is_window_menu_open() const { return m_is_window_menu_open; }

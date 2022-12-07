@@ -12,10 +12,11 @@
 
 namespace WindowServer {
 
-MenuItem::MenuItem(Menu& menu, unsigned identifier, DeprecatedString const& text, DeprecatedString const& shortcut_text, bool enabled, bool checkable, bool checked, Gfx::Bitmap const* icon)
+MenuItem::MenuItem(Menu& menu, unsigned identifier, DeprecatedString const& text, DeprecatedString const& shortcut_text, bool enabled, bool visible, bool checkable, bool checked, Gfx::Bitmap const* icon)
     : m_menu(menu)
     , m_type(Text)
     , m_enabled(enabled)
+    , m_visible(visible)
     , m_checkable(checkable)
     , m_checked(checked)
     , m_identifier(identifier)
@@ -23,6 +24,7 @@ MenuItem::MenuItem(Menu& menu, unsigned identifier, DeprecatedString const& text
     , m_shortcut_text(shortcut_text)
     , m_icon(icon)
 {
+    menu.invalidate_menu_window();
 }
 
 MenuItem::MenuItem(Menu& menu, Type type)
@@ -37,6 +39,14 @@ void MenuItem::set_enabled(bool enabled)
         return;
     m_enabled = enabled;
     m_menu.redraw();
+}
+
+void MenuItem::set_visible(bool visible)
+{
+    if (m_visible == visible)
+        return;
+    m_visible = visible;
+    m_menu.invalidate_menu_window();
 }
 
 void MenuItem::set_checked(bool checked)

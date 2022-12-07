@@ -228,6 +228,19 @@ void Action::set_enabled(bool enabled)
     });
 }
 
+void Action::set_visible(bool visible)
+{
+    if (m_visible == visible)
+        return;
+    m_visible = visible;
+    for_each_toolbar_button([visible](auto& button) {
+        button.set_visible(visible);
+    });
+    for_each_menu_item([visible](auto& item) {
+        item.set_visible(visible);
+    });
+}
+
 void Action::set_checked(bool checked)
 {
     if (m_checked == checked)

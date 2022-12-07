@@ -105,6 +105,9 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool);
+
     bool is_checkable() const { return m_checkable; }
     void set_checkable(bool checkable) { m_checkable = checkable; }
 
@@ -146,6 +149,7 @@ private:
     Shortcut m_shortcut;
     Shortcut m_alternate_shortcut;
     bool m_enabled { true };
+    bool m_visible { true };
     bool m_checkable { false };
     bool m_checked { false };
     bool m_swallow_key_event_when_disabled { false };
