@@ -311,6 +311,38 @@ ErrorOr<String> String::replace(StringView needle, StringView replacement, Repla
     return StringUtils::replace(*this, needle, replacement, replace_mode);
 }
 
+Optional<size_t> String::find(u32 needle, size_t start) const
+{
+    size_t index = 0;
+    for (auto codepoint : code_points()) {
+        if (index < start) {
+            continue;
+        }
+
+        if (codepoint == needle) {
+            return index;
+        }
+
+        index++;
+    }
+    return {};
+}
+
+Optional<size_t> String::find_last(u32 needle) const
+{
+    // FIXME: I am naive.
+    size_t index = 0;
+    Optional<size_t> needle_index = 0;
+    for (auto codepoint : code_points()) {
+        if (codepoint == needle) {
+            needle_index = index;
+        }
+
+        index++;
+    }
+    return needle_index;
+}
+
 bool String::is_short_string() const
 {
     return reinterpret_cast<uintptr_t>(m_data) & SHORT_STRING_FLAG;

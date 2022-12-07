@@ -67,6 +67,11 @@ public:
 
     ErrorOr<String> replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const;
 
+    [[nodiscard]] Optional<size_t> find(u32 needle, size_t start = 0) const;
+    [[nodiscard]] Optional<size_t> find_last(u32 needle) const;
+
+    [[nodiscard]] Optional<size_t> find_bytes(StringView needle, size_t bytes_start = 0) const { return StringUtils::find(bytes_as_string_view(), needle, bytes_start); }
+
     [[nodiscard]] bool operator==(String const&) const;
     [[nodiscard]] bool operator!=(String const& other) const { return !(*this == other); }
 
