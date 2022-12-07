@@ -29,6 +29,9 @@ private:
 
     Gfx::IntRect frame_inner_rect() const;
 
+    virtual Optional<UISize> calculated_min_size() const override;
+    virtual Optional<UISize> calculated_preferred_size() const override;
+
     int value_at(Gfx::IntPoint) const;
 
     bool m_dragging { false };
