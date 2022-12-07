@@ -9,9 +9,11 @@
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <AK/Variant.h>
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>
+#    include <AK/String.h>
 #endif
 
 namespace AK {
@@ -58,6 +60,7 @@ public:
     JsonValue(char const*);
 #ifndef KERNEL
     JsonValue(DeprecatedString const&);
+    JsonValue(String const&);
 #endif
     JsonValue(StringView);
 
@@ -96,6 +99,20 @@ public:
     {
         if (is_string())
             return as_deprecated_string();
+        return serialized<StringBuilder>().to_deprecated_string();
+    }
+
+    String as_string_or(String const& alternative) const
+    {
+        if (is_string())
+            return as_string();
+        return alternative;
+    }
+
+    String to_string() const
+    {
+        if (is_string())
+            return as_string();
         return serialized<StringBuilder>();
     }
 #endif
@@ -137,70 +154,76 @@ public:
     i32 as_i32() const
     {
         VERIFY(is_i32());
-        return m_value.as_i32;
+        return m_value.get<i32>();
     }
 
     u32 as_u32() const
     {
         VERIFY(is_u32());
-        return m_value.as_u32;
+        return m_value.get<u32>();
     }
 
     i64 as_i64() const
     {
         VERIFY(is_i64());
-        return m_value.as_i64;
+        return m_value.get<i64>();
     }
 
     u64 as_u64() const
     {
         VERIFY(is_u64());
-        return m_value.as_u64;
+        return m_value.get<u64>();
     }
 
     bool as_bool() const
     {
         VERIFY(is_bool());
-        return m_value.as_bool;
+        return m_value.get<bool>();
     }
 
 #ifndef KERNEL
     DeprecatedString as_deprecated_string() const
     {
         VERIFY(is_string());
-        return *m_value.as_deprecated_string;
+        return m_value.get<String>().to_deprecated_string();
+    }
+
+    String as_string() const
+    {
+        VERIFY(is_string());
+        return m_value.get<String>();
     }
 #endif
 
     JsonObject& as_object()
     {
         VERIFY(is_object());
-        return *m_value.as_object;
+        return *m_value.get<JsonObject*>();
     }
 
     JsonObject const& as_object() const
     {
         VERIFY(is_object());
-        return *m_value.as_object;
+        return *m_value.get<JsonObject*>();
     }
 
     JsonArray& as_array()
     {
         VERIFY(is_array());
-        return *m_value.as_array;
+        return *m_value.get<JsonArray*>();
     }
 
     JsonArray const& as_array() const
     {
         VERIFY(is_array());
-        return *m_value.as_array;
+        return *m_value.get<JsonArray*>();
     }
 
 #if !defined(KERNEL)
     double as_double() const
     {
         VERIFY(is_double());
-        return m_value.as_double;
+        return m_value.get<double>();
     }
 #endif
 
@@ -269,21 +292,12 @@ private:
 
     Type m_type { Type::Null };
 
-    union {
+    Variant<Empty,
 #ifndef KERNEL
-        StringImpl* as_deprecated_string { nullptr };
+        String, double,
 #endif
-        JsonArray* as_array;
-        JsonObject* as_object;
-#if !defined(KERNEL)
-        double as_double;
-#endif
-        i32 as_i32;
-        u32 as_u32;
-        i64 as_i64;
-        u64 as_u64;
-        bool as_bool;
-    } m_value;
+        JsonArray*, JsonObject*, i32, u32, i64, u64, bool>
+        m_value;
 };
 
 #ifndef KERNEL

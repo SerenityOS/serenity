@@ -166,7 +166,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>().to_deprecated_string(); }
 
 private:
     OrderedHashMap<DeprecatedString, JsonValue> m_members;
@@ -187,7 +187,7 @@ inline typename Builder::OutputType JsonObject::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return MUST(builder.to_string());
 }
 
 template<typename Builder>
@@ -196,21 +196,21 @@ inline void JsonValue::serialize(Builder& builder) const
     switch (m_type) {
     case Type::String: {
         builder.append('\"');
-        builder.append_escaped_for_json({ m_value.as_deprecated_string->characters(), m_value.as_deprecated_string->length() });
+        builder.append_escaped_for_json(m_value.get<String>().bytes_as_string_view());
         builder.append('\"');
     } break;
     case Type::Array:
-        m_value.as_array->serialize(builder);
+        m_value.get<JsonArray*>()->serialize(builder);
         break;
     case Type::Object:
-        m_value.as_object->serialize(builder);
+        m_value.get<JsonObject*>()->serialize(builder);
         break;
     case Type::Bool:
-        builder.append(m_value.as_bool ? "true"sv : "false"sv);
+        builder.append(m_value.get<bool>() ? "true"sv : "false"sv);
         break;
 #if !defined(KERNEL)
     case Type::Double:
-        builder.appendff("{}", m_value.as_double);
+        builder.appendff("{}", m_value.get<double>());
         break;
 #endif
     case Type::Int32:
@@ -238,7 +238,7 @@ inline typename Builder::OutputType JsonValue::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return MUST(builder.to_string());
 }
 
 }

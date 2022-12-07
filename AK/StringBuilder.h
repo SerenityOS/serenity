@@ -16,7 +16,7 @@ namespace AK {
 
 class StringBuilder {
 public:
-    using OutputType = DeprecatedString;
+    using OutputType = String;
 
     static ErrorOr<StringBuilder> create(size_t initial_capacity = inline_capacity);
 

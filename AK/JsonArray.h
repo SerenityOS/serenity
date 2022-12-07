@@ -71,7 +71,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>().to_deprecated_string(); }
 
     template<typename Callback>
     void for_each(Callback callback) const
@@ -109,7 +109,7 @@ inline typename Builder::OutputType JsonArray::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return MUST(builder.to_string());
 }
 
 }

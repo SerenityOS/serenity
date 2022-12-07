@@ -6,11 +6,15 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/StringView.h>
 
 #ifndef KERNEL
 #    include <AK/JsonParser.h>
+#endif
+
+#ifdef AK_OS_SERENITY
+extern "C" size_t strlen(char const*);
+#else
+#    include <string.h>
 #endif
 
 namespace AK {
@@ -38,19 +42,20 @@ void JsonValue::copy_from(JsonValue const& other)
 {
     m_type = other.m_type;
     switch (m_type) {
+    case Type::Null:
+        m_value.set(Empty {});
+        break;
     case Type::String:
-        VERIFY(!m_value.as_deprecated_string);
-        m_value.as_deprecated_string = other.m_value.as_deprecated_string;
-        m_value.as_deprecated_string->ref();
+        m_value.set(String(other.m_value.get<String>()));
         break;
     case Type::Object:
-        m_value.as_object = new JsonObject(*other.m_value.as_object);
+        m_value.set(new JsonObject(*other.m_value.get<JsonObject*>()));
         break;
     case Type::Array:
-        m_value.as_array = new JsonArray(*other.m_value.as_array);
+        m_value.set(new JsonArray(*other.m_value.get<JsonArray*>()));
         break;
     default:
-        m_value.as_u64 = other.m_value.as_u64;
+        m_value.set(other.m_value.get<u64>());
         break;
     }
 }
@@ -58,7 +63,7 @@ void JsonValue::copy_from(JsonValue const& other)
 JsonValue::JsonValue(JsonValue&& other)
 {
     m_type = exchange(other.m_type, Type::Null);
-    m_value.as_u64 = exchange(other.m_value.as_u64, 0);
+    m_value = exchange(other.m_value, Variant<Empty>());
 }
 
 JsonValue& JsonValue::operator=(JsonValue&& other)
@@ -66,7 +71,7 @@ JsonValue& JsonValue::operator=(JsonValue&& other)
     if (this != &other) {
         clear();
         m_type = exchange(other.m_type, Type::Null);
-        m_value.as_u64 = exchange(other.m_value.as_u64, 0);
+        m_value = exchange(other.m_value, Variant<Empty>());
     }
     return *this;
 }
@@ -79,7 +84,7 @@ bool JsonValue::equals(JsonValue const& other) const
     if (is_bool() && other.is_bool() && as_bool() == other.as_bool())
         return true;
 
-    if (is_string() && other.is_string() && as_deprecated_string() == other.as_deprecated_string())
+    if (is_string() && other.is_string() && as_string() == other.as_string())
         return true;
 
 #if !defined(KERNEL)
@@ -114,49 +119,49 @@ bool JsonValue::equals(JsonValue const& other) const
 JsonValue::JsonValue(int value)
     : m_type(Type::Int32)
 {
-    m_value.as_i32 = value;
+    m_value.set(static_cast<i32>(value));
 }
 
 JsonValue::JsonValue(unsigned value)
     : m_type(Type::UnsignedInt32)
 {
-    m_value.as_u32 = value;
+    m_value.set(static_cast<u32>(value));
 }
 
 JsonValue::JsonValue(long value)
     : m_type(sizeof(long) == 8 ? Type::Int64 : Type::Int32)
 {
     if constexpr (sizeof(long) == 8)
-        m_value.as_i64 = value;
+        m_value.set(static_cast<i64>(value));
     else
-        m_value.as_i32 = value;
+        m_value.set(static_cast<i32>(value));
 }
 
 JsonValue::JsonValue(unsigned long value)
     : m_type(sizeof(long) == 8 ? Type::UnsignedInt64 : Type::UnsignedInt32)
 {
     if constexpr (sizeof(long) == 8)
-        m_value.as_u64 = value;
+        m_value.set(static_cast<u64>(value));
     else
-        m_value.as_u32 = value;
+        m_value.set(static_cast<u32>(value));
 }
 
 JsonValue::JsonValue(long long value)
     : m_type(Type::Int64)
 {
     static_assert(sizeof(long long unsigned) == 8);
-    m_value.as_i64 = value;
+    m_value.set(static_cast<i64>(value));
 }
 
 JsonValue::JsonValue(long long unsigned value)
     : m_type(Type::UnsignedInt64)
 {
     static_assert(sizeof(long long unsigned) == 8);
-    m_value.as_u64 = value;
+    m_value.set(static_cast<u64>(value));
 }
 
 JsonValue::JsonValue(char const* cstring)
-    : JsonValue(DeprecatedString(cstring))
+    : JsonValue(StringView(cstring, strlen(cstring)))
 {
 }
 
@@ -164,7 +169,7 @@ JsonValue::JsonValue(char const* cstring)
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
 {
-    m_value.as_double = value;
+    m_value.set(value);
 }
 #endif
 
@@ -174,57 +179,59 @@ JsonValue::JsonValue(DeprecatedString const& value)
         m_type = Type::Null;
     } else {
         m_type = Type::String;
-        m_value.as_deprecated_string = const_cast<StringImpl*>(value.impl());
-        m_value.as_deprecated_string->ref();
+        m_value.set(MUST(String::from_deprecated_string(value)));
     }
 }
 
+JsonValue::JsonValue(String const& value)
+{
+    m_type = Type::String;
+    m_value.set(String(value));
+}
+
 JsonValue::JsonValue(StringView value)
-    : JsonValue(value.to_deprecated_string())
+    : JsonValue(MUST(String::from_utf8(value)))
 {
 }
 
 JsonValue::JsonValue(JsonObject const& value)
     : m_type(Type::Object)
 {
-    m_value.as_object = new JsonObject(value);
+    m_value.set(new JsonObject(value));
 }
 
 JsonValue::JsonValue(JsonArray const& value)
     : m_type(Type::Array)
 {
-    m_value.as_array = new JsonArray(value);
+    m_value.set(new JsonArray(value));
 }
 
 JsonValue::JsonValue(JsonObject&& value)
     : m_type(Type::Object)
 {
-    m_value.as_object = new JsonObject(move(value));
+    m_value.set(new JsonObject(move(value)));
 }
 
 JsonValue::JsonValue(JsonArray&& value)
     : m_type(Type::Array)
 {
-    m_value.as_array = new JsonArray(move(value));
+    m_value.set(new JsonArray(move(value)));
 }
 
 void JsonValue::clear()
 {
     switch (m_type) {
-    case Type::String:
-        m_value.as_deprecated_string->unref();
-        break;
     case Type::Object:
-        delete m_value.as_object;
+        delete m_value.get<JsonObject*>();
         break;
     case Type::Array:
-        delete m_value.as_array;
+        delete m_value.get<JsonArray*>();
         break;
     default:
         break;
     }
     m_type = Type::Null;
-    m_value.as_deprecated_string = nullptr;
+    m_value.set(Empty {});
 }
 
 #ifndef KERNEL
