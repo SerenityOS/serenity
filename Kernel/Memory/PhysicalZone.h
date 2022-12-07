@@ -62,7 +62,7 @@ private:
         }
 
         // This bucket's index in the m_buckets array. (Redundant data kept here for convenience.)
-        size_t order { 0 };
+        u8 order { 0 };
 
         // This is the start of the freelist for this buddy size.
         // It's an index into the global PhysicalPageEntry array (offset by this PhysicalRegion's base.)
@@ -75,7 +75,7 @@ private:
         Bitmap bitmap;
     };
 
-    static constexpr size_t max_order = 12;
+    static constexpr decltype(BuddyBucket::order) max_order = 12;
     BuddyBucket m_buckets[max_order + 1];
 
     PhysicalPageEntry& get_freelist_entry(ChunkIndex) const;
