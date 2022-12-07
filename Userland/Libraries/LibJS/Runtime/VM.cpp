@@ -608,17 +608,6 @@ ThrowCompletionOr<Reference> VM::resolve_binding(FlyString const& name, Environm
     //       But this is not actually correct as GetIdentifierReference (or really the methods it calls) can throw.
 }
 
-// 7.3.33 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
-ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor)
-{
-    for (auto& method : constructor.private_methods())
-        TRY(object.private_method_or_accessor_add(method));
-
-    for (auto& field : constructor.fields())
-        TRY(object.define_field(field));
-    return {};
-}
-
 // 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
 ThrowCompletionOr<Value> VM::resolve_this_binding()
 {

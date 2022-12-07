@@ -231,7 +231,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
         ordinary_call_bind_this(callee_context, this_argument);
 
         // b. Let initializeResult be Completion(InitializeInstanceElements(thisArgument, F)).
-        auto initialize_result = vm.initialize_instance_elements(*this_argument, *this);
+        auto initialize_result = this_argument->initialize_instance_elements(*this);
 
         // c. If initializeResult is an abrupt completion, then
         if (initialize_result.is_throw_completion()) {

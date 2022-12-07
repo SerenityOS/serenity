@@ -524,7 +524,7 @@ Completion SuperCall::execute(Interpreter& interpreter) const
     [[maybe_unused]] auto& f = this_er.function_object();
 
     // 11. Perform ? InitializeInstanceElements(result, F).
-    TRY(vm.initialize_instance_elements(*result, f));
+    TRY(result->initialize_instance_elements(f));
 
     // 12. Return result.
     return Value { result };

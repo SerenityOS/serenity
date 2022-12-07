@@ -206,8 +206,6 @@ public:
     Function<void(Promise&)> on_promise_unhandled_rejection;
     Function<void(Promise&)> on_promise_rejection_handled;
 
-    ThrowCompletionOr<void> initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor);
-
     CustomData* custom_data() { return m_custom_data; }
 
     ThrowCompletionOr<void> destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value);

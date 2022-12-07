@@ -606,6 +606,27 @@ ThrowCompletionOr<void> Object::define_field(ClassFieldDefinition const& field)
     return {};
 }
 
+// 7.3.33 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
+ThrowCompletionOr<void> Object::initialize_instance_elements(ECMAScriptFunctionObject& constructor)
+{
+    // 1. Let methods be the value of constructor.[[PrivateMethods]].
+    // 2. For each PrivateElement method of methods, do
+    for (auto const& method : constructor.private_methods()) {
+        // a. Perform ? PrivateMethodOrAccessorAdd(O, method).
+        TRY(private_method_or_accessor_add(method));
+    }
+
+    // 3. Let fields be the value of constructor.[[Fields]].
+    // 4. For each element fieldRecord of fields, do
+    for (auto const& field : constructor.fields()) {
+        // a. Perform ? DefineField(O, fieldRecord).
+        TRY(define_field(field));
+    }
+
+    // 5. Return unused.
+    return {};
+}
+
 // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
 // 10.1.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-getprototypeof

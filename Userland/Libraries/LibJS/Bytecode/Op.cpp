@@ -678,7 +678,7 @@ ThrowCompletionOr<void> SuperCall::execute_impl(Bytecode::Interpreter& interpret
     // NOTE: This is implied by the strong C++ type.
 
     // 11. Perform ? InitializeInstanceElements(result, F).
-    TRY(vm.initialize_instance_elements(*result, f));
+    TRY(result->initialize_instance_elements(f));
 
     // 12. Return result.
     interpreter.accumulator() = result;
