@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/CircularBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/EnumBits.h>
@@ -19,6 +20,7 @@
 #include <AK/Variant.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/SocketAddress.h>
+#include <LibIPC/Forward.h>
 #include <errno.h>
 #include <netdb.h>
 
@@ -297,6 +299,12 @@ public:
     virtual void close() override;
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode) override;
     virtual ErrorOr<void> truncate(off_t length) override;
+
+    int leak_fd(Badge<::IPC::File>)
+    {
+        m_should_close_file_descriptor = ShouldCloseFileDescriptor::No;
+        return m_fd;
+    }
 
     virtual ~File() override
     {
