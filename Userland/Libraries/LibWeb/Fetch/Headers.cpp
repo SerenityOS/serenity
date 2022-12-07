@@ -154,7 +154,7 @@ WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, Depr
     if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
         return {};
 
-    // 5. Otherwise, if this’s guard is "request-no-cors" and name/value is not a no-CORS-safelisted request-header, return.
+    // 5. Otherwise, if this’s guard is "request-no-cors" and (name, value) is not a no-CORS-safelisted request-header, return.
     if (m_guard == Guard::RequestNoCORS && !Infrastructure::is_no_cors_safelisted_request_header(header))
         return {};
 
@@ -253,7 +253,7 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
             .value = temporary_value.release_value(),
         };
 
-        // 4. If name/temporaryValue is not a no-CORS-safelisted request-header, then return.
+        // 4. If (name, temporaryValue) is not a no-CORS-safelisted request-header, then return.
         if (!Infrastructure::is_no_cors_safelisted_request_header(temporary_header))
             return {};
     }
