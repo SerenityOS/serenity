@@ -923,7 +923,10 @@ RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
             }
         }
     });
-    VERIFY(!page.is_null());
+
+    if (page.is_null())
+        dbgln("MM: couldn't find free physical page. Continuing...");
+
     return page;
 }
 
