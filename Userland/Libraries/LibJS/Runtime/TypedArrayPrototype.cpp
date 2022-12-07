@@ -1197,7 +1197,8 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArra
         auto value = TRY(src->get(k));
 
         // c. Let targetIndex be 𝔽(targetOffset + k).
-        CanonicalIndex target_index(CanonicalIndex::Type::Index, target_offset + k);
+        // NOTE: We verify above that target_offset + source_length is valid, so this cannot fail.
+        auto target_index = MUST(CanonicalIndex::from_double(vm, CanonicalIndex::Type::Index, target_offset + k));
 
         // d. Perform ? IntegerIndexedElementSet(target, targetIndex, value).
         // FIXME: This is very awkward.
@@ -1679,7 +1680,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
         value = TRY(value.to_number(vm));
 
     // 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
-    if (!is_valid_integer_index(*typed_array, CanonicalIndex(CanonicalIndex::Type::Index, actual_index)))
+    if (!is_valid_integer_index(*typed_array, TRY(CanonicalIndex::from_double(vm, CanonicalIndex::Type::Index, actual_index))))
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidIntegerIndex, actual_index);
 
     // 10. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
