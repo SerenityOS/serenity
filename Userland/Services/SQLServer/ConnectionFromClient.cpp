@@ -49,7 +49,7 @@ Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedStr
     return { {} };
 }
 
-void ConnectionFromClient::disconnect(u64 connection_id)
+void ConnectionFromClient::disconnect(SQL::ConnectionID connection_id)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::disconnect(connection_id: {})", connection_id);
     auto database_connection = DatabaseConnection::connection_for(connection_id);
@@ -59,7 +59,7 @@ void ConnectionFromClient::disconnect(u64 connection_id)
         dbgln("Database connection has disappeared");
 }
 
-Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(u64 connection_id, DeprecatedString const& sql)
+Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(SQL::ConnectionID connection_id, DeprecatedString const& sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement(connection_id: {}, sql: '{}')", connection_id, sql);
 
@@ -79,7 +79,7 @@ Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_stat
     return { result.value() };
 }
 
-Messages::SQLServer::ExecuteStatementResponse ConnectionFromClient::execute_statement(u64 statement_id, Vector<SQL::Value> const& placeholder_values)
+Messages::SQLServer::ExecuteStatementResponse ConnectionFromClient::execute_statement(SQL::StatementID statement_id, Vector<SQL::Value> const& placeholder_values)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::execute_query_statement(statement_id: {})", statement_id);
 

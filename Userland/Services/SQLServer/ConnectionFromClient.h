@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibIPC/ConnectionFromClient.h>
+#include <LibSQL/Type.h>
 #include <SQLServer/SQLClientEndpoint.h>
 #include <SQLServer/SQLServerEndpoint.h>
 
@@ -32,9 +33,9 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
     virtual Messages::SQLServer::ConnectResponse connect(DeprecatedString const&) override;
-    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(u64, DeprecatedString const&) override;
-    virtual Messages::SQLServer::ExecuteStatementResponse execute_statement(u64, Vector<SQL::Value> const& placeholder_values) override;
-    virtual void disconnect(u64) override;
+    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(SQL::ConnectionID, DeprecatedString const&) override;
+    virtual Messages::SQLServer::ExecuteStatementResponse execute_statement(SQL::StatementID, Vector<SQL::Value> const& placeholder_values) override;
+    virtual void disconnect(SQL::ConnectionID) override;
 
     DeprecatedString m_database_path;
 };

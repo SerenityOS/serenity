@@ -85,4 +85,8 @@ enum class Nulls {
     Last,
 };
 
+using ConnectionID = u64;
+using StatementID = u64;
+using ExecutionID = u64;
+
 }

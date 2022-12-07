@@ -152,7 +152,7 @@ private:
     bool m_keep_running { true };
     DeprecatedString m_database_name {};
     AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
-    u64 m_connection_id { 0 };
+    SQL::ConnectionID m_connection_id { 0 };
     Core::EventLoop m_loop;
     OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
