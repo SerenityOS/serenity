@@ -62,7 +62,7 @@ public:
     Vector(std::initializer_list<T> list)
     requires(!IsLvalueReference<T>)
     {
-        ensure_capacity(list.size());
+        MUST(try_ensure_capacity(list.size()));
         for (auto& item : list)
             unchecked_append(item);
     }
@@ -85,7 +85,7 @@ public:
 
     Vector(Vector const& other)
     {
-        ensure_capacity(other.size());
+        MUST(try_ensure_capacity(other.size()));
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
@@ -93,7 +93,7 @@ public:
     explicit Vector(Span<T const> other)
     requires(!IsLvalueReference<T>)
     {
-        ensure_capacity(other.size());
+        MUST(try_ensure_capacity(other.size()));
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
@@ -101,7 +101,7 @@ public:
     template<size_t other_inline_capacity>
     Vector(Vector<T, other_inline_capacity> const& other)
     {
-        ensure_capacity(other.size());
+        MUST(try_ensure_capacity(other.size()));
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
@@ -351,7 +351,7 @@ public:
     {
         if (this != &other) {
             clear();
-            ensure_capacity(other.size());
+            MUST(try_ensure_capacity(other.size()));
             TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
             m_size = other.size();
         }
@@ -362,7 +362,7 @@ public:
     Vector& operator=(Vector<T, other_inline_capacity> const& other)
     {
         clear();
-        ensure_capacity(other.size());
+        MUST(try_ensure_capacity(other.size()));
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
         return *this;
@@ -688,6 +688,7 @@ public:
         return try_resize(new_size, true);
     }
 
+#ifndef KERNEL
     void grow_capacity(size_t needed_capacity)
     {
         MUST(try_grow_capacity(needed_capacity));
@@ -697,6 +698,7 @@ public:
     {
         MUST(try_ensure_capacity(needed_capacity));
     }
+#endif
 
     void shrink(size_t new_size, bool keep_capacity = false)
     {

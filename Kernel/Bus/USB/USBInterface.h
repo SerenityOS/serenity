@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <Kernel/Bus/USB/USBDescriptors.h>
 
 namespace Kernel::USB {
 
@@ -20,7 +21,7 @@ public:
         , m_descriptor(descriptor)
         , m_endpoint_descriptors(endpoint_descriptors)
     {
-        m_endpoint_descriptors.ensure_capacity(descriptor.number_of_endpoints);
+        MUST(m_endpoint_descriptors.try_ensure_capacity(descriptor.number_of_endpoints));
     }
 
     Vector<USBEndpointDescriptor> const& endpoints() const { return m_endpoint_descriptors; }

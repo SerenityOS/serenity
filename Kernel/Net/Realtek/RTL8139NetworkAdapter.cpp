@@ -131,7 +131,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
     , m_rx_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX).release_value_but_fixme_should_propagate_errors(), "RTL8139 RX"sv, Memory::Region::Access::ReadWrite).release_value())
     , m_packet_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(PACKET_SIZE_MAX).release_value_but_fixme_should_propagate_errors(), "RTL8139 Packet buffer"sv, Memory::Region::Access::ReadWrite).release_value())
 {
-    m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
+    MUST(m_tx_buffers.try_ensure_capacity(RTL8139_TX_BUFFER_COUNT));
 
     dmesgln("RTL8139: Found @ {}", pci_address());
 

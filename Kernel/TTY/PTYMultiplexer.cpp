@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {
     m_freelist.with([&](auto& freelist) {
-        freelist.ensure_capacity(max_pty_pairs);
+        MUST(freelist.try_ensure_capacity(max_pty_pairs));
         for (int i = max_pty_pairs; i > 0; --i)
             freelist.unchecked_append(i - 1);
     });

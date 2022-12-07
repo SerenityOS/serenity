@@ -22,7 +22,7 @@ public:
         : m_device(device)
         , m_descriptor(descriptor)
     {
-        m_interfaces.ensure_capacity(descriptor.number_of_interfaces);
+        MUST(m_interfaces.try_ensure_capacity(descriptor.number_of_interfaces));
     }
 
     Device const& device() const { return m_device; }
