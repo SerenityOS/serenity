@@ -19,99 +19,29 @@ namespace Core::Stream {
 /// using a single read/write head.
 class FixedMemoryStream final : public SeekableStream {
 public:
-    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(Bytes bytes)
-    {
-        return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
-    }
+    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(Bytes bytes);
+    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(ReadonlyBytes bytes);
 
-    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(ReadonlyBytes bytes)
-    {
-        return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
-    }
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+    virtual ErrorOr<void> truncate(off_t) override;
+    virtual ErrorOr<Bytes> read(Bytes bytes) override;
 
-    virtual bool is_eof() const override { return m_offset >= m_bytes.size(); }
-    virtual bool is_open() const override { return true; }
-    // FIXME: It doesn't make sense to close an memory stream. Therefore, we don't do anything here. Is that fine?
-    virtual void close() override { }
-    // FIXME: It doesn't make sense to truncate a memory stream. Therefore, we don't do anything here. Is that fine?
-    virtual ErrorOr<void> truncate(off_t) override { return Error::from_errno(ENOTSUP); }
+    virtual ErrorOr<off_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override;
 
-    virtual ErrorOr<Bytes> read(Bytes bytes) override
-    {
-        auto to_read = min(remaining(), bytes.size());
-        if (to_read == 0)
-            return Bytes {};
+    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override;
+    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override;
 
-        m_bytes.slice(m_offset, to_read).copy_to(bytes);
-        m_offset += to_read;
-        return bytes.trim(to_read);
-    }
-
-    virtual ErrorOr<off_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override
-    {
-        switch (seek_mode) {
-        case SeekMode::SetPosition:
-            if (offset > static_cast<i64>(m_bytes.size()))
-                return Error::from_string_literal("Offset past the end of the stream memory");
-
-            m_offset = offset;
-            break;
-        case SeekMode::FromCurrentPosition:
-            if (offset + static_cast<i64>(m_offset) > static_cast<i64>(m_bytes.size()))
-                return Error::from_string_literal("Offset past the end of the stream memory");
-
-            m_offset += offset;
-            break;
-        case SeekMode::FromEndPosition:
-            if (offset > static_cast<i64>(m_bytes.size()))
-                return Error::from_string_literal("Offset past the start of the stream memory");
-
-            m_offset = m_bytes.size() - offset;
-            break;
-        }
-        return static_cast<off_t>(m_offset);
-    }
-
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
-    {
-        VERIFY(m_writing_enabled);
-
-        // FIXME: Can this not error?
-        auto const nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
-        m_offset += nwritten;
-        return nwritten;
-    }
-    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override
-    {
-        if (remaining() < bytes.size())
-            return Error::from_string_literal("Write of entire buffer ends past the memory area");
-
-        TRY(write(bytes));
-        return {};
-    }
-
-    Bytes bytes()
-    {
-        VERIFY(m_writing_enabled);
-        return m_bytes;
-    }
-    ReadonlyBytes bytes() const { return m_bytes; }
-    size_t offset() const { return m_offset; }
-    size_t remaining() const { return m_bytes.size() - m_offset; }
-
-protected:
-    explicit FixedMemoryStream(Bytes bytes)
-        : m_bytes(bytes)
-    {
-    }
-
-    explicit FixedMemoryStream(ReadonlyBytes bytes)
-        : m_bytes({ const_cast<u8*>(bytes.data()), bytes.size() })
-        , m_writing_enabled(false)
-    {
-    }
+    Bytes bytes();
+    ReadonlyBytes bytes() const;
+    size_t offset() const;
+    size_t remaining() const;
 
 private:
+    explicit FixedMemoryStream(Bytes bytes);
+    explicit FixedMemoryStream(ReadonlyBytes bytes);
+
     Bytes m_bytes;
     size_t m_offset { 0 };
     bool m_writing_enabled { true };
