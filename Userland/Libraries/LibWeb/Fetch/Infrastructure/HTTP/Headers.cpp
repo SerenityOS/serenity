@@ -569,13 +569,13 @@ bool is_no_cors_safelisted_request_header_name(ReadonlyBytes header_name)
 // https://fetch.spec.whatwg.org/#no-cors-safelisted-request-header
 bool is_no_cors_safelisted_request_header(Header const& header)
 {
-    // To determine whether a header header is a no-CORS-safelisted request-header, run these steps:
+    // To determine whether a header (name, value) is a no-CORS-safelisted request-header, run these steps:
 
-    // 1. If header’s name is not a no-CORS-safelisted request-header name, then return false.
+    // 1. If name is not a no-CORS-safelisted request-header name, then return false.
     if (!is_no_cors_safelisted_request_header_name(header.name))
         return false;
 
-    // 2. Return whether header is a CORS-safelisted request-header.
+    // 2. Return whether (name, value) is a CORS-safelisted request-header.
     return is_cors_safelisted_request_header(header);
 }
 
