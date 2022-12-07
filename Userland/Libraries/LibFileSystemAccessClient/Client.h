@@ -18,7 +18,7 @@
 
 namespace FileSystemAccessClient {
 
-using Result = ErrorOr<NonnullRefPtr<Core::File>>;
+using DeprecatedResult = ErrorOr<NonnullRefPtr<Core::File>>;
 
 class Client final
     : public IPC::ConnectionToServer<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
@@ -26,10 +26,10 @@ class Client final
     IPC_CLIENT_CONNECTION(Client, "/tmp/session/%sid/portal/filesystemaccess"sv)
 
 public:
-    Result try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path);
-    Result try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode);
-    Result try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
-    Result try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
+    DeprecatedResult try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path);
+    DeprecatedResult try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode);
+    DeprecatedResult try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
+    DeprecatedResult try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
 
     static Client& the();
 
@@ -45,10 +45,10 @@ private:
     virtual void handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& fd, Optional<DeprecatedString> const& chosen_file) override;
 
     int get_new_id();
-    Result handle_promise(int);
+    DeprecatedResult handle_promise(int);
 
     struct PromiseAndWindow {
-        RefPtr<Core::Promise<Result>> promise {};
+        RefPtr<Core::Promise<DeprecatedResult>> promise {};
         GUI::Window* parent_window { nullptr };
     };
 
