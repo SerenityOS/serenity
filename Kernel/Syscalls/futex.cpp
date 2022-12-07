@@ -25,7 +25,7 @@ void Process::clear_futex_queues_on_exec()
             if (futex_key.private_.address_space != address_space)
                 return false;
             bool did_wake_all;
-            futex_queue->wake_all(did_wake_all);
+            MUST(futex_queue->wake_all(did_wake_all));
             VERIFY(did_wake_all); // No one should be left behind...
             return true;
         });
@@ -158,7 +158,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         if (!futex_queue)
             return 0;
         bool is_empty;
-        u32 woke_count = futex_queue->wake_n(count, bitmask, is_empty);
+        u32 woke_count = TRY(futex_queue->wake_n(count, bitmask, is_empty));
         if (is_empty) {
             // If there are no more waiters, we want to get rid of the futex!
             remove_futex_queue(futex_key);

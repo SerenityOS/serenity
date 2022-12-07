@@ -20,8 +20,8 @@ public:
     virtual ~FutexQueue();
 
     ErrorOr<u32> wake_n_requeue(u32, Function<ErrorOr<FutexQueue*>()> const&, u32, bool&, bool&);
-    u32 wake_n(u32, Optional<u32> const&, bool&);
-    u32 wake_all(bool&);
+    ErrorOr<u32> wake_n(u32, Optional<u32> const&, bool&);
+    ErrorOr<u32> wake_all(bool&);
 
     template<class... Args>
     ErrorOr<Thread::BlockResult> wait_on(Thread::BlockTimeout const& timeout, Args&&... args)
