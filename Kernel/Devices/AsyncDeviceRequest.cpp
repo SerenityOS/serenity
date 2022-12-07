@@ -51,16 +51,15 @@ void AsyncDeviceRequest::request_finished()
     m_queue.wake_all();
 }
 
-auto AsyncDeviceRequest::wait(Time* timeout) -> RequestWaitResult
+ErrorOr<AsyncDeviceRequest::RequestWaitResult> AsyncDeviceRequest::wait(Time* timeout)
 {
     VERIFY(!m_parent_request);
     auto request_result = get_request_result();
     if (is_completed_result(request_result))
-        return { request_result, Thread::BlockResult::NotBlocked };
+        return RequestWaitResult { request_result, Thread::BlockResult::NotBlocked };
 
-    // FIXME propagate this error
-    auto wait_result = MUST(m_queue.wait_on(Thread::BlockTimeout(false, timeout), name()));
-    return { get_request_result(), wait_result };
+    auto wait_result = TRY(m_queue.wait_on(Thread::BlockTimeout(false, timeout), name()));
+    return RequestWaitResult { get_request_result(), wait_result };
 }
 
 auto AsyncDeviceRequest::get_request_result() const -> RequestResult

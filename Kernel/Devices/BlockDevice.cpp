@@ -69,7 +69,7 @@ bool BlockDevice::read_block(u64 index, UserOrKernelBuffer& buffer)
         return false;
     }
     auto read_request = read_request_or_error.release_value();
-    switch (read_request->wait().request_result()) {
+    switch (read_request->wait().release_value_but_fixme_should_propagate_errors().request_result()) {
     case AsyncDeviceRequest::Success:
         return true;
     case AsyncDeviceRequest::Failure:
@@ -95,7 +95,7 @@ bool BlockDevice::write_block(u64 index, UserOrKernelBuffer const& buffer)
         return false;
     }
     auto write_request = write_request_or_error.release_value();
-    switch (write_request->wait().request_result()) {
+    switch (write_request->wait().release_value_but_fixme_should_propagate_errors().request_result()) {
     case AsyncDeviceRequest::Success:
         return true;
     case AsyncDeviceRequest::Failure:
