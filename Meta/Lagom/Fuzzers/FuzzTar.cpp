@@ -12,7 +12,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto input_stream_or_error = Core::Stream::MemoryStream::construct({ data, size });
+    auto input_stream_or_error = Core::Stream::FixedMemoryStream::construct({ data, size });
 
     if (input_stream_or_error.is_error())
         return 0;

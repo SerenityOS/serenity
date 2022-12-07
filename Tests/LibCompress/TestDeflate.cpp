@@ -29,7 +29,7 @@ TEST_CASE(canonical_code_simple)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = MUST(Core::Stream::MemoryStream::construct(input));
+    auto memory_stream = MUST(Core::Stream::FixedMemoryStream::construct(input));
     auto bit_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(move(memory_stream)));
 
     for (size_t idx = 0; idx < 9; ++idx)
@@ -49,7 +49,7 @@ TEST_CASE(canonical_code_complex)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = MUST(Core::Stream::MemoryStream::construct(input));
+    auto memory_stream = MUST(Core::Stream::FixedMemoryStream::construct(input));
     auto bit_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(move(memory_stream)));
 
     for (size_t idx = 0; idx < 12; ++idx)
