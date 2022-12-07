@@ -355,7 +355,7 @@ public:
     private:
         HTTPHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(Core::Stream::FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(HTTP::Job::construct(move(request), *m_output_stream))
         {
@@ -381,7 +381,7 @@ public:
 
         Optional<u32> m_response_code;
         ByteBuffer m_stream_backing_buffer;
-        NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
+        NonnullOwnPtr<Core::Stream::FixedMemoryStream> m_output_stream;
         NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
         NonnullRefPtr<HTTP::Job> m_job;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
@@ -434,7 +434,7 @@ public:
     private:
         HTTPSHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(Core::Stream::FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(HTTP::HttpsJob::construct(move(request), *m_output_stream))
         {
@@ -460,7 +460,7 @@ public:
 
         Optional<u32> m_response_code;
         ByteBuffer m_stream_backing_buffer;
-        NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
+        NonnullOwnPtr<Core::Stream::FixedMemoryStream> m_output_stream;
         NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
         NonnullRefPtr<HTTP::HttpsJob> m_job;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
@@ -503,7 +503,7 @@ public:
     private:
         GeminiHeadlessRequest(Gemini::GeminiRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(Core::Stream::FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(Gemini::Job::construct(move(request), *m_output_stream))
         {
@@ -529,7 +529,7 @@ public:
 
         Optional<u32> m_response_code;
         ByteBuffer m_stream_backing_buffer;
-        NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
+        NonnullOwnPtr<Core::Stream::FixedMemoryStream> m_output_stream;
         NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
         NonnullRefPtr<Gemini::Job> m_job;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;

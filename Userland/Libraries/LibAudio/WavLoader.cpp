@@ -35,7 +35,7 @@ Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(Bytes buffer)
 {
-    auto stream = LOADER_TRY(Core::Stream::MemoryStream::construct(buffer));
+    auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -115,7 +115,7 @@ static ErrorOr<double> read_sample(Core::Stream::Stream& stream)
 LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
 {
     FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::try_create(samples_to_read));
-    auto stream = LOADER_TRY(Core::Stream::MemoryStream::construct(move(data)));
+    auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(move(data)));
 
     switch (m_sample_format) {
     case PcmSampleFormat::Uint8:

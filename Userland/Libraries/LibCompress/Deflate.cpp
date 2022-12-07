@@ -309,7 +309,7 @@ void DeflateDecompressor::close()
 
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(Core::Stream::MemoryStream::construct(bytes));
+    auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
     DeflateDecompressor deflate_stream { move(memory_stream) };
     DuplexMemoryStream output_stream;
 

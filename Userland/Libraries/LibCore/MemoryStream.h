@@ -15,16 +15,18 @@
 
 namespace Core::Stream {
 
-class MemoryStream final : public SeekableStream {
+/// A stream class that allows for reading/writing on a preallocated memory area
+/// using a single read/write head.
+class FixedMemoryStream final : public SeekableStream {
 public:
-    static ErrorOr<NonnullOwnPtr<MemoryStream>> construct(Bytes bytes)
+    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(Bytes bytes)
     {
-        return adopt_nonnull_own_or_enomem<MemoryStream>(new (nothrow) MemoryStream(bytes));
+        return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
     }
 
-    static ErrorOr<NonnullOwnPtr<MemoryStream>> construct(ReadonlyBytes bytes)
+    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(ReadonlyBytes bytes)
     {
-        return adopt_nonnull_own_or_enomem<MemoryStream>(new (nothrow) MemoryStream(bytes));
+        return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
     }
 
     virtual bool is_eof() const override { return m_offset >= m_bytes.size(); }
@@ -98,12 +100,12 @@ public:
     size_t remaining() const { return m_bytes.size() - m_offset; }
 
 protected:
-    explicit MemoryStream(Bytes bytes)
+    explicit FixedMemoryStream(Bytes bytes)
         : m_bytes(bytes)
     {
     }
 
-    explicit MemoryStream(ReadonlyBytes bytes)
+    explicit FixedMemoryStream(ReadonlyBytes bytes)
         : m_bytes({ const_cast<u8*>(bytes.data()), bytes.size() })
         , m_writing_enabled(false)
     {

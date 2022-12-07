@@ -153,7 +153,7 @@ Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes
 
 ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(Core::Stream::MemoryStream::construct(bytes));
+    auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
     auto gzip_stream = make<GzipDecompressor>(move(memory_stream));
     DuplexMemoryStream output_stream;
 
