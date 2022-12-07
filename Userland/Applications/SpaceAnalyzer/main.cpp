@@ -391,15 +391,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     });
-    // TODO: Both these menus could've been implemented as one, but it's impossible to change action text after it's shown once.
-    auto folder_node_context_menu = GUI::Menu::construct();
-    folder_node_context_menu->add_action(*open_folder_action);
-    folder_node_context_menu->add_action(*copy_path_action);
-    folder_node_context_menu->add_action(*delete_action);
-    auto file_node_context_menu = GUI::Menu::construct();
-    file_node_context_menu->add_action(*open_containing_folder_action);
-    file_node_context_menu->add_action(*copy_path_action);
-    file_node_context_menu->add_action(*delete_action);
+
+    auto context_menu = GUI::Menu::construct();
+    context_menu->add_action(*open_folder_action);
+    context_menu->add_action(*open_containing_folder_action);
+    context_menu->add_action(*copy_path_action);
+    context_menu->add_action(*delete_action);
 
     // Configure event handlers.
     breadcrumbbar.on_segment_click = [&](size_t index) {
@@ -438,10 +435,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         delete_action->set_enabled(is_removable(selected_node_path));
         if (Core::File::is_directory(selected_node_path)) {
-            folder_node_context_menu->popup(event.screen_position());
+            open_folder_action->set_visible(true);
+            open_containing_folder_action->set_visible(false);
         } else {
-            file_node_context_menu->popup(event.screen_position());
+            open_folder_action->set_visible(false);
+            open_containing_folder_action->set_visible(true);
         }
+        context_menu->popup(event.screen_position());
     };
 
     // At startup automatically do an analysis of root.
