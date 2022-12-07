@@ -62,36 +62,24 @@ WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
     auto& realm = this->realm();
     auto name = name_string.bytes();
 
-    // 1. If name is not a header name, then throw a TypeError.
-    if (!Infrastructure::is_header_name(name))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name"sv };
-
-    // 2. If this’s guard is "immutable", then throw a TypeError.
-    if (m_guard == Guard::Immutable)
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
-
-    // 3. Otherwise, if this's guard is "request" and (name, ``) is a forbidden request-header, return.
-    // NOTE: Passing a dummy header value to forbidden request-header ought not to have any negative repercussions.
+    // 1. If validating (name, ``) for headers returns false, then return.
+    // NOTE: Passing a dummy header value ought not to have any negative repercussions.
     auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair(name, ""sv));
-    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
+    if (!TRY(validate(header)))
         return {};
 
-    // 4. Otherwise, if this’s guard is "request-no-cors", name is not a no-CORS-safelisted request-header name, and name is not a privileged no-CORS request-header name, return.
+    // 2. If this’s guard is "request-no-cors", name is not a no-CORS-safelisted request-header name, and name is not a privileged no-CORS request-header name, then return.
     if (m_guard == Guard::RequestNoCORS && !Infrastructure::is_no_cors_safelisted_request_header_name(name) && !Infrastructure::is_privileged_no_cors_request_header_name(name))
         return {};
 
-    // 5. Otherwise, if this’s guard is "response" and name is a forbidden response-header name, return.
-    if (m_guard == Guard::Response && Infrastructure::is_forbidden_response_header_name(name))
-        return {};
-
-    // 6. If this’s header list does not contain name, then return.
+    // 3. If this’s header list does not contain name, then return.
     if (!m_header_list->contains(name))
         return {};
 
-    // 7. Delete name from this’s header list.
+    // 4. Delete name from this’s header list.
     m_header_list->delete_(name);
 
-    // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request-headers from this.
+    // 5. If this’s guard is "request-no-cors", then remove privileged no-CORS request-headers from this.
     if (m_guard == Guard::RequestNoCORS)
         remove_privileged_no_cors_request_headers();
 
@@ -144,32 +132,18 @@ WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, Depr
         .value = move(normalized_value),
     };
 
-    // 2. If name is not a header name or value is not a header value, then throw a TypeError.
-    if (!Infrastructure::is_header_name(name))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name"sv };
-    if (!Infrastructure::is_header_value(value))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header value"sv };
-
-    // 3. If this’s guard is "immutable", then throw a TypeError.
-    if (m_guard == Guard::Immutable)
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
-
-    // 4. Otherwise, if this’s guard is "request" and (name, value) is a forbidden request-header, return.
-    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
+    // 2. If validating (name, value) for headers returns false, then return.
+    if (!TRY(validate(header)))
         return {};
 
-    // 5. Otherwise, if this’s guard is "request-no-cors" and (name, value) is not a no-CORS-safelisted request-header, return.
+    // 3. If this’s guard is "request-no-cors" and (name, value) is not a no-CORS-safelisted request-header, then return.
     if (m_guard == Guard::RequestNoCORS && !Infrastructure::is_no_cors_safelisted_request_header(header))
         return {};
 
-    // 6. Otherwise, if this’s guard is "response" and name is a forbidden response-header name, return.
-    if (m_guard == Guard::Response && Infrastructure::is_forbidden_response_header_name(name))
-        return {};
-
-    // 7. Set (name, value) in this’s header list.
+    // 4. Set (name, value) in this’s header list.
     TRY_OR_RETURN_OOM(realm, m_header_list->set(move(header)));
 
-    // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request-headers from this.
+    // 5. If this’s guard is "request-no-cors", then remove privileged no-CORS request-headers from this.
     if (m_guard == Guard::RequestNoCORS)
         remove_privileged_no_cors_request_headers();
 
@@ -213,6 +187,35 @@ JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
     return {};
 }
 
+// https://fetch.spec.whatwg.org/#headers-validate
+WebIDL::ExceptionOr<bool> Headers::validate(Infrastructure::Header const& header) const
+{
+    // To validate a header (name, value) for a Headers object headers:
+    auto& realm = this->realm();
+    auto const& [name, value] = header;
+
+    // 1. If name is not a header name or value is not a header value, then throw a TypeError.
+    if (!Infrastructure::is_header_name(name))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name"sv };
+    if (!Infrastructure::is_header_value(value))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header value"sv };
+
+    // 2. If headers’s guard is "immutable", then throw a TypeError.
+    if (m_guard == Guard::Immutable)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
+
+    // 3. If headers’s guard is "request" and (name, value) is a forbidden request-header, then return false.
+    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
+        return false;
+
+    // 4. If headers’s guard is "response" and name is a forbidden response-header name, then return false.
+    if (m_guard == Guard::Response && Infrastructure::is_forbidden_response_header_name(name))
+        return false;
+
+    // 5. Return true.
+    return true;
+}
+
 // https://fetch.spec.whatwg.org/#concept-headers-append
 WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 {
@@ -223,21 +226,11 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     // 1. Normalize value.
     value = TRY_OR_RETURN_OOM(realm, Infrastructure::normalize_header_value(value));
 
-    // 2. If name is not a header name or value is not a header value, then throw a TypeError.
-    if (!Infrastructure::is_header_name(name))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name"sv };
-    if (!Infrastructure::is_header_value(value))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header value"sv };
-
-    // 3. If headers’s guard is "immutable", then throw a TypeError.
-    if (m_guard == Guard::Immutable)
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable"sv };
-
-    // 4. Otherwise, if headers’s guard is "request" and (name, value) is a forbidden request-header, return.
-    if (m_guard == Guard::Request && TRY_OR_RETURN_OOM(realm, Infrastructure::is_forbidden_request_header(header)))
+    // 2. If validating (name, value) for headers returns false, then return.
+    if (!TRY(validate(header)))
         return {};
 
-    // 5. Otherwise, if headers’s guard is "request-no-cors":
+    // 3. If headers’s guard is "request-no-cors":
     if (m_guard == Guard::RequestNoCORS) {
         // 1. Let temporaryValue be the result of getting name from headers’s header list.
         auto temporary_value = TRY_OR_RETURN_OOM(realm, m_header_list->get(name));
@@ -263,14 +256,10 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
             return {};
     }
 
-    // 6. Otherwise, if headers’s guard is "response" and name is a forbidden response-header name, return.
-    if (m_guard == Guard::Response && Infrastructure::is_forbidden_response_header_name(name))
-        return {};
-
-    // 7. Append (name, value) to headers’s header list.
+    // 4. Append (name, value) to headers’s header list.
     TRY_OR_RETURN_OOM(realm, m_header_list->append(move(header)));
 
-    // 8. If headers’s guard is "request-no-cors", then remove privileged no-CORS request-headers from headers.
+    // 5. If headers’s guard is "request-no-cors", then remove privileged no-CORS request-headers from headers.
     if (m_guard == Guard::RequestNoCORS)
         remove_privileged_no_cors_request_headers();
 

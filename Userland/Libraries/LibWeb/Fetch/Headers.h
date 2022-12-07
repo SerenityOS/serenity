@@ -62,6 +62,7 @@ private:
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
+    WebIDL::ExceptionOr<bool> validate(Infrastructure::Header const&) const;
     void remove_privileged_no_cors_request_headers();
 
     // https://fetch.spec.whatwg.org/#concept-headers-header-list
