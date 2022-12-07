@@ -8,6 +8,8 @@
 
 #include <AK/Types.h>
 
+namespace JS {
+
 class CanonicalIndex {
 public:
     enum class Type {
@@ -35,3 +37,5 @@ private:
     Type m_type;
     u32 m_index;
 };
+
+}
