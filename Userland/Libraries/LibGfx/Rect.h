@@ -323,15 +323,15 @@ public:
         return have_any;
     }
 
-    [[nodiscard]] ALWAYS_INLINE int primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
-    ALWAYS_INLINE void set_primary_offset_for_orientation(Orientation orientation, int value) { m_location.set_primary_offset_for_orientation(orientation, value); }
-    [[nodiscard]] ALWAYS_INLINE int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
-    ALWAYS_INLINE void set_secondary_offset_for_orientation(Orientation orientation, int value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
+    [[nodiscard]] ALWAYS_INLINE T primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
+    ALWAYS_INLINE void set_primary_offset_for_orientation(Orientation orientation, T value) { m_location.set_primary_offset_for_orientation(orientation, value); }
+    [[nodiscard]] ALWAYS_INLINE T secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
+    ALWAYS_INLINE void set_secondary_offset_for_orientation(Orientation orientation, T value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
 
-    [[nodiscard]] ALWAYS_INLINE int primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
-    [[nodiscard]] ALWAYS_INLINE int secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
-    ALWAYS_INLINE void set_primary_size_for_orientation(Orientation orientation, int value) { m_size.set_primary_size_for_orientation(orientation, value); }
-    ALWAYS_INLINE void set_secondary_size_for_orientation(Orientation orientation, int value) { m_size.set_secondary_size_for_orientation(orientation, value); }
+    [[nodiscard]] ALWAYS_INLINE T primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
+    [[nodiscard]] ALWAYS_INLINE T secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
+    ALWAYS_INLINE void set_primary_size_for_orientation(Orientation orientation, T value) { m_size.set_primary_size_for_orientation(orientation, value); }
+    ALWAYS_INLINE void set_secondary_size_for_orientation(Orientation orientation, T value) { m_size.set_secondary_size_for_orientation(orientation, value); }
 
     [[nodiscard]] T first_edge_for_orientation(Orientation orientation) const
     {
