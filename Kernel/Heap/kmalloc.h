@@ -27,7 +27,7 @@ public:                                                                      \
     }                                                                        \
     void operator delete(void* ptr) noexcept                                 \
     {                                                                        \
-        kfree_aligned(ptr);                                                  \
+        kfree_sized(ptr, sizeof(type));                                      \
     }                                                                        \
                                                                              \
 private:
@@ -81,13 +81,6 @@ void operator delete[](void* ptr, size_t) noexcept;
 [[gnu::malloc, gnu::alloc_size(1, 2)]] void* kcalloc(size_t, size_t);
 
 [[gnu::malloc, gnu::alloc_size(1), gnu::alloc_align(2)]] void* kmalloc_aligned(size_t size, size_t alignment);
-
-inline void kfree_aligned(void* ptr)
-{
-    if (ptr == nullptr)
-        return;
-    kfree_sized((u8*)ptr - ((ptrdiff_t const*)ptr)[-1], ((size_t const*)ptr)[-2]);
-}
 
 size_t kmalloc_good_size(size_t);
 
