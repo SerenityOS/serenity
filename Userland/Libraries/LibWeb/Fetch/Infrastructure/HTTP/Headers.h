@@ -58,6 +58,7 @@ struct RangeHeaderValue {
     Optional<u64> end;
 };
 
+[[nodiscard]] ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(ReadonlyBytes);
 [[nodiscard]] ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes>);
 [[nodiscard]] bool is_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_header_value(ReadonlyBytes);
@@ -70,7 +71,7 @@ struct RangeHeaderValue {
 [[nodiscard]] bool is_cors_safelisted_response_header_name(ReadonlyBytes, Span<ReadonlyBytes>);
 [[nodiscard]] bool is_no_cors_safelisted_request_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_no_cors_safelisted_request_header(Header const&);
-[[nodiscard]] bool is_forbidden_header_name(ReadonlyBytes);
+[[nodiscard]] ErrorOr<bool> is_forbidden_request_header(Header const&);
 [[nodiscard]] bool is_forbidden_response_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_request_body_header_name(ReadonlyBytes);
 [[nodiscard]] ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const&);
