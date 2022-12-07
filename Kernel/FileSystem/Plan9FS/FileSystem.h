@@ -60,7 +60,7 @@ private:
         ErrorOr<void> try_unblock(Blocker&);
 
     protected:
-        virtual bool should_add_blocker(Thread::Blocker&, void*) override;
+        virtual ErrorOr<bool> should_add_blocker(Thread::Blocker&, void*) override;
 
     private:
         Plan9FS& m_fs;

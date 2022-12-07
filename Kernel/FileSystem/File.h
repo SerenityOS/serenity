@@ -25,7 +25,7 @@ class FileBlockerSet final : public Thread::BlockerSet {
 public:
     FileBlockerSet() { }
 
-    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override
+    virtual ErrorOr<bool> should_add_blocker(Thread::Blocker& b, void* data) override
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
         auto& blocker = static_cast<Thread::FileBlocker&>(b);

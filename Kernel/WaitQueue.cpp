@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-bool WaitQueue::should_add_blocker(Thread::Blocker& b, void*)
+ErrorOr<bool> WaitQueue::should_add_blocker(Thread::Blocker& b, void*)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);

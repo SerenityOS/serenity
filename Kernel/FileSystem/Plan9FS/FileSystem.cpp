@@ -138,7 +138,7 @@ bool Plan9FS::Blocker::is_completed() const
     return m_completion->completed;
 }
 
-bool Plan9FS::Plan9FSBlockerSet::should_add_blocker(Thread::Blocker& b, void*)
+ErrorOr<bool> Plan9FS::Plan9FSBlockerSet::should_add_blocker(Thread::Blocker& b, void*)
 {
     // NOTE: m_lock is held already!
     auto& blocker = static_cast<Blocker&>(b);

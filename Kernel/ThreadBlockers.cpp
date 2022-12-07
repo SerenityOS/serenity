@@ -636,7 +636,7 @@ ErrorOr<bool> Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::Unb
     return did_unblock_any;
 }
 
-bool Thread::WaitBlockerSet::should_add_blocker(Blocker& b, void*)
+ErrorOr<bool> Thread::WaitBlockerSet::should_add_blocker(Blocker& b, void*)
 {
     // NOTE: m_lock is held already!
     if (m_finalized)

@@ -69,7 +69,7 @@ public:
     }
 
 protected:
-    virtual bool should_add_blocker(Thread::Blocker& b, void*) override
+    virtual ErrorOr<bool> should_add_blocker(Thread::Blocker& b, void*) override
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);

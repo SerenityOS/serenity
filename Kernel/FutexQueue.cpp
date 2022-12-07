@@ -13,7 +13,7 @@ namespace Kernel {
 FutexQueue::FutexQueue() = default;
 FutexQueue::~FutexQueue() = default;
 
-bool FutexQueue::should_add_blocker(Thread::Blocker& b, void*)
+ErrorOr<bool> FutexQueue::should_add_blocker(Thread::Blocker& b, void*)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);

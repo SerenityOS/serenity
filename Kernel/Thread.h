@@ -402,7 +402,7 @@ public:
         ErrorOr<bool> add_blocker(Blocker& blocker, void* data)
         {
             SpinlockLocker lock(m_lock);
-            if (!should_add_blocker(blocker, data))
+            if (!TRY(should_add_blocker(blocker, data)))
                 return false;
             TRY(m_blockers.try_append({ &blocker, data }));
             return true;
@@ -458,7 +458,7 @@ public:
             return m_blockers.is_empty();
         }
 
-        virtual bool should_add_blocker(Blocker&, void*) { return true; }
+        virtual ErrorOr<bool> should_add_blocker(Blocker&, void*) { return true; }
 
         struct BlockerInfo {
             Blocker* blocker;
@@ -715,7 +715,7 @@ public:
         }
 
     private:
-        bool should_add_blocker(Blocker& b, void*) override
+        ErrorOr<bool> should_add_blocker(Blocker& b, void*) override
         {
             VERIFY(b.blocker_type() == Blocker::Type::Signal);
             auto& blocker = static_cast<Thread::SignalBlocker&>(b);
@@ -768,7 +768,7 @@ public:
         void finalize();
 
     protected:
-        virtual bool should_add_blocker(Blocker&, void*) override;
+        virtual ErrorOr<bool> should_add_blocker(Blocker&, void*) override;
 
     private:
         struct ProcessBlockInfo {
@@ -813,7 +813,7 @@ public:
         }
 
     private:
-        bool should_add_blocker(Blocker& b, void*) override
+        ErrorOr<bool> should_add_blocker(Blocker& b, void*) override
         {
             VERIFY(b.blocker_type() == Blocker::Type::Flock);
             auto& blocker = static_cast<Thread::FlockBlocker&>(b);
@@ -1213,14 +1213,14 @@ private:
         }
 
     protected:
-        virtual bool should_add_blocker(Blocker& b, void*) override
+        virtual ErrorOr<bool> should_add_blocker(Blocker& b, void*) override
         {
             VERIFY(b.blocker_type() == Blocker::Type::Join);
             auto& blocker = static_cast<JoinBlocker&>(b);
 
             // NOTE: m_lock is held already!
             if (m_thread_did_exit) {
-                MUST(blocker.unblock(exit_value(), true)); // FIXME propagate this error
+                TRY(blocker.unblock(exit_value(), true));
                 return false;
             }
             return true;
