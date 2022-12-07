@@ -5,8 +5,10 @@
  */
 
 #include <AK/Format.h>
+#include <AK/String.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/Timer.h>
@@ -503,4 +505,55 @@ TEST_CASE(buffered_tcp_socket_read)
     EXPECT(!maybe_second_received_line.is_error());
     auto second_received_line = maybe_second_received_line.value();
     EXPECT_EQ(second_received_line, second_line);
+}
+
+// Allocating memory stream tests
+
+TEST_CASE(allocating_memory_stream_empty)
+{
+    Core::Stream::AllocatingMemoryStream stream;
+
+    EXPECT_EQ(stream.used_buffer_size(), 0ul);
+
+    {
+        Array<u8, 32> array;
+        auto read_bytes = MUST(stream.read(array));
+        EXPECT_EQ(read_bytes.size(), 0ul);
+    }
+}
+
+TEST_CASE(allocating_memory_stream_10kb)
+{
+    auto file = MUST(Core::Stream::File::open("/usr/Tests/LibCore/10kb.txt"sv, Core::Stream::OpenMode::Read));
+    size_t const file_size = MUST(file->size());
+    size_t constexpr test_chunk_size = 4096;
+
+    // Read file contents into the memory stream.
+    Core::Stream::AllocatingMemoryStream stream;
+    while (!file->is_eof()) {
+        Array<u8, test_chunk_size> array;
+        MUST(stream.write(MUST(file->read(array))));
+    }
+
+    EXPECT_EQ(stream.used_buffer_size(), file_size);
+
+    MUST(file->seek(0, Core::Stream::SeekMode::SetPosition));
+
+    // Check the stream contents when reading back.
+    size_t offset = 0;
+    while (!file->is_eof()) {
+        Array<u8, test_chunk_size> file_array;
+        Array<u8, test_chunk_size> stream_array;
+        auto file_span = MUST(file->read(file_array));
+        auto stream_span = MUST(stream.read(stream_array));
+        EXPECT_EQ(file_span.size(), stream_span.size());
+
+        for (size_t i = 0; i < file_span.size(); i++) {
+            if (file_array[i] == stream_array[i])
+                continue;
+
+            FAIL(String::formatted("Data started to diverge at index {}: file={}, stream={}", offset + i, file_array[i], stream_array[i]));
+        }
+        offset += file_span.size();
+    }
 }

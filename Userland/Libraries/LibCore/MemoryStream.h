@@ -47,4 +47,31 @@ private:
     bool m_writing_enabled { true };
 };
 
+/// A stream class that allows for writing to an automatically allocating memory area
+/// and reading back the written data afterwards.
+class AllocatingMemoryStream final : public Stream {
+public:
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual ErrorOr<void> discard(size_t) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+
+    size_t used_buffer_size() const;
+
+private:
+    // Note: We set the inline buffer capacity to zero to make moving chunks as efficient as possible.
+    using Chunk = AK::Detail::ByteBuffer<0>;
+    static constexpr size_t chunk_size = 4096;
+
+    ErrorOr<ReadonlyBytes> next_read_range();
+    ErrorOr<Bytes> next_write_range();
+    void cleanup_unused_chunks();
+
+    Vector<Chunk> m_chunks;
+    size_t m_read_offset = 0;
+    size_t m_write_offset = 0;
+};
+
 }
