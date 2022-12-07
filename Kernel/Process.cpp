@@ -821,9 +821,9 @@ ErrorOr<void> Process::finalize()
     return {};
 }
 
-void Process::disowned_by_waiter(Process& process)
+ErrorOr<void> Process::disowned_by_waiter(Process& process)
 {
-    m_wait_blocker_set.disowned_by_waiter(process);
+    return m_wait_blocker_set.disowned_by_waiter(process);
 }
 
 ErrorOr<void> Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)

@@ -762,7 +762,7 @@ public:
         {
         }
 
-        void disowned_by_waiter(Process&);
+        ErrorOr<void> disowned_by_waiter(Process&);
         ErrorOr<bool> unblock(Process&, WaitBlocker::UnblockFlags, u8);
         void try_unblock(WaitBlocker&);
         void finalize();

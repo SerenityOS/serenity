@@ -20,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$disown(ProcessID pid)
     process->with_mutable_protected_data([](auto& protected_data) {
         protected_data.ppid = 0;
     });
-    process->disowned_by_waiter(*this);
+    TRY(process->disowned_by_waiter(*this));
     return 0;
 }
 }

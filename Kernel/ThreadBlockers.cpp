@@ -554,20 +554,23 @@ void Thread::WaitBlockerSet::try_unblock(Thread::WaitBlocker& blocker)
     }
 }
 
-void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
+ErrorOr<void> Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
 {
     SpinlockLocker lock(m_lock);
     if (m_finalized)
-        return;
+        return {};
     for (size_t i = 0; i < m_processes.size();) {
         auto& info = m_processes[i];
         if (info.process == &process) {
-            // FIXME propagate this error
-            MUST(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
+            TRY(unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) -> ErrorOr<bool> {
                 VERIFY(b.blocker_type() == Blocker::Type::Wait);
                 auto& blocker = static_cast<WaitBlocker&>(b);
-                bool did_unblock = blocker.unblock(info.process, WaitBlocker::UnblockFlags::Disowned, 0, false).release_value_but_fixme_should_propagate_errors();
-                VERIFY(did_unblock); // disowning must unblock everyone
+                bool did_unblock = TRY(blocker.unblock(info.process, WaitBlocker::UnblockFlags::Disowned, 0, false));
+
+                if (!did_unblock) {
+                    // disowning must unblock everyone
+                    return Error::from_string_view("failed to unblock process"sv);
+                }
                 return true;
             }));
             dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] disowned {}", m_process, *info.process);
@@ -577,6 +580,7 @@ void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
 
         i++;
     }
+    return {};
 }
 
 ErrorOr<bool> Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::UnblockFlags flags, u8 signal)
