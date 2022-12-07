@@ -104,16 +104,21 @@ int File::leak_fd()
 
 bool File::is_device() const
 {
-    struct stat stat;
-    if (fstat(fd(), &stat) < 0)
-        return false;
-    return S_ISBLK(stat.st_mode) || S_ISCHR(stat.st_mode);
+    return is_device(fd());
 }
 
 bool File::is_device(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
+}
+
+bool File::is_device(int fd)
+{
+    struct stat st;
+    if (fstat(fd, &st) < 0)
         return false;
     return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
@@ -152,16 +157,21 @@ bool File::is_char_device(DeprecatedString const& filename)
 
 bool File::is_directory() const
 {
-    struct stat stat;
-    if (fstat(fd(), &stat) < 0)
-        return false;
-    return S_ISDIR(stat.st_mode);
+    return is_directory(fd());
 }
 
 bool File::is_directory(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISDIR(st.st_mode);
+}
+
+bool File::is_directory(int fd)
+{
+    struct stat st;
+    if (fstat(fd, &st) < 0)
         return false;
     return S_ISDIR(st.st_mode);
 }
