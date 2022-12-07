@@ -752,10 +752,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
     // 3. Let actualResponse be null.
     JS::GCPtr<Infrastructure::Response> actual_response;
 
-    // 4. Let timingInfo be fetchParams’s timing info.
-    // FIXME: This is unused (spec issue)
-
-    // 5. If request’s service-workers mode is "all", then:
+    // 4. If request’s service-workers mode is "all", then:
     if (request->service_workers_mode() == Infrastructure::Request::ServiceWorkersMode::All) {
         // 1. Let requestForServiceWorker be a clone of request.
         auto request_for_service_worker = TRY(request->clone(vm));
@@ -812,7 +809,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
 
     JS::GCPtr<PendingResponse> pending_actual_response;
 
-    // 6. If response is null, then:
+    // 5. If response is null, then:
     if (!response) {
         // 1. If makeCORSPreflight is true and one of these conditions is true:
         // NOTE: This step checks the CORS-preflight cache and if there is no suitable entry it performs a
@@ -863,7 +860,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
                 request->set_timing_allow_failed(true);
         }
 
-        // 7. If either request’s response tainting or response’s type is "opaque", and the cross-origin resource
+        // 6. If either request’s response tainting or response’s type is "opaque", and the cross-origin resource
         //    policy check with request’s origin, request’s client, request’s destination, and actualResponse returns
         //    blocked, then return a network error.
         // NOTE: The cross-origin resource policy check runs for responses coming from the network and responses coming
@@ -878,7 +875,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
 
         JS::GCPtr<PendingResponse> inner_pending_response;
 
-        // 8. If actualResponse’s status is a redirect status, then:
+        // 7. If actualResponse’s status is a redirect status, then:
         if (Infrastructure::is_redirect_status(actual_response->status())) {
             // FIXME: 1. If actualResponse’s status is not 303, request’s body is not null, and the connection uses HTTP/2,
             //           then user agents may, and are even encouraged to, transmit an RST_STREAM frame.
@@ -923,7 +920,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
         }
     });
 
-    // 9. Return response.
+    // 8. Return response.
     // NOTE: Typically actualResponse’s body’s stream is still being enqueued to after returning.
     return returned_pending_response;
 }
@@ -1332,9 +1329,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // 24. If httpRequest’s cache mode is neither "no-store" nor "reload", then:
         if (http_request->cache_mode() != Infrastructure::Request::CacheMode::NoStore
             && http_request->cache_mode() != Infrastructure::Request::CacheMode::Reload) {
-            // 1. Let timingInfo be fetchParams’s timing info.
-            //    FIXME: This is unused (spec issue)
-            //    Set storedResponse to the result of selecting a response from the httpCache, possibly needing
+            // 1. Set storedResponse to the result of selecting a response from the httpCache, possibly needing
             //    validation, as per the "Constructing Responses from Caches" chapter of HTTP Caching [HTTP-CACHING],
             //    if any.
             // NOTE: As mandated by HTTP, this still takes the `Vary` header into account.
