@@ -438,7 +438,7 @@ bool is_cors_safelisted_request_header(Header const& header)
         if (any_of(value.span(), is_cors_unsafe_request_header_byte))
             return false;
 
-        // 2. Let mimeType be the result of parsing value.
+        // 2. Let mimeType be the result of parsing the result of isomorphic decoding value.
         auto mime_type = MimeSniff::MimeType::from_string(StringView { value });
 
         // 3. If mimeType is failure, then return false.
