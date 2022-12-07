@@ -961,11 +961,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
     if (!Infrastructure::is_http_or_https_scheme(location_url.scheme()))
         return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request redirect URL must have HTTP or HTTPS scheme"sv));
 
-    // 7. If request’s redirect count is twenty, return a network error.
+    // 7. If request’s redirect count is 20, then return a network error.
     if (request->redirect_count() == 20)
         return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has reached maximum redirect count of 20"sv));
 
-    // 8. Increase request’s redirect count by one.
+    // 8. Increase request’s redirect count by 1.
     request->set_redirect_count(request->redirect_count() + 1);
 
     // 8. If request’s mode is "cors", locationURL includes credentials, and request’s origin is not same origin with
@@ -1013,7 +1013,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
             request->header_list()->delete_(header_name.bytes());
     }
 
-    // 13. If request’s body is non-null, then set request’s body to the body of the result of safely extracting
+    // 13. If request’s current URL’s origin is not same origin with locationURL’s origin, then for each headerName of
+    //     CORS non-wildcard request-header name, delete headerName from request’s header list.
+    // NOTE: I.e., the moment another origin is seen after the initial request, the `Authorization` header is removed.
+    if (!URL::url_origin(request->current_url()).is_same_origin(URL::url_origin(location_url))) {
+        static constexpr Array cors_non_wildcard_request_header_names {
+            "Authorization"sv
+        };
+        for (auto header_name : cors_non_wildcard_request_header_names)
+            request->header_list()->delete_(header_name.bytes());
+    }
+
+    // 14. If request’s body is non-null, then set request’s body to the body of the result of safely extracting
     //     request’s body’s source.
     // NOTE: request’s body’s source’s nullity has already been checked.
     if (!request->body().has<Empty>()) {
@@ -1026,26 +1037,26 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
         request->set_body(move(body));
     }
 
-    // 14. Let timingInfo be fetchParams’s timing info.
+    // 15. Let timingInfo be fetchParams’s timing info.
     auto timing_info = fetch_params.timing_info();
 
-    // 15. Set timingInfo’s redirect end time and post-redirect start time to the coarsened shared current time given
+    // 16. Set timingInfo’s redirect end time and post-redirect start time to the coarsened shared current time given
     //     fetchParams’s cross-origin isolated capability.
     auto now = HighResolutionTime::coarsened_shared_current_time(fetch_params.cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
     timing_info->set_redirect_end_time(now);
     timing_info->set_post_redirect_start_time(now);
 
-    // 16. If timingInfo’s redirect start time is 0, then set timingInfo’s redirect start time to timingInfo’s start
+    // 17. If timingInfo’s redirect start time is 0, then set timingInfo’s redirect start time to timingInfo’s start
     //     time.
     if (timing_info->redirect_start_time() == 0)
         timing_info->set_redirect_start_time(timing_info->start_time());
 
-    // 17. Append locationURL to request’s URL list.
+    // 18. Append locationURL to request’s URL list.
     request->url_list().append(location_url);
 
-    // FIXME: 18. Invoke set request’s referrer policy on redirect on request and actualResponse.
+    // FIXME: 19. Invoke set request’s referrer policy on redirect on request and actualResponse.
 
-    // 19. Return the result of running main fetch given fetchParams and true.
+    // 20. Return the result of running main fetch given fetchParams and true.
     return TRY(main_fetch(realm, fetch_params, Recursive::Yes)).release_value();
 }
 
