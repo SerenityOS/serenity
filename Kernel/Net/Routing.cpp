@@ -182,7 +182,7 @@ static MACAddress multicast_ethernet_address(IPv4Address const& address)
     return MACAddress { 0x01, 0x00, 0x5e, (u8)(address[1] & 0x7f), address[2], address[3] };
 }
 
-RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, LockRefPtr<NetworkAdapter> const through, AllowUsingGateway allow_using_gateway)
+ErrorOr<RoutingDecision> route_to(IPv4Address const& target, IPv4Address const& source, LockRefPtr<NetworkAdapter> const through, AllowUsingGateway allow_using_gateway)
 {
     auto matches = [&](auto& adapter) {
         if (!through)
@@ -260,11 +260,11 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, L
     });
 
     if (local_adapter && target == local_adapter->ipv4_address())
-        return { local_adapter, local_adapter->mac_address() };
+        return RoutingDecision { local_adapter, local_adapter->mac_address() };
 
     if (!local_adapter && !chosen_route) {
         dbgln_if(ROUTING_DEBUG, "Routing: Couldn't find a suitable adapter for route to {}", target);
-        return { nullptr, {} };
+        return RoutingDecision { nullptr, {} };
     }
 
     LockRefPtr<NetworkAdapter> adapter = nullptr;
@@ -289,20 +289,20 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, L
         adapter = chosen_route->adapter;
         next_hop_ip = chosen_route->gateway;
     } else {
-        return { nullptr, {} };
+        return RoutingDecision { nullptr, {} };
     }
 
     // If it's a broadcast, we already know everything we need to know.
     // FIXME: We should also deal with the case where `target_addr` is
     //        a broadcast to a subnet rather than a full broadcast.
     if (target_addr == 0xffffffff && matches(adapter))
-        return { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+        return RoutingDecision { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
 
     if (adapter == NetworkingManagement::the().loopback_adapter())
-        return { adapter, adapter->mac_address() };
+        return RoutingDecision { adapter, adapter->mac_address() };
 
     if ((target_addr & IPv4Address { 240, 0, 0, 0 }.to_u32()) == IPv4Address { 224, 0, 0, 0 }.to_u32())
-        return { adapter, multicast_ethernet_address(target) };
+        return RoutingDecision { adapter, multicast_ethernet_address(target) };
 
     {
         auto addr = arp_table().with([&](auto const& table) -> auto{
@@ -310,7 +310,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, L
         });
         if (addr.has_value()) {
             dbgln_if(ARP_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
-            return { adapter, addr.value() };
+            return RoutingDecision { adapter, addr.value() };
         }
     }
 
@@ -328,24 +328,23 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, L
         // FIXME: Waiting for the ARP response from inside the NetworkTask would
         // deadlock, so let's hope that whoever called route_to() tries again in a bit.
         dbgln_if(ARP_DEBUG, "Routing: Not waiting for ARP response from inside NetworkTask, sent ARP request using adapter {} for {}", adapter->name(), target);
-        return { nullptr, {} };
+        return RoutingDecision { nullptr, {} };
     }
 
     Optional<MACAddress> addr;
 
-    // FIXME propagate this error
-    if (!MUST(Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr)).was_interrupted()) {
+    if (!TRY(Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr)).was_interrupted()) {
         if (addr.has_value()) {
             dbgln_if(ARP_DEBUG, "Routing: Got ARP response using adapter {} for {} ({})",
                 adapter->name(),
                 next_hop_ip,
                 addr.value().to_string());
-            return { adapter, addr.value() };
+            return RoutingDecision { adapter, addr.value() };
         }
     }
 
     dbgln_if(ROUTING_DEBUG, "Routing: Couldn't find route using adapter {} for {}", adapter->name(), target);
-    return { nullptr, {} };
+    return RoutingDecision { nullptr, {} };
 }
 
 }

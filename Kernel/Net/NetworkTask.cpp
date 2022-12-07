@@ -337,7 +337,7 @@ void flush_delayed_tcp_acks()
 
 void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, LockRefPtr<NetworkAdapter> adapter)
 {
-    auto routing_decision = route_to(ipv4_packet.source(), ipv4_packet.destination(), adapter);
+    auto routing_decision = route_to(ipv4_packet.source(), ipv4_packet.destination(), adapter).release_value_but_fixme_should_propagate_errors();
     if (routing_decision.is_zero())
         return;
 

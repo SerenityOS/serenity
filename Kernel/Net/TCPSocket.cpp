@@ -202,7 +202,7 @@ ErrorOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserO
 
 ErrorOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t data_length)
 {
-    RoutingDecision routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    RoutingDecision routing_decision = TRY(route_to(peer_address(), local_address(), bound_interface()));
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
@@ -220,7 +220,7 @@ ErrorOr<void> TCPSocket::send_ack(bool allow_duplicate)
 
 ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
-    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
+    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : TRY(route_to(peer_address(), local_address(), bound_interface()));
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
 
@@ -441,7 +441,7 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
 {
     MutexLocker locker(mutex());
 
-    auto routing_decision = route_to(peer_address(), local_address());
+    auto routing_decision = TRY(route_to(peer_address(), local_address()));
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     if (!has_specific_local_address())
@@ -598,7 +598,7 @@ void TCPSocket::retransmit_packets()
         return;
     }
 
-    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    auto routing_decision = route_to(peer_address(), local_address(), bound_interface()).release_value_but_fixme_should_propagate_errors();
     if (routing_decision.is_zero())
         return;
 

@@ -64,7 +64,7 @@ enum class AllowUsingGateway {
     No,
 };
 
-RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, LockRefPtr<NetworkAdapter> const through = nullptr, AllowUsingGateway = AllowUsingGateway::Yes);
+ErrorOr<RoutingDecision> route_to(IPv4Address const& target, IPv4Address const& source, LockRefPtr<NetworkAdapter> const through = nullptr, AllowUsingGateway = AllowUsingGateway::Yes);
 
 SpinlockProtected<HashMap<IPv4Address, MACAddress>>& arp_table();
 SpinlockProtected<Route::RouteList>& routing_table();
