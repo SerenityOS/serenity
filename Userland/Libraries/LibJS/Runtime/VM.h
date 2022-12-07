@@ -114,8 +114,12 @@ public:
             on_call_stack_emptied();
     }
 
+    // https://tc39.es/ecma262/#running-execution-context
+    // At any point in time, there is at most one execution context per agent that is actually executing code.
+    // This is known as the agent's running execution context.
     ExecutionContext& running_execution_context() { return *m_execution_context_stack.last(); }
     ExecutionContext const& running_execution_context() const { return *m_execution_context_stack.last(); }
+
     Vector<ExecutionContext*> const& execution_context_stack() const { return m_execution_context_stack; }
     Vector<ExecutionContext*>& execution_context_stack() { return m_execution_context_stack; }
 
