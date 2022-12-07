@@ -63,7 +63,7 @@ void PhysicalRegion::initialize_zones()
     make_zones(small_zone_size);
 }
 
-OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned page_count)
+OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(size_t page_count)
 {
     VERIFY(page_count > 0);
     VERIFY(page_count < m_pages);

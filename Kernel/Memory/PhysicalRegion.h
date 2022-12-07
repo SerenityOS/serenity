@@ -28,10 +28,10 @@ public:
 
     PhysicalAddress lower() const { return m_lower; }
     PhysicalAddress upper() const { return m_upper; }
-    unsigned size() const { return m_pages; }
+    size_t size() const { return m_pages; }
     bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr < m_upper; }
 
-    OwnPtr<PhysicalRegion> try_take_pages_from_beginning(unsigned);
+    OwnPtr<PhysicalRegion> try_take_pages_from_beginning(size_t);
 
     RefPtr<PhysicalPage> take_free_page();
     NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count);
@@ -52,7 +52,7 @@ private:
 
     PhysicalAddress m_lower;
     PhysicalAddress m_upper;
-    unsigned m_pages { 0 };
+    size_t m_pages { 0 };
 };
 
 }
