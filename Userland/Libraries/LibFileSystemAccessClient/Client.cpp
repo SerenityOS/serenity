@@ -23,10 +23,10 @@ Client& Client::the()
     return *s_the;
 }
 
-Result Client::try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path)
+DeprecatedResult Client::try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
+    m_promises.set(id, PromiseAndWindow { Core::Promise<DeprecatedResult>::construct(), parent_window });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -48,10 +48,10 @@ Result Client::try_request_file_read_only_approved(GUI::Window* parent_window, D
     return handle_promise(id);
 }
 
-Result Client::try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode)
+DeprecatedResult Client::try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
+    m_promises.set(id, PromiseAndWindow { Core::Promise<DeprecatedResult>::construct(), parent_window });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -73,10 +73,10 @@ Result Client::try_request_file(GUI::Window* parent_window, DeprecatedString con
     return handle_promise(id);
 }
 
-Result Client::try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode requested_access)
+DeprecatedResult Client::try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode requested_access)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
+    m_promises.set(id, PromiseAndWindow { Core::Promise<DeprecatedResult>::construct(), parent_window });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -93,10 +93,10 @@ Result Client::try_open_file(GUI::Window* parent_window, DeprecatedString const&
     return handle_promise(id);
 }
 
-Result Client::try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access)
+DeprecatedResult Client::try_save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { Core::Promise<Result>::construct(), parent_window });
+    m_promises.set(id, PromiseAndWindow { Core::Promise<DeprecatedResult>::construct(), parent_window });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -166,7 +166,7 @@ int Client::get_new_id()
     return new_id;
 }
 
-Result Client::handle_promise(int id)
+DeprecatedResult Client::handle_promise(int id)
 {
     auto result = m_promises.get(id)->promise->await();
     m_promises.remove(id);
