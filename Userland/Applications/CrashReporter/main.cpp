@@ -278,13 +278,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
         LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
-        auto file_or_error = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, lexical_path.title(), lexical_path.extension());
-        if (file_or_error.is_error())
+        auto file_or_error = FileSystemAccessClient::Client::the().save_file(window, lexical_path.title(), lexical_path.extension());
+        if (file_or_error.is_error()) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Communication failed with FileSystemAccessServer: {}.", file_or_error.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
             return;
+        }
 
-        auto file = file_or_error.value();
-        if (!file->write(full_backtrace.to_deprecated_string()))
-            GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
+        auto file = file_or_error.release_value();
+        if (auto result = file->write(full_backtrace.to_byte_buffer()); result.is_error())
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", result.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
     save_backtrace_button.set_enabled(false);
 
