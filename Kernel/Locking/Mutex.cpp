@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Error.h"
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Locking/LockLocation.h>
@@ -148,7 +149,7 @@ ErrorOr<void> Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& locati
     }
 }
 
-void Mutex::unlock()
+ErrorOr<void> Mutex::unlock()
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
@@ -207,8 +208,9 @@ void Mutex::unlock()
         VERIFY(current_mode == Mode::Exclusive ? !m_holder : m_shared_holders == 0);
 
         m_mode = Mode::Unlocked;
-        unblock_waiters(current_mode);
+        TRY(unblock_waiters(current_mode));
     }
+    return {};
 }
 
 ErrorOr<void> Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& lock, u32 requested_locks)
@@ -249,19 +251,19 @@ ErrorOr<void> Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spi
     return {};
 }
 
-void Mutex::unblock_waiters(Mode previous_mode)
+ErrorOr<void> Mutex::unblock_waiters(Mode previous_mode)
 {
     VERIFY(m_times_locked == 0);
     VERIFY(m_mode == Mode::Unlocked);
 
-    m_blocked_thread_lists.with([&](auto& lists) {
-        auto unblock_shared = [&]() {
+    TRY(m_blocked_thread_lists.with([&](auto& lists) -> ErrorOr<void> {
+        auto unblock_shared = [&]() -> ErrorOr<bool> {
             if (lists.shared.is_empty())
                 return false;
             VERIFY(m_behavior == MutexBehavior::Regular);
             m_mode = Mode::Shared;
             for (auto& thread : lists.shared) {
-                auto requested_locks = MUST(thread.unblock_from_mutex(*this)); // FIXME propagate this error
+                auto requested_locks = TRY(thread.unblock_from_mutex(*this));
                 m_shared_holders += requested_locks;
 #if LOCK_SHARED_UPGRADE_DEBUG
                 auto set_result = m_shared_holders_map.set(&thread, requested_locks);
@@ -271,10 +273,10 @@ void Mutex::unblock_waiters(Mode previous_mode)
             }
             return true;
         };
-        auto unblock_exclusive = [&]<typename L>(L& list) {
+        auto unblock_exclusive = [&]<typename L>(L& list) -> ErrorOr<bool> {
             if (auto* next_exclusive_thread = list.first()) {
                 m_mode = Mode::Exclusive;
-                m_times_locked = MUST(next_exclusive_thread->unblock_from_mutex(*this)); // FIXME propagate this error
+                m_times_locked = TRY(next_exclusive_thread->unblock_from_mutex(*this));
                 m_holder = next_exclusive_thread;
                 return true;
             }
@@ -282,18 +284,20 @@ void Mutex::unblock_waiters(Mode previous_mode)
         };
 
         if (m_behavior == MutexBehavior::BigLock) {
-            unblock_exclusive(lists.exclusive_big_lock);
+            TRY(unblock_exclusive(lists.exclusive_big_lock));
         } else if (previous_mode == Mode::Exclusive) {
-            if (!unblock_shared())
-                unblock_exclusive(lists.exclusive);
+            if (!TRY(unblock_shared()))
+                TRY(unblock_exclusive(lists.exclusive));
         } else {
-            if (!unblock_exclusive(lists.exclusive))
-                unblock_shared();
+            if (!TRY(unblock_exclusive(lists.exclusive)))
+                TRY(unblock_shared());
         }
-    });
+        return {};
+    }));
+    return {};
 }
 
-auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
+ErrorOr<Mutex::Mode> Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore)
 {
     VERIFY(m_behavior == MutexBehavior::BigLock);
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
@@ -319,7 +323,7 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
         lock_count_to_restore = m_times_locked;
         m_times_locked = 0;
         m_mode = Mode::Unlocked;
-        unblock_waiters(Mode::Exclusive);
+        TRY(unblock_waiters(Mode::Exclusive));
         break;
     }
     case Mode::Unlocked: {

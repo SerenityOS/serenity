@@ -151,6 +151,8 @@ void ATAPort::complete_pio_transaction(AsyncDeviceRequest::RequestResult result)
     }
 }
 
+// FIXME handle errors here
+// This is not so trivial since this function is mostly used inside callbacks
 void ATAPort::complete_dma_transaction(AsyncDeviceRequest::RequestResult result)
 {
     // NOTE: this may be called from the interrupt handler!
@@ -173,7 +175,7 @@ void ATAPort::complete_dma_transaction(AsyncDeviceRequest::RequestResult result)
             {
                 auto result = force_busmastering_status_clean();
                 if (result.is_error()) {
-                    locker.unlock();
+                    MUST(locker.unlock());
                     current_request->complete(AsyncDeviceRequest::Failure);
                     return;
                 }
@@ -181,13 +183,13 @@ void ATAPort::complete_dma_transaction(AsyncDeviceRequest::RequestResult result)
 
             if (current_request->request_type() == AsyncBlockDeviceRequest::Read) {
                 if (auto result = current_request->write_to_buffer(current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * current_request->block_count()); result.is_error()) {
-                    locker.unlock();
+                    MUST(locker.unlock());
                     current_request->complete(AsyncDeviceRequest::MemoryFault);
                     return;
                 }
             }
         }
-        locker.unlock();
+        MUST(locker.unlock());
         current_request->complete(result);
     });
     if (work_item_creation_result.is_error()) {

@@ -647,12 +647,12 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     if (wait_for_tracer_at_next_execve()) {
         // Make sure we release the ptrace lock here or the tracer will block forever.
-        ptrace_locker.unlock();
+        TRY(ptrace_locker.unlock());
         Thread::current()->send_urgent_signal_to_self(SIGSTOP);
     } else {
         // Unlock regardless before disabling interrupts.
         // Ensure we always unlock after checking ptrace status to avoid TOCTOU ptrace issues
-        ptrace_locker.unlock();
+        TRY(ptrace_locker.unlock());
     }
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
@@ -706,7 +706,7 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     }
 
     u32 lock_count_to_restore;
-    [[maybe_unused]] auto rc = big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore);
+    [[maybe_unused]] auto rc = TRY(big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore));
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::in_critical());
     return {};

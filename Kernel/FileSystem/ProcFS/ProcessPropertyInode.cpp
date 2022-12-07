@@ -215,11 +215,11 @@ ErrorOr<void> ProcFSProcessPropertyInode::refresh_data(OpenFileDescription& desc
         return Error::from_errno(ESRCH);
     TRY(process->ptrace_lock().lock());
     if (!process->is_dumpable()) {
-        process->ptrace_lock().unlock();
+        TRY(process->ptrace_lock().unlock());
         return EPERM;
     }
     ScopeGuard guard = [&] {
-        process->ptrace_lock().unlock();
+        MUST(process->ptrace_lock().unlock()); // FIXME propagate this error
     };
     MutexLocker locker(m_refresh_lock);
     auto& cached_data = description.data();

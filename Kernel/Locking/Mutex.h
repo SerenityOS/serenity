@@ -43,8 +43,8 @@ public:
     ErrorOr<void> lock(Mode mode = Mode::Exclusive, LockLocation const& location = LockLocation::current());
     ErrorOr<void> restore_exclusive_lock(u32, LockLocation const& location = LockLocation::current());
 
-    void unlock();
-    [[nodiscard]] Mode force_unlock_exclusive_if_locked(u32&);
+    ErrorOr<void> unlock();
+    ErrorOr<Mode> force_unlock_exclusive_if_locked(u32&);
     [[nodiscard]] bool is_locked() const
     {
         SpinlockLocker lock(m_lock);
@@ -83,7 +83,7 @@ private:
     using BigLockBlockedThreadList = IntrusiveList<&Thread::m_big_lock_blocked_threads_list_node>;
 
     ErrorOr<void> block(Thread&, Mode, SpinlockLocker<Spinlock>&, u32);
-    void unblock_waiters(Mode);
+    ErrorOr<void> unblock_waiters(Mode);
 
     StringView m_name;
     Mode m_mode { Mode::Unlocked };
@@ -146,15 +146,16 @@ public:
     ALWAYS_INLINE ~MutexLocker()
     {
         if (m_locked)
-            unlock();
+            MUST(unlock()); // FIXME propagate this error
     }
 
-    ALWAYS_INLINE void unlock()
+    ALWAYS_INLINE ErrorOr<void> unlock()
     {
         VERIFY(m_lock);
         VERIFY(m_locked);
         m_locked = false;
-        m_lock->unlock();
+        TRY(m_lock->unlock());
+        return {};
     }
 
     ALWAYS_INLINE ErrorOr<void> attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())

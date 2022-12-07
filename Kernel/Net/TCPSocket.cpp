@@ -462,7 +462,7 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
     evaluate_block_conditions();
 
     if (description.is_blocking()) {
-        locker.unlock();
+        TRY(locker.unlock());
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
         if (TRY(Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags)).was_interrupted())
             return set_so_error(EINTR);

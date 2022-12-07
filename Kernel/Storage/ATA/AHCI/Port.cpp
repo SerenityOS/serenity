@@ -525,7 +525,7 @@ void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
     auto result = prepare_and_set_scatter_list(request);
     if (result.has_value()) {
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure.", representative_port_index());
-        locker.unlock();
+        MUST(locker.unlock()); // FIXME propagate this error
         complete_current_request(result.value());
         return;
     }
@@ -533,7 +533,7 @@ void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
     auto success = access_device(request.request_type(), request.block_index(), request.block_count());
     if (!success) {
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure.", representative_port_index());
-        locker.unlock();
+        MUST(locker.unlock()); // FIXME propagate this error
         complete_current_request(AsyncDeviceRequest::Failure);
         return;
     }

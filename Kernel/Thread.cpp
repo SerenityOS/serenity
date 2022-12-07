@@ -516,7 +516,7 @@ void Thread::yield_and_release_relock_big_lock()
 
 LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 {
-    return process().big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore);
+    return process().big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore).release_value_but_fixme_should_propagate_errors();
 }
 
 void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
