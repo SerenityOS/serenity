@@ -131,48 +131,28 @@ bool JsonValue::equals(JsonValue const& other) const
     return false;
 }
 
-JsonValue::JsonValue(int value)
+JsonValue::JsonValue(i32 value)
     : m_type(Type::Int32)
+    , m_value(value)
 {
-    m_value.set(static_cast<i32>(value));
 }
 
-JsonValue::JsonValue(unsigned value)
+JsonValue::JsonValue(u32 value)
     : m_type(Type::UnsignedInt32)
+    , m_value(value)
 {
-    m_value.set(static_cast<u32>(value));
 }
 
-JsonValue::JsonValue(long value)
-    : m_type(sizeof(long) == 8 ? Type::Int64 : Type::Int32)
-{
-    if constexpr (sizeof(long) == 8)
-        m_value.set(static_cast<i64>(value));
-    else
-        m_value.set(static_cast<i32>(value));
-}
-
-JsonValue::JsonValue(unsigned long value)
-    : m_type(sizeof(long) == 8 ? Type::UnsignedInt64 : Type::UnsignedInt32)
-{
-    if constexpr (sizeof(long) == 8)
-        m_value.set(static_cast<u64>(value));
-    else
-        m_value.set(static_cast<u32>(value));
-}
-
-JsonValue::JsonValue(long long value)
+JsonValue::JsonValue(i64 value)
     : m_type(Type::Int64)
+    , m_value(value)
 {
-    static_assert(sizeof(long long unsigned) == 8);
-    m_value.set(static_cast<i64>(value));
 }
 
-JsonValue::JsonValue(long long unsigned value)
+JsonValue::JsonValue(u64 value)
     : m_type(Type::UnsignedInt64)
+    , m_value(value)
 {
-    static_assert(sizeof(long long unsigned) == 8);
-    m_value.set(static_cast<u64>(value));
 }
 
 JsonValue::JsonValue(char const* cstring)

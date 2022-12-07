@@ -47,12 +47,10 @@ public:
     JsonValue& operator=(JsonValue const&);
     JsonValue& operator=(JsonValue&&);
 
-    JsonValue(int);
-    JsonValue(unsigned);
-    JsonValue(long);
-    JsonValue(long unsigned);
-    JsonValue(long long);
-    JsonValue(long long unsigned);
+    JsonValue(i32);
+    JsonValue(u32);
+    JsonValue(i64);
+    JsonValue(u64);
 
 #if !defined(KERNEL)
     JsonValue(double);
