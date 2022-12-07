@@ -40,7 +40,7 @@ ErrorOr<void> Service::setup_socket(SocketDescriptor& socket)
     // The return value is discarded as sockets are not always there, and unlinking a non-existent path is considered as a failure.
     (void)Core::System::unlink(socket.path);
 
-    TRY(Core::Directory::create(LexicalPath(socket.path).parent(), Core::Directory::CreateDirectories::Yes));
+    TRY(Core::Directory::create(TRY(TRY(LexicalPath::from_string(socket.path)).parent()), Core::Directory::CreateDirectories::Yes));
 
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later

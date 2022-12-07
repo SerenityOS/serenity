@@ -57,7 +57,7 @@ ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<Deprecate
     posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);
     if (chdir.has_value()) {
-        posix_spawn_file_actions_addchdir(&action, chdir.value().string().characters());
+        posix_spawn_file_actions_addchdir(&action, chdir.value().string().to_deprecated_string().characters());
     }
     posix_spawn_file_actions_adddup2(&action, stdout_pipe[1], STDOUT_FILENO);
     posix_spawn_file_actions_adddup2(&action, stderr_pipe[1], STDERR_FILENO);

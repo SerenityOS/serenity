@@ -200,15 +200,15 @@ void DirectoryView::setup_model()
 
     m_model->on_root_path_removed = [this] {
         // Change model root to the first existing parent directory.
-        LexicalPath model_root(model().root_path());
+        auto model_root = LexicalPath::from_string(model().root_path()).release_value_but_fixme_should_propagate_errors();
 
         while (model_root.string() != "/") {
-            model_root = model_root.parent();
-            if (Core::File::is_directory(model_root.string()))
+            model_root = model_root.parent().release_value_but_fixme_should_propagate_errors();
+            if (Core::File::is_directory(model_root.string().to_deprecated_string()))
                 break;
         }
 
-        open(model_root.string());
+        open(model_root.string().to_deprecated_string());
     };
 
     m_model->register_client(*this);
@@ -571,8 +571,8 @@ void DirectoryView::setup_actions()
     m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         DeprecatedString value;
         if (GUI::InputBox::show(window(), value, "Enter name:"sv, "New directory"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", path(), value));
-            int rc = mkdir(new_dir_path.characters(), 0777);
+            auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", path(), value)).release_value_but_fixme_should_propagate_errors();
+            int rc = mkdir(new_dir_path.to_deprecated_string().characters(), 0777);
             if (rc < 0) {
                 auto saved_errno = errno;
                 GUI::MessageBox::show(window(), DeprecatedString::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
@@ -583,9 +583,9 @@ void DirectoryView::setup_actions()
     m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         DeprecatedString value;
         if (GUI::InputBox::show(window(), value, "Enter name:"sv, "New file"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
-            auto new_file_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", path(), value));
+            auto new_file_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", path(), value)).release_value_but_fixme_should_propagate_errors();
             struct stat st;
-            int rc = stat(new_file_path.characters(), &st);
+            int rc = stat(new_file_path.to_deprecated_string().characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
                 auto saved_errno = errno;
                 GUI::MessageBox::show(window(), DeprecatedString::formatted("stat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
@@ -595,7 +595,7 @@ void DirectoryView::setup_actions()
                 GUI::MessageBox::show(window(), DeprecatedString::formatted("{}: Already exists", new_file_path), "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
-            int fd = creat(new_file_path.characters(), 0666);
+            int fd = creat(new_file_path.to_deprecated_string().characters(), 0666);
             if (fd < 0) {
                 auto saved_errno = errno;
                 GUI::MessageBox::show(window(), DeprecatedString::formatted("creat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error"sv, GUI::MessageBox::Type::Error);
@@ -669,8 +669,10 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
-        auto new_path = DeprecatedString::formatted("{}/{}", target_node.full_path(), LexicalPath::basename(url_to_copy.path()));
-        if (url_to_copy.path() == new_path)
+        auto new_path = String::formatted("{}/{}", target_node.full_path(),
+            LexicalPath::basename(String::from_deprecated_string(url_to_copy.path()).release_value_but_fixme_should_propagate_errors()))
+                            .release_value_but_fixme_should_propagate_errors();
+        if (url_to_copy.path() == new_path.to_deprecated_string())
             continue;
 
         paths_to_copy.append(url_to_copy.path());

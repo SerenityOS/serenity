@@ -288,7 +288,11 @@ static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& tr
 static bool is_removable(DeprecatedString const& absolute_path)
 {
     VERIFY(!absolute_path.is_empty());
-    int access_result = access(LexicalPath::dirname(absolute_path).characters(), W_OK);
+    int access_result = access(LexicalPath::dirname(String::from_deprecated_string(absolute_path).release_value_but_fixme_should_propagate_errors())
+                                   .release_value_but_fixme_should_propagate_errors()
+                                   .to_deprecated_string()
+                                   .characters(),
+        W_OK);
     if (access_result != 0 && errno != EACCES)
         perror("access");
     return access_result == 0;
@@ -350,7 +354,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Desktop::Launcher::open(URL::create_with_file_scheme(get_absolute_path_to_selected_node(treemapwidget)));
     });
     auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
-        LexicalPath path { get_absolute_path_to_selected_node(treemapwidget) };
+        auto path = LexicalPath::from_string(get_absolute_path_to_selected_node(treemapwidget).view()).release_value_but_fixme_should_propagate_errors();
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
 

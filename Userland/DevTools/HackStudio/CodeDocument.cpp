@@ -23,7 +23,7 @@ CodeDocument::CodeDocument(DeprecatedString const& file_path, Client* client)
     : TextDocument(client)
     , m_file_path(file_path)
 {
-    auto lexical_path = LexicalPath(file_path);
+    auto lexical_path = LexicalPath::from_string(file_path).release_value_but_fixme_should_propagate_errors();
     m_language = language_from_file(lexical_path);
     m_language_name = language_name_from_file(lexical_path);
 }

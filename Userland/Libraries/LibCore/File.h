@@ -77,6 +77,11 @@ public:
     };
 
     struct CopyError : public Error {
+        CopyError(Error&& error)
+            : Error(error.code())
+        {
+        }
+
         CopyError(int error_code, bool t)
             : Error(error_code)
             , tried_recursing(t)

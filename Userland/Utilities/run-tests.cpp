@@ -229,7 +229,7 @@ FileResult TestRunner::run_test_file(DeprecatedString const& test_path)
 {
     double start_time = get_time_in_ms();
 
-    auto path_for_test = LexicalPath(test_path);
+    auto path_for_test = LexicalPath::from_string(test_path).release_value_but_fixme_should_propagate_errors();
     if (should_skip_test(path_for_test)) {
         return FileResult { move(path_for_test), 0.0, Test::Result::Skip, -1 };
     }

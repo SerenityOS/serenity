@@ -15,6 +15,7 @@
 #include <LibCore/Stream.h>
 #include <LibIDL/IDLParser.h>
 #include <LibIDL/Types.h>
+#include <LibMain/Main.h>
 
 extern Vector<StringView> s_header_search_paths;
 
@@ -67,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
 
-    LexicalPath lexical_path(path);
+    auto lexical_path = TRY(LexicalPath::from_string(path));
     auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
 
     auto data = TRY(file->read_until_eof());

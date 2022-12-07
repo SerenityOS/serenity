@@ -44,10 +44,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool has_errors = false;
 
     for (auto& directory : directories) {
-        LexicalPath lexical_path(directory);
+        auto lexical_path = TRY(LexicalPath::from_string(directory));
         if (!create_parents) {
-            if (mkdir(lexical_path.string().characters(), mask.apply(mask_reference_mode)) < 0) {
-                perror("mkdir");
+            auto error = Core::System::mkdir(lexical_path.string(), mask.apply(mask_reference_mode));
+            if (error.is_error()) {
+                dbgln("{}", error.release_error());
                 has_errors = true;
             }
             continue;

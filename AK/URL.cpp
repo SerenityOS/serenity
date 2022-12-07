@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
@@ -161,7 +162,7 @@ u16 URL::default_port_for_scheme(StringView scheme)
 
 URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment, DeprecatedString const& hostname)
 {
-    LexicalPath lexical_path(path);
+    auto lexical_path = LexicalPath::from_string(path.view()).release_value_but_fixme_should_propagate_errors();
     if (!lexical_path.is_absolute())
         return {};
 
@@ -170,7 +171,11 @@ URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString 
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
     url.set_host(hostname.is_null() || hostname == "localhost" ? DeprecatedString::empty() : hostname);
-    url.set_paths(lexical_path.parts());
+    Vector<DeprecatedString> parts;
+    for (auto const& part : lexical_path.parts().release_value_but_fixme_should_propagate_errors()) {
+        parts.append(part.to_deprecated_string());
+    }
+    url.set_paths(parts);
     // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
     if (path.ends_with('/'))
         url.append_path("");
@@ -180,14 +185,18 @@ URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString 
 
 URL URL::create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment, DeprecatedString const& hostname)
 {
-    LexicalPath lexical_path(path);
+    auto lexical_path = LexicalPath::from_string(path.view()).release_value_but_fixme_should_propagate_errors();
 
     URL url;
     url.set_scheme("help");
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
     url.set_host(hostname.is_null() || hostname == "localhost" ? DeprecatedString::empty() : hostname);
-    url.set_paths(lexical_path.parts());
+    Vector<DeprecatedString> parts;
+    for (auto const& part : lexical_path.parts().release_value_but_fixme_should_propagate_errors()) {
+        parts.append(part.to_deprecated_string());
+    }
+    url.set_paths(parts);
     // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
     if (path.ends_with('/'))
         url.append_path("");
@@ -201,8 +210,8 @@ URL URL::create_with_url_or_path(DeprecatedString const& url_or_path)
     if (url.is_valid())
         return url;
 
-    DeprecatedString path = LexicalPath::canonicalized_path(url_or_path);
-    return URL::create_with_file_scheme(path);
+    auto path = LexicalPath::canonicalized_path(url_or_path).release_value_but_fixme_should_propagate_errors();
+    return URL::create_with_file_scheme(path.to_deprecated_string());
 }
 
 // https://url.spec.whatwg.org/#special-scheme

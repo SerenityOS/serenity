@@ -121,7 +121,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         }
     }
 
-    auto requested_path = LexicalPath::join("/"sv, resource_decoded).string();
+    auto requested_path = TRY(LexicalPath::join("/"sv, resource_decoded)).string();
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
@@ -146,7 +146,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         index_html_path_builder.append("/index.html"sv);
         auto index_html_path = index_html_path_builder.to_deprecated_string();
         if (!Core::File::exists(index_html_path)) {
-            TRY(handle_directory_listing(requested_path, real_path, request));
+            TRY(handle_directory_listing(requested_path.to_deprecated_string(), real_path, request));
             return true;
         }
         real_path = index_html_path;

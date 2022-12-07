@@ -155,7 +155,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
         auto filename = dt.next_path();
-        auto lexical_path = LexicalPath(filename);
+        auto lexical_path = LexicalPath::from_string(filename.view()).release_value_but_fixme_should_propagate_errors();
         if (lexical_path.extension() != "png")
             continue;
         auto basename = lexical_path.basename();

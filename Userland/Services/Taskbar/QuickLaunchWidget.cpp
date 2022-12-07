@@ -59,7 +59,7 @@ GUI::Icon QuickLaunchEntryExecutable::icon() const
 
 DeprecatedString QuickLaunchEntryExecutable::name() const
 {
-    return LexicalPath { m_path }.basename();
+    return LexicalPath::from_string(m_path).release_value_but_fixme_should_propagate_errors().basename();
 }
 
 ErrorOr<void> QuickLaunchEntryFile::launch() const

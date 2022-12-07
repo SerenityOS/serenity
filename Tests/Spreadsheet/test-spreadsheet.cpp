@@ -35,7 +35,7 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const&, JS::Interpreter& interpreter, 
 #ifdef AK_OS_SERENITY
     run_file(s_spreadsheet_runtime_path);
 #else
-    run_file(LexicalPath::join(Test::JS::g_test_root, s_spreadsheet_runtime_path).string());
+    run_file(MUST(LexicalPath::join(Test::JS::g_test_root, s_spreadsheet_runtime_path)).string().to_deprecated_string());
 #endif
 
     run_file("mock.test-common.js"sv);

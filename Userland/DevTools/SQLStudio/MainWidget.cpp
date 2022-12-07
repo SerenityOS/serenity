@@ -44,7 +44,7 @@ MainWidget::MainWidget()
         auto maybe_load_path = GUI::FilePicker::get_open_filepath(window());
         if (!maybe_load_path.has_value())
             return;
-        auto lexical_path = LexicalPath(maybe_load_path.release_value());
+        auto lexical_path = LexicalPath::from_string(maybe_load_path.release_value()).release_value_but_fixme_should_propagate_errors();
         open_script_from_file(lexical_path);
     });
 
@@ -431,7 +431,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
             if (!scheme.equals_ignoring_case("file"sv))
                 continue;
 
-            auto lexical_path = LexicalPath(url.path());
+            auto lexical_path = LexicalPath::from_string(url.path()).release_value_but_fixme_should_propagate_errors();
             if (lexical_path.extension().equals_ignoring_case("sql"sv))
                 open_script_from_file(lexical_path);
             if (lexical_path.extension().equals_ignoring_case("db"sv))

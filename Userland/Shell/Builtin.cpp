@@ -281,7 +281,7 @@ int Shell::builtin_cd(int argc, char const** argv)
     if (cd_history.is_empty() || cd_history.last() != real_path)
         cd_history.enqueue(real_path);
 
-    auto path_relative_to_current_directory = LexicalPath::relative_path(real_path, cwd);
+    auto path_relative_to_current_directory = LexicalPath::relative_path(real_path, cwd).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     if (path_relative_to_current_directory.is_empty())
         path_relative_to_current_directory = real_path;
     char const* path = path_relative_to_current_directory.characters();
@@ -682,7 +682,7 @@ int Shell::builtin_popd(int argc, char const** argv)
     if (should_not_switch)
         return 0;
 
-    auto new_path = LexicalPath::canonicalized_path(popped_path);
+    auto new_path = LexicalPath::canonicalized_path(popped_path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     if (chdir(new_path.characters()) < 0) {
         warnln("chdir({}) failed: {}", new_path, strerror(errno));
         return 1;
@@ -745,7 +745,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
         }
     }
 
-    auto real_path = LexicalPath::canonicalized_path(path_builder.to_deprecated_string());
+    auto real_path = LexicalPath::canonicalized_path(path_builder.to_deprecated_string()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
     struct stat st;
     int rc = stat(real_path.characters(), &st);

@@ -169,7 +169,7 @@ Optional<DeprecatedString> NewProjectDialog::get_project_full_path()
     if (!maybe_project_name.has_value())
         return {};
 
-    return LexicalPath::join(create_in, *maybe_project_name).string();
+    return LexicalPath::join(create_in, *maybe_project_name).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
 }
 
 void NewProjectDialog::do_create_project()

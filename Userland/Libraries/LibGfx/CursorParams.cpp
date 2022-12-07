@@ -13,7 +13,7 @@ namespace Gfx {
 
 CursorParams CursorParams::parse_from_filename(StringView cursor_path, Gfx::IntPoint default_hotspot)
 {
-    LexicalPath path(cursor_path);
+    auto path = LexicalPath::from_string(cursor_path).release_value_but_fixme_should_propagate_errors();
     auto file_title = path.title();
     auto last_dot_in_title = file_title.find_last('.');
     if (!last_dot_in_title.has_value() || last_dot_in_title.value() == 0) {

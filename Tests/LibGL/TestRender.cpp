@@ -34,7 +34,7 @@ static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView
     auto reference_filename = DeprecatedString::formatted("{}.qoi", test_name);
 
     if constexpr (SAVE_OUTPUT) {
-        auto target_path = LexicalPath("/home/anon").append(reference_filename);
+        auto target_path = MUST(MUST(LexicalPath::from_string("/home/anon"sv)).append(reference_filename));
         auto qoi_buffer = Gfx::QOIWriter::encode(bitmap);
         auto qoi_output_stream = MUST(Core::OutputFileStream::open(target_path.string()));
         auto number_of_bytes_written = qoi_output_stream.write(qoi_buffer);

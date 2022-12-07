@@ -606,7 +606,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     int argc = arguments.argc;
-    if (LexicalPath::basename(arguments.strings[0]) == "[") {
+    if (TRY(LexicalPath::basename(arguments.strings[0])) == "[") {
         --argc;
         if (StringView { arguments.strings[argc] } != "]")
             fatal_error("test invoked as '[' requires a closing bracket ']'");

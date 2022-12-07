@@ -732,8 +732,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
 
     if (!resources_folder.is_empty()) {
-        Web::FrameLoader::set_default_favicon_path(LexicalPath::join(resources_folder, "icons/16x16/app-browser.png"sv).string());
-        Gfx::FontDatabase::set_default_fonts_lookup_path(LexicalPath::join(resources_folder, "fonts"sv).string());
+        Web::FrameLoader::set_default_favicon_path(TRY(LexicalPath::join(resources_folder, "icons/16x16/app-browser.png"sv)).string().to_deprecated_string());
+        Gfx::FontDatabase::set_default_fonts_lookup_path(TRY(LexicalPath::join(resources_folder, "fonts"sv)).string().to_deprecated_string());
     }
     if (!ca_certs_path.is_empty()) {
         auto config_result = Core::ConfigFile::open(ca_certs_path);
@@ -755,7 +755,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto page_client = HeadlessBrowserPageClient::create();
 
     if (!resources_folder.is_empty()) {
-        auto system_theme = TRY(Gfx::load_system_theme(LexicalPath::join(resources_folder, "themes/Default.ini"sv).string()));
+        auto system_theme = TRY(Gfx::load_system_theme(TRY(LexicalPath::join(resources_folder, "themes/Default.ini"sv)).string().to_deprecated_string()));
         page_client->setup_palette(system_theme);
     } else {
         auto system_theme = TRY(Gfx::load_system_theme("/res/themes/Default.ini"));

@@ -313,3 +313,15 @@ inline Completion normal_completion(Optional<Value> value)
 Completion throw_completion(Value);
 
 }
+
+#define TRY_OR_RETURN_OOM_JS(vm, expression)                                   \
+    ({                                                                         \
+        /* Ignore -Wshadow to allow nesting the macro. */                      \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                       \
+            auto _temporary_result = (expression));                            \
+        if (_temporary_result.is_error()) {                                    \
+            VERIFY(_temporary_result.error().code() == ENOMEM);                \
+            return (vm).throw_completion<JS::InternalError>("Out of memory."); \
+        }                                                                      \
+        _temporary_result.release_value();                                     \
+    })

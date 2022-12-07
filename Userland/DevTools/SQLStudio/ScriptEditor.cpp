@@ -32,7 +32,7 @@ ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
     auto buffer = TRY(file->read_until_eof());
 
     set_text({ buffer.bytes() });
-    m_path = file_path.string();
+    m_path = file_path.string().to_deprecated_string();
     set_name(file_path.title());
     return {};
 }
@@ -63,7 +63,7 @@ ErrorOr<bool> ScriptEditor::save_as()
 
     m_path = save_path;
 
-    auto lexical_path = LexicalPath(save_path);
+    auto lexical_path = TRY(LexicalPath::from_string(save_path));
     set_name(lexical_path.title());
 
     auto parent = static_cast<GUI::TabWidget*>(parent_widget());

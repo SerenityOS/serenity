@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString path_buffer;
     if (path.is_empty()) {
-        path_buffer = LexicalPath::basename(target);
+        path_buffer = TRY(LexicalPath::basename(target)).to_deprecated_string();
         path = path_buffer.view();
     }
 
@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!stat.is_error() && S_ISDIR(stat.value().st_mode)) {
         // The target path is a directory, so we presumably want <path>/<filename> as the effective path.
-        path_buffer = LexicalPath::join(path, LexicalPath::basename(target)).string();
+        path_buffer = TRY(LexicalPath::join(path, TRY(LexicalPath::basename(target)))).string().to_deprecated_string();
         path = path_buffer.view();
         stat = Core::System::lstat(path);
     }

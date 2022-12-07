@@ -551,7 +551,7 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     auto target_path = path_input.text();
     if (Core::File::exists(target_path)) {
         if (!Core::File::is_directory(target_path))
-            target_path = LexicalPath::dirname(target_path);
+            target_path = LexicalPath::dirname(target_path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     } else {
         target_path = "/res/icons";
     }

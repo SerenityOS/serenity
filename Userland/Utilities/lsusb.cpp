@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     while (usb_devices.has_next()) {
-        auto full_path = LexicalPath(usb_devices.next_full_path());
+        auto full_path = TRY(LexicalPath::from_string(usb_devices.next_full_path()));
 
         auto proc_usb_device = Core::Stream::File::open(full_path.string(), Core::Stream::OpenMode::Read);
         if (proc_usb_device.is_error()) {

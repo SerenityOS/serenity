@@ -54,10 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                     // See if we can find the sources in /usr/src
                     // FIXME: I'm sure this can be improved!
-                    auto full_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("/usr/src/serenity/dummy/dummy/{}", source_position.file_path));
-                    if (access(full_path.characters(), F_OK) == 0) {
+                    auto full_path = TRY(LexicalPath::canonicalized_path(DeprecatedString::formatted("/usr/src/serenity/dummy/dummy/{}", source_position.file_path)));
+                    if (access(full_path.to_deprecated_string().characters(), F_OK) == 0) {
                         linked = true;
-                        auto url = URL::create_with_file_scheme(full_path, {}, hostname);
+                        auto url = URL::create_with_file_scheme(full_path.to_deprecated_string(), {}, hostname);
                         url.set_query(DeprecatedString::formatted("line_number={}", source_position.line_number));
                         out("\033]8;;{}\033\\", url.serialize());
                     }

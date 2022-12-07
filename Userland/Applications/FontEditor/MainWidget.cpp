@@ -114,18 +114,18 @@ ErrorOr<void> MainWidget::create_actions()
         if (!open_path.has_value())
             return;
         if (auto result = open_file(open_path.value()); result.is_error())
-            show_error(result.error(), "Opening"sv, LexicalPath { open_path.value() }.basename());
+            show_error(result.error(), "Opening"sv, MUST(LexicalPath::from_string(open_path.value())).basename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.is_empty())
             return m_save_as_action->activate();
         if (auto result = save_file(m_path); result.is_error())
-            show_error(result.error(), "Saving"sv, LexicalPath { m_path }.basename());
+            show_error(result.error(), "Saving"sv, MUST(LexicalPath::from_string(m_path)).basename());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
+        auto lexical_path = LexicalPath::from_string(m_path.is_empty() ? "Untitled.font" : m_path).release_value_but_fixme_should_propagate_errors();
         Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
         if (!save_path.has_value())
             return;
@@ -950,7 +950,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
 
         if (auto result = open_file(urls.first().path()); result.is_error())
-            show_error(result.error(), "Opening"sv, LexicalPath { urls.first().path() }.basename());
+            show_error(result.error(), "Opening"sv, LexicalPath::from_string(urls.first().path()).release_value_but_fixme_should_propagate_errors().basename());
     }
 }
 

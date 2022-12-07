@@ -16,7 +16,12 @@ namespace Core {
 LockFile::LockFile(char const* filename, Type type)
     : m_filename(filename)
 {
-    if (Core::Directory::create(LexicalPath(m_filename).parent(), Core::Directory::CreateDirectories::Yes).is_error())
+    if (Core::Directory::create(LexicalPath::from_string(StringView { m_filename, strlen(m_filename) })
+                                    .release_value_but_fixme_should_propagate_errors()
+                                    .parent()
+                                    .release_value_but_fixme_should_propagate_errors(),
+            Core::Directory::CreateDirectories::Yes)
+            .is_error())
         return;
 
     m_fd = open(filename, O_RDONLY | O_CREAT | O_CLOEXEC, 0666);

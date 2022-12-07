@@ -31,11 +31,11 @@ bool Playlist::load(StringView path)
 
 void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
 {
-    LexicalPath playlist_path(path);
+    auto playlist_path = LexicalPath::from_string(path).release_value_but_fixme_should_propagate_errors();
     Vector<M3UEntry*> to_delete;
 
     for (auto& entry : entries) {
-        if (!LexicalPath { entry.path }.is_absolute())
+        if (!LexicalPath::from_string(entry.path).release_value_but_fixme_should_propagate_errors().is_absolute())
             entry.path = DeprecatedString::formatted("{}/{}", playlist_path.dirname(), entry.path);
 
         if (!entry.extended_info->file_size_in_bytes.has_value()) {
@@ -49,7 +49,7 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
         }
 
         if (!entry.extended_info->track_display_title.has_value())
-            entry.extended_info->track_display_title = LexicalPath::title(entry.path);
+            entry.extended_info->track_display_title = LexicalPath::title(String::from_deprecated_string(entry.path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
         if (!entry.extended_info->track_length_in_seconds.has_value()) {
             // TODO: Implement embedded metadata extractor for other audio formats

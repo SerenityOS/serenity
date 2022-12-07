@@ -289,7 +289,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         display_hardening = true;
     }
 
-    path = LexicalPath::absolute_path(TRY(Core::System::getcwd()), path);
+    path = TRY(LexicalPath::absolute_path(TRY(Core::System::getcwd()), path)).to_deprecated_string();
 
     auto file_or_error = Core::MappedFile::map(path);
 

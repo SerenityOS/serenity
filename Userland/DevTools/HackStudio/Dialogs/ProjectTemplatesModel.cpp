@@ -116,11 +116,11 @@ void ProjectTemplatesModel::rescan_templates()
     }
 
     while (di.has_next()) {
-        auto full_path = LexicalPath(di.next_full_path());
+        auto full_path = LexicalPath::from_string(di.next_full_path()).release_value_but_fixme_should_propagate_errors();
         if (!full_path.has_extension(".ini"sv))
             continue;
 
-        auto project_template = ProjectTemplate::load_from_manifest(full_path.string());
+        auto project_template = ProjectTemplate::load_from_manifest(full_path.string().to_deprecated_string());
         if (!project_template) {
             warnln("Template manifest {} is invalid.", full_path.string());
             continue;

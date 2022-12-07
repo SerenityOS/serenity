@@ -5,6 +5,7 @@
  */
 
 #include "DebugSession.h"
+#include "AK/DeprecatedString.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
@@ -463,7 +464,7 @@ void DebugSession::update_loaded_libs()
 
         DeprecatedString lib_name = object_path.value();
         if (Core::File::looks_like_shared_library(lib_name))
-            lib_name = LexicalPath::basename(object_path.value());
+            lib_name = LexicalPath::basename(String::from_deprecated_string(lib_name).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
         FlatPtr base_address = entry.as_object().get("address"sv).to_addr();
         if (auto it = m_loaded_libraries.find(lib_name); it != m_loaded_libraries.end()) {

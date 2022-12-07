@@ -28,7 +28,7 @@ TEST_CASE(test_regression)
     while (directory_iterator.has_next()) {
         auto file_path = directory_iterator.next_full_path();
 
-        auto path = LexicalPath { file_path };
+        auto path = MUST(LexicalPath::from_string(file_path));
         if (!path.has_extension(".cpp"sv))
             continue;
 

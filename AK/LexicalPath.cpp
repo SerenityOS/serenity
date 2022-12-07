@@ -12,56 +12,61 @@
 
 namespace AK {
 
-char s_single_dot = '.';
-
-LexicalPath::LexicalPath(DeprecatedString path)
-    : m_string(canonicalized_path(move(path)))
+ErrorOr<LexicalPath> LexicalPath::from_string(StringView string_view)
 {
-    if (m_string.is_empty()) {
-        m_string = ".";
-        m_dirname = m_string;
-        m_basename = {};
-        m_title = {};
-        m_extension = {};
-        m_parts.clear();
-        return;
-    }
-
-    m_parts = m_string.split_view('/');
-
-    auto last_slash_index = m_string.view().find_last('/');
-    if (!last_slash_index.has_value()) {
-        // The path contains a single part and is not absolute. m_dirname = "."sv
-        m_dirname = { &s_single_dot, 1 };
-    } else if (*last_slash_index == 0) {
-        // The path contains a single part and is absolute. m_dirname = "/"sv
-        m_dirname = m_string.substring_view(0, 1);
-    } else {
-        m_dirname = m_string.substring_view(0, *last_slash_index);
-    }
-
-    if (m_string == "/")
-        m_basename = m_string;
-    else {
-        VERIFY(m_parts.size() > 0);
-        m_basename = m_parts.last();
-    }
-
-    auto last_dot_index = m_basename.find_last('.');
-    // NOTE: if the dot index is 0, this means we have ".foo", it's not an extension, as the title would then be "".
-    if (last_dot_index.has_value() && *last_dot_index != 0) {
-        m_title = m_basename.substring_view(0, *last_dot_index);
-        m_extension = m_basename.substring_view(*last_dot_index + 1);
-    } else {
-        m_title = m_basename;
-        m_extension = {};
-    }
+    return from_string(TRY(String::from_utf8(string_view)));
 }
 
-Vector<DeprecatedString> LexicalPath::parts() const
+ErrorOr<LexicalPath> LexicalPath::from_string(String path_string)
 {
-    Vector<DeprecatedString> vector;
-    vector.ensure_capacity(m_parts.size());
+    LexicalPath path;
+    path.m_string = TRY(canonicalized_path(path_string.bytes_as_string_view()));
+    if (path.m_string.is_empty()) {
+        path.m_string = TRY(String::from_utf8("."sv));
+        path.m_dirname = path.m_string;
+        path.m_basename = {};
+        path.m_title = {};
+        path.m_extension = {};
+        path.m_parts.clear();
+        return path;
+    }
+
+    path.m_parts = TRY(path.m_string.split_bytes('/'));
+
+    auto last_slash_index = path.m_string.bytes_as_string_view().find_last('/');
+    if (!last_slash_index.has_value()) {
+        // The path contains a single part and is not absolute. m_dirname = "."sv
+        path.m_dirname = TRY(String::from_utf8("."sv));
+    } else if (*last_slash_index == 0) {
+        // The path contains a single part and is absolute. m_dirname = "/"sv
+        path.m_dirname = TRY(path.m_string.substring_from_byte_offset(0, 1));
+    } else {
+        path.m_dirname = TRY(path.m_string.substring_from_byte_offset(0, *last_slash_index));
+    }
+
+    if (path.m_string == "/")
+        path.m_basename = path.m_string;
+    else {
+        VERIFY(path.m_parts.size() > 0);
+        path.m_basename = path.m_parts.last();
+    }
+
+    auto last_dot_index = path.m_basename.find_last('.');
+    // NOTE: if the dot index is 0, this means we have ".foo", it's not an extension, as the title would then be "".
+    if (last_dot_index.has_value() && *last_dot_index != 0) {
+        path.m_title = TRY(path.m_basename.substring_from_byte_offset(0, *last_dot_index));
+        path.m_extension = TRY(path.m_basename.substring_from_byte_offset(*last_dot_index + 1));
+    } else {
+        path.m_title = path.m_basename;
+        path.m_extension = {};
+    }
+    return path;
+}
+
+ErrorOr<Vector<String>> LexicalPath::parts() const
+{
+    Vector<String> vector;
+    TRY(vector.try_ensure_capacity(m_parts.size()));
     for (auto& part : m_parts)
         vector.unchecked_append(part);
     return vector;
@@ -69,7 +74,7 @@ Vector<DeprecatedString> LexicalPath::parts() const
 
 bool LexicalPath::has_extension(StringView extension) const
 {
-    return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
+    return m_string.ends_with_bytes(extension, CaseSensitivity::CaseInsensitive);
 }
 
 bool LexicalPath::is_child_of(LexicalPath const& possible_parent) const
@@ -88,23 +93,22 @@ bool LexicalPath::is_child_of(LexicalPath const& possible_parent) const
     return common_parts_with_parent == possible_parent.parts_view().span();
 }
 
-DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
+ErrorOr<String> LexicalPath::canonicalized_path(StringView path)
 {
-    if (path.is_null())
-        return {};
+    VERIFY(!path.is_null());
 
     // NOTE: We never allow an empty m_string, if it's empty, we just set it to '.'.
     if (path.is_empty())
-        return ".";
+        return String::from_utf8("."sv);
 
     // NOTE: If there are no dots, no '//' and the path doesn't end with a slash, it is already canonical.
     if (!path.contains("."sv) && !path.contains("//"sv) && !path.ends_with('/'))
-        return path;
+        return String::from_utf8(path);
 
-    auto is_absolute = path[0] == '/';
+    auto is_absolute = path.starts_with('/');
     auto parts = path.split_view('/');
     size_t approximate_canonical_length = 0;
-    Vector<DeprecatedString> canonical_parts;
+    Vector<String> canonical_parts;
 
     for (auto& part : parts) {
         if (part == ".")
@@ -123,56 +127,57 @@ DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
                 }
             }
         }
-        approximate_canonical_length += part.length() + 1;
-        canonical_parts.append(part);
+        approximate_canonical_length += part.bytes().size() + 1;
+        TRY(canonical_parts.try_append(TRY(String::from_utf8(part))));
     }
 
     if (canonical_parts.is_empty() && !is_absolute)
-        canonical_parts.append(".");
+        TRY(canonical_parts.try_append(TRY(String::from_utf8("."sv))));
 
     StringBuilder builder(approximate_canonical_length);
     if (is_absolute)
-        builder.append('/');
+        TRY(builder.try_append('/'));
     builder.join('/', canonical_parts);
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-DeprecatedString LexicalPath::absolute_path(DeprecatedString dir_path, DeprecatedString target)
+ErrorOr<String> LexicalPath::absolute_path(StringView dir_path, StringView target)
 {
-    if (LexicalPath(target).is_absolute()) {
+    if (TRY(LexicalPath::from_string(target)).is_absolute()) {
         return LexicalPath::canonicalized_path(target);
     }
-    return LexicalPath::canonicalized_path(join(dir_path, target).string());
+    return LexicalPath::canonicalized_path(TRY(join(dir_path, target)).string());
 }
 
-DeprecatedString LexicalPath::relative_path(StringView a_path, StringView a_prefix)
+ErrorOr<String> LexicalPath::relative_path(StringView a_path, StringView a_prefix)
 {
     if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
-        // FIXME: This should probably VERIFY or return an Optional<DeprecatedString>.
-        return ""sv;
+        // FIXME: This should probably VERIFY or return an Optional<String>.
+        return String {};
     }
 
     if (a_path == a_prefix)
-        return ".";
+        return String::from_utf8("."sv);
 
     // NOTE: Strip optional trailing slashes, except if the full path is only "/".
-    auto path = canonicalized_path(a_path);
-    auto prefix = canonicalized_path(a_prefix);
+    auto path = TRY(canonicalized_path(TRY(String::from_utf8(a_path))));
+    auto prefix = TRY(canonicalized_path(TRY(String::from_utf8(a_prefix))));
 
     if (path == prefix)
-        return ".";
+        return String::from_utf8("."sv);
 
     // NOTE: Handle this special case first.
     if (prefix == "/"sv)
-        return path.substring_view(1);
+        return path.substring_from_byte_offset(1);
 
     // NOTE: This means the prefix is a direct child of the path.
-    if (path.starts_with(prefix) && path[prefix.length()] == '/') {
-        return path.substring_view(prefix.length() + 1);
+    auto prefix_with_slash = TRY(String::formatted("{}/", prefix));
+    if (path.starts_with_bytes(prefix_with_slash)) {
+        return path.substring_from_byte_offset(prefix_with_slash.bytes().size());
     }
 
-    auto path_parts = path.split_view('/');
-    auto prefix_parts = prefix.split_view('/');
+    auto path_parts = TRY(path.split_bytes('/'));
+    auto prefix_parts = TRY(prefix.split_bytes('/'));
     size_t index_of_first_part_that_differs = 0;
     for (; index_of_first_part_that_differs < path_parts.size() && index_of_first_part_that_differs < prefix_parts.size(); index_of_first_part_that_differs++) {
         if (path_parts[index_of_first_part_that_differs] != prefix_parts[index_of_first_part_that_differs])
@@ -189,20 +194,20 @@ DeprecatedString LexicalPath::relative_path(StringView a_path, StringView a_pref
             builder.append('/');
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-LexicalPath LexicalPath::append(StringView value) const
+ErrorOr<LexicalPath> LexicalPath::append(StringView value) const
 {
     return LexicalPath::join(m_string, value);
 }
 
-LexicalPath LexicalPath::prepend(StringView value) const
+ErrorOr<LexicalPath> LexicalPath::prepend(StringView value) const
 {
     return LexicalPath::join(value, m_string);
 }
 
-LexicalPath LexicalPath::parent() const
+ErrorOr<LexicalPath> LexicalPath::parent() const
 {
     return append(".."sv);
 }

@@ -122,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString focused_entry;
     if (is_selection_mode) {
-        LexicalPath path(initial_location);
+        auto path = TRY(LexicalPath::from_string(initial_location));
         initial_location = path.dirname();
         focused_entry = path.basename();
     }
@@ -185,7 +185,10 @@ void do_paste(DeprecatedString const& target_directory, GUI::Window* window)
 void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window)
 {
     auto path = selected_file_paths.first();
-    auto destination = DeprecatedString::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
+    auto destination = DeprecatedString::formatted("{}/{}", Core::StandardPaths::desktop_directory(),
+        LexicalPath::basename(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors())
+            .release_value_but_fixme_should_propagate_errors()
+            .to_deprecated_string());
     if (auto result = Core::File::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, DeprecatedString::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager"sv,
             GUI::MessageBox::Type::Error);
@@ -198,13 +201,13 @@ void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI:
     if (GUI::InputBox::show(window, archive_name, "Enter name:"sv, "Create Archive"sv) != GUI::InputBox::ExecResult::OK)
         return;
 
-    auto output_directory_path = LexicalPath(selected_file_paths.first());
+    auto output_directory_path = LexicalPath::from_string(selected_file_paths.first()).release_value_but_fixme_should_propagate_errors();
 
     StringBuilder path_builder;
     path_builder.append(output_directory_path.dirname());
     path_builder.append('/');
     if (archive_name.is_empty()) {
-        path_builder.append(output_directory_path.parent().basename());
+        path_builder.append(output_directory_path.parent().release_value_but_fixme_should_propagate_errors().basename());
         path_builder.append(".zip"sv);
     } else {
         path_builder.append(archive_name);
@@ -227,7 +230,7 @@ void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI:
         arg_list.append("-f");
         arg_list.append(output_path.characters());
         for (auto const& path : selected_file_paths) {
-            relative_paths.append(LexicalPath::relative_path(path, output_directory_path.dirname()));
+            relative_paths.append(LexicalPath::relative_path(path, output_directory_path.dirname()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
             arg_list.append(relative_paths.last().characters());
         }
         arg_list.append(nullptr);
@@ -899,7 +902,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                 selected = directory_view->selected_file_paths();
             } else {
                 path = directories_model->full_path(tree_view.selection().first());
-                container_dir_path = LexicalPath::basename(path);
+                container_dir_path = LexicalPath::basename(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
                 selected = tree_view_selected_file_paths();
             }
 
@@ -1104,7 +1107,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         location_textbox.set_text(new_path);
 
         {
-            LexicalPath lexical_path(new_path);
+            auto lexical_path = LexicalPath::from_string(new_path).release_value_but_fixme_should_propagate_errors();
 
             auto segment_index_of_new_path_in_breadcrumbbar = breadcrumbbar.find_segment_with_data(new_path);
 
@@ -1124,12 +1127,12 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                 breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
                 StringBuilder builder;
 
-                for (auto& part : lexical_path.parts()) {
+                for (auto& part : lexical_path.parts().release_value_but_fixme_should_propagate_errors()) {
                     // NOTE: We rebuild the path as we go, so we have something to pass to GUI::FileIconProvider.
                     builder.append('/');
                     builder.append(part);
 
-                    breadcrumbbar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
+                    breadcrumbbar.append_segment(part.to_deprecated_string(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
                 }
 
                 breadcrumbbar.set_selected_segment(breadcrumbbar.segment_count() - 1);
@@ -1302,16 +1305,16 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         }
     };
 
-    auto copy_urls_to_directory = [&](Vector<URL> const& urls, DeprecatedString const& directory) {
+    auto copy_urls_to_directory = [&](Vector<URL> const& urls, DeprecatedString const& directory) -> ErrorOr<void> {
         if (urls.is_empty()) {
             dbgln("No files to copy");
-            return;
+            return {};
         }
         bool had_accepted_copy = false;
         for (auto& url_to_copy : urls) {
             if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
                 continue;
-            auto new_path = DeprecatedString::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
+            auto new_path = DeprecatedString::formatted("{}/{}", directory, TRY(LexicalPath::basename(TRY(String::from_deprecated_string(url_to_copy.path())))));
             if (url_to_copy.path() == new_path)
                 continue;
 
@@ -1324,12 +1327,13 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         }
         if (had_accepted_copy)
             refresh_tree_view();
+        return {};
     };
 
     breadcrumbbar.on_segment_drop = [&](size_t segment_index, GUI::DropEvent const& event) {
         if (!event.mime_data().has_urls())
             return;
-        copy_urls_to_directory(event.mime_data().urls(), breadcrumbbar.segment_data(segment_index));
+        copy_urls_to_directory(event.mime_data().urls(), breadcrumbbar.segment_data(segment_index)).release_value_but_fixme_should_propagate_errors();
     };
 
     breadcrumbbar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
@@ -1347,7 +1351,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         auto& target_node = directories_model->node(index);
         if (!target_node.is_directory())
             return;
-        copy_urls_to_directory(event.mime_data().urls(), target_node.full_path());
+        copy_urls_to_directory(event.mime_data().urls(), target_node.full_path()).release_value_but_fixme_should_propagate_errors();
         const_cast<GUI::DropEvent&>(event).accept();
     };
 

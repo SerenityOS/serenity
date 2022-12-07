@@ -263,7 +263,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (output_name.is_empty())
                     output_name = url.path();
 
-                LexicalPath path { output_name };
+                auto path = LexicalPath::from_string(output_name).release_value_but_fixme_should_propagate_errors();
                 output_name = path.basename();
 
                 // The URL didn't have a name component, e.g. 'serenityos.org'

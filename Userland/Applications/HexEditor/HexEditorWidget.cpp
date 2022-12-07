@@ -506,8 +506,8 @@ void HexEditorWidget::set_path(StringView path)
         m_name = {};
         m_extension = {};
     } else {
-        auto lexical_path = LexicalPath(path);
-        m_path = lexical_path.string();
+        auto lexical_path = LexicalPath::from_string(path).release_value_but_fixme_should_propagate_errors();
+        m_path = lexical_path.string().to_deprecated_string();
         m_name = lexical_path.title();
         m_extension = lexical_path.extension();
     }

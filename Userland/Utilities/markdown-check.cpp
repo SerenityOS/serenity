@@ -269,14 +269,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto file_lexical_path = LexicalPath(file_item.key);
+        auto file_lexical_path = TRY(LexicalPath::from_string(file_item.key));
         auto file_dir = file_lexical_path.dirname();
         for (auto const& file_link : file_item.value.file_links()) {
             DeprecatedString pointee_file;
             if (file_link.file_path.is_empty()) {
                 pointee_file = file_item.key;
             } else {
-                pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
+                pointee_file = TRY(LexicalPath::absolute_path(file_dir, file_link.file_path)).to_deprecated_string();
             }
             if (!Core::File::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",

@@ -153,7 +153,7 @@ DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
     for (size_t i = 0; i < source_positions.size(); ++i) {
         auto& position = source_positions[i];
         auto fmt = color ? "\033[34;1m{}\033[0m:{}"sv : "{}:{}"sv;
-        builder.appendff(fmt, LexicalPath::basename(position.file_path), position.line_number);
+        builder.appendff(fmt, LexicalPath::basename(String::from_utf8(position.file_path.view()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors(), position.line_number);
         if (i != source_positions.size() - 1) {
             builder.append(" => "sv);
         }

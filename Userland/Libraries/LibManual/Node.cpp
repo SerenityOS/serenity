@@ -31,11 +31,11 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     ++query_parameter_iterator;
     if (query_parameter_iterator.is_end()) {
         // [/path/to/docs.md]
-        auto path_from_query = LexicalPath { first_query_parameter };
+        auto path_from_query = TRY(LexicalPath::from_string(first_query_parameter));
         if (path_from_query.is_absolute()
-            && path_from_query.is_child_of(manual_base_path)
+            && path_from_query.is_child_of(TRY(LexicalPath::from_string(manual_base_path)))
             && path_from_query.extension() == "md"sv) {
-            auto section_directory = path_from_query.parent();
+            auto section_directory = TRY(path_from_query.parent());
             auto man_string_location = section_directory.basename().find("man"sv);
             if (!man_string_location.has_value())
                 return Error::from_string_literal("Page is inside invalid section");

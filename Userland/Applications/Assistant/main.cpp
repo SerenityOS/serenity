@@ -55,7 +55,8 @@ class ResultRow final : public GUI::Button {
             if (!m_context_menu) {
                 m_context_menu = GUI::Menu::construct();
 
-                if (LexicalPath path { text() }; path.is_absolute()) {
+                if (auto path = LexicalPath::from_string(text().view()).release_value_but_fixme_should_propagate_errors();
+                    path.is_absolute()) {
                     m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
                         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
                     }));

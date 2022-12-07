@@ -95,7 +95,7 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Interpreter& int
 
     auto start_time = Test::get_time_in_ms();
 
-    LexicalPath path(test_file);
+    auto path = MUST(LexicalPath::from_string(test_file.view()));
     auto dirname = path.dirname();
     enum {
         Early,
@@ -144,7 +144,7 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Interpreter& int
     }
 
     auto test_result = test_passed ? Test::Result::Pass : Test::Result::Fail;
-    auto test_path = LexicalPath::relative_path(test_file, Test::JS::g_test_root);
+    auto test_path = MUST(LexicalPath::relative_path(test_file, Test::JS::g_test_root)).to_deprecated_string();
     auto duration_ms = Test::get_time_in_ms() - start_time;
     return Test::JS::JSFileResult {
         test_path,

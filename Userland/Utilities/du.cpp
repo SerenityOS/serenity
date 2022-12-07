@@ -151,9 +151,9 @@ ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_
         }
     }
 
-    auto const basename = LexicalPath::basename(path);
+    auto const basename = TRY(LexicalPath::basename(path));
     for (auto const& pattern : du_option.excluded_patterns) {
-        if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
+        if (basename.to_deprecated_string().matches(pattern, CaseSensitivity::CaseSensitive))
             return { 0 };
     }
 

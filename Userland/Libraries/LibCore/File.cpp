@@ -245,12 +245,12 @@ DeprecatedString File::absolute_path(DeprecatedString const& path)
         return File::real_path_for(path);
 
     if (path.starts_with("/"sv))
-        return LexicalPath::canonicalized_path(path);
+        return LexicalPath::canonicalized_path(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
     auto working_directory = File::current_working_directory();
-    auto full_path = LexicalPath::join(working_directory, path);
+    auto full_path = LexicalPath::join(working_directory, path).release_value_but_fixme_should_propagate_errors();
 
-    return LexicalPath::canonicalized_path(full_path.string());
+    return LexicalPath::canonicalized_path(full_path.string()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 #ifdef AK_OS_SERENITY
@@ -350,7 +350,7 @@ static DeprecatedString get_duplicate_name(DeprecatedString const& path, int dup
     if (duplicate_count == 0) {
         return path;
     }
-    LexicalPath lexical_path(path);
+    auto lexical_path = LexicalPath::from_string(path.view()).release_value_but_fixme_should_propagate_errors();
     StringBuilder duplicated_name;
     duplicated_name.append('/');
     auto& parts = lexical_path.parts_view();
@@ -415,7 +415,7 @@ ErrorOr<void, File::CopyError> File::copy_file(DeprecatedString const& dst_path,
         if (errno != EISDIR)
             return CopyError { errno, false };
 
-        auto dst_dir_path = DeprecatedString::formatted("{}/{}", dst_path, LexicalPath::basename(source.filename()));
+        auto dst_dir_path = DeprecatedString::formatted("{}/{}", dst_path, TRY(LexicalPath::basename(TRY(String::from_deprecated_string(source.filename())))));
         dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0)
             return CopyError { errno, false };

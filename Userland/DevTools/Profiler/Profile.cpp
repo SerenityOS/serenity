@@ -337,7 +337,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
                 .executable = executable,
-                .basename = LexicalPath::basename(executable),
+                .basename = TRY(LexicalPath::basename(TRY(String::from_deprecated_string(executable)))).bytes_as_string_view(),
                 .start_valid = event.serial,
                 .end_valid = {},
             });
@@ -359,7 +359,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
                 .executable = executable,
-                .basename = LexicalPath::basename(executable),
+                .basename = TRY(LexicalPath::basename(TRY(String::from_deprecated_string(executable)))).bytes_as_string_view(),
                 .start_valid = event.serial,
                 .end_valid = {},
             });
@@ -624,7 +624,7 @@ ProfileNode::ProfileNode(Process const& process, FlyString const& object_name, D
     } else {
         object = object_name;
     }
-    m_object_name = LexicalPath::basename(object);
+    m_object_name = LexicalPath::basename(String::from_deprecated_string(object).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 }

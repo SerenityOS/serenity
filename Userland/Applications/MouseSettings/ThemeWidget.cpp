@@ -61,7 +61,7 @@ void MouseCursorModel::invalidate()
 
         Cursor cursor;
         cursor.path = move(path);
-        cursor.name = LexicalPath::basename(cursor.path);
+        cursor.name = LexicalPath::basename(String::from_deprecated_string(cursor.path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
         // FIXME: Animated cursor bitmaps
         auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path).release_value_but_fixme_should_propagate_errors();

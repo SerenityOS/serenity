@@ -500,7 +500,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool quit_at_eof = false;
     bool emulate_more = false;
 
-    if (LexicalPath::basename(arguments.strings[0]) == "more"sv)
+    if (TRY(LexicalPath::basename(TRY(String::from_utf8(arguments.strings[0])))) == "more"sv)
         emulate_more = true;
 
     Core::ArgsParser args_parser;

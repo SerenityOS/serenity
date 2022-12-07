@@ -177,7 +177,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
                 return;
 
             if (event.event_path.starts_with(widget->project().root_path())) {
-                DeprecatedString relative_path = LexicalPath::relative_path(event.event_path, widget->project().root_path());
+                DeprecatedString relative_path = LexicalPath::relative_path(event.event_path, widget->project().root_path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
                 widget->handle_external_file_deletion(relative_path);
             } else {
                 widget->handle_external_file_deletion(event.event_path);
@@ -273,8 +273,8 @@ void HackStudioWidget::open_project(DeprecatedString const& root_path)
 
     m_project->model().on_rename_successful = [this](auto& absolute_old_path, auto& absolute_new_path) {
         file_renamed(
-            LexicalPath::relative_path(absolute_old_path, m_project->root_path()),
-            LexicalPath::relative_path(absolute_new_path, m_project->root_path()));
+            LexicalPath::relative_path(absolute_old_path, m_project->root_path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string(),
+            LexicalPath::relative_path(absolute_new_path, m_project->root_path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     };
 
     auto recent_projects = read_recent_projects();
@@ -310,7 +310,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
 {
     DeprecatedString filename = full_filename;
     if (full_filename.starts_with(project().root_path())) {
-        filename = LexicalPath::relative_path(full_filename, project().root_path());
+        filename = LexicalPath::relative_path(full_filename, project().root_path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     }
     if (Core::File::is_directory(filename) || !Core::File::exists(filename))
         return false;
@@ -401,7 +401,7 @@ void HackStudioWidget::close_file_in_all_editors(DeprecatedString const& filenam
     for (auto& editor_wrapper : m_all_editor_wrappers) {
         Editor& editor = editor_wrapper.editor();
         DeprecatedString editor_file_path = editor.code_document().file_path();
-        DeprecatedString relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
+        DeprecatedString relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
         if (relative_editor_file_path == filename) {
             if (m_open_files_vector.is_empty()) {
@@ -536,12 +536,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(DeprecatedSt
         if (!path_to_selected.is_empty()) {
             VERIFY(Core::File::exists(path_to_selected.first()));
 
-            LexicalPath selected(path_to_selected.first());
+            LexicalPath selected = LexicalPath::from_string(path_to_selected.first()).release_value_but_fixme_should_propagate_errors();
 
             DeprecatedString dir_path;
 
-            if (Core::File::is_directory(selected.string()))
-                dir_path = selected.string();
+            if (Core::File::is_directory(selected.string().to_deprecated_string()))
+                dir_path = selected.string().to_deprecated_string();
             else
                 dir_path = selected.dirname();
 
@@ -569,20 +569,20 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
         auto path_to_selected = selected_file_paths();
 
         if (!path_to_selected.is_empty()) {
-            LexicalPath selected(path_to_selected.first());
+            auto selected = LexicalPath::from_string(path_to_selected.first()).release_value_but_fixme_should_propagate_errors();
 
             DeprecatedString dir_path;
 
-            if (Core::File::is_directory(selected.string()))
-                dir_path = selected.string();
+            if (Core::File::is_directory(selected.string().to_deprecated_string()))
+                dir_path = selected.string().to_deprecated_string();
             else
                 dir_path = selected.dirname();
 
             directory_name = DeprecatedString::formatted("{}/{}", dir_path, directory_name);
         }
 
-        auto formatted_dir_name = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_project->model().root_path(), directory_name));
-        int rc = mkdir(formatted_dir_name.characters(), 0755);
+        auto formatted_dir_name = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_project->model().root_path(), directory_name)).release_value_but_fixme_should_propagate_errors();
+        int rc = mkdir(formatted_dir_name.to_deprecated_string().characters(), 0755);
         if (rc < 0) {
             GUI::MessageBox::show(window(), "Failed to create new directory"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
@@ -655,7 +655,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
         DeprecatedString message;
         if (files.size() == 1) {
-            LexicalPath file(files[0]);
+            auto file = LexicalPath::from_string(files[0]).release_value_but_fixme_should_propagate_errors();
             message = DeprecatedString::formatted("Really remove {} from disk?", file.basename());
         } else {
             message = DeprecatedString::formatted("Really remove {} files from disk?", files.size());
@@ -892,7 +892,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
 {
     return GUI::CommonActions::make_save_as_action([&](auto&) {
         auto const old_filename = current_editor_wrapper().filename();
-        LexicalPath const old_path(old_filename);
+        auto const old_path = LexicalPath::from_string(old_filename).release_value_but_fixme_should_propagate_errors();
 
         Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(),
             old_filename.is_null() ? "Untitled"sv : old_path.title(),
@@ -902,7 +902,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
             return;
         }
 
-        DeprecatedString const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path());
+        DeprecatedString const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
         if (current_editor_wrapper().filename().is_null()) {
             current_editor_wrapper().set_filename(relative_file_path);
         } else {
@@ -1084,14 +1084,14 @@ void HackStudioWidget::initialize_debugger()
 
 DeprecatedString HackStudioWidget::get_full_path_of_serenity_source(DeprecatedString const& file)
 {
-    auto path_parts = LexicalPath(file).parts();
+    auto path_parts = LexicalPath::from_string(file).release_value_but_fixme_should_propagate_errors().parts().release_value_but_fixme_should_propagate_errors();
     while (!path_parts.is_empty() && path_parts[0] == "..") {
         path_parts.remove(0);
     }
     StringBuilder relative_path_builder;
     relative_path_builder.join('/', path_parts);
-    constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
-    LexicalPath serenity_sources_base(SERENITY_LIBS_PREFIX);
+    StringView const SERENITY_LIBS_PREFIX = "/usr/src/serenity"sv;
+    auto serenity_sources_base = LexicalPath::from_string(SERENITY_LIBS_PREFIX);
     return DeprecatedString::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_deprecated_string());
 }
 
@@ -1728,18 +1728,18 @@ void HackStudioWidget::create_location_history_actions()
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_project_configuration_action()
 {
     return GUI::Action::create("Project Configuration", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv).release_value(), [&](auto&) {
-        auto parent_directory = LexicalPath::dirname(Project::config_file_path);
-        auto absolute_config_file_path = LexicalPath::absolute_path(m_project->root_path(), Project::config_file_path);
+        auto parent_directory = LexicalPath::dirname(Project::config_file_path).release_value_but_fixme_should_propagate_errors();
+        auto absolute_config_file_path = LexicalPath::absolute_path(m_project->root_path(), Project::config_file_path).release_value_but_fixme_should_propagate_errors();
 
-        if (!Core::File::exists(absolute_config_file_path)) {
-            if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
+        if (!Core::File::exists(absolute_config_file_path.to_deprecated_string())) {
+            if (Core::File::exists(parent_directory.to_deprecated_string()) && !Core::File::is_directory(parent_directory.to_deprecated_string())) {
                 GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory));
                 return;
             }
 
-            mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory).characters(), 0755);
+            mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory).release_value_but_fixme_should_propagate_errors().to_deprecated_string().characters(), 0755);
 
-            auto file = Core::File::open(absolute_config_file_path, Core::OpenMode::WriteOnly);
+            auto file = Core::File::open(absolute_config_file_path.to_deprecated_string(), Core::OpenMode::WriteOnly);
             file.value()->write(
                 "{\n"
                 "    \"build_command\": \"your build command here\",\n"

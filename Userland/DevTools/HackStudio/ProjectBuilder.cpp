@@ -78,8 +78,8 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
 
 ErrorOr<void> ProjectBuilder::run_serenity_component()
 {
-    auto relative_path_to_dir = LexicalPath::relative_path(LexicalPath::dirname(m_serenity_component_cmake_file), m_project_root);
-    TRY(m_terminal->run_command(LexicalPath::join(relative_path_to_dir, m_serenity_component_name).string(), build_directory()));
+    auto relative_path_to_dir = TRY(LexicalPath::relative_path(TRY(LexicalPath::dirname(m_serenity_component_cmake_file)), m_project_root));
+    TRY(m_terminal->run_command(TRY(LexicalPath::join(relative_path_to_dir, m_serenity_component_name)).string().to_deprecated_string(), build_directory()));
     return {};
 }
 
@@ -124,16 +124,16 @@ ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_p
 ErrorOr<void> ProjectBuilder::initialize_build_directory()
 {
     if (!Core::File::exists(build_directory())) {
-        if (mkdir(LexicalPath::join(build_directory()).string().characters(), 0700)) {
+        if (mkdir(TRY(LexicalPath::join(build_directory())).string().to_deprecated_string().characters(), 0700)) {
             return Error::from_errno(errno);
         }
     }
 
-    auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
-    if (Core::File::exists(cmake_file_path))
-        MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed, false));
+    auto cmake_file_path = TRY(LexicalPath::join(build_directory(), "CMakeLists.txt"sv)).string();
+    if (Core::File::exists(cmake_file_path.to_deprecated_string()))
+        MUST(Core::File::remove(cmake_file_path.to_deprecated_string(), Core::File::RecursionMode::Disallowed, false));
 
-    auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::OpenMode::WriteOnly));
+    auto cmake_file = TRY(Core::File::open(cmake_file_path.to_deprecated_string(), Core::OpenMode::WriteOnly));
     cmake_file->write(generate_cmake_file_content());
 
     TRY(m_terminal->run_command(DeprecatedString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
@@ -146,12 +146,12 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
 
 Optional<DeprecatedString> ProjectBuilder::find_cmake_file_for(StringView file_path) const
 {
-    auto directory = LexicalPath::dirname(file_path);
+    auto directory = LexicalPath::dirname(file_path).release_value_but_fixme_should_propagate_errors();
     while (!directory.is_empty()) {
-        auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv);
-        if (Core::File::exists(cmake_path.string()))
-            return cmake_path.string();
-        directory = LexicalPath::dirname(directory);
+        auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv).release_value_but_fixme_should_propagate_errors();
+        if (Core::File::exists(cmake_path.string().to_deprecated_string()))
+            return cmake_path.string().to_deprecated_string();
+        directory = LexicalPath::dirname(directory).release_value_but_fixme_should_propagate_errors();
     }
     return {};
 }
@@ -217,7 +217,7 @@ void ProjectBuilder::for_each_library_definition(Function<void(DeprecatedString,
 
         auto library_name = result.capture_group_matches.at(0).at(0).view.string_view();
         auto library_obj_name = result.capture_group_matches.at(0).at(1).view.string_view();
-        auto so_path = DeprecatedString::formatted("{}.so", LexicalPath::join("/usr/lib"sv, DeprecatedString::formatted("lib{}", library_obj_name)).string());
+        auto so_path = DeprecatedString::formatted("{}.so", LexicalPath::join("/usr/lib"sv, DeprecatedString::formatted("lib{}", library_obj_name)).release_value_but_fixme_should_propagate_errors().string());
         func(library_name, so_path);
     }
 
@@ -268,7 +268,7 @@ ErrorOr<void> ProjectBuilder::verify_make_is_installed()
 
 DeprecatedString ProjectBuilder::build_directory() const
 {
-    return LexicalPath::join(m_project_root, "Build"sv).string();
+    return LexicalPath::join(m_project_root, "Build"sv).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
 }
 
 }

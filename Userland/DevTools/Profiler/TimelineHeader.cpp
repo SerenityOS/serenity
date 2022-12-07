@@ -25,7 +25,7 @@ TimelineHeader::TimelineHeader(Profile& profile, Process const& process)
     update_selection();
 
     m_icon = GUI::FileIconProvider::icon_for_executable(m_process.executable).bitmap_for_size(32);
-    m_text = DeprecatedString::formatted("{} ({})", LexicalPath::basename(m_process.executable), m_process.pid);
+    m_text = DeprecatedString::formatted("{} ({})", LexicalPath::basename(String::from_utf8(m_process.executable).release_value_but_fixme_should_propagate_errors()), m_process.pid);
 }
 
 void TimelineHeader::paint_event(GUI::PaintEvent& event)

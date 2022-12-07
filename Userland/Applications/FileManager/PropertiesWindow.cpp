@@ -29,7 +29,7 @@
 PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_rename, Window* parent_window)
     : Window(parent_window)
 {
-    auto lexical_path = LexicalPath(path);
+    auto lexical_path = LexicalPath::from_string(path).release_value_but_fixme_should_propagate_errors();
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
@@ -48,7 +48,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_re
     general_tab.load_from_gml(properties_window_general_tab_gml);
 
     m_name = lexical_path.basename();
-    m_path = lexical_path.string();
+    m_path = lexical_path.string().to_deprecated_string();
     m_parent_path = lexical_path.dirname();
 
     m_icon = general_tab.find_descendant_of_type_named<GUI::ImageWidget>("icon");
@@ -103,7 +103,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_re
             auto link_location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("link_location");
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {
-                auto link_directory = LexicalPath(link_destination);
+                auto link_directory = LexicalPath::from_string(link_destination).release_value_but_fixme_should_propagate_errors();
                 Desktop::Launcher::open(URL::create_with_file_scheme(link_directory.dirname(), link_directory.basename()));
             };
         }

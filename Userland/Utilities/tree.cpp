@@ -27,7 +27,7 @@ static int max_depth = INT_MAX;
 static int g_directories_seen = 0;
 static int g_files_seen = 0;
 
-static void print_directory_tree(DeprecatedString const& root_path, int depth, DeprecatedString const& indent_string)
+static ErrorOr<void> print_directory_tree(DeprecatedString const& root_path, int depth, DeprecatedString const& indent_string)
 {
     if (depth > 0) {
         DeprecatedString root_indent_string;
@@ -39,17 +39,17 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
         out("{}|-- ", root_indent_string);
     }
 
-    DeprecatedString root_dir_name = LexicalPath::basename(root_path);
+    DeprecatedString root_dir_name = TRY(LexicalPath::basename(root_path)).to_deprecated_string();
     out("\033[34;1m{}\033[0m\n", root_dir_name);
 
     if (depth >= max_depth) {
-        return;
+        return {};
     }
 
     Core::DirIterator di(root_path, flag_show_hidden_files ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
         warnln("{}: {}", root_path, di.error_string());
-        return;
+        return {};
     }
 
     Vector<DeprecatedString> names;
@@ -93,13 +93,14 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
                 new_indent_string = DeprecatedString::formatted("{}|   ", indent_string);
             }
 
-            print_directory_tree(full_path.characters(), depth + 1, new_indent_string);
+            TRY(print_directory_tree(full_path.characters(), depth + 1, new_indent_string));
         } else if (!flag_show_only_directories) {
             g_files_seen++;
 
             outln("{}|-- {}", indent_string, name);
         }
     }
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -121,11 +122,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (directories.is_empty()) {
-        print_directory_tree(".", 0, "");
+        TRY(print_directory_tree(".", 0, ""));
         puts("");
     } else {
         for (auto const& directory : directories) {
-            print_directory_tree(directory, 0, "");
+            TRY(print_directory_tree(directory, 0, ""));
             puts("");
         }
     }

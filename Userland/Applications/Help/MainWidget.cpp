@@ -99,8 +99,8 @@ MainWidget::MainWidget()
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.scheme() == "file") {
-            auto path = LexicalPath { url.path() };
-            if (!path.is_child_of(Manual::manual_base_path)) {
+            auto path = LexicalPath::from_string(url.path()).release_value_but_fixme_should_propagate_errors();
+            if (!path.is_child_of(LexicalPath::from_string(Manual::manual_base_path).release_value_but_fixme_should_propagate_errors())) {
                 open_external(url);
                 return;
             }

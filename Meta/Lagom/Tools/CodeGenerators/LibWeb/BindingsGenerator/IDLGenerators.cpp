@@ -201,12 +201,12 @@ static void generate_include_for(auto& generator, auto& path)
     for (auto& search_path : s_header_search_paths) {
         if (!path.starts_with(search_path))
             continue;
-        auto relative_path = LexicalPath::relative_path(path, search_path);
-        if (relative_path.length() < path_string.length())
-            path_string = relative_path;
+        auto relative_path = LexicalPath::relative_path(path, search_path).release_value_but_fixme_should_propagate_errors();
+        if (relative_path.code_points().length() < path_string.length())
+            path_string = relative_path.to_deprecated_string();
     }
 
-    LexicalPath include_path { path_string };
+    auto include_path = LexicalPath::from_string(path_string).release_value_but_fixme_should_propagate_errors();
     forked_generator.set("include.path", DeprecatedString::formatted("{}/{}.h", include_path.dirname(), include_path.title()));
     forked_generator.append(R"~~~(
 #include <@include.path@>

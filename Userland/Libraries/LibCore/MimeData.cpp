@@ -92,7 +92,7 @@ DeprecatedString guess_mime_type_based_on_filename(StringView path)
     if (path.ends_with(".sheets"sv, CaseSensitivity::CaseInsensitive))
         return "application/x-sheets+json";
     // FIXME: Share this, TextEditor and HackStudio language detection somehow.
-    auto basename = LexicalPath::basename(path);
+    auto basename = LexicalPath::basename(String::from_utf8(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
     if (path.ends_with(".cpp"sv, CaseSensitivity::CaseInsensitive)
         || path.ends_with(".c"sv, CaseSensitivity::CaseInsensitive)
         || path.ends_with(".hpp"sv, CaseSensitivity::CaseInsensitive)

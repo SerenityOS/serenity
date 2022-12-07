@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    auto program_name = LexicalPath::basename(arguments.strings[0]);
+    auto program_name = TRY(LexicalPath::basename(TRY(String::from_utf8(arguments.strings[0]))));
     auto hash_kind = Crypto::Hash::HashKind::None;
 
     if (program_name == "md5sum")
@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(1);
     }
 
-    auto hash_name = program_name.substring_view(0, program_name.length() - 3).to_deprecated_string().to_uppercase();
+    auto hash_name = TRY(program_name.substring_from_byte_offset(0, program_name.bytes().size() - 3)).to_deprecated_string().to_uppercase();
     auto paths_help_string = DeprecatedString::formatted("File(s) to print {} checksum of", hash_name);
 
     bool verify_from_paths = false;

@@ -833,9 +833,11 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
     } else if (Core::File::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
-            auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
-            if (Core::File::exists(resolved_filepath))
-                return resolved_filepath;
+            auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension))
+                                         .release_value_but_fixme_should_propagate_errors()
+                                         .string();
+            if (Core::File::exists(resolved_filepath.to_deprecated_string()))
+                return resolved_filepath.to_deprecated_string();
         }
     }
     return filename;
@@ -872,13 +874,13 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
             return script_or_module->filename();
         });
 
-    LexicalPath base_path { base_filename };
-    auto filename = LexicalPath::absolute_path(base_path.dirname(), module_request.module_specifier);
+    auto base_path = TRY_OR_RETURN_OOM_JS(*this, LexicalPath::from_string(base_filename));
+    auto filename = TRY_OR_RETURN_OOM_JS(*this, LexicalPath::absolute_path(base_path.dirname(), module_request.module_specifier));
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] base path: '{}'", base_path);
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] initial filename: '{}'", filename);
 
-    filename = resolve_module_filename(filename, module_type);
+    filename = TRY_OR_RETURN_OOM_JS(*this, String::from_deprecated_string(resolve_module_filename(filename.to_deprecated_string(), module_type)));
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolved filename: '{}'", filename);
 
@@ -898,7 +900,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filename);
 #endif
 
-    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filename, module_type);
+    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filename.to_deprecated_string(), module_type);
     if (loaded_module_or_end != nullptr) {
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filename, loaded_module_or_end->module.ptr());
         return NonnullGCPtr(*loaded_module_or_end->module);
@@ -906,7 +908,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
-    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(filename.to_deprecated_string(), Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
         return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);
@@ -940,7 +942,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     // We have to set it here already in case it references itself.
     m_loaded_modules.empend(
         referencing_script_or_module,
-        filename,
+        filename.to_deprecated_string(),
         module_type,
         *module,
         false);

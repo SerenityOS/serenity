@@ -79,8 +79,8 @@ Vector<DeprecatedString> ViewWidget::load_files_from_directory(DeprecatedString 
 {
     Vector<DeprecatedString> files_in_directory;
 
-    auto current_dir = LexicalPath(path).parent().string();
-    Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
+    auto current_dir = LexicalPath::from_string(path).release_value_but_fixme_should_propagate_errors().parent().release_value_but_fixme_should_propagate_errors().string();
+    Core::DirIterator iterator(current_dir.to_deprecated_string(), Core::DirIterator::Flags::SkipDots);
     while (iterator.has_next()) {
         DeprecatedString file = iterator.next_full_path();
         if (!Gfx::Bitmap::is_path_a_supported_image_format(file))

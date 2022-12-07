@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto const* cwd_ptr = getcwd(nullptr, 0);
             target_directory = StringView { cwd_ptr, strlen(cwd_ptr) };
         } else {
-            LexicalPath template_path(file_template);
+            auto template_path = TRY(LexicalPath::from_string(file_template));
             char const* env_directory = getenv("TMPDIR");
             target_directory = env_directory && *env_directory ? StringView { env_directory, strlen(env_directory) } : "/tmp"sv;
         }
@@ -93,15 +93,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto target_path = LexicalPath::join(target_directory, file_template).string();
+    auto target_path = TRY(LexicalPath::join(target_directory, file_template)).string();
 
-    auto final_path = TRY(make_temp(target_path, create_directory, dry_run));
+    auto final_path = TRY(make_temp(target_path.to_deprecated_string(), create_directory, dry_run));
     if (final_path.is_null()) {
         if (!quiet) {
             if (create_directory)
-                warnln("Failed to create directory via template {}", target_path.characters());
+                warnln("Failed to create directory via template {}", target_path.to_deprecated_string().characters());
             else
-                warnln("Failed to create file via template {}", target_path.characters());
+                warnln("Failed to create file via template {}", target_path.to_deprecated_string().characters());
         }
         return 1;
     }

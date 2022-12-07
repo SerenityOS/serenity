@@ -85,7 +85,7 @@ static ErrorOr<int> collect_copy_work_items(DeprecatedString const& source, Depr
         items.append(WorkItem {
             .type = WorkItem::Type::CopyFile,
             .source = source,
-            .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+            .destination = TRY(LexicalPath::join(destination, TRY(LexicalPath::basename(TRY(String::from_utf8(source.view())))))).string().to_deprecated_string(),
             .size = st.st_size,
         });
         return 0;
@@ -95,7 +95,7 @@ static ErrorOr<int> collect_copy_work_items(DeprecatedString const& source, Depr
     items.append(WorkItem {
         .type = WorkItem::Type::CreateDirectory,
         .source = {},
-        .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+        .destination = TRY(LexicalPath::join(destination, TRY(LexicalPath::basename(TRY(String::from_utf8(source.view())))))).string().to_deprecated_string(),
         .size = 0,
     });
 
@@ -103,8 +103,8 @@ static ErrorOr<int> collect_copy_work_items(DeprecatedString const& source, Depr
     while (dt.has_next()) {
         auto name = dt.next_path();
         TRY(collect_copy_work_items(
-            LexicalPath::join(source, name).string(),
-            LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+            TRY(LexicalPath::join(source, name)).string().to_deprecated_string(),
+            TRY(LexicalPath::join(destination, TRY(LexicalPath::basename(TRY(String::from_utf8(source)))))).string().to_deprecated_string(),
             items));
     }
 
@@ -129,7 +129,7 @@ static ErrorOr<int> collect_move_work_items(DeprecatedString const& source, Depr
         items.append(WorkItem {
             .type = WorkItem::Type::MoveFile,
             .source = source,
-            .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+            .destination = TRY(LexicalPath::join(destination, TRY(LexicalPath::basename(TRY(String::from_utf8(source)))))).string().to_deprecated_string(),
             .size = st.st_size,
         });
         return 0;
@@ -139,7 +139,7 @@ static ErrorOr<int> collect_move_work_items(DeprecatedString const& source, Depr
     items.append(WorkItem {
         .type = WorkItem::Type::CreateDirectory,
         .source = {},
-        .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+        .destination = TRY(LexicalPath::join(destination, TRY(LexicalPath::basename(TRY(String::from_utf8(source)))))).string().to_deprecated_string(),
         .size = 0,
     });
 
@@ -147,8 +147,8 @@ static ErrorOr<int> collect_move_work_items(DeprecatedString const& source, Depr
     while (dt.has_next()) {
         auto name = dt.next_path();
         TRY(collect_move_work_items(
-            LexicalPath::join(source, name).string(),
-            LexicalPath::join(destination, LexicalPath::basename(source)).string(),
+            TRY(LexicalPath::join(source, name)).string().to_deprecated_string(),
+            TRY(LexicalPath::join(destination, TRY(LexicalPath::basename(TRY(String::from_utf8(source)))))).string().to_deprecated_string(),
             items));
     }
 
@@ -190,7 +190,7 @@ static ErrorOr<int> collect_delete_work_items(DeprecatedString const& source, Ve
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
     while (dt.has_next()) {
         auto name = dt.next_path();
-        TRY(collect_delete_work_items(LexicalPath::join(source, name).string(), items));
+        TRY(collect_delete_work_items(TRY(LexicalPath::join(source, name)).string().to_deprecated_string(), items));
     }
 
     items.append(WorkItem {
@@ -338,7 +338,7 @@ ErrorOr<NonnullOwnPtr<Core::Stream::File>> open_destination_file(DeprecatedStrin
 
 DeprecatedString deduplicate_destination_file_name(DeprecatedString const& destination)
 {
-    LexicalPath destination_path(destination);
+    auto destination_path = LexicalPath::from_string(destination).release_value_but_fixme_should_propagate_errors();
     auto title_without_counter = destination_path.title();
     size_t next_counter = 1;
 
@@ -359,5 +359,8 @@ DeprecatedString deduplicate_destination_file_name(DeprecatedString const& desti
         basename.append(destination_path.extension());
     }
 
-    return LexicalPath::join(destination_path.dirname(), basename.to_deprecated_string()).string();
+    return LexicalPath::join(destination_path.dirname(), basename.to_deprecated_string())
+        .release_value_but_fixme_should_propagate_errors()
+        .string()
+        .to_deprecated_string();
 }

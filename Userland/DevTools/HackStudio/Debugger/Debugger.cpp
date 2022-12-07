@@ -96,7 +96,7 @@ Debug::DebugInfo::SourcePosition Debugger::create_source_position(DeprecatedStri
 {
     if (file.starts_with('/'))
         return { file, line + 1 };
-    return { LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_source_root, file)), line + 1 };
+    return { LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_source_root, file)).release_value_but_fixme_should_propagate_errors().to_deprecated_string(), line + 1 };
 }
 
 intptr_t Debugger::start_static()

@@ -113,7 +113,7 @@ void ImageEditor::set_title(DeprecatedString title)
 void ImageEditor::set_path(DeprecatedString path)
 {
     m_path = move(path);
-    set_title(LexicalPath::title(m_path));
+    set_title(LexicalPath::title(m_path).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
 }
 
 void ImageEditor::set_modified(DeprecatedString action_text)

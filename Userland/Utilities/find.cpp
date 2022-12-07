@@ -60,7 +60,7 @@ struct FileData {
         int flags = g_follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW;
         int rc = fstatat(dirfd, basename, &stat, flags);
         if (rc < 0) {
-            perror(full_path.string().characters());
+            perror(full_path.string().to_deprecated_string().characters());
             g_there_was_an_error = true;
             return nullptr;
         }
@@ -307,7 +307,7 @@ private:
             auto argv = const_cast<Vector<char*>&>(m_argv);
             for (auto& arg : argv) {
                 if (StringView { arg, strlen(arg) } == "{}")
-                    arg = const_cast<char*>(file_data.full_path.string().characters());
+                    arg = const_cast<char*>(file_data.full_path.string().to_deprecated_string().characters());
             }
             argv.append(nullptr);
             execvp(m_argv[0], argv.data());
@@ -488,7 +488,7 @@ static NonnullOwnPtr<Command> parse_all_commands(Vector<char*>& args)
     return make<AndCommand>(command.release_nonnull(), make<PrintCommand>());
 }
 
-static void walk_tree(FileData& root_data, Command& command)
+static ErrorOr<void> walk_tree(FileData& root_data, Command& command)
 {
     command.evaluate(root_data);
 
@@ -504,9 +504,9 @@ static void walk_tree(FileData& root_data, Command& command)
     case DT_LNK:
         if (g_follow_symlinks)
             break;
-        return;
+        return {};
     default:
-        return;
+        return {};
     }
 
     int dirfd = openat(root_data.dirfd, root_data.basename, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
@@ -514,11 +514,11 @@ static void walk_tree(FileData& root_data, Command& command)
         if (errno == ENOTDIR) {
             // Above we decided to try to open this file because it could
             // be a directory, but turns out it's not. This is fine though.
-            return;
+            return {};
         }
-        perror(root_data.full_path.string().characters());
+        perror(root_data.full_path.string().to_deprecated_string().characters());
         g_there_was_an_error = true;
-        return;
+        return {};
     }
 
     DIR* dir = fdopendir(dirfd);
@@ -533,22 +533,23 @@ static void walk_tree(FileData& root_data, Command& command)
             continue;
 
         FileData file_data {
-            root_data.full_path.append({ dirent->d_name, strlen(dirent->d_name) }),
+            TRY(root_data.full_path.append({ dirent->d_name, strlen(dirent->d_name) })),
             dirfd,
             dirent->d_name,
             (struct stat) {},
             false,
             dirent->d_type,
         };
-        walk_tree(file_data, command);
+        TRY(walk_tree(file_data, command));
     }
 
     if (errno != 0) {
-        perror(root_data.full_path.string().characters());
+        perror(root_data.full_path.string().to_deprecated_string().characters());
         g_there_was_an_error = true;
     }
 
     closedir(dir);
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -565,7 +566,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (arg == "-L") {
             g_follow_symlinks = true;
         } else if (!arg.starts_with('-')) {
-            paths.append(LexicalPath(arg));
+            paths.append(TRY(LexicalPath::from_string(arg)));
         } else {
             // No special case, so add back the argument and try to parse a command.
             args.prepend(raw_arg);
@@ -577,7 +578,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         command = make<PrintCommand>();
 
     if (paths.is_empty())
-        paths.append(LexicalPath("."));
+        paths.append(TRY(LexicalPath::from_string("."sv)));
 
     for (auto& path : paths) {
         DeprecatedString dirname = path.dirname();
@@ -593,7 +594,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             false,
             DT_UNKNOWN,
         };
-        walk_tree(file_data, *command);
+        TRY(walk_tree(file_data, *command));
         close(dirfd);
     }
 

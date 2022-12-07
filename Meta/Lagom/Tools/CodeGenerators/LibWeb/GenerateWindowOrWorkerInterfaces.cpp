@@ -37,7 +37,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object&, JS::Realm&);
 
 )~~~");
 
-    auto generated_header_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.h", class_name)).string();
+    auto generated_header_path = TRY(TRY(LexicalPath::from_string(output_path)).append(TRY(String::formatted("{}ExposedInterfaces.h", class_name)))).string();
     auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
     TRY(generated_header_file->write(generator.as_string_view().bytes()));
 
@@ -123,8 +123,8 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::R
 }
 }
 )~~~");
-    auto generated_implementation_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.cpp", class_name)).string();
-    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_path = TRY(TRY(LexicalPath::from_string(output_path)).append(DeprecatedString::formatted("{}ExposedInterfaces.cpp", class_name))).string();
+    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path.bytes_as_string_view(), Core::Stream::OpenMode::Write));
     TRY(generated_implementation_file->write(generator.as_string_view().bytes()));
 
     return {};
@@ -146,7 +146,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(!paths.is_empty());
     VERIFY(!base_path.is_empty());
 
-    const LexicalPath lexical_base(base_path);
+    auto const lexical_base = TRY(LexicalPath::from_string(base_path));
 
     // Read in all IDL files, we must own the storage for all of these for the lifetime of the program
     Vector<DeprecatedString> file_contents;
@@ -169,7 +169,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // TODO: service_worker_exposed
 
     for (size_t i = 0; i < paths.size(); ++i) {
-        IDL::Parser parser(paths[i], file_contents[i], lexical_base.string());
+        IDL::Parser parser(paths[i], file_contents[i], lexical_base.string().to_deprecated_string());
         TRY(add_to_interface_sets(parser.parse(), window_exposed, dedicated_worker_exposed, shared_worker_exposed));
         parsers.append(move(parser));
     }

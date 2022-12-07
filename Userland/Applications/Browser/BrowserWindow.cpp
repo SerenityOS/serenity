@@ -741,8 +741,8 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
     if (!bitmap.is_valid())
         return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
 
-    LexicalPath path { Core::StandardPaths::downloads_directory() };
-    path = path.append(Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv));
+    auto path = TRY(LexicalPath::from_string(Core::StandardPaths::downloads_directory()));
+    path = TRY(path.append(Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
 
     auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
 

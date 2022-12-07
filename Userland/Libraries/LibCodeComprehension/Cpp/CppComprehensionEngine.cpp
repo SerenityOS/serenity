@@ -722,10 +722,10 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
         include_dir = partial_include.substring_view(1, last_slash.value());
     }
 
-    auto full_dir = LexicalPath::join(include_root, include_dir).string();
+    auto full_dir = LexicalPath::join(include_root, include_dir).release_value_but_fixme_should_propagate_errors().string();
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "searching path: {}, partial_basename: {}", full_dir, partial_basename);
 
-    Core::DirIterator it(full_dir, Core::DirIterator::Flags::SkipDots);
+    Core::DirIterator it(full_dir.to_deprecated_string(), Core::DirIterator::Flags::SkipDots);
     Vector<CodeComprehension::AutocompleteResultEntry> options;
 
     auto prefix = include_type == System ? "<" : "\"";
@@ -736,7 +736,7 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
         if (!path.starts_with(partial_basename))
             continue;
 
-        if (Core::File::is_directory(LexicalPath::join(full_dir, path).string())) {
+        if (Core::File::is_directory(LexicalPath::join(full_dir, path).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string())) {
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = DeprecatedString::formatted("{}{}{}/", prefix, include_dir, path);
             options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path, CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);

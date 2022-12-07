@@ -181,12 +181,12 @@ void FileProvider::build_filesystem_cache()
                     if (S_ISLNK(st.st_mode))
                         continue;
 
-                    auto full_path = LexicalPath::join(slash, base_directory, path).string();
+                    auto full_path = MUST(LexicalPath::join(slash, base_directory, path)).string();
 
-                    m_full_path_cache.append(full_path);
+                    m_full_path_cache.append(full_path.to_deprecated_string());
 
                     if (S_ISDIR(st.st_mode)) {
-                        m_work_queue.enqueue(full_path);
+                        m_work_queue.enqueue(full_path.to_deprecated_string());
                     }
                 }
             }

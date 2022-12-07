@@ -68,7 +68,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, De
     // We trust that the kernel only sends the name when appropriate.
     if (event->name_length > 0) {
         DeprecatedString child_name { event->name, event->name_length - 1 };
-        result.event_path = LexicalPath::join(path, child_name).string();
+        result.event_path = LexicalPath::join(path, child_name).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
     } else {
         result.event_path = path;
     }
@@ -80,10 +80,10 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, De
 static DeprecatedString canonicalize_path(DeprecatedString path)
 {
     if (!path.is_empty() && path[0] == '/')
-        return LexicalPath::canonicalized_path(move(path));
+        return LexicalPath::canonicalized_path(move(path)).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     char* cwd = getcwd(nullptr, 0);
     VERIFY(cwd);
-    return LexicalPath::join({ cwd, strlen(cwd) }, move(path)).string();
+    return LexicalPath::join({ cwd, strlen(cwd) }, move(path)).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
 }
 
 ErrorOr<bool> FileWatcherBase::add_watch(DeprecatedString path, FileWatcherEvent::Type event_mask)

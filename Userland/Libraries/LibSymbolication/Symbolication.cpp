@@ -70,7 +70,7 @@ Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, Incl
         Array<StringView, 2> search_paths { "/usr/lib"sv, "/usr/local/lib"sv };
         bool found = false;
         for (auto& search_path : search_paths) {
-            full_path = LexicalPath::join(search_path, path).string();
+            full_path = LexicalPath::join(search_path, path).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
             if (Core::File::exists(full_path)) {
                 found = true;
                 break;
@@ -126,7 +126,7 @@ Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, Incl
     return Symbol {
         .address = address,
         .name = move(symbol),
-        .object = LexicalPath::basename(path),
+        .object = LexicalPath::basename(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string(),
         .offset = offset,
         .source_positions = move(positions),
     };

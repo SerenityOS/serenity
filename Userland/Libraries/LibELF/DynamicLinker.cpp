@@ -110,7 +110,7 @@ static Optional<DeprecatedString> resolve_library(DeprecatedString const& name, 
     // Absolute and relative (to the current working directory) paths are already considered resolved.
     // However, ensure that the returned path is absolute and canonical, so pass it through LexicalPath.
     if (name.contains('/'))
-        return LexicalPath::absolute_path(s_cwd, name);
+        return LexicalPath::absolute_path(s_cwd, name).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
     Vector<StringView> search_paths;
 
@@ -129,11 +129,14 @@ static Optional<DeprecatedString> resolve_library(DeprecatedString const& name, 
     search_paths.append("/usr/local/lib"sv);
 
     for (auto const& search_path : search_paths) {
-        LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filepath()), ReplaceMode::FirstOnly));
-        DeprecatedString library_name = library_path.append(name).string();
+        auto library_path = LexicalPath::from_string(search_path.replace("$ORIGIN"sv,
+                                                         LexicalPath::dirname(String::from_deprecated_string(parent_object.filepath()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors(),
+                                                         ReplaceMode::FirstOnly))
+                                .release_value_but_fixme_should_propagate_errors();
+        auto library_name = library_path.append(name).release_value_but_fixme_should_propagate_errors().string();
 
-        if (access(library_name.characters(), F_OK) == 0)
-            return library_name;
+        if (access(library_name.to_deprecated_string().characters(), F_OK) == 0)
+            return library_name.to_deprecated_string();
     }
 
     return {};
@@ -154,7 +157,7 @@ static Vector<DeprecatedString> get_dependencies(DeprecatedString const& path)
 {
     VERIFY(path.starts_with('/'));
 
-    auto name = LexicalPath::basename(path);
+    auto name = LexicalPath::basename(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
     auto lib = s_loaders.get(path).value();
     Vector<DeprecatedString> dependencies;
 

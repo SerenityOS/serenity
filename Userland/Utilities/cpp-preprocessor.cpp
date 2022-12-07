@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto content = TRY(file->read_until_eof());
-    DeprecatedString name = LexicalPath::basename(path);
-    Cpp::Preprocessor cpp(name, StringView { content });
+    auto name = TRY(LexicalPath::basename(path));
+    Cpp::Preprocessor cpp(name.to_deprecated_string(), StringView { content });
     auto tokens = cpp.process_and_lex();
 
     if (print_definitions) {

@@ -55,7 +55,7 @@ ErrorOr<Directory> Directory::adopt_fd(int fd, Optional<LexicalPath> path)
 
 ErrorOr<Directory> Directory::create(DeprecatedString path, CreateDirectories create_directories, mode_t creation_mode)
 {
-    return create(LexicalPath { move(path) }, create_directories, creation_mode);
+    return create(TRY(LexicalPath::from_string(path.view())), create_directories, creation_mode);
 }
 
 ErrorOr<Directory> Directory::create(LexicalPath path, CreateDirectories create_directories, mode_t creation_mode)
@@ -72,7 +72,7 @@ ErrorOr<void> Directory::ensure_directory(LexicalPath const& path, mode_t creati
     if (path.basename() == "/" || path.basename() == ".")
         return {};
 
-    TRY(ensure_directory(path.parent(), creation_mode));
+    TRY(ensure_directory(TRY(path.parent()), creation_mode));
 
     auto return_value = System::mkdir(path.string(), creation_mode);
     // We don't care if the directory already exists.
@@ -102,7 +102,7 @@ ErrorOr<struct stat> Directory::stat() const
 
 ErrorOr<DirIterator> Directory::create_iterator() const
 {
-    return DirIterator { TRY(path()).string() };
+    return DirIterator { TRY(path()).string().to_deprecated_string() };
 }
 
 }

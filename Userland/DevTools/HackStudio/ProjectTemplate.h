@@ -30,9 +30,9 @@ public:
     DeprecatedString const& name() const { return m_name; }
     DeprecatedString const& description() const { return m_description; }
     const GUI::Icon& icon() const { return m_icon; }
-    const DeprecatedString content_path() const
+    DeprecatedString content_path() const
     {
-        return LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", templates_path(), m_id));
+        return LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", templates_path(), m_id)).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     }
     int priority() const { return m_priority; }
 

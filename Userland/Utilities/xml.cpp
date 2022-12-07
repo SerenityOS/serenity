@@ -384,7 +384,8 @@ enum class TestResult {
     RunnerFailed,
 };
 static HashMap<DeprecatedString, TestResult> s_test_results {};
-static void do_run_tests(XML::Document& document)
+
+static ErrorOr<void> do_run_tests(XML::Document& document)
 {
     auto& root = document.root().content.get<XML::Node::Element>();
     VERIFY(root.name == "TESTSUITE");
@@ -402,7 +403,7 @@ static void do_run_tests(XML::Document& document)
 
     dump_cases(root);
 
-    auto base_path = LexicalPath::dirname(s_path);
+    auto base_path = TRY(LexicalPath::dirname(TRY(String::from_deprecated_string(s_path))));
 
     while (!suites.is_empty()) {
         auto& node = *suites.dequeue();
@@ -467,7 +468,7 @@ static void do_run_tests(XML::Document& document)
 
             auto out = suite.attributes.find("OUTPUT");
             if (out != suite.attributes.end()) {
-                auto out_path = LexicalPath::join(test_base_path, out->value).string();
+                auto out_path = TRY(LexicalPath::join(test_base_path, out->value)).string();
                 auto file_result = Core::Stream::File::open(out_path, Core::Stream::OpenMode::Read);
                 if (file_result.is_error()) {
                     warnln("Read error for {}: {}", out_path, file_result.error());
@@ -500,6 +501,7 @@ static void do_run_tests(XML::Document& document)
                 s_test_results.set(url.path(), TestResult::Passed);
         }
     }
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -534,7 +536,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto doc = result.release_value();
     if (run_tests) {
-        do_run_tests(doc);
+        TRY(do_run_tests(doc));
         size_t passed = 0;
         size_t failed = 0;
         size_t runner_error = 0;

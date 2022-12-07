@@ -13,6 +13,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
@@ -100,7 +101,7 @@ void FileSystemModel::Node::traverse_if_needed()
     Core::DirIterator di(full_path, m_model.should_show_dotfiles() ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
         m_error = di.error();
-        warnln("DirIterator: {}", di.error_string());
+        warnln("DirIterator: {}: {}", full_path, di.error_string());
         return;
     }
 
@@ -147,10 +148,10 @@ void FileSystemModel::Node::traverse_if_needed()
 
 OwnPtr<FileSystemModel::Node> FileSystemModel::Node::create_child(DeprecatedString const& child_name)
 {
-    DeprecatedString child_path = LexicalPath::join(full_path(), child_name).string();
+    String child_path = LexicalPath::join(full_path(), child_name).release_value_but_fixme_should_propagate_errors().string();
     auto child = adopt_own(*new Node(m_model));
 
-    bool ok = child->fetch_data(child_path, false);
+    bool ok = child->fetch_data(child_path.to_deprecated_string(), false);
     if (!ok)
         return {};
 
@@ -194,7 +195,10 @@ DeprecatedString FileSystemModel::Node::full_path() const
     }
     builder.append('/');
     builder.append(name);
-    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+    if (builder.is_empty()) {
+        return {};
+    }
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string().view()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 ModelIndex FileSystemModel::index(DeprecatedString path, int column) const
@@ -212,21 +216,21 @@ Optional<FileSystemModel::Node const&> FileSystemModel::node_for_path(Deprecated
     if (path == m_root_path)
         resolved_path = "/";
     else if (!m_root_path.is_empty() && path.starts_with(m_root_path))
-        resolved_path = LexicalPath::relative_path(path, m_root_path);
+        resolved_path = LexicalPath::relative_path(path.view(), m_root_path.view()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     else
         resolved_path = path;
-    LexicalPath lexical_path(resolved_path);
+    auto lexical_path = LexicalPath::from_string(resolved_path).release_value_but_fixme_should_propagate_errors();
 
     Node const* node = m_root->m_parent_of_root ? &m_root->m_children.first() : m_root;
     if (lexical_path.string() == "/")
         return *node;
 
-    auto& parts = lexical_path.parts_view();
+    auto parts = lexical_path.parts().release_value_but_fixme_should_propagate_errors();
     for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
         bool found = false;
         for (auto& child : node->m_children) {
-            if (child.name == part) {
+            if (child.name == part.to_deprecated_string()) {
                 const_cast<Node&>(child).reify_if_needed();
                 node = &child;
                 found = true;
@@ -249,7 +253,7 @@ DeprecatedString FileSystemModel::full_path(ModelIndex const& index) const
 }
 
 FileSystemModel::FileSystemModel(DeprecatedString root_path, Mode mode)
-    : m_root_path(LexicalPath::canonicalized_path(move(root_path)))
+    : m_root_path(root_path.is_null() ? DeprecatedString {} : LexicalPath::canonicalized_path(root_path.view()).release_value_but_fixme_should_propagate_errors().to_deprecated_string())
     , m_mode(mode)
 {
     setpwent();
@@ -346,7 +350,7 @@ void FileSystemModel::set_root_path(DeprecatedString root_path)
     if (root_path.is_null())
         m_root_path = {};
     else
-        m_root_path = LexicalPath::canonicalized_path(move(root_path));
+        m_root_path = LexicalPath::canonicalized_path(root_path.view()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     invalidate();
 
     if (m_root->has_error()) {
@@ -381,14 +385,14 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
 
     switch (event.type) {
     case Core::FileWatcherEvent::Type::ChildCreated: {
-        LexicalPath path { event.event_path };
+        auto path = LexicalPath::from_string(event.event_path).release_value_but_fixme_should_propagate_errors();
         auto& parts = path.parts_view();
         StringView child_name = parts.last();
         if (!m_should_show_dotfiles && child_name.starts_with('.'))
             break;
 
-        auto parent_name = path.parent().string();
-        auto parent = node_for_path(parent_name);
+        auto parent_name = path.parent().release_value_but_fixme_should_propagate_errors().string();
+        auto parent = node_for_path(parent_name.to_deprecated_string());
         if (!parent.has_value()) {
             dbgln("Got a ChildCreated on '{}' but that path does not exist?!", parent_name);
             break;
@@ -761,7 +765,7 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
 {
     VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
-    auto dirname = LexicalPath::dirname(node.full_path());
+    auto dirname = LexicalPath::dirname(String::from_deprecated_string(node.full_path()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     auto new_full_path = DeprecatedString::formatted("{}/{}", dirname, data.to_deprecated_string());
     int rc = rename(node.full_path().characters(), new_full_path.characters());
     if (rc < 0) {

@@ -262,7 +262,10 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {
-            target_path = Core::File::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
+            target_path = Core::File::real_path_for(DeprecatedString::formatted("{}/{}",
+                LexicalPath::dirname(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors())
+                    .release_value_but_fixme_should_propagate_errors(),
+                raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
 

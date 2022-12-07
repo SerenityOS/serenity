@@ -314,9 +314,9 @@ void Launcher::for_each_handler_for_path(DeprecatedString const& path, Function<
             return;
         }
 
-        auto link_target = LexicalPath { link_target_or_error.release_value() };
-        LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path), link_target.string());
-        auto real_path = Core::File::real_path_for(absolute_link_target.string());
+        auto link_target = LexicalPath::from_string(link_target_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
+        LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path).release_value_but_fixme_should_propagate_errors(), link_target.string()).release_value_but_fixme_should_propagate_errors();
+        auto real_path = Core::File::real_path_for(absolute_link_target.string().to_deprecated_string());
         return for_each_handler_for_path(real_path, [&](auto const& handler) -> bool {
             return f(handler);
         });
@@ -325,7 +325,7 @@ void Launcher::for_each_handler_for_path(DeprecatedString const& path, Function<
     if ((st.st_mode & S_IFMT) == S_IFREG && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         f(get_handler_for_executable(Handler::Type::Application, path));
 
-    auto extension = LexicalPath::extension(path).to_lowercase();
+    auto extension = LexicalPath::extension(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string().to_lowercase();
     auto mime_type = mime_type_for_file(path);
 
     if (mime_type.has_value()) {
@@ -374,7 +374,7 @@ bool Launcher::open_file_url(const URL& url)
     if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return spawn(url.path(), {});
 
-    auto extension = LexicalPath::extension(url.path()).to_lowercase();
+    auto extension = LexicalPath::extension(url.path()).release_value_but_fixme_should_propagate_errors().to_deprecated_string().to_lowercase();
     auto mime_type = mime_type_for_file(url.path());
 
     auto mime_type_or_extension = extension;

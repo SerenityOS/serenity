@@ -83,7 +83,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
         VERIFY(url.scheme() == "spreadsheet");
         if (url.host() == "example") {
-            auto entry = LexicalPath::basename(url.path());
+            auto entry = LexicalPath::basename(url.path()).release_value_but_fixme_should_propagate_errors();
             auto doc_option = m_docs.get(entry);
             if (!doc_option.is_object()) {
                 GUI::MessageBox::show_error(this, DeprecatedString::formatted("No documentation entry found for '{}'", url.path()));
@@ -121,7 +121,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             widget.add_sheet(sheet.release_nonnull());
             window->show();
         } else if (url.host() == "doc") {
-            auto entry = LexicalPath::basename(url.path());
+            auto entry = LexicalPath::basename(url.path()).release_value_but_fixme_should_propagate_errors();
             m_webview->load(URL::create_with_data("text/html", render(entry)));
         } else {
             dbgln("Invalid spreadsheet action domain '{}'", url.host());

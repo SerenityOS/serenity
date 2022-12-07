@@ -325,7 +325,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!Core::File::is_directory(test_directory)) {
         paths.append(test_directory);
     } else {
-        Test::iterate_directory_recursively(LexicalPath::canonicalized_path(test_directory), [&](DeprecatedString const& file_path) {
+        Test::iterate_directory_recursively(TRY(LexicalPath::canonicalized_path(StringView { test_directory, strlen(test_directory) })).to_deprecated_string(), [&](DeprecatedString const& file_path) {
             if (file_path.contains("_FIXTURE"sv))
                 return;
             // FIXME: Add ignored file set

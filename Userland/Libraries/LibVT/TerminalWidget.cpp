@@ -843,11 +843,11 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
                 auto url = URL(attribute.href);
                 auto path = url.path();
 
-                auto app_file = Desktop::AppFile::get_for_app(LexicalPath::basename(handlers[0]));
-                auto app_name = app_file->is_valid() ? app_file->name() : LexicalPath::basename(handlers[0]);
+                auto app_file = Desktop::AppFile::get_for_app(LexicalPath::basename(String::from_deprecated_string(handlers[0]).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
+                auto app_name = app_file->is_valid() ? app_file->name() : LexicalPath::basename(String::from_deprecated_string(handlers[0]).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
                 if (url.scheme() == "file") {
-                    auto file_name = LexicalPath::basename(path);
+                    auto file_name = LexicalPath::basename(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
 
                     if (path == handlers[0]) {
                         set_tooltip(DeprecatedString::formatted("Execute {}", app_name));
@@ -1102,7 +1102,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         // Then add them to the context menu.
         // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
         for (auto& handler : handlers) {
-            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
+            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(String::from_deprecated_string(handler).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
             if (!af->is_valid())
                 continue;
             auto action = GUI::Action::create(DeprecatedString::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
@@ -1122,8 +1122,8 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             // file://courage/home/anon/something -> /home/anon/something
             auto path = URL(m_context_menu_href).path();
             // /home/anon/something -> something
-            auto name = LexicalPath::basename(path);
-            GUI::Clipboard::the().set_plain_text(name);
+            auto name = LexicalPath::basename(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
+            GUI::Clipboard::the().set_plain_text(name.to_deprecated_string());
         }));
         m_context_menu_for_hyperlink->add_separator();
         m_context_menu_for_hyperlink->add_action(copy_action());

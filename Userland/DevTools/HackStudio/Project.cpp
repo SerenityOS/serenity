@@ -53,10 +53,10 @@ NonnullRefPtr<ProjectFile> Project::create_file(DeprecatedString const& path) co
 
 DeprecatedString Project::to_absolute_path(DeprecatedString const& path) const
 {
-    if (LexicalPath { path }.is_absolute()) {
+    if (LexicalPath::from_string(path).release_value_but_fixme_should_propagate_errors().is_absolute()) {
         return path;
     }
-    return LexicalPath { DeprecatedString::formatted("{}/{}", m_root_path, path) }.string();
+    return LexicalPath::from_string(DeprecatedString::formatted("{}/{}", m_root_path, path)).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
 }
 
 bool Project::project_is_serenity() const
@@ -68,7 +68,7 @@ bool Project::project_is_serenity() const
 
 NonnullOwnPtr<ProjectConfig> Project::config() const
 {
-    auto config_or_error = ProjectConfig::try_load_project_config(LexicalPath::absolute_path(m_root_path, config_file_path));
+    auto config_or_error = ProjectConfig::try_load_project_config(LexicalPath::absolute_path(m_root_path, config_file_path).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     if (config_or_error.is_error())
         return ProjectConfig::create_empty();
 

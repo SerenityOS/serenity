@@ -43,12 +43,12 @@ void AlbumCoverVisualizationWidget::paint_event(GUI::PaintEvent& event)
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> AlbumCoverVisualizationWidget::get_album_cover(StringView const filename)
 {
-    auto directory = LexicalPath::dirname(filename);
+    auto directory = TRY(LexicalPath::dirname(TRY(String::from_utf8(filename))));
 
     static constexpr auto possible_cover_filenames = Array { "cover.png"sv, "cover.jpg"sv };
     for (auto& it : possible_cover_filenames) {
-        LexicalPath cover_path = LexicalPath::join(directory, it);
-        if (Core::File::exists(cover_path.string()))
+        LexicalPath cover_path = TRY(LexicalPath::join(directory, it));
+        if (Core::File::exists(cover_path.string().to_deprecated_string()))
             return Gfx::Bitmap::try_load_from_file(cover_path.string());
     }
 

@@ -21,7 +21,7 @@ void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GU
 {
     DeprecatedString message;
     if (paths.size() == 1) {
-        message = DeprecatedString::formatted("Are you sure you want to delete {}?", LexicalPath::basename(paths[0]));
+        message = DeprecatedString::formatted("Are you sure you want to delete {}?", LexicalPath::basename(paths[0]).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     } else {
         message = DeprecatedString::formatted("Are you sure you want to delete {} files?", paths.size());
     }

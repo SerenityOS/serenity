@@ -31,9 +31,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     auto cwd = TRY(Core::System::getcwd());
-    TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, zip_path), "wc"sv));
+    TRY(Core::System::unveil(TRY(LexicalPath::absolute_path(cwd, zip_path)), "wc"sv));
     for (auto const& source_path : source_paths) {
-        TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, source_path), "r"sv));
+        TRY(Core::System::unveil(TRY(LexicalPath::absolute_path(cwd, source_path)), "r"sv));
     }
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -53,17 +53,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Archive::ZipOutputStream zip_stream { file_stream };
 
-    auto add_file = [&](DeprecatedString path) {
+    auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
         auto file = Core::File::construct(path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", path, file->error_string());
-            return;
+            return {};
         }
 
-        auto canonicalized_path = LexicalPath::canonicalized_path(path);
+        auto canonicalized_path = TRY(LexicalPath::canonicalized_path(path));
         auto file_buffer = file->read_all();
         Archive::ZipMember member {};
-        member.name = canonicalized_path;
+        member.name = canonicalized_path.to_deprecated_string();
 
         auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
         if (deflate_buffer.has_value() && deflate_buffer.value().size() < file_buffer.size()) {
@@ -81,9 +81,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         member.crc32 = checksum.digest();
         member.is_directory = false;
         zip_stream.add_member(member);
+        return {};
     };
 
-    auto add_directory = [&](DeprecatedString path, auto handle_directory) -> void {
+    auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
         auto canonicalized_path = DeprecatedString::formatted("{}/", LexicalPath::canonicalized_path(path));
         Archive::ZipMember member {};
         member.name = canonicalized_path;
@@ -96,25 +97,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("  adding: {} (stored 0%)", canonicalized_path);
 
         if (!recurse)
-            return;
+            return {};
 
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
             auto child_path = it.next_full_path();
             if (Core::File::is_link(child_path))
-                return;
+                return {};
             if (!Core::File::is_directory(child_path))
-                add_file(child_path);
+                TRY(add_file(child_path));
             else
-                handle_directory(child_path, handle_directory);
+                TRY(handle_directory(child_path, handle_directory));
         }
+        return {};
     };
 
     for (auto const& source_path : source_paths) {
         if (Core::File::is_directory(source_path)) {
-            add_directory(source_path, add_directory);
+            TRY(add_directory(source_path, add_directory));
         } else {
-            add_file(source_path);
+            TRY(add_file(source_path));
         }
     }
 

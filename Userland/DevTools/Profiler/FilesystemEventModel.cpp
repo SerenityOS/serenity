@@ -30,8 +30,8 @@ FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& search
         return *this;
     }
 
-    auto lex_path = LexicalPath(searched_path);
-    auto parts = lex_path.parts();
+    auto lex_path = LexicalPath::from_string(searched_path).release_value_but_fixme_should_propagate_errors();
+    auto parts = lex_path.parts().release_value_but_fixme_should_propagate_errors();
     auto current = parts.take_first();
 
     StringBuilder sb;
@@ -39,14 +39,14 @@ FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& search
     auto new_s = sb.to_deprecated_string();
 
     for (auto& child : m_children) {
-        if (child->m_path == current) {
+        if (child->m_path == current.to_deprecated_string()) {
             return child->find_or_create_node(new_s);
         }
     }
 
     if (m_parent) {
         for (auto& child : m_children) {
-            if (child->m_path == current) {
+            if (child->m_path == current.to_deprecated_string()) {
                 return child->find_or_create_node(new_s);
             }
         }
@@ -63,15 +63,15 @@ FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& search
 
 FileEventNode& FileEventNode::create_recursively(DeprecatedString new_path)
 {
-    auto const lex_path = LexicalPath(new_path);
-    auto parts = lex_path.parts();
+    auto const lex_path = LexicalPath::from_string(new_path).release_value_but_fixme_should_propagate_errors();
+    auto parts = lex_path.parts().release_value_but_fixme_should_propagate_errors();
 
     if (parts.size() == 1) {
         auto new_node = FileEventNode::create(new_path, this);
         m_children.append(new_node);
         return *new_node.ptr();
     } else {
-        auto new_node = FileEventNode::create(parts.take_first(), this);
+        auto new_node = FileEventNode::create(parts.take_first().to_deprecated_string(), this);
         m_children.append(new_node);
 
         StringBuilder sb;

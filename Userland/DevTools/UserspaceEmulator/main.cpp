@@ -56,7 +56,7 @@ int main(int argc, char** argv, char** env)
     }
 
     if (dump_profile && profile_dump_path.is_empty())
-        profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
+        profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath::from_string(executable_path.view()).release_value_but_fixme_should_propagate_errors().basename(), getpid());
 
     OwnPtr<OutputFileStream> profile_stream;
     OwnPtr<NonnullOwnPtrVector<DeprecatedString>> profile_strings;
@@ -99,7 +99,7 @@ int main(int argc, char** argv, char** env)
 
     StringBuilder builder;
     builder.append("(UE) "sv);
-    builder.append(LexicalPath::basename(arguments[0]));
+    builder.append(LexicalPath::basename(arguments[0]).release_value_but_fixme_should_propagate_errors());
     if (set_process_name(builder.string_view().characters_without_null_termination(), builder.string_view().length()) < 0) {
         perror("set_process_name");
         return 1;

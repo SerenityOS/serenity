@@ -248,8 +248,8 @@ static ErrorOr<LanguageMapping> parse_language_mapping(CLDR& cldr, StringView ke
 
 static ErrorOr<void> parse_core_aliases(DeprecatedString core_supplemental_path, CLDR& cldr)
 {
-    LexicalPath core_aliases_path(move(core_supplemental_path));
-    core_aliases_path = core_aliases_path.append("aliases.json"sv);
+    auto core_aliases_path = TRY(LexicalPath::from_string(move(core_supplemental_path)));
+    core_aliases_path = TRY(core_aliases_path.append("aliases.json"sv));
 
     auto core_aliases = TRY(read_json_file(core_aliases_path.string()));
     auto const& supplemental_object = core_aliases.as_object().get("supplemental"sv);
@@ -280,10 +280,12 @@ static ErrorOr<void> parse_core_aliases(DeprecatedString core_supplemental_path,
     return {};
 }
 
+// -h LocaleData.h.tmp -c LocaleData.cpp.tmp -b /home/sppmacd/Prog/serenity/Build/x86_64clang/CLDR/cldr-bcp47 -r /home/sppmacd/Prog/serenity/Build/x86_64clang/CLDR/cldr-core -l /home/sppmacd/Prog/serenity/Build/x86_64clang/CLDR/cldr-localenames-modern -m /home/sppmacd/Prog/serenity/Build/x86_64clang/CLDR/cldr-misc-modern -n /home/sppmacd/Prog/serenity/Build/x86_64clang/CLDR/cldr-numbers-modern -d /home/sppmacd/Prog/serenity/Build/x86_64clang/CLDR/cldr-dates-modern
+
 static ErrorOr<void> parse_likely_subtags(DeprecatedString core_supplemental_path, CLDR& cldr)
 {
-    LexicalPath likely_subtags_path(move(core_supplemental_path));
-    likely_subtags_path = likely_subtags_path.append("likelySubtags.json"sv);
+    auto likely_subtags_path = TRY(LexicalPath::from_string(core_supplemental_path.view()));
+    likely_subtags_path = TRY(likely_subtags_path.append("likelySubtags.json"sv));
 
     auto likely_subtags = TRY(read_json_file(likely_subtags_path.string()));
     auto const& supplemental_object = likely_subtags.as_object().get("supplemental"sv);
@@ -301,12 +303,12 @@ static ErrorOr<void> parse_likely_subtags(DeprecatedString core_supplemental_pat
 
 static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath languages_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
-    languages_path = languages_path.append("languages.json"sv);
+    auto languages_path = TRY(LexicalPath::from_string(locale_path.view())); // Note: Every JSON file defines identity data, so we can use any of them.
+    languages_path = TRY(languages_path.append("languages.json"sv));
 
     auto languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = languages.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(languages_path.parent()).basename());
     auto const& identity_object = locale_object.as_object().get("identity"sv);
     auto const& language_string = identity_object.as_object().get("language"sv);
     auto const& territory_string = identity_object.as_object().get("territory"sv);
@@ -338,12 +340,12 @@ static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, Lo
 
 static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath locale_display_names_path(move(locale_path));
-    locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
+    auto locale_display_names_path = TRY(LexicalPath::from_string(locale_path.view()));
+    locale_display_names_path = TRY(locale_display_names_path.append("localeDisplayNames.json"sv));
 
     auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(locale_display_names_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(locale_display_names_path.parent()).basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& locale_display_patterns_object = locale_display_names_object.as_object().get("localeDisplayPattern"sv);
     auto const& locale_pattern = locale_display_patterns_object.as_object().get("localePattern"sv);
@@ -359,12 +361,12 @@ static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path,
 
 static ErrorOr<void> preprocess_languages(DeprecatedString locale_path, CLDR& cldr)
 {
-    LexicalPath languages_path(move(locale_path));
-    languages_path = languages_path.append("languages.json"sv);
+    auto languages_path = TRY(LexicalPath::from_string(locale_path.view()));
+    languages_path = TRY(languages_path.append("languages.json"sv));
 
     auto locale_languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(languages_path.parent()).basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
 
@@ -442,12 +444,12 @@ static Optional<DeprecatedString> find_keyword_alias(StringView key, StringView 
 
 static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath languages_path(move(locale_path));
-    languages_path = languages_path.append("languages.json"sv);
+    auto languages_path = TRY(LexicalPath::from_string(locale_path.view()));
+    languages_path = TRY(languages_path.append("languages.json"sv));
 
     auto locale_languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(languages_path.parent()).basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
 
@@ -468,12 +470,12 @@ static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& 
 
 static ErrorOr<void> parse_locale_territories(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath territories_path(move(locale_path));
-    territories_path = territories_path.append("territories.json"sv);
+    auto territories_path = TRY(LexicalPath::from_string(locale_path.view()));
+    territories_path = TRY(territories_path.append("territories.json"sv));
 
     auto locale_territories = TRY(read_json_file(territories_path.string()));
     auto const& main_object = locale_territories.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(territories_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(territories_path.parent()).basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& territories_object = locale_display_names_object.as_object().get("territories"sv);
 
@@ -491,12 +493,12 @@ static ErrorOr<void> parse_locale_territories(DeprecatedString locale_path, CLDR
 
 static ErrorOr<void> parse_locale_scripts(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath scripts_path(move(locale_path));
-    scripts_path = scripts_path.append("scripts.json"sv);
+    auto scripts_path = TRY(LexicalPath::from_string(locale_path.view()));
+    scripts_path = TRY(scripts_path.append("scripts.json"sv));
 
     auto locale_scripts = TRY(read_json_file(scripts_path.string()));
     auto const& main_object = locale_scripts.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(scripts_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(scripts_path.parent()).basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& scripts_object = locale_display_names_object.as_object().get("scripts"sv);
 
@@ -514,12 +516,12 @@ static ErrorOr<void> parse_locale_scripts(DeprecatedString locale_path, CLDR& cl
 
 static ErrorOr<void> parse_locale_list_patterns(DeprecatedString misc_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath list_patterns_path(move(misc_path));
-    list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
+    auto list_patterns_path = TRY(LexicalPath::from_string(misc_path.view()));
+    list_patterns_path = TRY(list_patterns_path.append("listPatterns.json"sv));
 
     auto locale_list_patterns = TRY(read_json_file(list_patterns_path.string()));
     auto const& main_object = locale_list_patterns.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(list_patterns_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(list_patterns_path.parent()).basename());
     auto const& list_patterns_object = locale_object.as_object().get("listPatterns"sv);
 
     auto list_pattern_type = [](StringView key) {
@@ -565,12 +567,12 @@ static ErrorOr<void> parse_locale_list_patterns(DeprecatedString misc_path, CLDR
 
 static ErrorOr<void> parse_locale_layout(DeprecatedString misc_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath layout_path(move(misc_path));
-    layout_path = layout_path.append("layout.json"sv);
+    auto layout_path = TRY(LexicalPath::from_string(misc_path.view()));
+    layout_path = TRY(layout_path.append("layout.json"sv));
 
     auto locale_layout = TRY(read_json_file(layout_path.string()));
     auto const& main_object = locale_layout.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(layout_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(layout_path.parent()).basename());
     auto const& layout_object = locale_object.as_object().get("layout"sv);
     auto const& orientation_object = layout_object.as_object().get("orientation"sv);
 
@@ -597,12 +599,12 @@ static ErrorOr<void> parse_locale_layout(DeprecatedString misc_path, CLDR& cldr,
 
 static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath currencies_path(move(numbers_path));
-    currencies_path = currencies_path.append("currencies.json"sv);
+    auto currencies_path = TRY(LexicalPath::from_string(numbers_path.view()));
+    currencies_path = TRY(currencies_path.append("currencies.json"sv));
 
     auto locale_currencies = TRY(read_json_file(currencies_path.string()));
     auto const& main_object = locale_currencies.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(currencies_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(currencies_path.parent()).basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
     auto const& currencies_object = locale_numbers_object.as_object().get("currencies"sv);
 
@@ -645,12 +647,12 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
 
 static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath locale_display_names_path(move(locale_path));
-    locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
+    auto locale_display_names_path = TRY(LexicalPath::from_string(locale_path.view()));
+    locale_display_names_path = TRY(locale_display_names_path.append("localeDisplayNames.json"sv));
 
     auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(locale_display_names_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(locale_display_names_path.parent()).basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& types_object = locale_display_names_object.as_object().get("types"sv);
     auto const& calendar_object = types_object.as_object().get("calendar"sv);
@@ -676,12 +678,12 @@ static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& 
 
 static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath date_fields_path(move(dates_path));
-    date_fields_path = date_fields_path.append("dateFields.json"sv);
+    auto date_fields_path = TRY(LexicalPath::from_string(dates_path.view()));
+    date_fields_path = TRY(date_fields_path.append("dateFields.json"sv));
 
     auto locale_date_fields = TRY(read_json_file(date_fields_path.string()));
     auto const& main_object = locale_date_fields.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(date_fields_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(date_fields_path.parent()).basename());
     auto const& dates_object = locale_object.as_object().get("dates"sv);
     auto const& fields_object = dates_object.as_object().get("fields"sv);
 
@@ -732,12 +734,12 @@ static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR&
 
 static ErrorOr<void> parse_number_system_keywords(DeprecatedString locale_numbers_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath numbers_path(move(locale_numbers_path));
-    numbers_path = numbers_path.append("numbers.json"sv);
+    auto numbers_path = TRY(LexicalPath::from_string(locale_numbers_path.view()));
+    numbers_path = TRY(numbers_path.append("numbers.json"sv));
 
     auto numbers = TRY(read_json_file(numbers_path.string()));
     auto const& main_object = numbers.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(numbers_path.parent()).basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
     auto const& default_numbering_system_object = locale_numbers_object.as_object().get("defaultNumberingSystem"sv);
     auto const& other_numbering_systems_object = locale_numbers_object.as_object().get("otherNumberingSystems"sv);
@@ -777,13 +779,13 @@ static ErrorOr<void> parse_calendar_keywords(DeprecatedString locale_dates_path,
     while (calendars_iterator.has_next()) {
         auto locale_calendars_path = TRY(next_path_from_dir_iterator(calendars_iterator));
 
-        LexicalPath calendars_path(move(locale_calendars_path));
+        auto calendars_path = TRY(LexicalPath::from_string(locale_calendars_path.view()));
         if (!calendars_path.basename().starts_with("ca-"sv))
             continue;
 
         auto calendars = TRY(read_json_file(calendars_path.string()));
         auto const& main_object = calendars.as_object().get("main"sv);
-        auto const& locale_object = main_object.as_object().get(calendars_path.parent().basename());
+        auto const& locale_object = main_object.as_object().get(TRY(calendars_path.parent()).basename());
         auto const& dates_object = locale_object.as_object().get("dates"sv);
         auto const& calendars_object = dates_object.as_object().get("calendars"sv);
 
@@ -836,8 +838,8 @@ static void fill_in_collation_keywords(CLDR& cldr, LocaleData& locale)
 
 static ErrorOr<void> parse_default_content_locales(DeprecatedString core_path, CLDR& cldr)
 {
-    LexicalPath default_content_path(move(core_path));
-    default_content_path = default_content_path.append("defaultContent.json"sv);
+    auto default_content_path = TRY(LexicalPath::from_string(core_path.view()));
+    default_content_path = TRY(default_content_path.append("defaultContent.json"sv));
 
     auto default_content = TRY(read_json_file(default_content_path.string()));
     auto const& default_content_array = default_content.as_object().get("defaultContent"sv);
@@ -918,15 +920,15 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
-    LexicalPath core_supplemental_path(core_path);
-    core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    auto core_supplemental_path = TRY(LexicalPath::from_string(core_path));
+    core_supplemental_path = TRY(core_supplemental_path.append("supplemental"sv));
+    VERIFY(Core::File::is_directory(core_supplemental_path.string().to_deprecated_string()));
 
-    TRY(parse_core_aliases(core_supplemental_path.string(), cldr));
-    TRY(parse_likely_subtags(core_supplemental_path.string(), cldr));
+    TRY(parse_core_aliases(core_supplemental_path.string().to_deprecated_string(), cldr));
+    TRY(parse_likely_subtags(core_supplemental_path.string().to_deprecated_string(), cldr));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
-        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, TRY(LexicalPath::basename(TRY(String::from_deprecated_string(path))))));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
@@ -971,7 +973,6 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
         TRY(parse_locale_scripts(locale_path, cldr, locale));
         TRY(parse_locale_calendars(locale_path, cldr, locale));
     }
-
     while (misc_iterator.has_next()) {
         auto misc_path = TRY(next_path_from_dir_iterator(misc_iterator));
         auto language = TRY(remove_variants_from_path(misc_path));

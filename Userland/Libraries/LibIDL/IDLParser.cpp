@@ -137,11 +137,11 @@ HashMap<DeprecatedString, DeprecatedString> Parser::parse_extended_attributes()
 static HashTable<DeprecatedString> import_stack;
 Optional<Interface&> Parser::resolve_import(auto path)
 {
-    auto include_path = LexicalPath::join(import_base_path, path).string();
-    if (!Core::File::exists(include_path))
+    auto include_path = LexicalPath::join(import_base_path, path).release_value_but_fixme_should_propagate_errors().string();
+    if (!Core::File::exists(include_path.to_deprecated_string()))
         report_parsing_error(DeprecatedString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
-    auto real_path = Core::File::real_path_for(include_path);
+    auto real_path = Core::File::real_path_for(include_path.to_deprecated_string());
     if (top_level_resolved_imports().contains(real_path))
         return *top_level_resolved_imports().find(real_path)->value;
 

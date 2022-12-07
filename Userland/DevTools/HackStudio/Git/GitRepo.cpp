@@ -80,7 +80,7 @@ DeprecatedString GitRepo::command(Vector<DeprecatedString> const& command_parts)
 
 DeprecatedString GitRepo::command_wrapper(Vector<DeprecatedString> const& command_parts, DeprecatedString const& chdir)
 {
-    auto result = Core::command("git", command_parts, LexicalPath(chdir));
+    auto result = Core::command("git", command_parts, LexicalPath::from_string(chdir).release_value_but_fixme_should_propagate_errors());
     if (result.is_error() || result.value().exit_code != 0)
         return {};
     return result.value().output;

@@ -191,25 +191,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& icon_image_widget = *widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
 
-    auto app_name = LexicalPath::basename(executable_path);
+    auto app_name = TRY(LexicalPath::basename(executable_path));
     auto af = Desktop::AppFile::get_for_app(app_name);
     if (af->is_valid())
-        app_name = af->name();
+        app_name = TRY(String::from_utf8(af->name()));
 
     auto& description_label = *widget->find_descendant_of_type_named<GUI::Label>("description");
     description_label.set_text(DeprecatedString::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal));
 
     auto& executable_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
-    executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
+    executable_link_label.set_text(TRY(LexicalPath::canonicalized_path(executable_path)).to_deprecated_string());
     executable_link_label.on_click = [&] {
-        LexicalPath path { executable_path };
+        LexicalPath path = LexicalPath::from_string(executable_path).release_value_but_fixme_should_propagate_errors();
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     };
 
     auto& coredump_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
-    coredump_link_label.set_text(LexicalPath::canonicalized_path(coredump_path));
+    coredump_link_label.set_text(TRY(LexicalPath::canonicalized_path(coredump_path)).to_deprecated_string());
     coredump_link_label.on_click = [&] {
-        LexicalPath path { coredump_path };
+        LexicalPath path = LexicalPath::from_string(coredump_path).release_value_but_fixme_should_propagate_errors();
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     };
 
@@ -277,7 +277,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");
     save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
-        LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
+        auto lexical_path = LexicalPath::from_string(String::formatted("{}_{}_backtrace.txt", pid, app_name).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
         auto file_or_error = FileSystemAccessClient::Client::the().save_file(window, lexical_path.title(), lexical_path.extension());
         if (file_or_error.is_error()) {
             GUI::MessageBox::show(window, DeprecatedString::formatted("Communication failed with FileSystemAccessServer: {}.", file_or_error.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);

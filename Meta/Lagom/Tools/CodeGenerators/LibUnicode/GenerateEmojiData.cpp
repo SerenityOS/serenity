@@ -366,7 +366,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!generated_installation_path.is_empty()) {
-        TRY(Core::Directory::create(LexicalPath { generated_installation_path }.parent(), Core::Directory::CreateDirectories::Yes));
+        TRY(Core::Directory::create(TRY(TRY(LexicalPath::from_string(generated_installation_path)).parent()), Core::Directory::CreateDirectories::Yes));
 
         for (auto& emoji : emoji_data.emojis)
             set_image_path_for_emoji(emoji_resource_path, emoji);

@@ -32,17 +32,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto permission_mask = TRY(Core::FilePermissionsMask::parse(mode));
 
-    DeprecatedString destination_dir = (sources.size() > 1 ? DeprecatedString { destination } : LexicalPath::dirname(destination));
+    String destination_dir = (sources.size() > 1 ? TRY(String::from_utf8(destination)) : TRY(LexicalPath::dirname(destination)));
 
     if (create_leading_dest_components) {
-        DeprecatedString destination_dir_absolute = Core::File::absolute_path(destination_dir);
+        DeprecatedString destination_dir_absolute = Core::File::absolute_path(destination_dir.to_deprecated_string());
         MUST(Core::Directory::create(destination_dir_absolute, Core::Directory::CreateDirectories::Yes));
     }
 
     for (auto const& source : sources) {
         DeprecatedString final_destination;
         if (sources.size() > 1) {
-            final_destination = LexicalPath(destination).append(LexicalPath::basename(source)).string();
+            final_destination = TRY(TRY(LexicalPath::from_string(destination)).append(TRY(LexicalPath::basename(source)))).string().to_deprecated_string();
         } else {
             final_destination = destination;
         }

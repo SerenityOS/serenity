@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    DeprecatedString program_name = AK::LexicalPath::basename(args.strings[0]);
+    auto program_name = TRY(LexicalPath::basename(args.strings[0]));
 
     Vector<DeprecatedString> files;
 

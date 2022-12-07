@@ -41,8 +41,8 @@ DeprecatedResult Client::try_request_file_read_only_approved(GUI::Window* parent
     if (path.starts_with('/')) {
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, path);
     } else {
-        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
-        async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path);
+        auto full_path = TRY(LexicalPath::join(Core::File::current_working_directory(), path)).string();
+        async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path.to_deprecated_string());
     }
 
     return handle_promise<DeprecatedResult>(id);
@@ -66,8 +66,8 @@ DeprecatedResult Client::try_request_file(GUI::Window* parent_window, Deprecated
     if (path.starts_with('/')) {
         async_request_file(id, parent_window_server_client_id, parent_window_id, path, mode);
     } else {
-        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
-        async_request_file(id, parent_window_server_client_id, parent_window_id, full_path, mode);
+        auto full_path = TRY(LexicalPath::join(Core::File::current_working_directory(), path)).string();
+        async_request_file(id, parent_window_server_client_id, parent_window_id, full_path.to_deprecated_string(), mode);
     }
 
     return handle_promise<DeprecatedResult>(id);

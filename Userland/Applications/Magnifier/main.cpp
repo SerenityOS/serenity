@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (response.is_error())
                 return {};
             auto file = response.release_value();
-            auto path = AK::LexicalPath(file->filename());
+            auto path = LexicalPath::from_string(file->filename()).release_value_but_fixme_should_propagate_errors();
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
 

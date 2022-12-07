@@ -70,7 +70,7 @@ public:
                 continue;
             Cursor cursor;
             cursor.path = move(path);
-            cursor.name = LexicalPath::basename(cursor.path);
+            cursor.name = LexicalPath::basename(cursor.path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
             // FIXME: Animated cursor bitmaps
             auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path).release_value_but_fixme_should_propagate_errors();
@@ -159,7 +159,7 @@ public:
                 continue;
             IconSet icon_set;
             icon_set.big_icon = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
-            icon_set.name = LexicalPath::basename(path);
+            icon_set.name = LexicalPath::basename(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
             m_icon_sets.append(move(icon_set));
         }
 
@@ -173,7 +173,7 @@ public:
                 continue;
             IconSet icon_set;
             icon_set.little_icon = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
-            icon_set.name = LexicalPath::basename(path);
+            icon_set.name = LexicalPath::basename(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
             for (size_t i = 0; i < big_icons_found; i++) {
                 if (icon_set.name == m_icon_sets[i].name) {
                     m_icon_sets[i].little_icon = icon_set.little_icon;

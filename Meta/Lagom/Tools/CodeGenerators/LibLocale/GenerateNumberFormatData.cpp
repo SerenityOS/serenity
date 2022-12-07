@@ -241,8 +241,8 @@ struct CLDR {
 
 static ErrorOr<void> parse_number_system_digits(DeprecatedString core_supplemental_path, CLDR& cldr)
 {
-    LexicalPath number_systems_path(move(core_supplemental_path));
-    number_systems_path = number_systems_path.append("numberingSystems.json"sv);
+    auto number_systems_path = TRY(LexicalPath::from_string(core_supplemental_path.view()));
+    number_systems_path = TRY(number_systems_path.append("numberingSystems.json"sv));
 
     auto number_systems = TRY(read_json_file(number_systems_path.string()));
     auto const& supplemental_object = number_systems.as_object().get("supplemental"sv);
@@ -411,12 +411,12 @@ static void parse_number_pattern(Vector<DeprecatedString> patterns, CLDR& cldr, 
 
 static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath numbers_path(move(locale_numbers_path));
-    numbers_path = numbers_path.append("numbers.json"sv);
+    auto numbers_path = TRY(LexicalPath::from_string(locale_numbers_path.view()));
+    numbers_path = TRY(numbers_path.append("numbers.json"sv));
 
     auto numbers = TRY(read_json_file(numbers_path.string()));
     auto const& main_object = numbers.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(numbers_path.parent()).basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
     auto const& minimum_grouping_digits = locale_numbers_object.as_object().get("minimumGroupingDigits"sv);
 
@@ -596,12 +596,12 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
 
 static ErrorOr<void> parse_units(DeprecatedString locale_units_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath units_path(move(locale_units_path));
-    units_path = units_path.append("units.json"sv);
+    auto units_path = TRY(LexicalPath::from_string(locale_units_path.view()));
+    units_path = TRY(units_path.append("units.json"sv));
 
     auto locale_units = TRY(read_json_file(units_path.string()));
     auto const& main_object = locale_units.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(units_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(units_path.parent()).basename());
     auto const& locale_units_object = locale_object.as_object().get("units"sv);
     auto const& long_object = locale_units_object.as_object().get("long"sv);
     auto const& short_object = locale_units_object.as_object().get("short"sv);
@@ -702,14 +702,14 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
     auto units_iterator = TRY(path_to_dir_iterator(move(units_path)));
 
-    LexicalPath core_supplemental_path(move(core_path));
-    core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    auto core_supplemental_path = TRY(LexicalPath::from_string(core_path.view()));
+    core_supplemental_path = TRY(core_supplemental_path.append("supplemental"sv));
+    VERIFY(Core::File::is_directory(core_supplemental_path.string().to_deprecated_string()));
 
-    TRY(parse_number_system_digits(core_supplemental_path.string(), cldr));
+    TRY(parse_number_system_digits(core_supplemental_path.string().to_deprecated_string(), cldr));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
-        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, TRY(LexicalPath::basename(TRY(String::from_utf8(path)))).bytes_as_string_view()));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));

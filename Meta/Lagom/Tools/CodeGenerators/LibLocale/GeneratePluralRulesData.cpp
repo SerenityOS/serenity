@@ -327,8 +327,8 @@ static ErrorOr<void> parse_plural_rules(DeprecatedString core_supplemental_path,
     static constexpr auto form_prefix = "plurals-type-"sv;
     static constexpr auto rule_prefix = "pluralRule-count-"sv;
 
-    LexicalPath plurals_path(move(core_supplemental_path));
-    plurals_path = plurals_path.append(file_name);
+    auto plurals_path = TRY(LexicalPath::from_string(core_supplemental_path.view()));
+    plurals_path = TRY(plurals_path.append(file_name));
 
     auto plurals = TRY(read_json_file(plurals_path.string()));
     auto const& supplemental_object = plurals.as_object().get("supplemental"sv);
@@ -362,8 +362,8 @@ static ErrorOr<void> parse_plural_ranges(DeprecatedString core_supplemental_path
     static constexpr auto start_segment = "-start-"sv;
     static constexpr auto end_segment = "-end-"sv;
 
-    LexicalPath plural_ranges_path(move(core_supplemental_path));
-    plural_ranges_path = plural_ranges_path.append("pluralRanges.json"sv);
+    auto plural_ranges_path = TRY(LexicalPath::from_string(core_supplemental_path.view()));
+    plural_ranges_path = TRY(plural_ranges_path.append("pluralRanges.json"sv));
 
     auto plural_ranges = TRY(read_json_file(plural_ranges_path.string()));
     auto const& supplemental_object = plural_ranges.as_object().get("supplemental"sv);
@@ -397,12 +397,12 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
 {
     auto identity_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
 
-    LexicalPath core_supplemental_path(move(core_path));
-    core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    auto core_supplemental_path = TRY(LexicalPath::from_string(core_path.view()));
+    core_supplemental_path = TRY(core_supplemental_path.append("supplemental"sv));
+    VERIFY(Core::File::is_directory(core_supplemental_path.string().to_deprecated_string()));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
-        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, TRY(LexicalPath::basename(TRY(String::from_utf8(path))))));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
@@ -421,9 +421,9 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         cldr.locales.ensure(language);
     }
 
-    TRY(parse_plural_rules(core_supplemental_path.string(), "plurals.json"sv, cldr));
-    TRY(parse_plural_rules(core_supplemental_path.string(), "ordinals.json"sv, cldr));
-    TRY(parse_plural_ranges(core_supplemental_path.string(), cldr));
+    TRY(parse_plural_rules(core_supplemental_path.string().to_deprecated_string(), "plurals.json"sv, cldr));
+    TRY(parse_plural_rules(core_supplemental_path.string().to_deprecated_string(), "ordinals.json"sv, cldr));
+    TRY(parse_plural_ranges(core_supplemental_path.string().to_deprecated_string(), cldr));
     return {};
 }
 

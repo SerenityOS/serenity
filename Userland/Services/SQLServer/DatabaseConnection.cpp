@@ -34,7 +34,7 @@ RefPtr<DatabaseConnection> DatabaseConnection::connection_for(SQL::ConnectionID 
 
 ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(StringView database_path, DeprecatedString database_name, int client_id)
 {
-    if (LexicalPath path(database_name); (path.title() != database_name) || (path.dirname() != "."))
+    if (auto path = TRY(LexicalPath::from_string(database_name.view())); (path.title() != database_name) || (path.dirname() != "."))
         return Error::from_string_view("Invalid database name"sv);
 
     auto database = TRY(find_or_create_database(database_path, database_name));

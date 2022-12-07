@@ -323,12 +323,12 @@ DeprecatedString Reader::resolve_object_path(StringView name) const
 
     // Search for the first readable library file
     for (auto& directory : library_search_directories) {
-        auto full_path = LexicalPath::join(directory, name).string();
+        auto full_path = LexicalPath::join(directory, name).release_value_but_fixme_should_propagate_errors().string();
 
-        if (access(full_path.characters(), R_OK) != 0)
+        if (access(full_path.to_deprecated_string().characters(), R_OK) != 0)
             continue;
 
-        return full_path;
+        return full_path.to_deprecated_string();
     }
 
     return name;

@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto needs_new_script = true;
     if (file_to_open) {
-        auto path = LexicalPath(file_to_open);
+        auto path = TRY(LexicalPath::from_string({ file_to_open, strlen(file_to_open) }));
         if (path.extension().equals_ignoring_case("sql"sv)) {
             main_widget->open_script_from_file(path);
             needs_new_script = false;

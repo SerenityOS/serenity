@@ -567,9 +567,9 @@ static Optional<Locale::DayPeriod> day_period_from_string(StringView day_period)
 static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Time_Data
-    LexicalPath time_data_path(move(core_path));
-    time_data_path = time_data_path.append("supplemental"sv);
-    time_data_path = time_data_path.append("timeData.json"sv);
+    auto time_data_path = TRY(LexicalPath::from_string(core_path.view()));
+    time_data_path = TRY(time_data_path.append("supplemental"sv));
+    time_data_path = TRY(time_data_path.append("timeData.json"sv));
 
     auto time_data = TRY(read_json_file(time_data_path.string()));
     auto const& supplemental_object = time_data.as_object().get("supplemental"sv);
@@ -611,9 +611,9 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
 static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Week_Data
-    LexicalPath week_data_path(move(core_path));
-    week_data_path = week_data_path.append("supplemental"sv);
-    week_data_path = week_data_path.append("weekData.json"sv);
+    auto week_data_path = TRY(LexicalPath::from_string(core_path.view()));
+    week_data_path = TRY(week_data_path.append("supplemental"sv));
+    week_data_path = TRY(week_data_path.append("weekData.json"sv));
 
     auto week_data = TRY(read_json_file(week_data_path.string()));
     auto const& supplemental_object = week_data.as_object().get("supplemental"sv);
@@ -676,9 +676,9 @@ static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
 static ErrorOr<void> parse_meta_zones(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Metazones
-    LexicalPath meta_zone_path(move(core_path));
-    meta_zone_path = meta_zone_path.append("supplemental"sv);
-    meta_zone_path = meta_zone_path.append("metaZones.json"sv);
+    auto meta_zone_path = TRY(LexicalPath::from_string(core_path.view()));
+    meta_zone_path = TRY(meta_zone_path.append("supplemental"sv));
+    meta_zone_path = TRY(meta_zone_path.append("metaZones.json"sv));
 
     auto meta_zone = TRY(read_json_file(meta_zone_path.string()));
     auto const& supplemental_object = meta_zone.as_object().get("supplemental"sv);
@@ -1380,13 +1380,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
 
 static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath calendars_path(move(locale_calendars_path));
+    auto calendars_path = TRY(LexicalPath::from_string(locale_calendars_path.view()));
     if (!calendars_path.basename().starts_with("ca-"sv))
         return {};
 
     auto calendars = TRY(read_json_file(calendars_path.string()));
     auto const& main_object = calendars.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(calendars_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(calendars_path.parent()).basename());
     auto const& dates_object = locale_object.as_object().get("dates"sv);
     auto const& calendars_object = dates_object.as_object().get("calendars"sv);
 
@@ -1471,12 +1471,12 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
 
 static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_names_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath time_zone_names_path(move(locale_time_zone_names_path));
-    time_zone_names_path = time_zone_names_path.append("timeZoneNames.json"sv);
+    auto time_zone_names_path = TRY(LexicalPath::from_string(locale_time_zone_names_path.view()));
+    time_zone_names_path = TRY(time_zone_names_path.append("timeZoneNames.json"sv));
 
     auto time_zone_names = TRY(read_json_file(time_zone_names_path.string()));
     auto const& main_object = time_zone_names.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(time_zone_names_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(time_zone_names_path.parent()).basename());
     auto const& dates_object = locale_object.as_object().get("dates"sv);
     auto const& time_zone_names_object = dates_object.as_object().get("timeZoneNames"sv);
     auto const& meta_zone_object = time_zone_names_object.as_object().get("metazone"sv);
@@ -1581,9 +1581,9 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
 static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Day_Period_Rule_Sets
-    LexicalPath day_periods_path(move(core_path));
-    day_periods_path = day_periods_path.append("supplemental"sv);
-    day_periods_path = day_periods_path.append("dayPeriods.json"sv);
+    auto day_periods_path = TRY(LexicalPath::from_string(core_path.view()));
+    day_periods_path = TRY(day_periods_path.append("supplemental"sv));
+    day_periods_path = TRY(day_periods_path.append("dayPeriods.json"sv));
 
     auto locale_day_periods = TRY(read_json_file(day_periods_path.string()));
     auto const& supplemental_object = locale_day_periods.as_object().get("supplemental"sv);
@@ -1643,7 +1643,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
-        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, TRY(LexicalPath::basename(TRY(String::from_deprecated_string(path))))));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));

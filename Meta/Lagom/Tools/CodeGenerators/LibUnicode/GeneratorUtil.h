@@ -344,11 +344,11 @@ inline ErrorOr<JsonValue> read_json_file(StringView path)
 
 inline ErrorOr<Core::DirIterator> path_to_dir_iterator(DeprecatedString path, StringView subpath = "main"sv)
 {
-    LexicalPath lexical_path(move(path));
+    auto lexical_path = TRY(LexicalPath::from_string(path.view()));
     if (!subpath.is_empty())
-        lexical_path = lexical_path.append(subpath);
+        lexical_path = TRY(lexical_path.append(subpath));
 
-    Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator iterator(lexical_path.string().to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
     if (iterator.has_error()) {
         // FIXME: Make Core::DirIterator return a StringView for its error
         //        string.

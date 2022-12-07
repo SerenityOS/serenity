@@ -50,7 +50,7 @@ struct DiscoverFLACTestsHack {
         auto test_iterator = Core::DirIterator { "./SpecTests", Core::DirIterator::Flags::SkipParentAndBaseDir };
 
         while (test_iterator.has_next()) {
-            auto file = LexicalPath { test_iterator.next_full_path() };
+            auto file = MUST(LexicalPath::from_string(test_iterator.next_full_path().view()));
             if (file.extension() == "flac"sv) {
                 Test::add_test_case_to_suite(make_ref_counted<FlacTest>(move(file)));
             }

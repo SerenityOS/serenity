@@ -164,7 +164,7 @@ bool RunWindow::run_via_launch(DeprecatedString const& run_input)
 
 DeprecatedString RunWindow::history_file_path()
 {
-    return LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt"));
+    return LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt")).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 ErrorOr<void> RunWindow::load_history()

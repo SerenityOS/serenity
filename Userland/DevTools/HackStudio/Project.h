@@ -24,7 +24,7 @@ public:
 
     GUI::FileSystemModel& model() { return *m_model; }
     const GUI::FileSystemModel& model() const { return *m_model; }
-    DeprecatedString name() const { return LexicalPath::basename(m_root_path); }
+    DeprecatedString name() const { return LexicalPath::basename(m_root_path).release_value_but_fixme_should_propagate_errors().to_deprecated_string(); }
     DeprecatedString root_path() const { return m_root_path; }
 
     NonnullRefPtr<ProjectFile> create_file(DeprecatedString const& path) const;

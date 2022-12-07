@@ -57,7 +57,9 @@ int main(int argc, char** argv)
 {
     g_test_argc = argc;
     g_test_argv = argv;
-    auto program_name = LexicalPath::basename(argv[0]);
+    auto program_name = LexicalPath::basename(String::from_utf8({ argv[0], strlen(argv[0]) })
+                                                  .release_value_but_fixme_should_propagate_errors())
+                            .release_value_but_fixme_should_propagate_errors();
     g_program_name = program_name;
 
     struct sigaction act;
@@ -141,7 +143,10 @@ int main(int argc, char** argv)
         test_root = DeprecatedString { specified_test_root };
     } else {
 #ifdef AK_OS_SERENITY
-        test_root = LexicalPath::join("/home/anon/Tests"sv, DeprecatedString::formatted("{}-tests", program_name.split_view('-').last())).string();
+        test_root = LexicalPath::join("/home/anon/Tests"sv, DeprecatedString::formatted("{}-tests", program_name.split_bytes('-').release_value_but_fixme_should_propagate_errors().last()))
+                        .release_value_but_fixme_should_propagate_errors()
+                        .string()
+                        .to_deprecated_string();
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
         if (!serenity_source_dir) {

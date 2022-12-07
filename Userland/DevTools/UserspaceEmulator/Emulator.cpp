@@ -487,7 +487,7 @@ DeprecatedString Emulator::create_backtrace_line(FlatPtr address)
     }
 
     auto const& source_position = maybe_symbol->source_position.value();
-    return DeprecatedString::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
+    return DeprecatedString::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path).release_value_but_fixme_should_propagate_errors(), source_position.line_number);
 }
 
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
@@ -531,7 +531,7 @@ DeprecatedString Emulator::create_instruction_line(FlatPtr address, X86::Instruc
     if (!symbol.has_value() || !symbol->source_position.has_value())
         return DeprecatedString::formatted("{:p}: {}", address, insn.to_deprecated_string(address));
 
-    return DeprecatedString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_deprecated_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
+    return DeprecatedString::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_deprecated_string(address), LexicalPath::basename(symbol->source_position->file_path).release_value_but_fixme_should_propagate_errors(), symbol->source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum, siginfo_t* signal_info, void* context)

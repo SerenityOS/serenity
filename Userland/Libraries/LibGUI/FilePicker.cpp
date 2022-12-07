@@ -131,8 +131,8 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             DeprecatedString value;
             if (InputBox::show(this, value, "Enter name:"sv, "New directory"sv) == InputBox::ExecResult::OK && !value.is_empty()) {
-                auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));
-                int rc = mkdir(new_dir_path.characters(), 0777);
+                auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value)).release_value_but_fixme_should_propagate_errors();
+                int rc = mkdir(new_dir_path.to_deprecated_string().characters(), 0777);
                 if (rc < 0) {
                     MessageBox::show(this, DeprecatedString::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error"sv, MessageBox::Type::Error);
                 } else {
@@ -265,7 +265,7 @@ void FilePicker::on_file_return()
 {
     auto path = m_filename_textbox->text();
     if (!path.starts_with('/')) {
-        path = LexicalPath::join(m_model->root_path(), path).string();
+        path = LexicalPath::join(m_model->root_path(), path).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string();
     }
 
     bool file_exists = Core::File::exists(path);
@@ -295,9 +295,9 @@ void FilePicker::set_path(DeprecatedString const& path)
         return;
     }
 
-    auto new_path = LexicalPath(path).string();
-    m_location_textbox->set_icon(FileIconProvider::icon_for_path(new_path).bitmap_for_size(16));
-    m_model->set_root_path(new_path);
+    auto new_path = LexicalPath::from_string(path).release_value_but_fixme_should_propagate_errors().string();
+    m_location_textbox->set_icon(FileIconProvider::icon_for_path(new_path.to_deprecated_string()).bitmap_for_size(16));
+    m_model->set_root_path(new_path.to_deprecated_string());
 }
 
 }

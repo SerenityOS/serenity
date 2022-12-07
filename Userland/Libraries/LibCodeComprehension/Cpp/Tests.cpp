@@ -46,11 +46,17 @@ public:
 
     virtual Optional<DeprecatedString> get_or_read_from_filesystem(StringView filename) const override
     {
-        DeprecatedString target_filename = filename;
+        auto target_filename = String::from_utf8(filename);
+        if (target_filename.is_error()) {
+            return {};
+        }
         if (!project_root().is_null() && filename.starts_with(project_root())) {
             target_filename = LexicalPath::relative_path(filename, project_root());
+            if (target_filename.is_error()) {
+                return {};
+            }
         }
-        return m_map.get(target_filename);
+        return m_map.get(target_filename.release_value().to_deprecated_string());
     }
 
 private:
@@ -77,7 +83,7 @@ int run_tests()
 
 static void add_file(FileDB& filedb, DeprecatedString const& name)
 {
-    auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
+    auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).release_value_but_fixme_should_propagate_errors().string().to_deprecated_string(), Core::OpenMode::ReadOnly);
     VERIFY(!file.is_error());
     filedb.add(name, DeprecatedString::copy(file.value()->read_all()));
 }

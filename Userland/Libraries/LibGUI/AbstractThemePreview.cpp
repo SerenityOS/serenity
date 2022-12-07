@@ -57,9 +57,9 @@ void AbstractThemePreview::load_theme_bitmaps()
 
     auto buttons_path = m_preview_palette.title_button_icons_path();
 
-    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-close.png"), m_last_close_path, m_close_bitmap);
-    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-maximize.png"), m_last_maximize_path, m_maximize_bitmap);
-    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-minimize.png"), m_last_minimize_path, m_minimize_bitmap);
+    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-close.png"sv).release_value_but_fixme_should_propagate_errors().to_deprecated_string(), m_last_close_path, m_close_bitmap);
+    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-maximize.png"sv).release_value_but_fixme_should_propagate_errors().to_deprecated_string(), m_last_maximize_path, m_maximize_bitmap);
+    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-minimize.png"sv).release_value_but_fixme_should_propagate_errors().to_deprecated_string(), m_last_minimize_path, m_minimize_bitmap);
 
     load_bitmap(m_preview_palette.active_window_shadow_path(), m_last_active_window_shadow_path, m_active_window_shadow);
     load_bitmap(m_preview_palette.inactive_window_shadow_path(), m_last_inactive_window_shadow_path, m_inactive_window_shadow);

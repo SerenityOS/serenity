@@ -79,12 +79,12 @@ struct CLDR {
 
 static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath date_fields_path(move(locale_dates_path));
-    date_fields_path = date_fields_path.append("dateFields.json"sv);
+    auto date_fields_path = TRY(LexicalPath::from_string(locale_dates_path.view()));
+    date_fields_path = TRY(date_fields_path.append("dateFields.json"sv));
 
     auto date_fields = TRY(read_json_file(date_fields_path.string()));
     auto const& main_object = date_fields.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(date_fields_path.parent().basename());
+    auto const& locale_object = main_object.as_object().get(TRY(date_fields_path.parent()).basename());
     auto const& dates_object = locale_object.as_object().get("dates"sv);
     auto const& fields_object = dates_object.as_object().get("fields"sv);
 
@@ -141,7 +141,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString dates_path, CLDR& cldr)
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
-        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, TRY(LexicalPath::basename(TRY(String::from_deprecated_string(path))))));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));

@@ -36,7 +36,7 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
     if (path.is_empty())
         builder.append("untitled document"sv);
     else
-        builder.appendff("\"{}\"", LexicalPath::basename(path));
+        builder.appendff("\"{}\"", LexicalPath::basename(String::from_utf8(path).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
     builder.append(" before closing?"sv);
 
     if (!path.is_empty() && last_unmodified_timestamp.has_value()) {

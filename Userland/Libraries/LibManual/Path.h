@@ -10,7 +10,7 @@
 
 namespace Manual {
 
-extern LexicalPath const manual_base_path;
+extern StringView const manual_base_path;
 
 constexpr StringView const top_level_section_prefix = "man"sv;
 

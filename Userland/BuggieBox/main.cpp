@@ -90,7 +90,7 @@ static ErrorOr<int> buggiebox_main(Main::Arguments arguments)
         return 1;
     }
     bool found_runner = false;
-    LexicalPath runbase { arguments.strings[0] };
+    auto runbase = TRY(LexicalPath::from_string(arguments.strings[0]));
     auto result = TRY(run_program(arguments, runbase, found_runner));
     if (!found_runner)
         fail();
@@ -99,7 +99,7 @@ static ErrorOr<int> buggiebox_main(Main::Arguments arguments)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    LexicalPath runbase { arguments.strings[0] };
+    auto runbase = TRY(LexicalPath::from_string(arguments.strings[0]));
     if (runbase.basename() == "BuggieBox"sv) {
         Main::Arguments utility_arguments = arguments;
         utility_arguments.argc--;

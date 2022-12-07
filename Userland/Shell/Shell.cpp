@@ -538,8 +538,9 @@ Optional<DeprecatedString> Shell::help_path_for(Vector<RunnablePath> visited, Sh
 {
     switch (runnable_path.kind) {
     case RunnablePath::Kind::Executable: {
-        LexicalPath lexical_path(runnable_path.path);
-        return lexical_path.basename();
+        return LexicalPath::basename(String::from_utf8(runnable_path.path).release_value_but_fixme_should_propagate_errors())
+            .release_value_but_fixme_should_propagate_errors()
+            .to_deprecated_string();
     }
 
     case RunnablePath::Kind::Alias: {

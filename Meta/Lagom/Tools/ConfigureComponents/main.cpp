@@ -234,7 +234,7 @@ int main()
     auto current_working_directory = Core::File::current_working_directory();
     if (current_working_directory.is_null())
         return 1;
-    auto lexical_cwd = LexicalPath(current_working_directory);
+    auto lexical_cwd = LexicalPath::from_string(current_working_directory).release_value_but_fixme_should_propagate_errors();
     auto& parts = lexical_cwd.parts_view();
     if (parts.size() < 2 || parts[parts.size() - 2] != "Build") {
         warnln("\e[31mError:\e[0m This program needs to be executed from inside 'Build/*'.");

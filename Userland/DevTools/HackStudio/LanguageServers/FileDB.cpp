@@ -60,12 +60,16 @@ bool FileDB::add(DeprecatedString const& filename, int fd)
 
 DeprecatedString FileDB::to_absolute_path(DeprecatedString const& filename) const
 {
-    if (LexicalPath { filename }.is_absolute()) {
+    if (LexicalPath::from_string(filename.view()).release_value_but_fixme_should_propagate_errors().is_absolute()) {
         return filename;
     }
     if (m_project_root.is_null())
         return filename;
-    return LexicalPath { DeprecatedString::formatted("{}/{}", m_project_root, filename) }.string();
+    return LexicalPath::from_string(String::formatted("{}/{}", m_project_root, filename)
+                                        .release_value_but_fixme_should_propagate_errors())
+        .release_value_but_fixme_should_propagate_errors()
+        .string()
+        .to_deprecated_string();
 }
 
 RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(DeprecatedString const& filename) const

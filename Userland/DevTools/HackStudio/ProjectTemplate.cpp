@@ -41,7 +41,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(DeprecatedString con
         || !config->has_key("HackStudioTemplate", "IconName32x"))
         return {};
 
-    auto id = LexicalPath::title(manifest_path);
+    auto id = LexicalPath::title(manifest_path).release_value_but_fixme_should_propagate_errors();
     auto name = config->read_entry("HackStudioTemplate", "Name");
     auto description = config->read_entry("HackStudioTemplate", "Description");
     int priority = config->read_num_entry("HackStudioTemplate", "Priority", 0);
@@ -58,7 +58,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(DeprecatedString con
             icon = GUI::Icon(bitmap_or_error.release_value());
     }
 
-    return adopt_ref(*new ProjectTemplate(id, name, description, icon, priority));
+    return adopt_ref(*new ProjectTemplate(id.to_deprecated_string(), name, description, icon, priority));
 }
 
 Result<void, DeprecatedString> ProjectTemplate::create_project(DeprecatedString const& name, DeprecatedString const& path)
@@ -87,9 +87,9 @@ Result<void, DeprecatedString> ProjectTemplate::create_project(DeprecatedString 
     // Check for an executable post-create script in $TEMPLATES_DIR/$ID.postcreate,
     // and run it with the path and name
 
-    auto postcreate_script_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}.postcreate", templates_path(), m_id));
+    auto postcreate_script_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}.postcreate", templates_path(), m_id)).release_value_but_fixme_should_propagate_errors();
     struct stat postcreate_st;
-    int result = stat(postcreate_script_path.characters(), &postcreate_st);
+    int result = stat(postcreate_script_path.to_deprecated_string().characters(), &postcreate_st);
     if (result == 0 && (postcreate_st.st_mode & S_IXOTH) == S_IXOTH) {
         dbgln("Running post-create script '{}'", postcreate_script_path);
 
@@ -97,9 +97,9 @@ Result<void, DeprecatedString> ProjectTemplate::create_project(DeprecatedString 
         auto namespace_safe = name.replace("-"sv, "_"sv, ReplaceMode::All);
 
         pid_t child_pid;
-        char const* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };
+        char const* argv[] = { postcreate_script_path.to_deprecated_string().characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };
 
-        if ((errno = posix_spawn(&child_pid, postcreate_script_path.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
+        if ((errno = posix_spawn(&child_pid, postcreate_script_path.to_deprecated_string().characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
             return DeprecatedString("Failed to spawn project post-create script.");
         }

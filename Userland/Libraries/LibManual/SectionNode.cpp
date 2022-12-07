@@ -44,7 +44,7 @@ ErrorOr<void> SectionNode::reify_if_needed() const
 
     Vector<String> page_names;
     while (dir_iter.has_next()) {
-        LexicalPath lexical_path(dir_iter.next_path());
+        auto lexical_path = TRY(LexicalPath::from_string(dir_iter.next_path()));
         if (lexical_path.extension() != "md")
             continue;
         page_names.append(TRY(String::from_utf8(lexical_path.title())));

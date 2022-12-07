@@ -8,6 +8,6 @@
 
 namespace Manual {
 
-LexicalPath const manual_base_path { "/usr/share/man" };
+StringView const manual_base_path { "/usr/share/man"sv };
 
 }
