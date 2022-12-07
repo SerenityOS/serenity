@@ -33,9 +33,11 @@ public:
 
     bool is_directory() const;
     static bool is_directory(DeprecatedString const& filename);
+    static bool is_directory(int fd);
 
     bool is_device() const;
     static bool is_device(DeprecatedString const& filename);
+    static bool is_device(int fd);
     bool is_block_device() const;
     static bool is_block_device(DeprecatedString const& filename);
     bool is_char_device() const;
