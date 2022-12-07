@@ -165,11 +165,6 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode, ShouldCloseFi
     return file;
 }
 
-bool File::exists(StringView filename)
-{
-    return !Core::System::stat(filename).is_error();
-}
-
 ErrorOr<NonnullOwnPtr<File>> File::standard_input()
 {
     return File::adopt_fd(STDIN_FILENO, OpenMode::Read, ShouldCloseFileDescriptor::No);
