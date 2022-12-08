@@ -21,11 +21,9 @@ static void print_usage_and_exit()
 
 static ErrorOr<int> kill_all(DeprecatedString const& process_name, unsigned const signum)
 {
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (!all_processes.has_value())
-        return 1;
+    auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
-    for (auto& process : all_processes.value().processes) {
+    for (auto& process : all_processes.processes) {
         if (process.name == process_name) {
             TRY(Core::System::kill(process.pid, signum));
         }

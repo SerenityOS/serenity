@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <unistd.h>
 
 namespace Core {
@@ -72,8 +72,8 @@ struct AllProcessesStatistics {
 
 class ProcessStatisticsReader {
 public:
-    static Optional<AllProcessesStatistics> get_all(RefPtr<Core::File>&, bool include_usernames = true);
-    static Optional<AllProcessesStatistics> get_all(bool include_usernames = true);
+    static ErrorOr<AllProcessesStatistics> get_all(Core::Stream::SeekableStream&, bool include_usernames = true);
+    static ErrorOr<AllProcessesStatistics> get_all(bool include_usernames = true);
 
 private:
     static DeprecatedString username_from_uid(uid_t);

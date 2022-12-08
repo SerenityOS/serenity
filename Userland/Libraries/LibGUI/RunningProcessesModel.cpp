@@ -21,7 +21,7 @@ void RunningProcessesModel::update()
     m_processes.clear();
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (all_processes.has_value()) {
+    if (!all_processes.is_error()) {
         for (auto& it : all_processes.value().processes) {
             Process process;
             process.pid = it.pid;

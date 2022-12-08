@@ -22,14 +22,12 @@ static ErrorOr<Core::ProcessStatistics const*> get_proc(Core::AllProcessesStatis
 
 ErrorOr<pid_t> root_session_id(Optional<pid_t> force_sid)
 {
-    auto stats = Core::ProcessStatisticsReader::get_all(false);
-    if (!stats.has_value())
-        return Error::from_string_literal("Failed to get all process statistics");
+    auto stats = TRY(Core::ProcessStatisticsReader::get_all(false));
 
     pid_t sid = (force_sid.has_value()) ? force_sid.value() : TRY(System::getsid());
     while (true) {
-        pid_t parent = TRY(get_proc(stats.value(), sid))->ppid;
-        pid_t parent_sid = TRY(get_proc(stats.value(), parent))->sid;
+        pid_t parent = TRY(get_proc(stats, sid))->ppid;
+        pid_t parent_sid = TRY(get_proc(stats, parent))->sid;
 
         if (parent_sid == 0)
             break;

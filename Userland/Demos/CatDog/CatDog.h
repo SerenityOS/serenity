@@ -11,6 +11,7 @@
 #include <AK/RefPtr.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
@@ -72,7 +73,7 @@ private:
     bool m_up, m_down, m_left, m_right;
     bool m_roaming { true };
 
-    RefPtr<Core::File> m_proc_all;
+    NonnullOwnPtr<Core::Stream::File> m_proc_all;
 
     NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png"sv).release_value_but_fixme_should_propagate_errors();
     NonnullRefPtr<Gfx::Bitmap> m_artist = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png"sv).release_value_but_fixme_should_propagate_errors();
@@ -126,7 +127,7 @@ private:
 
     CatDog()
         : m_temp_pos { 0, 0 }
-        , m_proc_all(MUST(Core::File::open("/sys/kernel/processes", Core::OpenMode::ReadOnly)))
+        , m_proc_all(MUST(Core::Stream::File::open("/sys/kernel/processes"sv, Core::Stream::OpenMode::Read)))
     {
         set_image_by_main_state();
     }
