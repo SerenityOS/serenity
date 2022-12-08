@@ -24,6 +24,13 @@ TEST_CASE(construct_empty)
     EXPECT_EQ(empty, ""sv);
 }
 
+TEST_CASE(move_assignment)
+{
+    String string1 = MUST(String::from_utf8("hello"sv));
+    string1 = MUST(String::from_utf8("friends!"sv));
+    EXPECT_EQ(string1, "friends!"sv);
+}
+
 TEST_CASE(short_strings)
 {
 #ifdef AK_ARCH_64_BIT
