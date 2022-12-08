@@ -168,12 +168,6 @@ JsonValue::JsonValue(double value)
 }
 #endif
 
-JsonValue::JsonValue(bool value)
-    : m_type(Type::Bool)
-{
-    m_value.as_bool = value;
-}
-
 JsonValue::JsonValue(DeprecatedString const& value)
 {
     if (value.is_null()) {
