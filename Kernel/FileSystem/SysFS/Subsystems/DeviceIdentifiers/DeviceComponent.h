@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/KString.h>
@@ -19,7 +20,7 @@ class SysFSDeviceComponent final
     friend class SysFSCharacterDevicesDirectory;
 
 public:
-    static NonnullLockRefPtr<SysFSDeviceComponent> must_create(Device const&);
+    static ErrorOr<NonnullLockRefPtr<SysFSDeviceComponent>> try_create(Device const&);
     virtual StringView name() const override { return m_major_minor_formatted_device_name->view(); }
     bool is_block_device() const { return m_block_device; }
 

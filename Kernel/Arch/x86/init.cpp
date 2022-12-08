@@ -355,7 +355,7 @@ void init_stage2(void*)
     (void)FullDevice::must_create().leak_ref();
     (void)RandomDevice::must_create().leak_ref();
     (void)SelfTTYDevice::must_create().leak_ref();
-    PTYMultiplexer::initialize();
+    MUST(PTYMultiplexer::initialize());
 
     AudioManagement::the().initialize();
 

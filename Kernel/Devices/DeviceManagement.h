@@ -58,7 +58,7 @@ public:
     requires(requires(Args... args) { DeviceType::try_create(args...); })
     {
         auto device = TRY(DeviceType::try_create(forward<Args>(args)...));
-        device->after_inserting();
+        TRY(device->after_inserting());
         return device;
     }
 
@@ -66,7 +66,7 @@ public:
     static inline ErrorOr<NonnullLockRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
         auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
-        device->after_inserting();
+        TRY(device->after_inserting());
         return device;
     }
 

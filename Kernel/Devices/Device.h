@@ -50,7 +50,7 @@ public:
 
     virtual bool is_device() const override { return true; }
     virtual void will_be_destroyed() override;
-    virtual void after_inserting();
+    virtual ErrorOr<void> after_inserting();
     virtual bool is_openable_by_jailed_processes() const { return false; }
     void process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const&);
 
