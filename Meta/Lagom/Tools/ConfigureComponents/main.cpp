@@ -192,10 +192,17 @@ static Result<Vector<DeprecatedString>, int> run_whiptail(WhiptailMode mode, Vec
         return return_code;
     }
 
-    auto file = Core::File::construct();
-    file->open(read_fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-    auto data = DeprecatedString::copy(file->read_all());
-    return data.split('\n');
+    auto file_or_error = Core::Stream::File::adopt_fd(read_fd, Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error()) {
+        warnln("\e[31mError:\e[0m Could not adopt file descriptor for reading: {}", file_or_error.error());
+        return -1;
+    }
+    auto data_or_error = file_or_error.value()->read_until_eof();
+    if (data_or_error.is_error()) {
+        warnln("\e[31mError:\e[0m Could not read data from file descriptor: {}", data_or_error.error());
+        return -1;
+    }
+    return DeprecatedString::copy(data_or_error.value()).split('\n');
 }
 
 static bool run_system_command(DeprecatedString const& command, StringView command_name)
