@@ -830,4 +830,15 @@ void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool eve
     process_next_input_event();
 }
 
+void OutOfProcessWebView::inspect_accessibility_tree()
+{
+    client().async_inspect_accessibility_tree();
+}
+
+void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
+{
+    if (on_get_accessibility_tree)
+        on_get_accessibility_tree(accessibility_tree);
+}
+
 }
