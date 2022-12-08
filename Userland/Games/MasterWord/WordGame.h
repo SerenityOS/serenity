@@ -56,7 +56,7 @@ private:
     size_t m_max_guesses { 6 };
     size_t m_num_letters { 5 };
     bool m_check_guesses { false };
-    bool m_last_word_not_in_dictionary { false };
+    bool m_last_word_invalid { false };
     static constexpr int m_letter_width { 40 };
     static constexpr int m_letter_spacing { 5 };
     static constexpr int m_outer_margin { 20 };

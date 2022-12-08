@@ -83,22 +83,23 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
     // If we can still add a letter and the key was alpha
     if (m_current_guess.length() < m_num_letters && is_ascii_alpha(event.code_point())) {
         m_current_guess = DeprecatedString::formatted("{}{}", m_current_guess, event.text().to_uppercase());
-        m_last_word_not_in_dictionary = false;
+        m_last_word_invalid = false;
     }
     // If backspace pressed and already have some letters entered
     else if (event.key() == KeyCode::Key_Backspace && m_current_guess.length() > 0) {
         m_current_guess = m_current_guess.substring(0, m_current_guess.length() - 1);
-        m_last_word_not_in_dictionary = false;
+        m_last_word_invalid = false;
     }
     // If return pressed
     else if (event.key() == KeyCode::Key_Return) {
         if (m_current_guess.length() < m_num_letters) {
             show_message("Not enough letters"sv);
+            m_last_word_invalid = true;
         } else if (!is_in_dictionary(m_current_guess)) {
             show_message("Not in dictionary"sv);
-            m_last_word_not_in_dictionary = true;
+            m_last_word_invalid = true;
         } else {
-            m_last_word_not_in_dictionary = false;
+            m_last_word_invalid = false;
             clear_message();
 
             add_guess(m_current_guess);
@@ -147,7 +148,7 @@ void WordGame::paint_event(GUI::PaintEvent& event)
             } else if (guess_index == m_guesses.size()) {
                 if (letter_index < m_current_guess.length())
                     painter.draw_text(this_rect, m_current_guess.substring_view(letter_index, 1), font(), Gfx::TextAlignment::Center, m_text_color);
-                if (m_last_word_not_in_dictionary) {
+                if (m_last_word_invalid) {
                     painter.fill_rect(this_rect, m_word_not_in_dict_color);
                 }
             }
