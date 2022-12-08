@@ -33,11 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         return 1;
     }
 
-    auto process_statistics = Core::ProcessStatisticsReader::get_all();
-    if (!process_statistics.has_value()) {
-        warnln("Error: Could not get process statistics");
-        return 1;
-    }
+    auto process_statistics = TRY(Core::ProcessStatisticsReader::get_all());
 
     auto now = time(nullptr);
 
@@ -70,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
         DeprecatedString what = "n/a";
 
-        for (auto& process : process_statistics.value().processes) {
+        for (auto& process : process_statistics.processes) {
             if (process.tty == tty && process.pid == process.pgid)
                 what = process.name;
         }

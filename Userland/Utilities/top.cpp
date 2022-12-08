@@ -89,14 +89,12 @@ struct Snapshot {
     u64 total_time_scheduled_kernel { 0 };
 };
 
-static Snapshot get_snapshot()
+static ErrorOr<Snapshot> get_snapshot()
 {
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (!all_processes.has_value())
-        return {};
+    auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
     Snapshot snapshot;
-    for (auto& process : all_processes.value().processes) {
+    for (auto& process : all_processes.processes) {
         for (auto& thread : process.threads) {
             ThreadData thread_data;
             thread_data.tid = thread.tid;
@@ -126,8 +124,8 @@ static Snapshot get_snapshot()
         }
     }
 
-    snapshot.total_time_scheduled = all_processes->total_time_scheduled;
-    snapshot.total_time_scheduled_kernel = all_processes->total_time_scheduled_kernel;
+    snapshot.total_time_scheduled = all_processes.total_time_scheduled;
+    snapshot.total_time_scheduled_kernel = all_processes.total_time_scheduled_kernel;
 
     return snapshot;
 }
@@ -216,7 +214,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     enable_nonblocking_stdin();
 
     Vector<ThreadData*> threads;
-    auto prev = get_snapshot();
+    auto prev = TRY(get_snapshot());
     usleep(10000);
     for (;;) {
         if (g_window_size_changed) {
@@ -224,7 +222,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             g_window_size_changed = false;
         }
 
-        auto current = get_snapshot();
+        auto current = TRY(get_snapshot());
         auto total_scheduled_diff = current.total_time_scheduled - prev.total_time_scheduled;
 
         printf("\033[3J\033[H\033[2J");

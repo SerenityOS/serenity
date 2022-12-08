@@ -352,8 +352,8 @@ bool generate_profile(pid_t& pid)
     DeprecatedString process_name;
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (all_processes.has_value()) {
-        auto& processes = all_processes->processes;
+    if (!all_processes.is_error()) {
+        auto& processes = all_processes.value().processes;
         if (auto it = processes.find_if([&](auto& entry) { return entry.pid == pid; }); it != processes.end())
             process_name = it->name;
         else

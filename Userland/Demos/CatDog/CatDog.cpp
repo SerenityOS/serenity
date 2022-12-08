@@ -12,8 +12,8 @@
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
-    auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(m_proc_all);
-    if (maybe_proc_info.has_value()) {
+    auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(*m_proc_all);
+    if (!maybe_proc_info.is_error()) {
         auto proc_info = maybe_proc_info.release_value();
 
         auto maybe_paint_program = proc_info.processes.first_matching([](auto& process) {

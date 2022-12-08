@@ -34,10 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
 
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (!all_processes.has_value()) {
-        return 1;
-    }
+    auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
     PosixOptions options {};
     if (case_insensitive) {
@@ -50,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
 
     Vector<Core::ProcessStatistics> matched_processes;
-    for (auto& process : all_processes.value().processes) {
+    for (auto& process : all_processes.processes) {
         auto result = re.match(process.name, PosixFlags::Global);
         if (result.success) {
             matched_processes.append(process);

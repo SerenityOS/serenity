@@ -141,11 +141,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     outln("{:28} {:>4} {:>4} {:10} {:>4} {}", "COMMAND", "PID", "PGID", "USER", "FD", "NAME");
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (!all_processes.has_value())
-        return 1;
+    auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
     if (arg_pid == -1) {
-        for (auto& process : all_processes.value().processes) {
+        for (auto& process : all_processes.processes) {
             if (process.pid == 0)
                 continue;
             auto open_files = get_open_files_by_pid(process.pid);
@@ -170,7 +168,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 0;
 
         for (auto& file : open_files) {
-            display_entry(file, *all_processes->processes.find_if([&](auto& entry) { return entry.pid == arg_pid; }));
+            display_entry(file, *all_processes.processes.find_if([&](auto& entry) { return entry.pid == arg_pid; }));
         }
     }
 

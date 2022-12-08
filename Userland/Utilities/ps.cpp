@@ -98,11 +98,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         cmd_column = add_column("CMD", Alignment::Left);
     }
 
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (!all_processes.has_value())
-        return 1;
+    auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
-    auto& processes = all_processes.value().processes;
+    auto& processes = all_processes.processes;
 
     if (!pid_list.is_empty()) {
         every_process_flag = true;

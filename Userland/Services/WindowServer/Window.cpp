@@ -1073,15 +1073,13 @@ ErrorOr<Optional<DeprecatedString>> Window::compute_title_username(ConnectionFro
 {
     if (!client)
         return Error::from_string_literal("Tried to compute title username without a client");
-    auto stats = Core::ProcessStatisticsReader::get_all(true);
-    if (!stats.has_value())
-        return Error::from_string_literal("Failed to get all process statistics");
+    auto stats = TRY(Core::ProcessStatisticsReader::get_all(true));
     pid_t client_pid = TRY(client->socket().peer_pid());
-    auto client_stat = stats.value().processes.first_matching([&](auto& stat) { return stat.pid == client_pid; });
+    auto client_stat = stats.processes.first_matching([&](auto& stat) { return stat.pid == client_pid; });
     if (!client_stat.has_value())
         return Error::from_string_literal("Failed to find client process stat");
     pid_t login_session_pid = TRY(Core::SessionManagement::root_session_id(client_pid));
-    auto login_session_stat = stats.value().processes.first_matching([&](auto& stat) { return stat.pid == login_session_pid; });
+    auto login_session_stat = stats.processes.first_matching([&](auto& stat) { return stat.pid == login_session_pid; });
     if (!login_session_stat.has_value())
         return Error::from_string_literal("Failed to find login process stat");
     if (login_session_stat.value().uid == client_stat.value().uid)
