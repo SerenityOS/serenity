@@ -5,6 +5,7 @@
  */
 
 #include "PresenterWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -24,6 +25,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());
+
+    Config::pledge_domain("Presenter");
+
     window->set_title("Presenter");
     window->set_icon(GUI::Icon::default_icon("app-display-settings"sv).bitmap_for_size(16));
     auto main_widget = TRY(window->set_main_widget<PresenterWidget>());

@@ -8,6 +8,7 @@
 #include <AK/Forward.h>
 #include <AK/JsonObject.h>
 #include <AK/SourceGenerator.h>
+#include <LibConfig/Client.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>
@@ -213,10 +214,21 @@ void Presentation::paint(Gfx::Painter& painter) const
     painter.clear_rect(painter.clip_rect(), Color::White);
     current_slide().paint(painter, m_current_frame_in_slide.value(), scale);
 
-    // FIXME: Allow overriding the format with user settings.
-    painter.draw_text(painter.clip_rect(),
-        format_footer(m_metadata.get("footer-center").value_or("{presentation_title}: {slide_title} ({slide_number}/{slides_total}), frame {slide_frame_number}, last modified {date}"sv)),
-        Gfx::TextAlignment::BottomCenter);
+    auto footer_text = this->footer_text();
+    if (footer_text.has_value())
+        painter.draw_text(painter.clip_rect(), format_footer(*footer_text), Gfx::TextAlignment::BottomCenter);
+}
+
+Optional<DeprecatedString> Presentation::footer_text() const
+{
+    auto override_enabled = Config::read_bool("Presenter"sv, "Footer"sv, "OverrideFooter"sv, false);
+    if (override_enabled) {
+        auto footer_enabled = Config::read_bool("Presenter"sv, "Footer"sv, "EnableFooter"sv, true);
+        if (!footer_enabled)
+            return {};
+        return Config::read_string("Presenter"sv, "Footer"sv, "FooterText"sv, "{presentation_title}: {slide_title} ({slide_number}/{slides_total}), frame {slide_frame_number}, last modified {date}"sv);
+    }
+    return m_metadata.get("footer-center");
 }
 
 DeprecatedString Presentation::format_footer(StringView format) const

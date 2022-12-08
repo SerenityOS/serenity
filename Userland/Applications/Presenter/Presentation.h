@@ -54,6 +54,8 @@ public:
     // {frame_number}: Counts all frames on all slides
     DeprecatedString format_footer(StringView format) const;
 
+    Optional<DeprecatedString> footer_text() const;
+
 private:
     static HashMap<DeprecatedString, DeprecatedString> parse_metadata(JsonObject const& metadata_object);
     static ErrorOr<Gfx::IntSize> parse_presentation_size(JsonObject const& metadata_object);
