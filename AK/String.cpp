@@ -181,6 +181,9 @@ String::String(String&& other)
 
 String& String::operator=(String&& other)
 {
+    if (!is_short_string())
+        m_data->unref();
+
     m_data = exchange(other.m_data, nullptr);
     return *this;
 }
