@@ -316,6 +316,25 @@ TEST_CASE(hex_dump)
     EXPECT_EQ(DeprecatedString::formatted("{:*>4hex-dump}", "0000"), "30303030****0000");
 }
 
+TEST_CASE(span_format)
+{
+    {
+        Vector<int> v { 1, 2, 3, 4 };
+        EXPECT_EQ(DeprecatedString::formatted("{}", v.span()), "[ 1, 2, 3, 4 ]");
+        EXPECT_EQ(DeprecatedString::formatted("{}", const_cast<AddConst<decltype(v)>&>(v).span()), "[ 1, 2, 3, 4 ]");
+    }
+    {
+        Vector<StringView> v { "1"sv, "2"sv, "3"sv, "4"sv };
+        EXPECT_EQ(DeprecatedString::formatted("{}", v.span()), "[ 1, 2, 3, 4 ]");
+        EXPECT_EQ(DeprecatedString::formatted("{}", const_cast<AddConst<decltype(v)>&>(v).span()), "[ 1, 2, 3, 4 ]");
+    }
+    {
+        Vector<Vector<DeprecatedString>> v { { "1"sv, "2"sv }, { "3"sv, "4"sv } };
+        EXPECT_EQ(DeprecatedString::formatted("{}", v.span()), "[ [ 1, 2 ], [ 3, 4 ] ]");
+        EXPECT_EQ(DeprecatedString::formatted("{}", const_cast<AddConst<decltype(v)>&>(v).span()), "[ [ 1, 2 ], [ 3, 4 ] ]");
+    }
+}
+
 TEST_CASE(vector_format)
 {
     {

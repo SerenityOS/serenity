@@ -329,15 +329,16 @@ struct Formatter<StringView> : StandardFormatter {
     ErrorOr<void> format(FormatBuilder&, StringView);
 };
 
-template<typename T, size_t inline_capacity>
-requires(HasFormatter<T>) struct Formatter<Vector<T, inline_capacity>> : StandardFormatter {
-
+template<typename T>
+requires(HasFormatter<T>)
+struct Formatter<Span<T const>> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(move(formatter))
     {
     }
-    ErrorOr<void> format(FormatBuilder& builder, Vector<T> value)
+
+    ErrorOr<void> format(FormatBuilder& builder, Span<T const> value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };
@@ -372,6 +373,24 @@ requires(HasFormatter<T>) struct Formatter<Vector<T, inline_capacity>> : Standar
         }
         TRY(builder.put_literal(" ]"sv));
         return {};
+    }
+};
+
+template<typename T>
+requires(HasFormatter<T>)
+struct Formatter<Span<T>> : Formatter<Span<T const>> {
+    ErrorOr<void> format(FormatBuilder& builder, Span<T> value)
+    {
+        return Formatter<Span<T const>>::format(builder, value);
+    }
+};
+
+template<typename T, size_t inline_capacity>
+requires(HasFormatter<T>)
+struct Formatter<Vector<T, inline_capacity>> : Formatter<Span<T const>> {
+    ErrorOr<void> format(FormatBuilder& builder, Vector<T, inline_capacity> const& value)
+    {
+        return Formatter<Span<T const>>::format(builder, value.span());
     }
 };
 
