@@ -12,6 +12,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 
 [[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
 {
@@ -148,12 +149,14 @@ Optional<Interface&> Parser::resolve_import(auto path)
         report_parsing_error(DeprecatedString::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
     import_stack.set(real_path);
 
-    auto file_or_error = Core::File::open(real_path, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::Stream::File::open(real_path, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         report_parsing_error(DeprecatedString::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
-    auto data = file_or_error.value()->read_all();
-    auto& result = Parser(this, real_path, data, import_base_path).parse();
+    auto data_or_error = file_or_error.value()->read_until_eof();
+    if (data_or_error.is_error())
+        report_parsing_error(DeprecatedString::formatted("Failed to read {}: {}", real_path, data_or_error.error()), filename, input, lexer.tell());
+    auto& result = Parser(this, real_path, data_or_error.value(), import_base_path).parse();
     import_stack.remove(real_path);
 
     top_level_resolved_imports().set(real_path, &result);
