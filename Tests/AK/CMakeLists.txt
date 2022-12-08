@@ -14,6 +14,7 @@ set(AK_TEST_SOURCES
     TestByteBuffer.cpp
     TestCharacterTypes.cpp
     TestChecked.cpp
+    TestCircularBuffer.cpp
     TestCircularDeque.cpp
     TestCircularDuplexStream.cpp
     TestCircularQueue.cpp

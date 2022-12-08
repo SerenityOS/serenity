@@ -18,6 +18,7 @@ class ByteBuffer;
 
 class Bitmap;
 using ByteBuffer = Detail::ByteBuffer<32>;
+class CircularBuffer;
 class Error;
 class GenericLexer;
 class IPv4Address;
@@ -155,6 +156,7 @@ using AK::Badge;
 using AK::Bitmap;
 using AK::ByteBuffer;
 using AK::Bytes;
+using AK::CircularBuffer;
 using AK::CircularDuplexStream;
 using AK::CircularQueue;
 using AK::DeprecatedString;
