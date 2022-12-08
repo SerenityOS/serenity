@@ -37,6 +37,7 @@ endpoint WebContentServer
     get_source() =|
     inspect_dom_tree() =|
     inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) => (bool has_style, DeprecatedString computed_style,  DeprecatedString resolved_style,  DeprecatedString custom_properties, DeprecatedString node_box_sizing)
+    inspect_accessibility_tree() =|
     get_hovered_node_id() => (i32 node_id)
     js_console_input(DeprecatedString js_source) =|
     js_console_request_messages(i32 start_index) =|

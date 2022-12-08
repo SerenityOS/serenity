@@ -595,4 +595,11 @@ void ConnectionFromClient::prompt_closed(DeprecatedString const& response)
     m_page_host->prompt_closed(response);
 }
 
+void ConnectionFromClient::inspect_accessibility_tree()
+{
+    if (auto* doc = page().top_level_browsing_context().active_document()) {
+        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json());
+    }
+}
+
 }
