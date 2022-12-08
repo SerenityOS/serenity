@@ -2006,6 +2006,40 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
     return state;
 }
 
+static Result<char, Editor::Error> try_read_char_for_vt_dsr_with_retries()
+{
+    char c;
+    Editor::Error error;
+    bool read_success = false;
+
+    // Sometimes you have to be a little patient for terminal to start outputting
+    // the response for "Report cursor position". For example, this happens after
+    // Ctrl+C'ing the "top" command.
+    for (auto retries = 0; !read_success && retries < 5; ++retries) {
+        auto nread = read(0, &c, 1);
+        if (nread < 0) {
+            if (errno == 0 || errno == EINTR) {
+                // ????
+                continue;
+            }
+            dbgln("Error while reading DSR: {}", strerror(errno));
+            error = Editor::Error::ReadFailure;
+            continue;
+        }
+        if (nread == 0) {
+            dbgln("Terminal DSR issue; received no response");
+            error = Editor::Error::Empty;
+            continue;
+        }
+        read_success = true;
+    }
+
+    if (read_success) {
+        return c;
+    }
+    return error;
+}
+
 Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
 {
     char buf[16];
@@ -2060,20 +2094,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
     size_t row { 1 }, col { 1 };
 
     do {
-        char c;
-        auto nread = read(0, &c, 1);
-        if (nread < 0) {
-            if (errno == 0 || errno == EINTR) {
-                // ????
-                continue;
-            }
-            dbgln("Error while reading DSR: {}", strerror(errno));
-            return Error::ReadFailure;
-        }
-        if (nread == 0) {
-            dbgln("Terminal DSR issue; received no response");
-            return Error::Empty;
-        }
+        char c = TRY(try_read_char_for_vt_dsr_with_retries());
 
         switch (state) {
         case Free:
