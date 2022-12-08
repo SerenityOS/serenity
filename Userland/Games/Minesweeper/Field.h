@@ -105,6 +105,7 @@ public:
     void set_single_chording(bool new_val);
 
     void reset();
+    void generate_field(size_t start_row, size_t start_column);
 
 private:
     Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);

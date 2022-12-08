@@ -6,10 +6,12 @@
  */
 
 #include "Field.h"
+#include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <AK/NumberFormat.h>
 #include <AK/Queue.h>
 #include <AK/Random.h>
+#include <AK/Types.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
@@ -215,13 +217,6 @@ void Field::reset()
         square->label->set_visible(false);
     }
 
-    HashTable<int> mines;
-    while (mines.size() != m_mine_count) {
-        int location = get_random_uniform(rows() * columns());
-        if (!mines.contains(location))
-            mines.set(location);
-    }
-
     size_t i = 0;
     for (size_t r = 0; r < rows(); ++r) {
         for (size_t c = 0; c < columns(); ++c) {
@@ -232,7 +227,7 @@ void Field::reset()
             square.field = this;
             square.row = r;
             square.column = c;
-            square.has_mine = mines.contains(i);
+            square.has_mine = false;
             square.has_flag = false;
             square.is_considering = false;
             square.is_swept = false;
@@ -269,6 +264,47 @@ void Field::reset()
         }
     }
 
+    set_updates_enabled(true);
+}
+
+void Field::generate_field(size_t start_row, size_t start_column)
+{
+    VERIFY(m_squares.size() >= rows() * columns());
+    size_t board_size = rows() * columns();
+
+    // FIXME: Handle possible errors
+    HashTable<size_t> free_squares;
+
+    size_t start_index = start_row * columns() + start_column;
+    free_squares.set(start_index);
+
+    square(start_row, start_column).for_each_neighbor([&](auto const& neighbor) {
+        size_t neighbor_index = neighbor.row * columns() + neighbor.column;
+        free_squares.set(neighbor_index);
+    });
+
+    VERIFY(m_mine_count <= board_size - free_squares.size());
+
+    Vector<size_t> possible_mine_positions;
+    possible_mine_positions.ensure_capacity(board_size - free_squares.size());
+
+    for (size_t i = 0; i < board_size; ++i) {
+        m_squares[i]->has_mine = false;
+        m_squares[i]->has_flag = false;
+        m_squares[i]->is_considering = false;
+        m_squares[i]->is_swept = false;
+        m_squares[i]->number = 0;
+        if (!free_squares.contains(i))
+            possible_mine_positions.unchecked_append(i);
+    }
+
+    AK::shuffle(possible_mine_positions);
+
+    for (size_t i = 0; i < m_mine_count; i++) {
+        size_t mine_location = possible_mine_positions[i];
+        m_squares[mine_location]->has_mine = true;
+    }
+
     for (size_t r = 0; r < rows(); ++r) {
         for (size_t c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
@@ -279,13 +315,13 @@ void Field::reset()
             square.number = number;
             if (square.has_mine)
                 continue;
-            if (square.number)
+            if (square.number) {
                 square.label->set_icon(m_number_bitmap[square.number - 1]);
+            }
         }
     }
 
     m_unswept_empties = rows() * columns() - m_mine_count;
-    set_updates_enabled(true);
 }
 
 void Field::flood_fill(Square& square)
@@ -330,9 +366,8 @@ void Field::paint_event(GUI::PaintEvent& event)
 void Field::on_square_clicked_impl(Square& square, bool should_flood_fill)
 {
     if (m_first_click) {
-        while (square.has_mine || square.number != 0) {
-            reset();
-        }
+        reset();
+        generate_field(square.row, square.column);
     }
     m_first_click = false;
 
