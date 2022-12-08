@@ -538,6 +538,19 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     view_menu.add_action(*m_cursor_line_highlighting_action);
 
+    m_relative_line_number_action = GUI::Action::create_checkable("R&elative Line Number", [&](auto& action) {
+        m_editor->set_relative_line_number(action.is_checked());
+        Config::write_bool("TextEditor"sv, "View"sv, "RelativeLineNumber"sv, action.is_checked());
+    });
+
+    auto show_relative_line_number = Config::read_bool("TextEditor"sv, "View"sv, "RelativeLineNumber"sv, false);
+    m_relative_line_number_action->set_checked(show_relative_line_number);
+    m_editor->set_relative_line_number(show_relative_line_number);
+
+    m_relative_line_number_action->set_status_tip("Set relative line number");
+
+    view_menu.add_action(*m_relative_line_number_action);
+
     view_menu.add_separator();
     view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);
