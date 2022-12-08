@@ -1,6 +1,7 @@
 set(AK_SOURCES
     Assertions.cpp
     Base64.cpp
+    CircularBuffer.cpp
     DeprecatedString.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp
