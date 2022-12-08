@@ -55,12 +55,20 @@ public:
 #if !defined(KERNEL)
     JsonValue(double);
 #endif
-    JsonValue(bool);
     JsonValue(char const*);
 #ifndef KERNEL
     JsonValue(DeprecatedString const&);
 #endif
     JsonValue(StringView);
+
+    template<typename T>
+    requires(SameAs<RemoveCVReference<T>, bool>)
+    JsonValue(T value)
+        : m_type(Type::Bool)
+        , m_value { .as_bool = value }
+    {
+    }
+
     JsonValue(JsonArray const&);
     JsonValue(JsonObject const&);
 
