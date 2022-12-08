@@ -6,7 +6,7 @@
     }
 
     @GUI::TextBox {
-        name: "search_textbox"
+        name: "incremental_search_banner_search_textbox"
         max_width: 250
         preferred_width: "grow"
         placeholder: "Find"
@@ -19,7 +19,7 @@
         }
 
         @GUI::Button {
-            name: "previous_button"
+            name: "incremental_search_banner_previous_button"
             icon: "/res/icons/16x16/go-up.png"
             fixed_width: 18
             button_style: "Coolbar"
@@ -27,7 +27,7 @@
         }
 
         @GUI::Button {
-            name: "next_button"
+            name: "incremental_search_banner_next_button"
             icon: "/res/icons/16x16/go-down.png"
             fixed_width: 18
             button_style: "Coolbar"
@@ -36,7 +36,7 @@
     }
 
     @GUI::Label {
-        name: "index_label"
+        name: "incremental_search_banner_index_label"
         text_alignment: "CenterLeft"
     }
 
@@ -49,7 +49,7 @@
         }
 
         @GUI::Button {
-            name: "wrap_search_button"
+            name: "incremental_search_banner_wrap_search_button"
             fixed_width: 24
             icon: "/res/icons/16x16/reload.png"
             tooltip: "Wrap Search"
@@ -60,7 +60,7 @@
         }
 
         @GUI::Button {
-            name: "match_case_button"
+            name: "incremental_search_banner_match_case_button"
             fixed_width: 24
             icon: "/res/icons/16x16/app-font-editor.png"
             tooltip: "Match Case"
@@ -73,7 +73,7 @@
     @GUI::VerticalSeparator {}
 
     @GUI::Button {
-        name: "close_button"
+        name: "incremental_search_banner_close_button"
         fixed_size: [15, 16]
         button_style: "Coolbar"
         focus_policy: "NoFocus"

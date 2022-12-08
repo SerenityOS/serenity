@@ -20,39 +20,39 @@ IncrementalSearchBanner::IncrementalSearchBanner(TextEditor& editor)
     : m_editor(editor)
 {
     load_from_gml(incremental_search_banner_gml);
-    m_index_label = find_descendant_of_type_named<Label>("index_label");
+    m_index_label = find_descendant_of_type_named<Label>("incremental_search_banner_index_label");
 
-    m_wrap_search_button = find_descendant_of_type_named<Button>("wrap_search_button");
+    m_wrap_search_button = find_descendant_of_type_named<Button>("incremental_search_banner_wrap_search_button");
     m_wrap_search_button->on_checked = [this](auto is_checked) {
         m_wrap_search = is_checked
             ? TextDocument::SearchShouldWrap::Yes
             : TextDocument::SearchShouldWrap::No;
     };
 
-    m_match_case_button = find_descendant_of_type_named<Button>("match_case_button");
+    m_match_case_button = find_descendant_of_type_named<Button>("incremental_search_banner_match_case_button");
     m_match_case_button->on_checked = [this](auto is_checked) {
         m_match_case = is_checked;
         m_editor->reset_search_results();
         search(TextEditor::SearchDirection::Forward);
     };
 
-    m_close_button = find_descendant_of_type_named<Button>("close_button");
+    m_close_button = find_descendant_of_type_named<Button>("incremental_search_banner_close_button");
     m_close_button->set_text("\xE2\x9D\x8C");
     m_close_button->on_click = [this](auto) {
         hide();
     };
 
-    m_next_button = find_descendant_of_type_named<Button>("next_button");
+    m_next_button = find_descendant_of_type_named<Button>("incremental_search_banner_next_button");
     m_next_button->on_click = [this](auto) {
         search(TextEditor::SearchDirection::Forward);
     };
 
-    m_previous_button = find_descendant_of_type_named<Button>("previous_button");
+    m_previous_button = find_descendant_of_type_named<Button>("incremental_search_banner_previous_button");
     m_previous_button->on_click = [this](auto) {
         search(TextEditor::SearchDirection::Backward);
     };
 
-    m_search_textbox = find_descendant_of_type_named<TextBox>("search_textbox");
+    m_search_textbox = find_descendant_of_type_named<TextBox>("incremental_search_banner_search_textbox");
     m_search_textbox->on_change = [this]() {
         m_editor->reset_search_results();
         search(TextEditor::SearchDirection::Forward);
