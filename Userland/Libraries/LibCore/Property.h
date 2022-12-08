@@ -26,7 +26,12 @@ public:
         return m_setter(value);
     }
 
-    JsonValue get() const { return m_getter(); }
+    JsonValue get() const
+    {
+        if (!m_getter)
+            return {};
+        return m_getter();
+    }
 
     DeprecatedString const& name() const { return m_name; }
     bool is_readonly() const { return !m_setter; }
