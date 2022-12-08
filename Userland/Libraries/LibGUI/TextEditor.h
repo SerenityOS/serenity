@@ -97,6 +97,9 @@ public:
 
     void set_editing_cursor();
 
+    bool is_relative_line_number() const { return m_relative_line_number; }
+    void set_relative_line_number(bool);
+
     bool is_ruler_visible() const { return m_ruler_visible; }
     void set_ruler_visible(bool);
 
@@ -375,6 +378,7 @@ private:
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
+    bool m_relative_line_number { false };
     bool m_ruler_visible { false };
     bool m_gutter_visible { false };
     bool m_needs_rehighlight { false };

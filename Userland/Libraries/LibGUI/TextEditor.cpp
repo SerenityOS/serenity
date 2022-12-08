@@ -488,9 +488,10 @@ void TextEditor::paint_event(PaintEvent& event)
             if (ruler_line_rect.height() > line_height)
                 ruler_line_rect.set_height(line_height);
             // NOTE: Use Painter::draw_text() directly here, as we want to always draw the line numbers in clear text.
+            size_t const line_number = is_relative_line_number() && !is_current_line ? max(i, m_cursor.line()) - min(i, m_cursor.line()) : i + 1;
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0),
-                DeprecatedString::number(i + 1),
+                DeprecatedString::number(line_number),
                 is_current_line ? font().bold_variant() : font(),
                 Gfx::TextAlignment::CenterRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
@@ -1427,6 +1428,8 @@ void TextEditor::set_cursor(TextPosition const& a_position)
         on_cursor_change();
     if (m_highlighter)
         m_highlighter->cursor_did_change();
+    if (m_relative_line_number)
+        update();
 }
 
 void TextEditor::focusin_event(FocusEvent& event)
@@ -2256,6 +2259,15 @@ void TextEditor::set_substitution_code_point(Optional<u32> code_point)
 int TextEditor::number_of_visible_lines() const
 {
     return visible_content_rect().height() / line_height();
+}
+
+void TextEditor::set_relative_line_number(bool relative)
+{
+    if (m_relative_line_number == relative)
+        return;
+    m_relative_line_number = relative;
+    recompute_all_visual_lines();
+    update();
 }
 
 void TextEditor::set_ruler_visible(bool visible)
