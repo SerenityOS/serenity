@@ -7,18 +7,25 @@
 #include "WordGame.h"
 #include <AK/QuickSort.h>
 #include <AK/Random.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Stream.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(MasterWord, WordGame)
+
 // TODO: Add stats
+namespace MasterWord {
 
 WordGame::WordGame()
+    : m_clear_message_timer(Core::Timer::create_single_shot(5000, [this] { clear_message(); }))
 {
     read_words();
     m_num_letters = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
@@ -42,6 +49,7 @@ void WordGame::reset()
             reset();
         }
     }
+    clear_message();
     update();
 }
 
@@ -82,10 +90,17 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
         m_current_guess = m_current_guess.substring(0, m_current_guess.length() - 1);
         m_last_word_not_in_dictionary = false;
     }
-    // If enough letters and return pressed
-    else if (m_current_guess.length() == m_num_letters && event.key() == KeyCode::Key_Return) {
-        if (is_in_dictionary(m_current_guess)) {
+    // If return pressed
+    else if (event.key() == KeyCode::Key_Return) {
+        if (m_current_guess.length() < m_num_letters) {
+            show_message("Not enough letters"sv);
+        } else if (!is_in_dictionary(m_current_guess)) {
+            show_message("Not in dictionary"sv);
+            m_last_word_not_in_dictionary = true;
+        } else {
             m_last_word_not_in_dictionary = false;
+            clear_message();
+
             add_guess(m_current_guess);
             auto won = m_current_guess == m_current_word;
             m_current_guess = {};
@@ -96,8 +111,6 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
                 GUI::MessageBox::show(window(), DeprecatedString::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
                 reset();
             }
-        } else {
-            m_last_word_not_in_dictionary = true;
         }
     }
 
@@ -290,4 +303,20 @@ void WordGame::add_guess(AK::StringView guess)
 
     m_guesses.append({ guess, letter_states });
     update();
+}
+
+void WordGame::show_message(StringView message) const
+{
+    m_clear_message_timer->restart();
+    if (on_message)
+        on_message(message);
+}
+
+void WordGame::clear_message() const
+{
+    m_clear_message_timer->stop();
+    if (on_message)
+        on_message({});
+}
+
 }
