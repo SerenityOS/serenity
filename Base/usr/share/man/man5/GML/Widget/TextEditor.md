@@ -4,7 +4,7 @@ GML Text Editor Widget
 
 ## Description
 
-Defines a GUI text editor widget.
+Defines a GUI text editor widget. TextEditor is the base class of various kinds of text input boxes, both multiline and single-line.
 
 ## Synopsis
 
@@ -21,8 +21,10 @@ Defines a GUI text editor widget.
 
 ## Registered Properties
 
-| Property    | Type   | Possible values                 | Description     |
-|-------------|--------|---------------------------------|-----------------|
-| text        | string | Any string                      | Set text        |
-| placeholder | string | Any string                      | Set placeholder |
-| mode        | enum   | Editable, ReadOnly, DisplayOnly | Set editor mode |
+| Property    | Type   | Possible values                                                                                       | Description                                                                   |
+| ----------- | ------ | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| text        | string |                                                                                                       | Set text                                                                      |
+| placeholder | string |                                                                                                       | Set placeholder; the text that is shown when the user has not input any text. |
+| mode        | enum   | Editable, ReadOnly, DisplayOnly                                                                       | Set editor mode                                                               |
+| gutter      | bool   | Enable the gutter, a column left to the text content that is used for e.g. breakpoints in HackStudio. |
+| ruler       | bool   | Enable the ruler, a column left to the text and gutter that shows the line numbers.                   |
