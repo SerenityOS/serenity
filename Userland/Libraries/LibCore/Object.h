@@ -311,6 +311,15 @@ requires IsBaseOf<Object, T>
         [this] { return this->getter(); },                       \
         {});
 
+#define REGISTER_WRITE_ONLY_STRING_PROPERTY(property_name, setter) \
+    register_property(                                             \
+        property_name,                                             \
+        {},                                                        \
+        [this](auto& value) {                                      \
+            this->setter(value.to_deprecated_string());            \
+            return true;                                           \
+        });
+
 #define REGISTER_READONLY_SIZE_PROPERTY(property_name, getter) \
     register_property(                                         \
         property_name,                                         \
