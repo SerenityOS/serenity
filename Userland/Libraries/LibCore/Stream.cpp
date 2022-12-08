@@ -367,24 +367,12 @@ ErrorOr<IPv4Address> Socket::resolve_host(DeprecatedString const& host, SocketTy
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
 
-    // FIXME: Convert this to Core::System
-    struct addrinfo* results = nullptr;
-    int rc = getaddrinfo(host.characters(), nullptr, &hints, &results);
-    if (rc != 0) {
-        if (rc == EAI_SYSTEM) {
-            return Error::from_syscall("getaddrinfo"sv, -errno);
-        }
+    auto const results = TRY(Core::System::getaddrinfo(host.characters(), nullptr, hints));
 
-        auto const* error_string = gai_strerror(rc);
-        return Error::from_string_view({ error_string, strlen(error_string) });
-    }
-
-    ScopeGuard free_results = [results] { freeaddrinfo(results); };
-
-    for (auto* result = results; result != nullptr; result = result->ai_next) {
-        if (result->ai_family == AF_INET) {
-            auto* socket_address = bit_cast<struct sockaddr_in*>(result->ai_addr);
-            NetworkOrdered<u32> network_ordered_address { socket_address->sin_addr.s_addr };
+    for (auto const& result : results.addresses()) {
+        if (result.ai_family == AF_INET) {
+            auto* socket_address = bit_cast<struct sockaddr_in*>(result.ai_addr);
+            NetworkOrdered<u32> const network_ordered_address { socket_address->sin_addr.s_addr };
             return IPv4Address { network_ordered_address };
         }
     }
