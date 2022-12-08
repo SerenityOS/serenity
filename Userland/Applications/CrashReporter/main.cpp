@@ -279,11 +279,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");
     save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
-        if (full_backtrace.is_empty()) {
-            GUI::MessageBox::show(window, "Backtrace has not been generated yet. Please wait..."sv, "Empty Backtrace"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-
         LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
         auto file_or_error = FileSystemAccessClient::Client::the().try_save_file(window, lexical_path.title(), lexical_path.extension());
         if (file_or_error.is_error())
@@ -293,6 +288,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!file->write(full_backtrace.to_deprecated_string()))
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
+    save_backtrace_button.set_enabled(false);
 
     (void)Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(
         [&, coredump = move(coredump)](auto&) {
@@ -340,6 +336,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             progressbar.set_visible(false);
             tab_widget.set_visible(true);
+            save_backtrace_button.set_enabled(true);
             window->resize(window->width(), max(340, window->height()));
             window->set_progress(0);
         });
