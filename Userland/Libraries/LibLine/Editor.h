@@ -276,7 +276,7 @@ private:
 
     void ensure_free_lines_from_origin(size_t count);
 
-    Result<Vector<size_t, 2>, Error> vt_dsr();
+    Result<Vector<size_t, 2>, Error> get_cursor_position();
     void remove_at_index(size_t);
 
     enum class ModificationKind {
@@ -372,7 +372,7 @@ private:
 
     bool set_origin(bool quit_on_error = true)
     {
-        auto position = vt_dsr();
+        auto position = get_cursor_position();
         if (!position.is_error()) {
             set_origin(position.value()[0], position.value()[1]);
             return true;

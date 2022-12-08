@@ -2006,7 +2006,7 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
     return state;
 }
 
-static Result<char, Editor::Error> try_read_char_for_vt_dsr_with_retries()
+static Result<char, Editor::Error> read_cursor_position_response_char_with_retries()
 {
     char c;
     Editor::Error error;
@@ -2040,7 +2040,7 @@ static Result<char, Editor::Error> try_read_char_for_vt_dsr_with_retries()
     return error;
 }
 
-Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
+Result<Vector<size_t, 2>, Editor::Error> Editor::get_cursor_position()
 {
     char buf[16];
 
@@ -2094,7 +2094,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
     size_t row { 1 }, col { 1 };
 
     do {
-        char c = TRY(try_read_char_for_vt_dsr_with_retries());
+        char c = TRY(read_cursor_position_response_char_with_retries());
 
         switch (state) {
         case Free:
