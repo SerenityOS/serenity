@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "LibGUI/Action.h"
 #include "Presentation.h"
+#include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/SettingsWindow.h>
 #include <LibGUI/UIDimensions.h>
 #include <LibGUI/Widget.h>
 
@@ -35,4 +36,5 @@ private:
     OwnPtr<Presentation> m_current_presentation;
     RefPtr<GUI::Action> m_next_slide_action;
     RefPtr<GUI::Action> m_previous_slide_action;
+    RefPtr<GUI::SettingsWindow> m_settings_window;
 };

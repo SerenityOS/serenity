@@ -5,15 +5,17 @@
  */
 
 #include "PresenterWidget.h"
-#include "LibGUI/MessageBox.h"
 #include "Presentation.h"
+#include "PresenterSettings.h"
 #include <AK/Format.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/SettingsWindow.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
@@ -34,9 +36,16 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
             return;
         this->set_file(response.value()->filename());
     });
+
+    m_settings_window = TRY(GUI::SettingsWindow::create("Presenter Settings"));
+    (void)TRY(m_settings_window->add_tab<PresenterSettingsFooterWidget>("Footer", "footer"sv));
+    auto settings_action = GUI::Action::create("&Settings...", [this](auto&) {
+        m_settings_window->show();
+    });
     auto about_action = GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-display-settings"sv));
 
     TRY(file_menu.try_add_action(open_action));
+    TRY(file_menu.try_add_action(settings_action));
     TRY(file_menu.try_add_action(about_action));
 
     auto& presentation_menu = window->add_menu("&Presentation");
