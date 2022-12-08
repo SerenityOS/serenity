@@ -10,6 +10,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -127,9 +128,12 @@ FindInFilesWidget::FindInFilesWidget()
 
     m_result_view = add<GUI::TableView>();
 
-    m_result_view->on_activation = [](auto& index) {
+    m_result_view->on_activation = [this](auto& index) {
         auto& match = *(const Match*)index.internal_data();
-        open_file(match.filename);
+        auto open_file_result = open_file(match.filename);
+        if (open_file_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", match.filename, open_file_result.error()));
+        }
         current_editor().set_selection(match.range);
         current_editor().set_focus(true);
     };

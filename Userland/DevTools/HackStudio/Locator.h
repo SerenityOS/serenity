@@ -22,7 +22,7 @@ public:
 
 private:
     void update_suggestions();
-    void open_suggestion(const GUI::ModelIndex&);
+    ErrorOr<void> open_suggestion(const GUI::ModelIndex&);
 
     Locator(Core::Object* parent = nullptr);
 

@@ -390,7 +390,10 @@ void Editor::drop_event(GUI::DropEvent& event)
             return;
         }
         set_current_editor_wrapper(static_cast<EditorWrapper*>(parent()));
-        open_file(urls.first().path());
+        auto open_file_result = open_file(urls.first().path());
+        if (open_file_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", urls.first().path(), open_file_result.error()));
+        }
     }
 }
 
@@ -609,8 +612,11 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     if (!m_language_client)
         return;
 
-    m_language_client->on_declaration_found = [](DeprecatedString const& file, size_t line, size_t column) {
-        HackStudio::open_file(file, line, column);
+    m_language_client->on_declaration_found = [this](DeprecatedString const& file, size_t line, size_t column) {
+        auto open_file_result = HackStudio::open_file(file, line, column);
+        if (open_file_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", file, open_file_result.error()));
+        }
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
 }

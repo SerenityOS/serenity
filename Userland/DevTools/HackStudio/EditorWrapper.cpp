@@ -12,6 +12,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
@@ -37,8 +38,11 @@ ErrorOr<void> EditorWrapper::initialize_editor()
         set_current_editor_wrapper(this);
     };
 
-    m_editor->on_open = [](DeprecatedString const& path) {
-        open_file(path);
+    m_editor->on_open = [this](DeprecatedString const& path) {
+        auto open_file_result = open_file(path);
+        if (open_file_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", path, open_file_result.error()));
+        }
     };
 
     m_editor->on_modified_change = [this](bool) {

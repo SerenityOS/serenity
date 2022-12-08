@@ -12,6 +12,7 @@
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
@@ -67,7 +68,13 @@ public:
             if (index.column() == Column::Filename)
                 return suggestion.as_symbol_declaration.value().position.file;
             if (index.column() == Column::Icon) {
-                auto icon = ProjectDeclarations::get_icon_for(suggestion.as_symbol_declaration.value().type);
+                auto icon_or_error = ProjectDeclarations::get_icon_for(suggestion.as_symbol_declaration.value().type);
+                if (icon_or_error.is_error()) {
+                    // FIXME: Make this a GUI::DialogBox. This requires us to have a window object available however
+                    dbgln("Can't open icon {}", icon_or_error.error());
+                    return {};
+                }
+                auto icon = icon_or_error.release_value();
                 if (icon.has_value())
                     return icon.value();
                 return {};
@@ -138,7 +145,10 @@ Locator::Locator(Core::Object* parent)
         auto selected_index = m_suggestion_view->selection().first();
         if (!selected_index.is_valid())
             return;
-        open_suggestion(selected_index);
+        auto open_suggestion_result = open_suggestion(selected_index);
+        if (open_suggestion_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("There was an error opening this suggestion: {}", open_suggestion_result.error()));
+        }
     };
 
     m_textbox->on_focusout = [&]() {
@@ -153,23 +163,27 @@ Locator::Locator(Core::Object* parent)
     m_suggestion_view->set_column_headers_visible(false);
 
     m_suggestion_view->on_activation = [this](auto& index) {
-        open_suggestion(index);
+        auto open_suggestion_result = open_suggestion(index);
+        if (open_suggestion_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("There was an error opening this suggestion: {}", open_suggestion_result.error()));
+        }
     };
 }
 
-void Locator::open_suggestion(const GUI::ModelIndex& index)
+ErrorOr<void> Locator::open_suggestion(const GUI::ModelIndex& index)
 {
     auto& model = reinterpret_cast<LocatorSuggestionModel&>(*m_suggestion_view->model());
     auto suggestion = model.suggestions()[index.row()];
     if (suggestion.is_filename()) {
         auto filename = suggestion.as_filename.value();
-        open_file(filename);
+        TRY(open_file(filename));
     }
     if (suggestion.is_symbol_declaration()) {
         auto position = suggestion.as_symbol_declaration.value().position;
-        open_file(position.file, position.line, position.column);
+        TRY(open_file(position.file, position.line, position.column));
     }
     close();
+    return {};
 }
 
 void Locator::open()

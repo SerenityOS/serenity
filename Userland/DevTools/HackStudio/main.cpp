@@ -30,9 +30,9 @@ using namespace HackStudio;
 static WeakPtr<HackStudioWidget> s_hack_studio_widget;
 
 static bool make_is_available();
-static void notify_make_not_available();
-static void update_path_environment_variable();
-static Optional<DeprecatedString> last_opened_project_path();
+static ErrorOr<void> notify_make_not_available();
+static ErrorOr<void> update_path_environment_variable();
+static ErrorOr<Optional<DeprecatedString>> last_opened_project_path();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -43,34 +43,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     window->resize(840, 600);
-    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"sv).release_value_but_fixme_should_propagate_errors());
+    window->set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
 
-    update_path_environment_variable();
+    TRY(update_path_environment_variable());
 
     if (!make_is_available()) {
-        notify_make_not_available();
+        TRY(notify_make_not_available());
     }
-
+    dbgln("A!");
     char const* path_argument = nullptr;
     bool mode_coredump = false;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
     args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
     args_parser.parse(arguments);
-
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
-
     auto project_path = Core::File::real_path_for(".");
     if (!mode_coredump) {
         if (!argument_absolute_path.is_null())
             project_path = argument_absolute_path;
-        else if (auto path = last_opened_project_path(); path.has_value())
+        else if (auto path = TRY(last_opened_project_path()); path.has_value())
             project_path = path.release_value();
     }
 
     auto hack_studio_widget = TRY(window->try_set_main_widget<HackStudioWidget>(project_path));
     s_hack_studio_widget = hack_studio_widget;
-
     window->set_title(DeprecatedString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
 
     hack_studio_widget->initialize_menubar(*window);
@@ -86,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     hack_studio_widget->update_actions();
 
     if (mode_coredump)
-        hack_studio_widget->open_coredump(argument_absolute_path);
+        TRY(hack_studio_widget->open_coredump(argument_absolute_path));
 
     return app->exec();
 }
@@ -109,37 +106,39 @@ static bool make_is_available()
     return WEXITSTATUS(wstatus) == 0;
 }
 
-static void notify_make_not_available()
+static ErrorOr<void> notify_make_not_available()
 {
     auto notification = GUI::Notification::construct();
-    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png"sv).release_value_but_fixme_should_propagate_errors());
+    notification->set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png"sv)));
     notification->set_title("'make' Not Available");
     notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository");
     notification->show();
+    return {};
 }
 
-static void update_path_environment_variable()
+static ErrorOr<void> update_path_environment_variable()
 {
     StringBuilder path;
 
     auto const* path_env_ptr = getenv("PATH");
     if (path_env_ptr != NULL)
-        path.append({ path_env_ptr, strlen(path_env_ptr) });
+        TRY(path.try_append({ path_env_ptr, strlen(path_env_ptr) }));
 
     if (path.length())
-        path.append(':');
-    path.append(DEFAULT_PATH_SV);
+        TRY(path.try_append(':'));
+    TRY(path.try_append(DEFAULT_PATH_SV));
     setenv("PATH", path.to_deprecated_string().characters(), true);
+    return {};
 }
 
-static Optional<DeprecatedString> last_opened_project_path()
+static ErrorOr<Optional<DeprecatedString>> last_opened_project_path()
 {
-    auto projects = HackStudioWidget::read_recent_projects();
+    auto projects = TRY(HackStudioWidget::read_recent_projects());
     if (projects.size() == 0)
-        return {};
+        return { {} };
 
     if (!Core::File::exists(projects[0]))
-        return {};
+        return { {} };
 
     return { projects[0] };
 }
@@ -151,14 +150,16 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(DeprecatedString const& filename)
+ErrorOr<void> open_file(DeprecatedString const& filename)
 {
-    s_hack_studio_widget->open_file(filename);
+    TRY(s_hack_studio_widget->open_file(filename));
+    return {};
 }
 
-void open_file(DeprecatedString const& filename, size_t line, size_t column)
+ErrorOr<void> open_file(DeprecatedString const& filename, size_t line, size_t column)
 {
-    s_hack_studio_widget->open_file(filename, line, column);
+    TRY(s_hack_studio_widget->open_file(filename, line, column));
+    return {};
 }
 
 RefPtr<EditorWrapper> current_editor_wrapper()

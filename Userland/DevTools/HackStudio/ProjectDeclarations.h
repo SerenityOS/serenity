@@ -25,7 +25,7 @@ public:
 
     void set_declared_symbols(DeprecatedString const& filename, Vector<CodeComprehension::Declaration> const&);
 
-    static Optional<GUI::Icon> get_icon_for(CodeComprehension::DeclarationType);
+    static ErrorOr<Optional<GUI::Icon>> get_icon_for(CodeComprehension::DeclarationType);
 
     Function<void()> on_update = nullptr;
 

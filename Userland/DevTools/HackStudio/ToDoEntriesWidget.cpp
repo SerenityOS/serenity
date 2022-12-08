@@ -8,6 +8,7 @@
 #include "HackStudio.h"
 #include "ToDoEntries.h"
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGfx/Font/FontDatabase.h>
 
 namespace HackStudio {
@@ -102,9 +103,12 @@ ToDoEntriesWidget::ToDoEntriesWidget()
     set_layout<GUI::VerticalBoxLayout>();
     m_result_view = add<GUI::TableView>();
 
-    m_result_view->on_activation = [](auto& index) {
+    m_result_view->on_activation = [this](auto& index) {
         auto& match = *(CodeComprehension::TodoEntry const*)index.internal_data();
-        open_file(match.filename, match.line, match.column);
+        auto open_file_result = open_file(match.filename, match.line, match.column);
+        if (open_file_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", match.filename, open_file_result.error()));
+        }
     };
 }
 

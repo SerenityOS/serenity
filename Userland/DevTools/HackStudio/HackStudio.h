@@ -15,9 +15,9 @@
 namespace HackStudio {
 
 GUI::TextEditor& current_editor();
-void open_file(DeprecatedString const&);
+ErrorOr<void> open_file(DeprecatedString const&);
 RefPtr<EditorWrapper> current_editor_wrapper();
-void open_file(DeprecatedString const&, size_t line, size_t column);
+ErrorOr<void> open_file(DeprecatedString const&, size_t line, size_t column);
 Project& project();
 DeprecatedString currently_open_file();
 void set_current_editor_wrapper(RefPtr<EditorWrapper>);

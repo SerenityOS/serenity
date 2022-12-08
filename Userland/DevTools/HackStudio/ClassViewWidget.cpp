@@ -9,6 +9,7 @@
 #include "ProjectDeclarations.h"
 #include <AK/StdLibExtras.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/MessageBox.h>
 #include <string.h>
 
 namespace HackStudio {
@@ -27,7 +28,10 @@ ClassViewWidget::ClassViewWidget()
         if (!node->declaration)
             return;
 
-        open_file(node->declaration->position.file, node->declaration->position.line, node->declaration->position.column);
+        auto open_file_result = open_file(node->declaration->position.file, node->declaration->position.line, node->declaration->position.column);
+        if (open_file_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", node->declaration->position.file, open_file_result.error()));
+        }
     };
 }
 
@@ -54,7 +58,13 @@ GUI::Variant ClassViewModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
     case GUI::ModelRole::Icon: {
         if (!node->declaration)
             return {};
-        auto icon = ProjectDeclarations::get_icon_for(node->declaration->type);
+        auto icon_or_error = ProjectDeclarations::get_icon_for(node->declaration->type);
+        if (icon_or_error.is_error()) {
+            // FIXME: Make this a GUI::DialogBox. This requires us to have a window object available however
+            dbgln("Can't open icon {}", icon_or_error.error());
+            return {};
+        }
+        auto icon = icon_or_error.release_value();
         if (icon.has_value())
             return icon.value();
         return {};

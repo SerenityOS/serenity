@@ -38,7 +38,7 @@ class HackStudioWidget : public GUI::Widget {
 public:
     virtual ~HackStudioWidget() override;
 
-    bool open_file(DeprecatedString const& filename, size_t line = 0, size_t column = 0);
+    ErrorOr<void> open_file(DeprecatedString const& filename, size_t line = 0, size_t column = 0);
     void close_file_in_all_editors(DeprecatedString const& filename);
 
     void update_actions();
@@ -73,11 +73,11 @@ public:
         Coredump
     };
 
-    void open_coredump(DeprecatedString const& coredump_path);
+    ErrorOr<void> open_coredump(DeprecatedString const& coredump_path);
     void for_each_open_file(Function<void(ProjectFile const&)>);
     bool semantic_syntax_highlighting_is_enabled() const;
 
-    static Vector<DeprecatedString> read_recent_projects();
+    static ErrorOr<Vector<DeprecatedString>> read_recent_projects();
 
     void update_current_editor_title();
     void update_window_title();
@@ -90,7 +90,7 @@ private:
     Vector<DeprecatedString> selected_file_paths() const;
 
     HackStudioWidget(DeprecatedString path_to_project);
-    void open_project(DeprecatedString const& root_path);
+    ErrorOr<void> open_project(DeprecatedString const& root_path);
 
     enum class EditMode {
         Text,
@@ -129,9 +129,9 @@ private:
     NonnullRefPtr<GUI::Action> create_open_project_configuration_action();
     void create_location_history_actions();
 
-    void add_new_editor_tab_widget(GUI::Widget& parent);
-    void add_new_editor(GUI::TabWidget& parent);
-    RefPtr<EditorWrapper> get_editor_of_file(DeprecatedString const& filename);
+    ErrorOr<void> add_new_editor_tab_widget(GUI::Widget& parent);
+    ErrorOr<void> add_new_editor(GUI::TabWidget& parent);
+    ErrorOr<RefPtr<EditorWrapper>> get_editor_of_file(DeprecatedString const& filename);
     DeprecatedString get_project_executable_path() const;
 
     void on_action_tab_change();
@@ -141,19 +141,20 @@ private:
 
     void handle_external_file_deletion(DeprecatedString const& filepath);
     void stop_debugger_if_running();
-    void close_current_project();
+    ErrorOr<void> close_current_project();
 
     void create_open_files_view(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
     void create_file_menu(GUI::Window&);
-    void update_recent_projects_submenu();
     void create_edit_menu(GUI::Window&);
     void create_build_menu(GUI::Window&);
     void create_view_menu(GUI::Window&);
     void create_help_menu(GUI::Window&);
     void create_project_tab(GUI::Widget& parent);
     void configure_project_tree_view();
+
+    ErrorOr<void> update_recent_projects_submenu();
 
     void run();
     void build();
