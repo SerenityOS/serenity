@@ -264,9 +264,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& close_button = *widget->find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
-        if (unlink_on_exit)
-            unlink_coredump(coredump_path);
-        app->quit();
+        window->close();
     };
     close_button.set_focus(true);
 
