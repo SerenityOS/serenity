@@ -42,7 +42,7 @@ Button::Button(DeprecatedString text)
         { Gfx::ButtonStyle::Normal, "Normal" },
         { Gfx::ButtonStyle::Coolbar, "Coolbar" });
 
-    REGISTER_STRING_PROPERTY("icon", icon, set_icon_from_path);
+    REGISTER_WRITE_ONLY_STRING_PROPERTY("icon", set_icon_from_path);
     REGISTER_BOOL_PROPERTY("default", is_default, set_default);
 }
 

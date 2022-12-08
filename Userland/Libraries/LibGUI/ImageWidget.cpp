@@ -26,7 +26,7 @@ ImageWidget::ImageWidget(StringView)
 
     REGISTER_BOOL_PROPERTY("auto_resize", auto_resize, set_auto_resize);
     REGISTER_BOOL_PROPERTY("should_stretch", should_stretch, set_should_stretch);
-    REGISTER_STRING_PROPERTY("bitmap", bitmap, load_from_file);
+    REGISTER_WRITE_ONLY_STRING_PROPERTY("bitmap", load_from_file);
 }
 
 void ImageWidget::set_bitmap(Gfx::Bitmap const* bitmap)
