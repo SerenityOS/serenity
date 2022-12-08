@@ -18,13 +18,16 @@
 
 namespace HackStudio {
 
-EditorWrapper::EditorWrapper()
+ErrorOr<NonnullRefPtr<EditorWrapper>> EditorWrapper::try_create()
 {
-    set_layout<GUI::VerticalBoxLayout>();
-    m_filename_title = untitled_label;
+    NonnullRefPtr<EditorWrapper> editor_wrapper = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) EditorWrapper()));
+    TRY(editor_wrapper->initialize_editor());
+    return editor_wrapper;
+}
 
-    // FIXME: Propagate errors instead of giving up
-    m_editor = MUST(Editor::try_create());
+ErrorOr<void> EditorWrapper::initialize_editor()
+{
+    m_editor = TRY(Editor::try_create());
 
     add_child(*m_editor);
     m_editor->set_ruler_visible(true);
@@ -42,6 +45,14 @@ EditorWrapper::EditorWrapper()
         update_title();
         update_editor_window_title();
     };
+
+    return {};
+}
+
+EditorWrapper::EditorWrapper()
+{
+    set_layout<GUI::VerticalBoxLayout>();
+    m_filename_title = untitled_label;
 }
 
 LanguageClient& EditorWrapper::language_client() { return m_editor->language_client(); }

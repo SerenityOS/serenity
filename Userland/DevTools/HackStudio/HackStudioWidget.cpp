@@ -770,28 +770,28 @@ void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
 
 void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
 {
-    auto& wrapper = parent.add_tab<EditorWrapper>("(Untitled)");
-    parent.set_active_widget(&wrapper);
+    auto wrapper = parent.try_add_tab<EditorWrapper>("(Untitled)").release_value_but_fixme_should_propagate_errors();
+    parent.set_active_widget(wrapper);
     if (parent.children().size() > 1 || m_all_editor_tab_widgets.size() > 1)
         parent.set_close_button_enabled(true);
 
     auto previous_editor_wrapper = m_current_editor_wrapper;
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
-    wrapper.editor().set_focus(true);
-    wrapper.editor().set_font(*m_editor_font);
-    wrapper.set_project_root(m_project->root_path());
-    wrapper.editor().on_cursor_change = [this] { on_cursor_change(); };
-    wrapper.on_change = [this] { update_gml_preview(); };
+    wrapper->editor().set_focus(true);
+    wrapper->editor().set_font(*m_editor_font);
+    wrapper->set_project_root(m_project->root_path());
+    wrapper->editor().on_cursor_change = [this] { on_cursor_change(); };
+    wrapper->on_change = [this] { update_gml_preview(); };
     set_edit_mode(EditMode::Text);
     if (previous_editor_wrapper && previous_editor_wrapper->editor().editing_engine()->is_regular())
-        wrapper.editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+        wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
     else if (previous_editor_wrapper && previous_editor_wrapper->editor().editing_engine()->is_vim())
-        wrapper.editor().set_editing_engine(make<GUI::VimEditingEngine>());
+        wrapper->editor().set_editing_engine(make<GUI::VimEditingEngine>());
     else
-        wrapper.editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+        wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
 
-    wrapper.on_tab_close_request = [this, &parent](auto& tab) {
+    wrapper->on_tab_close_request = [this, &parent](auto& tab) {
         parent.deferred_invoke([this, &parent, &tab] {
             set_current_editor_wrapper(tab);
             parent.remove_tab(tab);

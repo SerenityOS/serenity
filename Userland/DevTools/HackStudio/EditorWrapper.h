@@ -22,9 +22,11 @@ namespace HackStudio {
 class Editor;
 
 class EditorWrapper : public GUI::Widget {
-    C_OBJECT(EditorWrapper)
+    C_OBJECT_ABSTRACT(EditorWrapper)
 
 public:
+    static ErrorOr<NonnullRefPtr<EditorWrapper>> try_create();
+
     virtual ~EditorWrapper() override = default;
 
     Editor& editor() { return *m_editor; }
@@ -56,6 +58,8 @@ private:
     static constexpr auto untitled_label = "(Untitled)"sv;
 
     EditorWrapper();
+
+    ErrorOr<void> initialize_editor();
 
     void update_title();
 
