@@ -130,7 +130,8 @@ extern "C" [[noreturn]] void init()
     dmesgln("Initialize MMU");
     Memory::MemoryManager::initialize(0);
     DeviceManagement::initialize();
-    JailManagement::the();
+    SysFSComponentRegistry::initialize();
+    DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
@@ -148,6 +149,9 @@ extern "C" [[noreturn]] void init()
     Processor::enable_interrupts();
 
     TimeManagement::initialize(0);
+
+    ProcFSComponentRegistry::initialize();
+    JailManagement::the();
 
     auto firmware_version = query_firmware_version();
     dmesgln("Firmware version: {}", firmware_version);
