@@ -399,7 +399,7 @@ void GLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* params)
             material.emissive = { params[0], params[1], params[2], params[3] };
             break;
         case GL_SHININESS:
-            material.shininess = *params;
+            material.shininess = params[0];
             break;
         case GL_AMBIENT_AND_DIFFUSE:
             material.ambient = { params[0], params[1], params[2], params[3] };
