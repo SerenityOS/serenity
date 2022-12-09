@@ -412,6 +412,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         breadcrumbbar.clear_segments();
         for (size_t k = 0; k < treemapwidget.path_size(); k++) {
             if (k == 0) {
+                if (treemapwidget.viewpoint() == 0)
+                    window->set_title("/ - SpaceAnalyzer");
+
                 breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
                 continue;
             }
@@ -420,6 +423,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             builder.append('/');
             builder.append(node->name());
+
+            // Sneakily set the window title here, while the StringBuilder holds the right amount of the path.
+            if (k == treemapwidget.viewpoint())
+                window->set_title(DeprecatedString::formatted("{} - SpaceAnalyzer", builder.string_view()));
 
             breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
         }
