@@ -36,6 +36,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto client = TRY(SQLServer::ConnectionFromClient::try_create(move(socket), 1));
     client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(sql_server_fd_passing_socket)));
     client->set_database_path(move(database_path));
+    client->on_disconnect = [&]() {
+        loop.quit(0);
+    };
 
     return loop.exec();
 }
