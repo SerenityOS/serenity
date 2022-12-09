@@ -219,9 +219,23 @@ WebIDL::ExceptionOr<void> Selection::collapse_to_start()
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-collapsetoend
-void Selection::collapse_to_end()
+WebIDL::ExceptionOr<void> Selection::collapse_to_end()
 {
-    TODO();
+    // 1. The method must throw InvalidStateError exception if the this is empty.
+    if (!m_range) {
+        return WebIDL::InvalidStateError::create(realm(), "Selection.collapse_to_end() on empty range"sv);
+    }
+
+    // 2. Otherwise, it must create a new range
+    auto new_range = DOM::Range::create(*m_document);
+
+    // 3. Set the start both its start and end to the start of this's range
+    TRY(new_range->set_start(*anchor_node(), m_range->end_offset()));
+    TRY(new_range->set_end(*anchor_node(), m_range->end_offset()));
+
+    // 4. Then set this's range to the newly-created range.
+    m_range = new_range;
+    return {};
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-extend
