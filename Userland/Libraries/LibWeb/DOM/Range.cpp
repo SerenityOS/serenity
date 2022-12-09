@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
@@ -1100,6 +1101,13 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
     TRY(set_start(*new_node, new_offset));
     TRY(set_end(*new_node, new_offset));
     return {};
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-range-getboundingclientrect
+JS::NonnullGCPtr<Geometry::DOMRect> Range::get_bounding_client_rect() const
+{
+    dbgln("(STUBBED) Range::get_bounding_client_rect()");
+    return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0);
 }
 
 }

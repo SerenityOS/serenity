@@ -1,5 +1,6 @@
 #import <DOM/Node.idl>
 #import <DOM/AbstractRange.idl>
+#import <Geometry/DOMRect.idl>
 
 [Exposed=Window]
 interface Range : AbstractRange {
@@ -37,6 +38,8 @@ interface Range : AbstractRange {
     short comparePoint(Node node, unsigned long offset);
 
     boolean intersectsNode(Node node);
+
+    DOMRect getBoundingClientRect();
 
     stringifier;
 
