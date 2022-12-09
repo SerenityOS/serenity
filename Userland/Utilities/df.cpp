@@ -35,9 +35,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
 
     if (flag_human_readable) {
-        outln("Filesystem      Size        Used    Available   Mount point");
+        outln("Filesystem      Size        Used    Available        Used%   Mount point");
     } else {
-        outln("Filesystem    Blocks        Used    Available   Mount point");
+        outln("Filesystem    Blocks        Used    Available        Used%   Mount point");
     }
 
     auto file_contents = TRY(file->read_until_eof());
@@ -48,21 +48,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto fs = fs_object.get("class_name"sv).to_deprecated_string();
         auto total_block_count = fs_object.get("total_block_count"sv).to_u64();
         auto free_block_count = fs_object.get("free_block_count"sv).to_u64();
+        auto used_block_count = total_block_count - free_block_count;
         [[maybe_unused]] auto total_inode_count = fs_object.get("total_inode_count"sv).to_u64();
         [[maybe_unused]] auto free_inode_count = fs_object.get("free_inode_count"sv).to_u64();
         auto block_size = fs_object.get("block_size"sv).to_u64();
         auto mount_point = fs_object.get("mount_point"sv).to_deprecated_string();
 
+        auto used_percentage = 100;
+        if (total_block_count != 0)
+            used_percentage = (used_block_count * 100) / total_block_count;
+
         out("{:10}", fs);
 
         if (flag_human_readable) {
             out("{:>10}  ", human_readable_size(total_block_count * block_size));
-            out("{:>10}   ", human_readable_size((total_block_count - free_block_count) * block_size));
+            out("{:>10}   ", human_readable_size(used_block_count * block_size));
             out("{:>10}   ", human_readable_size(free_block_count * block_size));
+            out("{:>9}%   ", used_percentage);
         } else {
             out("{:>10}  ", (uint64_t)total_block_count);
-            out("{:>10}   ", (uint64_t)(total_block_count - free_block_count));
+            out("{:>10}   ", (uint64_t)used_block_count);
             out("{:>10}   ", (uint64_t)free_block_count);
+            out("{:>9}%   ", used_percentage);
         }
 
         out("{}", mount_point);
