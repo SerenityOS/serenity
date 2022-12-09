@@ -460,20 +460,18 @@ static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& pa
         return true;
     };
 
-    Node* next_sibling = nullptr;
-    for (auto child = parent.first_child(); child; child = next_sibling) {
-        next_sibling = child->next_sibling();
+    for (auto child = parent.first_child(); child; child = child->next_sibling()) {
         if (matcher(*child)) {
             sequence.append(*child);
         } else {
             if (!sequence.is_empty()) {
                 if (!sequence_is_all_ignorable_whitespace())
-                    callback(sequence, next_sibling);
+                    callback(sequence, child);
                 sequence.clear();
             }
         }
     }
-    if (sequence.is_empty() && !sequence_is_all_ignorable_whitespace())
+    if (!sequence.is_empty() && !sequence_is_all_ignorable_whitespace())
         callback(sequence, nullptr);
 }
 
