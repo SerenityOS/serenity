@@ -442,6 +442,24 @@ public:
         return removed_count;
     }
 
+    T pop()
+    {
+        VERIFY(!is_empty());
+        T element;
+        if constexpr (IsOrdered) {
+            element = *m_collection_data.tail->slot();
+        } else {
+            for (size_t i = 0; i < m_capacity; ++i) {
+                if (is_used_bucket(m_buckets[i].state)) {
+                    element = *m_buckets[i].slot();
+                    break;
+                }
+            }
+        }
+        remove(element);
+        return element;
+    }
+
 private:
     void insert_during_rehash(T&& value)
     {
