@@ -93,6 +93,11 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
         });
     });
 
+    box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
+        process_row(row);
+        return IterationDecision::Continue;
+    });
+
     m_columns.resize(x_width);
 }
 
