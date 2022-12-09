@@ -49,7 +49,6 @@ private:
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    bool rect_can_contain_children(Gfx::IntRect const& rect) const;
     bool rect_can_contain_label(Gfx::IntRect const& rect) const;
 
     enum class HasLabel {
