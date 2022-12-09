@@ -106,15 +106,28 @@ void TableFormattingContext::compute_table_measures()
     for (auto& cell : m_cells) {
         auto width_of_containing_block = m_state.get(*cell.box.containing_block()).content_width();
         auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
-        float padding_left = cell.box.computed_values().padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        float padding_right = cell.box.computed_values().padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        float border_left = cell.box.computed_values().border_left().width;
-        float border_right = cell.box.computed_values().border_right().width;
+        auto& computed_values = cell.box.computed_values();
+        float padding_left = computed_values.padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        float padding_right = computed_values.padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        float border_left = computed_values.border_left().width;
+        float border_right = computed_values.border_right().width;
+        float width = computed_values.width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        auto cell_intrinsic_offsets = padding_left + padding_right + border_left + border_right;
+        auto min_content_width = calculate_min_content_width(cell.box);
+        auto max_content_width = calculate_max_content_width(cell.box);
 
-        auto min_width = calculate_min_content_width(cell.box) + padding_left + padding_right + border_left + border_right;
-        auto max_width = calculate_max_content_width(cell.box) + padding_left + padding_right + border_left + border_right;
-        m_columns[cell.column_index].min_width = max(m_columns[cell.column_index].min_width, min_width);
-        m_columns[cell.column_index].max_width = max(m_columns[cell.column_index].max_width, max_width);
+        float min_width = min_content_width;
+        if (!computed_values.min_width().is_auto())
+            min_width = max(min_width, computed_values.min_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
+
+        float max_width = computed_values.width().is_auto() ? max_content_width : width;
+        if (!computed_values.max_width().is_none())
+            max_width = min(max_width, computed_values.max_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
+
+        auto cell_outer_min_content_width = min_width + cell_intrinsic_offsets;
+        auto cell_outer_max_content_width = max(max(width, min_width), max_width) + cell_intrinsic_offsets;
+        m_columns[cell.column_index].min_width = max(m_columns[cell.column_index].min_width, cell_outer_min_content_width);
+        m_columns[cell.column_index].max_width = max(m_columns[cell.column_index].max_width, cell_outer_max_content_width);
     }
 
     for (auto& column : m_columns) {
