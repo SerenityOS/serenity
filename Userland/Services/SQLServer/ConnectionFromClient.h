@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibIPC/ConnectionFromClient.h>
@@ -28,6 +29,7 @@ public:
     static RefPtr<ConnectionFromClient> client_connection_for(int client_id);
 
     void set_database_path(DeprecatedString);
+    Function<void()> on_disconnect;
 
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);

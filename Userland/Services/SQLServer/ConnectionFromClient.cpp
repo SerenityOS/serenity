@@ -38,6 +38,9 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
 void ConnectionFromClient::die()
 {
     s_connections.remove(client_id());
+
+    if (on_disconnect)
+        on_disconnect();
 }
 
 Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedString const& database_name)
