@@ -561,10 +561,15 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
 FLATTEN ThrowCompletionOr<Value> Value::to_numeric(VM& vm) const
 {
-    auto primitive = TRY(to_primitive(vm, Value::PreferredType::Number));
-    if (primitive.is_bigint())
-        return primitive;
-    return primitive.to_number(vm);
+    // 1. Let primValue be ? ToPrimitive(value, number).
+    auto primitive_value = TRY(to_primitive(vm, Value::PreferredType::Number));
+
+    // 2. If primValue is a BigInt, return primValue.
+    if (primitive_value.is_bigint())
+        return primitive_value;
+
+    // 3. Return ? ToNumber(primValue).
+    return primitive_value.to_number(vm);
 }
 
 constexpr bool is_ascii_number(u32 code_point)
