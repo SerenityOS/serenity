@@ -12,7 +12,7 @@ compile_ipc(WebDriverServer.ipc WebDriverServerEndpoint.h)
 
 set(SOURCES
     ConnectionFromClient.cpp
-    ConsoleGlobalObject.cpp
+    ConsoleGlobalEnvironmentExtensions.cpp
     ImageCodecPluginSerenity.cpp
     PageHost.cpp
     WebContentConsoleClient.cpp
