@@ -239,7 +239,7 @@ void Field::reset()
             square.label->set_fill_with_background_color(false);
             square.label->set_relative_rect(rect);
             square.label->set_visible(false);
-            square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
+            square.label->set_icon(nullptr);
             if (!square.button) {
                 square.button = add<SquareButton>();
                 square.button->on_click = [this, &square](auto) {
@@ -313,9 +313,9 @@ void Field::generate_field(size_t start_row, size_t start_column)
                 number += neighbor.has_mine;
             });
             square.number = number;
-            if (square.has_mine)
-                continue;
-            if (square.number) {
+            if (square.has_mine) {
+                square.label->set_icon(m_mine_bitmap);
+            } else if (square.number) {
                 square.label->set_icon(m_number_bitmap[square.number - 1]);
             }
         }
