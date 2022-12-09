@@ -237,13 +237,48 @@ WebIDL::ExceptionOr<void> Selection::extend(JS::NonnullGCPtr<DOM::Node> node, un
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-setbaseandextent
-void Selection::set_base_and_extent(JS::NonnullGCPtr<DOM::Node> anchor_node, unsigned anchor_offset, JS::NonnullGCPtr<DOM::Node> focus_node, unsigned focus_offset)
+WebIDL::ExceptionOr<void> Selection::set_base_and_extent(JS::NonnullGCPtr<DOM::Node> anchor_node, unsigned anchor_offset, JS::NonnullGCPtr<DOM::Node> focus_node, unsigned focus_offset)
 {
-    (void)anchor_node;
-    (void)anchor_offset;
-    (void)focus_node;
-    (void)focus_offset;
-    TODO();
+    // 1. If anchorOffset is longer than anchorNode's length or if focusOffset is longer than focusNode's length, throw an IndexSizeError exception and abort these steps.
+    if (anchor_offset > anchor_node->length())
+        return WebIDL::IndexSizeError::create(realm(), "Anchor offset points outside of the anchor node");
+
+    if (focus_offset > focus_node->length())
+        return WebIDL::IndexSizeError::create(realm(), "Focus offset points outside of the focus node");
+
+    // 2. If the roots of anchorNode or focusNode are not the document associated with this, abort these steps.
+    if (&anchor_node->root() != m_document.ptr())
+        return {};
+
+    if (&focus_node->root() != m_document.ptr())
+        return {};
+
+    // 3. Let anchor be the boundary point (anchorNode, anchorOffset) and let focus be the boundary point (focusNode, focusOffset).
+
+    // 4. Let newRange be a new range.
+    auto new_range = DOM::Range::create(*m_document);
+
+    // 5. If anchor is before focus, set the start the newRange's start to anchor and its end to focus. Otherwise, set the start them to focus and anchor respectively.
+    auto position_of_anchor_relative_to_focus = DOM::position_of_boundary_point_relative_to_other_boundary_point(anchor_node, anchor_offset, focus_node, focus_offset);
+    if (position_of_anchor_relative_to_focus == DOM::RelativeBoundaryPointPosition::Before) {
+        TRY(new_range->set_start(anchor_node, anchor_offset));
+        TRY(new_range->set_end(focus_node, focus_offset));
+    } else {
+        TRY(new_range->set_start(focus_node, focus_offset));
+        TRY(new_range->set_end(anchor_node, anchor_offset));
+    }
+
+    // 6. Set this's range to newRange.
+    m_range = new_range;
+
+    // 7. If focus is before anchor, set this's direction to backwards. Otherwise, set it to forwards
+    // NOTE: "Otherwise" can be seen as "focus is equal to or after anchor".
+    if (position_of_anchor_relative_to_focus == DOM::RelativeBoundaryPointPosition::After)
+        m_direction = Direction::Backwards;
+    else
+        m_direction = Direction::Forwards;
+
+    return {};
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-selectallchildren
