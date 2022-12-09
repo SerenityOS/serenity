@@ -463,6 +463,8 @@ public:
         }
     }
 
+    auto index() const { return m_index; }
+
 private:
     template<typename... NewTs>
     Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) &&
