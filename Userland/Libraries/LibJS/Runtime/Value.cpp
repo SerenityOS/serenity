@@ -705,22 +705,35 @@ static Optional<BigInt*> string_to_bigint(VM& vm, StringView string);
 // 7.1.13 ToBigInt ( argument ), https://tc39.es/ecma262/#sec-tobigint
 ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
 {
+    // 1. Let prim be ? ToPrimitive(argument, number).
     auto primitive = TRY(to_primitive(vm, PreferredType::Number));
 
-    VERIFY(!primitive.is_empty());
-    if (primitive.is_number())
+    // 2. Return the value that prim corresponds to in Table 12.
+
+    // Number
+    if (primitive.is_number()) {
+        // Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::Convert, "number", "BigInt");
+    }
 
     switch (primitive.m_value.tag) {
+    // Undefined
     case UNDEFINED_TAG:
+        // Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::Convert, "undefined", "BigInt");
+    // Null
     case NULL_TAG:
+        // Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::Convert, "null", "BigInt");
+    // Boolean
     case BOOLEAN_TAG: {
+        // Return 1n if prim is true and 0n if prim is false.
         auto value = primitive.as_bool() ? 1 : 0;
         return BigInt::create(vm, Crypto::SignedBigInteger { value }).ptr();
     }
+    // BigInt
     case BIGINT_TAG:
+        // Return prim.
         return &primitive.as_bigint();
     case STRING_TAG: {
         // 1. Let n be ! StringToBigInt(prim).
@@ -733,7 +746,9 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
         // 3. Return n.
         return bigint.release_value();
     }
+    // Symbol
     case SYMBOL_TAG:
+        // Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "BigInt");
     default:
         VERIFY_NOT_REACHED();
