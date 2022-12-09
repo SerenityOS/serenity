@@ -35,9 +35,7 @@ private:
     }
 
     ConnectionFromClient& m_client;
-    WeakPtr<JS::Realm> m_realm;
-    JS::GCPtr<class ConsoleEnvironmentSettingsObject> m_console_settings;
-    JS::Handle<ConsoleGlobalObject> m_console_global_object;
+    JS::Handle<ConsoleGlobalEnvironmentExtensions> m_console_global_environment_extensions;
 
     void clear_output();
     void print_html(DeprecatedString const& line);

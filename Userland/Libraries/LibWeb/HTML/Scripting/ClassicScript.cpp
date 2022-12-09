@@ -71,7 +71,7 @@ JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script
-JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
+JS::Completion ClassicScript::run(RethrowErrors rethrow_errors, JS::GCPtr<JS::Environment> lexical_environment_override)
 {
     auto& vm = settings_object().realm().vm();
 
@@ -97,7 +97,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
         // 6. Otherwise, set evaluationStatus to ScriptEvaluation(script's record).
         auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
 
-        evaluation_status = interpreter->run(*m_script_record);
+        evaluation_status = interpreter->run(*m_script_record, lexical_environment_override);
 
         // FIXME: If ScriptEvaluation does not complete because the user agent has aborted the running script, leave evaluationStatus as null.
 

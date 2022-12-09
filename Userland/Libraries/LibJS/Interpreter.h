@@ -66,7 +66,7 @@ public:
 
     ~Interpreter() = default;
 
-    ThrowCompletionOr<Value> run(Script&);
+    ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = {});
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
     Realm& realm();

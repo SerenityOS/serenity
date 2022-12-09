@@ -7,78 +7,42 @@
  */
 
 #include "WebContentConsoleClient.h"
+#include <AK/TemporaryChange.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
-#include <WebContent/ConsoleGlobalObject.h>
+#include <WebContent/ConsoleGlobalEnvironmentExtensions.h>
 
 namespace WebContent {
-
-class ConsoleEnvironmentSettingsObject final : public Web::HTML::EnvironmentSettingsObject {
-    JS_CELL(ConsoleEnvironmentSettingsObject, EnvironmentSettingsObject);
-
-public:
-    ConsoleEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context)
-        : Web::HTML::EnvironmentSettingsObject(move(execution_context))
-    {
-    }
-
-    virtual ~ConsoleEnvironmentSettingsObject() override = default;
-
-    JS::GCPtr<Web::DOM::Document> responsible_document() override { return nullptr; }
-    DeprecatedString api_url_character_encoding() override { return m_api_url_character_encoding; }
-    AK::URL api_base_url() override { return m_url; }
-    Web::HTML::Origin origin() override { return m_origin; }
-    Web::HTML::PolicyContainer policy_container() override { return m_policy_container; }
-    Web::HTML::CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { return Web::HTML::CanUseCrossOriginIsolatedAPIs::Yes; }
-
-private:
-    DeprecatedString m_api_url_character_encoding;
-    AK::URL m_url;
-    Web::HTML::Origin m_origin;
-    Web::HTML::PolicyContainer m_policy_container;
-};
 
 WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm& realm, ConnectionFromClient& client)
     : ConsoleClient(console)
     , m_client(client)
-    , m_realm(realm)
 {
-    JS::DeferGC defer_gc(realm.heap());
-
-    auto& vm = realm.vm();
-    auto& window = static_cast<Web::HTML::Window&>(realm.global_object());
-
-    auto console_execution_context = MUST(JS::Realm::initialize_host_defined_realm(
-        vm, [&](JS::Realm& realm) {
-            m_console_global_object = vm.heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
-            return m_console_global_object;
-        },
-        nullptr));
-
-    auto* console_realm = console_execution_context->realm;
-    m_console_settings = vm.heap().allocate<ConsoleEnvironmentSettingsObject>(*console_realm, move(console_execution_context));
-    auto* intrinsics = vm.heap().allocate<Web::Bindings::Intrinsics>(*console_realm, *console_realm);
-    auto host_defined = make<Web::Bindings::HostDefined>(*m_console_settings, *intrinsics);
-    console_realm->set_host_defined(move(host_defined));
+    auto& window = verify_cast<Web::HTML::Window>(realm.global_object());
+    m_console_global_environment_extensions = realm.heap().allocate<ConsoleGlobalEnvironmentExtensions>(realm, realm, window);
 }
 
 void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
 {
-    if (!m_realm)
+    if (!m_console_global_environment_extensions)
         return;
 
-    auto script = Web::HTML::ClassicScript::create("(console)", js_source, *m_console_settings, m_console_settings->api_base_url());
+    auto& settings = Web::HTML::relevant_settings_object(*m_console_global_environment_extensions);
+    auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
+
+    JS::Environment* with_scope = JS::new_object_environment(*m_console_global_environment_extensions, true, &settings.realm().global_environment());
 
     // FIXME: Add parse error printouts back once ClassicScript can report parse errors.
-
-    auto result = script->run();
+    auto result = script->run(Web::HTML::ClassicScript::RethrowErrors::No, with_scope);
 
     if (result.value().has_value()) {
-        m_console_global_object->set_most_recent_result(result.value().value());
+        m_console_global_environment_extensions->set_most_recent_result(result.value().value());
         print_html(JS::MarkupGenerator::html_from_value(*result.value()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     }
 }
