@@ -320,6 +320,21 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
+#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                          \
+    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                         \
+    {                                                                                                                                      \
+        auto& vm = interpreter.vm();                                                                                                       \
+        auto& realm = *vm.current_realm();                                                                                                 \
+        interpreter.accumulator() = ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string));                 \
+        return {};                                                                                                                         \
+    }                                                                                                                                      \
+    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                               \
+    {                                                                                                                                      \
+        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string)); \
+    }
+
+JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DEFINE_NEW_BUILTIN_ERROR_OP)
+
 ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -728,6 +743,14 @@ ThrowCompletionOr<void> Throw::execute_impl(Bytecode::Interpreter& interpreter) 
     return throw_completion(interpreter.accumulator());
 }
 
+ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    if (!interpreter.accumulator().is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_string_without_side_effects());
+    return {};
+}
+
 ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
@@ -857,6 +880,15 @@ ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
+ThrowCompletionOr<void> GetMethod::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto identifier = interpreter.current_executable().get_identifier(m_property);
+    auto* method = TRY(interpreter.accumulator().get_method(vm, identifier));
+    interpreter.accumulator() = method ?: js_undefined();
+    return {};
+}
+
 // 14.7.5.9 EnumerateObjectProperties ( O ), https://tc39.es/ecma262/#sec-enumerate-object-properties
 ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
@@ -935,6 +967,17 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
         .done = false,
     };
     interpreter.accumulator() = iterator_to_object(vm, move(iterator));
+    return {};
+}
+
+ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto* iterator_object = TRY(interpreter.accumulator().to_object(vm));
+    auto iterator = object_to_iterator(vm, *iterator_object);
+
+    // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
+    TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
     return {};
 }
 
@@ -1210,6 +1253,11 @@ DeprecatedString Throw::to_deprecated_string_impl(Bytecode::Executable const&) c
     return "Throw";
 }
 
+DeprecatedString ThrowIfNotObject::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "ThrowIfNotObject";
+}
+
 DeprecatedString EnterUnwindContext::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     auto handler_string = m_handler_target.has_value() ? DeprecatedString::formatted("{}", *m_handler_target) : "<empty>";
@@ -1283,9 +1331,19 @@ DeprecatedString GetIterator::to_deprecated_string_impl(Executable const&) const
     return "GetIterator";
 }
 
+DeprecatedString GetMethod::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("GetMethod {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
 DeprecatedString GetObjectPropertyIterator::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "GetObjectPropertyIterator";
+}
+
+DeprecatedString IteratorClose::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), m_completion_value.has_value() ? m_completion_value.value().to_string_without_side_effects() : "<empty>");
 }
 
 DeprecatedString IteratorNext::to_deprecated_string_impl(Executable const&) const

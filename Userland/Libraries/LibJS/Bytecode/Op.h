@@ -208,6 +208,34 @@ private:
     StringTableIndex m_flags_index;
 };
 
+#define JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(O) \
+    O(TypeError)
+
+#define JS_DECLARE_NEW_BUILTIN_ERROR_OP(ErrorName)                                     \
+    class New##ErrorName final : public Instruction {                                  \
+    public:                                                                            \
+        explicit New##ErrorName(StringTableIndex error_string)                         \
+            : Instruction(Type::New##ErrorName)                                        \
+            , m_error_string(error_string)                                             \
+        {                                                                              \
+        }                                                                              \
+                                                                                       \
+        ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
+        DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
+        void replace_references_impl(BasicBlock const&, BasicBlock const&)             \
+        {                                                                              \
+        }                                                                              \
+        void replace_references_impl(Register, Register)                               \
+        {                                                                              \
+        }                                                                              \
+                                                                                       \
+    private:                                                                           \
+        StringTableIndex m_error_string;                                               \
+    };
+
+JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DECLARE_NEW_BUILTIN_ERROR_OP)
+#undef JS_DECLARE_NEW_BUILTIN_ERROR_OP
+
 // NOTE: This instruction is variable-width depending on the number of excluded names
 class CopyObjectExcludingProperties final : public Instruction {
 public:
@@ -819,6 +847,19 @@ public:
     void replace_references_impl(Register, Register) { }
 };
 
+class ThrowIfNotObject final : public Instruction {
+public:
+    ThrowIfNotObject()
+        : Instruction(Type::ThrowIfNotObject)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+};
+
 class EnterUnwindContext final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
@@ -953,6 +994,23 @@ public:
     void replace_references_impl(Register, Register) { }
 };
 
+class GetMethod final : public Instruction {
+public:
+    GetMethod(IdentifierTableIndex property)
+        : Instruction(Type::GetMethod)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_property;
+};
+
 class GetObjectPropertyIterator final : public Instruction {
 public:
     GetObjectPropertyIterator()
@@ -964,6 +1022,25 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
+};
+
+class IteratorClose final : public Instruction {
+public:
+    IteratorClose(Completion::Type completion_type, Optional<Value> completion_value)
+        : Instruction(Type::IteratorClose)
+        , m_completion_type(completion_type)
+        , m_completion_value(completion_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    Completion::Type m_completion_type { Completion::Type::Normal };
+    Optional<Value> m_completion_value;
 };
 
 class IteratorNext final : public Instruction {
