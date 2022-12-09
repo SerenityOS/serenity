@@ -436,23 +436,27 @@ bool Value::to_boolean() const
     }
 
     switch (m_value.tag) {
+    // 1. If argument is a Boolean, return argument.
+    case BOOLEAN_TAG:
+        return as_bool();
+    // 2. If argument is any of undefined, null, +0𝔽, -0𝔽, NaN, 0ℤ, or the empty String, return false.
     case UNDEFINED_TAG:
     case NULL_TAG:
         return false;
-    case BOOLEAN_TAG:
-        return as_bool();
     case INT32_TAG:
         return as_i32() != 0;
     case STRING_TAG:
         return !as_string().is_empty();
-    case SYMBOL_TAG:
-        return true;
     case BIGINT_TAG:
         return as_bigint().big_integer() != BIGINT_ZERO;
     case OBJECT_TAG:
-        // B.3.7.1 Changes to ToBoolean, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-to-boolean
+        // B.3.6.1 Changes to ToBoolean, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-to-boolean
+        // 3. If argument is an Object and argument has an [[IsHTMLDDA]] internal slot, return false.
         if (as_object().is_htmldda())
             return false;
+        // 4. Return true.
+        return true;
+    case SYMBOL_TAG:
         return true;
     default:
         VERIFY_NOT_REACHED();
