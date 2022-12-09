@@ -179,11 +179,10 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
     case GL_LIGHT_MODEL_LOCAL_VIEWER:
         // 0 means the viewer is at infinity
         // 1 means they're in local (eye) space
-        lighting_params.viewer_at_infinity = (x != 1.0f);
+        lighting_params.viewer_at_infinity = (x == 0.f);
         break;
     case GL_LIGHT_MODEL_TWO_SIDE:
-        VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
-        lighting_params.two_sided_lighting = x;
+        lighting_params.two_sided_lighting = (x != 0.f);
         break;
     default:
         VERIFY_NOT_REACHED();
