@@ -21,8 +21,9 @@
 
 class SQLRepl {
 public:
-    explicit SQLRepl(DeprecatedString const& database_name)
-        : m_loop()
+    explicit SQLRepl(Core::EventLoop& loop, DeprecatedString const& database_name, NonnullRefPtr<SQL::SQLClient> sql_client)
+        : m_sql_client(move(sql_client))
+        , m_loop(loop)
     {
         m_editor = Line::Editor::construct();
         m_editor->load_history(m_history_path);
@@ -73,8 +74,6 @@ public:
 
             m_editor->set_prompt(prompt_for_level(open_indents));
         };
-
-        m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
 
         m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto created, auto updated, auto deleted) {
             if (updated != 0 || created != 0 || deleted != 0) {
@@ -151,13 +150,13 @@ private:
     int m_repl_line_level { 0 };
     bool m_keep_running { true };
     DeprecatedString m_database_name {};
-    AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
+    NonnullRefPtr<SQL::SQLClient> m_sql_client;
     SQL::ConnectionID m_connection_id { 0 };
-    Core::EventLoop m_loop;
+    Core::EventLoop& m_loop;
     OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
     Vector<DeprecatedString> m_input_file_chain {};
-    Array<u8, PAGE_SIZE> m_buffer {};
+    Array<u8, 4096> m_buffer {};
 
     Optional<DeprecatedString> get_line()
     {
@@ -337,6 +336,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString file_to_read;
     bool suppress_sqlrc = false;
     auto sqlrc_path = DeprecatedString::formatted("{}/.sqlrc", Core::StandardPaths::home_directory());
+#if !defined(AK_OS_SERENITY)
+    StringView sql_server_path;
+#endif
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a client for the SerenitySQL database server.");
@@ -344,9 +346,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(file_to_read, "File to read", "read", 'r', "file");
     args_parser.add_option(file_to_source, "File to source", "source", 's', "file");
     args_parser.add_option(suppress_sqlrc, "Don't read ~/.sqlrc", "no-sqlrc", 'n');
+#if !defined(AK_OS_SERENITY)
+    args_parser.add_option(sql_server_path, "Path to SQLServer to launch if needed", "sql-server-path", 's', "path");
+#endif
     args_parser.parse(arguments);
 
-    SQLRepl repl(database_name);
+    Core::EventLoop loop;
+
+#if defined(AK_OS_SERENITY)
+    auto sql_client = TRY(SQL::SQLClient::try_create());
+#else
+    VERIFY(sql_server_path != nullptr);
+    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(sql_server_path));
+#endif
+
+    SQLRepl repl(loop, database_name, move(sql_client));
 
     if (!suppress_sqlrc && Core::File::exists(sqlrc_path))
         repl.source_file(sqlrc_path);

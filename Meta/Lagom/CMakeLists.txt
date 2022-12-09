@@ -492,6 +492,9 @@ if (BUILD_LAGOM)
             target_link_libraries(ntpquery LibCore LibMain)
         endif()
 
+        add_executable(sql ../../Userland/Utilities/sql.cpp)
+        target_link_libraries(sql LibCore LibIPC LibLine LibMain LibSQL)
+
         add_executable(test262-runner ../../Tests/LibJS/test262-runner.cpp)
         target_link_libraries(test262-runner LibJS LibCore)
 
