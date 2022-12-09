@@ -192,6 +192,12 @@ public:
         return (*m_impl)[i];
     }
 
+    [[nodiscard]] ALWAYS_INLINE u8 byte_at(size_t i) const
+    {
+        VERIFY(!is_null());
+        return bit_cast<u8>((*m_impl)[i]);
+    }
+
     using ConstIterator = SimpleIterator<const DeprecatedString, char const>;
 
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
