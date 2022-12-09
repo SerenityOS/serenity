@@ -168,6 +168,11 @@ public:
         return m_value;
     }
 
+    ALWAYS_INLINE constexpr T value_unchecked() const
+    {
+        return m_value;
+    }
+
     constexpr void add(T other)
     {
         m_overflow |= __builtin_add_overflow(m_value, other, &m_value);
