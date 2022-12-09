@@ -26,6 +26,7 @@ public:
     SQL::ConnectionID connection_id() const { return m_connection_id; }
     int client_id() const { return m_client_id; }
     NonnullRefPtr<SQL::Database> database() { return m_database; }
+    StringView database_name() const { return m_database_name; }
     void disconnect();
     SQL::ResultOr<SQL::StatementID> prepare_statement(StringView sql);
 

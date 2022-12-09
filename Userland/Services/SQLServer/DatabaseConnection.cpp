@@ -13,6 +13,17 @@ namespace SQLServer {
 static HashMap<SQL::ConnectionID, NonnullRefPtr<DatabaseConnection>> s_connections;
 static SQL::ConnectionID s_next_connection_id = 0;
 
+static ErrorOr<NonnullRefPtr<SQL::Database>> find_or_create_database(StringView database_path, StringView database_name)
+{
+    for (auto const& connection : s_connections) {
+        if (connection.value->database_name() == database_name)
+            return connection.value->database();
+    }
+
+    auto database_file = DeprecatedString::formatted("{}/{}.db", database_path, database_name);
+    return SQL::Database::try_create(move(database_file));
+}
+
 RefPtr<DatabaseConnection> DatabaseConnection::connection_for(SQL::ConnectionID connection_id)
 {
     if (s_connections.contains(connection_id))
@@ -26,8 +37,7 @@ ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(StringView
     if (LexicalPath path(database_name); (path.title() != database_name) || (path.dirname() != "."))
         return Error::from_string_view("Invalid database name"sv);
 
-    auto database_file = DeprecatedString::formatted("{}/{}.db", database_path, database_name);
-    auto database = SQL::Database::construct(move(database_file));
+    auto database = TRY(find_or_create_database(database_path, database_name));
 
     if (auto result = database->open(); result.is_error()) {
         warnln("Could not open database: {}", result.error().error_string());
