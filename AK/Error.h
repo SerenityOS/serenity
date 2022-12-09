@@ -81,9 +81,33 @@ public:
     {
     }
 
+    ALWAYS_INLINE ErrorOr(ErrorOr&&) = default;
+    ALWAYS_INLINE ErrorOr(ErrorOr const&) = default;
+    ALWAYS_INLINE ErrorOr& operator=(ErrorOr&&) = default;
+    ALWAYS_INLINE ErrorOr& operator=(ErrorOr const&) = default;
+
+    template<typename U>
+    ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType> const& value)
+        : m_value_or_error(value.m_value_or_error.visit([](U const& v) -> Variant<T, ErrorType> { return v; }, [](ErrorType const& error) -> Variant<T, ErrorType> { return error; }))
+    {
+    }
+
+    template<typename U>
+    ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>& value)
+        : m_value_or_error(value.m_value_or_error.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
+    {
+    }
+
+    template<typename U>
+    ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>&& value)
+        : m_value_or_error(value.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
+    {
+    }
+
     template<typename U>
     ALWAYS_INLINE ErrorOr(U&& value)
-    requires(!IsSame<RemoveCVReference<U>, ErrorOr<T, ErrorType>>)
+    requires(
+        requires { T(declval<U>()); } || requires { ErrorType(declval<RemoveCVReference<U>>()); })
         : m_value_or_error(forward<U>(value))
     {
     }
