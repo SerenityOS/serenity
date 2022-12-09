@@ -203,6 +203,7 @@ public:
     void gl_push_attrib(GLbitfield mask);
     void gl_pop_attrib();
     void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    void gl_light_modelv(GLenum pname, void const* params, GLenum type);
     void gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap);
     void gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
     void gl_get_tex_image(GLenum target, GLint level, GLenum format, GLenum type, void* pixels);

@@ -568,36 +568,22 @@ void glLightiv(GLenum light, GLenum pname, GLint const* params)
 
 void glLightModelf(GLenum pname, GLfloat param)
 {
-    g_gl_context->gl_light_model(pname, param, 0.0f, 0.0f, 0.0f);
+    g_gl_context->gl_light_model(pname, param, 0.f, 0.f, 0.f);
 }
 
 void glLightModelfv(GLenum pname, GLfloat const* params)
 {
-    switch (pname) {
-    case GL_LIGHT_MODEL_AMBIENT:
-        g_gl_context->gl_light_model(pname, params[0], params[1], params[2], params[3]);
-        break;
-    default:
-        g_gl_context->gl_light_model(pname, params[0], 0.0f, 0.0f, 0.0f);
-        break;
-    }
+    g_gl_context->gl_light_modelv(pname, params, GL_FLOAT);
 }
 
 void glLightModeliv(GLenum pname, GLint const* params)
 {
-    switch (pname) {
-    case GL_LIGHT_MODEL_AMBIENT:
-        g_gl_context->gl_light_model(pname, params[0], params[1], params[2], params[3]);
-        break;
-    default:
-        g_gl_context->gl_light_model(pname, params[0], 0.0f, 0.0f, 0.0f);
-        break;
-    }
+    g_gl_context->gl_light_modelv(pname, params, GL_INT);
 }
 
 void glLightModeli(GLenum pname, GLint param)
 {
-    g_gl_context->gl_light_model(pname, param, 0.0f, 0.0f, 0.0f);
+    g_gl_context->gl_light_model(pname, static_cast<float>(param), 0.f, 0.f, 0.f);
 }
 
 void glLineWidth(GLfloat width)
