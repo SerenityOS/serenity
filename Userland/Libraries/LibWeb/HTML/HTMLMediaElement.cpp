@@ -41,4 +41,10 @@ void HTMLMediaElement::load() const
     dbgln("(STUBBED) HTMLMediaElement::load()");
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-pause
+void HTMLMediaElement::pause() const
+{
+    dbgln("(STUBBED) HTMLMediaElement::pause()");
+}
+
 }

@@ -19,4 +19,5 @@ interface HTMLMediaElement : HTMLElement {
 
     CanPlayTypeResult canPlayType(DOMString type);
     undefined load();
+    undefined pause();
 };
