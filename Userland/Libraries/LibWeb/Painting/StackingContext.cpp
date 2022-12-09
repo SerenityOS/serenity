@@ -500,6 +500,16 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitT
     if (result.has_value() && result->paintable->visible_for_hit_testing())
         return result;
 
+    // "child stacking contexts with stack level 0" is first in the step, so last here to match reverse order.
+    for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
+        auto const& child = *m_children[i];
+        if (child.m_box.computed_values().z_index().value_or(0) != 0)
+            break;
+        auto result = child.hit_test(transformed_position, type);
+        if (result.has_value() && result->paintable->visible_for_hit_testing())
+            return result;
+    }
+
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
         auto result = paintable().hit_test(transformed_position, type);
