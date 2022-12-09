@@ -19,12 +19,12 @@
 #include <unistd.h>
 #include <utime.h>
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 #    include <serenity.h>
 #endif
 
 // On Linux distros that use glibc `basename` is defined as a macro that expands to `__xpg_basename`, so we undefine it
-#if defined(AK_OS_LINUX) && defined(basename)
+#if OS(LINUX) && defined(basename)
 #    undef basename
 #endif
 
@@ -243,7 +243,7 @@ DeprecatedString File::absolute_path(DeprecatedString const& path)
     return LexicalPath::canonicalized_path(full_path.string());
 }
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 
 ErrorOr<DeprecatedString> File::read_link(DeprecatedString const& link_path)
 {
@@ -455,7 +455,7 @@ ErrorOr<void, File::CopyError> File::copy_file(DeprecatedString const& dst_path,
 
     if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
         struct timespec times[2] = {
-#ifdef AK_OS_MACOS
+#if OS(MACOS)
             src_stat.st_atimespec,
             src_stat.st_mtimespec,
 #else
@@ -510,7 +510,7 @@ ErrorOr<void, File::CopyError> File::copy_directory(DeprecatedString const& dst_
 
     if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
         struct timespec times[2] = {
-#ifdef AK_OS_MACOS
+#if OS(MACOS)
             src_stat.st_atimespec,
             src_stat.st_mtimespec,
 #else

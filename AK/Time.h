@@ -16,7 +16,7 @@
 struct timeval;
 struct timespec;
 
-#if defined(AK_OS_WINDOWS)
+#if OS(WINDOWS)
 #    include <time.h>
 #endif
 

@@ -10,7 +10,7 @@
 #include <AK/Try.h>
 #include <AK/Variant.h>
 
-#if defined(AK_OS_SERENITY) && defined(KERNEL)
+#if OS(SERENITY) && defined(KERNEL)
 #    include <LibC/errno_codes.h>
 #else
 #    include <errno.h>
@@ -88,7 +88,7 @@ public:
     {
     }
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
     ErrorOr(ErrnoCode code)
         : m_value_or_error(Error::from_errno(code))
     {

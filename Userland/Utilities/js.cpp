@@ -563,7 +563,7 @@ public:
         }
 
         auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
         m_console.output_debug_message(log_level, output);
 #endif
 

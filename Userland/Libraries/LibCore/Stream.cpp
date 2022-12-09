@@ -14,10 +14,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 #    include <serenity.h>
 #endif
-#ifdef AK_OS_FREEBSD
+#if OS(FREEBSD)
 #    include <sys/ucred.h>
 #endif
 
@@ -596,9 +596,9 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd, PreventSIGPIPE
 
 ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
-#if defined(AK_OS_SERENITY)
+#if OS(SERENITY)
     return Core::System::recvfd(m_helper.fd(), flags);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS)
+#elif OS(LINUX) || OS(MACOS)
     union {
         struct cmsghdr cmsghdr;
         char control[CMSG_SPACE(sizeof(int))];
@@ -641,9 +641,9 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
 
 ErrorOr<void> LocalSocket::send_fd(int fd)
 {
-#if defined(AK_OS_SERENITY)
+#if OS(SERENITY)
     return Core::System::sendfd(m_helper.fd(), fd);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS)
+#elif OS(LINUX) || OS(MACOS)
     char c = 'F';
     struct iovec iov {
         .iov_base = &c,
@@ -682,13 +682,13 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
 
 ErrorOr<pid_t> LocalSocket::peer_pid() const
 {
-#ifdef AK_OS_MACOS
+#if OS(MACOS)
     pid_t pid;
     socklen_t pid_size = sizeof(pid);
-#elif defined(AK_OS_FREEBSD)
+#elif OS(FREEBSD)
     struct xucred creds = {};
     socklen_t creds_size = sizeof(creds);
-#elif defined(AK_OS_OPENBSD)
+#elif OS(OPENBSD)
     struct sockpeercred creds = {};
     socklen_t creds_size = sizeof(creds);
 #else
@@ -696,10 +696,10 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
     socklen_t creds_size = sizeof(creds);
 #endif
 
-#ifdef AK_OS_MACOS
+#if OS(MACOS)
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size));
     return pid;
-#elif defined(AK_OS_FREEBSD)
+#elif OS(FREEBSD)
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size));
     return creds.cr_pid;
 #else

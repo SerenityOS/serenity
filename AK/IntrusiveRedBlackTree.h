@@ -198,7 +198,7 @@ public:
 
     static constexpr bool IsRaw = IsPointer<Container>;
 
-#if !defined(AK_COMPILER_CLANG)
+#if !COMPILER(CLANG)
 private:
     template<Integral TK, typename TV, typename TContainer, SubstitutedIntrusiveRedBlackTreeNode<TK, TV, TContainer> TV::*member>
     friend class ::AK::Detail::IntrusiveRedBlackTree;

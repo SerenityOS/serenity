@@ -207,7 +207,7 @@ enum Function {
         __Count
 };
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 struct StringArgument {
     char const* characters;
     size_t length { 0 };

@@ -34,46 +34,46 @@
 #endif
 
 #if defined(__clang__)
-#    define AK_COMPILER_CLANG
+#    define AK_COMPILER_CLANG 1
 #elif defined(__GNUC__)
-#    define AK_COMPILER_GCC
+#    define AK_COMPILER_GCC 1
 #endif
 
 #if defined(__serenity__)
-#    define AK_OS_SERENITY
+#    define AK_OS_SERENITY 1
 #endif
 
 #if defined(__linux__)
-#    define AK_OS_LINUX
+#    define AK_OS_LINUX 1
 #endif
 
 #if defined(__APPLE__) && defined(__MACH__)
-#    define AK_OS_MACOS
-#    define AK_OS_BSD_GENERIC
+#    define AK_OS_MACOS 1
+#    define AK_OS_BSD_GENERIC 1
 #endif
 
 #if defined(__FreeBSD__)
-#    define AK_OS_BSD_GENERIC
-#    define AK_OS_FREEBSD
+#    define AK_OS_BSD_GENERIC 1
+#    define AK_OS_FREEBSD 1
 #endif
 
 #if defined(__NetBSD__)
-#    define AK_OS_BSD_GENERIC
-#    define AK_OS_NETBSD
+#    define AK_OS_BSD_GENERIC 1
+#    define AK_OS_NETBSD 1
 #endif
 
 #if defined(__OpenBSD__)
-#    define AK_OS_BSD_GENERIC
-#    define AK_OS_OPENBSD
+#    define AK_OS_BSD_GENERIC 1
+#    define AK_OS_OPENBSD 1
 #endif
 
 #if defined(__DragonFly__)
-#    define AK_OS_BSD_GENERIC
-#    define AK_OS_DRAGONFLY
+#    define AK_OS_BSD_GENERIC 1
+#    define AK_OS_DRAGONFLY 1
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
-#    define AK_OS_WINDOWS
+#    define AK_OS_WINDOWS 1
 #endif
 
 #if defined(__ANDROID__)
@@ -85,14 +85,16 @@
 #    endif
 #    undef STR
 #    undef __STR
-#    define AK_OS_ANDROID
+#    define AK_OS_ANDROID 1
 #endif
 
 #if defined(__EMSCRIPTEN__)
-#    define AK_OS_EMSCRIPTEN
+#    define AK_OS_EMSCRIPTEN 1
 #endif
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
+#define OS(os) (defined(AK_OS_##os) && AK_OS_##os)
+#define COMPILER(compiler) (defined(AK_COMPILER_##compiler) && AK_COMPILER_##compiler)
 
 #if ARCH(I386) || ARCH(X86_64)
 #    define VALIDATE_IS_X86()
@@ -106,7 +108,7 @@
 #    define VALIDATE_IS_AARCH64() static_assert(false, "Trying to include aarch64 only header on non aarch64 platform");
 #endif
 
-#if !defined(AK_COMPILER_CLANG) && !defined(__CLION_IDE_) && !defined(__CLION_IDE__)
+#if !COMPILER(CLANG) && !defined(__CLION_IDE_) && !defined(__CLION_IDE__)
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif
 
@@ -147,7 +149,7 @@
 #ifdef DISALLOW
 #    undef DISALLOW
 #endif
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    define DISALLOW(message) __attribute__((diagnose_if(1, message, "error")))
 #else
 #    define DISALLOW(message) __attribute__((error(message)))
@@ -167,25 +169,25 @@
 #    define ASAN_UNPOISON_MEMORY_REGION(addr, size)
 #endif
 
-#ifndef AK_OS_SERENITY
+#if !OS(SERENITY)
 // On macOS (at least Mojave), Apple's version of this header is not wrapped
 // in extern "C".
-#    ifdef AK_OS_MACOS
+#    if OS(MACOS)
 extern "C" {
 #    endif
 #    include <unistd.h>
 #    undef PAGE_SIZE
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
-#    ifdef AK_OS_MACOS
+#    if OS(MACOS)
 };
 #    endif
 #endif
 
-#if defined(AK_OS_WINDOWS)
+#if OS(WINDOWS)
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #endif
 
-#if defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_FREEBSD)
+#if OS(BSD_GENERIC) && !OS(FREEBSD)
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif

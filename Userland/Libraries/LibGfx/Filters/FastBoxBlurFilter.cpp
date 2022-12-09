@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#if defined(AK_COMPILER_GCC)
-#    pragma GCC optimize("O3")
-#endif
-
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
+
+#if COMPILER(GCC)
+#    pragma GCC optimize("O3")
+#endif
 
 namespace Gfx {
 

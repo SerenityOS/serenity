@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifndef AK_OS_SERENITY
+#if !OS(SERENITY)
 static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, char const*)
 {
     return mmap(addr, length, prot, flags, fd, offset);
@@ -171,7 +171,7 @@ bool DynamicLoader::load_stage_2(unsigned flags)
         for (auto& text_segment : m_text_segments) {
             VERIFY(text_segment.address().get() != 0);
 
-#ifndef AK_OS_MACOS
+#if !OS(MACOS)
             // Remap this text region as private.
             if (mremap(text_segment.address().as_ptr(), text_segment.size(), text_segment.size(), MAP_PRIVATE) == MAP_FAILED) {
                 perror("mremap .text: MAP_PRIVATE");
@@ -240,7 +240,7 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
             return DlErrorMessage { DeprecatedString::formatted("mprotect .relro: PROT_READ: {}", strerror(errno)) };
         }
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
         if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, DeprecatedString::formatted("{}: .relro", m_filepath).characters()) < 0) {
             return DlErrorMessage { DeprecatedString::formatted("set_mmap_name .relro: {}", strerror(errno)) };
         }

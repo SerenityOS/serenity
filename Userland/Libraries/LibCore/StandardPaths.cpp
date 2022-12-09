@@ -57,7 +57,7 @@ DeprecatedString StandardPaths::config_directory()
 
     StringBuilder builder;
     builder.append(home_directory());
-#if defined(AK_OS_MACOS)
+#if OS(MACOS)
     builder.append("/Library/Preferences"sv);
 #else
     builder.append("/.config"sv);
@@ -72,9 +72,9 @@ DeprecatedString StandardPaths::data_directory()
 
     StringBuilder builder;
     builder.append(home_directory());
-#if defined(AK_OS_SERENITY)
+#if OS(SERENITY)
     builder.append("/.data"sv);
-#elif defined(AK_OS_MACOS)
+#elif OS(MACOS)
     builder.append("/Library/Application Support"sv);
 #else
     builder.append("/.local/share"sv);

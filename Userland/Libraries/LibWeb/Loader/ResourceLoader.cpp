@@ -18,7 +18,7 @@
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 #    include <serenity.h>
 #endif
 
@@ -127,7 +127,7 @@ static DeprecatedString sanitized_url_for_logging(AK::URL const& url)
 
 static void emit_signpost(DeprecatedString const& message, int id)
 {
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
     auto string_id = perf_register_string(message.characters(), message.length());
     perf_event(PERF_EVENT_SIGNPOST, string_id, id);
 #else

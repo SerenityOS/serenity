@@ -11,7 +11,7 @@
 #include <LibJS/Runtime/NumberConstructor.h>
 #include <LibJS/Runtime/NumberObject.h>
 
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    define EPSILON_VALUE AK::exp2(-52.)
 #    define MAX_SAFE_INTEGER_VALUE AK::exp2(53.) - 1
 #    define MIN_SAFE_INTEGER_VALUE -(AK::exp2(53.) - 1)

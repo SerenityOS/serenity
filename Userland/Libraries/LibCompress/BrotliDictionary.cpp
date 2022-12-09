@@ -9,11 +9,11 @@
 
 // Include the 119.9 KiB of dictionary data from a binary file
 extern u8 const brotli_dictionary_data[];
-#if defined(AK_OS_MACOS)
+#if OS(MACOS)
 asm(".const_data\n"
     ".globl _brotli_dictionary_data\n"
     "_brotli_dictionary_data:\n");
-#elif defined(AK_OS_EMSCRIPTEN)
+#elif OS(EMSCRIPTEN)
 asm(".section .data, \"\",@\n"
     ".global brotli_dictionary_data\n"
     "brotli_dictionary_data:\n");
@@ -23,7 +23,7 @@ asm(".section .rodata\n"
     "brotli_dictionary_data:\n");
 #endif
 asm(".incbin \"LibCompress/BrotliDictionaryData.bin\"\n"
-#if (!defined(AK_OS_WINDOWS) && !defined(AK_OS_EMSCRIPTEN))
+#if (!OS(WINDOWS) && !OS(EMSCRIPTEN))
     ".previous\n");
 #else
 );

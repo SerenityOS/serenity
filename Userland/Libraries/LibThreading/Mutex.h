@@ -24,7 +24,7 @@ public:
     Mutex()
         : m_lock_count(0)
     {
-#ifndef AK_OS_SERENITY
+#if !OS(SERENITY)
         pthread_mutexattr_t attr;
         pthread_mutexattr_init(&attr);
         pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -41,7 +41,7 @@ public:
     void unlock();
 
 private:
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
     pthread_mutex_t m_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 #else
     pthread_mutex_t m_mutex;

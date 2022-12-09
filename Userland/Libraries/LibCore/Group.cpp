@@ -23,7 +23,7 @@ ErrorOr<DeprecatedString> Group::generate_group_file() const
     ScopeGuard grent_guard([] { endgrent(); });
     setgrent();
     errno = 0;
-#ifndef AK_OS_MACOS
+#if !OS(MACOS)
     struct group group;
     struct group* gr = nullptr;
     char buffer[1024] = { 0 };
@@ -71,7 +71,7 @@ ErrorOr<void> Group::sync()
     return {};
 }
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !OS(BSD_GENERIC) && !OS(ANDROID)
 ErrorOr<void> Group::add_group(Group& group)
 {
     if (group.name().is_empty())
@@ -127,7 +127,7 @@ ErrorOr<Vector<Group>> Group::all()
     ScopeGuard grent_guard([] { endgrent(); });
     setgrent();
     errno = 0;
-#ifndef AK_OS_MACOS
+#if !OS(MACOS)
     struct group group;
     struct group* gr = nullptr;
     char buffer[1024] = { 0 };

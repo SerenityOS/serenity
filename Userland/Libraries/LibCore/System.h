@@ -26,13 +26,13 @@
 #include <time.h>
 #include <utime.h>
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !OS(BSD_GENERIC) && !OS(ANDROID)
 #    include <shadow.h>
 #endif
 
 namespace Core::System {
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 ErrorOr<void> beep();
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
@@ -78,17 +78,17 @@ ALWAYS_INLINE ErrorOr<void> unveil(std::nullptr_t, std::nullptr_t)
     return unveil(StringView {}, StringView {});
 }
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !OS(BSD_GENERIC) && !OS(ANDROID)
 ErrorOr<Optional<struct spwd>> getspent();
 ErrorOr<Optional<struct spwd>> getspnam(StringView name);
 #endif
 
-#ifndef AK_OS_MACOS
+#if !OS(MACOS)
 ErrorOr<int> accept4(int sockfd, struct sockaddr*, socklen_t*, int flags);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
-#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD) || defined(AK_OS_FREEBSD)
+#if OS(MACOS) || OS(OPENBSD) || OS(FREEBSD)
 ErrorOr<sig_t> signal(int signal, sig_t handler);
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);
@@ -159,7 +159,7 @@ ErrorOr<void> unlink(StringView path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
-#ifndef AK_OS_ANDROID
+#if !OS(ANDROID)
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
 #endif
 enum class SearchInPath {
@@ -167,13 +167,13 @@ enum class SearchInPath {
     Yes,
 };
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 #endif
 
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath, Optional<Span<StringView>> environment = {});
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 ErrorOr<void> join_jail(u64 jail_index);
 ErrorOr<u64> create_jail(StringView jail_name);
 #endif
@@ -206,7 +206,7 @@ ErrorOr<void> unlockpt(int fildes);
 ErrorOr<void> access(StringView pathname, int mode);
 ErrorOr<DeprecatedString> readlink(StringView pathname);
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length);
 #endif
 

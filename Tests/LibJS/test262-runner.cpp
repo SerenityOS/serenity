@@ -26,7 +26,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#if !OS(MACOS) && !OS(EMSCRIPTEN)
 // Only used to disable core dumps
 #    include <sys/prctl.h>
 #endif
@@ -556,13 +556,13 @@ static bool g_in_assert = false;
     exit(12);
 }
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 void __assertion_failed(char const* assertion)
 {
     handle_failed_assert(assertion);
 }
 #else
-#    ifdef AK_OS_EMSCRIPTEN
+#    if OS(EMSCRIPTEN)
 extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, int line, char const* function)
 #    else
 extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
@@ -595,7 +595,7 @@ int main(int argc, char** argv)
     args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
     args_parser.parse(argc, argv);
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#if !OS(MACOS) && !OS(EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {
         perror("prctl(PR_SET_DUMPABLE)");
         return exit_wrong_arguments;

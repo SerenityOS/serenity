@@ -9,7 +9,7 @@
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
-#if defined(AK_COMPILER_GCC)
+#if COMPILER(GCC)
 #    pragma GCC optimize("O3")
 #endif
 

@@ -36,7 +36,7 @@ private:
     Name m_hostname;
 
     static constexpr sockaddr_in mdns_addr {
-#ifdef AK_OS_BSD_GENERIC
+#if OS(BSD_GENERIC)
         .sin_len = sizeof(struct sockaddr_in),
 #endif
         .sin_family = AF_INET,

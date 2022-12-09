@@ -6,7 +6,7 @@
 
 #include <AK/Platform.h>
 
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    pragma clang optimize off
 #else
 #    pragma GCC optimize("O0")

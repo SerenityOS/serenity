@@ -6,15 +6,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#if defined(AK_COMPILER_GCC)
-#    pragma GCC optimize("O3")
-#endif
-
 #include "FillPathImplementation.h"
 #include <AK/Function.h>
 #include <AK/NumericLimits.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Line.h>
+
+#if COMPILER(GCC)
+#    pragma GCC optimize("O3")
+#endif
 
 namespace Gfx {
 

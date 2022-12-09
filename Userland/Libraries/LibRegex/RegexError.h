@@ -8,7 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Types.h>
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 #    include <bits/regex_defs.h>
 #else
 #    include <LibC/bits/regex_defs.h>

@@ -8,7 +8,7 @@
 
 #include <AK/Platform.h>
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 #    ifdef KERNEL
 #        include <Kernel/kstdio.h>
 #    else

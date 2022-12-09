@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifndef AK_OS_SERENITY
+#if !OS(SERENITY)
 #    error "This file is intended for use on Serenity only to implement POSIX regex.h"
 #endif
 

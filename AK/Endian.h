@@ -10,7 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/Platform.h>
 
-#if defined(AK_OS_MACOS)
+#if OS(MACOS)
 #    include <libkern/OSByteOrder.h>
 #    include <machine/endian.h>
 

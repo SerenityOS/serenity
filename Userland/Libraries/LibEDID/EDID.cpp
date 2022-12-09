@@ -24,7 +24,7 @@ namespace EDID {
 
 // clang doesn't like passing around pointers to members in packed structures,
 // even though we're only using them for arithmetic purposes
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    pragma clang diagnostic ignored "-Waddress-of-packed-member"
 #endif
 

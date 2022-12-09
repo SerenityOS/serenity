@@ -16,7 +16,7 @@
 namespace Core {
 
 // Only supported in serenity mode because we use `posix_spawn_file_actions_addchdir`
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 
 ErrorOr<CommandResult> command(DeprecatedString const& command_string, Optional<LexicalPath> chdir)
 {

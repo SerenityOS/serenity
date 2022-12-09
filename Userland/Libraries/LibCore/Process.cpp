@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <spawn.h>
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 #    include <serenity.h>
 #endif
 
@@ -51,7 +51,7 @@ struct ArgvList {
 
     ErrorOr<pid_t> spawn()
     {
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
         if (!m_working_directory.is_empty())

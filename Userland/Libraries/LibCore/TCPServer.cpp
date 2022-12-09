@@ -79,7 +79,7 @@ ErrorOr<NonnullOwnPtr<Stream::TCPSocket>> TCPServer::accept()
     VERIFY(m_listening);
     sockaddr_in in;
     socklen_t in_size = sizeof(in);
-#ifndef AK_OS_MACOS
+#if !OS(MACOS)
     int accepted_fd = TRY(Core::System::accept4(m_fd, (sockaddr*)&in, &in_size, SOCK_NONBLOCK | SOCK_CLOEXEC));
 #else
     int accepted_fd = TRY(Core::System::accept(m_fd, (sockaddr*)&in, &in_size));
@@ -87,7 +87,7 @@ ErrorOr<NonnullOwnPtr<Stream::TCPSocket>> TCPServer::accept()
 
     auto socket = TRY(Stream::TCPSocket::adopt_fd(accepted_fd));
 
-#ifdef AK_OS_MACOS
+#if OS(MACOS)
     // FIXME: Ideally, we should let the caller decide whether it wants the
     //        socket to be nonblocking or not, but there are currently places
     //        which depend on this.

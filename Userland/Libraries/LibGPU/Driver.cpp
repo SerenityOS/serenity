@@ -15,9 +15,9 @@ namespace GPU {
 // FIXME: Think of a better way to configure these paths. Maybe use ConfigServer?
 static HashMap<DeprecatedString, DeprecatedString> const s_driver_path_map
 {
-#if defined(AK_OS_SERENITY)
+#if OS(SERENITY)
     { "softgpu", "libsoftgpu.so.serenity" },
-#elif defined(AK_OS_MACOS)
+#elif OS(MACOS)
     { "softgpu", "liblagom-softgpu.dylib" },
 #else
     { "softgpu", "liblagom-softgpu.so.0" },

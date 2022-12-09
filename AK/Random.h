@@ -9,7 +9,7 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
-#if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
+#if OS(SERENITY) || OS(ANDROID)
 #    include <stdlib.h>
 #endif
 
@@ -17,11 +17,11 @@
 #    include <unistd.h>
 #endif
 
-#if defined(AK_OS_MACOS)
+#if OS(MACOS)
 #    include <sys/random.h>
 #endif
 
-#if defined(AK_OS_WINDOWS)
+#if OS(WINDOWS)
 #    include <random>
 #    include <unistd.h>
 #endif
@@ -30,10 +30,10 @@ namespace AK {
 
 inline void fill_with_random([[maybe_unused]] void* buffer, [[maybe_unused]] size_t length)
 {
-#if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
+#if OS(SERENITY) || OS(ANDROID)
     arc4random_buf(buffer, length);
 #elif defined(OSS_FUZZ)
-#elif defined(__unix__) or defined(AK_OS_MACOS)
+#elif defined(__unix__) or OS(MACOS)
     [[maybe_unused]] int rc = getentropy(buffer, length);
 #else
     char* char_buffer = static_cast<char*>(buffer);

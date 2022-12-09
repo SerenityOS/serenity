@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
     bool print_times = false;
     bool print_progress =
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
         true; // Use OSC 9 to print progress
 #else
         false;
@@ -140,7 +140,7 @@ int main(int argc, char** argv)
     if (specified_test_root) {
         test_root = DeprecatedString { specified_test_root };
     } else {
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
         test_root = LexicalPath::join("/home/anon/Tests"sv, DeprecatedString::formatted("{}-tests", program_name.split_view('-').last())).string();
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     }
 
     if (common_path.is_empty()) {
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
         common_path = "/home/anon/Tests/js-tests/test-common.js";
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");

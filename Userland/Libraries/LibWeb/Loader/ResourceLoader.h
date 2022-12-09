@@ -26,21 +26,21 @@ namespace Web {
 #    define CPU_STRING "AArch64"
 #endif
 
-#if defined(AK_OS_SERENITY)
+#if OS(SERENITY)
 #    define OS_STRING "SerenityOS"
-#elif defined(AK_OS_LINUX)
+#elif OS(LINUX)
 #    define OS_STRING "Linux"
-#elif defined(AK_OS_MACOS)
+#elif OS(MACOS)
 #    define OS_STRING "macOS"
-#elif defined(AK_OS_WINDOWS)
+#elif OS(WINDOWS)
 #    define OS_STRING "Windows"
-#elif defined(AK_OS_FREEBSD)
+#elif OS(FREEBSD)
 #    define OS_STRING "FreeBSD"
-#elif defined(AK_OS_OPENBSD)
+#elif OS(OPENBSD)
 #    define OS_STRING "OpenBSD"
-#elif defined(AK_OS_NETBSD)
+#elif OS(NETBSD)
 #    define OS_STRING "NetBSD"
-#elif defined(AK_OS_DRAGONFLY)
+#elif OS(DRAGONFLY)
 #    define OS_STRING "DragonFly"
 #else
 #    error Unknown OS

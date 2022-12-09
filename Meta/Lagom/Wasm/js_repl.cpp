@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifndef AK_OS_EMSCRIPTEN
+#if !OS(EMSCRIPTEN)
 #    error "This program is for Emscripten only"
 #endif
 

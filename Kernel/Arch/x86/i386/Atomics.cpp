@@ -8,7 +8,7 @@
 
 extern "C" {
 
-#if defined(AK_COMPILER_GCC) // FIXME: Remove this file once GCC supports 8-byte atomics on i686
+#if COMPILER(GCC) // FIXME: Remove this file once GCC supports 8-byte atomics on i686
 
 u64 kernel__atomic_compare_exchange_8(u64 volatile*, u64*, u64, int, int);
 #    pragma redefine_extname kernel__atomic_compare_exchange_8 __atomic_compare_exchange_8

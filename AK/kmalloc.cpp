@@ -7,7 +7,7 @@
 
 #include <AK/kmalloc.h>
 
-#if defined(AK_OS_SERENITY) && !defined(KERNEL)
+#if OS(SERENITY) && !defined(KERNEL)
 
 #    include <AK/Assertions.h>
 

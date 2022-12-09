@@ -21,7 +21,7 @@
 #define STRINGIFY_HELPER(x) #x
 #define STRINGIFY(x) STRINGIFY_HELPER(x)
 
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    define UNROLL_LOOP _Pragma(STRINGIFY(unroll))
 #else
 #    define UNROLL_LOOP _Pragma(STRINGIFY(GCC unroll(LOOP_UNROLL_N)))

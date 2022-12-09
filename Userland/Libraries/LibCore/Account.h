@@ -11,14 +11,14 @@
 #include <AK/Vector.h>
 #include <LibCore/SecretString.h>
 #include <pwd.h>
-#ifndef AK_OS_BSD_GENERIC
+#if !OS(BSD_GENERIC)
 #    include <shadow.h>
 #endif
 #include <sys/types.h>
 
 namespace Core {
 
-#ifdef AK_OS_BSD_GENERIC
+#if OS(BSD_GENERIC)
 struct spwd {
     char* sp_namp;
     char* sp_pwdp;
@@ -73,7 +73,7 @@ private:
     Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids);
 
     ErrorOr<DeprecatedString> generate_passwd_file() const;
-#ifndef AK_OS_BSD_GENERIC
+#if !OS(BSD_GENERIC)
     ErrorOr<DeprecatedString> generate_shadow_file() const;
 #endif
 

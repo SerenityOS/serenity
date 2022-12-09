@@ -302,7 +302,7 @@ public:
     template<typename U, typename V>
     [[nodiscard]] static constexpr bool addition_would_overflow(U u, V v)
     {
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
         Checked checked;
         checked = u;
         checked += v;
@@ -315,7 +315,7 @@ public:
     template<typename U, typename V>
     [[nodiscard]] static constexpr bool multiplication_would_overflow(U u, V v)
     {
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
         Checked checked;
         checked = u;
         checked *= v;

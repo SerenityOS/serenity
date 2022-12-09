@@ -9,7 +9,7 @@
 
 TEST_ROOT("Userland/Applications/Spreadsheet/Tests");
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 static constexpr auto s_spreadsheet_runtime_path = "/res/js/Spreadsheet/runtime.js"sv;
 #else
 static constexpr auto s_spreadsheet_runtime_path = "../../../../Base/res/js/Spreadsheet/runtime.js"sv;
@@ -32,7 +32,7 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const&, JS::Interpreter& interpreter, 
         interpreter.vm().pop_execution_context();
     };
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
     run_file(s_spreadsheet_runtime_path);
 #else
     run_file(LexicalPath::join(Test::JS::g_test_root, s_spreadsheet_runtime_path).string());

@@ -12,7 +12,7 @@
 static void run_test(StringView const file_name)
 {
     // This makes sure that the tests will run both on target and in Lagom.
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
     DeprecatedString path = DeprecatedString::formatted("/usr/Tests/LibCompress/brotli-test-files/{}", file_name);
 #else
     DeprecatedString path = DeprecatedString::formatted("brotli-test-files/{}", file_name);
@@ -88,7 +88,7 @@ TEST_CASE(brotli_single_x)
 TEST_CASE(brotli_decompress_zero_one_bin)
 {
     // This makes sure that the tests will run both on target and in Lagom.
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
     DeprecatedString path = "/usr/Tests/LibCompress/brotli-test-files/zero-one.bin";
 #else
     DeprecatedString path = "brotli-test-files/zero-one.bin";

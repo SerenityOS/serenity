@@ -15,7 +15,7 @@ namespace Core {
 
 class Group {
 public:
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !OS(BSD_GENERIC) && !OS(ANDROID)
     static ErrorOr<void> add_group(Group& group);
 #endif
 

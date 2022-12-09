@@ -14,7 +14,7 @@
 #include "Parser.h"
 #include "Utilities.h"
 
-#if defined(AK_COMPILER_GCC)
+#if COMPILER(GCC)
 #    pragma GCC optimize("O3")
 #endif
 

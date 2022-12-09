@@ -35,7 +35,7 @@ using f128 = long double;
 #    endif
 #endif
 
-#ifdef AK_OS_SERENITY
+#if OS(SERENITY)
 
 using size_t = __SIZE_TYPE__;
 using ssize_t = MakeSigned<size_t>;
@@ -66,7 +66,7 @@ using pid_t = int;
 using __ptrdiff_t = __PTRDIFF_TYPE__;
 #    endif
 
-#    if defined(AK_OS_WINDOWS)
+#    if OS(WINDOWS)
 using ssize_t = MakeSigned<size_t>;
 using mode_t = unsigned short;
 #    endif

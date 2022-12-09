@@ -91,13 +91,13 @@ TEST_CASE(aligned_alloc_fuzz)
 
 TEST_CASE(aligned_alloc_not_power2)
 {
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wnon-power-of-two-alignment"
 #endif
     EXPECT_EQ(aligned_alloc(7, 256), nullptr);
     EXPECT_EQ(errno, EINVAL);
-#if defined(AK_COMPILER_CLANG)
+#if COMPILER(CLANG)
 #    pragma clang diagnostic pop
 #endif
 }

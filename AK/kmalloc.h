@@ -26,10 +26,10 @@ inline void kfree_sized(void* ptr, size_t)
 }
 #endif
 
-#ifndef AK_OS_SERENITY
+#if !OS(SERENITY)
 #    include <AK/Types.h>
 
-#    ifndef AK_OS_MACOS
+#    if !OS(MACOS)
 extern "C" {
 inline size_t malloc_good_size(size_t size) { return size; }
 }

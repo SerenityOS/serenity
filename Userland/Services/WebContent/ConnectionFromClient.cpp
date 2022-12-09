@@ -90,7 +90,7 @@ void ConnectionFromClient::load_url(const URL& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
-#if defined(AK_OS_SERENITY)
+#if OS(SERENITY)
     DeprecatedString process_name;
     if (url.host().is_empty())
         process_name = "WebContent";
