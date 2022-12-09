@@ -30,7 +30,8 @@ NonnullLockRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::
         "VirtGPU Scratch Space"sv,
         Memory::Region::Access::ReadWrite));
 
-    auto adapter = adopt_lock_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(scratch_space_region)));
+    auto active_context_ids = Bitmap::must_create(VREND_MAX_CTX, false);
+    auto adapter = adopt_lock_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(active_context_ids), move(scratch_space_region)));
     adapter->initialize();
     MUST(adapter->initialize_adapter());
     return adapter;
@@ -125,10 +126,15 @@ ErrorOr<void> VirtIOGraphicsAdapter::attach_physical_range_to_framebuffer(VirtIO
     return {};
 }
 
-VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier, NonnullOwnPtr<Memory::Region> scratch_space_region)
+VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier, Bitmap&& active_context_ids, NonnullOwnPtr<Memory::Region> scratch_space_region)
     : VirtIO::Device(device_identifier)
     , m_scratch_space(move(scratch_space_region))
 {
+    m_active_context_ids.with([&](Bitmap& my_active_context_ids) {
+        my_active_context_ids = move(active_context_ids);
+        // Note: Context ID 0 is invalid, so mark it as in use.
+        my_active_context_ids.set(0, true);
+    });
 }
 
 void VirtIOGraphicsAdapter::initialize()
@@ -410,10 +416,23 @@ Graphics::VirtIOGPU::ResourceID VirtIOGraphicsAdapter::allocate_resource_id()
     return m_resource_id_counter++;
 }
 
-Graphics::VirtIOGPU::ContextID VirtIOGraphicsAdapter::allocate_context_id()
+ErrorOr<Graphics::VirtIOGPU::ContextID> VirtIOGraphicsAdapter::allocate_context_id()
 {
-    // FIXME: This should really be tracked using a bitmap, instead of an atomic counter
-    return m_context_id_counter++;
+    Optional<Graphics::VirtIOGPU::ContextID> new_context_id;
+
+    m_active_context_ids.with([&new_context_id](Bitmap& active_context_ids) {
+        auto maybe_available_id = active_context_ids.find_first_unset();
+        if (!maybe_available_id.has_value())
+            return;
+        new_context_id = maybe_available_id.value();
+        active_context_ids.set(maybe_available_id.value(), true);
+    });
+
+    if (new_context_id.has_value())
+        return new_context_id.value();
+
+    dmesgln("VirtIO::GraphicsAdapter: No available context IDs.");
+    return Error::from_errno(ENXIO);
 }
 
 void VirtIOGraphicsAdapter::delete_resource(Graphics::VirtIOGPU::ResourceID resource_id)
@@ -439,10 +458,10 @@ void VirtIOGraphicsAdapter::initialize_3d_device()
     }
 }
 
-Graphics::VirtIOGPU::ContextID VirtIOGraphicsAdapter::create_context()
+ErrorOr<Graphics::VirtIOGPU::ContextID> VirtIOGraphicsAdapter::create_context()
 {
     VERIFY(m_operation_lock.is_locked());
-    auto ctx_id = allocate_context_id();
+    auto ctx_id = TRY(allocate_context_id());
     auto writer = create_scratchspace_writer();
     auto& request = writer.append_structure<Graphics::VirtIOGPU::Protocol::ContextCreate>();
     auto& response = writer.append_structure<Graphics::VirtIOGPU::Protocol::ControlHeader>();
