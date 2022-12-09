@@ -46,7 +46,7 @@ private:
         size_t column_index;
         size_t row_index;
         size_t column_span;
-        size_t raw_span;
+        size_t row_span;
         float baseline { 0 };
     };
 
