@@ -277,13 +277,19 @@ bool Value::is_constructor() const
 // 7.2.8 IsRegExp ( argument ), https://tc39.es/ecma262/#sec-isregexp
 ThrowCompletionOr<bool> Value::is_regexp(VM& vm) const
 {
+    // 1. If argument is not an Object, return false.
     if (!is_object())
         return false;
 
+    // 2. Let matcher be ? Get(argument, @@match).
     auto matcher = TRY(as_object().get(*vm.well_known_symbol_match()));
+
+    // 3. If matcher is not undefined, return ToBoolean(matcher).
     if (!matcher.is_undefined())
         return matcher.to_boolean();
 
+    // 4. If argument has a [[RegExpMatcher]] internal slot, return true.
+    // 5. Return false.
     return is<RegExpObject>(as_object());
 }
 
