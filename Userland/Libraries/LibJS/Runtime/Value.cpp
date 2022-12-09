@@ -379,22 +379,37 @@ ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
         return number_to_string(m_value.as_double);
 
     switch (m_value.tag) {
-    case UNDEFINED_TAG:
-        return "undefined"sv;
-    case NULL_TAG:
-        return "null"sv;
-    case BOOLEAN_TAG:
-        return as_bool() ? "true"sv : "false"sv;
-    case INT32_TAG:
-        return DeprecatedString::number(as_i32());
+    // 1. If argument is a String, return argument.
     case STRING_TAG:
         return as_string().deprecated_string();
+    // 2. If argument is a Symbol, throw a TypeError exception.
     case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");
+    // 3. If argument is undefined, return "undefined".
+    case UNDEFINED_TAG:
+        return "undefined"sv;
+    // 4. If argument is null, return "null".
+    case NULL_TAG:
+        return "null"sv;
+    // 5. If argument is true, return "true".
+    // 6. If argument is false, return "false".
+    case BOOLEAN_TAG:
+        return as_bool() ? "true"sv : "false"sv;
+    // 7. If argument is a Number, return Number::toString(argument, 10).
+    case INT32_TAG:
+        return DeprecatedString::number(as_i32());
+    // 8. If argument is a BigInt, return BigInt::toString(argument, 10).
     case BIGINT_TAG:
         return as_bigint().big_integer().to_base(10);
+    // 9. Assert: argument is an Object.
     case OBJECT_TAG: {
+        // 10. Let primValue be ? ToPrimitive(argument, string).
         auto primitive_value = TRY(to_primitive(vm, PreferredType::String));
+
+        // 11. Assert: primValue is not an Object.
+        VERIFY(!primitive_value.is_object());
+
+        // 12. Return ? ToString(primValue).
         return primitive_value.to_string(vm);
     }
     default:
