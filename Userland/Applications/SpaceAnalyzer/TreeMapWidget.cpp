@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -271,6 +272,24 @@ Vector<int> TreeMapWidget::path_to_position(Gfx::IntPoint position)
         }
     });
     return path;
+}
+
+void TreeMapWidget::mousemove_event(GUI::MouseEvent& event)
+{
+    auto* node = path_node(m_viewpoint);
+    if (!node) {
+        set_tooltip({});
+        return;
+    }
+
+    auto* hovered_node = node;
+    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeMapNode const&, int index, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
+        if (is_remainder == IsRemainder::No && rect.contains(event.position())) {
+            hovered_node = &hovered_node->child_at(index);
+        }
+    });
+
+    set_tooltip(DeprecatedString::formatted("{}\n{}", hovered_node->name(), human_readable_size(hovered_node->area())));
 }
 
 void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
