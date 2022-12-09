@@ -11,33 +11,38 @@
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
-#include <LibCore/SystemServerTakeover.h>
+#include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
-#include <QSocketNotifier>
 #include <SQLServer/ConnectionFromClient.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    int sql_server_fd_passing_socket { -1 };
+    DeprecatedString pid_file;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(sql_server_fd_passing_socket, "File descriptor of the passing socket for the SQLServer connection", "sql-server-fd-passing-socket", 's', "sql_server_fd_passing_socket");
+    args_parser.add_option(pid_file, "Path to the PID file for the SQLServer singleton process", "pid-file", 'p', "pid_file");
     args_parser.parse(arguments);
 
-    VERIFY(sql_server_fd_passing_socket >= 0);
+    VERIFY(!pid_file.is_empty());
 
     auto database_path = DeprecatedString::formatted("{}/Ladybird", Core::StandardPaths::data_directory());
     TRY(Core::Directory::create(database_path, Core::Directory::CreateDirectories::Yes));
 
     Core::EventLoop loop;
 
-    auto socket = TRY(Core::take_over_socket_from_system_server("SQLServer"sv));
-    auto client = TRY(SQLServer::ConnectionFromClient::try_create(move(socket), 1));
-    client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(sql_server_fd_passing_socket)));
-    client->set_database_path(move(database_path));
-    client->on_disconnect = [&]() {
-        loop.quit(0);
+    auto server = TRY(IPC::MultiServer<SQLServer::ConnectionFromClient>::try_create());
+    u64 connection_count { 0 };
+
+    server->on_new_client = [&](auto& client) {
+        client.set_database_path(database_path);
+        ++connection_count;
+
+        client.on_disconnect = [&]() {
+            if (--connection_count == 0) {
+                MUST(Core::System::unlink(pid_file));
+                loop.quit(0);
+            }
+        };
     };
 
     return loop.exec();
