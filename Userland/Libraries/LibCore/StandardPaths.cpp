@@ -9,6 +9,7 @@
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -78,6 +79,27 @@ DeprecatedString StandardPaths::data_directory()
     builder.append("/Library/Application Support"sv);
 #else
     builder.append("/.local/share"sv);
+#endif
+
+    return LexicalPath::canonicalized_path(builder.to_deprecated_string());
+}
+
+ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
+{
+    if (auto* data_directory = getenv("XDG_RUNTIME_DIR"))
+        return LexicalPath::canonicalized_path(data_directory);
+
+    StringBuilder builder;
+
+#if defined(AK_OS_SERENITY)
+    auto sid = TRY(Core::System::getsid());
+    builder.appendff("/tmp/session/{}", sid);
+#elif defined(AK_OS_MACOS)
+    builder.append(home_directory());
+    builder.append("/Library/Application Support"sv);
+#else
+    auto uid = getuid();
+    builder.appendff("/run/user/{}", uid);
 #endif
 
     return LexicalPath::canonicalized_path(builder.to_deprecated_string());
