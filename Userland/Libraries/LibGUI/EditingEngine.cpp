@@ -106,6 +106,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
         }
 
         move_one_helper(event, direction);
+        return true;
     }
 
     if (event.key() == KeyCode::Key_Home) {
