@@ -280,8 +280,18 @@ Gfx::IntRect ImageEditor::mouse_indicator_rect_y() const
 
 void ImageEditor::second_paint_event(GUI::PaintEvent& event)
 {
-    if (m_active_tool)
-        m_active_tool->on_second_paint(m_active_layer, event);
+    if (m_active_tool) {
+        if (m_show_rulers) {
+            auto clipped_event = GUI::PaintEvent(Gfx::IntRect { event.rect().x() + m_ruler_thickness,
+                                                     event.rect().y() + m_ruler_thickness,
+                                                     event.rect().width() - m_ruler_thickness,
+                                                     event.rect().height() - m_ruler_thickness },
+                event.window_size());
+            m_active_tool->on_second_paint(m_active_layer, clipped_event);
+        } else {
+            m_active_tool->on_second_paint(m_active_layer, event);
+        }
+    }
 }
 
 GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(GUI::MouseEvent const& event) const
