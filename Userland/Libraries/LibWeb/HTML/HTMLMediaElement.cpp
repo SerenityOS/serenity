@@ -35,6 +35,7 @@ Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(DeprecatedString con
     return Bindings::CanPlayTypeResult::Empty;
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-load
 void HTMLMediaElement::load() const
 {
     dbgln("(STUBBED) HTMLMediaElement::load()");
