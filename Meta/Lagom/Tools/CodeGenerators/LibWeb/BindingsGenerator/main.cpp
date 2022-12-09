@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Namespaces.h"
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
@@ -74,32 +75,7 @@ int main(int argc, char** argv)
     IDL::Parser parser(path, data, import_base_path);
     auto& interface = parser.parse();
 
-    static constexpr Array libweb_interface_namespaces = {
-        "CSS"sv,
-        "Crypto"sv,
-        "DOM"sv,
-        "DOMParsing"sv,
-        "Encoding"sv,
-        "Fetch"sv,
-        "FileAPI"sv,
-        "Geometry"sv,
-        "HTML"sv,
-        "HighResolutionTime"sv,
-        "IntersectionObserver"sv,
-        "NavigationTiming"sv,
-        "RequestIdleCallback"sv,
-        "ResizeObserver"sv,
-        "SVG"sv,
-        "Selection"sv,
-        "UIEvents"sv,
-        "URL"sv,
-        "WebGL"sv,
-        "WebIDL"sv,
-        "WebSockets"sv,
-        "XHR"sv,
-    };
-
-    if (libweb_interface_namespaces.span().contains_slow(namespace_)) {
+    if (IDL::libweb_interface_namespaces.span().contains_slow(namespace_)) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::"sv);
