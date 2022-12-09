@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Namespaces.h"
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
@@ -1377,7 +1378,16 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("value", value);
-    scoped_generator.set("type", type.name());
+    if (!libweb_interface_namespaces.span().contains_slow(type.name())) {
+        scoped_generator.set("type", type.name());
+    } else {
+        // e.g. Document.getSelection which returns Selection, which is in the Selection namespace.
+        StringBuilder builder;
+        builder.append(type.name());
+        builder.append("::"sv);
+        builder.append(type.name());
+        scoped_generator.set("type", builder.to_deprecated_string());
+    }
     scoped_generator.set("result_expression", result_expression);
     scoped_generator.set("recursion_depth", DeprecatedString::number(recursion_depth));
 
