@@ -36,6 +36,13 @@ inline ErrorOr<void> StringBuilder::will_append(size_t size)
     return {};
 }
 
+ErrorOr<StringBuilder> StringBuilder::create(size_t initial_capacity)
+{
+    StringBuilder builder;
+    TRY(builder.m_buffer.try_ensure_capacity(initial_capacity));
+    return builder;
+}
+
 StringBuilder::StringBuilder(size_t initial_capacity)
 {
     m_buffer.ensure_capacity(initial_capacity);
