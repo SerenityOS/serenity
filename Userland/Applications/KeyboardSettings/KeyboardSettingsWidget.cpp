@@ -228,7 +228,13 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     m_selected_keymaps_listview->on_selection_change = [&]() {
         auto& selection = m_selected_keymaps_listview->selection();
         m_remove_keymap_button->set_enabled(!selection.is_empty() && keymaps_list_model.keymaps().size() > 1);
-        m_activate_keymap_button->set_enabled(!selection.is_empty());
+        if (selection.is_empty()) {
+            m_activate_keymap_button->set_enabled(false);
+        } else {
+            auto& highlighted_keymap = keymaps_list_model.keymap_at(selection.first().row());
+            auto& active_keymap = keymaps_list_model.active_keymap();
+            m_activate_keymap_button->set_enabled(highlighted_keymap != active_keymap);
+        }
     };
 
     m_test_typing_area = *find_descendant_of_type_named<GUI::TextEditor>("test_typing_area");
