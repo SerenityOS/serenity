@@ -44,6 +44,10 @@ using ConditionallyResultType = typename Detail::ConditionallyResultType<conditi
 template<typename>
 class Optional;
 
+struct OptionalNone {
+    explicit OptionalNone() = default;
+};
+
 template<typename T>
 requires(!IsLvalueReference<T>) class [[nodiscard]] Optional<T> {
     template<typename U>
@@ -55,6 +59,16 @@ public:
     using ValueType = T;
 
     ALWAYS_INLINE Optional() = default;
+
+    template<SameAs<OptionalNone> V>
+    Optional(V) { }
+
+    template<SameAs<OptionalNone> V>
+    Optional& operator=(V)
+    {
+        clear();
+        return *this;
+    }
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
     Optional(Optional const& other)
@@ -115,6 +129,7 @@ public:
     }
 
     template<typename U = T>
+    requires(!IsSame<OptionalNone, RemoveCVReference<U>>)
     ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value)
     requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U &&>)
         : m_has_value(true)
