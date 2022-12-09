@@ -171,7 +171,7 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
         lighting_params.scene_ambient_color = { x, y, z, w };
         break;
     case GL_LIGHT_MODEL_COLOR_CONTROL: {
-        GLenum color_control = static_cast<GLenum>(x);
+        auto color_control = static_cast<GLenum>(x);
         RETURN_WITH_ERROR_IF(color_control != GL_SINGLE_COLOR && color_control != GL_SEPARATE_SPECULAR_COLOR, GL_INVALID_ENUM);
         lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? GPU::ColorControl::SingleColor : GPU::ColorControl::SeparateSpecularColor;
         break;
@@ -189,6 +189,30 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
     }
 
     m_rasterizer->set_light_model_params(lighting_params);
+}
+
+void GLContext::gl_light_modelv(GLenum pname, void const* params, GLenum type)
+{
+    auto invoke_implementation = [&](auto const* params) {
+        switch (pname) {
+        case GL_LIGHT_MODEL_AMBIENT:
+            gl_light_model(pname, params[0], params[1], params[2], params[3]);
+            return;
+        default:
+            gl_light_model(pname, params[0], 0.f, 0.f, 0.f);
+            return;
+        }
+    };
+    switch (type) {
+    case GL_FLOAT:
+        invoke_implementation(reinterpret_cast<GLfloat const*>(params));
+        break;
+    case GL_INT:
+        invoke_implementation(reinterpret_cast<GLint const*>(params));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void GLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
