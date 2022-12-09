@@ -85,7 +85,6 @@ static void prioritize_nodes(Node& start, NodeMap const& node_map)
                 // the graph. To avoid an infinite loop, the duplicate node is not added
                 // to the stack a second time. Instead, the edge is deliberately ignored,
                 // and the topological sort proceeds as though the cycle did not exist.
-
                 handle_cycle(stack, next_ancestor);
             else
                 // Recursively prioritize all ancestors.
@@ -99,9 +98,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     StringView path;
+    bool quiet = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to file", "path", Core::ArgsParser::Required::No);
+    args_parser.add_option(quiet, "Suppress warnings about cycles", "quiet", 'q');
     args_parser.parse(arguments);
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
