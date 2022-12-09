@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Function.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ConnectionFromClient.h>
 
@@ -22,13 +23,18 @@ public:
         return adopt_nonnull_own_or_enomem(new (nothrow) MultiServer(move(server)));
     }
 
+    Function<void(ConnectionFromClientType&)> on_new_client;
+
 private:
     explicit MultiServer(NonnullRefPtr<Core::LocalServer> server)
         : m_server(move(server))
     {
         m_server->on_accept = [&](auto client_socket) {
             auto client_id = ++m_next_client_id;
-            (void)IPC::new_client_connection<ConnectionFromClientType>(move(client_socket), client_id);
+
+            auto client = IPC::new_client_connection<ConnectionFromClientType>(move(client_socket), client_id);
+            if (on_new_client)
+                on_new_client(*client);
         };
     }
 
