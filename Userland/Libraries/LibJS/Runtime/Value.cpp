@@ -519,22 +519,39 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
 {
     auto& realm = *vm.current_realm();
     VERIFY(!is_empty());
-    if (is_number())
+
+    // Number
+    if (is_number()) {
+        // Return a new Number object whose [[NumberData]] internal slot is set to argument. See 21.1 for a description of Number objects.
         return NumberObject::create(realm, as_double());
+    }
 
     switch (m_value.tag) {
+    // Undefined
+    // Null
     case UNDEFINED_TAG:
     case NULL_TAG:
+        // Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefined);
+    // Boolean
     case BOOLEAN_TAG:
+        // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument. See 20.3 for a description of Boolean objects.
         return BooleanObject::create(realm, as_bool());
+    // String
     case STRING_TAG:
+        // Return a new String object whose [[StringData]] internal slot is set to argument. See 22.1 for a description of String objects.
         return StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), *realm.intrinsics().string_prototype());
+    // Symbol
     case SYMBOL_TAG:
+        // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument. See 20.4 for a description of Symbol objects.
         return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol()));
+    // BigInt
     case BIGINT_TAG:
+        // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument. See 21.2 for a description of BigInt objects.
         return BigIntObject::create(realm, const_cast<JS::BigInt&>(as_bigint()));
+    // Object
     case OBJECT_TAG:
+        // Return argument.
         return &const_cast<Object&>(as_object());
     default:
         VERIFY_NOT_REACHED();
