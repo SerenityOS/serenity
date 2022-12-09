@@ -162,17 +162,40 @@ void Selection::empty()
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-collapse
-void Selection::collapse(JS::GCPtr<DOM::Node>, unsigned offset)
+WebIDL::ExceptionOr<void> Selection::collapse(JS::GCPtr<DOM::Node> node, unsigned offset)
 {
-    (void)offset;
-    TODO();
+    // 1. If node is null, this method must behave identically as removeAllRanges() and abort these steps.
+    if (!node) {
+        remove_all_ranges();
+        return {};
+    }
+
+    // 2. The method must throw an IndexSizeError exception if offset is longer than node's length and abort these steps.
+    if (offset > node->length()) {
+        return WebIDL::IndexSizeError::create(realm(), "Selection.collapse() with offset longer than node's length"sv);
+    }
+
+    // 3. If node's root is not the document associated with this, abort these steps.
+    if (&node->root() != m_document.ptr())
+        return {};
+
+    // 4. Otherwise, let newRange be a new range.
+    auto new_range = DOM::Range::create(*m_document);
+
+    // 5. Set the start the start and the end of newRange to (node, offset).
+    TRY(new_range->set_start(*node, offset));
+
+    // 6. Set this's range to newRange.
+    m_range = new_range;
+
+    return {};
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-setposition
-void Selection::set_position(JS::GCPtr<DOM::Node> node, unsigned offset)
+WebIDL::ExceptionOr<void> Selection::set_position(JS::GCPtr<DOM::Node> node, unsigned offset)
 {
     // The method must be an alias, and behave identically, to collapse().
-    collapse(node, offset);
+    return collapse(node, offset);
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-collapsetostart

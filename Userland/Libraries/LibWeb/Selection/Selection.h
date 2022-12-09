@@ -37,8 +37,8 @@ public:
     WebIDL::ExceptionOr<void> remove_range(JS::NonnullGCPtr<DOM::Range>);
     void remove_all_ranges();
     void empty();
-    void collapse(JS::GCPtr<DOM::Node>, unsigned offset);
-    void set_position(JS::GCPtr<DOM::Node>, unsigned offset);
+    WebIDL::ExceptionOr<void> collapse(JS::GCPtr<DOM::Node>, unsigned offset);
+    WebIDL::ExceptionOr<void> set_position(JS::GCPtr<DOM::Node>, unsigned offset);
     void collapse_to_start();
     void collapse_to_end();
     WebIDL::ExceptionOr<void> extend(JS::NonnullGCPtr<DOM::Node>, unsigned offset);
