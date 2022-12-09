@@ -1568,11 +1568,6 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
         Utf8View x_code_points { x_string };
         Utf8View y_code_points { y_string };
 
-        if (x_code_points.starts_with(y_code_points))
-            return TriState::False;
-        if (y_code_points.starts_with(x_code_points))
-            return TriState::True;
-
         for (auto k = x_code_points.begin(), l = y_code_points.begin();
              k != x_code_points.end() && l != y_code_points.end();
              ++k, ++l) {
@@ -1584,7 +1579,10 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
                 }
             }
         }
-        VERIFY_NOT_REACHED();
+
+        return x_code_points.length() < y_code_points.length()
+            ? TriState::True
+            : TriState::False;
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
