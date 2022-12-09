@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Forward.h>
 
 namespace Core {
@@ -19,6 +20,7 @@ public:
     static DeprecatedString tempfile_directory();
     static DeprecatedString config_directory();
     static DeprecatedString data_directory();
+    static ErrorOr<DeprecatedString> runtime_directory();
 };
 
 }
