@@ -661,25 +661,39 @@ Optional<Value> string_to_number(StringView string)
 ThrowCompletionOr<Value> Value::to_number(VM& vm) const
 {
     VERIFY(!is_empty());
+
+    // 1. If argument is a Number, return argument.
     if (is_number())
         return *this;
 
     switch (m_value.tag) {
-    case UNDEFINED_TAG:
-        return js_nan();
-    case NULL_TAG:
-        return Value(0);
-    case BOOLEAN_TAG:
-        return Value(as_bool() ? 1 : 0);
-    case STRING_TAG:
-        return string_to_number(as_string().deprecated_string().view());
+    // 2. If argument is either a Symbol or a BigInt, throw a TypeError exception.
     case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "number");
     case BIGINT_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "BigInt", "number");
+    // 3. If argument is undefined, return NaN.
+    case UNDEFINED_TAG:
+        return js_nan();
+    // 4. If argument is either null or false, return +0𝔽.
+    case NULL_TAG:
+        return Value(0);
+    // 5. If argument is true, return 1𝔽.
+    case BOOLEAN_TAG:
+        return Value(as_bool() ? 1 : 0);
+    // 6. If argument is a String, return StringToNumber(argument).
+    case STRING_TAG:
+        return string_to_number(as_string().deprecated_string().view());
+    // 7. Assert: argument is an Object.
     case OBJECT_TAG: {
-        auto primitive = TRY(to_primitive(vm, PreferredType::Number));
-        return primitive.to_number(vm);
+        // 8. Let primValue be ? ToPrimitive(argument, number).
+        auto primitive_value = TRY(to_primitive(vm, PreferredType::Number));
+
+        // 9. Assert: primValue is not an Object.
+        VERIFY(!primitive_value.is_object());
+
+        // 10. Return ? ToNumber(primValue).
+        return primitive_value.to_number(vm);
     }
     default:
         VERIFY_NOT_REACHED();
