@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 #if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
@@ -52,10 +53,21 @@ inline T get_random()
 
 u32 get_random_uniform(u32 max_bounds);
 
+template<typename Collection>
+inline void shuffle(Collection& collection)
+{
+    // Fisher-Yates shuffle
+    for (size_t i = collection.size() - 1; i >= 1; --i) {
+        size_t j = get_random_uniform(i + 1);
+        AK::swap(collection[i], collection[j]);
+    }
+}
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::fill_with_random;
 using AK::get_random;
 using AK::get_random_uniform;
+using AK::shuffle;
 #endif
