@@ -299,7 +299,7 @@ public:
         return { characters(), length() };
     }
 
-    [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const { return StringUtils::replace(*this, needle, replacement, replace_mode); }
+    [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode replace_mode = ReplaceMode::All) const { return StringUtils::replace(*this, needle, replacement, replace_mode); }
     [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(*this, needle); }
     [[nodiscard]] DeprecatedString reverse() const;
 
