@@ -2273,13 +2273,13 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     auto destructuring = head_result.is_destructuring;
 
     // 5. If destructuring is true and if lhsKind is assignment, then
-    if (destructuring) {
+    if (destructuring && head_result.lhs_kind == LHSKind::Assignment) {
         // a. Assert: lhs is a LeftHandSideExpression.
         // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
         // FIXME: Implement this.
         return Bytecode::CodeGenerationError {
             &node,
-            "Unimplemented: destructuring in for-in/of"sv,
+            "Unimplemented: assignment destructuring in for/of"sv,
         };
     }
     // 6. Repeat,
@@ -2326,7 +2326,9 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
                     TRY(generator.emit_store_to_reference(**ptr));
                 } else {
                     auto& binding_pattern = lhs.get<NonnullRefPtr<BindingPattern>>();
-                    TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Register::accumulator()));
+                    auto value_register = generator.allocate_register();
+                    generator.emit<Bytecode::Op::Store>(value_register);
+                    TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, Bytecode::Op::SetVariable::InitializationMode::Set, value_register));
                 }
             }
         }
@@ -2386,9 +2388,9 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     }
     //    j. Else,
     else {
-        // FIXME: Implement destructuring
-        //  i. If lhsKind is assignment, then
-        //      1. Let status be Completion(DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue).
+        // FIXME: i. If lhsKind is assignment, then
+        //           1. Let status be Completion(DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue).
+
         //  ii. Else if lhsKind is varBinding, then
         //      1. Assert: lhs is a ForBinding.
         //      2. Let status be Completion(BindingInitialization of lhs with arguments nextValue and undefined).
@@ -2396,10 +2398,20 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         //      1. Assert: lhsKind is lexicalBinding.
         //      2. Assert: lhs is a ForDeclaration.
         //      3. Let status be Completion(ForDeclarationBindingInitialization of lhs with arguments nextValue and iterationEnv).
-        return Bytecode::CodeGenerationError {
-            &node,
-            "Unimplemented: destructuring in for-in/of"sv,
-        };
+        if (head_result.lhs_kind == LHSKind::VarBinding || head_result.lhs_kind == LHSKind::LexicalBinding) {
+            auto& declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode>>());
+            VERIFY(declaration.declarations().size() == 1);
+            auto& binding_pattern = declaration.declarations().first().target().get<NonnullRefPtr<BindingPattern>>();
+
+            auto value_register = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(value_register);
+            TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, head_result.lhs_kind == LHSKind::VarBinding ? Bytecode::Op::SetVariable::InitializationMode::Set : Bytecode::Op::SetVariable::InitializationMode::Initialize, value_register));
+        } else {
+            return Bytecode::CodeGenerationError {
+                &node,
+                "Unimplemented: assignment destructuring in for/of"sv,
+            };
+        }
     }
 
     // FIXME: Implement iteration closure.
