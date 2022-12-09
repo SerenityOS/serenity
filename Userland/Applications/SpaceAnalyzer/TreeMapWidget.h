@@ -43,6 +43,7 @@ public:
 private:
     TreeMapWidget() = default;
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
