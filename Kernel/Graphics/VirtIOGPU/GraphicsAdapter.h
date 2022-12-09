@@ -63,7 +63,7 @@ private:
         PhysicalBuffer back_buffer;
     };
 
-    VirtIOGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<Memory::Region> scratch_space_region);
+    VirtIOGraphicsAdapter(PCI::DeviceIdentifier const&, Bitmap&& active_context_ids, NonnullOwnPtr<Memory::Region> scratch_space_region);
 
     ErrorOr<void> initialize_adapter();
 
@@ -80,14 +80,14 @@ private:
     }
 
     // 3D Command stuff
-    Graphics::VirtIOGPU::ContextID create_context();
+    ErrorOr<Graphics::VirtIOGPU::ContextID> create_context();
     void attach_resource_to_context(Graphics::VirtIOGPU::ResourceID resource_id, Graphics::VirtIOGPU::ContextID context_id);
     void submit_command_buffer(Graphics::VirtIOGPU::ContextID, Function<size_t(Bytes)> buffer_writer);
     Graphics::VirtIOGPU::Protocol::TextureFormat get_framebuffer_format() const { return Graphics::VirtIOGPU::Protocol::TextureFormat::VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM; }
 
     auto& operation_lock() { return m_operation_lock; }
     Graphics::VirtIOGPU::ResourceID allocate_resource_id();
-    Graphics::VirtIOGPU::ContextID allocate_context_id();
+    ErrorOr<Graphics::VirtIOGPU::ContextID> allocate_context_id();
 
     PhysicalAddress start_of_scratch_space() const { return m_scratch_space->physical_page(0)->paddr(); }
     AK::BinaryBufferWriter create_scratchspace_writer()
@@ -113,7 +113,7 @@ private:
     VirtIO::Configuration const* m_device_configuration { nullptr };
     // Note: Resource ID 0 is invalid, and we must not allocate 0 as the first resource ID.
     Atomic<u32> m_resource_id_counter { 1 };
-    Atomic<u32> m_context_id_counter { 1 };
+    SpinlockProtected<Bitmap> m_active_context_ids { LockRank::None };
     LockRefPtr<VirtIOGPU3DDevice> m_3d_device;
     bool m_has_virgl_support { false };
 

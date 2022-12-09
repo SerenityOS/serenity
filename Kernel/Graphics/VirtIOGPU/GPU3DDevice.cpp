@@ -39,7 +39,7 @@ VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapt
     , m_graphics_adapter(graphics_adapter)
     , m_transfer_buffer_region(move(transfer_buffer_region))
 {
-    m_kernel_context_id = m_graphics_adapter->create_context();
+    m_kernel_context_id = MUST(m_graphics_adapter->create_context());
 }
 
 void VirtIOGPU3DDevice::detach(OpenFileDescription& description)
@@ -65,7 +65,7 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
             return EEXIST;
         SpinlockLocker locker(m_graphics_adapter->operation_lock());
         // TODO: Delete the context if it fails to be set in m_context_state_lookup
-        auto context_id = m_graphics_adapter->create_context();
+        auto context_id = TRY(m_graphics_adapter->create_context());
         LockRefPtr<PerContextState> per_context_state = TRY(PerContextState::try_create(context_id));
         TRY(m_context_state_lookup.try_set(&description, per_context_state));
         return {};
