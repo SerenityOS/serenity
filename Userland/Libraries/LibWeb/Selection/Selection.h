@@ -40,7 +40,7 @@ public:
     WebIDL::ExceptionOr<void> collapse(JS::GCPtr<DOM::Node>, unsigned offset);
     WebIDL::ExceptionOr<void> set_position(JS::GCPtr<DOM::Node>, unsigned offset);
     WebIDL::ExceptionOr<void> collapse_to_start();
-    void collapse_to_end();
+    WebIDL::ExceptionOr<void> collapse_to_end();
     WebIDL::ExceptionOr<void> extend(JS::NonnullGCPtr<DOM::Node>, unsigned offset);
     WebIDL::ExceptionOr<void> set_base_and_extent(JS::NonnullGCPtr<DOM::Node> anchor_node, unsigned anchor_offset, JS::NonnullGCPtr<DOM::Node> focus_node, unsigned focus_offset);
     WebIDL::ExceptionOr<void> select_all_children(JS::NonnullGCPtr<DOM::Node>);
