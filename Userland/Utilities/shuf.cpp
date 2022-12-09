@@ -54,17 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (lines.is_empty())
         return 0;
 
-    // Fisher-Yates shuffle
-    Bytes tmp;
-    for (size_t i = lines.size() - 1; i >= 1; --i) {
-        size_t j = get_random_uniform(i + 1);
-        // Swap i and j
-        if (i == j)
-            continue;
-        tmp = lines[j];
-        lines[j] = lines[i];
-        lines[i] = tmp;
-    }
+    AK::shuffle(lines);
 
     Array<u8, 1> output_delimiter = { '\n' };
     for (size_t i = 0; i < min(head_count.value_or(lines.size()), lines.size()); ++i) {
