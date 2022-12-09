@@ -296,29 +296,40 @@ ThrowCompletionOr<bool> Value::is_regexp(VM& vm) const
 // 13.5.3 The typeof Operator, https://tc39.es/ecma262/#sec-typeof-operator
 DeprecatedString Value::typeof() const
 {
+    // 9. If val is a Number, return "number".
     if (is_number())
         return "number";
 
     switch (m_value.tag) {
+    // 4. If val is undefined, return "undefined".
     case UNDEFINED_TAG:
         return "undefined";
+    // 5. If val is null, return "object".
     case NULL_TAG:
         return "object";
+    // 6. If val is a String, return "string".
     case STRING_TAG:
         return "string";
-    case OBJECT_TAG:
-        // B.3.7.3 Changes to the typeof Operator, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-typeof
-        if (as_object().is_htmldda())
-            return "undefined";
-        if (is_function())
-            return "function";
-        return "object";
-    case BOOLEAN_TAG:
-        return "boolean";
+    // 7. If val is a Symbol, return "symbol".
     case SYMBOL_TAG:
         return "symbol";
+    // 8. If val is a Boolean, return "boolean".
+    case BOOLEAN_TAG:
+        return "boolean";
+    // 10. If val is a BigInt, return "bigint".
     case BIGINT_TAG:
         return "bigint";
+    // 11. Assert: val is an Object.
+    case OBJECT_TAG:
+        // B.3.6.3 Changes to the typeof Operator, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-typeof
+        // 12. If val has an [[IsHTMLDDA]] internal slot, return "undefined".
+        if (as_object().is_htmldda())
+            return "undefined";
+        // 13. If val has a [[Call]] internal slot, return "function".
+        if (is_function())
+            return "function";
+        // 14. Return "object".
+        return "object";
     default:
         VERIFY_NOT_REACHED();
     }
