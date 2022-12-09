@@ -241,6 +241,9 @@ Array& Value::as_array()
 // 7.2.3 IsCallable ( argument ), https://tc39.es/ecma262/#sec-iscallable
 bool Value::is_function() const
 {
+    // 1. If argument is not an Object, return false.
+    // 2. If argument has a [[Call]] internal method, return true.
+    // 3. Return false.
     return is_object() && as_object().is_function();
 }
 
