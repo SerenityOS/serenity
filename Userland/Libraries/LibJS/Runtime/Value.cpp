@@ -466,31 +466,51 @@ bool Value::to_boolean() const
 // 7.1.1 ToPrimitive ( input [ , preferredType ] ), https://tc39.es/ecma262/#sec-toprimitive
 ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_type) const
 {
-    auto get_hint_for_preferred_type = [&]() -> DeprecatedString {
-        switch (preferred_type) {
-        case PreferredType::Default:
-            return "default";
-        case PreferredType::String:
-            return "string";
-        case PreferredType::Number:
-            return "number";
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    };
+    // 1. If input is an Object, then
     if (is_object()) {
-        auto to_primitive_method = TRY(get_method(vm, *vm.well_known_symbol_to_primitive()));
-        if (to_primitive_method) {
-            auto hint = get_hint_for_preferred_type();
-            auto result = TRY(call(vm, *to_primitive_method, *this, PrimitiveString::create(vm, hint)));
+        // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
+        auto* exotic_to_primitive = TRY(get_method(vm, *vm.well_known_symbol_to_primitive()));
+
+        // b. If exoticToPrim is not undefined, then
+        if (exotic_to_primitive) {
+            auto hint = [&]() -> DeprecatedString {
+                switch (preferred_type) {
+                // i. If preferredType is not present, let hint be "default".
+                case PreferredType::Default:
+                    return "default";
+                // ii. Else if preferredType is string, let hint be "string".
+                case PreferredType::String:
+                    return "string";
+                // iii. Else,
+                // 1. Assert: preferredType is number.
+                // 2. Let hint be "number".
+                case PreferredType::Number:
+                    return "number";
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            }();
+
+            // iv. Let result be ? Call(exoticToPrim, input, « hint »).
+            auto result = TRY(call(vm, *exotic_to_primitive, *this, PrimitiveString::create(vm, hint)));
+
+            // v. If result is not an Object, return result.
             if (!result.is_object())
                 return result;
+
+            // vi. Throw a TypeError exception.
             return vm.throw_completion<TypeError>(ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
         }
+
+        // c. If preferredType is not present, let preferredType be number.
         if (preferred_type == PreferredType::Default)
             preferred_type = PreferredType::Number;
+
+        // d. Return ? OrdinaryToPrimitive(input, preferredType).
         return as_object().ordinary_to_primitive(preferred_type);
     }
+
+    // 2. Return input.
     return *this;
 }
 
