@@ -227,6 +227,38 @@ public:
         return move(fallback);
     }
 
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE T value_or_lazy_evaluated(Callback callback) const
+    {
+        if (m_has_value)
+            return value();
+        return callback();
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE Optional<T> value_or_lazy_evaluated_optional(Callback callback) const
+    {
+        if (m_has_value)
+            return value();
+        return callback();
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE ErrorOr<T> try_value_or_lazy_evaluated(Callback callback) const
+    {
+        if (m_has_value)
+            return value();
+        return TRY(callback());
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE ErrorOr<Optional<T>> try_value_or_lazy_evaluated_optional(Callback callback) const
+    {
+        if (m_has_value)
+            return value();
+        return TRY(callback());
+    }
+
     ALWAYS_INLINE T const& operator*() const { return value(); }
     ALWAYS_INLINE T& operator*() { return value(); }
 
@@ -422,6 +454,38 @@ public:
         if (has_value())
             return Optional<RemoveCVReference<T>>(value());
         return {};
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE T value_or_lazy_evaluated(Callback callback) const
+    {
+        if (m_pointer != nullptr)
+            return value();
+        return callback();
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE Optional<T> value_or_lazy_evaluated_optional(Callback callback) const
+    {
+        if (m_pointer != nullptr)
+            return value();
+        return callback();
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE ErrorOr<T> try_value_or_lazy_evaluated(Callback callback) const
+    {
+        if (m_pointer != nullptr)
+            return value();
+        return TRY(callback());
+    }
+
+    template<typename Callback>
+    [[nodiscard]] ALWAYS_INLINE ErrorOr<Optional<T>> try_value_or_lazy_evaluated_optional(Callback callback) const
+    {
+        if (m_pointer != nullptr)
+            return value();
+        return TRY(callback());
     }
 
     template<typename F, typename MappedType = decltype(declval<F>()(declval<T&>())), auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>, typename OptionalType = Optional<ConditionallyResultType<IsErrorOr, MappedType>>>
