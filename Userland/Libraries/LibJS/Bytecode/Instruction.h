@@ -34,6 +34,7 @@
     O(GetById)                       \
     O(GetByValue)                    \
     O(GetIterator)                   \
+    O(GetMethod)                     \
     O(GetNewTarget)                  \
     O(GetObjectPropertyIterator)     \
     O(GetVariable)                   \
@@ -42,6 +43,7 @@
     O(In)                            \
     O(Increment)                     \
     O(InstanceOf)                    \
+    O(IteratorClose)                 \
     O(IteratorNext)                  \
     O(IteratorResultDone)            \
     O(IteratorResultValue)           \
@@ -68,6 +70,7 @@
     O(NewObject)                     \
     O(NewRegExp)                     \
     O(NewString)                     \
+    O(NewTypeError)                  \
     O(Not)                           \
     O(PushDeclarativeEnvironment)    \
     O(PutById)                       \
@@ -82,6 +85,7 @@
     O(Sub)                           \
     O(SuperCall)                     \
     O(Throw)                         \
+    O(ThrowIfNotObject)              \
     O(Typeof)                        \
     O(TypeofVariable)                \
     O(UnaryMinus)                    \
