@@ -82,6 +82,8 @@ public:
 
     static HashTable<Range*>& live_ranges();
 
+    JS::NonnullGCPtr<Geometry::DOMRect> get_bounding_client_rect() const;
+
 private:
     explicit Range(Document&);
     Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
