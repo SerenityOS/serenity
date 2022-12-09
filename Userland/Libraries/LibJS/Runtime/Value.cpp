@@ -203,17 +203,32 @@ DeprecatedString number_to_string(double d, NumberToStringMode mode)
 // 7.2.2 IsArray ( argument ), https://tc39.es/ecma262/#sec-isarray
 ThrowCompletionOr<bool> Value::is_array(VM& vm) const
 {
+    // 1. If argument is not an Object, return false.
     if (!is_object())
         return false;
-    auto& object = as_object();
+
+    auto const& object = as_object();
+
+    // 2. If argument is an Array exotic object, return true.
     if (is<Array>(object))
         return true;
+
+    // 3. If argument is a Proxy exotic object, then
     if (is<ProxyObject>(object)) {
-        auto& proxy = static_cast<ProxyObject const&>(object);
+        auto const& proxy = static_cast<ProxyObject const&>(object);
+
+        // a. If argument.[[ProxyHandler]] is null, throw a TypeError exception.
         if (proxy.is_revoked())
             return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
-        return Value(&proxy.target()).is_array(vm);
+
+        // b. Let target be argument.[[ProxyTarget]].
+        auto const& target = proxy.target();
+
+        // c. Return ? IsArray(target).
+        return Value(&target).is_array(vm);
     }
+
+    // 4. Return false.
     return false;
 }
 
