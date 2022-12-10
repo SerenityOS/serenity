@@ -1375,11 +1375,24 @@ ThrowCompletionOr<Value> bitwise_or(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
+// BitwiseXORExpression : BitwiseXORExpression ^ BitwiseANDExpression
 ThrowCompletionOr<Value> bitwise_xor(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+    // 1-2, 6. N/A.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
     if (both_number(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.1.18 Number::bitwiseXOR ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR
+        // 1. Return NumberBitwiseOp(^, x, y).
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
             return Value(0);
         if (!lhs_numeric.is_finite_number())
@@ -1388,8 +1401,13 @@ ThrowCompletionOr<Value> bitwise_xor(VM& vm, Value lhs, Value rhs)
             return lhs_numeric;
         return Value(TRY(lhs_numeric.to_i32(vm)) ^ TRY(rhs_numeric.to_i32(vm)));
     }
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.2.19 BigInt::bitwiseXOR ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR
+        // 1. Return BigIntBitwiseOp(^, x, y).
         return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
+    }
+
+    // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
 }
 
