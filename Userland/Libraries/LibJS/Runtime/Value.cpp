@@ -1729,18 +1729,37 @@ ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.8.2 The Subtraction Operator ( - ), https://tc39.es/ecma262/#sec-subtraction-operator-minus
+// AdditiveExpression : AdditiveExpression - MultiplicativeExpression
 ThrowCompletionOr<Value> sub(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+    // 1-2, 6. N/A.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
     if (both_number(lhs_numeric, rhs_numeric)) {
-        double lhsd = lhs_numeric.as_double();
-        double rhsd = rhs_numeric.as_double();
-        double interm = lhsd - rhsd;
-        return Value(interm);
+        // 6.1.6.1.8 Number::subtract ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-subtract
+        auto x = lhs_numeric.as_double();
+        auto y = rhs_numeric.as_double();
+        // 1. Return Number::add(x, Number::unaryMinus(y)).
+        return Value(x - y);
     }
-    if (both_bigint(lhs_numeric, rhs_numeric))
-        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.2.8 BigInt::subtract ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-subtract
+        auto x = lhs_numeric.as_bigint().big_integer();
+        auto y = rhs_numeric.as_bigint().big_integer();
+        // 1. Return the BigInt value that represents the difference x minus y.
+        return BigInt::create(vm, x.minus(y));
+    }
+
+    // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "subtraction");
 }
 
