@@ -2150,15 +2150,31 @@ bool same_value_zero(Value lhs, Value rhs)
     return same_value_non_numeric(lhs, rhs);
 }
 
-// 7.2.12 SameValueNonNumeric ( x, y ), https://tc39.es/ecma262/#sec-samevaluenonnumeric
+// 7.2.12 SameValueNonNumber ( x, y ), https://tc39.es/ecma262/#sec-samevaluenonnumeric
+// FIXME: Rename this to same_value_non_number()
 bool same_value_non_numeric(Value lhs, Value rhs)
 {
-    VERIFY(!lhs.is_number() && !lhs.is_bigint());
+    // 1. Assert: Type(x) is the same as Type(y).
     VERIFY(same_type_for_equality(lhs, rhs));
+    VERIFY(!lhs.is_number());
 
-    if (lhs.is_string())
+    // FIXME: 2. If x is a BigInt, then
+    //     a. Return BigInt::equal(x, y).
+
+    // 5. If x is a String, then
+    if (lhs.is_string()) {
+        // a. If x and y are exactly the same sequence of code units (same length and same code units at corresponding indices), return true; otherwise, return false.
         return lhs.as_string().deprecated_string() == rhs.as_string().deprecated_string();
+    }
 
+    // 3. If x is undefined, return true.
+    // 4. If x is null, return true.
+    // 6. If x is a Boolean, then
+    //    a. If x and y are both true or both false, return true; otherwise, return false.
+    // 7. If x is a Symbol, then
+    //    a. If x and y are both the same Symbol value, return true; otherwise, return false.
+    // 8. If x and y are the same Object value, return true. Otherwise, return false.
+    // NOTE: All the options above will have the exact same bit representation in Value, so we can directly compare the bits.
     return lhs.m_value.encoded == rhs.m_value.encoded;
 }
 
