@@ -853,12 +853,21 @@ ThrowCompletionOr<double> Value::to_double(VM& vm) const
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
 ThrowCompletionOr<PropertyKey> Value::to_property_key(VM& vm) const
 {
+    // OPTIMIZATION: Return the value as a numeric PropertyKey, if possible.
     if (is_int32() && as_i32() >= 0)
         return PropertyKey { as_i32() };
+
+    // 1. Let key be ? ToPrimitive(argument, string).
     auto key = TRY(to_primitive(vm, PreferredType::String));
-    if (key.is_symbol())
+
+    // 2. If key is a Symbol, then
+    if (key.is_symbol()) {
+        // a. Return key.
         return &key.as_symbol();
-    return TRY(key.to_string(vm));
+    }
+
+    // 3. Return ! ToString(key).
+    return MUST(key.to_string(vm));
 }
 
 ThrowCompletionOr<i32> Value::to_i32_slow_case(VM& vm) const
