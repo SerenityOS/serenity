@@ -1412,12 +1412,36 @@ ThrowCompletionOr<Value> bitwise_xor(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.5.6 Bitwise NOT Operator ( ~ ), https://tc39.es/ecma262/#sec-bitwise-not-operator
+// UnaryExpression : ~ UnaryExpression
 ThrowCompletionOr<Value> bitwise_not(VM& vm, Value lhs)
 {
-    auto lhs_numeric = TRY(lhs.to_numeric(vm));
-    if (lhs_numeric.is_number())
-        return Value(~TRY(lhs_numeric.to_i32(vm)));
-    return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().bitwise_not());
+    // 1. Let expr be ? Evaluation of UnaryExpression.
+    // NOTE: This is handled in the AST or Bytecode interpreter.
+
+    // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
+
+    auto old_value = TRY(lhs.to_numeric(vm));
+
+    // 3. If oldValue is a Number, then
+    if (old_value.is_number()) {
+        // a. Return Number::bitwiseNOT(oldValue).
+
+        // 6.1.6.1.2 Number::bitwiseNOT ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT
+        // 1. Let oldValue be ! ToInt32(x).
+        // 2. Return the result of applying bitwise complement to oldValue. The mathematical value of the result is
+        //    exactly representable as a 32-bit two's complement bit string.
+        return Value(~TRY(old_value.to_i32(vm)));
+    }
+
+    // 4. Else,
+    // a. Assert: oldValue is a BigInt.
+    VERIFY(old_value.is_bigint());
+
+    // b. Return BigInt::bitwiseNOT(oldValue).
+
+    // 6.1.6.2.2 BigInt::bitwiseNOT ( x ), https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT
+    // 1. Return -x - 1ℤ.
+    return BigInt::create(vm, old_value.as_bigint().big_integer().bitwise_not());
 }
 
 // 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator
