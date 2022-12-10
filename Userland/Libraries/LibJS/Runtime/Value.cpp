@@ -837,7 +837,11 @@ ThrowCompletionOr<i64> Value::to_bigint_int64(VM& vm) const
 // 7.1.16 ToBigUint64 ( argument ), https://tc39.es/ecma262/#sec-tobiguint64
 ThrowCompletionOr<u64> Value::to_bigint_uint64(VM& vm) const
 {
+    // 1. Let n be ? ToBigInt(argument).
     auto* bigint = TRY(to_bigint(vm));
+
+    // 2. Let int64bit be ℝ(n) modulo 2^64.
+    // 3. Return ℤ(int64bit).
     return bigint->big_integer().to_u64();
 }
 
