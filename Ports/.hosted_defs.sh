@@ -46,7 +46,7 @@ else
     export CXXFILT="${SERENITY_ARCH}-pc-serenity-c++filt"
 fi
 
-export PATH="${SERENITY_TOOLCHAIN_BINDIR}:${HOST_PATH}"
+export PATH="${SERENITY_TOOLCHAIN_BINDIR}:${SERENITY_SOURCE_DIR}/Toolchain/Local/cmake/bin:${HOST_PATH}"
 
 export PKG_CONFIG_DIR=""
 export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"
