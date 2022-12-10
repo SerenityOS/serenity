@@ -1,12 +1,11 @@
+#
+# Download and compile the WebAssembly testsuite into the WebAssembly binary format
+#
+
 if(INCLUDE_WASM_SPEC_TESTS)
-    if (CMAKE_PROJECT_NAME STREQUAL "SerenityOS")
-        set(SOURCE_DIR "${SerenityOS_SOURCE_DIR}")
-    else()
-        set(SOURCE_DIR "${SERENITY_PROJECT_ROOT}")
-    endif()
     set(WASM_SPEC_TEST_GZ_URL https://github.com/WebAssembly/testsuite/archive/refs/heads/main.tar.gz)
-    set(WASM_SPEC_TEST_GZ_PATH ${CMAKE_BINARY_DIR}/wasm-spec-testsuite.tar.gz)
-    set(WASM_SPEC_TEST_PATH ${SOURCE_DIR}/Userland/Libraries/LibWasm/Tests/Fixtures/SpecTests)
+    set(WASM_SPEC_TEST_GZ_PATH ${CMAKE_BINARY_DIR}/wasm-spec-testsuite.tar.gz CACHE PATH "")
+    set(WASM_SPEC_TEST_PATH ${CMAKE_CURRENT_BINARY_DIR}/Tests/Fixtures/SpecTests CACHE PATH "")
 
     if(NOT EXISTS ${WASM_SPEC_TEST_GZ_PATH})
         message(STATUS "Downloading the WebAssembly testsuite from ${WASM_SPEC_TEST_GZ_URL}...")
@@ -18,7 +17,13 @@ if(INCLUDE_WASM_SPEC_TESTS)
         set(SKIP_PRETTIER true)
     endif()
 
-    if(EXISTS ${WASM_SPEC_TEST_GZ_PATH} AND NOT EXISTS ${WASM_SPEC_TEST_PATH})
+    find_program(WAT2WASM wat2wasm REQUIRED)
+    find_program(PRETTIER prettier OPTIONAL)
+    if (NOT SKIP_PRETTIER AND NOT PRETTIER_FOUND)
+       message(FATAL_ERROR "Prettier required to format Wasm spec tests! Install prettier or set WASM_SPEC_TEST_SKIP_FORMATTING to ON")
+    endif()
+
+    if(EXISTS ${WASM_SPEC_TEST_GZ_PATH} AND NOT EXISTS ${WASM_SPEC_TEST_PATH}/const_0.wasm)
         message(STATUS "Extracting the WebAssembly testsuite from ${WASM_SPEC_TEST_GZ_PATH}...")
         file(MAKE_DIRECTORY ${WASM_SPEC_TEST_PATH})
         if (CMAKE_VERSION VERSION_LESS 3.18.0)
@@ -26,7 +31,7 @@ if(INCLUDE_WASM_SPEC_TESTS)
         else()
             file(ARCHIVE_EXTRACT INPUT ${WASM_SPEC_TEST_GZ_PATH} )
         endif()
-        file(GLOB WASM_TESTS "${CMAKE_BINARY_DIR}/testsuite-main/*.wast")
+        file(GLOB WASM_TESTS "${CMAKE_CURRENT_BINARY_DIR}/testsuite-main/*.wast")
         foreach(PATH ${WASM_TESTS})
             get_filename_component(NAME ${PATH} NAME_WLE)
             message(STATUS "Generating test cases for WebAssembly test ${NAME}...")
@@ -36,8 +41,13 @@ if(INCLUDE_WASM_SPEC_TESTS)
                 continue()
             endif()
             execute_process(
-                COMMAND env SKIP_PRETTIER=${SKIP_PRETTIER} bash ${SOURCE_DIR}/Meta/generate-libwasm-spec-test.sh "${PATH}" "${SOURCE_DIR}/Userland/Libraries/LibWasm/Tests/Spec" "${NAME}" "${WASM_SPEC_TEST_PATH}")
+                COMMAND env SKIP_PRETTIER=${SKIP_PRETTIER} bash ${SerenityOS_SOURCE_DIR}/Meta/generate-libwasm-spec-test.sh "${PATH}" "${CMAKE_CURRENT_BINARY_DIR}/Tests/Spec" "${NAME}" "${WASM_SPEC_TEST_PATH}")
         endforeach()
         file(REMOVE testsuite-main)
+    endif()
+
+    # FIXME: Install these into usr/Tests/LibWasm
+    if (SERENITYOS)
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Tests/ DESTINATION home/anon/Tests/wasm-tests)
     endif()
 endif()

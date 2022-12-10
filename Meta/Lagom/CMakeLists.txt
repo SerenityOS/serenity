@@ -65,7 +65,6 @@ if (ENABLE_FUZZERS OR CMAKE_CROSSCOMPILING)
     set(BUILD_LAGOM_TOOLS OFF)
 endif()
 
-include(wasm_spec_tests)
 include(flac_spec_tests)
 include(lagom_compile_options)
 
@@ -665,13 +664,12 @@ if (BUILD_LAGOM)
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
         target_link_libraries(test-wasm LibCore LibTest LibWasm LibJS)
+        # FIXME: Don't require passing test-common.js path if you only want to pass a custom Test root path
         add_test(
             NAME WasmParser
-            COMMAND test-wasm --show-progress=false
+            COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests ${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibJS/Tests/test-common.js
         )
-        set_tests_properties(WasmParser PROPERTIES
-            ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}
-            SKIP_RETURN_CODE 1)
+        set_tests_properties(WasmParser PROPERTIES SKIP_RETURN_CODE 1)
 
         # Tests that are not LibTest based
         # Shell
