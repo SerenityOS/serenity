@@ -155,7 +155,8 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
     }
 
     VERIFY(is_block_formatting_context());
-    VERIFY(!child_box.children_are_inline());
+    if (child_box.children_are_inline())
+        return {};
 
     // The child box is a block container that doesn't create its own BFC.
     // It will be formatted by this BFC.
