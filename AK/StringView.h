@@ -40,6 +40,12 @@ public:
     {
     }
 
+    // Note: This is here for Jakt.
+    ALWAYS_INLINE static StringView from_string_literal(StringView string)
+    {
+        return string;
+    }
+
     StringView(ByteBuffer const&);
 #ifndef KERNEL
     StringView(String const&);
