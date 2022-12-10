@@ -2130,18 +2130,23 @@ bool same_value(Value lhs, Value rhs)
 // 7.2.11 SameValueZero ( x, y ), https://tc39.es/ecma262/#sec-samevaluezero
 bool same_value_zero(Value lhs, Value rhs)
 {
+    // 1. If Type(x) is different from Type(y), return false.
     if (!same_type_for_equality(lhs, rhs))
         return false;
 
+    // 2. If x is a Number, then
     if (lhs.is_number()) {
+        // a. Return Number::sameValueZero(x, y).
         if (lhs.is_nan() && rhs.is_nan())
             return true;
         return lhs.as_double() == rhs.as_double();
     }
 
+    // FIXME: This should be handled in SameValueNonNumber now (formerly SameValueNonNumeric)
     if (lhs.is_bigint())
         return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 
+    // 3. Return SameValueNonNumber(x, y).
     return same_value_non_numeric(lhs, rhs);
 }
 
