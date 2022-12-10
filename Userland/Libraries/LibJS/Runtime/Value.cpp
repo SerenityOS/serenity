@@ -1798,17 +1798,38 @@ ThrowCompletionOr<Value> mul(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
+// MultiplicativeExpression : MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
 ThrowCompletionOr<Value> div(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+    // 1-2, 6. N/A.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
-    if (both_number(lhs_numeric, rhs_numeric))
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.1.5 Number::divide ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-divide
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
-    if (both_bigint(lhs_numeric, rhs_numeric)) {
-        if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
-            return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
-        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
     }
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.2.5 BigInt::divide ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-divide
+        auto x = lhs_numeric.as_bigint().big_integer();
+        auto y = rhs_numeric.as_bigint().big_integer();
+        // 1. If y is 0ℤ, throw a RangeError exception.
+        if (y == BIGINT_ZERO)
+            return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
+        // 2. Let quotient be ℝ(x) / ℝ(y).
+        // 3. Return the BigInt value that represents quotient rounded towards 0 to the next integer value.
+        return BigInt::create(vm, x.divided_by(y).quotient);
+    }
+
+    // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "division");
 }
 
