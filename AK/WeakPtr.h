@@ -18,6 +18,16 @@ class [[nodiscard]] WeakPtr {
 public:
     WeakPtr() = default;
 
+    template<SameAs<OptionalNone> V>
+    WeakPtr(V) { }
+
+    template<SameAs<OptionalNone> V>
+    WeakPtr& operator=(V)
+    {
+        clear();
+        return *this;
+    }
+
     template<typename U>
     WeakPtr(WeakPtr<U> const& other)
     requires(IsBaseOf<T, U>)
