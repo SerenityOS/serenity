@@ -2181,20 +2181,33 @@ bool same_value_non_numeric(Value lhs, Value rhs)
 // 7.2.15 IsStrictlyEqual ( x, y ), https://tc39.es/ecma262/#sec-isstrictlyequal
 bool is_strictly_equal(Value lhs, Value rhs)
 {
+    // 1. If Type(x) is different from Type(y), return false.
     if (!same_type_for_equality(lhs, rhs))
         return false;
 
+    // 2. If x is a Number, then
     if (lhs.is_number()) {
+        // a. Return Number::equal(x, y).
+
+        // 6.1.6.1.13 Number::equal ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-equal
+        // 1. If x is NaN, return false.
+        // 2. If y is NaN, return false.
         if (lhs.is_nan() || rhs.is_nan())
             return false;
+        // 3. If x is the same Number value as y, return true.
+        // 4. If x is +0𝔽 and y is -0𝔽, return true.
+        // 5. If x is -0𝔽 and y is +0𝔽, return true.
         if (lhs.as_double() == rhs.as_double())
             return true;
+        // 6. Return false.
         return false;
     }
 
+    // FIXME: This should be handled in SameValueNonNumber now (formerly SameValueNonNumeric)
     if (lhs.is_bigint())
         return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 
+    // 3. Return SameValueNonNumber(x, y).
     return same_value_non_numeric(lhs, rhs);
 }
 
