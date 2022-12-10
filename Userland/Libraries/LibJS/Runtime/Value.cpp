@@ -2114,17 +2114,8 @@ bool same_value(Value lhs, Value rhs)
         return lhs.as_double() == rhs.as_double();
     }
 
-    // FIXME: This should be handled in SameValueNonNumber now (formerly SameValueNonNumeric)
-    if (lhs.is_bigint()) {
-        auto lhs_big_integer = lhs.as_bigint().big_integer();
-        auto rhs_big_integer = rhs.as_bigint().big_integer();
-        if (lhs_big_integer == BIGINT_ZERO && rhs_big_integer == BIGINT_ZERO && lhs_big_integer.is_negative() != rhs_big_integer.is_negative())
-            return false;
-        return lhs_big_integer == rhs_big_integer;
-    }
-
     // 3. Return SameValueNonNumber(x, y).
-    return same_value_non_numeric(lhs, rhs);
+    return same_value_non_number(lhs, rhs);
 }
 
 // 7.2.11 SameValueZero ( x, y ), https://tc39.es/ecma262/#sec-samevaluezero
@@ -2142,24 +2133,25 @@ bool same_value_zero(Value lhs, Value rhs)
         return lhs.as_double() == rhs.as_double();
     }
 
-    // FIXME: This should be handled in SameValueNonNumber now (formerly SameValueNonNumeric)
-    if (lhs.is_bigint())
-        return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
-
     // 3. Return SameValueNonNumber(x, y).
-    return same_value_non_numeric(lhs, rhs);
+    return same_value_non_number(lhs, rhs);
 }
 
 // 7.2.12 SameValueNonNumber ( x, y ), https://tc39.es/ecma262/#sec-samevaluenonnumeric
-// FIXME: Rename this to same_value_non_number()
-bool same_value_non_numeric(Value lhs, Value rhs)
+bool same_value_non_number(Value lhs, Value rhs)
 {
     // 1. Assert: Type(x) is the same as Type(y).
     VERIFY(same_type_for_equality(lhs, rhs));
     VERIFY(!lhs.is_number());
 
-    // FIXME: 2. If x is a BigInt, then
-    //     a. Return BigInt::equal(x, y).
+    // 2. If x is a BigInt, then
+    if (lhs.is_bigint()) {
+        // a. Return BigInt::equal(x, y).
+
+        // 6.1.6.2.13 BigInt::equal ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-equal
+        // 1. If ℝ(x) = ℝ(y), return true; otherwise return false.
+        return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
+    }
 
     // 5. If x is a String, then
     if (lhs.is_string()) {
@@ -2203,12 +2195,8 @@ bool is_strictly_equal(Value lhs, Value rhs)
         return false;
     }
 
-    // FIXME: This should be handled in SameValueNonNumber now (formerly SameValueNonNumeric)
-    if (lhs.is_bigint())
-        return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
-
     // 3. Return SameValueNonNumber(x, y).
-    return same_value_non_numeric(lhs, rhs);
+    return same_value_non_number(lhs, rhs);
 }
 
 // 7.2.14 IsLooselyEqual ( x, y ), https://tc39.es/ecma262/#sec-islooselyequal

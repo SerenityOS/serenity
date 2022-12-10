@@ -498,7 +498,7 @@ private:
     friend ThrowCompletionOr<Value> less_than(VM&, Value lhs, Value rhs);
     friend ThrowCompletionOr<Value> less_than_equals(VM&, Value lhs, Value rhs);
     friend ThrowCompletionOr<Value> add(VM&, Value lhs, Value rhs);
-    friend bool same_value_non_numeric(Value lhs, Value rhs);
+    friend bool same_value_non_number(Value lhs, Value rhs);
 };
 
 inline Value js_undefined()
@@ -559,7 +559,7 @@ ThrowCompletionOr<bool> is_loosely_equal(VM&, Value lhs, Value rhs);
 bool is_strictly_equal(Value lhs, Value rhs);
 bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
-bool same_value_non_numeric(Value lhs, Value rhs);
+bool same_value_non_number(Value lhs, Value rhs);
 ThrowCompletionOr<TriState> is_less_than(VM&, Value lhs, Value rhs, bool left_first);
 
 double to_integer_or_infinity(double);
