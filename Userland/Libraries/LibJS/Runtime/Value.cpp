@@ -1282,13 +1282,24 @@ ThrowCompletionOr<Value> less_than(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
+// RelationalExpression : RelationalExpression <= ShiftExpression
 ThrowCompletionOr<Value> less_than_equals(VM& vm, Value lhs, Value rhs)
 {
+    // 1. Let lref be ? Evaluation of RelationalExpression.
+    // 2. Let lval be ? GetValue(lref).
+    // 3. Let rref be ? Evaluation of ShiftExpression.
+    // 4. Let rval be ? GetValue(rref).
+    // NOTE: This is handled in the AST or Bytecode interpreter.
+
+    // OPTIMIZATION: If both values are i32, we can do a direct comparison without calling into IsLessThan.
     if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() <= rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(vm, lhs, rhs, false));
-    if (relation == TriState::Unknown || relation == TriState::True)
+    // 5. Let r be ? IsLessThan(rval, lval, false).
+    auto relation = TRY(is_less_than(vm, lhs, rhs, false));
+
+    // 6. If r is true or undefined, return false. Otherwise, return true.
+    if (relation == TriState::True || relation == TriState::Unknown)
         return Value(false);
     return Value(true);
 }
