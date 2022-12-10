@@ -1072,11 +1072,18 @@ ThrowCompletionOr<u8> Value::to_u8_clamp(VM& vm) const
 // 7.1.20 ToLength ( argument ), https://tc39.es/ecma262/#sec-tolength
 ThrowCompletionOr<size_t> Value::to_length(VM& vm) const
 {
+    // 1. Let len be ? ToIntegerOrInfinity(argument).
     auto len = TRY(to_integer_or_infinity(vm));
+
+    // 2. If len ≤ 0, return +0𝔽.
     if (len <= 0)
         return 0;
-    // FIXME: The spec says that this function's output range is 0 - 2^53-1. But we don't want to overflow the size_t.
+
+    // FIXME: The expected output range is 0 - 2^53-1, but we don't want to overflow the size_t on 32-bit platforms.
+    //        Convert this to u64 so it works everywhere.
     constexpr double length_limit = sizeof(void*) == 4 ? NumericLimits<size_t>::max() : MAX_ARRAY_LIKE_INDEX;
+
+    // 3. Return 𝔽(min(len, 2^53 - 1)).
     return min(len, length_limit);
 }
 
