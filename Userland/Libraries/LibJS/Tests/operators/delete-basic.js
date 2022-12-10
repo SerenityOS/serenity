@@ -166,8 +166,7 @@ test("deleting an object computed property coerces the object to a property key"
     expect(called).toBeTrue();
 });
 
-// FIXME: This currently does not work as it trys to coerce the returned Symbol to a String. I'm not sure why this is.
-test.skip("deleting a symbol returned by @@toPrimitive", () => {
+test("deleting a symbol returned by @@toPrimitive", () => {
     let called = false;
     const obj = { [Symbol.toStringTag]: "hello world" };
 

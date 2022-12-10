@@ -1482,7 +1482,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
 
         TRY(require_object_coercible(vm, base_value));
 
-        property_key = TRY(PropertyKey::from_value(vm, value));
+        property_key = TRY(value.to_property_key(vm));
     } else if (is<PrivateIdentifier>(*m_property)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_property);
         return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
