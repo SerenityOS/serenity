@@ -241,6 +241,7 @@ cmd_with_target() {
         SUPER_BUILD_DIR="$BUILD_DIR"
         CMAKE_ARGS+=("-DCMAKE_INSTALL_PREFIX=$SERENITY_SOURCE_DIR/Build/lagom-install")
     fi
+    export PATH="$SERENITY_SOURCE_DIR/Toolchain/Local/cmake/bin":$PATH
 }
 
 ensure_target() {
@@ -289,6 +290,11 @@ delete_target() {
     [ ! -d "$SUPER_BUILD_DIR" ] || rm -rf "$SUPER_BUILD_DIR"
 }
 
+build_cmake() {
+    echo "CMake version too old: build_cmake"
+    ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildCMake.sh )
+}
+
 build_toolchain() {
     echo "build_toolchain: $TOOLCHAIN_DIR"
     if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
@@ -299,6 +305,9 @@ build_toolchain() {
 }
 
 ensure_toolchain() {
+    if [ "$(cmake -P "$SERENITY_SOURCE_DIR"/Meta/CMake/cmake-version.cmake)" -ne 1 ]; then
+        build_cmake
+    fi
     [ -d "$TOOLCHAIN_DIR" ] || build_toolchain
 
     if [ "$TOOLCHAIN_TYPE" = "GNU" ]; then
