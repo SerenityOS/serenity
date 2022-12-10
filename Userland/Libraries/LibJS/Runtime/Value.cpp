@@ -983,15 +983,24 @@ ThrowCompletionOr<u16> Value::to_u16(VM& vm) const
 // 7.1.10 ToInt8 ( argument ), https://tc39.es/ecma262/#sec-toint8
 ThrowCompletionOr<i8> Value::to_i8(VM& vm) const
 {
-    double value = TRY(to_number(vm)).as_double();
-    if (!isfinite(value) || value == 0)
+    // 1. Let number be ? ToNumber(argument).
+    double number = TRY(to_number(vm)).as_double();
+
+    // 2. If number is not finite or number is either +0𝔽 or -0𝔽, return +0𝔽.
+    if (!isfinite(number) || number == 0)
         return 0;
-    auto abs = fabs(value);
+
+    // 3. Let int be the mathematical value whose sign is the sign of number and whose magnitude is floor(abs(ℝ(number))).
+    auto abs = fabs(number);
     auto int_val = floor(abs);
-    if (signbit(value))
+    if (signbit(number))
         int_val = -int_val;
+
+    // 4. Let int8bit be int modulo 2^8.
     auto remainder = fmod(int_val, 256.0);
     auto int8bit = remainder >= 0.0 ? remainder : remainder + 256.0; // The notation “x modulo y” computes a value k of the same sign as y
+
+    // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
     if (int8bit >= 128.0)
         int8bit -= 256.0;
     return static_cast<i8>(int8bit);
