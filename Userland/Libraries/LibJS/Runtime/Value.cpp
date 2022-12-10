@@ -2019,18 +2019,27 @@ ThrowCompletionOr<Value> in(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.10.2 InstanceofOperator ( V, target ), https://tc39.es/ecma262/#sec-instanceofoperator
-ThrowCompletionOr<Value> instance_of(VM& vm, Value lhs, Value rhs)
+ThrowCompletionOr<Value> instance_of(VM& vm, Value value, Value target)
 {
-    if (!rhs.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects());
-    auto has_instance_method = TRY(rhs.get_method(vm, *vm.well_known_symbol_has_instance()));
-    if (has_instance_method) {
-        auto has_instance_result = TRY(call(vm, *has_instance_method, rhs, lhs));
-        return Value(has_instance_result.to_boolean());
+    // 1. If target is not an Object, throw a TypeError exception.
+    if (!target.is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, target.to_string_without_side_effects());
+
+    // 2. Let instOfHandler be ? GetMethod(target, @@hasInstance).
+    auto* instance_of_handler = TRY(target.get_method(vm, *vm.well_known_symbol_has_instance()));
+
+    // 3. If instOfHandler is not undefined, then
+    if (instance_of_handler) {
+        // a. Return ToBoolean(? Call(instOfHandler, target, « V »)).
+        return Value(TRY(call(vm, *instance_of_handler, target, value)).to_boolean());
     }
-    if (!rhs.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects());
-    return TRY(ordinary_has_instance(vm, lhs, rhs));
+
+    // 4. If IsCallable(target) is false, throw a TypeError exception.
+    if (!target.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, target.to_string_without_side_effects());
+
+    // 5. Return ? OrdinaryHasInstance(target, V).
+    return ordinary_has_instance(vm, target, value);
 }
 
 // 7.3.22 OrdinaryHasInstance ( C, O ), https://tc39.es/ecma262/#sec-ordinaryhasinstance
