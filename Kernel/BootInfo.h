@@ -28,6 +28,10 @@ extern "C" PhysicalAddress boot_pdpt;
 extern "C" PhysicalAddress boot_pd0;
 extern "C" PhysicalAddress boot_pd_kernel;
 extern "C" Kernel::PageTableEntry* boot_pd_kernel_pt1023;
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+extern "C" PhysicalAddress boot_pd_kasan;
+extern "C" PhysicalAddress kasan_zero;
+#endif
 extern "C" char const* kernel_cmdline;
 extern "C" u32 multiboot_flags;
 extern "C" multiboot_memory_map_t* multiboot_memory_map;

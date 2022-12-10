@@ -37,6 +37,11 @@ extern "C" u64 boot_pd_kernel[512];
 extern "C" u64 boot_pd_kernel_pt0[512];
 extern "C" u64 boot_pd_kernel_image_pts[512 * (MAX_KERNEL_SIZE >> 21 & 0x1ff)];
 extern "C" u64 boot_pd_kernel_pt1023[512];
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+extern "C" u64 boot_pd_kasan[512];
+extern "C" u64 boot_pde_kasan[512];
+extern "C" u8 kasan_zero[4096];
+#endif
 extern "C" char const kernel_cmdline[4096];
 
 extern "C" void reload_cr3();
@@ -159,6 +164,23 @@ extern "C" [[noreturn]] void init()
 
     boot_pd_kernel[511] = (FlatPtr)boot_pd_kernel_pt1023 | 0x3;
 
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+    // map 64GB of KASAN shadow region
+    for (size_t i = 447; i < 512; i++) {
+        boot_pdpt[i] = (FlatPtr)boot_pd_kasan | 0x3;
+    }
+
+    for (size_t i = 0; i < 512; i++) {
+        boot_pd_kasan[i] = (FlatPtr)boot_pde_kasan | 0x3;
+    }
+
+    for (size_t i = 0; i < 512; i++) {
+        boot_pde_kasan[i] = (FlatPtr)kasan_zero | 0x1;
+    }
+
+    __builtin_memset(kasan_zero, 0, sizeof(kasan_zero));
+#endif
+
     reload_cr3();
 
     for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
@@ -197,6 +219,10 @@ extern "C" [[noreturn]] void init()
     info.boot_pd0 = (PhysicalPtr)boot_pd0;
     info.boot_pd_kernel = (PhysicalPtr)boot_pd_kernel;
     info.boot_pd_kernel_pt1023 = (FlatPtr)adjust_by_mapping_base(boot_pd_kernel_pt1023);
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+    info.boot_pd_kasan = (PhysicalPtr)boot_pd_kasan;
+    info.kasan_zero = (PhysicalPtr)kasan_zero;
+#endif
     info.kernel_cmdline = (FlatPtr)adjust_by_mapping_base(kernel_cmdline);
     info.multiboot_flags = multiboot_info_ptr->flags;
     info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr);

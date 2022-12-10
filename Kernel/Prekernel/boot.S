@@ -40,6 +40,17 @@ boot_pd_kernel_image_pts:
 .global boot_pd_kernel_pt1023
 boot_pd_kernel_pt1023:
 .skip 4096
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+.global boot_pd_kasan
+boot_pd_kasan:
+.skip 4096
+.global boot_pde_kasan
+boot_pde_kasan:
+.skip 4096
+.global kasan_zero
+kasan_zero:
+.skip 4096
+#endif
 
 .section .text
 

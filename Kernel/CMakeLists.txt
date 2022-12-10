@@ -199,6 +199,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Variables/KASANDeadly.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
     FileSystem/TmpFS/FileSystem.cpp
@@ -661,10 +662,8 @@ if (ENABLE_KERNEL_UNDEFINED_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
 endif()
 
-# Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
-# is not currently meant to be used, besides when developing Kernel ASAN support.
-#
 if (ENABLE_KERNEL_ADDRESS_SANITIZER)
+    add_definitions(-DENABLE_KERNEL_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=kernel-address)
     add_link_options(-fsanitize=kernel-address)
 endif()

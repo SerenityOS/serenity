@@ -11,6 +11,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/KASANDeadly.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.h>
 
 namespace Kernel {
@@ -21,6 +22,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalKernelVariablesDirectory> SysFSGlo
     MUST(global_variables_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSCapsLockRemap::must_create(*global_variables_directory));
         list.append(SysFSDumpKmallocStacks::must_create(*global_variables_directory));
+        list.append(SysFSKASANDeadly::must_create(*global_variables_directory));
         list.append(SysFSUBSANDeadly::must_create(*global_variables_directory));
         list.append(SysFSCoredumpDirectory::must_create(*global_variables_directory));
         return {};

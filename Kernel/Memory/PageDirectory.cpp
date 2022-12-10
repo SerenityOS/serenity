@@ -43,6 +43,13 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
     // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)
     directory->m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
 
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+    // Share 64GB of KASAN shadow region
+    for (size_t i = 447; i < 512; i++) {
+        directory->m_directory_pages[i] = MM.kernel_page_directory().m_directory_pages[i];
+    }
+#endif
+
 #if ARCH(X86_64)
     {
         InterruptDisabler disabler;
@@ -110,6 +117,13 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
     m_directory_table = PhysicalPage::create(boot_pdpt, MayReturnToFreeList::No);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0, MayReturnToFreeList::No);
     m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel, MayReturnToFreeList::No);
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+    dmesgln("MM: boot_pd_kasan @ {}", boot_pd_kasan);
+    // Map 64GB of KASAN shadow region
+    for (size_t i = 447; i < 512; i++) {
+        m_directory_pages[i] = PhysicalPage::create(boot_pd_kasan, MayReturnToFreeList::No);
+    }
+#endif
 }
 
 PageDirectory::~PageDirectory()

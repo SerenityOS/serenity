@@ -33,6 +33,10 @@ struct [[gnu::packed]] BootInfo {
     u32 boot_pd0;
     u32 boot_pd_kernel;
     u64 boot_pd_kernel_pt1023;
+#ifdef ENABLE_KERNEL_ADDRESS_SANITIZER
+    u32 boot_pd_kasan;
+    u32 kasan_zero;
+#endif
     u64 kernel_cmdline;
     u32 multiboot_flags;
     u64 multiboot_memory_map;

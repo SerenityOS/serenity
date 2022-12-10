@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/AddressSanitizer.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
@@ -449,6 +450,8 @@ static void* kmalloc_impl(size_t size, CallerWillInitializeMemory caller_will_in
         PerformanceManager::add_kmalloc_perf_event(*current_thread, size, (FlatPtr)ptr);
     }
 
+    Kernel::AddressSanitizer::unpoison((unsigned long)ptr, size);
+
     return ptr;
 }
 
@@ -479,6 +482,8 @@ void kfree_sized(void* ptr, size_t size)
     if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
         Processor::verify_no_spinlocks_held();
     }
+
+    Kernel::AddressSanitizer::poison((unsigned long)ptr, size, Kernel::AddressSanitizer::Poison::Freed);
 
     SpinlockLocker lock(s_lock);
     ++g_kfree_call_count;
