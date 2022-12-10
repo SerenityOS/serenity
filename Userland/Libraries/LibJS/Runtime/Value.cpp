@@ -2455,11 +2455,13 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
 // 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
 ThrowCompletionOr<Value> Value::invoke_internal(VM& vm, PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
 {
-    auto property = TRY(get(vm, property_key));
-    if (!property.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, property.to_string_without_side_effects());
+    // 1. If argumentsList is not present, set argumentsList to a new empty List.
 
-    return call(vm, property.as_function(), *this, move(arguments));
+    // 2. Let func be ? GetV(V, P).
+    auto function = TRY(get(vm, property_key));
+
+    // 3. Return ? Call(func, V, argumentsList).
+    return call(vm, function, *this, move(arguments));
 }
 
 }
