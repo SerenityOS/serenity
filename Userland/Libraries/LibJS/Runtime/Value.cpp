@@ -1445,8 +1445,13 @@ ThrowCompletionOr<Value> bitwise_not(VM& vm, Value lhs)
 }
 
 // 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator
+// UnaryExpression : + UnaryExpression
 ThrowCompletionOr<Value> unary_plus(VM& vm, Value lhs)
 {
+    // 1. Let expr be ? Evaluation of UnaryExpression.
+    // NOTE: This is handled in the AST or Bytecode interpreter.
+
+    // 2. Return ? ToNumber(? GetValue(expr)).
     return TRY(lhs.to_number(vm));
 }
 
