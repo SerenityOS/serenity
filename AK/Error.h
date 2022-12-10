@@ -72,9 +72,12 @@ private:
     bool m_syscall { false };
 };
 
-template<typename T, typename ErrorType>
+template<typename T, typename E>
 class [[nodiscard]] ErrorOr {
 public:
+    using ResultType = T;
+    using ErrorType = E;
+
     ErrorOr()
     requires(IsSame<T, Empty>)
         : m_value_or_error(Empty {})
@@ -146,6 +149,7 @@ private:
 template<typename ErrorType>
 class [[nodiscard]] ErrorOr<void, ErrorType> : public ErrorOr<Empty, ErrorType> {
 public:
+    using ResultType = void;
     using ErrorOr<Empty, ErrorType>::ErrorOr;
 };
 
