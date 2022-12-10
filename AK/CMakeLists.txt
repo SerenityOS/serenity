@@ -14,6 +14,7 @@ set(AK_SOURCES
     JsonValue.cpp
     kmalloc.cpp
     LexicalPath.cpp
+    NumberFormat.cpp
     Random.cpp
     StackInfo.cpp
     String.cpp
