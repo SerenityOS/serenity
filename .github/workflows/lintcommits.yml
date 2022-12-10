@@ -8,7 +8,7 @@ on: [pull_request_target]
 jobs:
   lint_commits:
     runs-on: ubuntu-22.04
-    if: always() && github.repository == 'SerenityOS/serenity'
+    if: always()
 
     steps:
       - name: Lint PR commits
