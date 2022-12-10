@@ -13,6 +13,7 @@ unset LLVM_PROFILE_FILE
 echo "Failed: $fail_count" > ./test-results.log
 
 if test $DO_SHUTDOWN_AFTER_TESTS {
+    sync
     shutdown -n
 }
 
