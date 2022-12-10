@@ -1123,14 +1123,28 @@ ThrowCompletionOr<size_t> Value::to_index(VM& vm) const
 // 7.1.5 ToIntegerOrInfinity ( argument ), https://tc39.es/ecma262/#sec-tointegerorinfinity
 ThrowCompletionOr<double> Value::to_integer_or_infinity(VM& vm) const
 {
+    // 1. Let number be ? ToNumber(argument).
     auto number = TRY(to_number(vm));
+
+    // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
     if (number.is_nan() || number.as_double() == 0)
         return 0;
+
+    // 3. If number is +∞𝔽, return +∞.
+    // 4. If number is -∞𝔽, return -∞.
     if (number.is_infinity())
         return number.as_double();
+
+    // 5. Let integer be floor(abs(ℝ(number))).
     auto integer = floor(fabs(number.as_double()));
+
+    // 6. If number < -0𝔽, set integer to -integer.
+    // NOTE: The zero check is required as 'integer' is a double here but an MV in the spec,
+    //       which doesn't have negative zero.
     if (number.as_double() < 0 && integer != 0)
         integer = -integer;
+
+    // 7. Return integer.
     return integer;
 }
 
@@ -1155,6 +1169,8 @@ double to_integer_or_infinity(double number)
     auto integer = floor(fabs(number));
 
     // 6. If number < -0𝔽, set integer to -integer.
+    // NOTE: The zero check is required as 'integer' is a double here but an MV in the spec,
+    //       which doesn't have negative zero.
     if (number < 0 && integer != 0)
         integer = -integer;
 
