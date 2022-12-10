@@ -2091,19 +2091,30 @@ ThrowCompletionOr<Value> ordinary_has_instance(VM& vm, Value lhs, Value rhs)
 // 7.2.10 SameValue ( x, y ), https://tc39.es/ecma262/#sec-samevalue
 bool same_value(Value lhs, Value rhs)
 {
+    // 1. If Type(x) is different from Type(y), return false.
     if (!same_type_for_equality(lhs, rhs))
         return false;
 
+    // 2. If x is a Number, then
     if (lhs.is_number()) {
+        // a. Return Number::sameValue(x, y).
+
+        // 6.1.6.1.14 Number::sameValue ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-sameValue
+        // 1. If x is NaN and y is NaN, return true.
         if (lhs.is_nan() && rhs.is_nan())
             return true;
+        // 2. If x is +0𝔽 and y is -0𝔽, return false.
         if (lhs.is_positive_zero() && rhs.is_negative_zero())
             return false;
+        // 3. If x is -0𝔽 and y is +0𝔽, return false.
         if (lhs.is_negative_zero() && rhs.is_positive_zero())
             return false;
+        // 4. If x is the same Number value as y, return true.
+        // 5. Return false.
         return lhs.as_double() == rhs.as_double();
     }
 
+    // FIXME: This should be handled in SameValueNonNumber now (formerly SameValueNonNumeric)
     if (lhs.is_bigint()) {
         auto lhs_big_integer = lhs.as_bigint().big_integer();
         auto rhs_big_integer = rhs.as_bigint().big_integer();
@@ -2112,6 +2123,7 @@ bool same_value(Value lhs, Value rhs)
         return lhs_big_integer == rhs_big_integer;
     }
 
+    // 3. Return SameValueNonNumber(x, y).
     return same_value_non_numeric(lhs, rhs);
 }
 
