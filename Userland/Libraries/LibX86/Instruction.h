@@ -1007,11 +1007,12 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, OperandSiz
     , m_address_size(address_size)
 {
     VERIFY(operand_size != OperandSize::Size64);
-    // Use address_size as the hint to switch into long mode, m_address_size refers to the default
-    // size of displacements/immediates, which is 32 even in long mode, with the exception of moffset (see below).
+    // Use address_size as the hint to switch into long mode.
+    // m_address_size refers to the default size of displacements/immediates, which is 32 even in long mode (2.2.1.3 Displacement, 2.2.1.5 Immediates),
+    // with the exception of moffset (see below).
     if (address_size == AddressSize::Size64) {
         m_operand_size = OperandSize::Size32;
-        m_address_size = AddressSize::Size64;
+        m_address_size = AddressSize::Size32;
         m_mode = ProcessorMode::Long;
     }
     u8 prefix_bytes = 0;
@@ -1124,7 +1125,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, OperandSiz
         return;
     }
 
-    // 2.2.1.3 Direct Memory-Offset MOVs
+    // 2.2.1.4 Direct Memory-Offset MOVs
     auto effective_address_size = m_address_size;
     if (m_mode == ProcessorMode::Long) {
         switch (m_descriptor->format) {
