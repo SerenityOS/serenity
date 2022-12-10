@@ -959,15 +959,24 @@ ThrowCompletionOr<i16> Value::to_i16(VM& vm) const
 // 7.1.9 ToUint16 ( argument ), https://tc39.es/ecma262/#sec-touint16
 ThrowCompletionOr<u16> Value::to_u16(VM& vm) const
 {
-    double value = TRY(to_number(vm)).as_double();
-    if (!isfinite(value) || value == 0)
+    // 1. Let number be ? ToNumber(argument).
+    double number = TRY(to_number(vm)).as_double();
+
+    // 2. If number is not finite or number is either +0𝔽 or -0𝔽, return +0𝔽.
+    if (!isfinite(number) || number == 0)
         return 0;
-    auto int_val = floor(fabs(value));
-    if (signbit(value))
+
+    // 3. Let int be the mathematical value whose sign is the sign of number and whose magnitude is floor(abs(ℝ(number))).
+    auto int_val = floor(fabs(number));
+    if (signbit(number))
         int_val = -int_val;
+
+    // 4. Let int16bit be int modulo 2^16.
     auto int16bit = fmod(int_val, NumericLimits<u16>::max() + 1.0);
     if (int16bit < 0)
         int16bit += NumericLimits<u16>::max() + 1.0;
+
+    // 5. Return 𝔽(int16bit).
     return static_cast<u16>(int16bit);
 }
 
