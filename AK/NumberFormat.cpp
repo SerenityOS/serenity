@@ -4,32 +4,50 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/NumberFormat.h>
+#include <AK/StringView.h>
 
 namespace AK {
 
 // FIXME: Remove this hackery once printf() supports floats.
-static DeprecatedString number_string_with_one_decimal(u64 number, u64 unit, char const* suffix)
+static DeprecatedString number_string_with_one_decimal(u64 number, u64 unit, StringView suffix)
 {
     int decimal = (number % unit) * 10 / unit;
     return DeprecatedString::formatted("{}.{} {}", number / unit, decimal, suffix);
 }
 
+DeprecatedString human_readable_quantity(u64 quantity, StringView unit)
+{
+    constexpr u64 size_of_unit = 1024;
+    constexpr auto unit_prefixes = AK::Array { "", "K", "M", "G", "T", "P", "E" };
+    auto full_unit_suffix = [&](int index) {
+        auto binary_infix = (size_of_unit == 1024 && index != 0) ? "i"sv : ""sv;
+        return DeprecatedString::formatted("{}{}{}",
+            unit_prefixes[index], binary_infix, unit);
+    };
+
+    auto size_of_current_unit = size_of_unit;
+
+    if (quantity < size_of_unit)
+        return DeprecatedString::formatted("{} {}", quantity, full_unit_suffix(0));
+
+    for (size_t i = 1; i < unit_prefixes.size() - 1; i++) {
+        auto suffix = full_unit_suffix(i);
+        if (quantity < size_of_unit * size_of_current_unit) {
+            return number_string_with_one_decimal(quantity, size_of_current_unit, suffix);
+        }
+
+        size_of_current_unit *= size_of_unit;
+    }
+
+    return number_string_with_one_decimal(quantity,
+        size_of_current_unit, full_unit_suffix(unit_prefixes.size() - 1));
+}
+
 DeprecatedString human_readable_size(u64 size)
 {
-    if (size < 1 * KiB)
-        return DeprecatedString::formatted("{} B", size);
-    if (size < 1 * MiB)
-        return number_string_with_one_decimal(size, KiB, "KiB");
-    if (size < 1 * GiB)
-        return number_string_with_one_decimal(size, MiB, "MiB");
-    if (size < 1 * TiB)
-        return number_string_with_one_decimal(size, GiB, "GiB");
-    if (size < 1 * PiB)
-        return number_string_with_one_decimal(size, TiB, "TiB");
-    if (size < 1 * EiB)
-        return number_string_with_one_decimal(size, PiB, "PiB");
-    return number_string_with_one_decimal(size, EiB, "EiB");
+    return human_readable_quantity(size, "B"sv);
 }
 
 DeprecatedString human_readable_size_long(u64 size)
