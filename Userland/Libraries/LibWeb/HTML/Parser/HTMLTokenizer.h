@@ -132,7 +132,7 @@ public:
     bool is_insertion_point_defined() const { return m_insertion_point.defined; }
     bool is_insertion_point_reached()
     {
-        return m_insertion_point.defined && m_insertion_point.position >= m_utf8_view.iterator_offset(m_utf8_iterator);
+        return m_insertion_point.defined && m_utf8_view.iterator_offset(m_utf8_iterator) >= m_insertion_point.position;
     }
     void undefine_insertion_point() { m_insertion_point.defined = false; }
     void store_insertion_point() { m_old_insertion_point = m_insertion_point; }
