@@ -1,0 +1,4 @@
+# Everywhere: Rename to_{string => deprecated_string}() where applicable
+57dc179b1fce5d4b7171311b04667debfe693095
+# AK+Everywhere: Rename String to DeprecatedString
+6e19ab2bbce0b113b628e6f8e9b5c0640053933e
