@@ -669,8 +669,6 @@ ErrorOr<void> Formatter<StringView>::format(FormatBuilder& builder, StringView v
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
         VERIFY_NOT_REACHED();
-    if (m_alternative_form)
-        VERIFY_NOT_REACHED();
     if (m_zero_pad)
         VERIFY_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character && m_mode != Mode::HexDump)
