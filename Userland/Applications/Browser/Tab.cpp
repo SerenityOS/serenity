@@ -14,6 +14,7 @@
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
+#include "History/HistoryWidget.h"
 #include "InspectorWidget.h"
 #include "StorageWidget.h"
 #include <AK/StringBuilder.h>
@@ -748,6 +749,24 @@ void Tab::show_storage_inspector()
     }
 
     auto* window = m_storage_widget->window();
+    window->show();
+    window->move_to_front();
+}
+
+void Tab::show_history_inspector()
+{
+    if (!m_history_widget) {
+        auto history_window = GUI::Window::construct(&window());
+        history_window->resize(500, 300);
+        history_window->set_title("History");
+        history_window->set_icon(g_icon_bag.history);
+        m_history_widget = history_window->set_main_widget<HistoryWidget>();
+    }
+
+    m_history_widget->clear_history_entries();
+    m_history_widget->set_history_entries(m_history.get_all_history_entries());
+
+    auto* window = m_history_widget->window();
     window->show();
     window->move_to_front();
 }

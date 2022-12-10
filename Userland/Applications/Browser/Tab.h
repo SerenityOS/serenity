@@ -25,6 +25,7 @@ namespace Browser {
 class BrowserWindow;
 class InspectorWidget;
 class ConsoleWidget;
+class HistoryWidget;
 class StorageWidget;
 
 class Tab final : public GUI::Widget {
@@ -86,6 +87,7 @@ public:
 
     void show_console_window();
     void show_storage_inspector();
+    void show_history_inspector();
 
     DeprecatedString const& title() const { return m_title; }
     Gfx::Bitmap const* icon() const { return m_icon; }
@@ -125,6 +127,7 @@ private:
     RefPtr<InspectorWidget> m_dom_inspector_widget;
     RefPtr<ConsoleWidget> m_console_widget;
     RefPtr<StorageWidget> m_storage_widget;
+    RefPtr<HistoryWidget> m_history_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 

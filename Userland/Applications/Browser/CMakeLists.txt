@@ -7,6 +7,7 @@ serenity_component(
 
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
 compile_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
+compile_gml(History/HistoryWidget.gml HistoryWidgetGML.h history_widget_gml)
 compile_gml(StorageWidget.gml StorageWidgetGML.h storage_widget_gml)
 compile_gml(Tab.gml TabGML.h tab_gml)
 
@@ -20,6 +21,8 @@ set(SOURCES
     DownloadWidget.cpp
     ElementSizePreviewWidget.cpp
     History.cpp
+    History/HistoryModel.cpp
+    History/HistoryWidget.cpp
     IconBag.cpp
     InspectorWidget.cpp
     StorageModel.cpp
@@ -32,6 +35,7 @@ set(SOURCES
 set(GENERATED_SOURCES
     BrowserWindowGML.h
     EditBookmarkGML.h
+    HistoryWidgetGML.h
     StorageWidgetGML.h
     TabGML.h
 )

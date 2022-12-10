@@ -280,6 +280,14 @@ void BrowserWindow::build_menus()
     storage_window_action->set_status_tip("Show Storage inspector for this page");
     inspect_menu.add_action(storage_window_action);
 
+    auto history_window_action = GUI::Action::create(
+        "Open &History Window", g_icon_bag.history, [this](auto&) {
+            active_tab().show_history_inspector();
+        },
+        this);
+    storage_window_action->set_status_tip("Show History inspector for this tab");
+    inspect_menu.add_action(history_window_action);
+
     auto& settings_menu = add_menu("&Settings");
 
     m_change_homepage_action = GUI::Action::create(
