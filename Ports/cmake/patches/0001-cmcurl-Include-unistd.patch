@@ -14,10 +14,10 @@ Everyone gets this wrong. Most platforms are very lax with these includes, but w
  1 file changed, 1 insertion(+)
 
 diff --git a/Utilities/cmcurl/include/curl/multi.h b/Utilities/cmcurl/include/curl/multi.h
-index 91cd95d3..9940748f 100644
+index 2f3ec37a7685a98f59bfae180cd37cf342b99194..154f3c28ea955fdef3d3c9cd605a9d99de07773d 100644
 --- a/Utilities/cmcurl/include/curl/multi.h
 +++ b/Utilities/cmcurl/include/curl/multi.h
-@@ -47,6 +47,7 @@
+@@ -49,6 +49,7 @@
   * but with this warning attached.
   */
  #include "curl.h"
