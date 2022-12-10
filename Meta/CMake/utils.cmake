@@ -89,6 +89,9 @@ function(serenity_libc target_name fs_name)
     # Avoid creating a dependency cycle between system libraries and the C++ standard library. This is necessary
     # to ensure that initialization functions will be called in the right order (libc++ must come after LibPthread).
     target_link_options(${target_name} PRIVATE -static-libstdc++)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$" AND ENABLE_USERSPACE_COVERAGE_COLLECTION)
+       target_link_libraries(${target_name} PRIVATE clang_rt.profile)
+    endif()
     target_link_directories(LibC PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
     serenity_generated_sources(${target_name})
 endfunction()
