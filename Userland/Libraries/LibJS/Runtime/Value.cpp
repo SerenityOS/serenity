@@ -826,7 +826,11 @@ static Optional<BigInt*> string_to_bigint(VM& vm, StringView string)
 // 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/#sec-tobigint64
 ThrowCompletionOr<i64> Value::to_bigint_int64(VM& vm) const
 {
+    // 1. Let n be ? ToBigInt(argument).
     auto* bigint = TRY(to_bigint(vm));
+
+    // 2. Let int64bit be ℝ(n) modulo 2^64.
+    // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
     return static_cast<i64>(bigint->big_integer().to_u64());
 }
 
