@@ -83,7 +83,7 @@ if [ -f _disk_image ]; then
 
     echo "checking existing image"
     result=0
-    "$E2FSCK" -f -y _disk_image || result=$?
+    "$E2FSCK_PATH" -f -y _disk_image || result=$?
     if [ $result -ge 4 ]; then
         rm -f _disk_image
         USE_EXISTING=0

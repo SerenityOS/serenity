@@ -44,4 +44,4 @@ find_executable() {
 
 FUSE2FS_PATH="$(find_executable fuse2fs)"
 RESIZE2FS_PATH="$(find_executable resize2fs)"
-E2FSCK="$(find_executable e2fsck)"
+E2FSCK_PATH="$(find_executable e2fsck)"
