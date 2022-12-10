@@ -1658,8 +1658,14 @@ ThrowCompletionOr<Value> unsigned_right_shift(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.8.1 The Addition Operator ( + ), https://tc39.es/ecma262/#sec-addition-operator-plus
+// AdditiveExpression : AdditiveExpression + MultiplicativeExpression
 ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+
+    // 1. If opText is +, then
+
+    // OPTIMIZATION: If both values are i32 or double, we can do a direct addition without the type conversions below.
     if (both_number(lhs, rhs)) {
         if (lhs.is_int32() && rhs.is_int32()) {
             Checked<i32> result;
@@ -1670,21 +1676,55 @@ ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
         }
         return Value(lhs.as_double() + rhs.as_double());
     }
+
+    // a. Let lprim be ? ToPrimitive(lval).
     auto lhs_primitive = TRY(lhs.to_primitive(vm));
+
+    // b. Let rprim be ? ToPrimitive(rval).
     auto rhs_primitive = TRY(rhs.to_primitive(vm));
 
+    // c. If lprim is a String or rprim is a String, then
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
+        // i. Let lstr be ? ToString(lprim).
         auto lhs_string = TRY(lhs_primitive.to_primitive_string(vm));
+
+        // ii. Let rstr be ? ToString(rprim).
         auto rhs_string = TRY(rhs_primitive.to_primitive_string(vm));
+
+        // iii. Return the string-concatenation of lstr and rstr.
         return PrimitiveString::create(vm, *lhs_string, *rhs_string);
     }
 
+    // d. Set lval to lprim.
+    // e. Set rval to rprim.
+
+    // 2. NOTE: At this point, it must be a numeric operation.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs_primitive.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs_primitive.to_numeric(vm));
-    if (both_number(lhs_numeric, rhs_numeric))
-        return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
-    if (both_bigint(lhs_numeric, rhs_numeric))
-        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
+
+    // 6. N/A.
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.1.7 Number::add ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-add
+        auto x = lhs_numeric.as_double();
+        auto y = rhs_numeric.as_double();
+        return Value(x + y);
+    }
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.2.7 BigInt::add ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-add
+        auto x = lhs_numeric.as_bigint().big_integer();
+        auto y = rhs_numeric.as_bigint().big_integer();
+        return BigInt::create(vm, x.plus(y));
+    }
+
+    // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "addition");
 }
 
