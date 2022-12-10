@@ -870,23 +870,35 @@ ThrowCompletionOr<PropertyKey> Value::to_property_key(VM& vm) const
     return MUST(key.to_string(vm));
 }
 
+// 7.1.6 ToInt32 ( argument ), https://tc39.es/ecma262/#sec-toint32
 ThrowCompletionOr<i32> Value::to_i32_slow_case(VM& vm) const
 {
     VERIFY(!is_int32());
-    double value = TRY(to_number(vm)).as_double();
-    if (!isfinite(value) || value == 0)
+
+    // 1. Let number be ? ToNumber(argument).
+    double number = TRY(to_number(vm)).as_double();
+
+    // 2. If number is not finite or number is either +0𝔽 or -0𝔽, return +0𝔽.
+    if (!isfinite(number) || number == 0)
         return 0;
-    auto abs = fabs(value);
+
+    // 3. Let int be the mathematical value whose sign is the sign of number and whose magnitude is floor(abs(ℝ(number))).
+    auto abs = fabs(number);
     auto int_val = floor(abs);
-    if (signbit(value))
+    if (signbit(number))
         int_val = -int_val;
+
+    // 4. Let int32bit be int modulo 2^32.
     auto remainder = fmod(int_val, 4294967296.0);
     auto int32bit = remainder >= 0.0 ? remainder : remainder + 4294967296.0; // The notation “x modulo y” computes a value k of the same sign as y
+
+    // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
     if (int32bit >= 2147483648.0)
         int32bit -= 4294967296.0;
     return static_cast<i32>(int32bit);
 }
 
+// 7.1.6 ToInt32 ( argument ), https://tc39.es/ecma262/#sec-toint32
 ThrowCompletionOr<i32> Value::to_i32(VM& vm) const
 {
     if (is_int32())
