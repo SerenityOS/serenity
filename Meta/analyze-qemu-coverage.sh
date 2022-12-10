@@ -3,6 +3,7 @@
 set -eo pipefail
 
 SCRIPT_DIR="$(dirname "${0}")"
+SERENITY_ROOT="$(realpath "${SCRIPT_DIR}"/..)"
 
 if [ -z "$SERENITY_ARCH" ]; then
     SERENITY_ARCH="x86_64"
@@ -13,7 +14,7 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     toolchain_suffix="clang"
 fi
 
-BUILD_DIR="${SCRIPT_DIR}/../Build/${SERENITY_ARCH}${toolchain_suffix}"
+BUILD_DIR="${SERENITY_ROOT}/Build/${SERENITY_ARCH}${toolchain_suffix}"
 TEMP_PROFDATA="$BUILD_DIR/tmp_profile_data"
 
 mkdir -p "$TEMP_PROFDATA"
@@ -62,12 +63,12 @@ if [ ! -f "$COVERAGE_PREPARE" ]; then
     fi
 fi
 
-CLANG_BINDIR="${SCRIPT_DIR}/../Toolchain/Local/clang/bin"
+CLANG_BINDIR="${SERENITY_ROOT}/Toolchain/Local/clang/bin"
 
 # shellcheck disable=SC2128,SC2086 # all_binaries variable needs expanded to space separated string, not newline separated string
 python3 "$COVERAGE_PREPARE" \
     --unified-report \
-    -C "$SCRIPT_DIR/.." \
+    -C "${SERENITY_ROOT}" \
     "$CLANG_BINDIR/llvm-profdata" "$CLANG_BINDIR/llvm-cov" \
     "$TEMP_PROFDATA/" \
     "$BUILD_DIR/reports/" \
