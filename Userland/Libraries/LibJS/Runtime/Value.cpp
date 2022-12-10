@@ -2311,14 +2311,24 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     Value x_primitive;
     Value y_primitive;
 
+    // 1. If the LeftFirst flag is true, then
     if (left_first) {
+        // a. Let px be ? ToPrimitive(x, number).
         x_primitive = TRY(lhs.to_primitive(vm, Value::PreferredType::Number));
+
+        // b. Let py be ? ToPrimitive(y, number).
         y_primitive = TRY(rhs.to_primitive(vm, Value::PreferredType::Number));
     } else {
+        // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
+
+        // b. Let py be ? ToPrimitive(y, number).
         y_primitive = TRY(lhs.to_primitive(vm, Value::PreferredType::Number));
+
+        // c. Let px be ? ToPrimitive(x, number).
         x_primitive = TRY(rhs.to_primitive(vm, Value::PreferredType::Number));
     }
 
+    // 3. If px is a String and py is a String, then
     if (x_primitive.is_string() && y_primitive.is_string()) {
         auto x_string = x_primitive.as_string().deprecated_string();
         auto y_string = y_primitive.as_string().deprecated_string();
@@ -2326,71 +2336,107 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
         Utf8View x_code_points { x_string };
         Utf8View y_code_points { y_string };
 
+        // a. Let lx be the length of px.
+        // b. Let ly be the length of py.
+        // c. For each integer i such that 0 ≤ i < min(lx, ly), in ascending order, do
         for (auto k = x_code_points.begin(), l = y_code_points.begin();
              k != x_code_points.end() && l != y_code_points.end();
              ++k, ++l) {
+            // i. Let cx be the integer that is the numeric value of the code unit at index i within px.
+            // ii. Let cy be the integer that is the numeric value of the code unit at index i within py.
             if (*k != *l) {
+                // iii. If cx < cy, return true.
                 if (*k < *l) {
                     return TriState::True;
-                } else {
+                }
+                // iv. If cx > cy, return false.
+                else {
                     return TriState::False;
                 }
             }
         }
 
+        // d. If lx < ly, return true. Otherwise, return false.
         return x_code_points.length() < y_code_points.length()
             ? TriState::True
             : TriState::False;
     }
 
+    // 4. Else,
+    // a. If px is a BigInt and py is a String, then
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
+        // i. Let ny be StringToBigInt(py).
         auto y_bigint = string_to_bigint(vm, y_primitive.as_string().deprecated_string());
+
+        // ii. If ny is undefined, return undefined.
         if (!y_bigint.has_value())
             return TriState::Unknown;
 
+        // iii. Return BigInt::lessThan(px, ny).
         if (x_primitive.as_bigint().big_integer() < (*y_bigint)->big_integer())
             return TriState::True;
         return TriState::False;
     }
 
+    // b. If px is a String and py is a BigInt, then
     if (x_primitive.is_string() && y_primitive.is_bigint()) {
+        // i. Let nx be StringToBigInt(px).
         auto x_bigint = string_to_bigint(vm, x_primitive.as_string().deprecated_string());
+
+        // ii. If nx is undefined, return undefined.
         if (!x_bigint.has_value())
             return TriState::Unknown;
 
+        // iii. Return BigInt::lessThan(nx, py).
         if ((*x_bigint)->big_integer() < y_primitive.as_bigint().big_integer())
             return TriState::True;
         return TriState::False;
     }
 
+    // c. NOTE: Because px and py are primitive values, evaluation order is not important.
+
+    // d. Let nx be ? ToNumeric(px).
     auto x_numeric = TRY(x_primitive.to_numeric(vm));
+
+    // e. Let ny be ? ToNumeric(py).
     auto y_numeric = TRY(y_primitive.to_numeric(vm));
 
+    // h. If nx or ny is NaN, return undefined.
     if (x_numeric.is_nan() || y_numeric.is_nan())
         return TriState::Unknown;
 
+    // i. If nx is -∞𝔽 or ny is +∞𝔽, return true.
     if (x_numeric.is_positive_infinity() || y_numeric.is_negative_infinity())
         return TriState::False;
 
+    // j. If nx is +∞𝔽 or ny is -∞𝔽, return false.
     if (x_numeric.is_negative_infinity() || y_numeric.is_positive_infinity())
         return TriState::True;
 
+    // f. If Type(nx) is the same as Type(ny), then
+
+    // i. If nx is a Number, then
     if (x_numeric.is_number() && y_numeric.is_number()) {
+        // 1. Return Number::lessThan(nx, ny).
         if (x_numeric.as_double() < y_numeric.as_double())
             return TriState::True;
         else
             return TriState::False;
     }
-
+    // ii. Else,
     if (x_numeric.is_bigint() && y_numeric.is_bigint()) {
+        // 1. Assert: nx is a BigInt.
+        // 2. Return BigInt::lessThan(nx, ny).
         if (x_numeric.as_bigint().big_integer() < y_numeric.as_bigint().big_integer())
             return TriState::True;
         else
             return TriState::False;
     }
 
+    // g. Assert: nx is a BigInt and ny is a Number, or nx is a Number and ny is a BigInt.
     VERIFY((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
 
+    // k. If ℝ(nx) < ℝ(ny), return true; otherwise return false.
     bool x_lower_than_y;
     VERIFY(!x_numeric.is_nan() && !y_numeric.is_nan());
     if (x_numeric.is_number()) {
