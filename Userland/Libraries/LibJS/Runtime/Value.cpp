@@ -909,13 +909,22 @@ ThrowCompletionOr<i32> Value::to_i32(VM& vm) const
 // 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
 ThrowCompletionOr<u32> Value::to_u32(VM& vm) const
 {
-    double value = TRY(to_number(vm)).as_double();
-    if (!isfinite(value) || value == 0)
+    // 1. Let number be ? ToNumber(argument).
+    double number = TRY(to_number(vm)).as_double();
+
+    // 2. If number is not finite or number is either +0𝔽 or -0𝔽, return +0𝔽.
+    if (!isfinite(number) || number == 0)
         return 0;
-    auto int_val = floor(fabs(value));
-    if (signbit(value))
+
+    // 3. Let int be the mathematical value whose sign is the sign of number and whose magnitude is floor(abs(ℝ(number))).
+    auto int_val = floor(fabs(number));
+    if (signbit(number))
         int_val = -int_val;
+
+    // 4. Let int32bit be int modulo 2^32.
     auto int32bit = fmod(int_val, NumericLimits<u32>::max() + 1.0);
+
+    // 5. Return 𝔽(int32bit).
     // Cast to i64 here to ensure that the double --> u32 cast doesn't invoke undefined behavior
     // Otherwise, negative numbers cause a UBSAN warning.
     return static_cast<u32>(static_cast<i64>(int32bit));
