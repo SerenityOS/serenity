@@ -618,7 +618,7 @@ private:
 class Instruction {
 public:
     template<typename InstructionStreamType>
-    static Instruction from_stream(InstructionStreamType&, OperandSize, AddressSize);
+    static Instruction from_stream(InstructionStreamType&, ProcessorMode);
     ~Instruction() = default;
 
     ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
@@ -699,7 +699,7 @@ public:
 
 private:
     template<typename InstructionStreamType>
-    Instruction(InstructionStreamType&, OperandSize, AddressSize);
+    Instruction(InstructionStreamType&, ProcessorMode);
 
     void to_deprecated_string_internal(StringBuilder&, u32 origin, SymbolProvider const*, bool x32) const;
 
@@ -961,9 +961,9 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::re
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, OperandSize operand_size, AddressSize address_size)
+ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, ProcessorMode mode)
 {
-    return Instruction(stream, operand_size, address_size);
+    return Instruction(stream, mode);
 }
 
 ALWAYS_INLINE unsigned Instruction::length() const
@@ -1002,19 +1002,14 @@ ALWAYS_INLINE Optional<SegmentRegister> to_segment_prefix(u8 op)
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, OperandSize operand_size, AddressSize address_size)
-    : m_operand_size(operand_size)
-    , m_address_size(address_size)
+ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, ProcessorMode mode)
+    : m_mode(mode)
 {
-    VERIFY(operand_size != OperandSize::Size64);
-    // Use address_size as the hint to switch into long mode.
+    m_operand_size = OperandSize::Size32;
     // m_address_size refers to the default size of displacements/immediates, which is 32 even in long mode (2.2.1.3 Displacement, 2.2.1.5 Immediates),
     // with the exception of moffset (see below).
-    if (address_size == AddressSize::Size64) {
-        m_operand_size = OperandSize::Size32;
-        m_address_size = AddressSize::Size32;
-        m_mode = ProcessorMode::Long;
-    }
+    m_address_size = AddressSize::Size32;
+
     u8 prefix_bytes = 0;
     for (;; ++prefix_bytes) {
         u8 opbyte = stream.read8();

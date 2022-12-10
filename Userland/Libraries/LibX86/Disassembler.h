@@ -23,10 +23,10 @@ public:
         if (!m_stream.can_read())
             return {};
 #if ARCH(I386)
-        return Instruction::from_stream(m_stream, OperandSize::Size32, AddressSize::Size32);
+        return Instruction::from_stream(m_stream, ProcessorMode::Protected);
 #else
 #    if ARCH(X86_64)
-        return Instruction::from_stream(m_stream, OperandSize::Size32, AddressSize::Size64);
+        return Instruction::from_stream(m_stream, ProcessorMode::Long);
 #    else
         dbgln("Unsupported platform");
         return {};
