@@ -228,7 +228,16 @@ inline NonnullRefPtr<T> adopt_ref(T& object)
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
 }
 
+template<Formattable T>
+struct Formatter<NonnullRefPtr<T>> : Formatter<T> {
+    ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& value)
+    {
+        return Formatter<T>::format(builder, *value);
+    }
+};
+
 template<typename T>
+requires(!HasFormatter<T>)
 struct Formatter<NonnullRefPtr<T>> : Formatter<T const*> {
     ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& value)
     {

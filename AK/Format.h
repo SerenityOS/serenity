@@ -39,6 +39,9 @@ inline constexpr bool HasFormatter = true;
 template<typename T>
 inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
 
+template<typename T>
+concept Formattable = HasFormatter<T>;
+
 constexpr size_t max_format_arguments = 256;
 
 struct TypeErasedParameter {
