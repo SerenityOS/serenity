@@ -1875,69 +1875,137 @@ ThrowCompletionOr<Value> mod(VM& vm, Value lhs, Value rhs)
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "modulo");
 }
 
+// 6.1.6.1.3 Number::exponentiate ( base, exponent ), https://tc39.es/ecma262/#sec-numeric-types-number-exponentiate
 static Value exp_double(Value base, Value exponent)
 {
     VERIFY(both_number(base, exponent));
+
+    // 1. If exponent is NaN, return NaN.
     if (exponent.is_nan())
         return js_nan();
+
+    // 2. If exponent is +0𝔽 or exponent is -0𝔽, return 1𝔽.
     if (exponent.is_positive_zero() || exponent.is_negative_zero())
         return Value(1);
+
+    // 3. If base is NaN, return NaN.
     if (base.is_nan())
         return js_nan();
-    if (base.is_positive_infinity())
+
+    // 4. If base is +∞𝔽, then
+    if (base.is_positive_infinity()) {
+        // a. If exponent > +0𝔽, return +∞𝔽. Otherwise, return +0𝔽.
         return exponent.as_double() > 0 ? js_infinity() : Value(0);
+    }
+
+    // 5. If base is -∞𝔽, then
     if (base.is_negative_infinity()) {
         auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
-        if (exponent.as_double() > 0)
+
+        // a. If exponent > +0𝔽, then
+        if (exponent.as_double() > 0) {
+            // i. If exponent is an odd integral Number, return -∞𝔽. Otherwise, return +∞𝔽.
             return is_odd_integral_number ? js_negative_infinity() : js_infinity();
-        else
+        }
+        // b. Else,
+        else {
+            // i. If exponent is an odd integral Number, return -0𝔽. Otherwise, return +0𝔽.
             return is_odd_integral_number ? Value(-0.0) : Value(0);
+        }
     }
-    if (base.is_positive_zero())
+
+    // 6. If base is +0𝔽, then
+    if (base.is_positive_zero()) {
+        // a. If exponent > +0𝔽, return +0𝔽. Otherwise, return +∞𝔽.
         return exponent.as_double() > 0 ? Value(0) : js_infinity();
+    }
+
+    // 7. If base is -0𝔽, then
     if (base.is_negative_zero()) {
         auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
-        if (exponent.as_double() > 0)
+
+        // a. If exponent > +0𝔽, then
+        if (exponent.as_double() > 0) {
+            // i. If exponent is an odd integral Number, return -0𝔽. Otherwise, return +0𝔽.
             return is_odd_integral_number ? Value(-0.0) : Value(0);
-        else
+        }
+        // b. Else,
+        else {
+            // i. If exponent is an odd integral Number, return -∞𝔽. Otherwise, return +∞𝔽.
             return is_odd_integral_number ? js_negative_infinity() : js_infinity();
+        }
     }
+
+    // 8. Assert: base is finite and is neither +0𝔽 nor -0𝔽.
     VERIFY(base.is_finite_number() && !base.is_positive_zero() && !base.is_negative_zero());
+
+    // 9. If exponent is +∞𝔽, then
     if (exponent.is_positive_infinity()) {
         auto absolute_base = fabs(base.as_double());
+
+        // a. If abs(ℝ(base)) > 1, return +∞𝔽.
         if (absolute_base > 1)
             return js_infinity();
+        // b. If abs(ℝ(base)) is 1, return NaN.
         else if (absolute_base == 1)
             return js_nan();
+        // c. If abs(ℝ(base)) < 1, return +0𝔽.
         else if (absolute_base < 1)
             return Value(0);
     }
+
+    // 10. If exponent is -∞𝔽, then
     if (exponent.is_negative_infinity()) {
         auto absolute_base = fabs(base.as_double());
+
+        // a. If abs(ℝ(base)) > 1, return +0𝔽.
         if (absolute_base > 1)
             return Value(0);
+        // b. If abs(ℝ(base)) is 1, return NaN.
         else if (absolute_base == 1)
             return js_nan();
+        // a. If abs(ℝ(base)) > 1, return +0𝔽.
         else if (absolute_base < 1)
             return js_infinity();
     }
+
+    // 11. Assert: exponent is finite and is neither +0𝔽 nor -0𝔽.
     VERIFY(exponent.is_finite_number() && !exponent.is_positive_zero() && !exponent.is_negative_zero());
+
+    // 12. If base < -0𝔽 and exponent is not an integral Number, return NaN.
     if (base.as_double() < 0 && !exponent.is_integral_number())
         return js_nan();
+
+    // 13. Return an implementation-approximated Number value representing the result of raising ℝ(base) to the ℝ(exponent) power.
     return Value(::pow(base.as_double(), exponent.as_double()));
 }
 
 // 13.6 Exponentiation Operator, https://tc39.es/ecma262/#sec-exp-operator
+// ExponentiationExpression : UpdateExpression ** ExponentiationExpression
 ThrowCompletionOr<Value> exp(VM& vm, Value lhs, Value rhs)
 {
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
-    if (both_number(lhs_numeric, rhs_numeric))
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
+    if (both_number(lhs_numeric, rhs_numeric)) {
         return exp_double(lhs_numeric, rhs_numeric);
+    }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
-        if (rhs_numeric.as_bigint().big_integer().is_negative())
+        // 6.1.6.2.3 BigInt::exponentiate ( base, exponent ), https://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate
+        auto base = lhs_numeric.as_bigint().big_integer();
+        auto exponent = rhs_numeric.as_bigint().big_integer();
+        // 1. If exponent < 0ℤ, throw a RangeError exception.
+        if (exponent.is_negative())
             return vm.throw_completion<RangeError>(ErrorType::NegativeExponent);
-        return BigInt::create(vm, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
+        // 2. If base is 0ℤ and exponent is 0ℤ, return 1ℤ.
+        // 3. Return the BigInt value that represents ℝ(base) raised to the power ℝ(exponent).
+        return BigInt::create(vm, Crypto::NumberTheory::Power(base, exponent));
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "exponentiation");
 }
