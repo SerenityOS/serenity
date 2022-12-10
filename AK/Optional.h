@@ -200,6 +200,14 @@ public:
         new (&m_storage) T(forward<Parameters>(parameters)...);
     }
 
+    template<typename Callable>
+    ALWAYS_INLINE void lazy_emplace(Callable callable)
+    {
+        clear();
+        m_has_value = true;
+        new (&m_storage) T { callable() };
+    }
+
     [[nodiscard]] ALWAYS_INLINE bool has_value() const { return m_has_value; }
 
     [[nodiscard]] ALWAYS_INLINE T& value() &
