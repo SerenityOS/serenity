@@ -1496,19 +1496,42 @@ ThrowCompletionOr<Value> unary_minus(VM& vm, Value lhs)
 }
 
 // 13.9.1 The Left Shift Operator ( << ), https://tc39.es/ecma262/#sec-left-shift-operator
+// ShiftExpression : ShiftExpression << AdditiveExpression
 ThrowCompletionOr<Value> left_shift(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+    // 1-2, 6. N/A.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
     if (both_number(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.1.9 Number::leftShift ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-leftShift
+
+        // OPTIMIZATION: Handle infinite values according to the results returned by ToInt32/ToUint32.
         if (!lhs_numeric.is_finite_number())
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        // Ok, so this performs toNumber() again but that "can't" throw
+
+        // 1. Let lnum be ! ToInt32(x).
         auto lhs_i32 = MUST(lhs_numeric.to_i32(vm));
-        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm)) % 32;
-        return Value(lhs_i32 << rhs_u32);
+
+        // 2. Let rnum be ! ToUint32(y).
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm));
+
+        // 3. Let shiftCount be ℝ(rnum) modulo 32.
+        auto shift_count = rhs_u32 % 32;
+
+        // 4. Return the result of left shifting lnum by shiftCount bits. The mathematical value of the result is
+        //    exactly representable as a 32-bit two's complement bit string.
+        return Value(lhs_i32 << shift_count);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         // 6.1.6.2.9 BigInt::leftShift ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift
@@ -1530,6 +1553,8 @@ ThrowCompletionOr<Value> left_shift(VM& vm, Value lhs, Value rhs)
         // 2. Return the BigInt value that represents ℝ(x) × 2^y.
         return Value(BigInt::create(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor)));
     }
+
+    // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "left-shift");
 }
 
