@@ -18,6 +18,7 @@ public:
         DeprecatedString title;
     };
     void dump() const;
+    Vector<URLTitlePair> get_all_history_entries();
 
     void push(const URL& url, DeprecatedString const& title);
     void replace_current(const URL& url, DeprecatedString const& title);

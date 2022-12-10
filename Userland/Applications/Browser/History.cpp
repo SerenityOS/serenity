@@ -18,6 +18,11 @@ void History::dump() const
     }
 }
 
+Vector<History::URLTitlePair> History::get_all_history_entries()
+{
+    return m_items;
+}
+
 void History::push(const URL& url, DeprecatedString const& title)
 {
     if (!m_items.is_empty() && m_items[m_current].url == url)
