@@ -933,15 +933,24 @@ ThrowCompletionOr<u32> Value::to_u32(VM& vm) const
 // 7.1.8 ToInt16 ( argument ), https://tc39.es/ecma262/#sec-toint16
 ThrowCompletionOr<i16> Value::to_i16(VM& vm) const
 {
-    double value = TRY(to_number(vm)).as_double();
-    if (!isfinite(value) || value == 0)
+    // 1. Let number be ? ToNumber(argument).
+    double number = TRY(to_number(vm)).as_double();
+
+    // 2. If number is not finite or number is either +0𝔽 or -0𝔽, return +0𝔽.
+    if (!isfinite(number) || number == 0)
         return 0;
-    auto abs = fabs(value);
+
+    // 3. Let int be the mathematical value whose sign is the sign of number and whose magnitude is floor(abs(ℝ(number))).
+    auto abs = fabs(number);
     auto int_val = floor(abs);
-    if (signbit(value))
+    if (signbit(number))
         int_val = -int_val;
+
+    // 4. Let int16bit be int modulo 2^16.
     auto remainder = fmod(int_val, 65536.0);
     auto int16bit = remainder >= 0.0 ? remainder : remainder + 65536.0; // The notation “x modulo y” computes a value k of the same sign as y
+
+    // 5. If int16bit ≥ 2^15, return 𝔽(int16bit - 2^16); otherwise return 𝔽(int16bit).
     if (int16bit >= 32768.0)
         int16bit -= 65536.0;
     return static_cast<i16>(int16bit);
