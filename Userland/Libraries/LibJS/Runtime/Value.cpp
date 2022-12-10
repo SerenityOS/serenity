@@ -2045,26 +2045,44 @@ ThrowCompletionOr<Value> instance_of(VM& vm, Value value, Value target)
 // 7.3.22 OrdinaryHasInstance ( C, O ), https://tc39.es/ecma262/#sec-ordinaryhasinstance
 ThrowCompletionOr<Value> ordinary_has_instance(VM& vm, Value lhs, Value rhs)
 {
+    // 1. If IsCallable(C) is false, return false.
     if (!rhs.is_function())
         return Value(false);
+
     auto& rhs_function = rhs.as_function();
 
+    // 2. If C has a [[BoundTargetFunction]] internal slot, then
     if (is<BoundFunction>(rhs_function)) {
-        auto& bound_target = static_cast<BoundFunction const&>(rhs_function);
+        auto const& bound_target = static_cast<BoundFunction const&>(rhs_function);
+
+        // a. Let BC be C.[[BoundTargetFunction]].
+        // b. Return ? InstanceofOperator(O, BC).
         return instance_of(vm, lhs, Value(&bound_target.bound_target_function()));
     }
 
+    // 3. If O is not an Object, return false.
     if (!lhs.is_object())
         return Value(false);
 
-    Object* lhs_object = &lhs.as_object();
+    auto* lhs_object = &lhs.as_object();
+
+    // 4. Let P be ? Get(C, "prototype").
     auto rhs_prototype = TRY(rhs_function.get(vm.names.prototype));
+
+    // 5. If P is not an Object, throw a TypeError exception.
     if (!rhs_prototype.is_object())
         return vm.throw_completion<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs.to_string_without_side_effects());
+
+    // 6. Repeat,
     while (true) {
+        // a. Set O to ? O.[[GetPrototypeOf]]().
         lhs_object = TRY(lhs_object->internal_get_prototype_of());
+
+        // b. If O is null, return false.
         if (!lhs_object)
             return Value(false);
+
+        // c. If SameValue(P, O) is true, return true.
         if (same_value(rhs_prototype, lhs_object))
             return Value(true);
     }
