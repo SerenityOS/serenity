@@ -1456,17 +1456,41 @@ ThrowCompletionOr<Value> unary_plus(VM& vm, Value lhs)
 }
 
 // 13.5.5 Unary - Operator, https://tc39.es/ecma262/#sec-unary-minus-operator
+// UnaryExpression : - UnaryExpression
 ThrowCompletionOr<Value> unary_minus(VM& vm, Value lhs)
 {
-    auto lhs_numeric = TRY(lhs.to_numeric(vm));
-    if (lhs_numeric.is_number()) {
-        if (lhs_numeric.is_nan())
+    // 1. Let expr be ? Evaluation of UnaryExpression.
+    // NOTE: This is handled in the AST or Bytecode interpreter.
+
+    // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
+    auto old_value = TRY(lhs.to_numeric(vm));
+
+    // 3. If oldValue is a Number, then
+    if (old_value.is_number()) {
+        // a. Return Number::unaryMinus(oldValue).
+
+        // 6.1.6.1.1 Number::unaryMinus ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus
+        // 1. If x is NaN, return NaN.
+        if (old_value.is_nan())
             return js_nan();
-        return Value(-lhs_numeric.as_double());
+
+        // 2. Return the result of negating x; that is, compute a Number with the same magnitude but opposite sign.
+        return Value(-old_value.as_double());
     }
-    if (lhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
+
+    // 4. Else,
+    // a. Assert: oldValue is a BigInt.
+    VERIFY(old_value.is_bigint());
+
+    // b. Return BigInt::unaryMinus(oldValue).
+
+    // 6.1.6.2.1 BigInt::unaryMinus ( x ), https://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus
+    // 1. If x is 0ℤ, return 0ℤ.
+    if (old_value.as_bigint().big_integer() == BIGINT_ZERO)
         return BigInt::create(vm, BIGINT_ZERO);
-    auto big_integer_negated = lhs_numeric.as_bigint().big_integer();
+
+    // 2. Return the BigInt value that represents the negation of ℝ(x).
+    auto big_integer_negated = old_value.as_bigint().big_integer();
     big_integer_negated.negate();
     return BigInt::create(vm, big_integer_negated);
 }
