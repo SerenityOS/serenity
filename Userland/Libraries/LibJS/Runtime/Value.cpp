@@ -1834,10 +1834,21 @@ ThrowCompletionOr<Value> div(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
+// MultiplicativeExpression : MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
 ThrowCompletionOr<Value> mod(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+    // 1-2, 6. N/A.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
     if (both_number(lhs_numeric, rhs_numeric)) {
         // 6.1.6.1.6 Number::remainder ( n, d ), https://tc39.es/ecma262/#sec-numeric-types-number-remainder
         // The ECMA specification is describing the mathematical definition of modulus
@@ -1847,10 +1858,20 @@ ThrowCompletionOr<Value> mod(VM& vm, Value lhs, Value rhs)
         return Value(fmod(n, d));
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
-        if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
+        // 6.1.6.2.6 BigInt::remainder ( n, d ), https://tc39.es/ecma262/#sec-numeric-types-bigint-remainder
+        auto n = lhs_numeric.as_bigint().big_integer();
+        auto d = rhs_numeric.as_bigint().big_integer();
+        // 1. If d is 0ℤ, throw a RangeError exception.
+        if (d == BIGINT_ZERO)
             return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
-        return BigInt::create(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
+        // 2. If n is 0ℤ, return 0ℤ.
+        // 3. Let quotient be ℝ(n) / ℝ(d).
+        // 4. Let q be the BigInt whose sign is the sign of quotient and whose magnitude is floor(abs(quotient)).
+        // 5. Return n - (d × q).
+        return BigInt::create(vm, n.divided_by(d).remainder);
     }
+
+    // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "modulo");
 }
 
