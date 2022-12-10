@@ -1610,20 +1610,50 @@ ThrowCompletionOr<Value> right_shift(VM& vm, Value lhs, Value rhs)
 }
 
 // 13.9.3 The Unsigned Right Shift Operator ( >>> ), https://tc39.es/ecma262/#sec-unsigned-right-shift-operator
+// ShiftExpression : ShiftExpression >>> AdditiveExpression
 ThrowCompletionOr<Value> unsigned_right_shift(VM& vm, Value lhs, Value rhs)
 {
+    // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
+    // 1-2, 5-6. N/A.
+
+    // 3. Let lnum be ? ToNumeric(lval).
     auto lhs_numeric = TRY(lhs.to_numeric(vm));
+
+    // 4. Let rnum be ? ToNumeric(rval).
     auto rhs_numeric = TRY(rhs.to_numeric(vm));
+
+    // 7. Let operation be the abstract operation associated with opText and Type(lnum) in the following table:
+    // [...]
+    // 8. Return operation(lnum, rnum).
     if (both_number(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.1.11 Number::unsignedRightShift ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift
+
+        // OPTIMIZATION: Handle infinite values according to the results returned by ToUint32.
         if (!lhs_numeric.is_finite_number())
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        // Ok, so this performs toNumber() again but that "can't" throw
+
+        // 1. Let lnum be ! ToUint32(x).
         auto lhs_u32 = MUST(lhs_numeric.to_u32(vm));
-        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm)) % 32;
-        return Value(lhs_u32 >> rhs_u32);
+
+        // 2. Let rnum be ! ToUint32(y).
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm));
+
+        // 3. Let shiftCount be ℝ(rnum) modulo 32.
+        auto shift_count = rhs_u32 % 32;
+
+        // 4. Return the result of performing a zero-filling right shift of lnum by shiftCount bits.
+        //    Vacated bits are filled with zero. The mathematical value of the result is exactly representable
+        //    as a 32-bit unsigned bit string.
+        return Value(lhs_u32 >> shift_count);
     }
+
+    // 6. If lnum is a BigInt, then
+    // d. If opText is >>>, return ? BigInt::unsignedRightShift(lnum, rnum).
+
+    // 6.1.6.2.11 BigInt::unsignedRightShift ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift
+    // 1. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperator, "unsigned right-shift");
 }
 
