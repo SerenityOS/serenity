@@ -69,7 +69,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
 
         server_fd = TRY(Core::System::dup(server_fd));
 
-        auto takeover_string = DeprecatedString::formatted("{}:{}", socket_path, server_fd);
+        auto takeover_string = DeprecatedString::formatted("SQLServer:{}", server_fd);
         TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
         auto arguments = Array {
