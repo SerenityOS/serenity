@@ -65,7 +65,6 @@ void displayln() { user_display("\n", 1); }
 
 class UserDisplayStream final : public Core::Stream::Stream {
     virtual ErrorOr<Bytes> read(Bytes) override { return Error::from_string_view("Not readable"sv); };
-    virtual bool is_writable() const override { return true; }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
     {
         user_display(bit_cast<char const*>(bytes.data()), bytes.size());

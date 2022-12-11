@@ -30,7 +30,6 @@ public:
     }
 
     // ^Stream
-    virtual bool is_readable() const override { return m_stream.is_readable(); }
     virtual ErrorOr<Bytes> read(Bytes bytes) override
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
@@ -40,7 +39,6 @@ public:
         align_to_byte_boundary();
         return m_stream.read(bytes);
     }
-    virtual bool is_writable() const override { return m_stream.is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
     virtual bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
     virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
@@ -147,7 +145,6 @@ public:
     }
 
     // ^Stream
-    virtual bool is_readable() const override { return m_stream.is_readable(); }
     virtual ErrorOr<Bytes> read(Bytes bytes) override
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
@@ -157,7 +154,6 @@ public:
         align_to_byte_boundary();
         return m_stream.read(bytes);
     }
-    virtual bool is_writable() const override { return m_stream.is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
     virtual bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
     virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }

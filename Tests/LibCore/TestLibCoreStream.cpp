@@ -29,8 +29,6 @@ TEST_CASE(file_open)
     // Testing out some basic file properties.
     auto file = maybe_file.release_value();
     EXPECT(file->is_open());
-    EXPECT(!file->is_readable());
-    EXPECT(file->is_writable());
     EXPECT(!file->is_eof());
 
     auto maybe_size = file->size();
