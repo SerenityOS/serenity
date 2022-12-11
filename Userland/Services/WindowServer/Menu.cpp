@@ -202,15 +202,6 @@ void Menu::draw()
     painter.draw_rect(rect, Color::Black);
     painter.fill_rect(rect.shrunken(2, 2), palette.menu_base());
 
-    bool has_checkable_items = false;
-    bool has_items_with_icon = false;
-    for (auto& item : m_items) {
-        if (!item.is_visible())
-            continue;
-        has_checkable_items = has_checkable_items | item.is_checkable();
-        has_items_with_icon = has_items_with_icon | !!item.icon();
-    }
-
     // Draw the stripe first, which may extend outside of individual items. We can
     // skip this step when painting an individual item since we're drawing all of them
     painter.fill_rect(stripe_rect(), palette.menu_stripe());
