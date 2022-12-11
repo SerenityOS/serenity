@@ -177,6 +177,7 @@ String::String(String const& other)
 String::String(String&& other)
     : m_data(exchange(other.m_data, nullptr))
 {
+    other.m_short_string.byte_count_and_short_string_flag = SHORT_STRING_FLAG;
 }
 
 String& String::operator=(String&& other)
@@ -185,6 +186,7 @@ String& String::operator=(String&& other)
         m_data->unref();
 
     m_data = exchange(other.m_data, nullptr);
+    other.m_short_string.byte_count_and_short_string_flag = SHORT_STRING_FLAG;
     return *this;
 }
 
@@ -200,7 +202,7 @@ String& String::operator=(String const& other)
 
 String::~String()
 {
-    if (!is_short_string() && m_data)
+    if (!is_short_string())
         m_data->unref();
 }
 
