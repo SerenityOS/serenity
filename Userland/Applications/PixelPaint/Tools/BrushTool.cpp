@@ -192,18 +192,18 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     bool draw_ellipse = true;
 
     // If we have an ImageEditor scaled_size should not excede diagonal length of the ImageEditor
-    if(m_editor){
+    if (m_editor) {
         // FIXME: The ImageEditor diagonal size could be saved on the ImageEditor and exposed to optimize.
         //        It would be nice if that was recalculated when the ImageEditor was resized
-        if(m_scale_last_created_cursor != new_scale){
-            if(m_editor_previous_size[0] != m_editor->width() || m_editor_previous_size[1] != m_editor->height()){
+        if (m_scale_last_created_cursor != new_scale) {
+            if (m_editor_previous_size[0] != m_editor->width() || m_editor_previous_size[1] != m_editor->height()) {
                 m_editor_previous_size[0] = m_editor->width();
                 m_editor_previous_size[1] = m_editor->height();
-                max_scaled_size = sqrt(pow(m_editor->width(),2) + pow(m_editor->height(),2));
+                max_scaled_size = sqrt(pow(m_editor->width(), 2) + pow(m_editor->height(), 2));
             }
         }
 
-        if( scaled_size > max_scaled_size){
+        if (scaled_size > max_scaled_size) {
             scaled_size = max_scaled_size;
             containing_box_size = scaled_size * 2;
             // Due to performance issues when the cursor is too large we choose to draw it here.
@@ -225,12 +225,11 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::MidGray, 1);
 
     // If no ImageEditor is present, we cannot bind the ellipse within the editor. Then we will just draw the ellipse.
-    if(!m_editor){
+    if (!m_editor) {
         aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
-    }else{
-        if(draw_ellipse){
-            // FIXME: It would be nice touch to set this to the current user selected color
-            Color color = Color::LightGray;
+    } else {
+        if (draw_ellipse) {
+            Color color = m_editor->color_for(GUI::MouseButton::Primary);
             aa_painter.fill_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), color.with_alpha(100));
         }
     }
@@ -249,7 +248,8 @@ void BrushTool::refresh_editor_cursor()
         m_editor->update_tool_cursor();
 }
 
-void BrushTool::set_current_position(Gfx::IntPoint cursor_position){
+void BrushTool::set_current_position(Gfx::IntPoint cursor_position)
+{
     m_current_position = cursor_position;
 }
 

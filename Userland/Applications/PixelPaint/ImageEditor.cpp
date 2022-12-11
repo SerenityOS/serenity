@@ -417,12 +417,12 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         // Update the cursors when the mouse position is changed to allow the rectangles and ellipses to be clamped within
         // the bounds of the ImageEditor and not draw ontop of the rest of the UI.
         if (is<BrushTool>(*m_active_tool)) {
-            if (m_active_tool->tool_name() == "Erase Tool"sv){
+            if (m_active_tool->tool_name() == "Erase Tool"sv) {
                 EraseTool* active_erase_tool = dynamic_cast<EraseTool*>(m_active_tool);
                 active_erase_tool->set_current_position(m_mouse_position);
                 active_erase_tool->refresh_editor_cursor();
             }
-            if (m_active_tool->tool_name() == "Brush Tool"sv){
+            if (m_active_tool->tool_name() == "Brush Tool"sv) {
                 BrushTool* active_erase_tool = dynamic_cast<BrushTool*>(m_active_tool);
                 active_erase_tool->set_current_position(m_mouse_position);
                 active_erase_tool->refresh_editor_cursor();
