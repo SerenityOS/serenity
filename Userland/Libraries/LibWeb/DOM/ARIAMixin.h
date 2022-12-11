@@ -136,6 +136,8 @@ public:
 
     FlyString role_or_default() const;
 
+    bool has_global_aria_attribute() const;
+
 protected:
     ARIAMixin() = default;
 };
