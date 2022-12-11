@@ -84,6 +84,7 @@ MainWidget::MainWidget()
                     m_tool_properties_widget->set_enabled(false);
                     set_actions_enabled(false);
                 }
+                update_window_modified();
             });
         }
     };
@@ -117,6 +118,7 @@ void MainWidget::image_editor_did_update_undo_stack()
         m_redo_action->set_enabled(false);
         return;
     }
+    image_editor->update_modified();
 
     auto make_action_text = [](auto prefix, auto suffix) {
         StringBuilder builder;
