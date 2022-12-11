@@ -18,7 +18,7 @@ static DeprecatedString read_all(DeprecatedString const& path)
     auto file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
-    if (!file->read_or_error(content.bytes()))
+    if (!file->read_entire_buffer(content.bytes()))
         VERIFY_NOT_REACHED();
     return DeprecatedString { content.bytes() };
 }

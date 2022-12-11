@@ -22,7 +22,7 @@ TEST_SETUP
     auto file = file_or_error.release_value();
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
-    if (!file->read_or_error(content.bytes()))
+    if (!file->read_entire_buffer(content.bytes()))
         VERIFY_NOT_REACHED();
     DeprecatedString test_data { content.bytes() };
 

@@ -87,17 +87,17 @@ TEST_CASE(file_seeking_around)
 
     EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500);
-    EXPECT(file->read_or_error(buffer));
+    EXPECT(file->read_entire_buffer(buffer));
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
     EXPECT(!file->seek(234, Core::Stream::SeekMode::FromCurrentPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 750);
-    EXPECT(file->read_or_error(buffer));
+    EXPECT(file->read_entire_buffer(buffer));
     EXPECT_EQ(buffer_contents, expected_seek_contents2);
 
     EXPECT(!file->seek(-105, Core::Stream::SeekMode::FromEndPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 8597);
-    EXPECT(file->read_or_error(buffer));
+    EXPECT(file->read_entire_buffer(buffer));
     EXPECT_EQ(buffer_contents, expected_seek_contents3);
 }
 
@@ -120,7 +120,7 @@ TEST_CASE(file_adopt_fd)
 
     EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500);
-    EXPECT(file->read_or_error(buffer));
+    EXPECT(file->read_entire_buffer(buffer));
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
     // A single seek & read test should be fine for now.
@@ -218,7 +218,7 @@ TEST_CASE(tcp_socket_write)
     auto server_socket = maybe_server_socket.release_value();
     EXPECT(!server_socket->set_blocking(true).is_error());
 
-    EXPECT(client_socket->write_or_error({ sent_data.characters_without_null_termination(), sent_data.length() }));
+    EXPECT(client_socket->write_entire_buffer({ sent_data.characters_without_null_termination(), sent_data.length() }));
     client_socket->close();
 
     auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
@@ -282,7 +282,7 @@ TEST_CASE(udp_socket_read_write)
     auto client_socket = maybe_client_socket.release_value();
 
     EXPECT(client_socket->is_open());
-    EXPECT(client_socket->write_or_error({ sent_data.characters_without_null_termination(), sent_data.length() }));
+    EXPECT(client_socket->write_entire_buffer({ sent_data.characters_without_null_termination(), sent_data.length() }));
 
     // FIXME: UDPServer::receive sadly doesn't give us a way to block on it,
     // currently.
@@ -400,7 +400,7 @@ TEST_CASE(local_socket_write)
             EXPECT(!maybe_client_socket.is_error());
             auto client_socket = maybe_client_socket.release_value();
 
-            EXPECT(client_socket->write_or_error({ sent_data.characters_without_null_termination(), sent_data.length() }));
+            EXPECT(client_socket->write_entire_buffer({ sent_data.characters_without_null_termination(), sent_data.length() }));
             client_socket->close();
 
             return 0;
