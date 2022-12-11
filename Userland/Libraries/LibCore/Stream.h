@@ -35,7 +35,7 @@ public:
     virtual ErrorOr<Bytes> read(Bytes) = 0;
     /// Tries to fill the entire buffer through reading. Returns whether the
     /// buffer was filled without an error.
-    virtual bool read_entire_buffer(Bytes);
+    virtual ErrorOr<void> read_entire_buffer(Bytes);
     /// Reads the stream until EOF, storing the contents into a ByteBuffer which
     /// is returned once EOF is encountered. The block size determines the size
     /// of newly allocated chunks while reading.
@@ -51,7 +51,7 @@ public:
     virtual ErrorOr<size_t> write(ReadonlyBytes) = 0;
     /// Same as write, but does not return until either the entire buffer
     /// contents are written or an error occurs.
-    virtual bool write_entire_buffer(ReadonlyBytes);
+    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);
 
     // This is a wrapper around `write_entire_buffer` that is compatible with
     // `write_or_error`. This is required by some templated code in LibProtocol
@@ -59,7 +59,7 @@ public:
     // TODO: Fully port or wrap `Request::stream_into_impl` into `Core::Stream` and remove this.
     bool write_or_error(ReadonlyBytes buffer)
     {
-        return write_entire_buffer(buffer);
+        return !write_entire_buffer(buffer).is_error();
     }
 
     /// Returns whether the stream has reached the end of file. For sockets,

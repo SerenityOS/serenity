@@ -75,7 +75,7 @@ bool Job::can_read() const
 
 bool Job::write(ReadonlyBytes bytes)
 {
-    return m_socket->write_entire_buffer(bytes);
+    return !m_socket->write_entire_buffer(bytes).is_error();
 }
 
 void Job::flush_received_buffers()

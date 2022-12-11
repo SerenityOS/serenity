@@ -79,13 +79,13 @@ public:
         m_offset += nwritten;
         return nwritten;
     }
-    virtual bool write_entire_buffer(ReadonlyBytes bytes) override
+    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override
     {
         if (remaining() < bytes.size())
-            return false;
+            return Error::from_string_literal("Write of entire buffer ends past the memory area");
 
-        MUST(write(bytes));
-        return true;
+        TRY(write(bytes));
+        return {};
     }
 
     Bytes bytes()
