@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +24,7 @@
 #include <WindowServer/Button.h>
 #include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/Cursor.h>
+#include <WindowServer/GlobalMenu.h>
 #include <WindowServer/WindowClientEndpoint.h>
 
 namespace WindowServer {
@@ -417,6 +419,8 @@ void WindowManager::remove_window(Window& window)
             conn.async_window_removed(conn.window_id(), window.client_id(), window.window_id());
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_closed();
 }
 
 void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
@@ -501,6 +505,8 @@ void WindowManager::tell_wms_window_state_changed(Window& window)
         tell_wm_about_window(conn, window);
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_changed();
 }
 
 void WindowManager::tell_wms_window_icon_changed(Window& window)
@@ -509,6 +515,8 @@ void WindowManager::tell_wms_window_icon_changed(Window& window)
         tell_wm_about_window_icon(conn, window);
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_changed();
 }
 
 void WindowManager::tell_wms_window_rect_changed(Window& window)
@@ -595,6 +603,14 @@ static bool window_type_has_title(WindowType type)
 }
 
 void WindowManager::notify_modified_changed(Window& window)
+{
+    if (m_switcher->is_visible())
+        m_switcher->refresh();
+
+    tell_wms_window_state_changed(window);
+}
+
+void WindowManager::notify_menubar_changed(Window& window)
 {
     if (m_switcher->is_visible())
         m_switcher->refresh();
@@ -1330,25 +1346,27 @@ void WindowManager::process_mouse_event(MouseEvent& event)
     if (process_mouse_event_for_titlebar_buttons(event))
         return;
 
-    // 7. If there are menus open, deal with them now. (FIXME: This needs to be cleaned up & simplified!)
-    bool hitting_menu_in_window_with_active_menu = [&] {
-        if (!m_window_with_active_menu)
-            return false;
-        auto& frame = m_window_with_active_menu->frame();
-        return frame.menubar_rect().contains(event.position().translated(-frame.rect().location()));
-    }();
+    if (!GlobalMenu::the().enabled()) {
+        // 7. If there are menus open, deal with them now. (FIXME: This needs to be cleaned up & simplified!)
+        bool hitting_menu_in_window_with_active_menu = [&] {
+            if (!m_window_with_active_menu)
+                return false;
+            auto& frame = m_window_with_active_menu->frame();
+            return frame.menubar_rect().contains(event.position().translated(-frame.rect().location()));
+        }();
 
-    // FIXME: This is quite hackish, we clear the hovered menu before potentially setting the same menu
-    //        as hovered again. This makes sure that the hovered state doesn't linger after moving the
-    //        cursor away from a hovered menu.
-    MenuManager::the().set_hovered_menu(nullptr);
+        // FIXME: This is quite hackish, we clear the hovered menu before potentially setting the same menu
+        //        as hovered again. This makes sure that the hovered state doesn't linger after moving the
+        //        cursor away from a hovered menu.
+        MenuManager::the().set_hovered_menu(nullptr);
 
-    if (MenuManager::the().has_open_menu()
-        || hitting_menu_in_window_with_active_menu) {
+        if (MenuManager::the().has_open_menu()
+            || hitting_menu_in_window_with_active_menu) {
 
-        if (!hitting_menu_in_window_with_active_menu) {
-            MenuManager::the().dispatch_event(event);
-            return;
+            if (!hitting_menu_in_window_with_active_menu) {
+                MenuManager::the().dispatch_event(event);
+                return;
+            }
         }
     }
 
@@ -2079,6 +2097,7 @@ bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString t
     if (!sync_config_to_disk())
         return false;
     invalidate_after_theme_or_font_change();
+    GlobalMenu::the().handle_active_window_changed();
     return true;
 }
 

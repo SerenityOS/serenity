@@ -7,6 +7,7 @@ serenity_component(
 set(SOURCES
     main.cpp
     ClockWidget.cpp
+    GlobalMenuWindow.cpp
     QuickLaunchWidget.cpp
     ShutdownDialog.cpp
     TaskbarButton.cpp

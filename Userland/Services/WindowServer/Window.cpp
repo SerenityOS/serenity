@@ -19,6 +19,7 @@
 #include <LibCore/Account.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/SessionManagement.h>
+#include <WindowServer/GlobalMenu.h>
 
 namespace WindowServer {
 
@@ -720,12 +721,14 @@ void Window::ensure_window_menu()
         m_window_menu_move_item->set_icon(&move_icon());
         m_window_menu->add_item(move(move_item));
 
-        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
+        if (!GlobalMenu::the().enabled()) {
+            m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
-        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
-        m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
-        menubar_visibility_item->set_checkable(true);
-        m_window_menu->add_item(move(menubar_visibility_item));
+            auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
+            m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
+            menubar_visibility_item->set_checkable(true);
+            m_window_menu->add_item(move(menubar_visibility_item));
+        }
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
@@ -807,8 +810,11 @@ void Window::popup_window_menu(Gfx::IntPoint position, WindowMenuDefaultAction d
     m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
     m_window_menu_maximize_item->set_icon(is_maximized() ? &restore_icon() : &maximize_icon());
     m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);
-    m_window_menu_menubar_visibility_item->set_enabled(m_menubar.has_menus());
-    m_window_menu_menubar_visibility_item->set_checked(m_menubar.has_menus() && m_should_show_menubar);
+
+    if (!GlobalMenu::the().enabled()) {
+        m_window_menu_menubar_visibility_item->set_enabled(m_menubar.has_menus());
+        m_window_menu_menubar_visibility_item->set_checked(m_menubar.has_menus() && m_should_show_menubar);
+    }
 
     m_window_menu->popup(position);
 }
@@ -1042,6 +1048,8 @@ void Window::add_menu(Menu& menu)
     m_menubar.add_menu(menu, rect());
     Compositor::the().invalidate_occlusions();
     frame().invalidate();
+
+    WindowManager::the().notify_menubar_changed(*this);
 }
 
 void Window::invalidate_menubar()
@@ -1088,6 +1096,15 @@ ErrorOr<Optional<DeprecatedString>> Window::compute_title_username(ConnectionFro
     if (login_session_stat.value().uid == client_stat.value().uid)
         return Optional<DeprecatedString> {};
     return client_stat.value().username;
+}
+
+bool Window::should_show_menubar() const
+{
+    // FIXME: Make this optional when using the global menu
+    if (GlobalMenu::the().enabled())
+        return false;
+
+    return m_should_show_menubar;
 }
 
 }

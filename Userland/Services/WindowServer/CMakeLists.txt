@@ -17,6 +17,7 @@ set(SOURCES
     Compositor.cpp
     Cursor.cpp
     EventLoop.cpp
+    GlobalMenu.cpp
     main.cpp
     Menu.cpp
     Menubar.cpp
