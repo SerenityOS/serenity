@@ -39,18 +39,21 @@ void Parser::set_document(WeakPtr<Document> const& document)
 
 DeprecatedString Parser::parse_comment()
 {
-    if (!m_reader.matches('%'))
-        return {};
+    StringBuilder comment;
+    while (true) {
+        if (!m_reader.matches('%'))
+            break;
 
-    m_reader.consume();
-    auto comment_start_offset = m_reader.offset();
-    m_reader.move_until([&](auto) {
-        return m_reader.matches_eol();
-    });
-    DeprecatedString str = StringView(m_reader.bytes().slice(comment_start_offset, m_reader.offset() - comment_start_offset));
-    m_reader.consume_eol();
-    m_reader.consume_whitespace();
-    return str;
+        m_reader.consume();
+        auto comment_start_offset = m_reader.offset();
+        m_reader.move_until([&](auto) {
+            return m_reader.matches_eol();
+        });
+        comment.append(m_reader.bytes().slice(comment_start_offset, m_reader.offset() - comment_start_offset));
+        m_reader.consume_eol();
+        m_reader.consume_whitespace();
+    }
+    return comment.to_deprecated_string();
 }
 
 PDFErrorOr<Value> Parser::parse_value(CanBeIndirectValue can_be_indirect_value)
