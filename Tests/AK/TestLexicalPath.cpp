@@ -15,10 +15,12 @@ TEST_CASE(relative_path)
     EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/tmp"sv), "abc.txt"sv);
     EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/tmp/"sv), "abc.txt"sv);
     EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/"sv), "tmp/abc.txt"sv);
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/usr"sv), "/tmp/abc.txt"sv);
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/usr"sv), "../tmp/abc.txt"sv);
 
     EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt"sv, "tmp"sv), ""sv);
     EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt"sv, "/tmp"sv), ""sv);
+
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/foo/bar/baz.txt"sv, "/tmp/bar/foo/"sv), "../../foo/bar/baz.txt"sv);
 }
 
 TEST_CASE(regular_absolute_path)
