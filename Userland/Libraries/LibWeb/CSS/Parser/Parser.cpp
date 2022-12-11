@@ -4262,9 +4262,6 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
         }
     };
 
-    LengthPercentage zero_offset = Length::make_px(0);
-    LengthPercentage center_offset = Percentage { 50 };
-
     struct EdgeOffset {
         PositionEdge edge;
         LengthPercentage offset;
@@ -4275,6 +4272,19 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
     Optional<EdgeOffset> horizontal;
     Optional<EdgeOffset> vertical;
     bool found_center = false;
+
+    auto const center_offset = Percentage { 50 };
+    auto const zero_offset = Length::make_px(0);
+
+    auto value_to_length_percentage = [&](auto value) -> Optional<LengthPercentage> {
+        if (value->is_percentage())
+            return LengthPercentage { value->as_percentage().percentage() };
+        if (value->has_length())
+            return LengthPercentage { value->to_length() };
+        if (value->is_calculated())
+            return LengthPercentage { value->as_calculated() };
+        return {};
+    };
 
     while (tokens.has_next_token()) {
         // Check if we're done
@@ -4289,53 +4299,43 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
         tokens.next_token();
         auto value = maybe_value.release_nonnull();
 
-        if (value->is_percentage()) {
+        auto offset = value_to_length_percentage(value);
+        if (offset.has_value()) {
             if (!horizontal.has_value()) {
-                horizontal = EdgeOffset { PositionEdge::Left, value->as_percentage().percentage(), false, true };
+                horizontal = EdgeOffset { PositionEdge::Left, *offset, false, true };
             } else if (!vertical.has_value()) {
-                vertical = EdgeOffset { PositionEdge::Top, value->as_percentage().percentage(), false, true };
+                vertical = EdgeOffset { PositionEdge::Top, *offset, false, true };
             } else {
                 return nullptr;
             }
             continue;
         }
 
-        if (value->has_length()) {
-            if (!horizontal.has_value()) {
-                horizontal = EdgeOffset { PositionEdge::Left, value->to_length(), false, true };
-            } else if (!vertical.has_value()) {
-                vertical = EdgeOffset { PositionEdge::Top, value->to_length(), false, true };
-            } else {
-                return nullptr;
+        auto try_parse_offset = [&](bool& offset_provided) -> LengthPercentage {
+            if (tokens.has_next_token()) {
+                auto& token = tokens.peek_token();
+                auto maybe_value = parse_css_value(token);
+                if (!maybe_value)
+                    return zero_offset;
+                auto offset = value_to_length_percentage(maybe_value.release_nonnull());
+                if (offset.has_value()) {
+                    offset_provided = true;
+                    tokens.next_token();
+                    return *offset;
+                }
             }
-            continue;
-        }
+            return zero_offset;
+        };
 
         if (value->has_identifier()) {
             auto identifier = value->to_identifier();
             if (is_horizontal(identifier)) {
-                LengthPercentage offset = zero_offset;
                 bool offset_provided = false;
-                if (tokens.has_next_token()) {
-                    auto maybe_offset = parse_dimension(tokens.peek_token());
-                    if (maybe_offset.has_value() && maybe_offset.value().is_length_percentage()) {
-                        offset = maybe_offset.value().length_percentage();
-                        offset_provided = true;
-                        tokens.next_token();
-                    }
-                }
+                auto offset = try_parse_offset(offset_provided);
                 horizontal = EdgeOffset { *to_edge(identifier), offset, true, offset_provided };
             } else if (is_vertical(identifier)) {
-                LengthPercentage offset = zero_offset;
                 bool offset_provided = false;
-                if (tokens.has_next_token()) {
-                    auto maybe_offset = parse_dimension(tokens.peek_token());
-                    if (maybe_offset.has_value() && maybe_offset.value().is_length_percentage()) {
-                        offset = maybe_offset.value().length_percentage();
-                        offset_provided = true;
-                        tokens.next_token();
-                    }
-                }
+                auto offset = try_parse_offset(offset_provided);
                 vertical = EdgeOffset { *to_edge(identifier), offset, true, offset_provided };
             } else if (identifier == ValueID::Center) {
                 found_center = true;
