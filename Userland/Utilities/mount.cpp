@@ -150,7 +150,7 @@ static ErrorOr<void> print_mounts()
     // Output info about currently mounted filesystems.
     auto df = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
 
-    auto content = TRY(df->read_all());
+    auto content = TRY(df->read_until_eof());
     auto json = TRY(JsonValue::from_string(content));
 
     json.as_array().for_each([](auto& value) {

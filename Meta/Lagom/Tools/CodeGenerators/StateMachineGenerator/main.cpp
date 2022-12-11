@@ -222,7 +222,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-    auto content = TRY(file->read_all());
+    auto content = TRY(file->read_until_eof());
     auto state_machine = parse_state_machine(content);
 
     StringBuilder builder;

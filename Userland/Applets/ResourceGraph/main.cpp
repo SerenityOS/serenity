@@ -153,7 +153,7 @@ private:
             file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
         }
 
-        auto file_contents = TRY(file->read_all());
+        auto file_contents = TRY(file->read_until_eof());
         return TRY(JsonValue::from_string(file_contents));
     }
 

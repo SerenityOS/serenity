@@ -47,12 +47,12 @@ bool Stream::read_or_error(Bytes buffer)
     return true;
 }
 
-ErrorOr<ByteBuffer> Stream::read_all(size_t block_size)
+ErrorOr<ByteBuffer> Stream::read_until_eof(size_t block_size)
 {
-    return read_all_impl(block_size);
+    return read_until_eof_impl(block_size);
 }
 
-ErrorOr<ByteBuffer> Stream::read_all_impl(size_t block_size, size_t expected_file_size)
+ErrorOr<ByteBuffer> Stream::read_until_eof_impl(size_t block_size, size_t expected_file_size)
 {
     ByteBuffer data;
     data.ensure_capacity(expected_file_size);
@@ -243,12 +243,12 @@ ErrorOr<Bytes> File::read(Bytes buffer)
     return buffer.trim(nread);
 }
 
-ErrorOr<ByteBuffer> File::read_all(size_t block_size)
+ErrorOr<ByteBuffer> File::read_until_eof(size_t block_size)
 {
     // Note: This is used as a heuristic, it's not valid for devices or virtual files.
     auto const potential_file_size = TRY(System::fstat(m_fd)).st_size;
 
-    return read_all_impl(block_size, potential_file_size);
+    return read_until_eof_impl(block_size, potential_file_size);
 }
 
 ErrorOr<size_t> File::write(ReadonlyBytes buffer)

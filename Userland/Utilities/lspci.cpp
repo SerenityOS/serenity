@@ -119,35 +119,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto vendor_id_contents = vendor_id_file.value()->read_all();
+        auto vendor_id_contents = vendor_id_file.value()->read_until_eof();
         if (vendor_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", vendor_id_filename, vendor_id_contents.error());
             continue;
         }
         u32 vendor_id = read_hex_string_from_bytebuffer(vendor_id_contents.value());
 
-        auto device_id_contents = device_id_file.value()->read_all();
+        auto device_id_contents = device_id_file.value()->read_until_eof();
         if (device_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", device_id_filename, device_id_contents.error());
             continue;
         }
         u32 device_id = read_hex_string_from_bytebuffer(device_id_contents.value());
 
-        auto revision_id_contents = revision_id_file.value()->read_all();
+        auto revision_id_contents = revision_id_file.value()->read_until_eof();
         if (revision_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", revision_id_filename, revision_id_contents.error());
             continue;
         }
         u32 revision_id = read_hex_string_from_bytebuffer(revision_id_contents.value());
 
-        auto class_id_contents = class_id_file.value()->read_all();
+        auto class_id_contents = class_id_file.value()->read_until_eof();
         if (class_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", class_id_filename, class_id_contents.error());
             continue;
         }
         u32 class_id = read_hex_string_from_bytebuffer(class_id_contents.value());
 
-        auto subclass_id_contents = subclass_id_file.value()->read_all();
+        auto subclass_id_contents = subclass_id_file.value()->read_until_eof();
         if (subclass_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", subclass_id_filename, subclass_id_contents.error());
             continue;
@@ -183,7 +183,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
-            auto bar_value_contents = bar_value_file.value()->read_all();
+            auto bar_value_contents = bar_value_file.value()->read_until_eof();
             if (bar_value_contents.is_error()) {
                 dbgln("Error: Could not read {}: {}", bar_value_filename, bar_value_contents.error());
                 continue;

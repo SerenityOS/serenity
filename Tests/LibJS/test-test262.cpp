@@ -177,7 +177,7 @@ public:
 
     DeprecatedString read_all()
     {
-        auto all_output_or_error = m_input->read_all();
+        auto all_output_or_error = m_input->read_until_eof();
         if (all_output_or_error.is_error()) {
             warnln("Got error: {} while reading runner output", all_output_or_error.error());
             return ""sv;

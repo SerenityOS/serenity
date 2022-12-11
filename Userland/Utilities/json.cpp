@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio"));
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
     if (!dotted_key.is_empty()) {
         auto key_parts = dotted_key.split_view('.');

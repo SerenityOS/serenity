@@ -157,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return Error::from_string_view(s_error_string);
         }
         auto file = file_or_error.release_value();
-        auto string = MUST(file->read_all());
+        auto string = MUST(file->read_until_eof());
         file_contents.append(DeprecatedString(ReadonlyBytes(string)));
     }
     VERIFY(paths.size() == file_contents.size());

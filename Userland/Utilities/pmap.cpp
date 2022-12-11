@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Address{}           Size Access  Name", padding);
     }
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
 
     Vector<JsonValue> sorted_regions = json.as_array().values();

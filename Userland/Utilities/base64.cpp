@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(filepath, Core::Stream::OpenMode::Read));
-    ByteBuffer buffer = TRY(file->read_all());
+    ByteBuffer buffer = TRY(file->read_until_eof());
 
     TRY(Core::System::pledge("stdio"));
 

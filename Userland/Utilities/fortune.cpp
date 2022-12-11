@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
     if (!json.is_array()) {
         warnln("{} does not contain an array of quotes", path);

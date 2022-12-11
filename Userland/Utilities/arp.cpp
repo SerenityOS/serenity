@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!flag_set && !flag_delete) {
         auto file = TRY(Core::Stream::File::open("/sys/kernel/net/arp"sv, Core::Stream::OpenMode::Read));
-        auto file_contents = TRY(file->read_all());
+        auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 
         Vector<JsonValue> sorted_regions = json.as_array().values();

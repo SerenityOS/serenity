@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (path.is_empty())
         path = "Source/little/main.cpp"sv;
     auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-    auto content = TRY(file->read_all());
+    auto content = TRY(file->read_until_eof());
     StringView content_view(content);
 
     ::Cpp::Preprocessor processor(path, content_view);

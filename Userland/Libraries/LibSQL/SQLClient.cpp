@@ -104,7 +104,7 @@ static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
             return server_pid_file.release_error();
         }
 
-        auto contents = server_pid_file.value()->read_all();
+        auto contents = server_pid_file.value()->read_until_eof();
         if (contents.is_error()) {
             warnln("Could not read SQLServer PID file '{}': {}", pid_path, contents.error());
             return contents.release_error();

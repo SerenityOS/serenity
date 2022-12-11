@@ -115,7 +115,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
         du_option.excluded_patterns.append(pattern);
     if (!exclude_from.is_empty()) {
         auto file = TRY(Core::Stream::File::open(exclude_from, Core::Stream::OpenMode::Read));
-        auto const buff = TRY(file->read_all());
+        auto const buff = TRY(file->read_until_eof());
         if (!buff.is_empty()) {
             DeprecatedString patterns = DeprecatedString::copy(buff, Chomp);
             du_option.excluded_patterns.extend(patterns.split('\n'));

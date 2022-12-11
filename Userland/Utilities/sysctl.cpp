@@ -20,7 +20,7 @@ static DeprecatedString get_variable(StringView name)
         warnln("Failed to open {}: {}", path, file.error());
         return {};
     }
-    auto buffer = file.value()->read_all();
+    auto buffer = file.value()->read_until_eof();
     if (buffer.is_error()) {
         warnln("Failed to read {}: {}", path, buffer.error());
         return {};

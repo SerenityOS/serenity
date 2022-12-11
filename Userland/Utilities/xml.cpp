@@ -372,7 +372,7 @@ static auto parse(StringView contents)
                     return Error::from_string_literal("NYI: Nonlocal entity");
 
                 auto file = TRY(Core::Stream::File::open(url.path(), Core::Stream::OpenMode::Read));
-                return DeprecatedString::copy(TRY(file->read_all()));
+                return DeprecatedString::copy(TRY(file->read_until_eof()));
             },
         },
     };
@@ -449,7 +449,7 @@ static void do_run_tests(XML::Document& document)
 
             warnln("Running test {}", url.path());
 
-            auto contents = file_result.value()->read_all();
+            auto contents = file_result.value()->read_until_eof();
             if (contents.is_error()) {
                 warnln("Read error for {}: {}", url.path(), contents.error());
                 s_test_results.set(url.path(), TestResult::RunnerFailed);
@@ -474,7 +474,7 @@ static void do_run_tests(XML::Document& document)
                     s_test_results.set(url.path(), TestResult::RunnerFailed);
                     continue;
                 }
-                auto contents = file_result.value()->read_all();
+                auto contents = file_result.value()->read_until_eof();
                 if (contents.is_error()) {
                     warnln("Read error for {}: {}", out_path, contents.error());
                     s_test_results.set(url.path(), TestResult::RunnerFailed);
@@ -517,7 +517,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     s_path = Core::File::real_path_for(filename);
     auto file = TRY(Core::Stream::File::open(s_path, Core::Stream::OpenMode::Read));
-    auto contents = TRY(file->read_all());
+    auto contents = TRY(file->read_until_eof());
 
     auto xml_parser = parse(contents);
     auto result = xml_parser.parse();

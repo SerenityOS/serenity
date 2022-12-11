@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         auto file = file_or_error.release_value();
 
-        auto content_buffer_or_error = file->read_all();
+        auto content_buffer_or_error = file->read_until_eof();
         if (content_buffer_or_error.is_error()) {
             warnln("Failed to read {}: {}", path, file_or_error.error());
             // Since this should never happen anyway, fail early.

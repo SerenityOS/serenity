@@ -19,6 +19,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 
     auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
 
-    (void)brotli_stream.read_all();
+    (void)brotli_stream.read_until_eof();
     return 0;
 }

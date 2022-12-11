@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
-    ByteBuffer buffer = TRY(file->read_all());
+    ByteBuffer buffer = TRY(file->read_until_eof());
 
     u8 input_delimiter = is_zero_terminated ? '\0' : '\n';
     Vector<Bytes> lines;

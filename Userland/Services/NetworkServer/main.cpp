@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto config_file = TRY(Core::ConfigFile::open_for_system("Network"));
 
     auto proc_net_adapters_file = TRY(Core::Stream::File::open("/sys/kernel/net/adapters"sv, Core::Stream::OpenMode::Read));
-    auto data = TRY(proc_net_adapters_file->read_all());
+    auto data = TRY(proc_net_adapters_file->read_until_eof());
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = TRY(parser.parse());
 

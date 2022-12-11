@@ -153,7 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!has_protocol_flag || flag_tcp) {
         auto file = TRY(Core::Stream::File::open("/sys/kernel/net/tcp"sv, Core::Stream::OpenMode::Read));
-        auto file_contents = TRY(file->read_all());
+        auto file_contents = TRY(file->read_until_eof());
         auto json_or_error = JsonValue::from_string(file_contents);
         if (json_or_error.is_error()) {
             warnln("Error: {}", json_or_error.error());
@@ -245,7 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!has_protocol_flag || flag_udp) {
         auto file = TRY(Core::Stream::File::open("/sys/kernel/net/udp"sv, Core::Stream::OpenMode::Read));
-        auto file_contents = TRY(file->read_all());
+        auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 
         Vector<JsonValue> sorted_regions = json.as_array().values();

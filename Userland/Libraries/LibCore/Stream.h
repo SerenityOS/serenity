@@ -39,7 +39,7 @@ public:
     /// Reads the stream until EOF, storing the contents into a ByteBuffer which
     /// is returned once EOF is encountered. The block size determines the size
     /// of newly allocated chunks while reading.
-    virtual ErrorOr<ByteBuffer> read_all(size_t block_size = 4096);
+    virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096);
     /// Discards the given number of bytes from the stream.
     /// Unless specifically overwritten, this just uses read() to read into an
     /// internal stack-based buffer.
@@ -69,12 +69,12 @@ public:
     }
 
 protected:
-    /// Provides a default implementation of read_all that works for streams
+    /// Provides a default implementation of read_until_eof that works for streams
     /// that behave like POSIX file descriptors. expected_file_size can be
     /// passed as a heuristic for what the Stream subclass expects the file
     /// content size to be in order to reduce allocations (does not affect
     /// actual reading).
-    ErrorOr<ByteBuffer> read_all_impl(size_t block_size, size_t expected_file_size = 0);
+    ErrorOr<ByteBuffer> read_until_eof_impl(size_t block_size, size_t expected_file_size = 0);
 };
 
 enum class SeekMode {
@@ -238,7 +238,7 @@ public:
     }
 
     virtual ErrorOr<Bytes> read(Bytes) override;
-    virtual ErrorOr<ByteBuffer> read_all(size_t block_size = 4096) override;
+    virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
     virtual bool is_eof() const override;
     virtual bool is_open() const override;

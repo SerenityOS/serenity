@@ -337,7 +337,7 @@ inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView p
 inline ErrorOr<JsonValue> read_json_file(StringView path)
 {
     auto file = TRY(open_file(path, Core::Stream::OpenMode::Read));
-    auto buffer = TRY(file->read_all());
+    auto buffer = TRY(file->read_until_eof());
 
     return JsonValue::from_string(buffer);
 }

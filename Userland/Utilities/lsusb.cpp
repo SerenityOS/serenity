@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto contents = proc_usb_device.value()->read_all();
+        auto contents = proc_usb_device.value()->read_until_eof();
         if (contents.is_error()) {
             warnln("Failed to read {}: {}", full_path.string(), contents.error());
             continue;

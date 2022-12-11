@@ -70,7 +70,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
         outln("lsof: PID {}: {}", pid, file.error());
         return Vector<OpenFile>();
     }
-    auto data = file.value()->read_all();
+    auto data = file.value()->read_until_eof();
     if (data.is_error()) {
         outln("lsof: PID {}: {}", pid, data.error());
         return {};
