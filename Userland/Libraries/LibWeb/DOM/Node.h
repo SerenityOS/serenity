@@ -12,6 +12,8 @@
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
+#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/AccessibilityTreeNode.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOMParsing/XMLSerializer.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -639,6 +641,8 @@ protected:
     // https://dom.spec.whatwg.org/#registered-observer-list
     // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
     Vector<RegisteredObserver&> m_registered_observer_list;
+
+    void build_accessibility_tree(AccessibilityTreeNode& parent) const;
 
 private:
     void queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);

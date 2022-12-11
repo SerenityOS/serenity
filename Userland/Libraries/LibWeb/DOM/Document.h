@@ -447,6 +447,8 @@ public:
 
     bool query_command_supported(DeprecatedString const&) const;
 
+    DeprecatedString dump_accessibility_tree_as_json();
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
