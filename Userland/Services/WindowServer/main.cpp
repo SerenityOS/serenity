@@ -7,6 +7,7 @@
 #include "AppletManager.h"
 #include "Compositor.h"
 #include "EventLoop.h"
+#include "GlobalMenu.h"
 #include "Screen.h"
 #include "WindowManager.h"
 #include <LibCore/ConfigFile.h>
@@ -148,6 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
     auto am = WindowServer::AppletManager::construct();
+    auto gm = WindowServer::GlobalMenu::construct();
     auto mm = WindowServer::MenuManager::construct();
 
     TRY(Core::System::unveil("/tmp", ""));

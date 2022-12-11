@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +25,7 @@
 #include <WindowServer/Button.h>
 #include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/Cursor.h>
+#include <WindowServer/GlobalMenu.h>
 #include <WindowServer/WindowClientEndpoint.h>
 
 namespace WindowServer {
@@ -419,6 +421,8 @@ void WindowManager::remove_window(Window& window)
 
     if (m_tile_window_overlay && m_tile_window_overlay->is_window(window))
         stop_tile_window_animation();
+
+    GlobalMenu::the().handle_active_window_closed();
 }
 
 void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
@@ -503,6 +507,8 @@ void WindowManager::tell_wms_window_state_changed(Window& window)
         tell_wm_about_window(conn, window);
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_changed();
 }
 
 void WindowManager::tell_wms_window_icon_changed(Window& window)
@@ -511,6 +517,8 @@ void WindowManager::tell_wms_window_icon_changed(Window& window)
         tell_wm_about_window_icon(conn, window);
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_changed();
 }
 
 void WindowManager::tell_wms_window_rect_changed(Window& window)
@@ -597,6 +605,14 @@ static bool window_type_has_title(WindowType type)
 }
 
 void WindowManager::notify_modified_changed(Window& window)
+{
+    if (m_switcher->is_visible())
+        m_switcher->refresh();
+
+    tell_wms_window_state_changed(window);
+}
+
+void WindowManager::notify_menubar_changed(Window& window)
 {
     if (m_switcher->is_visible())
         m_switcher->refresh();
@@ -1456,6 +1472,12 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         || hitting_menu_in_window_with_active_menu) {
 
         if (!hitting_menu_in_window_with_active_menu) {
+            // Normally, we don't send events to windows if there is a foreground menu active.
+            // However, we want to override this behavior for the global menu so that you can
+            // switch menus by just moving your mouse after you've already opened one submenu.
+            if (GlobalMenu::the().enabled() && GlobalMenu::the().has_active_menu())
+                GlobalMenu::the().dispatch_event(event);
+
             MenuManager::the().dispatch_event(event);
             return;
         }
@@ -2203,6 +2225,7 @@ bool WindowManager::update_theme(ByteString theme_path, ByteString theme_name, b
     if (!sync_config_to_disk())
         return false;
     invalidate_after_theme_or_font_change();
+    GlobalMenu::the().handle_active_window_changed();
     return true;
 }
 

@@ -79,6 +79,7 @@ public:
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
+    void notify_menubar_changed(Window&);
 
     Gfx::IntRect tiled_window_rect(Window const&, Optional<Screen const&> = {}, WindowTileType tile_type = WindowTileType::Maximized) const;
 
