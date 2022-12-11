@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Filesystem    Blocks        Used    Available   Mount point");
     }
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
     auto json_result = TRY(JsonValue::from_string(file_contents));
     auto const& json = json_result.as_array();
     json.for_each([](auto& value) {

@@ -118,7 +118,7 @@ static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)
 
 static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core::Stream::File& pnp_ids_file)
 {
-    auto pnp_ids_file_bytes = TRY(pnp_ids_file.read_all());
+    auto pnp_ids_file_bytes = TRY(pnp_ids_file.read_until_eof());
     StringView pnp_ids_file_contents(pnp_ids_file_bytes);
 
     HashMap<DeprecatedString, PnpIdData> pnp_id_data;

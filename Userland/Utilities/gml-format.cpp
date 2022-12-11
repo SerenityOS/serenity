@@ -16,7 +16,7 @@ static ErrorOr<bool> format_file(StringView path, bool inplace)
     auto open_mode = (inplace && !read_from_stdin) ? Core::Stream::OpenMode::ReadWrite : Core::Stream::OpenMode::Read;
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, open_mode));
 
-    auto contents = TRY(file->read_all());
+    auto contents = TRY(file->read_until_eof());
     auto formatted_gml_or_error = GUI::GML::format_gml(contents);
     if (formatted_gml_or_error.is_error()) {
         warnln("Failed to parse GML: {}", formatted_gml_or_error.error());

@@ -113,7 +113,7 @@ Image::Image(NonnullRefPtr<ImageDecoderClient::Client> client, NonnullRefPtr<GUI
 ErrorOr<void> Image::reload_image()
 {
     auto file = TRY(Core::Stream::File::open(m_image_path, Core::Stream::OpenMode::Read));
-    auto data = TRY(file->read_all());
+    auto data = TRY(file->read_until_eof());
     auto maybe_decoded = m_client->decode_image(data);
     if (!maybe_decoded.has_value() || maybe_decoded.value().frames.size() < 1)
         return Error::from_string_view("Could not decode image"sv);

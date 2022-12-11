@@ -15,7 +15,7 @@
 static ErrorOr<void> tail_from_pos(Core::Stream::File& file, off_t startline)
 {
     TRY(file.seek(startline + 1, Core::Stream::SeekMode::SetPosition));
-    auto buffer = TRY(file.read_all());
+    auto buffer = TRY(file.read_until_eof());
     out("{}", StringView { buffer });
     return {};
 }
@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         do {
             // FIXME: If f is the standard input, f->read_all() does not block
             // anymore after sending EOF (^D), despite f->is_open() returning true.
-            auto buffer = TRY(f->read_all(PAGE_SIZE));
+            auto buffer = TRY(f->read_until_eof(PAGE_SIZE));
             auto line_count = StringView(buffer).count("\n"sv);
             auto bytes = buffer.bytes();
             size_t line_index = 0;
@@ -108,7 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto watcher = TRY(Core::FileWatcher::create());
         watcher->on_change = [&](Core::FileWatcherEvent const& event) {
             if (event.type == Core::FileWatcherEvent::Type::ContentModified) {
-                auto buffer_or_error = f->read_all();
+                auto buffer_or_error = f->read_until_eof();
                 if (buffer_or_error.is_error()) {
                     auto error = buffer_or_error.error();
                     warnln(error.string_literal());

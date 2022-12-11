@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio"));
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
 
     if (use_color) {

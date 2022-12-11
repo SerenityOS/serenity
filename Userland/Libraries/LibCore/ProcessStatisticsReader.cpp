@@ -21,7 +21,7 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(Core::Stream::S
 
     AllProcessesStatistics all_processes_statistics;
 
-    auto file_contents = TRY(proc_all_file.read_all());
+    auto file_contents = TRY(proc_all_file.read_until_eof());
     auto json_obj = TRY(JsonValue::from_string(file_contents)).as_object();
     json_obj.get("processes"sv).as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();

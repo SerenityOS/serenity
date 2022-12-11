@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::Stream::File::open("/var/run/utmp"sv, Core::Stream::OpenMode::ReadWrite));
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
     auto previous_json = TRY(JsonValue::from_string(file_contents));
 
     JsonObject json;

@@ -149,7 +149,7 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
             };
         }
 
-        auto contents_or_error = file_or_error.value()->read_all();
+        auto contents_or_error = file_or_error.value()->read_until_eof();
         if (contents_or_error.is_error()) {
             return TestError {
                 NegativePhase::Harness,
@@ -719,7 +719,7 @@ int main(int argc, char** argv)
         static size_t strict_length = use_strict.length();
 
         {
-            auto contents_or_error = file->read_all();
+            auto contents_or_error = file->read_until_eof();
             if (contents_or_error.is_error()) {
                 warnln("Could not read contents of file: {}", path);
                 return exit_read_file_failure;

@@ -86,7 +86,7 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Depre
         auto bufstream = bufstream_result.release_value();
         auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
 
-        auto uncompressed = brotli_stream.read_all();
+        auto uncompressed = brotli_stream.read_until_eof();
         if (uncompressed.is_error()) {
             dbgln("Job::handle_content_encoding: Brotli::decompress() failed: {}.", uncompressed.error());
             return {};

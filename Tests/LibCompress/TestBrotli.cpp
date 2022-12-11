@@ -19,13 +19,13 @@ static void run_test(StringView const file_name)
 #endif
 
     auto cmp_file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-    auto cmp_data = MUST(cmp_file->read_all());
+    auto cmp_data = MUST(cmp_file->read_until_eof());
 
     DeprecatedString path_compressed = DeprecatedString::formatted("{}.br", path);
 
     auto file = MUST(Core::Stream::File::open(path_compressed, Core::Stream::OpenMode::Read));
     auto brotli_stream = Compress::BrotliDecompressionStream { *file };
-    auto data = MUST(brotli_stream.read_all());
+    auto data = MUST(brotli_stream.read_until_eof());
 
     EXPECT_EQ(data, cmp_data);
 }

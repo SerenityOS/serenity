@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool color_output = TRY(Core::System::isatty(STDOUT_FILENO));
 
-    auto hunks = Diff::from_text(TRY(file1->read_all()), TRY(file2->read_all()));
+    auto hunks = Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()));
     for (auto const& hunk : hunks) {
         auto original_start = hunk.original_start_line;
         auto target_start = hunk.target_start_line;

@@ -18,7 +18,7 @@ M3UParser::M3UParser()
 NonnullOwnPtr<M3UParser> M3UParser::from_file(StringView path)
 {
     auto file_result = Core::Stream::File::open(path, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
-    auto contents = file_result->read_all().release_value_but_fixme_should_propagate_errors();
+    auto contents = file_result->read_until_eof().release_value_but_fixme_should_propagate_errors();
     auto use_utf8 = path.ends_with(".m3u8"sv, CaseSensitivity::CaseInsensitive);
     return from_memory(DeprecatedString { contents, NoChomp }, use_utf8);
 }

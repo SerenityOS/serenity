@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio"));
 
-    auto buffer = TRY(file->read_all());
+    auto buffer = TRY(file->read_until_eof());
     dbgln("Read size {}", buffer.size());
 
     auto input = DeprecatedString::copy(buffer);

@@ -113,7 +113,7 @@ private:
             return "";
         }
 
-        auto file_contents_or_error = file_or_error.value()->read_all();
+        auto file_contents_or_error = file_or_error.value()->read_until_eof();
         if (file_contents_or_error.is_error()) {
             dbgln("Error: Could not read /sys/kernel/net/adapters: {}", file_contents_or_error.error());
             return "";

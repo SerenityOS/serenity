@@ -826,7 +826,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::Stream::File::open(arguments.strings[1], Core::Stream::OpenMode::Read));
 
-    auto file_contents = TRY(file->read_all());
+    auto file_contents = TRY(file->read_until_eof());
 
     auto endpoints = parse(file_contents);
 

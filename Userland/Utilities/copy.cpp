@@ -43,7 +43,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     } else if (text.is_empty()) {
         // Copy our stdin.
         auto c_stdin = TRY(Core::Stream::File::standard_input());
-        auto buffer = TRY(c_stdin->read_all());
+        auto buffer = TRY(c_stdin->read_until_eof());
         dbgln("Read size {}", buffer.size());
         dbgln("Read data: `{}`", StringView(buffer.bytes()));
         options.data = buffer.bytes();

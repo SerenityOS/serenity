@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("stdio"));
 
-    auto file_contents = TRY(proc_interrupts->read_all());
+    auto file_contents = TRY(proc_interrupts->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
 
     auto cpu_count = json.as_array().at(0).as_object().get("per_cpu_call_counts"sv).as_array().size();

@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     if (file_or_error.is_error()) {
         outln("This account is currently not available.");
     } else {
-        auto message_from_file = TRY(file_or_error.value()->read_all());
+        auto message_from_file = TRY(file_or_error.value()->read_until_eof());
         out("{}", StringView { message_from_file });
     }
 

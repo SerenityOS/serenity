@@ -56,21 +56,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto maybe_command_set = command_set_file.value()->read_all();
+        auto maybe_command_set = command_set_file.value()->read_until_eof();
         if (maybe_command_set.is_error()) {
             dbgln("Error: Could not read {}: {}", command_set_filename, maybe_command_set.error());
             continue;
         }
         DeprecatedString command_set = StringView(maybe_command_set.value().bytes());
 
-        auto maybe_last_lba = last_lba_file.value()->read_all();
+        auto maybe_last_lba = last_lba_file.value()->read_until_eof();
         if (maybe_last_lba.is_error()) {
             dbgln("Error: Could not read {}: {}", last_lba_filename, maybe_last_lba.error());
             continue;
         }
         DeprecatedString last_lba = StringView(maybe_last_lba.value().bytes());
 
-        auto maybe_sector_size = sector_size_file.value()->read_all();
+        auto maybe_sector_size = sector_size_file.value()->read_until_eof();
         if (maybe_sector_size.is_error()) {
             dbgln("Error: Could not read {}: {}", sector_size_filename, maybe_sector_size.error());
             continue;

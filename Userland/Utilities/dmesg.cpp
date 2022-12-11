@@ -15,7 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto file = TRY(Core::Stream::File::open("/sys/kernel/dmesg"sv, Core::Stream::OpenMode::Read));
-    auto buffer = TRY(file->read_all());
+    auto buffer = TRY(file->read_until_eof());
     out("{}", StringView { buffer });
     return 0;
 }

@@ -152,7 +152,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto fn = parse_target_name(type);
 
     auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
-    auto input = TRY(file->read_all());
+    auto input = TRY(file->read_until_eof());
 
     return fn(input.data(), input.size());
 }

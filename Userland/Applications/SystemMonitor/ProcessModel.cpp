@@ -411,7 +411,7 @@ Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned fla
 static ErrorOr<DeprecatedString> try_read_command_line(pid_t pid)
 {
     auto file = TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read));
-    auto data = TRY(file->read_all());
+    auto data = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(StringView { data.bytes() }));
     auto array = json.as_array().values();
     return DeprecatedString::join(" "sv, array);

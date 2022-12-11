@@ -370,7 +370,7 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
-    auto file_contents_or_error = file_or_error.value()->read_all();
+    auto file_contents_or_error = file_or_error.value()->read_until_eof();
     if (file_contents_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error()));
 
@@ -878,7 +878,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             for (auto& path : script_paths) {
                 auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-                auto file_contents = TRY(file->read_all());
+                auto file_contents = TRY(file->read_until_eof());
                 auto source = StringView { file_contents };
 
                 if (Utf8View { file_contents }.validate()) {

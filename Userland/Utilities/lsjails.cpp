@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio"));
 
     outln("Index    Name");
-    auto file_contents = TRY(jails_data->read_all());
+    auto file_contents = TRY(jails_data->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
     json.as_array().for_each([](auto& value) {
         auto& jail = value.as_object();

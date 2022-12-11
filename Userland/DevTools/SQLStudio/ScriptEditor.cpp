@@ -29,7 +29,7 @@ void ScriptEditor::new_script_with_temp_name(DeprecatedString name)
 ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
 {
     auto file = TRY(Core::Stream::File::open(file_path.string(), Core::Stream::OpenMode::Read));
-    auto buffer = TRY(file->read_all());
+    auto buffer = TRY(file->read_until_eof());
 
     set_text({ buffer.bytes() });
     m_path = file_path.string();

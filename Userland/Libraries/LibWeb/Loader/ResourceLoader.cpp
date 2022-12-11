@@ -243,7 +243,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             }
 
             auto file = maybe_file.release_value();
-            auto maybe_data = file->read_all();
+            auto maybe_data = file->read_until_eof();
             if (maybe_data.is_error()) {
                 log_failure(request, maybe_data.error());
                 if (error_callback)

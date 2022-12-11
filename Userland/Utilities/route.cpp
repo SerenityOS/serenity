@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (modify_action.is_empty()) {
         auto file = TRY(Core::Stream::File::open("/sys/kernel/net/route"sv, Core::Stream::OpenMode::Read));
-        auto file_contents = TRY(file->read_all());
+        auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 
         outln("Kernel IP routing table");

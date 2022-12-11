@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio proc"));
 
     dbgln("Loading man page from {}", TRY(page->path()));
-    auto buffer = TRY(file->read_all());
+    auto buffer = TRY(file->read_until_eof());
     auto source = DeprecatedString::copy(buffer);
 
     auto const title = TRY(String::from_utf8("SerenityOS manual"sv));
