@@ -93,19 +93,19 @@ ErrorOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_fr
     return name;
 }
 
-UNMAP_AFTER_INIT LockRefPtr<NetworkAdapter> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
 {
-    if (auto candidate = E1000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
-        return candidate;
-    if (auto candidate = E1000ENetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
-        return candidate;
-    if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
-        return candidate;
-    if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
-        return candidate;
-    if (auto candidate = NE2000NetworkAdapter::try_to_initialize(device_identifier); !candidate.is_null())
-        return candidate;
-    return {};
+    if (auto candidate = TRY(E1000NetworkAdapter::try_to_initialize(device_identifier)))
+        return candidate.release_nonnull();
+    if (auto candidate = TRY(E1000ENetworkAdapter::try_to_initialize(device_identifier)))
+        return candidate.release_nonnull();
+    if (auto candidate = TRY(RTL8139NetworkAdapter::try_to_initialize(device_identifier)))
+        return candidate.release_nonnull();
+    if (auto candidate = TRY(RTL8168NetworkAdapter::try_to_initialize(device_identifier)))
+        return candidate.release_nonnull();
+    if (auto candidate = TRY(NE2000NetworkAdapter::try_to_initialize(device_identifier)))
+        return candidate.release_nonnull();
+    return Error::from_string_literal("Unsupported network adapter");
 }
 
 bool NetworkingManagement::initialize()
@@ -115,8 +115,12 @@ bool NetworkingManagement::initialize()
             // Note: PCI class 2 is the class of Network devices
             if (device_identifier.class_code().value() != 0x02)
                 return;
-            if (auto adapter = determine_network_device(device_identifier); !adapter.is_null())
-                m_adapters.with([&](auto& adapters) { adapters.append(adapter.release_nonnull()); });
+            auto result = determine_network_device(device_identifier);
+            if (result.is_error()) {
+                dmesgln("Failed to initialize network adapter ({} {}): {}", device_identifier.address(), device_identifier.hardware_id(), result.error());
+                return;
+            }
+            m_adapters.with([&](auto& adapters) { adapters.append(result.release_value()); });
         }));
     }
     auto loopback = LoopbackAdapter::try_create();
