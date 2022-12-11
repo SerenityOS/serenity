@@ -245,6 +245,10 @@ public:
 
 #undef ARIA_IMPL
 
+    virtual bool exclude_from_accessibility_tree() const override;
+
+    virtual bool include_in_accessibility_tree() const override;
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual void initialize(JS::Realm&) override;

@@ -136,6 +136,12 @@ public:
 
     FlyString role_or_default() const;
 
+    // https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion
+    virtual bool exclude_from_accessibility_tree() const = 0;
+
+    // https://www.w3.org/TR/wai-aria-1.2/#tree_inclusion
+    virtual bool include_in_accessibility_tree() const = 0;
+
     bool has_global_aria_attribute() const;
 
 protected:
