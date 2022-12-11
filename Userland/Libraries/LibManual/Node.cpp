@@ -25,8 +25,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     auto query_parameter_iterator = query_parameters.begin();
 
     if (query_parameter_iterator.is_end())
-        // BUG! No query was given.
-        VERIFY_NOT_REACHED();
+        return PageNode::help_index_page();
 
     auto first_query_parameter = *query_parameter_iterator;
     ++query_parameter_iterator;
