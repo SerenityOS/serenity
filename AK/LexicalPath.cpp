@@ -171,8 +171,25 @@ DeprecatedString LexicalPath::relative_path(StringView a_path, StringView a_pref
         return path.substring_view(prefix.length() + 1);
     }
 
-    // FIXME: It's still possible to generate a relative path in this case, it just needs some "..".
-    return path;
+    auto path_parts = path.split_view('/');
+    auto prefix_parts = prefix.split_view('/');
+    size_t index_of_first_part_that_differs = 0;
+    for (; index_of_first_part_that_differs < path_parts.size() && index_of_first_part_that_differs < prefix_parts.size(); index_of_first_part_that_differs++) {
+        if (path_parts[index_of_first_part_that_differs] != prefix_parts[index_of_first_part_that_differs])
+            break;
+    }
+
+    StringBuilder builder;
+    for (size_t part_index = index_of_first_part_that_differs; part_index < prefix_parts.size(); part_index++) {
+        builder.append("../"sv);
+    }
+    for (size_t part_index = index_of_first_part_that_differs; part_index < path_parts.size(); part_index++) {
+        builder.append(path_parts[part_index]);
+        if (part_index != path_parts.size() - 1) // We don't need a slash after the file name or the name of the last directory
+            builder.append('/');
+    }
+
+    return builder.to_deprecated_string();
 }
 
 LexicalPath LexicalPath::append(StringView value) const
