@@ -120,6 +120,10 @@ public:
 
     void set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers);
 
+    void set_modified(DeprecatedString action_text);
+    void set_unmodified();
+    void update_modified();
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 

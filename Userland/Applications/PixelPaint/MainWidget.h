@@ -59,6 +59,8 @@ private:
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
+    void update_window_modified();
+
     ProjectLoader m_loader;
 
     RefPtr<ToolboxWidget> m_toolbox;

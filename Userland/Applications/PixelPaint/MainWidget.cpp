@@ -95,12 +95,7 @@ MainWidget::MainWidget()
         m_vectorscope_widget->set_image(&image_editor.image());
         m_layer_list_widget->set_image(&image_editor.image());
         m_layer_properties_widget->set_layer(image_editor.active_layer());
-        window()->set_modified(image_editor.is_modified());
-        image_editor.on_modified_change = [this](bool modified) {
-            window()->set_modified(modified);
-            m_histogram_widget->image_changed();
-            m_vectorscope_widget->image_changed();
-        };
+        update_window_modified();
         if (auto* active_tool = m_toolbox->active_tool())
             image_editor.set_active_tool(active_tool);
         m_show_guides_action->set_checked(image_editor.guide_visibility());
@@ -166,7 +161,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto& editor = create_new_editor(*image);
                 auto image_title = dialog->image_name().trim_whitespace();
                 editor.set_title(image_title.is_empty() ? "Untitled" : image_title);
-                editor.undo_stack().set_current_unmodified();
+                editor.set_unmodified();
 
                 m_histogram_widget->set_image(image);
                 m_vectorscope_widget->set_image(image);
@@ -1005,7 +1000,7 @@ void MainWidget::open_image(Core::File& file)
     auto& editor = create_new_editor(image);
     editor.set_loaded_from_image(m_loader.is_raw_image());
     editor.set_path(file.filename());
-    editor.undo_stack().set_current_unmodified();
+    editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
 }
 
@@ -1022,7 +1017,7 @@ void MainWidget::create_default_image()
     auto& editor = create_new_editor(*image);
     editor.set_title("Untitled");
     editor.set_active_layer(bg_layer);
-    editor.undo_stack().set_current_unmodified();
+    editor.set_unmodified();
 }
 
 void MainWidget::create_image_from_clipboard()
@@ -1076,6 +1071,13 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 
     image_editor.on_title_change = [&](auto const& title) {
         m_tab_widget->set_tab_title(image_editor, title);
+    };
+
+    image_editor.on_modified_change = [&](auto const modified) {
+        m_tab_widget->set_tab_modified(image_editor, modified);
+        update_window_modified();
+        m_histogram_widget->image_changed();
+        m_vectorscope_widget->image_changed();
     };
 
     image_editor.on_image_mouse_position_change = [&](auto const& mouse_position) {
@@ -1176,5 +1178,10 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
         open_image(response.value());
     }
+}
+
+void MainWidget::update_window_modified()
+{
+    window()->set_modified(m_tab_widget->is_any_tab_modified());
 }
 }

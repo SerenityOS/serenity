@@ -63,9 +63,7 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action(DeprecatedString action_text)
 {
-    if (on_modified_change)
-        on_modified_change(true);
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image, move(action_text)));
+    set_modified(move(action_text));
 }
 
 bool ImageEditor::is_modified()
@@ -116,6 +114,24 @@ void ImageEditor::set_path(DeprecatedString path)
 {
     m_path = move(path);
     set_title(LexicalPath::title(m_path));
+}
+
+void ImageEditor::set_modified(DeprecatedString action_text)
+{
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, move(action_text)));
+    update_modified();
+}
+
+void ImageEditor::set_unmodified()
+{
+    m_undo_stack.set_current_unmodified();
+    update_modified();
+}
+
+void ImageEditor::update_modified()
+{
+    if (on_modified_change)
+        on_modified_change(is_modified());
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)
@@ -568,8 +584,7 @@ void ImageEditor::clear_guides()
 
 void ImageEditor::layers_did_change()
 {
-    if (on_modified_change)
-        on_modified_change(true);
+    update_modified();
     update();
 }
 
@@ -687,9 +702,7 @@ void ImageEditor::save_project()
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", path(), result.error()));
         return;
     }
-    undo_stack().set_current_unmodified();
-    if (on_modified_change)
-        on_modified_change(false);
+    set_unmodified();
 }
 
 void ImageEditor::save_project_as()
@@ -705,9 +718,7 @@ void ImageEditor::save_project_as()
     }
     set_path(file->filename());
     set_loaded_from_image(false);
-    undo_stack().set_current_unmodified();
-    if (on_modified_change)
-        on_modified_change(false);
+    set_unmodified();
 }
 
 Result<void, DeprecatedString> ImageEditor::save_project_to_file(Core::File& file) const

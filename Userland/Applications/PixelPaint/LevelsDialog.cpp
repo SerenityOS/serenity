@@ -58,10 +58,8 @@ LevelsDialog::LevelsDialog(GUI::Window* parent_window, ImageEditor* editor)
     };
 
     apply_button->on_click = [this](auto) {
-        if (m_did_change) {
-            m_editor->on_modified_change(true);
+        if (m_did_change)
             m_editor->did_complete_action("Levels"sv);
-        }
 
         cleanup_resources();
         done(ExecResult::OK);
