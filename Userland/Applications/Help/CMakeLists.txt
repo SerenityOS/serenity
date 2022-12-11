@@ -19,5 +19,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Help ICON app-help)
-target_link_libraries(Help PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibDesktop LibMain LibManual)
+target_link_libraries(Help PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibDesktop LibMain LibManual LibLocale)
 link_with_locale_data(Help)
