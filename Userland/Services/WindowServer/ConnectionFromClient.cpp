@@ -647,7 +647,8 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
             window->refresh_client_size();
     }
     if (window->type() == WindowType::Desktop) {
-        window->set_rect(Screen::bounding_rect());
+        // FIXME: get the window's screen
+        window->set_rect(WindowManager::the().arena_rect_for_type(Screen::main(), WindowType::Desktop));
         window->recalculate_rect();
     }
     window->set_opacity(opacity);

@@ -19,6 +19,7 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
+#include <Services/Taskbar/GlobalMenuWindow.h>
 #include <Services/Taskbar/TaskbarWindow.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
@@ -1441,8 +1442,15 @@ Gfx::IntRect WindowManager::desktop_rect(Screen& screen) const
     if (active_fullscreen_window())
         return Screen::main().rect(); // TODO: we should support fullscreen windows on any screen
     auto screen_rect = screen.rect();
-    if (screen.is_main_screen())
+    if (screen.is_main_screen()) {
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         screen_rect.set_height(screen.height() - TaskbarWindow::taskbar_height());
+
+        if (GlobalMenu::the().enabled()) {
+            screen_rect.take_from_top(GlobalMenuWindow::global_menu_height());
+            screen_rect.set_y(GlobalMenuWindow::global_menu_height());
+        }
+    }
     return screen_rect;
 }
 
@@ -1450,7 +1458,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(Screen& screen, WindowType type)
 {
     switch (type) {
     case WindowType::Desktop:
-        return Screen::bounding_rect();
     case WindowType::Normal:
         return desktop_rect(screen);
     case WindowType::Menu:
@@ -1972,8 +1979,15 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
     auto& screen = Screen::closest_to_rect(window.frame().rect());
     Gfx::IntRect rect = screen.rect();
 
-    if (screen.is_main_screen())
+    if (screen.is_main_screen()) {
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         rect.set_height(rect.height() - TaskbarWindow::taskbar_height());
+
+        if (GlobalMenu::the().enabled()) {
+            rect.take_from_top(GlobalMenuWindow::global_menu_height());
+            rect.set_y(GlobalMenuWindow::global_menu_height());
+        }
+    }
 
     if (tile_type == WindowTileType::Maximized) {
         auto border_thickness = palette().window_border_thickness();
@@ -2005,6 +2019,8 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
         auto half_screen_remainder = rect.height() % 2;
         rect.set_height(rect.height() / 2 + half_screen_remainder);
         rect.set_y(rect.height() - half_screen_remainder);
+        if (screen.is_main_screen())
+            rect.set_y(rect.y() + GlobalMenuWindow::global_menu_height());
     }
 
     Gfx::IntRect window_rect = window.rect();
@@ -2195,8 +2211,9 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desir
     if (overlap_window) {
         auto& screen = Screen::closest_to_location(desired);
         point = overlap_window->position() + shift;
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         point = { point.x() % screen.width(),
-            (point.y() >= (screen.height() - (screen.is_main_screen() ? TaskbarWindow::taskbar_height() : 0)))
+            (point.y() >= (screen.height() - (screen.is_main_screen() ? TaskbarWindow::taskbar_height() + (GlobalMenu::the().enabled() ? GlobalMenuWindow::global_menu_height() : 0) : 0)))
                 ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
                 : point.y() };
     } else {
