@@ -193,26 +193,23 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
 
 void GLContext::gl_light_modelv(GLenum pname, void const* params, GLenum type)
 {
-    auto invoke_implementation = [&](auto const* params) {
-        switch (pname) {
-        case GL_LIGHT_MODEL_AMBIENT:
-            gl_light_model(pname, params[0], params[1], params[2], params[3]);
-            return;
-        default:
-            gl_light_model(pname, params[0], 0.f, 0.f, 0.f);
-            return;
-        }
+    VERIFY(type == GL_FLOAT || type == GL_INT);
+
+    auto parameters_to_vector = [&]<typename T>(T const* params) -> FloatVector4 {
+        return (pname == GL_LIGHT_MODEL_AMBIENT)
+            ? Vector4<T> { params[0], params[1], params[2], params[3] }.template to_type<float>()
+            : Vector4<T> { params[0], 0, 0, 0 }.template to_type<float>();
     };
-    switch (type) {
-    case GL_FLOAT:
-        invoke_implementation(reinterpret_cast<GLfloat const*>(params));
-        break;
-    case GL_INT:
-        invoke_implementation(reinterpret_cast<GLint const*>(params));
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+
+    auto light_model_parameters = (type == GL_FLOAT)
+        ? parameters_to_vector(reinterpret_cast<GLfloat const*>(params))
+        : parameters_to_vector(reinterpret_cast<GLint const*>(params));
+
+    // Normalize integers to -1..1
+    if (pname == GL_LIGHT_MODEL_AMBIENT && type == GL_INT)
+        light_model_parameters = (light_model_parameters + 2147483648.f) / 2147483647.5f - 1.f;
+
+    gl_light_model(pname, light_model_parameters[0], light_model_parameters[1], light_model_parameters[2], light_model_parameters[3]);
 }
 
 void GLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
