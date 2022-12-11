@@ -37,7 +37,9 @@ static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
     TRY(Core::System::fcntl(socket_fd, F_SETFD, FD_CLOEXEC));
 #    endif
 
+#    ifndef AK_OS_MACOS
     TRY(Core::System::fchmod(socket_fd, 0600));
+#    endif
 
     auto socket_address = Core::SocketAddress::local(socket_path);
     auto socket_address_un = socket_address.to_sockaddr_un().release_value();
