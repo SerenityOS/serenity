@@ -6,4 +6,4 @@
 
 #pragma once
 
-#define PTHREAD_STACK_MAX (8 * 1024 * 1024) // 8MiB
+#define PTHREAD_STACK_MAX (32 * 1024 * 1024) // 32MiB
