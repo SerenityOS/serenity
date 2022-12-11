@@ -7,6 +7,7 @@
  */
 
 #include <LibJS/Runtime/ExecutionContext.h>
+#include <LibJS/Runtime/FunctionObject.h>
 
 namespace JS {
 
@@ -36,6 +37,22 @@ ExecutionContext ExecutionContext::copy() const
     copy.is_strict_mode = is_strict_mode;
 
     return copy;
+}
+
+void ExecutionContext::visit_edges(Cell::Visitor& visitor)
+{
+    visitor.visit(function);
+    visitor.visit(realm);
+    visitor.visit(variable_environment);
+    visitor.visit(lexical_environment);
+    visitor.visit(private_environment);
+    visitor.visit(context_owner);
+    visitor.visit(this_value);
+    script_or_module.visit(
+        [](Empty) {},
+        [&](auto& script_or_module) {
+            visitor.visit(script_or_module);
+        });
 }
 
 }
