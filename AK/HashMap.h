@@ -222,6 +222,17 @@ public:
         return find(key)->value;
     }
 
+    template<typename Callback>
+    ErrorOr<V> try_ensure(K const& key, Callback initialization_callback)
+    {
+        auto it = find(key);
+        if (it != end())
+            return it->value;
+        auto result = TRY(try_set(key, initialization_callback()));
+        VERIFY(result == HashSetResult::InsertedNewEntry);
+        return find(key)->value;
+    }
+
     [[nodiscard]] Vector<K> keys() const
     {
         Vector<K> list;
