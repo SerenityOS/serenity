@@ -189,6 +189,24 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
     auto scaled_size = size() * m_scale_last_created_cursor;
     auto containing_box_size = 2 * scaled_size;
+
+    // If we have an ImageEditor scaled_size should not excede diagonal length of the ImageEditor
+    if(m_editor){
+        // FIXME: The ImageEditor diagonal size could be saved on the ImageEditor and exposed to optimize.
+        //        It would be nice if that was recalculated when the ImageEditor was resized
+        if(m_editor_previous_size[0] != m_editor->width() || m_editor_previous_size[1] != m_editor->height()){
+            m_editor_previous_size[0] = m_editor->width();
+            m_editor_previous_size[1] = m_editor->height();
+            max_scaled_size = sqrt(pow(m_editor->width(),2) + pow(m_editor->height(),2));
+        }
+
+        if( scaled_size > max_scaled_size){
+            scaled_size = max_scaled_size;
+            // containing_box_size also needs to change in order to draw the ellipse in the correct location.
+            containing_box_size = max_scaled_size * 2;
+        }
+    }
+
     NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(containing_box_size, containing_box_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::Painter painter { new_cursor };
@@ -198,16 +216,27 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::LightGray, 3);
     painter.draw_line({ scaled_size - 5, scaled_size }, { scaled_size + 5, scaled_size }, Color::MidGray, 1);
     painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::MidGray, 1);
-    aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+
+    // If no ImageEditor is present, we cannot bind the ellipse within the editor. Then we will just draw the ellipse.
+    if(!m_editor){
+        aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+    }else{
+        // FIXME: Draw the cursor with clipped edges rather than nothing at all when it intersects with the outside edges of the ImageEditor
+        aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+    }
 
     return new_cursor;
 }
 
 void BrushTool::refresh_editor_cursor()
 {
-    m_cursor = build_cursor();
-    if (m_editor)
-        m_editor->update_tool_cursor();
+    // Only build_cursor if the m_editor scale size or tool size has changed.
+    if(size() != m_size_previous || m_scale_last_created_cursor != ( m_editor ? m_editor->scale() : 1 ) ){
+        m_cursor = build_cursor();
+        m_size_previous = size();
+        if (m_editor)
+            m_editor->update_tool_cursor();
+    }
 }
 
 }

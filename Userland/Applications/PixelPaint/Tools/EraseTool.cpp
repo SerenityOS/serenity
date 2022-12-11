@@ -144,6 +144,15 @@ NonnullRefPtr<Gfx::Bitmap> EraseTool::build_cursor()
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
     int scaled_size = size() * m_scale_last_created_cursor;
 
+    // If we have an ImageEditor the scaled_size should not excede the longest size of the ImageEditor (width or height)
+    if(m_editor){
+        int max_dimension = max(m_editor->width(), m_editor->height());
+        if( scaled_size > max_dimension * 2 ){
+            // scaled_size needs to change in order to draw the cursor in the correct location.
+            scaled_size = max_dimension * 2;
+        }
+    }
+
     NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(scaled_size, scaled_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::IntRect rect { 0, 0, scaled_size, scaled_size };
