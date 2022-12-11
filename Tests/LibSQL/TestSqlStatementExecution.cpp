@@ -105,7 +105,7 @@ TEST_CASE(insert_into_table)
     EXPECT(!rows_or_error.is_error());
     for (auto& row : rows_or_error.value()) {
         EXPECT_EQ(row["TEXTCOLUMN"].to_deprecated_string(), "Test");
-        EXPECT_EQ(row["INTCOLUMN"].to_int().value(), 42);
+        EXPECT_EQ(row["INTCOLUMN"].to_int<i32>(), 42);
         count++;
     }
     EXPECT_EQ(count, 1);
@@ -318,7 +318,7 @@ TEST_CASE(select_with_where)
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable WHERE IntColumn > 44;");
     EXPECT_EQ(result.size(), 2u);
     for (auto& row : result) {
-        EXPECT(row.row[1].to_int().value() > 44);
+        EXPECT(row.row[1].to_int<i32>().value() > 44);
     }
 }
 
@@ -348,10 +348,10 @@ TEST_CASE(select_cross_join)
     EXPECT_EQ(result.size(), 25u);
     for (auto& row : result) {
         EXPECT(row.row.size() == 4);
-        EXPECT(row.row[1].to_int().value() >= 42);
-        EXPECT(row.row[1].to_int().value() <= 46);
-        EXPECT(row.row[3].to_int().value() >= 40);
-        EXPECT(row.row[3].to_int().value() <= 48);
+        EXPECT(row.row[1].to_int<i32>().value() >= 42);
+        EXPECT(row.row[1].to_int<i32>().value() <= 46);
+        EXPECT(row.row[3].to_int<i32>().value() >= 40);
+        EXPECT(row.row[3].to_int<i32>().value() <= 48);
     }
 }
 
@@ -383,7 +383,7 @@ TEST_CASE(select_inner_join)
         "WHERE TestTable1.IntColumn = TestTable2.IntColumn;");
     EXPECT_EQ(result.size(), 1u);
     EXPECT_EQ(result[0].row.size(), 3u);
-    EXPECT_EQ(result[0].row[0].to_int().value(), 42);
+    EXPECT_EQ(result[0].row[0].to_int<i32>(), 42);
     EXPECT_EQ(result[0].row[1].to_deprecated_string(), "Test_1");
     EXPECT_EQ(result[0].row[2].to_deprecated_string(), "Test_12");
 }
@@ -463,11 +463,11 @@ TEST_CASE(select_with_order)
 
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
     EXPECT_EQ(result.size(), 5u);
-    EXPECT_EQ(result[0].row[1].to_int().value(), 40);
-    EXPECT_EQ(result[1].row[1].to_int().value(), 41);
-    EXPECT_EQ(result[2].row[1].to_int().value(), 42);
-    EXPECT_EQ(result[3].row[1].to_int().value(), 44);
-    EXPECT_EQ(result[4].row[1].to_int().value(), 47);
+    EXPECT_EQ(result[0].row[1].to_int<i32>(), 40);
+    EXPECT_EQ(result[1].row[1].to_int<i32>(), 41);
+    EXPECT_EQ(result[2].row[1].to_int<i32>(), 42);
+    EXPECT_EQ(result[3].row[1].to_int<i32>(), 44);
+    EXPECT_EQ(result[4].row[1].to_int<i32>(), 47);
 
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn;");
     EXPECT_EQ(result.size(), 5u);
@@ -547,15 +547,15 @@ TEST_CASE(select_with_order_two_columns)
     result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn, IntColumn;");
     EXPECT_EQ(result.size(), 5u);
     EXPECT_EQ(result[0].row[0].to_deprecated_string(), "Test_1");
-    EXPECT_EQ(result[0].row[1].to_int().value(), 47);
+    EXPECT_EQ(result[0].row[1].to_int<i32>(), 47);
     EXPECT_EQ(result[1].row[0].to_deprecated_string(), "Test_2");
-    EXPECT_EQ(result[1].row[1].to_int().value(), 40);
+    EXPECT_EQ(result[1].row[1].to_int<i32>(), 40);
     EXPECT_EQ(result[2].row[0].to_deprecated_string(), "Test_2");
-    EXPECT_EQ(result[2].row[1].to_int().value(), 42);
+    EXPECT_EQ(result[2].row[1].to_int<i32>(), 42);
     EXPECT_EQ(result[3].row[0].to_deprecated_string(), "Test_4");
-    EXPECT_EQ(result[3].row[1].to_int().value(), 41);
+    EXPECT_EQ(result[3].row[1].to_int<i32>(), 41);
     EXPECT_EQ(result[4].row[0].to_deprecated_string(), "Test_5");
-    EXPECT_EQ(result[4].row[1].to_int().value(), 44);
+    EXPECT_EQ(result[4].row[1].to_int<i32>(), 44);
 }
 
 TEST_CASE(select_with_order_by_column_not_in_result)
@@ -626,16 +626,16 @@ TEST_CASE(select_with_order_limit_and_offset)
     }
     auto result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY IntColumn LIMIT 10 OFFSET 10;");
     EXPECT_EQ(result.size(), 10u);
-    EXPECT_EQ(result[0].row[1].to_int().value(), 10);
-    EXPECT_EQ(result[1].row[1].to_int().value(), 11);
-    EXPECT_EQ(result[2].row[1].to_int().value(), 12);
-    EXPECT_EQ(result[3].row[1].to_int().value(), 13);
-    EXPECT_EQ(result[4].row[1].to_int().value(), 14);
-    EXPECT_EQ(result[5].row[1].to_int().value(), 15);
-    EXPECT_EQ(result[6].row[1].to_int().value(), 16);
-    EXPECT_EQ(result[7].row[1].to_int().value(), 17);
-    EXPECT_EQ(result[8].row[1].to_int().value(), 18);
-    EXPECT_EQ(result[9].row[1].to_int().value(), 19);
+    EXPECT_EQ(result[0].row[1].to_int<i32>(), 10);
+    EXPECT_EQ(result[1].row[1].to_int<i32>(), 11);
+    EXPECT_EQ(result[2].row[1].to_int<i32>(), 12);
+    EXPECT_EQ(result[3].row[1].to_int<i32>(), 13);
+    EXPECT_EQ(result[4].row[1].to_int<i32>(), 14);
+    EXPECT_EQ(result[5].row[1].to_int<i32>(), 15);
+    EXPECT_EQ(result[6].row[1].to_int<i32>(), 16);
+    EXPECT_EQ(result[7].row[1].to_int<i32>(), 17);
+    EXPECT_EQ(result[8].row[1].to_int<i32>(), 18);
+    EXPECT_EQ(result[9].row[1].to_int<i32>(), 19);
 }
 
 TEST_CASE(select_with_limit_out_of_bounds)
@@ -707,7 +707,7 @@ TEST_CASE(binary_operator_execution)
             auto const& result_row = result.at(i).row;
             EXPECT_EQ(result_row.size(), 1u);
 
-            auto result_column = result_row[0].to_int();
+            auto result_column = result_row[0].to_int<i32>();
             result_values.append(result_column.value());
         }
 

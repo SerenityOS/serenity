@@ -268,7 +268,7 @@ void insert_into_and_scan_hash_index(int num_keys)
         int count = 0;
         for (auto iter = hash_index->begin(); !iter.is_end(); iter++, count++) {
             auto key = (*iter);
-            auto key_value = key[0].to_int();
+            auto key_value = key[0].to_int<i32>();
             VERIFY(key_value.has_value());
 
             for (auto ix = 0; ix < num_keys; ix++) {

@@ -59,9 +59,9 @@ Key ColumnDef::key() const
 {
     auto key = Key(index_def());
     key["table_hash"] = parent_relation()->hash();
-    key["column_number"] = (int)column_number();
+    key["column_number"] = column_number();
     key["column_name"] = name();
-    key["column_type"] = (int)type();
+    key["column_type"] = to_underlying(type());
     return key;
 }
 
@@ -183,7 +183,7 @@ void TableDef::append_column(DeprecatedString name, SQLType sql_type)
 
 void TableDef::append_column(Key const& column)
 {
-    auto column_type = column["column_type"].to_int();
+    auto column_type = column["column_type"].to_int<UnderlyingType<SQLType>>();
     VERIFY(column_type.has_value());
 
     append_column(column["column_name"].to_deprecated_string(), static_cast<SQLType>(*column_type));

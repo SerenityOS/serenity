@@ -165,7 +165,7 @@ ResultOr<NonnullRefPtr<TableDef>> Database::get_table(DeprecatedString const& sc
 
     auto table_hash = table_def->hash();
     auto column_key = ColumnDef::make_key(table_def);
-    for (auto it = m_table_columns->find(column_key); !it.is_end() && ((*it)["table_hash"].to_u32().value() == table_hash); ++it)
+    for (auto it = m_table_columns->find(column_key); !it.is_end() && ((*it)["table_hash"].to_int<u32>() == table_hash); ++it)
         table_def->append_column(*it);
 
     return table_def;

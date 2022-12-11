@@ -119,7 +119,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
 
         auto limit = TRY(m_limit_clause->limit_expression()->evaluate(context));
         if (!limit.is_null()) {
-            auto limit_value_maybe = limit.to_u32();
+            auto limit_value_maybe = limit.to_int<size_t>();
             if (!limit_value_maybe.has_value())
                 return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "LIMIT clause must evaluate to an integer value"sv };
 
@@ -129,7 +129,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         if (m_limit_clause->offset_expression() != nullptr) {
             auto offset = TRY(m_limit_clause->offset_expression()->evaluate(context));
             if (!offset.is_null()) {
-                auto offset_value_maybe = offset.to_u32();
+                auto offset_value_maybe = offset.to_int<size_t>();
                 if (!offset_value_maybe.has_value())
                     return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "OFFSET clause must evaluate to an integer value"sv };
 
