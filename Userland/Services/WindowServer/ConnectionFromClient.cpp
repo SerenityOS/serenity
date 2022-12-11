@@ -136,13 +136,12 @@ void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submen
         return;
     }
     auto& menu = *(*it).value;
-    auto menu_item = make<MenuItem>(menu, identifier, text, shortcut, enabled, checkable, checked);
+    auto menu_item = make<MenuItem>(menu, identifier, text, shortcut, enabled, visible, checkable, checked);
     if (is_default)
         menu_item->set_default(true);
     menu_item->set_icon(icon.bitmap());
     menu_item->set_submenu_id(submenu_id);
     menu_item->set_exclusive(exclusive);
-    menu_item->set_visible(visible);
     menu.add_item(move(menu_item));
 }
 
