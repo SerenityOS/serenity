@@ -82,6 +82,9 @@ ErrorOr<void> Stream::discard(size_t discarded_bytes)
     Array<u8, continuous_read_size> buffer;
 
     while (discarded_bytes > 0) {
+        if (is_eof())
+            return Error::from_string_literal("Reached end-of-file before reading all discarded bytes");
+
         auto slice = TRY(read(buffer.span().slice(0, min(discarded_bytes, continuous_read_size))));
         discarded_bytes -= slice.size();
     }
