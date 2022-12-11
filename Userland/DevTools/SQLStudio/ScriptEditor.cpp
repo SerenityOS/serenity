@@ -44,8 +44,7 @@ ErrorOr<bool> ScriptEditor::save()
 
     auto file = TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Write));
     auto editor_text = text();
-    if (editor_text.length() && !file->write_entire_buffer(editor_text.bytes()))
-        return Error::from_string_literal("Failed to write to file");
+    TRY(file->write_entire_buffer(editor_text.bytes()));
 
     document().set_unmodified();
     return true;
@@ -60,8 +59,7 @@ ErrorOr<bool> ScriptEditor::save_as()
 
     auto file = TRY(Core::Stream::File::open(save_path, Core::Stream::OpenMode::Write));
     auto editor_text = text();
-    if (editor_text.length() && !file->write_entire_buffer(editor_text.bytes()))
-        return Error::from_string_literal("Failed to write to file");
+    TRY(file->write_entire_buffer(editor_text.bytes()));
 
     m_path = save_path;
 

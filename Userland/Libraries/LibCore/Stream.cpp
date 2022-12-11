@@ -23,14 +23,14 @@
 
 namespace Core::Stream {
 
-bool Stream::read_entire_buffer(Bytes buffer)
+ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
 {
     VERIFY(buffer.size());
 
     size_t nread = 0;
     do {
         if (is_eof())
-            return false;
+            return Error::from_string_literal("Reached end-of-file before filling the entire buffer");
 
         auto result = read(buffer.slice(nread));
         if (result.is_error()) {
@@ -38,13 +38,13 @@ bool Stream::read_entire_buffer(Bytes buffer)
                 continue;
             }
 
-            return false;
+            return result.release_error();
         }
 
         nread += result.value().size();
     } while (nread < buffer.size());
 
-    return true;
+    return {};
 }
 
 ErrorOr<ByteBuffer> Stream::read_until_eof(size_t block_size)
@@ -89,7 +89,7 @@ ErrorOr<void> Stream::discard(size_t discarded_bytes)
     return {};
 }
 
-bool Stream::write_entire_buffer(ReadonlyBytes buffer)
+ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
 {
     VERIFY(buffer.size());
 
@@ -101,13 +101,13 @@ bool Stream::write_entire_buffer(ReadonlyBytes buffer)
                 continue;
             }
 
-            return false;
+            return result.release_error();
         }
 
         nwritten += result.value();
     } while (nwritten < buffer.size());
 
-    return true;
+    return {};
 }
 
 ErrorOr<off_t> SeekableStream::tell() const

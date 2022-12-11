@@ -21,7 +21,7 @@ bool WebSocketImplSerenity::can_read_line()
 
 bool WebSocketImplSerenity::send(ReadonlyBytes bytes)
 {
-    return m_socket->write_entire_buffer(bytes);
+    return !m_socket->write_entire_buffer(bytes).is_error();
 }
 
 bool WebSocketImplSerenity::eof()
