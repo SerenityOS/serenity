@@ -36,7 +36,7 @@ static float get_normalized_aspect_ratio(float a, float b)
     }
 }
 
-static bool node_is_leaf(TreeMapNode const& node)
+static bool node_is_leaf(TreeNode const& node)
 {
     return node.num_children() == 0;
 }
@@ -46,7 +46,7 @@ bool TreeMapWidget::rect_can_contain_label(Gfx::IntRect const& rect) const
     return rect.height() >= font().presentation_size() && rect.width() > 20;
 }
 
-void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, TreeMapNode const& node, Gfx::IntRect const& cell_rect, Gfx::IntRect const& inner_rect, int depth, HasLabel has_label) const
+void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, TreeNode const& node, Gfx::IntRect const& cell_rect, Gfx::IntRect const& inner_rect, int depth, HasLabel has_label) const
 {
     if (cell_rect.width() <= 2 || cell_rect.height() <= 2) {
         painter.fill_rect(cell_rect, Color::Black);
@@ -102,7 +102,7 @@ void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, TreeMapNode const& n
 }
 
 template<typename Function>
-void TreeMapWidget::lay_out_children(TreeMapNode const& node, Gfx::IntRect const& rect, int depth, Function callback)
+void TreeMapWidget::lay_out_children(TreeNode const& node, Gfx::IntRect const& rect, int depth, Function callback)
 {
     if (node.num_children() == 0) {
         return;
@@ -215,11 +215,11 @@ void TreeMapWidget::lay_out_children(TreeMapNode const& node, Gfx::IntRect const
     }
 }
 
-TreeMapNode const* TreeMapWidget::path_node(size_t n) const
+TreeNode const* TreeMapWidget::path_node(size_t n) const
 {
     if (!m_tree.ptr())
         return nullptr;
-    TreeMapNode const* iter = &m_tree->root();
+    TreeNode const* iter = &m_tree->root();
     size_t path_index = 0;
     while (iter && path_index < m_path.size() && path_index < n) {
         size_t child_index = m_path[path_index];
@@ -239,13 +239,13 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
 
     m_selected_node_cache = path_node(m_path.size());
 
-    TreeMapNode const* node = path_node(m_viewpoint);
+    TreeNode const* node = path_node(m_viewpoint);
     if (!node) {
         painter.fill_rect(frame_inner_rect(), Color::MidGray);
     } else if (node_is_leaf(*node)) {
         paint_cell_frame(painter, *node, frame_inner_rect(), Gfx::IntRect(), m_viewpoint - 1, HasLabel::Yes);
     } else {
-        lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeMapNode const& node, int, Gfx::IntRect const& rect, Gfx::IntRect const& inner_rect, int depth, HasLabel has_label, IsRemainder remainder) {
+        lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeNode const& node, int, Gfx::IntRect const& rect, Gfx::IntRect const& inner_rect, int depth, HasLabel has_label, IsRemainder remainder) {
             if (remainder == IsRemainder::No) {
                 paint_cell_frame(painter, node, rect, inner_rect, depth, has_label);
             } else {
@@ -261,12 +261,12 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
 
 Vector<int> TreeMapWidget::path_to_position(Gfx::IntPoint position)
 {
-    TreeMapNode const* node = path_node(m_viewpoint);
+    TreeNode const* node = path_node(m_viewpoint);
     if (!node) {
         return {};
     }
     Vector<int> path;
-    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeMapNode const&, int index, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
+    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeNode const&, int index, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
         if (is_remainder == IsRemainder::No && rect.contains(position)) {
             path.append(index);
         }
@@ -283,7 +283,7 @@ void TreeMapWidget::mousemove_event(GUI::MouseEvent& event)
     }
 
     auto* hovered_node = node;
-    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeMapNode const&, int index, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
+    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeNode const&, int index, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
         if (is_remainder == IsRemainder::No && rect.contains(event.position())) {
             hovered_node = &hovered_node->child_at(index);
         }
@@ -294,7 +294,7 @@ void TreeMapWidget::mousemove_event(GUI::MouseEvent& event)
 
 void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    TreeMapNode const* node = path_node(m_viewpoint);
+    TreeNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
         Vector<int> path = path_to_position(event.position());
         if (!path.is_empty()) {
@@ -312,7 +312,7 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Primary)
         return;
-    TreeMapNode const* node = path_node(m_viewpoint);
+    TreeNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
         Vector<int> path = path_to_position(event.position());
         m_path.shrink(m_viewpoint);
@@ -355,7 +355,7 @@ void TreeMapWidget::context_menu_event(GUI::ContextMenuEvent& context_menu_event
         on_context_menu_request(context_menu_event);
 }
 
-void TreeMapWidget::set_tree(RefPtr<TreeMap> tree)
+void TreeMapWidget::set_tree(RefPtr<Tree> tree)
 {
     m_tree = tree;
     m_path.clear();

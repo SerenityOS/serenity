@@ -7,6 +7,7 @@ compile_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.h space_analyzer_gml)
 
 set(SOURCES
     TreeMapWidget.cpp
+    Tree.cpp
     main.cpp
 )
 
