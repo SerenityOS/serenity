@@ -20,7 +20,7 @@ class E1000NetworkAdapter : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static LockRefPtr<E1000NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static ErrorOr<LockRefPtr<E1000NetworkAdapter>> try_to_initialize(PCI::DeviceIdentifier const&);
 
     virtual bool initialize();
 

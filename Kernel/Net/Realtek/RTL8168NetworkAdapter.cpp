@@ -182,19 +182,16 @@ namespace Kernel {
 #define TX_BUFFER_SIZE 0x1FF8
 #define RX_BUFFER_SIZE 0x1FF8 // FIXME: this should be increased (0x3FFF)
 
-UNMAP_AFTER_INIT LockRefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<LockRefPtr<RTL8168NetworkAdapter>> RTL8168NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Realtek)
-        return {};
+        return nullptr;
     if (pci_device_identifier.hardware_id().device_id != 0x8168)
-        return {};
+        return nullptr;
     u8 irq = pci_device_identifier.interrupt_line().value();
-    // FIXME: Better propagate errors here
-    auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
-    if (interface_name_or_error.is_error())
-        return {};
-    auto registers_io_window = MUST(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    return adopt_lock_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
+    auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), move(interface_name))));
 }
 
 bool RTL8168NetworkAdapter::determine_supported_version() const

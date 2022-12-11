@@ -159,24 +159,19 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     }
 }
 
-UNMAP_AFTER_INIT LockRefPtr<E1000NetworkAdapter> E1000NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<LockRefPtr<E1000NetworkAdapter>> E1000NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Intel)
-        return {};
+        return nullptr;
     if (!is_valid_device_id(pci_device_identifier.hardware_id().device_id))
-        return {};
+        return nullptr;
     u8 irq = pci_device_identifier.interrupt_line().value();
-    // FIXME: Better propagate errors here
-    auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
-    if (interface_name_or_error.is_error())
-        return {};
-    auto registers_io_window = IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
-    auto adapter = adopt_lock_ref_if_nonnull(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
-    if (!adapter)
-        return {};
-    if (adapter->initialize())
-        return adapter;
-    return {};
+    auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), move(interface_name))));
+    if (!adapter->initialize())
+        return Error::from_string_literal("E1000NetworkAdapter: Unable to initialize adapter");
+    return adapter;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
