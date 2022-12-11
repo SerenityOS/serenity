@@ -8,6 +8,7 @@
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
 #include <LibCore/IODevice.h>
+#include <LibCore/System.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Serializer.h>
 #include <sys/stat.h>
@@ -56,6 +57,15 @@ ErrorOr<void> Heap::open()
         }
     } else {
         initialize_zero_block();
+    }
+
+    // FIXME: We should more gracefully handle version incompatibilities. For now, we drop the database.
+    if (m_version != current_version) {
+        dbgln_if(SQL_DEBUG, "Heap file {} opened has incompatible version {}. Deleting for version {}.", name(), m_version, current_version);
+        m_file = nullptr;
+
+        TRY(Core::System::unlink(name()));
+        return open();
     }
 
     dbgln_if(SQL_DEBUG, "Heap file {} opened. Size = {}", name(), size());
@@ -248,7 +258,7 @@ void Heap::update_zero_block()
 
 void Heap::initialize_zero_block()
 {
-    m_version = 0x00000001;
+    m_version = current_version;
     m_schemas_root = 0;
     m_tables_root = 0;
     m_table_columns_root = 0;

@@ -110,7 +110,7 @@ TEST_CASE(create_heap)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto heap = SQL::Heap::construct("/tmp/test.db");
     EXPECT(!heap->open().is_error());
-    EXPECT_EQ(heap->version(), 0x00000001u);
+    EXPECT_EQ(heap->version(), SQL::Heap::current_version);
 }
 
 TEST_CASE(create_from_dev_random)

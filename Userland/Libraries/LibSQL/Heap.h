@@ -33,6 +33,8 @@ class Heap : public Core::Object {
     C_OBJECT(Heap);
 
 public:
+    static constexpr inline u32 current_version = 1;
+
     virtual ~Heap() override;
 
     ErrorOr<void> open();
@@ -104,7 +106,7 @@ private:
     u32 m_schemas_root { 0 };
     u32 m_tables_root { 0 };
     u32 m_table_columns_root { 0 };
-    u32 m_version { 0x00000001 };
+    u32 m_version { current_version };
     Array<u32, 16> m_user_values { 0 };
     HashMap<u32, ByteBuffer> m_write_ahead_log;
 };
