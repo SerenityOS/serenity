@@ -26,24 +26,26 @@ struct Node {
 using NodeMap = OrderedHashMap<StringView, Node>;
 using NodeStack = Vector<Node&>;
 
-static void handle_cycle(NodeStack& stack, Node& duplicated_node)
+static void handle_cycle(NodeStack& stack, Node& duplicated_node, bool quiet)
 {
     // Report on a cycle by moving down the stack of dependencies, logging every node
     // between the implicit top of the stack (represented by duplicate_node) and that
     // node's first appearance.
 
-    warnln("tsort: The following nodes form a cycle");
+    if (!quiet)
+        warnln("tsort: The following nodes form a cycle");
 
     for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
         auto node = *it;
         node.status = NodeStatus::NotSeen;
-        warnln("tsort: {}", node.name);
+        if (!quiet)
+            warnln("tsort: {}", node.name);
         if (node.name == duplicated_node.name)
             return;
     }
 }
 
-static void prioritize_nodes(Node& start, NodeMap& node_map, NodeStack& stack)
+static void prioritize_nodes(Node& start, NodeMap& node_map, NodeStack& stack, bool quiet)
 {
     // Prioritize (topologically sort) a subset of a directed graph using a depth first
     // search. The "deepest" nodes are the earliest ancestors of all other nodes and
@@ -81,7 +83,7 @@ static void prioritize_nodes(Node& start, NodeMap& node_map, NodeStack& stack)
                 // the graph. To avoid an infinite loop, the duplicate node is not added
                 // to the stack a second time. Instead, the edge is deliberately ignored,
                 // and the topological sort proceeds as though the cycle did not exist.
-                handle_cycle(stack, next_ancestor);
+                handle_cycle(stack, next_ancestor, quiet);
             else
                 // Recursively prioritize all ancestors.
                 stack.append(next_ancestor);
@@ -94,9 +96,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     StringView path;
+    bool quiet;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to file", "path", Core::ArgsParser::Required::No);
+    args_parser.add_option(quiet, "Suppress warnings about cycles", "quiet", 'q');
     args_parser.parse(arguments);
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
@@ -138,7 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto& entry : node_map) {
         auto& node_to_prioritize = entry.value;
         if (node_to_prioritize.status == NodeStatus::NotSeen)
-            prioritize_nodes(node_to_prioritize, node_map, stack);
+            prioritize_nodes(node_to_prioritize, node_map, stack, quiet);
     }
 
     return 0;
