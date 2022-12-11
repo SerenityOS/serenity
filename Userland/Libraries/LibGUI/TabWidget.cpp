@@ -287,8 +287,14 @@ void TabWidget::paint_event(PaintEvent& event)
                 Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
 
             Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
-            painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
-            painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+            if (!m_tabs[i].modified) {
+                painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
+                painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+            } else {
+                painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-1, -1), palette().button_text());
+                painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().translated(1, -1), palette().button_text());
+                painter.draw_line(icon_rect.bottom_left().moved_down(1), icon_rect.bottom_right().moved_down(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
+            }
         }
     }
 
@@ -355,8 +361,14 @@ void TabWidget::paint_event(PaintEvent& event)
             Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
 
         Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
-        painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
-        painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+        if (!m_tabs[i].modified) {
+            painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
+            painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+        } else {
+            painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-1, -1), palette().button_text());
+            painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().translated(1, -1), palette().button_text());
+            painter.draw_line(icon_rect.bottom_left().moved_down(1), icon_rect.bottom_right().moved_down(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
+        }
     }
 }
 
