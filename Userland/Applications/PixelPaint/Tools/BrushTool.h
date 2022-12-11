@@ -62,7 +62,7 @@ private:
     bool m_has_clicked { false };
     Gfx::IntPoint m_last_position;
     NonnullRefPtr<Gfx::Bitmap> m_cursor = build_cursor();
-    int m_editor_previous_size[2] { 0, 0 };
+    Gfx::IntSize m_editor_previous_size = Gfx::IntSize(0, 0);
     int m_size_previous { 20 };
     float max_scaled_size = 0;
 };

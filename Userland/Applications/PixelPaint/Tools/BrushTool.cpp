@@ -186,7 +186,7 @@ GUI::Widget* BrushTool::get_properties_widget()
 
 NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
 {
-    float new_scale = m_editor ? m_editor->scale() : 1;
+    auto new_scale = m_editor ? m_editor->scale() : 1;
     auto scaled_size = size() * new_scale;
     auto containing_box_size = 2 * scaled_size;
     bool draw_ellipse = true;
@@ -196,9 +196,8 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
         // FIXME: The ImageEditor diagonal size could be saved on the ImageEditor and exposed to optimize.
         //        It would be nice if that was recalculated when the ImageEditor was resized
         if (m_scale_last_created_cursor != new_scale) {
-            if (m_editor_previous_size[0] != m_editor->width() || m_editor_previous_size[1] != m_editor->height()) {
-                m_editor_previous_size[0] = m_editor->width();
-                m_editor_previous_size[1] = m_editor->height();
+            if (m_editor_previous_size != m_editor->size()) {
+                m_editor_previous_size = m_editor->size();
                 max_scaled_size = sqrt(pow(m_editor->width(), 2) + pow(m_editor->height(), 2));
             }
         }
@@ -227,11 +226,9 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     // If no ImageEditor is present, we cannot bind the ellipse within the editor. Then we will just draw the ellipse.
     if (!m_editor) {
         aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
-    } else {
-        if (draw_ellipse) {
-            Color color = m_editor->color_for(GUI::MouseButton::Primary);
-            aa_painter.fill_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), color.with_alpha(100));
-        }
+    } else if (draw_ellipse) {
+        Color color = m_editor->color_for(GUI::MouseButton::Primary);
+        aa_painter.fill_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), color.with_alpha(100));
     }
 
     m_scale_last_created_cursor = new_scale;
