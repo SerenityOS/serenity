@@ -1267,4 +1267,63 @@ void Element::invalidate_style_after_attribute_change(FlyString const& attribute
     invalidate_style();
 }
 
+// https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion
+bool Element::exclude_from_accessibility_tree() const
+{
+    // The following elements are not exposed via the accessibility API and user agents MUST NOT include them in the accessibility tree:
+
+    // Elements, including their descendent elements, that have host language semantics specifying that the element is not displayed, such as CSS display:none, visibility:hidden, or the HTML hidden attribute.
+    if (!layout_node())
+        return true;
+
+    // Elements with none or presentation as the first role in the role attribute. However, their exclusion is conditional. In addition, the element's descendants and text content are generally included. These exceptions and conditions are documented in the presentation (role) section.
+    // FIXME: Handle exceptions to excluding presentation role
+    auto role = role_or_default().to_lowercase();
+    if (role == ARIARoleNames::none || role == ARIARoleNames::presentation)
+        return true;
+
+    // TODO: If not already excluded from the accessibility tree per the above rules, user agents SHOULD NOT include the following elements in the accessibility tree:
+    //    Elements, including their descendants, that have aria-hidden set to true. In other words, aria-hidden="true" on a parent overrides aria-hidden="false" on descendants.
+    //    Any descendants of elements that have the characteristic "Children Presentational: True" unless the descendant is not allowed to be presentational because it meets one of the conditions for exception described in Presentational Roles Conflict Resolution. However, the text content of any excluded descendants is included.
+    //    Elements with the following roles have the characteristic "Children Presentational: True":
+    //      button
+    //      checkbox
+    //      img
+    //      menuitemcheckbox
+    //      menuitemradio
+    //      meter
+    //      option
+    //      progressbar
+    //      radio
+    //      scrollbar
+    //      separator
+    //      slider
+    //      switch
+    //      tab
+    return false;
+}
+
+// https://www.w3.org/TR/wai-aria-1.2/#tree_inclusion
+bool Element::include_in_accessibility_tree() const
+{
+    // If not excluded from or marked as hidden in the accessibility tree per the rules above in Excluding Elements in the Accessibility Tree, user agents MUST provide an accessible object in the accessibility tree for DOM elements that meet any of the following criteria:
+    if (exclude_from_accessibility_tree())
+        return false;
+    // Elements that are not hidden and may fire an accessibility API event, including:
+    // Elements that are currently focused, even if the element or one of its ancestor elements has its aria-hidden attribute set to true.
+    if (is_focused())
+        return true;
+    // TODO: Elements that are a valid target of an aria-activedescendant attribute.
+
+    // Elements that have an explicit role or a global WAI-ARIA attribute and do not have aria-hidden set to true. (See Excluding Elements in the Accessibility Tree for additional guidance on aria-hidden.)
+    // NOTE: The spec says only explicit roles count, but playing around in other browsers, this does not seem to be true in practice (for example button elements are always exposed with their implicit role if none is set)
+    //       This issue https://github.com/w3c/aria/issues/1851 seeks clarification on this point
+    if ((!role_or_default().is_empty() || has_global_aria_attribute()) && aria_hidden() != "true")
+        return true;
+
+    // TODO: Elements that are not hidden and have an ID that is referenced by another element via a WAI-ARIA property.
+
+    return false;
+}
+
 }
