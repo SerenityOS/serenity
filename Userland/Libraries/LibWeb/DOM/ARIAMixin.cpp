@@ -32,4 +32,30 @@ FlyString ARIAMixin::role_or_default() const
     return default_role();
 }
 
+// https://www.w3.org/TR/wai-aria-1.2/#global_states
+bool ARIAMixin::has_global_aria_attribute() const
+{
+    return !aria_atomic().is_null()
+        || !aria_busy().is_null()
+        || !aria_controls().is_null()
+        || !aria_current().is_null()
+        || !aria_described_by().is_null()
+        || !aria_details().is_null()
+        || !aria_disabled().is_null()
+        || !aria_drop_effect().is_null()
+        || !aria_error_message().is_null()
+        || !aria_flow_to().is_null()
+        || !aria_grabbed().is_null()
+        || !aria_has_popup().is_null()
+        || !aria_hidden().is_null()
+        || !aria_invalid().is_null()
+        || !aria_key_shortcuts().is_null()
+        || !aria_label().is_null()
+        || !aria_labelled_by().is_null()
+        || !aria_live().is_null()
+        || !aria_owns().is_null()
+        || !aria_relevant().is_null()
+        || !aria_role_description().is_null();
+}
+
 }
