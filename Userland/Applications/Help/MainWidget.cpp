@@ -213,7 +213,7 @@ ErrorOr<void> MainWidget::set_start_page(Vector<StringView, 2> query_parameters)
 
 ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 {
-    static String const help_index_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[7 - 1], TRY(String::from_utf8("Help-index"sv))))->path());
+    static String const help_index_path = TRY(TRY(Manual::PageNode::help_index_page())->path());
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) {
         m_history.push(help_index_path);
         open_page(help_index_path);

@@ -30,6 +30,8 @@ public:
 
     ErrorOr<String> path() const;
 
+    static ErrorOr<NonnullRefPtr<PageNode>> help_index_page();
+
 private:
     NonnullRefPtr<SectionNode> m_section;
     String m_page;
