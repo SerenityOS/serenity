@@ -249,6 +249,9 @@ void Job::on_socket_connected()
             }
 
             if (!can_read_line.value()) {
+                // FIXME: Figure out what to do here if we can't read a full line (or just haven't buffered it yet).
+                //        For a properly implemented stream, can_read_line does try to fill the read buffer,
+                //        but in case this ever fails we shouldn't just be dropping the first 64 bytes of the request.
                 dbgln_if(JOB_DEBUG, "Job {} cannot read line", m_request.url());
                 auto maybe_buf = receive(64);
                 if (maybe_buf.is_error()) {
