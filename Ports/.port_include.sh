@@ -9,6 +9,7 @@ fi
 unset SERENITY_STRIPPED_ENV
 
 export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
+export CMAKE_BUILD_PARALLEL_LEVEL="$MAKEJOBS"
 
 buildstep() {
     local buildstep_name=$1
