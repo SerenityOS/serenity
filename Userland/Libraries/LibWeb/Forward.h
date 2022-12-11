@@ -136,6 +136,7 @@ namespace Web::DOM {
 class AbstractRange;
 class AbortController;
 class AbortSignal;
+class AccessibilityTreeNode;
 class Attr;
 class CDATASection;
 class CharacterData;
