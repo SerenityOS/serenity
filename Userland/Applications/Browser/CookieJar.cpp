@@ -447,11 +447,10 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(Span<SQL::Value const> row)
 
     auto convert_time = [&](auto& field, StringView name) -> ErrorOr<void> {
         auto const& value = row[index++];
-        if (value.type() != SQL::SQLType::Float)
+        if (value.type() != SQL::SQLType::Integer)
             return Error::from_string_view(name);
 
-        // FIXME: Support 64-bit types in LibSQL::Value.
-        auto time = static_cast<time_t>(value.to_double().value());
+        auto time = value.to_int<time_t>().value();
         field = Core::DateTime::from_timestamp(time);
         return {};
     };
@@ -461,7 +460,7 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(Span<SQL::Value const> row)
         if (value.type() != SQL::SQLType::Integer)
             return Error::from_string_view(name);
 
-        auto same_site = value.to_int().value();
+        auto same_site = value.to_int<UnderlyingType<Web::Cookie::SameSite>>().value();
         if (same_site > to_underlying(Web::Cookie::SameSite::Lax))
             return Error::from_string_view(name);
 
@@ -493,9 +492,9 @@ void CookieJar::insert_cookie_into_database(Web::Cookie::Cookie const& cookie)
         cookie.name,
         cookie.value,
         to_underlying(cookie.same_site),
-        static_cast<double>(cookie.creation_time.timestamp()),    // FIXME: Support 64-bit types in LibSQL::Value.
-        static_cast<double>(cookie.last_access_time.timestamp()), // FIXME: Support 64-bit types in LibSQL::Value.
-        static_cast<double>(cookie.expiry_time.timestamp()),      // FIXME: Support 64-bit types in LibSQL::Value.
+        cookie.creation_time.timestamp(),
+        cookie.last_access_time.timestamp(),
+        cookie.expiry_time.timestamp(),
         cookie.domain,
         cookie.path,
         cookie.secure,
@@ -510,9 +509,9 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
         m_statements.update_cookie, {}, [this]() { purge_expired_cookies(); }, {},
         cookie.value,
         to_underlying(cookie.same_site),
-        static_cast<double>(cookie.creation_time.timestamp()),    // FIXME: Support 64-bit types in LibSQL::Value.
-        static_cast<double>(cookie.last_access_time.timestamp()), // FIXME: Support 64-bit types in LibSQL::Value.
-        static_cast<double>(cookie.expiry_time.timestamp()),      // FIXME: Support 64-bit types in LibSQL::Value.
+        cookie.creation_time.timestamp(),
+        cookie.last_access_time.timestamp(),
+        cookie.expiry_time.timestamp(),
         cookie.secure,
         cookie.http_only,
         cookie.host_only,
@@ -583,8 +582,6 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
 void CookieJar::purge_expired_cookies()
 {
     auto now = Core::DateTime::now().timestamp();
-
-    // FIXME: Support 64-bit types in LibSQL::Value.
-    m_database.execute_statement(m_statements.expire_cookie, {}, {}, {}, static_cast<double>(now));
+    m_database.execute_statement(m_statements.expire_cookie, {}, {}, {}, now);
 }
 }
