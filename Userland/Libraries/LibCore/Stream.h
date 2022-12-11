@@ -40,7 +40,9 @@ public:
     /// is returned once EOF is encountered. The block size determines the size
     /// of newly allocated chunks while reading.
     virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096);
-    /// Discards the given number of bytes from the stream.
+    /// Discards the given number of bytes from the stream. As this is usually used
+    /// as an efficient version of `read_entire_buffer`, it returns an error
+    /// if reading failed or if not all bytes could be discarded.
     /// Unless specifically overwritten, this just uses read() to read into an
     /// internal stack-based buffer.
     virtual ErrorOr<void> discard(size_t discarded_bytes);
