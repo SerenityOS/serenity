@@ -229,9 +229,6 @@ ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
     return {};
 }
 
-bool File::is_readable() const { return has_flag(m_mode, OpenMode::Read); }
-bool File::is_writable() const { return has_flag(m_mode, OpenMode::Write); }
-
 ErrorOr<Bytes> File::read(Bytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Read)) {

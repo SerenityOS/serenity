@@ -107,9 +107,7 @@ public:
 public:
     BrotliDecompressionStream(Stream&);
 
-    bool is_readable() const override { return m_input_stream.is_readable(); }
     ErrorOr<Bytes> read(Bytes output_buffer) override;
-    bool is_writable() const override { return m_input_stream.is_writable(); }
     ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_input_stream.write(bytes); }
     bool is_eof() const override;
     bool is_open() const override { return m_input_stream.is_open(); }

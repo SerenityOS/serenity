@@ -356,9 +356,6 @@ private:
     }
 
 public:
-    virtual bool is_readable() const override { return true; }
-    virtual bool is_writable() const override { return true; }
-
     /// Reads into a buffer, with the maximum size being the size of the buffer.
     /// The amount of bytes read can be smaller than the size of the buffer.
     /// Returns either the bytes that were read, or an errno in the case of
