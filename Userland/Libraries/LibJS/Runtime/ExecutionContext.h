@@ -26,6 +26,8 @@ struct ExecutionContext {
 
     [[nodiscard]] ExecutionContext copy() const;
 
+    void visit_edges(Cell::Visitor&);
+
 private:
     explicit ExecutionContext(MarkedVector<Value> existing_arguments);
 
