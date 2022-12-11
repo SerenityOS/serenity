@@ -40,7 +40,7 @@ public:
         return m_stream.read(bytes);
     }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
-    virtual bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
+    virtual bool write_entire_buffer(ReadonlyBytes bytes) override { return m_stream.write_entire_buffer(bytes); }
     virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
     virtual bool is_open() const override { return m_stream.is_open(); }
     virtual void close() override
@@ -155,7 +155,7 @@ public:
         return m_stream.read(bytes);
     }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
-    virtual bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
+    virtual bool write_entire_buffer(ReadonlyBytes bytes) override { return m_stream.write_entire_buffer(bytes); }
     virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
     virtual bool is_open() const override { return m_stream.is_open(); }
     virtual void close() override

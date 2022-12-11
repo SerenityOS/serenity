@@ -23,7 +23,7 @@
 
 namespace Core::Stream {
 
-bool Stream::read_or_error(Bytes buffer)
+bool Stream::read_entire_buffer(Bytes buffer)
 {
     VERIFY(buffer.size());
 
@@ -89,7 +89,7 @@ ErrorOr<void> Stream::discard(size_t discarded_bytes)
     return {};
 }
 
-bool Stream::write_or_error(ReadonlyBytes buffer)
+bool Stream::write_entire_buffer(ReadonlyBytes buffer)
 {
     VERIFY(buffer.size());
 

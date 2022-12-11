@@ -79,7 +79,7 @@ public:
         m_offset += nwritten;
         return nwritten;
     }
-    virtual bool write_or_error(ReadonlyBytes bytes) override
+    virtual bool write_entire_buffer(ReadonlyBytes bytes) override
     {
         if (remaining() < bytes.size())
             return false;

@@ -471,7 +471,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     auto search_engines_file = TRY(Core::Stream::File::open(Browser::search_engines_file_path(), Core::Stream::OpenMode::Read));
     auto file_size = TRY(search_engines_file->size());
     auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
-    if (search_engines_file->read_or_error(buffer)) {
+    if (search_engines_file->read_entire_buffer(buffer)) {
         StringView buffer_contents { buffer.bytes() };
         if (auto json = TRY(JsonValue::from_string(buffer_contents)); json.is_array()) {
             auto json_array = json.as_array();
