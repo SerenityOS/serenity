@@ -19,6 +19,7 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
+#include <Services/Taskbar/GlobalMenuWindow.h>
 #include <Services/Taskbar/TaskbarWindow.h>
 #include <WindowServer/Animation.h>
 #include <WindowServer/AppletManager.h>
@@ -1554,8 +1555,15 @@ Gfx::IntRect WindowManager::desktop_rect(Screen const& screen) const
     if (active_fullscreen_window())
         return Screen::main().rect(); // TODO: we should support fullscreen windows on any screen
     auto screen_rect = screen.rect();
-    if (screen.is_main_screen())
+    if (screen.is_main_screen()) {
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         screen_rect.set_height(screen.height() - TaskbarWindow::taskbar_height());
+
+        if (GlobalMenu::the().enabled()) {
+            screen_rect.set_height(screen_rect.height() - GlobalMenuWindow::global_menu_height());
+            screen_rect.set_y(GlobalMenuWindow::global_menu_height());
+        }
+    }
     return screen_rect;
 }
 
@@ -1563,7 +1571,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(Screen& screen, WindowType type)
 {
     switch (type) {
     case WindowType::Desktop:
-        return Screen::bounding_rect();
     case WindowType::Normal:
         return desktop_rect(screen);
     case WindowType::Menu:
@@ -2324,9 +2331,10 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desir
         auto& screen = Screen::closest_to_location(desired);
         auto available_rect = desktop_rect(screen);
         point = overlap_window->position() + shift;
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         point = { point.x() % screen.width(),
             (point.y() >= available_rect.height())
-                ? palette().window_theme().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
+                ? palette().window_theme().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette()) + (GlobalMenu::the().enabled() ? GlobalMenuWindow::global_menu_height() : 0)
                 : point.y() };
     } else {
         point = desired;
