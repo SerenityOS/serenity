@@ -73,6 +73,9 @@ public:
     [[nodiscard]] bool operator==(char const* cstring) const;
     [[nodiscard]] bool operator!=(char const* cstring) const { return !(*this == cstring); }
 
+    // NOTE: UTF-8 is defined in a way that lexicographic ordering of code points is equivalent to lexicographic ordering of bytes.
+    [[nodiscard]] int operator<=>(String const& other) const { return this->bytes_as_string_view().compare(other.bytes_as_string_view()); }
+
     [[nodiscard]] u32 hash() const;
 
     template<Arithmetic T>
