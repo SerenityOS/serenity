@@ -6,26 +6,11 @@
 
 #pragma once
 
+#include "Tree.h"
 #include <LibGUI/Frame.h>
 #include <LibGfx/Rect.h>
 
 namespace SpaceAnalyzer {
-
-struct TreeMapNode {
-    virtual DeprecatedString name() const = 0;
-    virtual i64 area() const = 0;
-    virtual size_t num_children() const = 0;
-    virtual TreeMapNode const& child_at(size_t i) const = 0;
-    virtual void sort_children_by_area() const = 0;
-
-protected:
-    virtual ~TreeMapNode() = default;
-};
-
-struct TreeMap : public RefCounted<TreeMap> {
-    virtual ~TreeMap() = default;
-    virtual TreeMapNode const& root() const = 0;
-};
 
 class TreeMapWidget final : public GUI::Frame {
     C_OBJECT(TreeMapWidget)
@@ -35,10 +20,10 @@ public:
     Function<void()> on_path_change;
     Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
     size_t path_size() const;
-    TreeMapNode const* path_node(size_t n) const;
+    TreeNode const* path_node(size_t n) const;
     size_t viewpoint() const;
     void set_viewpoint(size_t);
-    void set_tree(RefPtr<TreeMap> tree);
+    void set_tree(RefPtr<Tree> tree);
 
 private:
     TreeMapWidget() = default;
@@ -62,11 +47,11 @@ private:
     };
 
     template<typename Function>
-    void lay_out_children(TreeMapNode const&, Gfx::IntRect const&, int depth, Function);
-    void paint_cell_frame(GUI::Painter&, TreeMapNode const&, Gfx::IntRect const&, Gfx::IntRect const&, int depth, HasLabel has_label) const;
+    void lay_out_children(TreeNode const&, Gfx::IntRect const&, int depth, Function);
+    void paint_cell_frame(GUI::Painter&, TreeNode const&, Gfx::IntRect const&, Gfx::IntRect const&, int depth, HasLabel has_label) const;
     Vector<int> path_to_position(Gfx::IntPoint);
 
-    RefPtr<TreeMap> m_tree;
+    RefPtr<Tree> m_tree;
     Vector<int> m_path;
     size_t m_viewpoint { 0 };
     void const* m_selected_node_cache;

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Tree.h"
 #include "TreeMapWidget.h"
 #include <AK/Error.h>
 #include <AK/LexicalPath.h>
@@ -37,44 +38,6 @@
 
 static constexpr auto APP_NAME = "Space Analyzer"sv;
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
-
-struct TreeNode : public SpaceAnalyzer::TreeMapNode {
-    TreeNode(DeprecatedString name)
-        : m_name(move(name)) {};
-
-    virtual DeprecatedString name() const override { return m_name; }
-    virtual i64 area() const override { return m_area; }
-    virtual size_t num_children() const override
-    {
-        if (m_children) {
-            return m_children->size();
-        }
-        return 0;
-    }
-    virtual TreeNode const& child_at(size_t i) const override { return m_children->at(i); }
-    virtual void sort_children_by_area() const override
-    {
-        if (m_children) {
-            Vector<TreeNode>* children = const_cast<Vector<TreeNode>*>(m_children.ptr());
-            quick_sort(*children, [](auto& a, auto& b) { return b.m_area < a.m_area; });
-        }
-    }
-
-    DeprecatedString m_name;
-    i64 m_area { 0 };
-    OwnPtr<Vector<TreeNode>> m_children;
-};
-
-struct Tree : public SpaceAnalyzer::TreeMap {
-    Tree(DeprecatedString root_name)
-        : m_root(move(root_name)) {};
-    virtual ~Tree() {};
-    TreeNode m_root;
-    virtual SpaceAnalyzer::TreeMapNode const& root() const override
-    {
-        return m_root;
-    };
-};
 
 struct MountInfo {
     DeprecatedString mount_point;
@@ -301,7 +264,7 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
         if (k != 0) {
             path_builder.append('/');
         }
-        SpaceAnalyzer::TreeMapNode const* node = treemapwidget.path_node(k);
+        TreeNode const* node = treemapwidget.path_node(k);
         path_builder.append(node->name());
     }
     return path_builder.build();
@@ -416,7 +379,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
-            const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
+            const TreeNode* node = treemapwidget.path_node(k);
 
             builder.append('/');
             builder.append(node->name());
