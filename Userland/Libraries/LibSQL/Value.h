@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Checked.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
@@ -17,8 +18,15 @@
 #include <LibSQL/Forward.h>
 #include <LibSQL/Result.h>
 #include <LibSQL/Type.h>
+#include <math.h>
 
 namespace SQL {
+
+template<typename T>
+concept Boolean = SameAs<RemoveCVReference<T>, bool>;
+
+template<typename T>
+concept Integer = (Integral<T> && !Boolean<T>);
 
 /**
  * A `Value` is an atomic piece of SQL data`. A `Value` has a basic type
@@ -26,49 +34,91 @@ namespace SQL {
  * level layers, but the resulting data is stored in these `Value` objects.
  */
 class Value {
+    template<Integer T>
+    using IntegerType = Conditional<IsSigned<T>, i64, u64>;
+
 public:
     explicit Value(SQLType sql_type = SQLType::Null);
     explicit Value(DeprecatedString);
-    explicit Value(int);
-    explicit Value(u32);
     explicit Value(double);
     Value(Value const&);
     Value(Value&&);
     ~Value();
 
-    static ResultOr<Value> create_tuple(NonnullRefPtr<TupleDescriptor>);
-    static ResultOr<Value> create_tuple(Vector<Value>);
+    explicit Value(Integer auto value)
+        : m_type(SQLType::Integer)
+        , m_value(static_cast<IntegerType<decltype(value)>>(value))
+    {
+    }
 
-    template<typename T>
-    requires(SameAs<RemoveCVReference<T>, bool>) explicit Value(T value)
+    explicit Value(Boolean auto value)
         : m_type(SQLType::Boolean)
         , m_value(value)
     {
     }
 
+    static ResultOr<Value> create_tuple(NonnullRefPtr<TupleDescriptor>);
+    static ResultOr<Value> create_tuple(Vector<Value>);
+
     [[nodiscard]] SQLType type() const;
     [[nodiscard]] StringView type_name() const;
     [[nodiscard]] bool is_type_compatible_with(SQLType) const;
     [[nodiscard]] bool is_null() const;
+    [[nodiscard]] bool is_int() const;
+
+    [[nodiscard]] auto const& value() const
+    {
+        VERIFY(m_value.has_value());
+        return *m_value;
+    }
 
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
-    [[nodiscard]] Optional<int> to_int() const;
-    [[nodiscard]] Optional<u32> to_u32() const;
     [[nodiscard]] Optional<double> to_double() const;
     [[nodiscard]] Optional<bool> to_bool() const;
     [[nodiscard]] Optional<Vector<Value>> to_vector() const;
 
+    template<Integer T>
+    [[nodiscard]] Optional<T> to_int() const
+    {
+        if (is_null())
+            return {};
+
+        return m_value->visit(
+            [](DeprecatedString const& value) -> Optional<T> {
+                if constexpr (IsSigned<T>)
+                    return value.to_int<T>();
+                else
+                    return value.to_uint<T>();
+            },
+            [](Integer auto value) -> Optional<T> {
+                if (!AK::is_within_range<T>(value))
+                    return {};
+                return static_cast<T>(value);
+            },
+            [](double value) -> Optional<T> {
+                if (!AK::is_within_range<T>(value))
+                    return {};
+                return static_cast<T>(round(value));
+            },
+            [](bool value) -> Optional<T> { return static_cast<T>(value); },
+            [](TupleValue const&) -> Optional<T> { return {}; });
+    }
+
     Value& operator=(Value);
     Value& operator=(DeprecatedString);
-    Value& operator=(int);
-    Value& operator=(u32);
     Value& operator=(double);
+
+    Value& operator=(Integer auto value)
+    {
+        m_type = SQLType::Integer;
+        m_value = static_cast<IntegerType<decltype(value)>>(value);
+        return *this;
+    }
 
     ResultOr<void> assign_tuple(NonnullRefPtr<TupleDescriptor>);
     ResultOr<void> assign_tuple(Vector<Value>);
 
-    template<typename T>
-    requires(SameAs<RemoveCVReference<T>, bool>) Value& operator=(T value)
+    Value& operator=(Boolean auto value)
     {
         m_type = SQLType::Boolean;
         m_value = value;
@@ -83,9 +133,14 @@ public:
     [[nodiscard]] int compare(Value const&) const;
     bool operator==(Value const&) const;
     bool operator==(StringView) const;
-    bool operator==(int) const;
-    bool operator==(u32) const;
     bool operator==(double) const;
+
+    template<Integer T>
+    bool operator==(T value)
+    {
+        return to_int<T>() == value;
+    }
+
     bool operator!=(Value const&) const;
     bool operator<(Value const&) const;
     bool operator<=(Value const&) const;
@@ -97,10 +152,12 @@ public:
     ResultOr<Value> multiply(Value const&) const;
     ResultOr<Value> divide(Value const&) const;
     ResultOr<Value> modulo(Value const&) const;
+    ResultOr<Value> negate() const;
     ResultOr<Value> shift_left(Value const&) const;
     ResultOr<Value> shift_right(Value const&) const;
     ResultOr<Value> bitwise_or(Value const&) const;
     ResultOr<Value> bitwise_and(Value const&) const;
+    ResultOr<Value> bitwise_not() const;
 
     [[nodiscard]] TupleElementDescriptor descriptor() const;
 
@@ -112,7 +169,7 @@ private:
         Vector<Value> values;
     };
 
-    using ValueType = Variant<DeprecatedString, int, double, bool, TupleValue>;
+    using ValueType = Variant<DeprecatedString, i64, u64, double, bool, TupleValue>;
 
     static ResultOr<NonnullRefPtr<TupleDescriptor>> infer_tuple_descriptor(Vector<Value> const& values);
     Value(NonnullRefPtr<TupleDescriptor> descriptor, Vector<Value> values);

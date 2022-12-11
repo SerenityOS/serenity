@@ -33,7 +33,7 @@ class Heap : public Core::Object {
     C_OBJECT(Heap);
 
 public:
-    static constexpr inline u32 current_version = 2;
+    static constexpr inline u32 current_version = 3;
 
     virtual ~Heap() override;
 

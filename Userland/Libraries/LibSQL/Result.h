@@ -48,6 +48,7 @@ constexpr char const* command_tag(SQLCommand command)
     S(DatabaseDoesNotExist, "Database '{}' does not exist")                                       \
     S(DatabaseUnavailable, "Database Unavailable")                                                \
     S(IntegerOperatorTypeMismatch, "Cannot apply '{}' operator to non-numeric operands")          \
+    S(IntegerOverflow, "Operation would cause integer overflow")                                  \
     S(InternalError, "{}")                                                                        \
     S(InvalidDatabaseName, "Invalid database name '{}'")                                          \
     S(InvalidNumberOfPlaceholderValues, "Number of values does not match number of placeholders") \

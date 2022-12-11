@@ -211,7 +211,7 @@ void insert_into_and_scan_btree(int num_keys)
             if (prev.size()) {
                 EXPECT(prev < key);
             }
-            auto key_value = key[0].to_int();
+            auto key_value = key[0].to_int<i32>();
             for (auto ix = 0; ix < num_keys; ix++) {
                 if (keys[ix] == key_value) {
                     EXPECT_EQ(key.pointer(), pointers[ix]);

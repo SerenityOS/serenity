@@ -128,15 +128,7 @@ ResultOr<Value> UnaryOperatorExpression::evaluate(ExecutionContext& context) con
             return expression_value;
         return Result { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()) };
     case UnaryOperator::Minus:
-        if (expression_value.type() == SQLType::Integer) {
-            expression_value = -expression_value.to_int().value();
-            return expression_value;
-        }
-        if (expression_value.type() == SQLType::Float) {
-            expression_value = -expression_value.to_double().value();
-            return expression_value;
-        }
-        return Result { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()) };
+        return expression_value.negate();
     case UnaryOperator::Not:
         if (expression_value.type() == SQLType::Boolean) {
             expression_value = !expression_value.to_bool().value();
@@ -144,11 +136,7 @@ ResultOr<Value> UnaryOperatorExpression::evaluate(ExecutionContext& context) con
         }
         return Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, UnaryOperator_name(type()) };
     case UnaryOperator::BitwiseNot:
-        if (expression_value.type() == SQLType::Integer) {
-            expression_value = ~expression_value.to_u32().value();
-            return expression_value;
-        }
-        return Result { SQLCommand::Unknown, SQLErrorCode::IntegerOperatorTypeMismatch, UnaryOperator_name(type()) };
+        return expression_value.bitwise_not();
     default:
         VERIFY_NOT_REACHED();
     }

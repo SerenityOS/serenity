@@ -68,10 +68,10 @@ void verify_table_contents(SQL::Database& db, int expected_count)
     EXPECT(!rows_or_error.is_error());
     for (auto& row : rows_or_error.value()) {
         StringBuilder builder;
-        builder.appendff("Test{}", row["IntColumn"].to_int().value());
+        builder.appendff("Test{}", row["IntColumn"].to_int<i32>().value());
         EXPECT_EQ(row["TextColumn"].to_deprecated_string(), builder.build());
         count++;
-        sum += row["IntColumn"].to_int().value();
+        sum += row["IntColumn"].to_int<i32>().value();
     }
     EXPECT_EQ(count, expected_count);
     EXPECT_EQ(sum, (expected_count * (expected_count - 1)) / 2);
