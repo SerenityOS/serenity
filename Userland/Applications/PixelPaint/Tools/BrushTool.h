@@ -42,6 +42,7 @@ public:
         return (1.0 - double { distance / size() }) * multiplicand;
     }
     void refresh_editor_cursor();
+    void set_current_position(Gfx::IntPoint cursor_position);
 
 protected:
     virtual StringView tool_name() const override { return "Brush Tool"sv; }
@@ -51,6 +52,7 @@ protected:
     virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint start, Gfx::IntPoint end);
     virtual NonnullRefPtr<Gfx::Bitmap> build_cursor();
     float m_scale_last_created_cursor = 0;
+    Gfx::IntPoint m_current_position;
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;
