@@ -92,8 +92,8 @@ StringView Value::type_name() const
 {
     switch (type()) {
 #undef __ENUMERATE_SQL_TYPE
-#define __ENUMERATE_SQL_TYPE(name, cardinal, type, impl, size) \
-    case SQLType::type:                                        \
+#define __ENUMERATE_SQL_TYPE(name, type) \
+    case SQLType::type:                  \
         return name##sv;
         ENUMERATE_SQL_TYPES(__ENUMERATE_SQL_TYPE)
 #undef __ENUMERATE_SQL_TYPE
