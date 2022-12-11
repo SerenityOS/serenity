@@ -487,8 +487,10 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
 
     if ((!m_left_floats.current_boxes.is_empty() || !m_right_floats.current_boxes.is_empty())
         && creates_block_formatting_context(child_box)) {
-        available_width_within_containing_block -= m_left_floats.current_width + m_right_floats.current_width;
-        x += m_left_floats.current_width;
+        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(child_box, root(), m_state);
+        auto space = space_used_by_floats(box_in_root_rect.y());
+        available_width_within_containing_block -= space.left + space.right;
+        x += space.left;
     }
 
     if (child_box.containing_block()->computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
