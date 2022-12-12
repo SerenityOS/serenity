@@ -385,6 +385,7 @@ class TextMetrics;
 class Timer;
 class TimeRanges;
 class TrackEvent;
+class TraversableNavigable;
 class VideoTrack;
 class VideoTrackList;
 class Window;
