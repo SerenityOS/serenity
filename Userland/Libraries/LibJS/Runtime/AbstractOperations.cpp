@@ -1227,10 +1227,10 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 }
 
-// 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
-ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
+// 22.1.3.18.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacementTemplate ), https://tc39.es/ecma262/#sec-getsubstitution
+ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement_template)
 {
-    auto replace_string = TRY(replacement.to_utf16_string(vm));
+    auto replace_string = TRY(replacement_template.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 
     Vector<u16, 1> result;
