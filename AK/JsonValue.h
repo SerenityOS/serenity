@@ -66,7 +66,7 @@ public:
     requires(SameAs<RemoveCVReference<T>, bool>)
     JsonValue(T value)
         : m_type(Type::Bool)
-        , m_value { .as_bool = value }
+        , m_value(value)
     {
     }
 

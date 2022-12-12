@@ -163,8 +163,8 @@ JsonValue::JsonValue(char const* cstring)
 #if !defined(KERNEL)
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
+    , m_value(value)
 {
-    m_value.set(value);
 }
 #endif
 
@@ -179,9 +179,9 @@ JsonValue::JsonValue(DeprecatedString const& value)
 }
 
 JsonValue::JsonValue(String const& value)
+    : m_type(Type::String)
+    , m_value(String(value))
 {
-    m_type = Type::String;
-    m_value.set(String(value));
 }
 
 JsonValue::JsonValue(StringView value)
@@ -191,26 +191,26 @@ JsonValue::JsonValue(StringView value)
 
 JsonValue::JsonValue(JsonObject const& value)
     : m_type(Type::Object)
+    , m_value(new JsonObject(value))
 {
-    m_value.set(new JsonObject(value));
 }
 
 JsonValue::JsonValue(JsonArray const& value)
     : m_type(Type::Array)
+    , m_value(new JsonArray(value))
 {
-    m_value.set(new JsonArray(value));
 }
 
 JsonValue::JsonValue(JsonObject&& value)
     : m_type(Type::Object)
+    , m_value(new JsonObject(move(value)))
 {
-    m_value.set(new JsonObject(move(value)));
 }
 
 JsonValue::JsonValue(JsonArray&& value)
     : m_type(Type::Array)
+    , m_value(new JsonArray(move(value)))
 {
-    m_value.set(new JsonArray(move(value)));
 }
 
 void JsonValue::clear()
