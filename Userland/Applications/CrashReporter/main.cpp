@@ -308,26 +308,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             });
             return results;
         },
-        [&](auto results) {
-            // FIXME: Make BackgroundAction propagate ErrorOr values so we can replace these MUSTs with TRYs.
-
+        [&](auto results) -> ErrorOr<void> {
             for (auto& backtrace : results.thread_backtraces) {
-                auto container = MUST(backtrace_tab_widget->try_add_tab<GUI::Widget>(backtrace.title));
-                (void)MUST(container->template try_set_layout<GUI::VerticalBoxLayout>());
+                auto container = TRY(backtrace_tab_widget->try_add_tab<GUI::Widget>(backtrace.title));
+                (void)TRY(container->template try_set_layout<GUI::VerticalBoxLayout>());
                 container->layout()->set_margins(4);
-                auto backtrace_text_editor = MUST(container->template try_add<GUI::TextEditor>());
+                auto backtrace_text_editor = TRY(container->template try_add<GUI::TextEditor>());
                 backtrace_text_editor->set_text(backtrace.text);
                 backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
                 backtrace_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
                 backtrace_text_editor->set_should_hide_unnecessary_scrollbars(true);
-                full_backtrace.appendff("==== {} ====\n{}\n", backtrace.title, backtrace.text);
+                TRY(full_backtrace.try_appendff("==== {} ====\n{}\n", backtrace.title, backtrace.text));
             }
 
             for (auto& cpu_registers : results.thread_cpu_registers) {
-                auto container = MUST(cpu_registers_tab_widget->try_add_tab<GUI::Widget>(cpu_registers.title));
-                (void)MUST(container->template try_set_layout<GUI::VerticalBoxLayout>());
+                auto container = TRY(cpu_registers_tab_widget->try_add_tab<GUI::Widget>(cpu_registers.title));
+                (void)TRY(container->template try_set_layout<GUI::VerticalBoxLayout>());
                 container->layout()->set_margins(4);
-                auto cpu_registers_text_editor = MUST(container->template try_add<GUI::TextEditor>());
+                auto cpu_registers_text_editor = TRY(container->template try_add<GUI::TextEditor>());
                 cpu_registers_text_editor->set_text(cpu_registers.text);
                 cpu_registers_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
                 cpu_registers_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
@@ -339,6 +337,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             save_backtrace_button.set_enabled(true);
             window->resize(window->width(), max(340, window->height()));
             window->set_progress(0);
+            return {};
+        },
+        [window](Error error) {
+            dbgln("Error while parsing the coredump: {}", error);
+            window->close();
         });
 
     window->show();

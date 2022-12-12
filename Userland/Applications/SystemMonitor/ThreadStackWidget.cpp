@@ -120,10 +120,11 @@ void ThreadStackWidget::refresh()
             return Symbolication::symbolicate_thread(pid, tid, Symbolication::IncludeSourcePosition::No);
         },
 
-        [weak_this = make_weak_ptr()](auto result) {
+        [weak_this = make_weak_ptr()](auto result) -> ErrorOr<void> {
             if (!weak_this)
-                return;
+                return {};
             Core::EventLoop::current().post_event(const_cast<Core::Object&>(*weak_this), make<CompletionEvent>(move(result)));
+            return {};
         });
 }
 
