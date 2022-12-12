@@ -51,6 +51,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
     layer->did_modify_bitmap(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
     m_last_position = layer_event.position();
     m_has_clicked = true;
+    m_was_drawing = true;
 }
 
 void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
