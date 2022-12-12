@@ -45,6 +45,7 @@ static bool url_matches_about_blank(AK::URL const& url)
         && url.host().is_null();
 }
 
+// FIXME: This is an outdated older version of "determining the origin" and should be removed.
 // https://html.spec.whatwg.org/multipage/browsers.html#determining-the-origin
 HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin)
 {
@@ -71,6 +72,34 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
 
     // 5. Return url's origin.
     return URL::url_origin(*url);
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin
+HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin, Optional<HTML::Origin> container_origin)
+{
+    // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
+    if (sandbox_flags.flags & SandboxingFlagSet::SandboxedOrigin) {
+        return HTML::Origin {};
+    }
+
+    // FIXME: 2. If url is null, then return a new opaque origin.
+    // FIXME: There appears to be no way to get a null URL here, so it might be a spec bug.
+
+    // 3. If url is about:srcdoc, then:
+    if (url == "about:srcdoc"sv) {
+        // 1. Assert: containerOrigin is non-null.
+        VERIFY(container_origin.has_value());
+
+        // 2. Return containerOrigin.
+        return container_origin.release_value();
+    }
+
+    // 4. If url matches about:blank and sourceOrigin is non-null, then return sourceOrigin.
+    if (url_matches_about_blank(url) && source_origin.has_value())
+        return source_origin.release_value();
+
+    // 5. Return url's origin.
+    return URL::url_origin(url);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-top-level-browsing-context
