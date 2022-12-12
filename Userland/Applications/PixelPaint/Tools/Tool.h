@@ -83,6 +83,9 @@ public:
     // We only set the override_alt_key flag to true since the override is false by default. If false is desired do not call method.
     virtual bool is_overriding_alt() { return false; };
 
+    virtual void set_current_position(Gfx::IntPoint) { }
+    virtual void refresh_editor_cursor() { }
+
 protected:
     Tool() = default;
     WeakPtr<ImageEditor> m_editor;
@@ -97,6 +100,9 @@ protected:
 
     GUI::ValueSlider* m_primary_slider { nullptr };
     GUI::ValueSlider* m_secondary_slider { nullptr };
+
+    // Current position of the tool within the widget
+    Gfx::IntPoint m_current_tool_position;
 };
 
 }

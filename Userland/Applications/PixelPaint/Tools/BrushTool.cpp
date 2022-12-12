@@ -247,7 +247,7 @@ void BrushTool::refresh_editor_cursor()
 
 void BrushTool::set_current_position(Gfx::IntPoint cursor_position)
 {
-    m_current_position = cursor_position;
+    m_current_tool_position = cursor_position;
 }
 
 }
