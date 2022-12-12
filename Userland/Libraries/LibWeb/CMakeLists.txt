@@ -348,6 +348,7 @@ set(SOURCES
     HTML/TextMetrics.cpp
     HTML/Timer.cpp
     HTML/TrackEvent.cpp
+    HTML/TraversableNavigable.cpp
     HTML/VideoTrack.cpp
     HTML/VideoTrackList.cpp
     HTML/Window.cpp

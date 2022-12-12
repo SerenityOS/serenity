@@ -384,6 +384,7 @@ class SubmitEvent;
 class TextMetrics;
 class Timer;
 class TrackEvent;
+class TraversableNavigable;
 class VideoTrack;
 class VideoTrackList;
 class Window;
