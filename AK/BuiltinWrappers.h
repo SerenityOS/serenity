@@ -8,6 +8,8 @@
 
 #include "Concepts.h"
 
+namespace AK {
+
 template<Unsigned IntType>
 inline constexpr int popcount(IntType value)
 {
@@ -147,3 +149,14 @@ inline constexpr int bit_scan_forward(IntType value)
     return 1 + count_trailing_zeroes(static_cast<MakeUnsigned<IntType>>(value));
 #endif
 }
+
+}
+
+#if USING_AK_GLOBALLY
+using AK::bit_scan_forward;
+using AK::count_leading_zeroes;
+using AK::count_leading_zeroes_safe;
+using AK::count_trailing_zeroes;
+using AK::count_trailing_zeroes_safe;
+using AK::popcount;
+#endif
