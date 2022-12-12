@@ -369,6 +369,7 @@ class MessageEvent;
 class MessagePort;
 class MimeType;
 class MimeTypeArray;
+class Navigable;
 class NavigableContainer;
 class Navigator;
 struct NavigationParams;

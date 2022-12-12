@@ -313,6 +313,7 @@ set(SOURCES
     HTML/MessagePort.cpp
     HTML/MimeType.cpp
     HTML/MimeTypeArray.cpp
+    HTML/Navigable.cpp
     HTML/NavigableContainer.cpp
     HTML/Navigator.cpp
     HTML/NavigatorID.cpp
