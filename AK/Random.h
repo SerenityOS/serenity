@@ -22,8 +22,7 @@
 #endif
 
 #if defined(AK_OS_WINDOWS)
-#    include <random>
-#    include <unistd.h>
+#    include <stdlib.h>
 #endif
 
 namespace AK {
@@ -38,7 +37,7 @@ inline void fill_with_random([[maybe_unused]] void* buffer, [[maybe_unused]] siz
 #else
     char* char_buffer = static_cast<char*>(buffer);
     for (size_t i = 0; i < length; i++) {
-        char_buffer[i] = std::rand();
+        char_buffer[i] = rand();
     }
 #endif
 }
