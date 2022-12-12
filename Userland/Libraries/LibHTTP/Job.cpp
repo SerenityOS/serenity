@@ -251,16 +251,11 @@ void Job::on_socket_connected()
             }
 
             if (!can_read_line.value()) {
-                dbgln_if(JOB_DEBUG, "Job {} cannot read line", m_request.url());
-                auto maybe_buf = receive(64);
-                if (maybe_buf.is_error()) {
-                    dbgln_if(JOB_DEBUG, "Job {} cannot read any bytes!", m_request.url());
-                    return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-                }
-
-                dbgln_if(JOB_DEBUG, "{} bytes was read", maybe_buf.value().bytes().size());
-                return;
+                dbgln_if(JOB_DEBUG, "Job {} cannot read a full line", m_request.url());
+                // TODO: Should we retry here instead of failing instantly?
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
+
             auto maybe_line = read_line(PAGE_SIZE);
             if (maybe_line.is_error()) {
                 dbgln_if(JOB_DEBUG, "Job {} could not read line: {}", m_request.url(), maybe_line.error());
