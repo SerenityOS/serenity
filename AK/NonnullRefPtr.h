@@ -264,7 +264,6 @@ inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
 {
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *new T { forward<Args>(args)... });
 }
-}
 
 template<typename T>
 struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
@@ -273,6 +272,8 @@ struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
     static unsigned hash(NonnullRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
     static bool equals(NonnullRefPtr<T> const& a, NonnullRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
+
+}
 
 #if USING_AK_GLOBALLY
 using AK::adopt_ref;

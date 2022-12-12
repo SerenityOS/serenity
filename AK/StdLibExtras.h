@@ -16,6 +16,8 @@
 
 #include <AK/Assertions.h>
 
+namespace AK {
+
 template<typename T, typename U>
 constexpr auto round_up_to_power_of_two(T value, U power_of_two)
 requires(AK::Detail::IsIntegral<T> && AK::Detail::IsIntegral<U>)
@@ -30,21 +32,23 @@ requires(AK::Detail::IsIntegral<T>)
     return value && !((value) & (value - 1));
 }
 
+}
+
 #ifndef AK_DONT_REPLACE_STD
 namespace std { // NOLINT(cert-dcl58-cpp) Names in std to aid tools
 
 // NOTE: These are in the "std" namespace since some compilers and static analyzers rely on it.
 
 template<typename T>
-constexpr T&& forward(RemoveReference<T>& param)
+constexpr T&& forward(AK::Detail::RemoveReference<T>& param)
 {
     return static_cast<T&&>(param);
 }
 
 template<typename T>
-constexpr T&& forward(RemoveReference<T>&& param) noexcept
+constexpr T&& forward(AK::Detail::RemoveReference<T>&& param) noexcept
 {
-    static_assert(!IsLvalueReference<T>, "Can't forward an rvalue as an lvalue.");
+    static_assert(!AK::Detail::IsLvalueReference<T>, "Can't forward an rvalue as an lvalue.");
     return static_cast<T&&>(param);
 }
 
@@ -59,8 +63,16 @@ constexpr T&& move(T& arg)
 #    include <utility>
 #endif
 
+#if !USING_AK_GLOBALLY
+namespace AK {
+#endif
+
 using std::forward;
 using std::move;
+
+#if !USING_AK_GLOBALLY
+}
+#endif
 
 namespace AK::Detail {
 template<typename T>
@@ -182,10 +194,12 @@ using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
 using AK::is_constant_evaluated;
+using AK::is_power_of_two;
 using AK::max;
 using AK::min;
 using AK::mix;
 using AK::RawPtr;
+using AK::round_up_to_power_of_two;
 using AK::swap;
 using AK::to_underlying;
 #endif
