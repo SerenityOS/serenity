@@ -27,7 +27,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
+    TRY(Core::System::unveil("/bin/sysctl", "x"));
     TRY(Core::System::unveil("/sys/kernel/keymap", "r"));
+    TRY(Core::System::unveil("/sys/kernel/variables/caps_lock_to_ctrl", "r"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
