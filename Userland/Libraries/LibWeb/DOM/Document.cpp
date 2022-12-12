@@ -1706,8 +1706,8 @@ bool Document::is_fully_active() const
         return false;
     if (browsing_context->is_top_level())
         return true;
-    if (auto* browsing_context_container_document = browsing_context->container_document()) {
-        if (browsing_context_container_document->is_fully_active())
+    if (auto* navigable_container_document = browsing_context->container_document()) {
+        if (navigable_container_document->is_fully_active())
             return true;
     }
     return false;

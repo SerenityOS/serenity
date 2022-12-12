@@ -274,7 +274,6 @@ class DOMRectReadOnly;
 
 namespace Web::HTML {
 class BrowsingContext;
-class BrowsingContextContainer;
 class BrowsingContextGroup;
 class CanvasRenderingContext2D;
 class ClassicScript;
@@ -370,7 +369,9 @@ class MessageEvent;
 class MessagePort;
 class MimeType;
 class MimeTypeArray;
+class NavigableContainer;
 class Navigator;
+struct NavigationParams;
 class Origin;
 class PageTransitionEvent;
 class Path2D;

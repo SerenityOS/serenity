@@ -5,7 +5,7 @@
  */
 
 #include <AK/Debug.h>
-#include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
