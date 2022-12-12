@@ -889,8 +889,7 @@ ThrowCompletionOr<i32> Value::to_i32_slow_case(VM& vm) const
         int_val = -int_val;
 
     // 4. Let int32bit be int modulo 2^32.
-    auto remainder = fmod(int_val, 4294967296.0);
-    auto int32bit = remainder >= 0.0 ? remainder : remainder + 4294967296.0; // The notation “x modulo y” computes a value k of the same sign as y
+    auto int32bit = modulo(int_val, NumericLimits<u32>::max() + 1.0);
 
     // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
     if (int32bit >= 2147483648.0)
@@ -922,7 +921,7 @@ ThrowCompletionOr<u32> Value::to_u32(VM& vm) const
         int_val = -int_val;
 
     // 4. Let int32bit be int modulo 2^32.
-    auto int32bit = fmod(int_val, NumericLimits<u32>::max() + 1.0);
+    auto int32bit = modulo(int_val, NumericLimits<u32>::max() + 1.0);
 
     // 5. Return 𝔽(int32bit).
     // Cast to i64 here to ensure that the double --> u32 cast doesn't invoke undefined behavior
@@ -947,8 +946,7 @@ ThrowCompletionOr<i16> Value::to_i16(VM& vm) const
         int_val = -int_val;
 
     // 4. Let int16bit be int modulo 2^16.
-    auto remainder = fmod(int_val, 65536.0);
-    auto int16bit = remainder >= 0.0 ? remainder : remainder + 65536.0; // The notation “x modulo y” computes a value k of the same sign as y
+    auto int16bit = modulo(int_val, NumericLimits<u16>::max() + 1.0);
 
     // 5. If int16bit ≥ 2^15, return 𝔽(int16bit - 2^16); otherwise return 𝔽(int16bit).
     if (int16bit >= 32768.0)
@@ -972,9 +970,7 @@ ThrowCompletionOr<u16> Value::to_u16(VM& vm) const
         int_val = -int_val;
 
     // 4. Let int16bit be int modulo 2^16.
-    auto int16bit = fmod(int_val, NumericLimits<u16>::max() + 1.0);
-    if (int16bit < 0)
-        int16bit += NumericLimits<u16>::max() + 1.0;
+    auto int16bit = modulo(int_val, NumericLimits<u16>::max() + 1.0);
 
     // 5. Return 𝔽(int16bit).
     return static_cast<u16>(int16bit);
@@ -997,8 +993,7 @@ ThrowCompletionOr<i8> Value::to_i8(VM& vm) const
         int_val = -int_val;
 
     // 4. Let int8bit be int modulo 2^8.
-    auto remainder = fmod(int_val, 256.0);
-    auto int8bit = remainder >= 0.0 ? remainder : remainder + 256.0; // The notation “x modulo y” computes a value k of the same sign as y
+    auto int8bit = modulo(int_val, NumericLimits<u8>::max() + 1.0);
 
     // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
     if (int8bit >= 128.0)
@@ -1022,9 +1017,7 @@ ThrowCompletionOr<u8> Value::to_u8(VM& vm) const
         int_val = -int_val;
 
     // 4. Let int8bit be int modulo 2^8.
-    auto int8bit = fmod(int_val, NumericLimits<u8>::max() + 1.0);
-    if (int8bit < 0)
-        int8bit += NumericLimits<u8>::max() + 1.0;
+    auto int8bit = modulo(int_val, NumericLimits<u8>::max() + 1.0);
 
     // 5. Return 𝔽(int8bit).
     return static_cast<u8>(int8bit);
