@@ -47,7 +47,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool attempt_interactive = false;
 
     auto initialize = [&] {
-        editor = Line::Editor::construct();
+        auto configuration = Line::Configuration::from_config();
+        if (!attempt_interactive) {
+            configuration.set(Line::Configuration::Flags::None);
+            configuration.set(Line::Configuration::SignalHandler::NoSignalHandlers);
+            configuration.set(Line::Configuration::OperationMode::NonInteractive);
+            configuration.set(Line::Configuration::RefreshBehavior::Eager);
+        }
+
+        editor = Line::Editor::construct(move(configuration));
         editor->initialize();
 
         shell = Shell::Shell::construct(*editor, attempt_interactive);
@@ -199,7 +207,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto execute_file = !file_to_read_from.is_empty() && "-"sv != file_to_read_from;
-    attempt_interactive = !execute_file;
+    attempt_interactive = !execute_file && (command_to_run.is_empty() || keep_open);
 
     if (keep_open && command_to_run.is_empty() && !execute_file) {
         warnln("Option --keep-open can only be used in combination with -c or when specifying a file to execute.");
