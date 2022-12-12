@@ -210,8 +210,9 @@ public:
 
     JS::GCPtr<DOM::Node> currently_focused_area();
 
-    Vector<SessionHistoryEntry>& session_history() { return m_session_history; }
-    Vector<SessionHistoryEntry> const& session_history() const { return m_session_history; }
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& session_history() { return m_session_history; }
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>> const& session_history() const { return m_session_history; }
+
     size_t session_history_index() const { return *m_session_history_index; }
 
     // https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
@@ -284,7 +285,7 @@ private:
     Optional<size_t> m_session_history_index { 0 };
 
     // https://html.spec.whatwg.org/multipage/history.html#session-history
-    Vector<SessionHistoryEntry> m_session_history;
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>> m_session_history;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#creator-url
     Optional<AK::URL> m_creator_url;

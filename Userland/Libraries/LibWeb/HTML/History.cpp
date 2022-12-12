@@ -83,7 +83,7 @@ WebIDL::ExceptionOr<void> History::go(long delta = 0)
     if (next_entry_index < sessions.size()) {
         auto const& next_entry = sessions.at(next_entry_index);
         // FIXME: 4. Traverse the history by a delta with delta and document's browsing context.
-        browsing_context->loader().load(next_entry.url, FrameLoader::Type::Reload);
+        browsing_context->loader().load(next_entry->url, FrameLoader::Type::Reload);
     }
 
     return {};

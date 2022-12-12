@@ -337,6 +337,7 @@ set(SOURCES
     HTML/Scripting/ModuleScript.cpp
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
+    HTML/SessionHistoryEntry.cpp
     HTML/Storage.cpp
     HTML/StructuredSerialize.cpp
     HTML/SubmitEvent.cpp
