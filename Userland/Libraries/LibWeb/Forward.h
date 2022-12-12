@@ -351,6 +351,7 @@ class PromiseRejectionEvent;
 class WorkerDebugConsoleClient;
 struct SandboxingFlagSet;
 struct SerializedFormData;
+struct SessionHistoryEntry;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
