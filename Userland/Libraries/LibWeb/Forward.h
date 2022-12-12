@@ -249,6 +249,7 @@ struct CrossOriginOpenerPolicy;
 struct CrossOriginOpenerPolicyEnforcementResult;
 class CustomElementDefinition;
 class CustomElementRegistry;
+class DocumentState;
 class DOMParser;
 class DOMStringMap;
 struct Environment;
