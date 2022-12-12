@@ -390,6 +390,8 @@ ErrorOr<String> Value::to_string_without_side_effects() const
         return String::formatted("[object {}]", as_object().class_name());
     case ACCESSOR_TAG:
         return "<accessor>"_string;
+    case EMPTY_TAG:
+        return "<empty>"_string;
     default:
         VERIFY_NOT_REACHED();
     }
