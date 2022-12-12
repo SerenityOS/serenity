@@ -95,4 +95,18 @@ JS::GCPtr<TraversableNavigable> Navigable::traversable_navigable()
     return static_cast<TraversableNavigable*>(navigable);
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top
+JS::GCPtr<TraversableNavigable> Navigable::top_level_traversable()
+{
+    // 1. Let navigable be inputNavigable.
+    auto navigable = this;
+
+    // 2. While navigable's parent is not null, set navigable to navigable's parent.
+    while (navigable->parent())
+        navigable = navigable->parent();
+
+    // 3. Return navigable.
+    return verify_cast<TraversableNavigable>(navigable);
+}
+
 }
