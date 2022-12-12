@@ -53,8 +53,8 @@ TabWidget::TabWidget()
 
 ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
 {
-    m_tabs.append({ widget.title(), nullptr, &widget, false });
-    add_child(widget);
+    TRY(m_tabs.try_append({ widget.title(), nullptr, &widget, false }));
+    TRY(try_add_child(widget));
     update_focus_policy();
     if (on_tab_count_change)
         on_tab_count_change(m_tabs.size());
