@@ -39,7 +39,7 @@ void CloneTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color, Gfx::IntPoint point)
 
             auto falloff = get_falloff(distance);
             auto pixel_color = bitmap.get_pixel(source_x, source_y);
-            pixel_color.set_alpha(falloff * 255);
+            pixel_color.set_alpha(falloff * pixel_color.alpha());
             bitmap.set_pixel(target_x, target_y, bitmap.get_pixel(target_x, target_y).blend(pixel_color));
         }
     }
