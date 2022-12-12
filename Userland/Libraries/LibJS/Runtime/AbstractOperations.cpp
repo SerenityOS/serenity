@@ -397,6 +397,12 @@ DeclarativeEnvironment* new_declarative_environment(Environment& environment)
 ObjectEnvironment* new_object_environment(Object& object, bool is_with_environment, Environment* environment)
 {
     auto& heap = object.heap();
+
+    // 1. Let env be a new Object Environment Record.
+    // 2. Set env.[[BindingObject]] to O.
+    // 3. Set env.[[IsWithEnvironment]] to W.
+    // 4. Set env.[[OuterEnv]] to E.
+    // 5. Return env.
     return heap.allocate_without_realm<ObjectEnvironment>(object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
 }
 
