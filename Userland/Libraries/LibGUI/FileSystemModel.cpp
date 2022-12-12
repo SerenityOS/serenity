@@ -670,7 +670,7 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
             return render_thumbnail(path);
         },
 
-        [this, path, weak_this](auto thumbnail_or_error) {
+        [this, path, weak_this](auto thumbnail_or_error) -> ErrorOr<void> {
             if (thumbnail_or_error.is_error()) {
                 s_thumbnail_cache.set(path, nullptr);
                 dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
@@ -681,7 +681,7 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
             // The model was destroyed, no need to update
             // progress or call any event handlers.
             if (weak_this.is_null())
-                return;
+                return {};
 
             m_thumbnail_progress++;
             if (on_thumbnail_progress)
@@ -692,6 +692,7 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
             }
 
             did_update(UpdateFlag::DontInvalidateIndices);
+            return {};
         });
 
     return false;

@@ -144,8 +144,9 @@ void FileProvider::query(DeprecatedString const& query, Function<void(NonnullRef
             }
             return results;
         },
-        [on_complete = move(on_complete)](auto results) {
+        [on_complete = move(on_complete)](auto results) -> ErrorOr<void> {
             on_complete(move(results));
+            return {};
         });
 }
 
@@ -192,8 +193,9 @@ void FileProvider::build_filesystem_cache()
             dbgln("Built cache in {} ms", timer.elapsed());
             return 0;
         },
-        [this](auto) {
+        [this](auto) -> ErrorOr<void> {
             m_building_cache = false;
+            return {};
         });
 }
 
