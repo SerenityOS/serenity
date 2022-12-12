@@ -88,8 +88,8 @@ ThrowCompletionOr<Object*> construct_impl(VM& vm, FunctionObject& function, Opti
 // 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
 ThrowCompletionOr<size_t> length_of_array_like(VM& vm, Object const& object)
 {
-    auto result = TRY(object.get(vm.names.length));
-    return result.to_length(vm);
+    // 1. Return ℝ(? ToLength(? Get(obj, "length"))).
+    return TRY(object.get(vm.names.length)).to_length(vm);
 }
 
 // 7.3.20 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
