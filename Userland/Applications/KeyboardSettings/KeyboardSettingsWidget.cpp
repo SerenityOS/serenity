@@ -309,6 +309,9 @@ void KeyboardSettingsWidget::set_keymaps(Vector<DeprecatedString> const& keymaps
 
 void KeyboardSettingsWidget::write_caps_lock_to_ctrl_sys_variable(bool caps_lock_to_ctrl)
 {
+    if (getuid() != 0)
+        return;
+
     auto write_command = DeprecatedString::formatted("caps_lock_to_ctrl={}", caps_lock_to_ctrl ? "1" : "0");
     GUI::Process::spawn_or_show_error(window(), "/bin/sysctl"sv, Array { "-w", write_command.characters() });
 }
