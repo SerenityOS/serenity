@@ -687,10 +687,10 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
         return false;
 
     if (JS::GCPtr<DOM::Element> focused_element = document->focused_element()) {
-        if (is<HTML::BrowsingContextContainer>(*focused_element)) {
-            auto& browsing_context_container = verify_cast<HTML::BrowsingContextContainer>(*focused_element);
-            if (browsing_context_container.nested_browsing_context())
-                return fire_keyboard_event(event_name, *browsing_context_container.nested_browsing_context(), key, modifiers, code_point);
+        if (is<HTML::NavigableContainer>(*focused_element)) {
+            auto& navigable_container = verify_cast<HTML::NavigableContainer>(*focused_element);
+            if (navigable_container.nested_browsing_context())
+                return fire_keyboard_event(event_name, *navigable_container.nested_browsing_context(), key, modifiers, code_point);
         }
 
         auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();

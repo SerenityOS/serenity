@@ -29,10 +29,10 @@
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/StaticNodeList.h>
-#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
+#include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -1070,8 +1070,8 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
             MUST(attributes.finish());
         }
 
-        if (element->is_browsing_context_container()) {
-            auto const* container = static_cast<HTML::BrowsingContextContainer const*>(element);
+        if (element->is_navigable_container()) {
+            auto const* container = static_cast<HTML::NavigableContainer const*>(element);
             if (auto const* content_document = container->content_document()) {
                 auto children = MUST(object.add_array("children"sv));
                 JsonObjectSerializer<StringBuilder> content_document_object = MUST(children.add_object());

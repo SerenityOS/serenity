@@ -9,36 +9,36 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
-HashTable<BrowsingContextContainer*>& BrowsingContextContainer::all_instances()
+HashTable<NavigableContainer*>& NavigableContainer::all_instances()
 {
-    static HashTable<BrowsingContextContainer*> set;
+    static HashTable<NavigableContainer*> set;
     return set;
 }
 
-BrowsingContextContainer::BrowsingContextContainer(DOM::Document& document, DOM::QualifiedName qualified_name)
+NavigableContainer::NavigableContainer(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }
 
-BrowsingContextContainer::~BrowsingContextContainer() = default;
+NavigableContainer::~NavigableContainer() = default;
 
-void BrowsingContextContainer::visit_edges(Cell::Visitor& visitor)
+void NavigableContainer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_nested_browsing_context);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-nested-browsing-context
-void BrowsingContextContainer::create_new_nested_browsing_context()
+void NavigableContainer::create_new_nested_browsing_context()
 {
     // 1. Let group be element's node document's browsing context's top-level browsing context's group.
     VERIFY(document().browsing_context());
@@ -62,7 +62,7 @@ void BrowsingContextContainer::create_new_nested_browsing_context()
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#concept-bcc-content-document
-const DOM::Document* BrowsingContextContainer::content_document() const
+const DOM::Document* NavigableContainer::content_document() const
 {
     // 1. If container's nested browsing context is null, then return null.
     if (m_nested_browsing_context == nullptr)
@@ -89,7 +89,7 @@ const DOM::Document* BrowsingContextContainer::content_document() const
     return document;
 }
 
-DOM::Document const* BrowsingContextContainer::content_document_without_origin_check() const
+DOM::Document const* NavigableContainer::content_document_without_origin_check() const
 {
     if (!m_nested_browsing_context)
         return nullptr;
@@ -97,7 +97,7 @@ DOM::Document const* BrowsingContextContainer::content_document_without_origin_c
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content-other.html#dom-media-getsvgdocument
-const DOM::Document* BrowsingContextContainer::get_svg_document() const
+const DOM::Document* NavigableContainer::get_svg_document() const
 {
     // 1. Let document be this element's content document.
     auto const* document = content_document();
@@ -109,7 +109,7 @@ const DOM::Document* BrowsingContextContainer::get_svg_document() const
     return nullptr;
 }
 
-HTML::WindowProxy* BrowsingContextContainer::content_window()
+HTML::WindowProxy* NavigableContainer::content_window()
 {
     if (!m_nested_browsing_context)
         return nullptr;
@@ -128,7 +128,7 @@ static bool url_matches_about_blank(AK::URL const& url)
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements
-void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
+void NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
 {
     // 1. Let url be the URL record about:blank.
     auto url = AK::URL("about:blank");
@@ -196,7 +196,7 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
-void BrowsingContextContainer::navigate_an_iframe_or_frame(JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource)
+void NavigableContainer::navigate_an_iframe_or_frame(JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource)
 {
     // 1. Let historyHandling be "default".
     auto history_handling = HistoryHandlingBehavior::Default;

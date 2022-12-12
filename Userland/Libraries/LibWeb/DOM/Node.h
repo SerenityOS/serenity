@@ -90,7 +90,7 @@ public:
     virtual bool is_html_input_element() const { return false; }
     virtual bool is_html_progress_element() const { return false; }
     virtual bool is_html_template_element() const { return false; }
-    virtual bool is_browsing_context_container() const { return false; }
+    virtual bool is_navigable_container() const { return false; }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> pre_insert(JS::NonnullGCPtr<Node>, JS::GCPtr<Node>);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> pre_remove(JS::NonnullGCPtr<Node>);

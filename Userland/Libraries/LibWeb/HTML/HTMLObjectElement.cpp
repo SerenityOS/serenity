@@ -17,7 +17,7 @@
 namespace Web::HTML {
 
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : BrowsingContextContainer(document, move(qualified_name))
+    : NavigableContainer(document, move(qualified_name))
 {
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
     // Whenever one of the following conditions occur:
@@ -40,7 +40,7 @@ JS::ThrowCompletionOr<void> HTMLObjectElement::initialize(JS::Realm& realm)
 
 void HTMLObjectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    BrowsingContextContainer::parse_attribute(name, value);
+    NavigableContainer::parse_attribute(name, value);
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
     // Whenever one of the following conditions occur:
@@ -70,7 +70,7 @@ JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS:
 {
     switch (m_representation) {
     case Representation::Children:
-        return BrowsingContextContainer::create_layout_node(move(style));
+        return NavigableContainer::create_layout_node(move(style));
     case Representation::NestedBrowsingContext:
         // FIXME: Actually paint the nested browsing context's document, similar to how iframes are painted with FrameBox and NestedBrowsingContextPaintable.
         return nullptr;

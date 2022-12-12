@@ -8,19 +8,19 @@
 
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
-#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
 namespace Web::HTML {
 
 class HTMLObjectElement final
-    : public BrowsingContextContainer
+    : public NavigableContainer
     , public FormAssociatedElement
     , public ResourceClient {
-    WEB_PLATFORM_OBJECT(HTMLObjectElement, BrowsingContextContainer)
-    FORM_ASSOCIATED_ELEMENT(BrowsingContextContainer, HTMLObjectElement)
+    WEB_PLATFORM_OBJECT(HTMLObjectElement, NavigableContainer)
+    FORM_ASSOCIATED_ELEMENT(NavigableContainer, HTMLObjectElement)
 
     enum class Representation {
         Unknown,

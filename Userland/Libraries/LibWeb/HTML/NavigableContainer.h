@@ -10,13 +10,13 @@
 
 namespace Web::HTML {
 
-class BrowsingContextContainer : public HTMLElement {
-    WEB_PLATFORM_OBJECT(BrowsingContextContainer, HTMLElement);
+class NavigableContainer : public HTMLElement {
+    WEB_PLATFORM_OBJECT(NavigableContainer, HTMLElement);
 
 public:
-    virtual ~BrowsingContextContainer() override;
+    virtual ~NavigableContainer() override;
 
-    static HashTable<BrowsingContextContainer*>& all_instances();
+    static HashTable<NavigableContainer*>& all_instances();
 
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
     BrowsingContext const* nested_browsing_context() const { return m_nested_browsing_context; }
@@ -29,7 +29,7 @@ public:
     DOM::Document const* get_svg_document() const;
 
 protected:
-    BrowsingContextContainer(DOM::Document&, DOM::QualifiedName);
+    NavigableContainer(DOM::Document&, DOM::QualifiedName);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -44,12 +44,12 @@ protected:
     JS::GCPtr<BrowsingContext> m_nested_browsing_context;
 
 private:
-    virtual bool is_browsing_context_container() const override { return true; }
+    virtual bool is_navigable_container() const override { return true; }
 };
 
 }
 
 namespace Web::DOM {
 template<>
-inline bool Node::fast_is<HTML::BrowsingContextContainer>() const { return is_browsing_context_container(); }
+inline bool Node::fast_is<HTML::NavigableContainer>() const { return is_navigable_container(); }
 }

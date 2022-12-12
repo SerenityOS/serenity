@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/NavigableContainer.h>
 
 namespace Web::HTML {
 
-class HTMLIFrameElement final : public BrowsingContextContainer {
-    WEB_PLATFORM_OBJECT(HTMLIFrameElement, BrowsingContextContainer);
+class HTMLIFrameElement final : public NavigableContainer {
+    WEB_PLATFORM_OBJECT(HTMLIFrameElement, NavigableContainer);
 
 public:
     virtual ~HTMLIFrameElement() override;

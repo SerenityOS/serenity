@@ -18,8 +18,8 @@
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/AbstractBrowsingContext.h>
 #include <LibWeb/HTML/ActivateTab.h>
-#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
@@ -179,8 +179,8 @@ public:
 
     bool is_child_of(BrowsingContext const&) const;
 
-    HTML::BrowsingContextContainer* container() { return m_container; }
-    HTML::BrowsingContextContainer const* container() const { return m_container; }
+    HTML::NavigableContainer* container() { return m_container; }
+    HTML::NavigableContainer const* container() const { return m_container; }
 
     CSSPixelPoint to_top_level_position(CSSPixelPoint);
     CSSPixelRect to_top_level_rect(CSSPixelRect const&);
@@ -266,7 +266,7 @@ public:
     virtual void set_window_handle(String handle) override { m_window_handle = move(handle); }
 
 private:
-    explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
+    explicit BrowsingContext(Page&, HTML::NavigableContainer*);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -296,7 +296,7 @@ private:
     // https://html.spec.whatwg.org/multipage/browsers.html#creator-origin
     Optional<HTML::Origin> m_creator_origin;
 
-    JS::GCPtr<HTML::BrowsingContextContainer> m_container;
+    JS::GCPtr<HTML::NavigableContainer> m_container;
     CSSPixelSize m_size;
     CSSPixelPoint m_viewport_scroll_offset;
 

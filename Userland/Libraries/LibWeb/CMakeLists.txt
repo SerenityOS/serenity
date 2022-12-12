@@ -202,7 +202,6 @@ set(SOURCES
     Geometry/DOMRectReadOnly.cpp
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp
-    HTML/BrowsingContextContainer.cpp
     HTML/BrowsingContextGroup.cpp
     HTML/Canvas/CanvasDrawImage.cpp
     HTML/Canvas/CanvasPath.cpp
@@ -314,6 +313,7 @@ set(SOURCES
     HTML/MessagePort.cpp
     HTML/MimeType.cpp
     HTML/MimeTypeArray.cpp
+    HTML/NavigableContainer.cpp
     HTML/Navigator.cpp
     HTML/NavigatorID.cpp
     HTML/PageTransitionEvent.cpp
