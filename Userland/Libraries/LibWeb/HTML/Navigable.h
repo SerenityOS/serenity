@@ -41,6 +41,7 @@ public:
     void set_container(JS::GCPtr<NavigableContainer>);
 
     JS::GCPtr<TraversableNavigable> traversable_navigable();
+    JS::GCPtr<TraversableNavigable> top_level_traversable();
 
 protected:
     Navigable();
