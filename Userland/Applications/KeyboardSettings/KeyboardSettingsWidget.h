@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Vector.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -28,6 +29,9 @@ private:
 
     void set_keymaps(Vector<DeprecatedString> const& keymaps, DeprecatedString const& active_keymap);
 
+    void write_caps_lock_to_ctrl_sys_variable(bool);
+    ErrorOr<bool> read_caps_lock_to_ctrl_sys_variable();
+
     Vector<DeprecatedString> m_initial_keymap_list;
 
     DeprecatedString m_initial_active_keymap;
@@ -35,6 +39,7 @@ private:
     RefPtr<GUI::ListView> m_selected_keymaps_listview;
     RefPtr<GUI::Label> m_active_keymap_label;
     RefPtr<GUI::CheckBox> m_num_lock_checkbox;
+    RefPtr<GUI::CheckBox> m_caps_lock_checkbox;
     RefPtr<GUI::Button> m_activate_keymap_button;
     RefPtr<GUI::Button> m_add_keymap_button;
     RefPtr<GUI::Button> m_remove_keymap_button;
