@@ -124,4 +124,18 @@
             name: "num_lock_checkbox"
         }
     }
+
+    @GUI::GroupBox {
+        title: "Caps Lock"
+        fixed_height: 60
+        layout: @GUI::HorizontalBoxLayout {
+            margins: [16, 8, 8]
+            spacing: 16
+        }
+
+        @GUI::CheckBox {
+            text: "Use Caps Lock as an additional Ctrl"
+            name: "caps_lock_remapped_to_ctrl_checkbox"
+        }
+    }
 }

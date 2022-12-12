@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Sam Cohen <sbcohen2000@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -255,6 +256,19 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     m_num_lock_checkbox->on_checked = [&](auto) {
         set_modified(true);
     };
+
+    m_caps_lock_checkbox = find_descendant_of_type_named<GUI::CheckBox>("caps_lock_remapped_to_ctrl_checkbox");
+    auto caps_lock_is_remapped = read_caps_lock_to_ctrl_sys_variable();
+    if (caps_lock_is_remapped.is_error()) {
+        auto error_message = DeprecatedString::formatted("Could not determine if Caps Lock is remapped to Ctrl: {}", caps_lock_is_remapped.error());
+        GUI::MessageBox::show_error(window(), error_message);
+    } else {
+        m_caps_lock_checkbox->set_checked(caps_lock_is_remapped.value());
+    }
+    m_caps_lock_checkbox->set_enabled(getuid() == 0);
+    m_caps_lock_checkbox->on_checked = [&](auto) {
+        set_modified(true);
+    };
 }
 
 KeyboardSettingsWidget::~KeyboardSettingsWidget()
@@ -282,10 +296,28 @@ void KeyboardSettingsWidget::apply_settings()
     }
     m_initial_active_keymap = m_keymaps_list_model.active_keymap();
     Config::write_bool("KeyboardSettings"sv, "StartupEnable"sv, "NumLock"sv, m_num_lock_checkbox->is_checked());
+    write_caps_lock_to_ctrl_sys_variable(m_caps_lock_checkbox->is_checked());
 }
 
 void KeyboardSettingsWidget::set_keymaps(Vector<DeprecatedString> const& keymaps, DeprecatedString const& active_keymap)
 {
     auto keymaps_string = DeprecatedString::join(',', keymaps);
     GUI::Process::spawn_or_show_error(window(), "/bin/keymap"sv, Array { "-s", keymaps_string.characters(), "-m", active_keymap.characters() });
+}
+
+void KeyboardSettingsWidget::write_caps_lock_to_ctrl_sys_variable(bool caps_lock_to_ctrl)
+{
+    if (getuid() != 0)
+        return;
+
+    auto write_command = DeprecatedString::formatted("caps_lock_to_ctrl={}", caps_lock_to_ctrl ? "1" : "0");
+    GUI::Process::spawn_or_show_error(window(), "/bin/sysctl"sv, Array { "-w", write_command.characters() });
+}
+
+ErrorOr<bool> KeyboardSettingsWidget::read_caps_lock_to_ctrl_sys_variable()
+{
+    auto file = TRY(Core::File::open("/sys/kernel/variables/caps_lock_to_ctrl"sv, Core::File::OpenMode::Read));
+    auto buffer = TRY(file->read_until_eof());
+    StringView contents_string((char const*)buffer.data(), min(1, buffer.size()));
+    return contents_string == "1";
 }
