@@ -445,9 +445,17 @@ PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer)
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
 Environment& get_this_environment(VM& vm)
 {
+    // 1. Let env be the running execution context's LexicalEnvironment.
+    // 2. Repeat,
     for (auto* env = vm.lexical_environment(); env; env = env->outer_environment()) {
+        // a. Let exists be env.HasThisBinding().
+        // b. If exists is true, return env.
         if (env->has_this_binding())
             return *env;
+
+        // c. Let outer be env.[[OuterEnv]].
+        // d. Assert: outer is not null.
+        // e. Set env to outer.
     }
     VERIFY_NOT_REACHED();
 }
