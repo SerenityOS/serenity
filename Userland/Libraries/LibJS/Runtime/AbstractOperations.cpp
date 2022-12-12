@@ -385,7 +385,12 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(VM& vm, FunctionObject
 // 9.1.2.2 NewDeclarativeEnvironment ( E ), https://tc39.es/ecma262/#sec-newdeclarativeenvironment
 DeclarativeEnvironment* new_declarative_environment(Environment& environment)
 {
-    return environment.heap().allocate_without_realm<DeclarativeEnvironment>(&environment);
+    auto& heap = environment.heap();
+
+    // 1. Let env be a new Declarative Environment Record containing no bindings.
+    // 2. Set env.[[OuterEnv]] to E.
+    // 3. Return env.
+    return heap.allocate_without_realm<DeclarativeEnvironment>(&environment);
 }
 
 // 9.1.2.3 NewObjectEnvironment ( O, W, E ), https://tc39.es/ecma262/#sec-newobjectenvironment
