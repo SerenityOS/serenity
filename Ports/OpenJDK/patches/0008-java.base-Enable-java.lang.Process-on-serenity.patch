@@ -50,7 +50,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f83b5e719
 --- /dev/null
 +++ b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,165 @@
 +/*
 + * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -90,6 +90,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +#include <AK/JsonArray.h>
 +#include <LibCore/ProcessStatisticsReader.h>
 +#include <LibCore/Stream.h>
++#include <LibCore/File.h>
 +#include <stdio.h>
 +#include <string.h>
 +
@@ -121,7 +122,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +
 +pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t pid, jlong *total, jlong *start) {
 +    auto maybe_stats = Core::ProcessStatisticsReader::get_all(proc_all);
-+    if (!maybe_stats.has_value()) {
++    if (maybe_stats.is_error()) {
 +        JNU_ThrowByNameWithLastError(env,
 +            "java/lang/RuntimeException", "ProcessStatisticsReader::get_all failed");
 +            return -1;
@@ -168,7 +169,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +
 +void os_getCmdlineAndUserInfo(JNIEnv *env, jobject jinfo, pid_t pid) {
 +    auto maybe_stats = Core::ProcessStatisticsReader::get_all(proc_all);
-+    if (!maybe_stats.has_value()) {
++    if (maybe_stats.is_error()) {
 +        JNU_ThrowByNameWithLastError(env,
 +            "java/lang/RuntimeException", "ProcessStatisticsReader::get_all failed");
 +        return;
@@ -189,7 +190,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +    JNU_CHECK_EXCEPTION(env);
 +
 +    auto cmdline_file = JAVA_TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
-+    auto contents = JAVA_TRY(cmdline_file->read_all(), "Unable to read /proc/pid/cmdline"sv);
++    auto contents = JAVA_TRY(cmdline_file->read_until_eof(), "Unable to read /proc/pid/cmdline"sv);
 +    auto cmdline = JAVA_TRY(JsonValue::from_string(contents), "Invalid JSON in /proc/pid/cmdline"sv);
 +
 +    if (!cmdline.is_array())
