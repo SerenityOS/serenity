@@ -168,16 +168,19 @@
 #endif
 
 #ifndef AK_OS_SERENITY
+#    ifdef AK_OS_WINDOWS
+// FIXME: No idea where to get this, but it's 4096 anyway :^)
+#        define PAGE_SIZE 4096
 // On macOS (at least Mojave), Apple's version of this header is not wrapped
 // in extern "C".
-#    ifdef AK_OS_MACOS
+#    elif defined(AK_OS_MACOS)
 extern "C" {
 #    endif
 #    include <unistd.h>
 #    undef PAGE_SIZE
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #    ifdef AK_OS_MACOS
-};
+}
 #    endif
 #endif
 
