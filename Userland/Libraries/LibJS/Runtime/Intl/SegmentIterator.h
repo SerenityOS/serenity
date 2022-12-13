@@ -16,7 +16,7 @@ class SegmentIterator final : public Object {
     JS_OBJECT(SegmentIterator, Object);
 
 public:
-    static SegmentIterator* create(Realm&, Segmenter&, Utf16View const&, Segments const&);
+    static NonnullGCPtr<SegmentIterator> create(Realm&, Segmenter&, Utf16View const&, Segments const&);
 
     virtual ~SegmentIterator() override = default;
 
