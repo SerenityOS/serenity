@@ -16,7 +16,7 @@ class ProxyObject final : public FunctionObject {
     JS_OBJECT(ProxyObject, FunctionObject);
 
 public:
-    static ProxyObject* create(Realm&, Object& target, Object& handler);
+    static NonnullGCPtr<ProxyObject> create(Realm&, Object& target, Object& handler);
 
     virtual ~ProxyObject() override = default;
 
