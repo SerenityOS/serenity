@@ -38,7 +38,7 @@ using f128 = long double;
 #ifdef AK_OS_SERENITY
 
 using size_t = __SIZE_TYPE__;
-using ssize_t = MakeSigned<size_t>;
+using ssize_t = AK::Detail::MakeSigned<size_t>;
 
 using ptrdiff_t = __PTRDIFF_TYPE__;
 
@@ -67,7 +67,7 @@ using __ptrdiff_t = __PTRDIFF_TYPE__;
 #    endif
 
 #    if defined(AK_OS_WINDOWS)
-using ssize_t = MakeSigned<size_t>;
+using ssize_t = AK::Detail::MakeSigned<size_t>;
 using mode_t = unsigned short;
 #    endif
 #endif
@@ -84,6 +84,8 @@ constexpr u64 EiB = KiB * KiB * KiB * KiB * KiB * KiB;
 namespace std { // NOLINT(cert-dcl58-cpp) nullptr_t must be in ::std:: for some analysis tools
 using nullptr_t = decltype(nullptr);
 }
+
+namespace AK {
 
 using nullptr_t = std::nullptr_t;
 
@@ -117,8 +119,6 @@ enum class [[nodiscard]] TriState : u8 {
     Unknown
 };
 
-namespace AK {
-
 enum MemoryOrder {
     memory_order_relaxed = __ATOMIC_RELAXED,
     memory_order_consume = __ATOMIC_CONSUME,
@@ -129,3 +129,11 @@ enum MemoryOrder {
 };
 
 }
+
+#if USING_AK_GLOBALLY
+using AK::align_down_to;
+using AK::align_up_to;
+using AK::MemoryOrder;
+using AK::nullptr_t;
+using AK::TriState;
+#endif
