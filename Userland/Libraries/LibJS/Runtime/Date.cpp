@@ -21,9 +21,9 @@ static Crypto::SignedBigInteger const s_one_billion_bigint { 1'000'000'000 };
 static Crypto::SignedBigInteger const s_one_million_bigint { 1'000'000 };
 static Crypto::SignedBigInteger const s_one_thousand_bigint { 1'000 };
 
-Date* Date::create(Realm& realm, double date_value)
+NonnullGCPtr<Date> Date::create(Realm& realm, double date_value)
 {
-    return realm.heap().allocate<Date>(realm, date_value, *realm.intrinsics().date_prototype());
+    return *realm.heap().allocate<Date>(realm, date_value, *realm.intrinsics().date_prototype());
 }
 
 Date::Date(double date_value, Object& prototype)
