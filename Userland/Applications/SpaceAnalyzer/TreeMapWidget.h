@@ -51,6 +51,7 @@ private:
     void lay_out_children(TreeNode const&, Gfx::IntRect const&, int depth, Function);
     void paint_cell_frame(GUI::Painter&, TreeNode const&, Gfx::IntRect const&, Gfx::IntRect const&, int depth, HasLabel has_label) const;
     Vector<DeprecatedString> path_to_position(Gfx::IntPoint);
+    void recalculate_path_for_new_tree();
 
     RefPtr<Tree> m_tree;
     Vector<DeprecatedString> m_path;
