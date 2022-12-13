@@ -40,7 +40,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_alpha_hit_threshold(1.0f);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto catdog_widget = TRY(window->try_set_main_widget<CatDog>());
+    auto catdog_widget = TRY(CatDog::create());
+    window->set_main_widget(catdog_widget);
     (void)TRY(catdog_widget->try_set_layout<GUI::VerticalBoxLayout>());
     catdog_widget->layout()->set_spacing(0);
 
