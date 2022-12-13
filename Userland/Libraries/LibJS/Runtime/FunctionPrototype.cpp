@@ -102,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     }
 
     // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
-    auto* function = TRY(BoundFunction::create(realm, target, this_argument, move(arguments)));
+    auto function = TRY(BoundFunction::create(realm, target, this_argument, move(arguments)));
 
     // 4. Let argCount be the number of elements in args.
     auto arg_count = vm.argument_count() > 0 ? vm.argument_count() - 1 : 0;
