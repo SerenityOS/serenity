@@ -16,7 +16,7 @@ class DateTimeFormatFunction final : public NativeFunction {
     JS_OBJECT(DateTimeFormatFunction, NativeFunction);
 
 public:
-    static DateTimeFormatFunction* create(Realm&, DateTimeFormat&);
+    static NonnullGCPtr<DateTimeFormatFunction> create(Realm&, DateTimeFormat&);
 
     virtual ~DateTimeFormatFunction() override = default;
     virtual void initialize(Realm&) override;

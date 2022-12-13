@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
     if (!date_time_format->bound_format()) {
         // a. Let F be a new built-in function object as defined in DateTime Format Functions (11.1.6).
         // b. Set F.[[DateTimeFormat]] to dtf.
-        auto* bound_format = DateTimeFormatFunction::create(realm, *date_time_format);
+        auto bound_format = DateTimeFormatFunction::create(realm, *date_time_format);
 
         // c. Set dtf.[[BoundFormat]] to F.
         date_time_format->set_bound_format(bound_format);
