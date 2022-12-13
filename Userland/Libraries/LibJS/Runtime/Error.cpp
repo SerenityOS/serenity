@@ -14,15 +14,15 @@
 
 namespace JS {
 
-Error* Error::create(Realm& realm)
+NonnullGCPtr<Error> Error::create(Realm& realm)
 {
-    return realm.heap().allocate<Error>(realm, *realm.intrinsics().error_prototype());
+    return *realm.heap().allocate<Error>(realm, *realm.intrinsics().error_prototype());
 }
 
-Error* Error::create(Realm& realm, DeprecatedString const& message)
+NonnullGCPtr<Error> Error::create(Realm& realm, DeprecatedString const& message)
 {
     auto& vm = realm.vm();
-    auto* error = Error::create(realm);
+    auto error = Error::create(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);
     return error;
@@ -98,24 +98,24 @@ DeprecatedString Error::stack_string() const
     return stack_string_builder.build();
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)              \
-    ClassName* ClassName::create(Realm& realm)                                                        \
-    {                                                                                                 \
-        return realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype()); \
-    }                                                                                                 \
-                                                                                                      \
-    ClassName* ClassName::create(Realm& realm, DeprecatedString const& message)                       \
-    {                                                                                                 \
-        auto& vm = realm.vm();                                                                        \
-        auto* error = ClassName::create(realm);                                                       \
-        u8 attr = Attribute::Writable | Attribute::Configurable;                                      \
-        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);  \
-        return error;                                                                                 \
-    }                                                                                                 \
-                                                                                                      \
-    ClassName::ClassName(Object& prototype)                                                           \
-        : Error(prototype)                                                                            \
-    {                                                                                                 \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)               \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm)                                            \
+    {                                                                                                  \
+        return *realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype()); \
+    }                                                                                                  \
+                                                                                                       \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, DeprecatedString const& message)           \
+    {                                                                                                  \
+        auto& vm = realm.vm();                                                                         \
+        auto error = ClassName::create(realm);                                                         \
+        u8 attr = Attribute::Writable | Attribute::Configurable;                                       \
+        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);   \
+        return error;                                                                                  \
+    }                                                                                                  \
+                                                                                                       \
+    ClassName::ClassName(Object& prototype)                                                            \
+        : Error(prototype)                                                                             \
+    {                                                                                                  \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS
