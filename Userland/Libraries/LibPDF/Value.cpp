@@ -16,7 +16,7 @@ DeprecatedString Value::to_deprecated_string(int indent) const
             // Return type deduction means that we can't use implicit conversions.
             return "<empty>";
         },
-        [&](std::nullptr_t const&) -> DeprecatedString {
+        [&](nullptr_t const&) -> DeprecatedString {
             return "null";
         },
         [&](bool const& b) -> DeprecatedString {

@@ -16,7 +16,7 @@
 
 namespace PDF {
 
-class Value : public Variant<Empty, std::nullptr_t, bool, int, float, Reference, NonnullRefPtr<Object>> {
+class Value : public Variant<Empty, nullptr_t, bool, int, float, Reference, NonnullRefPtr<Object>> {
 public:
     using Variant::Variant;
 

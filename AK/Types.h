@@ -81,13 +81,13 @@ constexpr u64 TiB = KiB * KiB * KiB * KiB;
 constexpr u64 PiB = KiB * KiB * KiB * KiB * KiB;
 constexpr u64 EiB = KiB * KiB * KiB * KiB * KiB * KiB;
 
-namespace std { // NOLINT(cert-dcl58-cpp) nullptr_t must be in ::std:: for some analysis tools
+namespace AK_REPLACED_STD_NAMESPACE { // NOLINT(cert-dcl58-cpp) nullptr_t must be in ::std:: for some analysis tools
 using nullptr_t = decltype(nullptr);
 }
 
 namespace AK {
 
-using nullptr_t = std::nullptr_t;
+using nullptr_t = AK_REPLACED_STD_NAMESPACE::nullptr_t;
 
 static constexpr FlatPtr explode_byte(u8 b)
 {
@@ -133,6 +133,7 @@ enum MemoryOrder {
 #if USING_AK_GLOBALLY
 using AK::align_down_to;
 using AK::align_up_to;
+using AK::explode_byte;
 using AK::MemoryOrder;
 using AK::nullptr_t;
 using AK::TriState;

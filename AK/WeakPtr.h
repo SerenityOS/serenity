@@ -59,7 +59,7 @@ public:
         return *this;
     }
 
-    WeakPtr& operator=(std::nullptr_t)
+    WeakPtr& operator=(nullptr_t)
     {
         clear();
         return *this;

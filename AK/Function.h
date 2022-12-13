@@ -54,7 +54,7 @@ public:
     using ReturnType = Out;
 
     Function() = default;
-    Function(std::nullptr_t)
+    Function(nullptr_t)
     {
     }
 
@@ -116,7 +116,7 @@ public:
         return *this;
     }
 
-    Function& operator=(std::nullptr_t)
+    Function& operator=(nullptr_t)
     {
         clear();
         return *this;

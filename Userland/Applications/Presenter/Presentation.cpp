@@ -14,7 +14,7 @@
 
 Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
     : m_normative_size(normative_size)
-    , m_metadata(std::move(metadata))
+    , m_metadata(move(metadata))
 {
 }
 

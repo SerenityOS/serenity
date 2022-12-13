@@ -197,7 +197,7 @@ public:
         return *this;
     }
 
-    RefPtr& operator=(std::nullptr_t)
+    RefPtr& operator=(nullptr_t)
     {
         clear();
         return *this;
@@ -256,7 +256,7 @@ public:
 
     ALWAYS_INLINE operator bool() { return !is_null(); }
 
-    bool operator==(std::nullptr_t) const { return is_null(); }
+    bool operator==(nullptr_t) const { return is_null(); }
 
     bool operator==(RefPtr const& other) const { return as_ptr() == other.as_ptr(); }
 

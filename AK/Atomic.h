@@ -41,7 +41,7 @@ static inline V* atomic_exchange(T volatile** var, V* desired, MemoryOrder order
 }
 
 template<typename T, typename V = RemoveVolatile<T>>
-static inline V* atomic_exchange(T volatile** var, std::nullptr_t, MemoryOrder order = memory_order_seq_cst) noexcept
+static inline V* atomic_exchange(T volatile** var, nullptr_t, MemoryOrder order = memory_order_seq_cst) noexcept
 {
     return __atomic_exchange_n(const_cast<V**>(var), nullptr, order);
 }
@@ -63,7 +63,7 @@ template<typename T, typename V = RemoveVolatile<T>>
 }
 
 template<typename T, typename V = RemoveVolatile<T>>
-[[nodiscard]] static inline bool atomic_compare_exchange_strong(T volatile** var, V*& expected, std::nullptr_t, MemoryOrder order = memory_order_seq_cst) noexcept
+[[nodiscard]] static inline bool atomic_compare_exchange_strong(T volatile** var, V*& expected, nullptr_t, MemoryOrder order = memory_order_seq_cst) noexcept
 {
     if (order == memory_order_acq_rel || order == memory_order_release)
         return __atomic_compare_exchange_n(const_cast<V**>(var), &expected, nullptr, false, memory_order_release, memory_order_acquire);
@@ -125,7 +125,7 @@ static inline void atomic_store(T volatile** var, V* desired, MemoryOrder order 
 }
 
 template<typename T, typename V = RemoveVolatile<T>>
-static inline void atomic_store(T volatile** var, std::nullptr_t, MemoryOrder order = memory_order_seq_cst) noexcept
+static inline void atomic_store(T volatile** var, nullptr_t, MemoryOrder order = memory_order_seq_cst) noexcept
 {
     __atomic_store_n(const_cast<V**>(var), nullptr, order);
 }

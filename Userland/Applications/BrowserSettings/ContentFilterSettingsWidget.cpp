@@ -121,7 +121,7 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
 
         if (GUI::InputBox::show(window(), text, "Enter domain name"sv, "Add domain to Content Filter"sv) == GUI::Dialog::ExecResult::OK
             && !text.is_empty()) {
-            m_domain_list_model->add_domain(std::move(text));
+            m_domain_list_model->add_domain(move(text));
             set_modified(true);
         }
     };

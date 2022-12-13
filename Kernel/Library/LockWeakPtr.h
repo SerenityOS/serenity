@@ -49,7 +49,7 @@ public:
         return *this;
     }
 
-    LockWeakPtr& operator=(std::nullptr_t)
+    LockWeakPtr& operator=(nullptr_t)
     {
         clear();
         return *this;
