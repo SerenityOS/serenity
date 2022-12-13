@@ -863,7 +863,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
     }
 
     // 7. Let map be ! Construct(%Map%).
-    auto* map = Map::create(realm);
+    auto map = Map::create(realm);
 
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {

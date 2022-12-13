@@ -20,7 +20,7 @@ class Map : public Object {
     JS_OBJECT(Map, Object);
 
 public:
-    static Map* create(Realm&);
+    static NonnullGCPtr<Map> create(Realm&);
 
     virtual ~Map() override = default;
 
