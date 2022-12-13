@@ -750,10 +750,10 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         document_type_copy->set_system_id(document_type->system_id());
         copy = move(document_type_copy);
     } else if (is<Attr>(this)) {
-        // FIXME:
         // Attr
         // Set copy’s namespace, namespace prefix, local name, and value to those of node.
-        dbgln("clone_node() not implemented for Attribute");
+        auto& attr = static_cast<Attr&>(*this);
+        copy = attr.clone(*document);
     } else if (is<Text>(this)) {
         // Text
         auto text = verify_cast<Text>(this);
