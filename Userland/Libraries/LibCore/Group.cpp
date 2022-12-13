@@ -19,31 +19,26 @@ namespace Core {
 ErrorOr<DeprecatedString> Group::generate_group_file() const
 {
     StringBuilder builder;
+    char buffer[1024] = { 0 };
 
     ScopeGuard grent_guard([] { endgrent(); });
     setgrent();
-    errno = 0;
-#ifndef AK_OS_MACOS
-    struct group group;
-    struct group* gr = nullptr;
-    char buffer[1024] = { 0 };
-    while (getgrent_r(&group, buffer, sizeof(buffer), &gr) == 0 && gr) {
-#else
-    for (auto const* gr = getgrent(); gr; gr = getgrent()) {
-#endif
-        if (gr->gr_name == m_name)
+
+    while (true) {
+        auto group = TRY(Core::System::getgrent({ buffer, sizeof(buffer) }));
+        if (!group.has_value())
+            break;
+
+        if (group->gr_name == m_name)
             builder.appendff("{}:x:{}:{}\n", m_name, m_id, DeprecatedString::join(',', m_members));
         else {
             Vector<DeprecatedString> members;
-            for (size_t i = 0; gr->gr_mem[i]; ++i)
-                members.append(gr->gr_mem[i]);
+            for (size_t i = 0; group->gr_mem[i]; ++i)
+                members.append(group->gr_mem[i]);
 
-            builder.appendff("{}:x:{}:{}\n", gr->gr_name, gr->gr_gid, DeprecatedString::join(',', members));
+            builder.appendff("{}:x:{}:{}\n", group->gr_name, group->gr_gid, DeprecatedString::join(',', members));
         }
     }
-
-    if (errno)
-        return Error::from_errno(errno);
 
     return builder.to_deprecated_string();
 }
@@ -123,27 +118,22 @@ ErrorOr<void> Group::add_group(Group& group)
 ErrorOr<Vector<Group>> Group::all()
 {
     Vector<Group> groups;
+    char buffer[1024] = { 0 };
 
     ScopeGuard grent_guard([] { endgrent(); });
     setgrent();
-    errno = 0;
-#ifndef AK_OS_MACOS
-    struct group group;
-    struct group* gr = nullptr;
-    char buffer[1024] = { 0 };
-    while (getgrent_r(&group, buffer, sizeof(buffer), &gr) == 0 && gr) {
-#else
-    for (auto const* gr = getgrent(); gr; gr = getgrent()) {
-#endif
+
+    while (true) {
+        auto group = TRY(Core::System::getgrent({ buffer, sizeof(buffer) }));
+        if (!group.has_value())
+            break;
+
         Vector<DeprecatedString> members;
-        for (size_t i = 0; gr->gr_mem[i]; ++i)
-            members.append(gr->gr_mem[i]);
+        for (size_t i = 0; group->gr_mem[i]; ++i)
+            members.append(group->gr_mem[i]);
 
-        groups.append({ gr->gr_name, gr->gr_gid, members });
+        groups.append({ group->gr_name, group->gr_gid, members });
     }
-
-    if (errno)
-        return Error::from_errno(errno);
 
     return groups;
 }

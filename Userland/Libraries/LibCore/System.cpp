@@ -86,6 +86,40 @@ static ErrorOr<Optional<struct passwd>> getpwent_impl(Span<char> buffer)
     return Optional<struct passwd> {};
 }
 
+// clang-format off
+template<typename T>
+concept SupportsReentrantGetgrent = requires(T group, T* ptr)
+{
+    getgrent_r(&group, nullptr, 0, &ptr);
+};
+// clang-format on
+
+// Note: This has to be in the global namespace for the extern declaration to trick the compiler
+// into finding a declaration of getgrent_r when it doesn't actually exist.
+static ErrorOr<Optional<struct group>> getgrent_impl(Span<char> buffer)
+{
+    if constexpr (SupportsReentrantGetgrent<struct group>) {
+        struct group group;
+        struct group* ptr = nullptr;
+
+        extern int getgrent_r(struct group*, char*, size_t, struct group**);
+        auto result = getgrent_r(&group, buffer.data(), buffer.size(), &ptr);
+
+        if (result == 0 && ptr)
+            return group;
+        if (result != 0 && result != ENOENT)
+            return Error::from_errno(result);
+    } else {
+        errno = 0;
+        if (auto const* group = ::getgrent())
+            return *group;
+        if (errno)
+            return Error::from_errno(errno);
+    }
+
+    return Optional<struct group> {};
+}
+
 namespace Core::System {
 
 #ifndef HOST_NAME_MAX
@@ -674,6 +708,11 @@ ErrorOr<Optional<struct passwd>> getpwuid(uid_t uid)
     if (errno)
         return Error::from_syscall("getpwuid"sv, -errno);
     return Optional<struct passwd> {};
+}
+
+ErrorOr<Optional<struct group>> getgrent(Span<char> buffer)
+{
+    return getgrent_impl(buffer);
 }
 
 ErrorOr<Optional<struct group>> getgrgid(gid_t gid)
