@@ -266,7 +266,7 @@ JS::Promise* Blob::array_buffer()
         promise->reject(buffer_result.release_error().value().release_value());
         return promise;
     }
-    auto* buffer = buffer_result.release_value();
+    auto buffer = buffer_result.release_value();
     buffer->buffer().overwrite(0, m_byte_buffer.data(), m_byte_buffer.size());
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns a new ArrayBuffer whose contents are its first argument.

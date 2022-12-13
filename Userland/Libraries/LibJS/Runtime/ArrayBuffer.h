@@ -25,9 +25,9 @@ class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
 
 public:
-    static ThrowCompletionOr<ArrayBuffer*> create(Realm&, size_t);
-    static ArrayBuffer* create(Realm&, ByteBuffer);
-    static ArrayBuffer* create(Realm&, ByteBuffer*);
+    static ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> create(Realm&, size_t);
+    static NonnullGCPtr<ArrayBuffer> create(Realm&, ByteBuffer);
+    static NonnullGCPtr<ArrayBuffer> create(Realm&, ByteBuffer*);
 
     virtual ~ArrayBuffer() override = default;
 
