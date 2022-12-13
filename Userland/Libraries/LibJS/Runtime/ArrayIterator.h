@@ -14,7 +14,7 @@ class ArrayIterator final : public Object {
     JS_OBJECT(ArrayIterator, Object);
 
 public:
-    static ArrayIterator* create(Realm&, Value array, Object::PropertyKind iteration_kind);
+    static NonnullGCPtr<ArrayIterator> create(Realm&, Value array, Object::PropertyKind iteration_kind);
 
     virtual ~ArrayIterator() override = default;
 
