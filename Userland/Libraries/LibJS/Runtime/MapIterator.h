@@ -16,7 +16,7 @@ class MapIterator final : public Object {
     JS_OBJECT(MapIterator, Object);
 
 public:
-    static MapIterator* create(Realm&, Map& map, Object::PropertyKind iteration_kind);
+    static NonnullGCPtr<MapIterator> create(Realm&, Map& map, Object::PropertyKind iteration_kind);
 
     virtual ~MapIterator() override = default;
 
