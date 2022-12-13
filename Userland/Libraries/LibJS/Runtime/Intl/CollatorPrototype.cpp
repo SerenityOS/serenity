@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::compare_getter)
     if (!collator->bound_compare()) {
         // a. Let F be a new built-in function object as defined in 10.3.3.1.
         // b. Set F.[[Collator]] to collator.
-        auto* function = CollatorCompareFunction::create(realm, *collator);
+        auto function = CollatorCompareFunction::create(realm, *collator);
 
         // c. Set collator.[[BoundCompare]] to F.
         collator->set_bound_compare(function);

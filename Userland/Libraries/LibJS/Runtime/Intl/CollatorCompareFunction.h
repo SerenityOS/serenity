@@ -14,7 +14,7 @@ class CollatorCompareFunction : public NativeFunction {
     JS_OBJECT(CollatorCompareFunction, NativeFunction);
 
 public:
-    static CollatorCompareFunction* create(Realm&, Collator&);
+    static NonnullGCPtr<CollatorCompareFunction> create(Realm&, Collator&);
 
     virtual void initialize(Realm&) override;
     virtual ~CollatorCompareFunction() override = default;
