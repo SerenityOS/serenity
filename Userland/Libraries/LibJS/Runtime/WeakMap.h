@@ -19,7 +19,7 @@ class WeakMap final
     JS_OBJECT(WeakMap, Object);
 
 public:
-    static WeakMap* create(Realm&);
+    static NonnullGCPtr<WeakMap> create(Realm&);
 
     virtual ~WeakMap() override = default;
 
