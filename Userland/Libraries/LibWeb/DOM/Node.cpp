@@ -1262,8 +1262,19 @@ bool Node::is_equal_node(Node const* other_node) const
             return false;
         break;
     }
+    case (u16)NodeType::ATTRIBUTE_NODE: {
+        // Its namespace, local name, and value.
+        auto& this_attr = verify_cast<Attr>(*this);
+        auto& other_attr = verify_cast<Attr>(*other_node);
+        if (this_attr.namespace_uri() != other_attr.namespace_uri())
+            return false;
+        if (this_attr.local_name() != other_attr.local_name())
+            return false;
+        if (this_attr.value() != other_attr.value())
+            return false;
+        break;
+    }
     case (u16)NodeType::PROCESSING_INSTRUCTION_NODE:
-    case (u16)NodeType::ATTRIBUTE_NODE:
         TODO();
     default:
         break;
