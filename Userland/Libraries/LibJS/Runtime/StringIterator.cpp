@@ -10,9 +10,9 @@
 
 namespace JS {
 
-StringIterator* StringIterator::create(Realm& realm, DeprecatedString string)
+NonnullGCPtr<StringIterator> StringIterator::create(Realm& realm, DeprecatedString string)
 {
-    return realm.heap().allocate<StringIterator>(realm, move(string), *realm.intrinsics().string_iterator_prototype());
+    return *realm.heap().allocate<StringIterator>(realm, move(string), *realm.intrinsics().string_iterator_prototype());
 }
 
 StringIterator::StringIterator(DeprecatedString string, Object& prototype)
