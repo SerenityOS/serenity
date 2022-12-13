@@ -109,7 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalEnvironmentExtensions::$$_function)
         return element->query_selector_all(selector);
     }));
 
-    auto* array = TRY(JS::Array::create(*vm.current_realm(), node_list->length()));
+    auto array = TRY(JS::Array::create(*vm.current_realm(), node_list->length()));
     for (auto i = 0u; i < node_list->length(); ++i) {
         TRY(array->create_data_property_or_throw(i, node_list->item_value(i)));
     }

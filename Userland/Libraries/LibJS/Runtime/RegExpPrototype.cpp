@@ -121,7 +121,7 @@ static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string
     // 4. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
 
     // 5. Set A to ! ArrayCreate(n).
-    auto* array = MUST(Array::create(realm, indices.size()));
+    auto array = MUST(Array::create(realm, indices.size()));
 
     // 6. If hasGroups is true, then
     //     a. Let groups be ! ObjectCreate(null).
@@ -253,7 +253,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     VERIFY(result.n_named_capture_groups < NumericLimits<u32>::max());
 
     // 19. Let A be ! ArrayCreate(n + 1).
-    auto* array = MUST(Array::create(realm, result.n_named_capture_groups + 1));
+    auto array = MUST(Array::create(realm, result.n_named_capture_groups + 1));
 
     // 20. Assert: The mathematical value of A's "length" property is n + 1.
 
@@ -546,7 +546,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     // c. Let A be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(realm, 0));
+    auto array = MUST(Array::create(realm, 0));
 
     // d. Let n be 0.
     size_t n = 0;
@@ -926,7 +926,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto* splitter = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(new_flags))));
 
     // 11. Let A be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(realm, 0));
+    auto array = MUST(Array::create(realm, 0));
 
     // 12. Let lengthA be 0.
     size_t array_length = 0;

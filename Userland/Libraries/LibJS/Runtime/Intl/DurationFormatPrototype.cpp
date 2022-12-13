@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     auto parts = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 7. Let n be 0.
     // 8. For each { [[Type]], [[Value]] } part in parts, do

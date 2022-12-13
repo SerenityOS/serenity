@@ -120,7 +120,7 @@ static ThrowCompletionOr<Object*> array_species_create(VM& vm, Object& original_
     auto is_array = TRY(Value(&original_array).is_array(vm));
 
     if (!is_array)
-        return TRY(Array::create(realm, length));
+        return TRY(Array::create(realm, length)).ptr();
 
     auto constructor = TRY(original_array.get(vm.names.constructor));
     if (constructor.is_constructor()) {
@@ -140,7 +140,7 @@ static ThrowCompletionOr<Object*> array_species_create(VM& vm, Object& original_
     }
 
     if (constructor.is_undefined())
-        return TRY(Array::create(realm, length));
+        return TRY(Array::create(realm, length)).ptr();
 
     if (!constructor.is_constructor())
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
@@ -796,7 +796,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {
         // a. Let elements be CreateArrayFromList(g.[[Elements]]).
-        auto* elements = Array::create_from(realm, group.value);
+        auto elements = Array::create_from(realm, group.value);
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
         MUST(object->create_data_property_or_throw(group.key, elements));
@@ -868,7 +868,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {
         // a. Let elements be CreateArrayFromList(g.[[Elements]]).
-        auto* elements = Array::create_from(realm, group.value);
+        auto elements = Array::create_from(realm, group.value);
 
         // b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
         // c. Append entry as the last element of map.[[MapData]].
@@ -1758,7 +1758,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
     auto length = TRY(length_of_array_like(vm, *object));
 
     // 3. Let A be ? ArrayCreate(𝔽(len)).
-    auto* array = TRY(Array::create(realm, length));
+    auto array = TRY(Array::create(realm, length));
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -1800,7 +1800,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
     auto length = TRY(length_of_array_like(vm, *object));
 
     // 4. Let A be ? ArrayCreate(𝔽(len)).
-    auto* array = TRY(Array::create(realm, length));
+    auto array = TRY(Array::create(realm, length));
 
     // 5. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
     Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
@@ -1893,7 +1893,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     auto new_length = static_cast<u64>(new_length_double);
 
     // 13. Let A be ? ArrayCreate(𝔽(newLen)).
-    auto* array = TRY(Array::create(realm, new_length));
+    auto array = TRY(Array::create(realm, new_length));
 
     // 14. Let i be 0.
     size_t i = 0;
@@ -2047,7 +2047,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
         return vm.throw_completion<RangeError>(ErrorType::IndexOutOfRange, actual_index, length);
 
     // 7. Let A be ? ArrayCreate(𝔽(len)).
-    auto* array = TRY(Array::create(realm, length));
+    auto array = TRY(Array::create(realm, length));
 
     // 8. Let k be 0.
     // 9. Repeat, while k < len,

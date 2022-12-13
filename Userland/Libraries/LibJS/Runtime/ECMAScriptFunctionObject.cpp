@@ -441,7 +441,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             [&](auto const& param) -> ThrowCompletionOr<void> {
                 Value argument_value;
                 if (parameter.is_rest) {
-                    auto* array = MUST(Array::create(realm, 0));
+                    auto array = MUST(Array::create(realm, 0));
                     for (size_t rest_index = i; rest_index < execution_context_arguments.size(); ++rest_index)
                         array->indexed_properties().append(execution_context_arguments[rest_index]);
                     argument_value = array;

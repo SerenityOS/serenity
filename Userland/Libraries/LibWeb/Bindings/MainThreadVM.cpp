@@ -443,7 +443,7 @@ void queue_mutation_observer_microtask(DOM::Document& document)
                 auto& callback = mutation_observer->callback();
                 auto& realm = callback.callback_context.realm();
 
-                auto* wrapped_records = MUST(JS::Array::create(realm, 0));
+                auto wrapped_records = MUST(JS::Array::create(realm, 0));
                 for (size_t i = 0; i < records.size(); ++i) {
                     auto& record = records.at(i);
                     auto property_index = JS::PropertyKey { i };

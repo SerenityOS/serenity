@@ -431,7 +431,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             VERIFY(i == binding.entries.size() - 1);
 
             // 2. Let A be ! ArrayCreate(0).
-            auto* array = MUST(Array::create(realm, 0));
+            auto array = MUST(Array::create(realm, 0));
 
             // 3. Let n be 0.
             // 4. Repeat,

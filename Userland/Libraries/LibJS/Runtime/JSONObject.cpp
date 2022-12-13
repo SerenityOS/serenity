@@ -441,7 +441,7 @@ Object* JSONObject::parse_json_object(VM& vm, JsonObject const& json_object)
 Array* JSONObject::parse_json_array(VM& vm, JsonArray const& json_array)
 {
     auto& realm = *vm.current_realm();
-    auto* array = MUST(Array::create(realm, 0));
+    auto array = MUST(Array::create(realm, 0));
     size_t index = 0;
     json_array.for_each([&](auto& value) {
         array->define_direct_property(index++, parse_json_value(vm, value), default_attributes);

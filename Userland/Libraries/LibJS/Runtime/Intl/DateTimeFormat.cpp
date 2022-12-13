@@ -857,7 +857,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
     auto parts = TRY(partition_date_time_pattern(vm, date_time_format, time));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -881,7 +881,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 template<typename Callback>
@@ -1173,7 +1173,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
     auto parts = TRY(partition_date_time_range_pattern(vm, date_time_format, start, end));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -1200,7 +1200,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 // 11.5.13 ToLocalTime ( epochNs, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime

@@ -209,7 +209,7 @@ Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<Deprec
     auto parts = create_parts_from_list(list_format, list);
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;

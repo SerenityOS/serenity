@@ -17,7 +17,7 @@
 namespace JS {
 
 // 10.4.2.2 ArrayCreate ( length [ , proto ] ), https://tc39.es/ecma262/#sec-arraycreate
-ThrowCompletionOr<Array*> Array::create(Realm& realm, u64 length, Object* prototype)
+ThrowCompletionOr<NonnullGCPtr<Array>> Array::create(Realm& realm, u64 length, Object* prototype)
 {
     auto& vm = realm.vm();
 
@@ -38,14 +38,14 @@ ThrowCompletionOr<Array*> Array::create(Realm& realm, u64 length, Object* protot
     MUST(array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false }));
 
     // 7. Return A.
-    return array;
+    return NonnullGCPtr { *array };
 }
 
 // 7.3.18 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
-Array* Array::create_from(Realm& realm, Vector<Value> const& elements)
+NonnullGCPtr<Array> Array::create_from(Realm& realm, Vector<Value> const& elements)
 {
     // 1. Let array be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(realm, 0));
+    auto array = MUST(Array::create(realm, 0));
 
     // 2. Let n be 0.
     // 3. For each element e of elements, do

@@ -914,7 +914,7 @@ Array* format_numeric_to_parts(VM& vm, NumberFormat& number_format, Mathematical
     auto parts = partition_number_pattern(vm, number_format, move(number));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -1824,7 +1824,7 @@ ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM& vm, NumberFormat& nu
     auto parts = TRY(partition_number_range_pattern(vm, number_format, move(start), move(end)));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -1851,7 +1851,7 @@ ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM& vm, NumberFormat& nu
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 }

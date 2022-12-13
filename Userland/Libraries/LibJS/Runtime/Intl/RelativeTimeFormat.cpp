@@ -249,7 +249,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(VM& vm, RelativeTimeForm
     auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(realm, 0));
+    auto result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -279,7 +279,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(VM& vm, RelativeTimeForm
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 }

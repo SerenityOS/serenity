@@ -21,11 +21,11 @@ class Array : public Object {
     JS_OBJECT(Array, Object);
 
 public:
-    static ThrowCompletionOr<Array*> create(Realm&, u64 length, Object* prototype = nullptr);
-    static Array* create_from(Realm&, Vector<Value> const&);
+    static ThrowCompletionOr<NonnullGCPtr<Array>> create(Realm&, u64 length, Object* prototype = nullptr);
+    static NonnullGCPtr<Array> create_from(Realm&, Vector<Value> const&);
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
-    static Array* create_from(Realm& realm, Span<T const> elements, Function<Value(T const&)> map_fn)
+    static NonnullGCPtr<Array> create_from(Realm& realm, Span<T const> elements, Function<Value(T const&)> map_fn)
     {
         auto values = MarkedVector<Value> { realm.heap() };
         values.ensure_capacity(elements.size());
