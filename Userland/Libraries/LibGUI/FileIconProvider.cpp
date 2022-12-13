@@ -222,7 +222,7 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
             continue;
         }
 
-        icon.set_bitmap_for_size(icon_section.image_size, std::move(bitmap));
+        icon.set_bitmap_for_size(icon_section.image_size, move(bitmap));
     }
 
     if (had_error) {

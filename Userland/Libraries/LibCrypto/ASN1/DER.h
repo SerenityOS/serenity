@@ -217,7 +217,7 @@ private:
     static Result<bool, DecodeError> decode_boolean(ReadonlyBytes);
     static Result<UnsignedBigInteger, DecodeError> decode_arbitrary_sized_integer(ReadonlyBytes);
     static Result<StringView, DecodeError> decode_octet_string(ReadonlyBytes);
-    static Result<std::nullptr_t, DecodeError> decode_null(ReadonlyBytes);
+    static Result<nullptr_t, DecodeError> decode_null(ReadonlyBytes);
     static Result<Vector<int>, DecodeError> decode_object_identifier(ReadonlyBytes);
     static Result<StringView, DecodeError> decode_printable_string(ReadonlyBytes);
     static Result<BitStringView, DecodeError> decode_bit_string(ReadonlyBytes);

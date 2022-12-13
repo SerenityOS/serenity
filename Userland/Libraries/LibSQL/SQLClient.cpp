@@ -139,7 +139,7 @@ ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Str
     auto socket = TRY(Core::Stream::LocalSocket::connect(move(socket_path)));
     TRY(socket->set_blocking(true));
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SQLClient(std::move(socket)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SQLClient(move(socket)));
 }
 
 #endif

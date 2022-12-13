@@ -15,7 +15,7 @@ struct FlacTest : Test::TestCase {
     FlacTest(LexicalPath path)
         : Test::TestCase(
             DeprecatedString::formatted("flac_spec_test_{}", path.basename()), [this]() { run(); }, false)
-        , m_path(std::move(path))
+        , m_path(move(path))
     {
     }
 

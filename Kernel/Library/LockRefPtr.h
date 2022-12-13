@@ -113,7 +113,7 @@ struct LockRefPtrTraits {
 
     static constexpr FlatPtr default_null_value = 0;
 
-    using NullType = std::nullptr_t;
+    using NullType = nullptr_t;
 };
 
 template<typename T, typename PtrTraits>
@@ -284,7 +284,7 @@ public:
         return *this;
     }
 
-    LockRefPtr& operator=(std::nullptr_t)
+    LockRefPtr& operator=(nullptr_t)
     {
         clear();
         return *this;
@@ -353,8 +353,8 @@ public:
 
     ALWAYS_INLINE operator bool() { return !is_null(); }
 
-    bool operator==(std::nullptr_t) const { return is_null(); }
-    bool operator!=(std::nullptr_t) const { return !is_null(); }
+    bool operator==(nullptr_t) const { return is_null(); }
+    bool operator!=(nullptr_t) const { return !is_null(); }
 
     bool operator==(LockRefPtr const& other) const { return as_ptr() == other.as_ptr(); }
     bool operator!=(LockRefPtr const& other) const { return as_ptr() != other.as_ptr(); }

@@ -74,7 +74,7 @@ ALWAYS_INLINE ErrorOr<void> unveil(char const (&path)[NPath], char const (&permi
     return unveil(StringView { path, NPath - 1 }, StringView { permissions, NPermissions - 1 });
 }
 
-ALWAYS_INLINE ErrorOr<void> unveil(std::nullptr_t, std::nullptr_t)
+ALWAYS_INLINE ErrorOr<void> unveil(nullptr_t, nullptr_t)
 {
     return unveil(StringView {}, StringView {});
 }

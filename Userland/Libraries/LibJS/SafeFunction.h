@@ -24,7 +24,7 @@ class SafeFunction<Out(In...)> {
 
 public:
     SafeFunction() = default;
-    SafeFunction(std::nullptr_t)
+    SafeFunction(nullptr_t)
     {
     }
 
@@ -102,7 +102,7 @@ public:
         return *this;
     }
 
-    SafeFunction& operator=(std::nullptr_t)
+    SafeFunction& operator=(nullptr_t)
     {
         clear();
         return *this;

@@ -97,7 +97,7 @@ public:
 
     OwnPtr& operator=(T* ptr) = delete;
 
-    OwnPtr& operator=(std::nullptr_t)
+    OwnPtr& operator=(nullptr_t)
     {
         clear();
         return *this;

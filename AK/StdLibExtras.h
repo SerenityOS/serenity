@@ -34,10 +34,17 @@ requires(AK::Detail::IsIntegral<T>)
 
 }
 
-#ifndef AK_DONT_REPLACE_STD
-namespace std { // NOLINT(cert-dcl58-cpp) Names in std to aid tools
+#if !USING_AK_GLOBALLY
+#    define AK_REPLACED_STD_NAMESPACE AK::replaced_std
+#else
+#    define AK_REPLACED_STD_NAMESPACE std
+#endif
+
+namespace AK_REPLACED_STD_NAMESPACE { // NOLINT(cert-dcl58-cpp) Names in std to aid tools
 
 // NOTE: These are in the "std" namespace since some compilers and static analyzers rely on it.
+//       If USING_AK_GLOBALLY is false, we can't put them in ::std, so we put them in AK::replaced_std instead
+//       The user code should not notice anything unless it explicitly asks for std::stuff, so...don't.
 
 template<typename T>
 constexpr T&& forward(AK::Detail::RemoveReference<T>& param)
@@ -59,20 +66,11 @@ constexpr T&& move(T& arg)
 }
 
 }
-#else
-#    include <utility>
-#endif
 
-#if !USING_AK_GLOBALLY
 namespace AK {
-#endif
-
-using std::forward;
-using std::move;
-
-#if !USING_AK_GLOBALLY
+using AK_REPLACED_STD_NAMESPACE::forward;
+using AK_REPLACED_STD_NAMESPACE::move;
 }
-#endif
 
 namespace AK::Detail {
 template<typename T>
@@ -193,11 +191,13 @@ using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
+using AK::forward;
 using AK::is_constant_evaluated;
 using AK::is_power_of_two;
 using AK::max;
 using AK::min;
 using AK::mix;
+using AK::move;
 using AK::RawPtr;
 using AK::round_up_to_power_of_two;
 using AK::swap;

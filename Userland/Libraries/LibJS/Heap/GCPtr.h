@@ -129,7 +129,7 @@ public:
     {
     }
 
-    GCPtr(std::nullptr_t)
+    GCPtr(nullptr_t)
         : m_ptr(nullptr)
     {
     }

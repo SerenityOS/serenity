@@ -250,7 +250,7 @@ public:
         return *this;
     }
 
-    DeprecatedString& operator=(std::nullptr_t)
+    DeprecatedString& operator=(nullptr_t)
     {
         m_impl = nullptr;
         return *this;

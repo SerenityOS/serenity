@@ -126,7 +126,7 @@ Result<StringView, DecodeError> Decoder::decode_octet_string(ReadonlyBytes bytes
     return StringView { bytes.data(), bytes.size() };
 }
 
-Result<std::nullptr_t, DecodeError> Decoder::decode_null(ReadonlyBytes data)
+Result<nullptr_t, DecodeError> Decoder::decode_null(ReadonlyBytes data)
 {
     if (data.size() != 0)
         return DecodeError::InvalidInputFormat;

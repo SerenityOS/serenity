@@ -948,7 +948,7 @@ public:
     {
     }
 
-    explicit Yield(std::nullptr_t)
+    explicit Yield(nullptr_t)
         : Instruction(Type::Yield)
     {
     }

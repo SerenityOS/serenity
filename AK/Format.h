@@ -544,8 +544,8 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
 };
 
 template<>
-struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
-    ErrorOr<void> format(FormatBuilder& builder, std::nullptr_t)
+struct Formatter<nullptr_t> : Formatter<FlatPtr> {
+    ErrorOr<void> format(FormatBuilder& builder, nullptr_t)
     {
         if (m_mode == Mode::Default)
             m_mode = Mode::Pointer;
