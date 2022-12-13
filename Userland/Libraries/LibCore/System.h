@@ -122,6 +122,7 @@ ErrorOr<int> tcsetpgrp(int fd, pid_t pgrp);
 ErrorOr<void> chmod(StringView pathname, mode_t mode);
 ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid);
 ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid);
+ErrorOr<Optional<struct passwd>> getpwent(Span<char> buffer);
 ErrorOr<Optional<struct passwd>> getpwnam(StringView name);
 ErrorOr<Optional<struct group>> getgrnam(StringView name);
 ErrorOr<Optional<struct passwd>> getpwuid(uid_t);
