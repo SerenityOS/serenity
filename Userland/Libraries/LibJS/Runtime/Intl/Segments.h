@@ -16,7 +16,7 @@ class Segments final : public Object {
     JS_OBJECT(Segments, Object);
 
 public:
-    static Segments* create(Realm&, Segmenter&, Utf16String);
+    static NonnullGCPtr<Segments> create(Realm&, Segmenter&, Utf16String);
 
     virtual ~Segments() override = default;
 
