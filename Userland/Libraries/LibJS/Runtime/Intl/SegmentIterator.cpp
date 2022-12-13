@@ -11,7 +11,7 @@
 namespace JS::Intl {
 
 // 18.6.1 CreateSegmentIterator ( segmenter, string ), https://tc39.es/ecma402/#sec-createsegmentsobject
-SegmentIterator* SegmentIterator::create(Realm& realm, Segmenter& segmenter, Utf16View const& string, Segments const& segments)
+NonnullGCPtr<SegmentIterator> SegmentIterator::create(Realm& realm, Segmenter& segmenter, Utf16View const& string, Segments const& segments)
 {
     // 1. Let internalSlotsList be « [[IteratingSegmenter]], [[IteratedString]], [[IteratedStringNextSegmentCodeUnitIndex]] ».
     // 2. Let iterator be OrdinaryObjectCreate(%SegmentIteratorPrototype%, internalSlotsList).
@@ -19,7 +19,7 @@ SegmentIterator* SegmentIterator::create(Realm& realm, Segmenter& segmenter, Utf
     // 4. Set iterator.[[IteratedString]] to string.
     // 5. Set iterator.[[IteratedStringNextSegmentCodeUnitIndex]] to 0.
     // 6. Return iterator.
-    return realm.heap().allocate<SegmentIterator>(realm, realm, segmenter, move(string), segments);
+    return *realm.heap().allocate<SegmentIterator>(realm, realm, segmenter, move(string), segments);
 }
 
 // 18.6 Segment Iterator Objects, https://tc39.es/ecma402/#sec-segment-iterator-objects
