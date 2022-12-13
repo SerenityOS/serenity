@@ -17,7 +17,7 @@ class Set : public Object {
     JS_OBJECT(Set, Object);
 
 public:
-    static Set* create(Realm&);
+    static NonnullGCPtr<Set> create(Realm&);
 
     virtual void initialize(Realm&) override;
     virtual ~Set() override = default;
