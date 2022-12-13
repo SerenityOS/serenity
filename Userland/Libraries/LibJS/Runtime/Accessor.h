@@ -17,9 +17,9 @@ class Accessor final : public Cell {
     JS_CELL(Accessor, Cell);
 
 public:
-    static Accessor* create(VM& vm, FunctionObject* getter, FunctionObject* setter)
+    static NonnullGCPtr<Accessor> create(VM& vm, FunctionObject* getter, FunctionObject* setter)
     {
-        return vm.heap().allocate_without_realm<Accessor>(getter, setter);
+        return *vm.heap().allocate_without_realm<Accessor>(getter, setter);
     }
 
     FunctionObject* getter() const { return m_getter; }
