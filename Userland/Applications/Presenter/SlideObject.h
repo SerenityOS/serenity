@@ -59,7 +59,8 @@ public:
 protected:
     GraphicsObject();
 
-    Gfx::Color m_color;
+    // FIXME: Change the default color based on the color scheme
+    Gfx::Color m_color { Gfx::Color::Black };
 };
 
 class Text : public GraphicsObject {
@@ -86,9 +87,9 @@ protected:
     DeprecatedString m_text;
     // The font family, technically speaking.
     DeprecatedString m_font;
-    int m_font_size;
-    unsigned m_font_weight;
-    Gfx::TextAlignment m_text_alignment;
+    int m_font_size { 18 };
+    unsigned m_font_weight { Gfx::FontWeight::Regular };
+    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
 };
 
 // How to scale an image object.
