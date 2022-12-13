@@ -33,8 +33,10 @@ ErrorOr<DeprecatedString> Group::generate_group_file() const
             builder.appendff("{}:x:{}:{}\n", m_name, m_id, DeprecatedString::join(',', m_members));
         else {
             Vector<DeprecatedString> members;
-            for (size_t i = 0; group->gr_mem[i]; ++i)
-                members.append(group->gr_mem[i]);
+            if (group->gr_mem) {
+                for (size_t i = 0; group->gr_mem[i]; ++i)
+                    members.append(group->gr_mem[i]);
+            }
 
             builder.appendff("{}:x:{}:{}\n", group->gr_name, group->gr_gid, DeprecatedString::join(',', members));
         }
@@ -129,10 +131,12 @@ ErrorOr<Vector<Group>> Group::all()
             break;
 
         Vector<DeprecatedString> members;
-        for (size_t i = 0; group->gr_mem[i]; ++i)
-            members.append(group->gr_mem[i]);
+        if (group->gr_mem) {
+            for (size_t i = 0; group->gr_mem[i]; ++i)
+                members.append(group->gr_mem[i]);
+        }
 
-        groups.append({ group->gr_name, group->gr_gid, members });
+        groups.append({ group->gr_name, group->gr_gid, move(members) });
     }
 
     return groups;
