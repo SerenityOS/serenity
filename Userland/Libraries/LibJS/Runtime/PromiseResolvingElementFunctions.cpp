@@ -189,7 +189,7 @@ ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
     // 10. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
         // a. Let error be a newly created AggregateError object.
-        auto* error = AggregateError::create(realm);
+        auto error = AggregateError::create(realm);
 
         // b. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errors) }).
         auto* errors_array = Array::create_from(realm, m_values.values());
