@@ -39,7 +39,7 @@ JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const
 
     auto byte_buffer = input.to_byte_buffer();
     auto array_length = byte_buffer.size();
-    auto* array_buffer = JS::ArrayBuffer::create(realm(), move(byte_buffer));
+    auto array_buffer = JS::ArrayBuffer::create(realm(), move(byte_buffer));
     return JS::Uint8Array::create(realm(), array_length, *array_buffer);
 }
 

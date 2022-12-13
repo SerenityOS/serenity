@@ -11,23 +11,23 @@
 
 namespace JS {
 
-ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(Realm& realm, size_t byte_length)
+ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> ArrayBuffer::create(Realm& realm, size_t byte_length)
 {
     auto buffer = ByteBuffer::create_zeroed(byte_length);
     if (buffer.is_error())
         return realm.vm().throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    return realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.intrinsics().array_buffer_prototype());
+    return NonnullGCPtr { *realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.intrinsics().array_buffer_prototype()) };
 }
 
-ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer buffer)
+NonnullGCPtr<ArrayBuffer> ArrayBuffer::create(Realm& realm, ByteBuffer buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm, move(buffer), *realm.intrinsics().array_buffer_prototype());
+    return *realm.heap().allocate<ArrayBuffer>(realm, move(buffer), *realm.intrinsics().array_buffer_prototype());
 }
 
-ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
+NonnullGCPtr<ArrayBuffer> ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm, buffer, *realm.intrinsics().array_buffer_prototype());
+    return *realm.heap().allocate<ArrayBuffer>(realm, buffer, *realm.intrinsics().array_buffer_prototype());
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)

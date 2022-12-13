@@ -84,7 +84,7 @@ JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<
         return promise;
     }
 
-    auto* result = JS::ArrayBuffer::create(realm, result_buffer.release_value());
+    auto result = JS::ArrayBuffer::create(realm, result_buffer.release_value());
 
     // 9. Resolve promise with result.
     promise->fulfill(result);

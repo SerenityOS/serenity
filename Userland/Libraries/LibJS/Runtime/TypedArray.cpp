@@ -424,13 +424,13 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length, FunctionObject& new_target)                        \
     {                                                                                                                            \
         auto* prototype = TRY(get_prototype_from_constructor(realm.vm(), new_target, &Intrinsics::snake_name##_prototype));      \
-        auto* array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                         \
+        auto array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                          \
         return realm.heap().allocate<ClassName>(realm, *prototype, length, *array_buffer);                                       \
     }                                                                                                                            \
                                                                                                                                  \
     ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length)                                                    \
     {                                                                                                                            \
-        auto* array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                         \
+        auto array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                          \
         return create(realm, length, *array_buffer);                                                                             \
     }                                                                                                                            \
                                                                                                                                  \
