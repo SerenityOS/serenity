@@ -121,7 +121,7 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
         vm, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
             // 1. Let valuesArray be CreateArrayFromList(values).
-            auto* values_array = Array::create_from(realm, values.values());
+            auto values_array = Array::create_from(realm, values.values());
 
             // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
             TRY(call(vm, *result_capability.resolve(), js_undefined(), values_array));
@@ -154,7 +154,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& it
     return perform_promise_common(
         vm, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
-            auto* values_array = Array::create_from(realm, values.values());
+            auto values_array = Array::create_from(realm, values.values());
 
             TRY(call(vm, *result_capability.resolve(), js_undefined(), values_array));
 
@@ -201,7 +201,7 @@ static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_r
             auto error = AggregateError::create(realm);
 
             // 2. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errors) }).
-            auto* errors_array = Array::create_from(realm, errors.values());
+            auto errors_array = Array::create_from(realm, errors.values());
             MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
             // 3. Return ThrowCompletion(error).

@@ -3571,7 +3571,7 @@ Completion ArrayExpression::execute(Interpreter& interpreter) const
     auto& realm = *vm.current_realm();
 
     // 1. Let array be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(realm, 0));
+    auto array = MUST(Array::create(realm, 0));
 
     // 2. Perform ? ArrayAccumulation of ElementList with arguments array and 0.
 
@@ -3736,10 +3736,10 @@ ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter&
     // 8. Let template be ! ArrayCreate(count).
     // NOTE: We don't set count since we push the values using append which
     //       would then append after count. Same for 9.
-    auto* template_ = MUST(Array::create(realm, 0));
+    auto template_ = MUST(Array::create(realm, 0));
 
     // 9. Let rawObj be ! ArrayCreate(count).
-    auto* raw_obj = MUST(Array::create(realm, 0));
+    auto raw_obj = MUST(Array::create(realm, 0));
 
     // 10. Let index be 0.
     // 11. Repeat, while index < count,
@@ -3775,7 +3775,7 @@ ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter&
     MUST(template_->set_integrity_level(Object::IntegrityLevel::Frozen));
 
     // 15. Append the Record { [[Site]]: templateLiteral, [[Array]]: template } to templateRegistry.
-    m_cached_values.set(&realm, make_handle(template_));
+    m_cached_values.set(&realm, make_handle(template_.ptr()));
 
     // 16. Return template.
     return template_;

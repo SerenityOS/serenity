@@ -767,7 +767,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     }
 
     // 7. Let argArray be CreateArrayFromList(argumentsList).
-    auto* arguments_array = Array::create_from(realm, arguments_list);
+    auto arguments_array = Array::create_from(realm, arguments_list);
 
     // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
     return call(vm, trap, &m_handler, &m_target, this_argument, arguments_array);
@@ -812,7 +812,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     }
 
     // 8. Let argArray be CreateArrayFromList(argumentsList).
-    auto* arguments_array = Array::create_from(realm, arguments_list);
+    auto arguments_array = Array::create_from(realm, arguments_list);
 
     // 9. Let newObj be ? Call(trap, handler, « target, argArray, newTarget »).
     auto new_object = TRY(call(vm, trap, &m_handler, &m_target, arguments_array, &new_target));

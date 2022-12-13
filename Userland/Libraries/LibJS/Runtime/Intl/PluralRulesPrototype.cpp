@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
     auto available_categories = ::Locale::available_plural_categories(plural_rules->locale(), plural_rules->type());
 
-    auto* plural_categories = Array::create_from<::Locale::PluralCategory>(realm, available_categories, [&](auto category) {
+    auto plural_categories = Array::create_from<::Locale::PluralCategory>(realm, available_categories, [&](auto category) {
         return PrimitiveString::create(vm, ::Locale::plural_category_to_string(category));
     });
 

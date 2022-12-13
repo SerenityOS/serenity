@@ -176,7 +176,7 @@ ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* array = MUST(Array::create(interpreter.realm(), 0));
+    auto array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t i = 0; i < m_element_count; i++) {
         auto& value = interpreter.reg(Register(m_elements[0].index() + i));
         array->indexed_properties().put(i, value, default_attributes);
@@ -273,7 +273,7 @@ ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& int
     auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
     auto iterator = object_to_iterator(vm, *iterator_object);
 
-    auto* array = MUST(Array::create(interpreter.realm(), 0));
+    auto array = MUST(Array::create(interpreter.realm(), 0));
     size_t index = 0;
 
     while (true) {

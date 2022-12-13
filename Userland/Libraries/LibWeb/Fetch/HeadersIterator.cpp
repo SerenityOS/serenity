@@ -57,7 +57,7 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
     case JS::Object::PropertyKind::Value:
         return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), StringView { pair.value }), false);
     case JS::Object::PropertyKind::KeyAndValue: {
-        auto* array = JS::Array::create_from(realm(), { JS::PrimitiveString::create(vm(), StringView { pair.name }), JS::PrimitiveString::create(vm(), StringView { pair.value }) });
+        auto array = JS::Array::create_from(realm(), { JS::PrimitiveString::create(vm(), StringView { pair.name }), JS::PrimitiveString::create(vm(), StringView { pair.value }) });
         return create_iterator_result_object(vm(), array, false);
     }
     default:

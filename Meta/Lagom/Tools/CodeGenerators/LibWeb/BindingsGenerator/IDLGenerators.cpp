@@ -1429,7 +1429,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
         auto& sequence_generic_type = verify_cast<IDL::ParameterizedType>(type);
 
         scoped_generator.append(R"~~~(
-    auto* new_array@recursion_depth@ = MUST(JS::Array::create(realm, 0));
+    auto new_array@recursion_depth@ = MUST(JS::Array::create(realm, 0));
 )~~~");
 
         if (!type.is_nullable()) {

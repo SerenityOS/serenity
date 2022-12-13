@@ -75,7 +75,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
     // 10. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
         // a. Let valuesArray be CreateArrayFromList(values).
-        auto* values_array = Array::create_from(realm, m_values.values());
+        auto values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
         return JS::call(vm, *m_capability->resolve(), js_undefined(), values_array);
@@ -116,7 +116,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
     // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
         // a. Let valuesArray be CreateArrayFromList(values).
-        auto* values_array = Array::create_from(realm, m_values.values());
+        auto values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
         return JS::call(vm, *m_capability->resolve(), js_undefined(), values_array);
@@ -157,7 +157,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
     // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
         // a. Let valuesArray be CreateArrayFromList(values).
-        auto* values_array = Array::create_from(realm, m_values.values());
+        auto values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
         return JS::call(vm, *m_capability->resolve(), js_undefined(), values_array);
@@ -192,7 +192,7 @@ ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
         auto error = AggregateError::create(realm);
 
         // b. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errors) }).
-        auto* errors_array = Array::create_from(realm, m_values.values());
+        auto errors_array = Array::create_from(realm, m_values.values());
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
         // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).

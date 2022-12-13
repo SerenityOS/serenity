@@ -757,7 +757,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 
     auto string = TRY(object.to_utf16_string(vm));
 
-    auto* array = MUST(Array::create(realm, 0));
+    auto array = MUST(Array::create(realm, 0));
     size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();
