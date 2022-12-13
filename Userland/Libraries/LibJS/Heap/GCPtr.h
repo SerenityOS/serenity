@@ -52,6 +52,7 @@ public:
     NonnullGCPtr& operator=(GCPtr<T> const& other)
     {
         m_ptr = const_cast<T*>(other.ptr());
+        VERIFY(m_ptr);
         return *this;
     }
 
@@ -186,8 +187,18 @@ public:
         return *this;
     }
 
-    T* operator->() const { return m_ptr; }
-    T& operator*() const { return *m_ptr; }
+    T* operator->() const
+    {
+        VERIFY(m_ptr);
+        return m_ptr;
+    }
+
+    T& operator*() const
+    {
+        VERIFY(m_ptr);
+        return *m_ptr;
+    }
+
     T* ptr() const { return m_ptr; }
 
     operator bool() const { return !!m_ptr; }
