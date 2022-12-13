@@ -132,7 +132,7 @@ static void initialize_constructor(VM& vm, PropertyKey const& property_key, Obje
 }
 
 // 9.3.2 CreateIntrinsics ( realmRec ), https://tc39.es/ecma262/#sec-createintrinsics
-Intrinsics* Intrinsics::create(Realm& realm)
+NonnullGCPtr<Intrinsics> Intrinsics::create(Realm& realm)
 {
     auto& vm = realm.vm();
 
@@ -160,7 +160,7 @@ Intrinsics* Intrinsics::create(Realm& realm)
     add_restricted_function_properties(static_cast<FunctionObject&>(*realm.intrinsics().function_prototype()), realm);
 
     // 4. Return unused.
-    return intrinsics;
+    return *intrinsics;
 }
 
 void Intrinsics::initialize_intrinsics(Realm& realm)
