@@ -10,7 +10,12 @@
 #include <AK/Vector.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Normalize.h>
-#include <LibUnicode/UnicodeData.h>
+
+#if ENABLE_UNICODE_DATA
+#    include <LibUnicode/UnicodeData.h>
+#else
+struct Unicode::CodePointDecomposition { };
+#endif
 
 namespace Unicode {
 
@@ -118,9 +123,11 @@ static u32 combine_hangul_code_points(u32 a, u32 b)
     return 0;
 }
 
-static u32 combine_code_points(u32 a, u32 b)
+static u32 combine_code_points([[maybe_unused]] u32 a, [[maybe_unused]] u32 b)
 {
+#if ENABLE_UNICODE_DATA
     Array<u32, 2> const points { a, b };
+
     // FIXME: Do something better than linear search to find reverse mappings.
     for (size_t index = 0;; ++index) {
         auto mapping_maybe = Unicode::code_point_decomposition_by_index(index);
@@ -133,6 +140,8 @@ static u32 combine_code_points(u32 a, u32 b)
             return mapping.code_point;
         }
     }
+#endif
+
     return 0;
 }
 
@@ -141,12 +150,14 @@ enum class UseCompatibility {
     No
 };
 
-static void decompose_code_point(u32 code_point, Vector<u32>& code_points_output, UseCompatibility use_compatibility)
+static void decompose_code_point(u32 code_point, Vector<u32>& code_points_output, [[maybe_unused]] UseCompatibility use_compatibility)
 {
     if (is_hangul_code_point(code_point)) {
         decompose_hangul_code_point(code_point, code_points_output);
         return;
     }
+
+#if ENABLE_UNICODE_DATA
     auto const mapping = Unicode::code_point_decomposition(code_point);
     if (mapping.has_value() && (mapping->tag == CompatibilityFormattingTag::Canonical || use_compatibility == UseCompatibility::Yes)) {
         for (auto code_point : mapping->decomposition) {
@@ -155,6 +166,7 @@ static void decompose_code_point(u32 code_point, Vector<u32>& code_points_output
     } else {
         code_points_output.append(code_point);
     }
+#endif
 }
 
 // This can be any sorting algorithm that maintains order (like std::stable_sort),

@@ -432,7 +432,9 @@ if (BUILD_LAGOM)
     # FIXME: LibLocaleData is an object lib in Lagom, because the weak symbol trick we use on serenity
     #    straight up isn't supposed to work per ELF rules
     target_link_libraries(LibLocale PRIVATE LibTimeZone)
-    install(TARGETS LibLocaleData EXPORT LagomTargets)
+    if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
+        install(TARGETS LibLocaleData EXPORT LagomTargets)
+    endif()
 
     add_serenity_subdirectory(Userland/Shell)
 
