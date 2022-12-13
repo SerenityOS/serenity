@@ -10,6 +10,35 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 
+ErrorOr<NonnullRefPtr<CatDog>> CatDog::create()
+{
+    auto catdog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CatDog));
+    catdog->m_alert = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png"sv));
+    catdog->m_artist = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png"sv));
+    catdog->m_erun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png"sv));
+    catdog->m_erun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png"sv));
+    catdog->m_inspector = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/inspector.png"sv));
+    catdog->m_nerun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png"sv));
+    catdog->m_nerun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png"sv));
+    catdog->m_nrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png"sv));
+    catdog->m_nrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png"sv));
+    catdog->m_nwrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png"sv));
+    catdog->m_nwrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png"sv));
+    catdog->m_serun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png"sv));
+    catdog->m_serun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png"sv));
+    catdog->m_sleep1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png"sv));
+    catdog->m_sleep2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png"sv));
+    catdog->m_srun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png"sv));
+    catdog->m_srun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png"sv));
+    catdog->m_still = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png"sv));
+    catdog->m_swrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png"sv));
+    catdog->m_swrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png"sv));
+    catdog->m_wrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png"sv));
+    catdog->m_wrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png"sv));
+    catdog->m_curr_bmp = catdog->m_alert;
+    return catdog;
+}
+
 void CatDog::timer_event(Core::TimerEvent&)
 {
     auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(*m_proc_all);

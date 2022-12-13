@@ -23,6 +23,8 @@ class CatDog final : public GUI::Widget
     C_OBJECT(CatDog);
 
 public:
+    static ErrorOr<NonnullRefPtr<CatDog>> create();
+
     // The general state, does not contain movement direction or whether CatDog is roaming.
     enum class MainState {
         Idle,      // default state
@@ -75,30 +77,30 @@ private:
 
     NonnullOwnPtr<Core::Stream::File> m_proc_all;
 
-    NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_artist = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_erun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_inspector = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/inspector.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nerun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nerun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nwrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nwrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_serun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_serun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_sleep1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_sleep2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_srun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_srun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_still = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_swrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_swrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_wrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png"sv).release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_wrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    RefPtr<Gfx::Bitmap> m_alert;
+    RefPtr<Gfx::Bitmap> m_artist;
+    RefPtr<Gfx::Bitmap> m_erun1;
+    RefPtr<Gfx::Bitmap> m_erun2;
+    RefPtr<Gfx::Bitmap> m_inspector;
+    RefPtr<Gfx::Bitmap> m_nerun1;
+    RefPtr<Gfx::Bitmap> m_nerun2;
+    RefPtr<Gfx::Bitmap> m_nrun1;
+    RefPtr<Gfx::Bitmap> m_nrun2;
+    RefPtr<Gfx::Bitmap> m_nwrun1;
+    RefPtr<Gfx::Bitmap> m_nwrun2;
+    RefPtr<Gfx::Bitmap> m_serun1;
+    RefPtr<Gfx::Bitmap> m_serun2;
+    RefPtr<Gfx::Bitmap> m_sleep1;
+    RefPtr<Gfx::Bitmap> m_sleep2;
+    RefPtr<Gfx::Bitmap> m_srun1;
+    RefPtr<Gfx::Bitmap> m_srun2;
+    RefPtr<Gfx::Bitmap> m_still;
+    RefPtr<Gfx::Bitmap> m_swrun1;
+    RefPtr<Gfx::Bitmap> m_swrun2;
+    RefPtr<Gfx::Bitmap> m_wrun1;
+    RefPtr<Gfx::Bitmap> m_wrun2;
 
-    NonnullRefPtr<Gfx::Bitmap> m_curr_bmp = m_alert;
+    RefPtr<Gfx::Bitmap> m_curr_bmp;
 
     // Used if CatDog is still; may also account for animation frames.
     void set_image_by_main_state()
