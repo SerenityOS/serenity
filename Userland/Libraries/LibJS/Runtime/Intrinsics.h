@@ -15,7 +15,7 @@ class Intrinsics final : public Cell {
     JS_CELL(Intrinsics, Cell);
 
 public:
-    static Intrinsics* create(Realm&);
+    static NonnullGCPtr<Intrinsics> create(Realm&);
 
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
