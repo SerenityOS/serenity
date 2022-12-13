@@ -351,9 +351,9 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file_or_error.release_value()));
-    auto* object = JS::Object::create(realm, realm.intrinsics().object_prototype());
+    auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
     for (auto const& group : config_file->groups()) {
-        auto* group_object = JS::Object::create(realm, realm.intrinsics().object_prototype());
+        auto group_object = JS::Object::create(realm, realm.intrinsics().object_prototype());
         for (auto const& key : config_file->keys(group)) {
             auto entry = config_file->read_entry(group, key);
             group_object->define_direct_property(key, JS::PrimitiveString::create(vm, move(entry)), JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable);

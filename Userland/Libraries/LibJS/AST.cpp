@@ -1896,7 +1896,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         }
     }
 
-    auto* prototype = Object::create(realm, proto_parent);
+    auto prototype = Object::create(realm, proto_parent);
     VERIFY(prototype);
 
     vm.running_execution_context().lexical_environment = class_environment;
@@ -3067,7 +3067,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
     auto& realm = *vm.current_realm();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
+    auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with argument obj.
     for (auto& property : m_properties) {

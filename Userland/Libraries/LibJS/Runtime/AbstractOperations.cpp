@@ -1053,7 +1053,7 @@ Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
 
     // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
-    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
+    auto object = Object::create(realm, realm.intrinsics().object_prototype());
     object->set_has_parameter_map();
 
     // 4. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).

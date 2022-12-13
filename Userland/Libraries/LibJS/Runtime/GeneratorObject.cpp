@@ -99,7 +99,7 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
     };
 
     auto& realm = *vm.current_realm();
-    auto* completion_object = Object::create(realm, nullptr);
+    auto completion_object = Object::create(realm, nullptr);
     completion_object->define_direct_property(vm.names.type, Value(to_underlying(completion.type())), default_attributes);
     completion_object->define_direct_property(vm.names.value, completion.value().value(), default_attributes);
 

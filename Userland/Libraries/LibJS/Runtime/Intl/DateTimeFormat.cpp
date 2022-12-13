@@ -547,13 +547,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
     auto const& locale = date_time_format.locale();
     auto const& data_locale = date_time_format.data_locale();
 
-    auto construct_number_format = [&](auto* options) -> ThrowCompletionOr<NumberFormat*> {
+    auto construct_number_format = [&](auto& options) -> ThrowCompletionOr<NumberFormat*> {
         auto* number_format = TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale), options));
         return static_cast<NumberFormat*>(number_format);
     };
 
     // 4. Let nfOptions be OrdinaryObjectCreate(null).
-    auto* number_format_options = Object::create(realm, nullptr);
+    auto number_format_options = Object::create(realm, nullptr);
 
     // 5. Perform ! CreateDataPropertyOrThrow(nfOptions, "useGrouping", false).
     MUST(number_format_options->create_data_property_or_throw(vm.names.useGrouping, Value(false)));
@@ -562,7 +562,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
     auto* number_format = TRY(construct_number_format(number_format_options));
 
     // 7. Let nf2Options be OrdinaryObjectCreate(null).
-    auto* number_format_options2 = Object::create(realm, nullptr);
+    auto number_format_options2 = Object::create(realm, nullptr);
 
     // 8. Perform ! CreateDataPropertyOrThrow(nf2Options, "minimumIntegerDigits", 2).
     MUST(number_format_options2->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(2)));
@@ -582,7 +582,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
         fractional_second_digits = date_time_format.fractional_second_digits();
 
         // a. Let nf3Options be OrdinaryObjectCreate(null).
-        auto* number_format_options3 = Object::create(realm, nullptr);
+        auto number_format_options3 = Object::create(realm, nullptr);
 
         // b. Perform ! CreateDataPropertyOrThrow(nf3Options, "minimumIntegerDigits", fractionalSecondDigits).
         MUST(number_format_options3->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(*fractional_second_digits)));
@@ -865,7 +865,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(realm, realm.intrinsics().object_prototype());
+        auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));
@@ -1181,7 +1181,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
     // 4. For each Record { [[Type]], [[Value]], [[Source]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%ObjectPrototype%).
-        auto* object = Object::create(realm, realm.intrinsics().object_prototype());
+        auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));

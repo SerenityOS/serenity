@@ -251,7 +251,7 @@ ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter)
 static Object* iterator_to_object(VM& vm, Iterator iterator)
 {
     auto& realm = *vm.current_realm();
-    auto* object = Object::create(realm, nullptr);
+    auto object = Object::create(realm, nullptr);
     object->define_direct_property(vm.names.iterator, iterator.iterator, 0);
     object->define_direct_property(vm.names.next, iterator.next_method, 0);
     object->define_direct_property(vm.names.done, Value(iterator.done), 0);
@@ -342,7 +342,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 
     auto* from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
 
-    auto* to_object = Object::create(realm, realm.intrinsics().object_prototype());
+    auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
 
     HashTable<Value, ValueTraits> excluded_names;
     for (size_t i = 0; i < m_excluded_names_count; ++i)
@@ -930,7 +930,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                     return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next");
 
                 auto& iterated_object = iterated_object_value.as_object();
-                auto* result_object = Object::create(realm, nullptr);
+                auto result_object = Object::create(realm, nullptr);
                 while (true) {
                     if (items.is_empty()) {
                         result_object->define_direct_property(vm.names.done, JS::Value(true), default_attributes);

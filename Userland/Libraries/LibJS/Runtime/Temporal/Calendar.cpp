@@ -945,7 +945,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     auto& realm = *vm.current_realm();
 
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
-    auto* merged = Object::create(realm, realm.intrinsics().object_prototype());
+    auto merged = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 2. Let fieldsKeys be ? EnumerableOwnPropertyNames(fields, key).
     auto fields_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
@@ -1012,7 +1012,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     }
 
     // 7. Return merged.
-    return merged;
+    return merged.ptr();
 }
 
 // 12.2.38 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear

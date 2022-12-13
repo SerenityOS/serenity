@@ -27,14 +27,14 @@ namespace JS {
 static HashMap<Object const*, HashMap<FlyString, Object::IntrinsicAccessor>> s_intrinsics;
 
 // 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate
-Object* Object::create(Realm& realm, Object* prototype)
+NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
+        return *realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
     else if (prototype == realm.intrinsics().object_prototype())
-        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
+        return *realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
     else
-        return realm.heap().allocate<Object>(realm, *prototype);
+        return *realm.heap().allocate<Object>(realm, *prototype);
 }
 
 Object::Object(GlobalObjectTag, Realm& realm)

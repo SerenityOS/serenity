@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
     auto revoker = NativeFunction::create(realm, move(revoker_closure), 0, "");
 
     // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(realm, realm.intrinsics().object_prototype());
+    auto result = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
     MUST(result->create_data_property_or_throw(vm.names.proxy, proxy));

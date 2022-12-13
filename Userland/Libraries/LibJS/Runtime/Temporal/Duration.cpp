@@ -689,7 +689,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
             auto* new_relative_to = TRY(calendar_date_add(vm, *calendar, relative_to, *one_year, nullptr, date_add));
 
             // ii. Let untilOptions be OrdinaryObjectCreate(null).
-            auto* until_options = Object::create(realm, nullptr);
+            auto until_options = Object::create(realm, nullptr);
 
             // iii. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
             MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"sv)));
@@ -925,7 +925,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
         auto* date_until = TRY(Value(&calendar).get_method(vm, vm.names.dateUntil));
 
         // l. Let untilOptions be OrdinaryObjectCreate(null).
-        auto* until_options = Object::create(realm, nullptr);
+        auto until_options = Object::create(realm, nullptr);
 
         // m. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"sv)));
@@ -1106,7 +1106,7 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
         // h. Let differenceOptions be OrdinaryObjectCreate(null).
-        auto* difference_options = Object::create(realm, nullptr);
+        auto difference_options = Object::create(realm, nullptr);
 
         // i. Perform ! CreateDataPropertyOrThrow(differenceOptions, "largestUnit", dateLargestUnit).
         MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, date_largest_unit)));
@@ -1309,7 +1309,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto* days_later = TRY(calendar_date_add(vm, *calendar, relative_to, *days_duration, nullptr, date_add));
 
         // k. Let untilOptions be OrdinaryObjectCreate(null).
-        auto* until_options = Object::create(realm, nullptr);
+        auto until_options = Object::create(realm, nullptr);
 
         // l. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "year"sv)));

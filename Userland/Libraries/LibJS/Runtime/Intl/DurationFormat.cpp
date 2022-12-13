@@ -339,7 +339,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         auto value = duration.*value_slot;
 
         // i. Let nfOpts be ! OrdinaryObjectCreate(null).
-        auto* number_format_options = Object::create(realm, nullptr);
+        auto number_format_options = Object::create(realm, nullptr);
 
         // j. If unit is "seconds", "milliseconds", or "microseconds", then
         if (unit.is_one_of("seconds"sv, "milliseconds"sv, "microseconds"sv)) {
@@ -486,7 +486,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
     }
 
     // 4. Let lfOpts be ! OrdinaryObjectCreate(null).
-    auto* list_format_options = Object::create(realm, nullptr);
+    auto list_format_options = Object::create(realm, nullptr);
 
     // 5. Perform ! CreateDataPropertyOrThrow(lfOpts, "type", "unit").
     MUST(list_format_options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, "unit"sv)));

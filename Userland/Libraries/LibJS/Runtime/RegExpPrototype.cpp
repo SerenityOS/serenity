@@ -284,7 +284,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     //     a. Let groups be undefined.
     //     b. Let hasGroups be false.
     bool has_groups = result.n_named_capture_groups != 0;
-    Object* groups_object = has_groups ? Object::create(realm, nullptr) : nullptr;
+    auto groups_object = has_groups ? Object::create(realm, nullptr) : GCPtr<Object> {};
 
     // 32. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
     for (size_t i = 1; i <= result.n_capture_groups; ++i) {
