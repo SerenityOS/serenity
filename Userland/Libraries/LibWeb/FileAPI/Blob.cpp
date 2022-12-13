@@ -244,7 +244,7 @@ JS::Promise* Blob::text()
 
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader
-    auto* promise = JS::Promise::create(realm());
+    auto promise = JS::Promise::create(realm());
     auto result = JS::PrimitiveString::create(vm(), DeprecatedString { m_byte_buffer.bytes() });
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
@@ -260,7 +260,7 @@ JS::Promise* Blob::array_buffer()
 
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader.
-    auto* promise = JS::Promise::create(realm());
+    auto promise = JS::Promise::create(realm());
     auto buffer_result = JS::ArrayBuffer::create(realm(), m_byte_buffer.size());
     if (buffer_result.is_error()) {
         promise->reject(buffer_result.release_error().value().release_value());

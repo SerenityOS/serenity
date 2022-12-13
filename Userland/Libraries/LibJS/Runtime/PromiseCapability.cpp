@@ -78,7 +78,7 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
     auto executor = NativeFunction::create(realm, move(executor_closure), 2, "");
 
     // 6. Let promise be ? Construct(C, « executor »).
-    auto* promise = TRY(construct(vm, constructor.as_function(), executor));
+    auto promise = TRY(construct(vm, constructor.as_function(), executor));
 
     // 7. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
     // NOTE: We only assign a value in the executor closure if it is a function.

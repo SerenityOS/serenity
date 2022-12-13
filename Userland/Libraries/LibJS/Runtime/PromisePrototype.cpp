@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 
     // 1. Let promise be the this value.
     // 2. If IsPromise(promise) is false, throw a TypeError exception.
-    auto* promise = TRY(typed_this_object(vm));
+    auto promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
     auto* constructor = TRY(species_constructor(vm, *promise, *realm.intrinsics().promise_constructor()));
@@ -113,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto result = TRY(call(vm, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
-            auto* promise = TRY(promise_resolve(vm, constructor, result));
+            auto promise = TRY(promise_resolve(vm, constructor, result));
 
             // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
             auto return_value = [value_handle = make_handle(value)](auto&) -> ThrowCompletionOr<Value> {
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto result = TRY(call(vm, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
-            auto* promise = TRY(promise_resolve(vm, constructor, result));
+            auto promise = TRY(promise_resolve(vm, constructor, result));
 
             // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
             auto throw_reason = [reason_handle = make_handle(reason)](auto&) -> ThrowCompletionOr<Value> {

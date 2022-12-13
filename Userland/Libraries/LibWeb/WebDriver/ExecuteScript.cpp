@@ -315,7 +315,7 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
     auto start = Time::now_monotonic();
 
     // 4. Let promise be a new Promise.
-    auto* promise = JS::Promise::create(realm);
+    auto promise = JS::Promise::create(realm);
 
     // FIXME: 5 Run the following substeps in parallel:
     auto result = [&] {
