@@ -112,7 +112,7 @@ JS::Promise* JavaScriptModuleScript::run(PreventErrorReporting)
 
     // 2. Check if we can run script with settings. If this returns "do not run", then return a promise resolved with undefined.
     if (settings.can_run_script() == RunScriptDecision::DoNotRun) {
-        auto* promise = JS::Promise::create(settings.realm());
+        auto promise = JS::Promise::create(settings.realm());
         promise->fulfill(JS::js_undefined());
         return promise;
     }
@@ -140,7 +140,7 @@ JS::Promise* JavaScriptModuleScript::run(PreventErrorReporting)
         // If Evaluate fails to complete as a result of the user agent aborting the running script,
         // then set evaluationPromise to a promise rejected with a new "QuotaExceededError" DOMException.
         if (elevation_promise_or_error.is_error()) {
-            auto* promise = JS::Promise::create(settings_object().realm());
+            auto promise = JS::Promise::create(settings_object().realm());
             promise->reject(WebIDL::QuotaExceededError::create(settings_object().realm(), "Failed to evaluate module script").ptr());
 
             evaluation_promise = promise;

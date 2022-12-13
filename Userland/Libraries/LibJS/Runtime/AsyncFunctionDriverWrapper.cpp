@@ -56,7 +56,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
         return promise;
     }
 
-    auto* promise = static_cast<Promise*>(&promise_value.as_object());
+    auto promise = static_cast<Promise*>(&promise_value.as_object());
     if (TRY(result.get(vm, vm.names.done)).to_boolean())
         return promise;
 

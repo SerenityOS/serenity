@@ -27,7 +27,7 @@ public:
         Handle,
     };
 
-    static Promise* create(Realm&);
+    static NonnullGCPtr<Promise> create(Realm&);
 
     virtual ~Promise() = default;
 

@@ -107,7 +107,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
 
     // 12. Return Completion(result).
     // Note: Because we expect it to return a promise we convert this here.
-    auto* promise = Promise::create(realm());
+    auto promise = Promise::create(realm());
     if (result.is_error()) {
         VERIFY(result.throw_completion().value().has_value());
         promise->reject(*result.throw_completion().value());
@@ -115,7 +115,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
         // Note: This value probably isn't visible to JS code? But undefined is fine anyway.
         promise->fulfill(js_undefined());
     }
-    return promise;
+    return promise.ptr();
 }
 
 // 1.2.2 SetSyntheticModuleExport ( module, exportName, exportValue ), https://tc39.es/proposal-json-modules/#sec-setsyntheticmoduleexport

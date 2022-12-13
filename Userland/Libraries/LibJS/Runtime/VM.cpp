@@ -75,7 +75,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
         // By default, we throw on dynamic imports this is to prevent arbitrary file access by scripts.
         VERIFY(current_realm());
         auto& realm = *current_realm();
-        auto* promise = Promise::create(realm);
+        auto promise = Promise::create(realm);
 
         // If you are here because you want to enable dynamic module importing make sure it won't be a security problem
         // by checking the default implementation of HostImportModuleDynamically and creating your own hook or calling
@@ -965,7 +965,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
     //    FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
     //    where promise is a Promise rejected with an error representing the cause of failure.
 
-    auto* promise = Promise::create(realm);
+    auto promise = Promise::create(realm);
 
     ScopeGuard finish_dynamic_import = [&] {
         host_finish_dynamic_import(referencing_script_or_module, module_request, promise_capability, promise);

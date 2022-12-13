@@ -47,7 +47,7 @@ ThrowCompletionOr<u32> Module::inner_module_evaluation(VM& vm, Vector<Module*>&,
 {
     // 1. If module is not a Cyclic Module Record, then
     // a. Let promise be ! module.Evaluate().
-    auto* promise = TRY(evaluate(vm));
+    auto promise = TRY(evaluate(vm));
 
     // b. Assert: promise.[[PromiseState]] is not pending.
     VERIFY(promise->state() != Promise::State::Pending);

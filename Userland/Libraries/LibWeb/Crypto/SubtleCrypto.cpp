@@ -38,7 +38,7 @@ JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data.cell());
     if (data_buffer_or_error.is_error()) {
         auto error = WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer");
-        auto* promise = JS::Promise::create(realm);
+        auto promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
     }
@@ -59,13 +59,13 @@ JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
         auto error = WebIDL::NotSupportedError::create(realm, DeprecatedString::formatted("Invalid hash function '{}'", algorithm));
-        auto* promise = JS::Promise::create(realm);
+        auto promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
     }
 
     // 5. Let promise be a new Promise.
-    auto* promise = JS::Promise::create(realm);
+    auto promise = JS::Promise::create(realm);
 
     // 6. Return promise and perform the remaining steps in parallel.
     // FIXME: We don't have a good abstraction for this yet, so we do it in sync.

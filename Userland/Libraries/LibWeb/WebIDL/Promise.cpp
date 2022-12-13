@@ -135,7 +135,7 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(JS::PromiseCapability const& prom
     auto new_capability = MUST(JS::new_promise_capability(vm, constructor));
 
     // 7. Return PerformPromiseThen(promise.[[Promise]], onFulfilled, onRejected, newCapability).
-    auto* promise = verify_cast<JS::Promise>(promise_capability.promise().ptr());
+    auto promise = verify_cast<JS::Promise>(promise_capability.promise().ptr());
     auto value = promise->perform_then(on_fulfilled, on_rejected, new_capability);
     return verify_cast<JS::Promise>(value.as_object());
 }
@@ -173,7 +173,7 @@ JS::NonnullGCPtr<JS::Promise> upon_rejection(JS::PromiseCapability const& promis
 void mark_promise_as_handled(JS::PromiseCapability const& promise_capability)
 {
     // To mark as handled a Promise<T> promise, set promise.[[Promise]].[[PromiseIsHandled]] to true.
-    auto* promise = verify_cast<JS::Promise>(promise_capability.promise().ptr());
+    auto promise = verify_cast<JS::Promise>(promise_capability.promise().ptr());
     promise->set_is_handled();
 }
 

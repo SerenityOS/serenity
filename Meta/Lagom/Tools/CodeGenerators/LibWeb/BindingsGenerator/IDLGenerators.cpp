@@ -520,7 +520,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // anything of this sort. Both Gecko and Blink do it, however, so I'm sure it's correct.
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !is<JS::Promise>(@js_name@@js_suffix@.as_object())) {
-        auto* new_promise = JS::Promise::create(realm);
+        auto new_promise = JS::Promise::create(realm);
         new_promise->fulfill(@js_name@@js_suffix@);
         @js_name@@js_suffix@ = new_promise;
     }
