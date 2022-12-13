@@ -523,7 +523,7 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     // Number
     if (is_number()) {
         // Return a new Number object whose [[NumberData]] internal slot is set to argument. See 21.1 for a description of Number objects.
-        return NumberObject::create(realm, as_double());
+        return NumberObject::create(realm, as_double()).ptr();
     }
 
     switch (m_value.tag) {
