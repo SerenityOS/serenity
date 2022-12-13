@@ -202,7 +202,7 @@ Iterator create_async_from_sync_iterator(VM& vm, Iterator sync_iterator_record)
 
     // 1. Let asyncIterator be OrdinaryObjectCreate(%AsyncFromSyncIteratorPrototype%, « [[SyncIteratorRecord]] »).
     // 2. Set asyncIterator.[[SyncIteratorRecord]] to syncIteratorRecord.
-    auto* async_iterator = AsyncFromSyncIterator::create(realm, sync_iterator_record);
+    auto async_iterator = AsyncFromSyncIterator::create(realm, sync_iterator_record);
 
     // 3. Let nextMethod be ! Get(asyncIterator, "next").
     auto next_method = MUST(async_iterator->get(vm.names.next));

@@ -11,9 +11,9 @@
 
 namespace JS {
 
-AsyncFromSyncIterator* AsyncFromSyncIterator::create(Realm& realm, Iterator sync_iterator_record)
+NonnullGCPtr<AsyncFromSyncIterator> AsyncFromSyncIterator::create(Realm& realm, Iterator sync_iterator_record)
 {
-    return realm.heap().allocate<AsyncFromSyncIterator>(realm, realm, sync_iterator_record);
+    return *realm.heap().allocate<AsyncFromSyncIterator>(realm, realm, sync_iterator_record);
 }
 
 AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterator_record)

@@ -17,7 +17,7 @@ class AsyncFromSyncIterator final : public Object {
     JS_OBJECT(AsyncFromSyncIterator, Object);
 
 public:
-    static AsyncFromSyncIterator* create(Realm&, Iterator sync_iterator_record);
+    static NonnullGCPtr<AsyncFromSyncIterator> create(Realm&, Iterator sync_iterator_record);
 
     virtual void initialize(Realm&) override;
     virtual ~AsyncFromSyncIterator() override = default;
