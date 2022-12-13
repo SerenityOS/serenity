@@ -12,7 +12,13 @@
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
 
-struct TreeNode final {
+struct MountInfo {
+    DeprecatedString mount_point;
+    DeprecatedString source;
+};
+
+class TreeNode final {
+public:
     TreeNode(DeprecatedString name)
         : m_name(move(name)) {};
 
@@ -27,19 +33,26 @@ struct TreeNode final {
     }
     TreeNode const& child_at(size_t i) const { return m_children->at(i); }
     void sort_children_by_area() const;
+    HashMap<int, int> populate_filesize_tree(Vector<MountInfo>& mounts, Function<void(size_t)> on_progress);
+
+private:
+    long long int update_totals();
 
     DeprecatedString m_name;
     i64 m_area { 0 };
     OwnPtr<Vector<TreeNode>> m_children;
 };
 
-struct Tree : public RefCounted<Tree> {
+class Tree : public RefCounted<Tree> {
+public:
     Tree(DeprecatedString root_name)
         : m_root(move(root_name)) {};
     ~Tree() {};
-    TreeNode m_root;
-    TreeNode const& root() const
+    TreeNode& root()
     {
         return m_root;
     };
+
+private:
+    TreeNode m_root;
 };
