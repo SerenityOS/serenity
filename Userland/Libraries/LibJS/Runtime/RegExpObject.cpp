@@ -124,14 +124,14 @@ ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView patte
     return result.release_value();
 }
 
-RegExpObject* RegExpObject::create(Realm& realm)
+NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm)
 {
-    return realm.heap().allocate<RegExpObject>(realm, *realm.intrinsics().regexp_prototype());
+    return *realm.heap().allocate<RegExpObject>(realm, *realm.intrinsics().regexp_prototype());
 }
 
-RegExpObject* RegExpObject::create(Realm& realm, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags)
+NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags)
 {
-    return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), *realm.intrinsics().regexp_prototype());
+    return *realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), *realm.intrinsics().regexp_prototype());
 }
 
 RegExpObject::RegExpObject(Object& prototype)
