@@ -15,12 +15,17 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<Attr> Attr::create(Document& document, FlyString local_name, DeprecatedString value, Element const* owner_element)
 {
-    return *document.heap().allocate<Attr>(document.realm(), document, move(local_name), move(value), owner_element);
+    return *document.heap().allocate<Attr>(document.realm(), document, QualifiedName(move(local_name), {}, {}), move(value), owner_element);
 }
 
-Attr::Attr(Document& document, FlyString local_name, DeprecatedString value, Element const* owner_element)
+JS::NonnullGCPtr<Attr> Attr::clone(Document& document)
+{
+    return *heap().allocate<Attr>(realm(), document, m_qualified_name, m_value, nullptr);
+}
+
+Attr::Attr(Document& document, QualifiedName qualified_name, DeprecatedString value, Element const* owner_element)
     : Node(document, NodeType::ATTRIBUTE_NODE)
-    , m_qualified_name(move(local_name), {}, {})
+    , m_qualified_name(move(qualified_name))
     , m_value(move(value))
     , m_owner_element(owner_element)
 {
