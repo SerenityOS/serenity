@@ -45,7 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Snake");
     window->resize(324, 344);
 
-    auto game = TRY(window->try_set_main_widget<SnakeGame>());
+    auto game = TRY(SnakeGame::create());
+    window->set_main_widget(game);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
