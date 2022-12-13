@@ -372,7 +372,11 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(IPv4Address const& source, I
     };
     static_assert(sizeof(PseudoHeader) == 12);
 
-    PseudoHeader pseudo_header { .header = { source, destination, 0, (u8)IPv4Protocol::TCP, packet.header_size() + payload_size } };
+    Checked<u16> packet_size = packet.header_size();
+    packet_size += payload_size;
+    VERIFY(!packet_size.has_overflow());
+
+    PseudoHeader pseudo_header { .header = { source, destination, 0, (u8)IPv4Protocol::TCP, packet_size.value() } };
 
     u32 checksum = 0;
     auto* raw_pseudo_header = pseudo_header.raw;
