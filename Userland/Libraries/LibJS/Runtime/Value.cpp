@@ -548,7 +548,7 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     // BigInt
     case BIGINT_TAG:
         // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument. See 21.2 for a description of BigInt objects.
-        return BigIntObject::create(realm, const_cast<JS::BigInt&>(as_bigint()));
+        return BigIntObject::create(realm, const_cast<JS::BigInt&>(as_bigint())).ptr();
     // Object
     case OBJECT_TAG:
         // Return argument.
