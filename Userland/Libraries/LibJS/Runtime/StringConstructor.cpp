@@ -61,7 +61,7 @@ ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_targ
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
-    return StringObject::create(realm, *primitive_string, *prototype);
+    return StringObject::create(realm, *primitive_string, *prototype).ptr();
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
