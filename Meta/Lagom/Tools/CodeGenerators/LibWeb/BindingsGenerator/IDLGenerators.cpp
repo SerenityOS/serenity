@@ -1564,7 +1564,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
         auto dictionary_generator = scoped_generator.fork();
 
         dictionary_generator.append(R"~~~(
-    auto* dictionary_object@recursion_depth@ = JS::Object::create(realm, realm.intrinsics().object_prototype());
+    auto dictionary_object@recursion_depth@ = JS::Object::create(realm, realm.intrinsics().object_prototype());
 )~~~");
 
         auto* current_dictionary = &interface.dictionaries.find(type.name())->value;
@@ -2467,7 +2467,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
     if (interface.has_unscopable_member) {
         generator.append(R"~~~(
-    auto* unscopable_object = JS::Object::create(realm, nullptr);
+    auto unscopable_object = JS::Object::create(realm, nullptr);
 )~~~");
     }
 

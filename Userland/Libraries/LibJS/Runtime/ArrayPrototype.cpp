@@ -89,7 +89,7 @@ void ArrayPrototype::initialize(Realm& realm)
     // 23.1.3.37 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
     // With change array by copy proposal, https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype-@@unscopables
-    auto* unscopable_list = Object::create(realm, nullptr);
+    auto unscopable_list = Object::create(realm, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true)));
@@ -791,7 +791,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
     }
 
     // 7. Let obj be OrdinaryObjectCreate(null).
-    auto* object = Object::create(realm, nullptr);
+    auto object = Object::create(realm, nullptr);
 
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {

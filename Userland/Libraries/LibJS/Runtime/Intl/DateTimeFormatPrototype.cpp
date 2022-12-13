@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     auto* date_time_format = TRY(typed_this_object(vm));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(realm, realm.intrinsics().object_prototype());
+    auto options = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 5. For each row of Table 5, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

@@ -385,7 +385,7 @@ JS::VM& main_thread_vm()
         //       and ensure_web_constructor() invocations.
         // FIXME: Find a nicer way to do this.
         JS::DeferGC defer_gc(root_realm->heap());
-        auto* object = JS::Object::create(*root_realm, nullptr);
+        auto object = JS::Object::create(*root_realm, nullptr);
         root_realm->set_global_object(object, object);
         add_window_exposed_interfaces(*object, *root_realm);
 

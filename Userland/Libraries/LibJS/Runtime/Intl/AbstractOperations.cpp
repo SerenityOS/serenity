@@ -600,7 +600,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
     // 1. If options is undefined, then
     if (options.is_undefined()) {
         // a. Return OrdinaryObjectCreate(null).
-        return Object::create(realm, nullptr);
+        return Object::create(realm, nullptr).ptr();
     }
 
     // 2. Return ? ToObject(options).

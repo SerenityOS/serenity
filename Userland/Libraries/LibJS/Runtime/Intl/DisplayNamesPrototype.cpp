@@ -131,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
     auto* display_names = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(realm, realm.intrinsics().object_prototype());
+    auto options = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. For each row of Table 8, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

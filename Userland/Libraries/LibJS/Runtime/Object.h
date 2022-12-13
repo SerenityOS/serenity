@@ -44,7 +44,7 @@ class Object : public Cell {
     JS_CELL(Object, Cell);
 
 public:
-    static Object* create(Realm&, Object* prototype);
+    static NonnullGCPtr<Object> create(Realm&, Object* prototype);
 
     virtual void initialize(Realm&) override;
     virtual ~Object();

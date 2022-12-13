@@ -735,7 +735,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
     auto* date_time = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(realm, realm.intrinsics().object_prototype());
+    auto fields = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", dateTime.[[Calendar]]).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&date_time->calendar())));

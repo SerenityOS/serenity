@@ -73,7 +73,7 @@ ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_targ
         return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
-        return Object::create(realm, realm.intrinsics().object_prototype());
+        return Object::create(realm, realm.intrinsics().object_prototype()).ptr();
     return value.to_object(vm);
 }
 
@@ -223,7 +223,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
     auto& realm = *vm.current_realm();
     auto iterable = TRY(require_object_coercible(vm, vm.argument(0)));
 
-    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
+    auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
     (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
@@ -274,7 +274,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto own_keys = TRY(object->internal_own_property_keys());
 
     // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
-    auto* descriptors = Object::create(realm, realm.intrinsics().object_prototype());
+    auto descriptors = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
@@ -369,7 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
         return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
 
     // 2. Let obj be OrdinaryObjectCreate(O).
-    auto* object = Object::create(realm, proto.is_null() ? nullptr : &proto.as_object());
+    auto object = Object::create(realm, proto.is_null() ? nullptr : &proto.as_object());
 
     // 3. If Properties is not undefined, then
     if (!properties.is_undefined()) {

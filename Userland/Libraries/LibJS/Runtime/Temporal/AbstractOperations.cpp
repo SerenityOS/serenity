@@ -84,7 +84,7 @@ ThrowCompletionOr<Object*> get_options_object(VM& vm, Value options)
     // 1. If options is undefined, then
     if (options.is_undefined()) {
         // a. Return OrdinaryObjectCreate(null).
-        return Object::create(realm, nullptr);
+        return Object::create(realm, nullptr).ptr();
     }
 
     // 2. If Type(options) is Object, then
@@ -600,7 +600,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         auto* fields = TRY(prepare_temporal_fields(vm, value_object, field_names, Vector<StringView> {}));
 
         // f. Let dateOptions be OrdinaryObjectCreate(null).
-        auto* date_options = Object::create(realm, nullptr);
+        auto date_options = Object::create(realm, nullptr);
 
         // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
         MUST(date_options->create_data_property_or_throw(vm.names.overflow, PrimitiveString::create(vm, "constrain"sv)));
@@ -740,7 +740,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& optio
     auto& realm = *vm.current_realm();
 
     // 1. Let merged be OrdinaryObjectCreate(null).
-    auto* merged = Object::create(realm, nullptr);
+    auto merged = Object::create(realm, nullptr);
 
     // 2. Let keys be ? EnumerableOwnPropertyNames(options, key).
     auto keys = TRY(options.enumerable_own_property_names(Object::PropertyKind::Key));
@@ -760,7 +760,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& optio
     MUST(merged->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, move(largest_unit))));
 
     // 5. Return merged.
-    return merged;
+    return merged.ptr();
 }
 
 // 13.19 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
@@ -1745,7 +1745,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     auto& realm = *vm.current_realm();
 
     // 1. Let result be OrdinaryObjectCreate(null).
-    auto* result = Object::create(realm, nullptr);
+    auto result = Object::create(realm, nullptr);
     VERIFY(result);
 
     // 2. Let any be false.
@@ -1811,7 +1811,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 // 13.44 GetDifferenceSettings ( operation, options, unitGroup, disallowedUnits, fallbackSmallestUnit, smallestLargestDefaultUnit ), https://tc39.es/proposal-temporal/#sec-temporal-getdifferencesettings

@@ -408,7 +408,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     merged_fields = TRY(prepare_temporal_fields(vm, *merged_fields, merged_field_names, Vector<StringView> {}));
 
     // 12. Let options be OrdinaryObjectCreate(null).
-    auto* options = Object::create(realm, nullptr);
+    auto options = Object::create(realm, nullptr);
 
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
     MUST(options->create_data_property_or_throw(vm.names.overflow, PrimitiveString::create(vm, vm.names.reject.as_string())));
@@ -427,7 +427,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
     auto* year_month = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(realm, realm.intrinsics().object_prototype());
+    auto fields = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", yearMonth.[[Calendar]]).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&year_month->calendar())));

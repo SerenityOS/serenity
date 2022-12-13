@@ -345,7 +345,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto* duration_to_add = MUST(create_temporal_duration(vm, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 14. Let optionsCopy be OrdinaryObjectCreate(null).
-    auto* options_copy = Object::create(realm, nullptr);
+    auto options_copy = Object::create(realm, nullptr);
 
     // 15. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
     auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
