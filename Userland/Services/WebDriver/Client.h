@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022, Salvatore Gargano <info@sungvzer.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -86,6 +87,9 @@ private:
     virtual Web::WebDriver::Response print_page(Web::WebDriver::Parameters parameters, JsonValue payload) override;
 
     static NonnullOwnPtrVector<Session> s_sessions;
+
+    // https://w3c.github.io/webdriver/#dfn-maximum-active-sessions
+    static Optional<u32> s_active_sessions_limit;
     static Atomic<unsigned> s_next_session_id;
 };
 

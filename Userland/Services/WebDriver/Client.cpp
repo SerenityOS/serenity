@@ -4,6 +4,7 @@
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022, Salvatore Gargano <info@sungvzer.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,9 @@ namespace WebDriver {
 
 Atomic<unsigned> Client::s_next_session_id;
 NonnullOwnPtrVector<Session> Client::s_sessions;
+
+// This may be “unlimited” for intermediary nodes.
+Optional<u32> Client::s_active_sessions_limit { 1 }; // ... but must be exactly one for a remote end that is an endpoint node.
 
 ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
 {
@@ -126,8 +130,10 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session");
 
-    // FIXME: 1. If the maximum active sessions is equal to the length of the list of active sessions,
-    //           return error with error code session not created.
+    // 1. If the maximum active sessions is equal to the length of the list of active sessions,
+    //    return error with error code session not created.
+    if (s_active_sessions_limit.has_value() && s_active_sessions_limit.value() == s_sessions.size())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, "Reached maximum active sessions limit"sv);
 
     // FIXME: 2. If the remote end is an intermediary node, take implementation-defined steps that either
     //           result in returning an error with error code session not created, or in returning a
@@ -136,8 +142,9 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     //           reference to the session created on the upstream node as the associated session such
     //           that commands may be forwarded to this associated session on subsequent commands.
 
-    // FIXME: 3. If the maximum active sessions is equal to the length of the list of active sessions,
-    //           return error with error code session not created.
+    // 3. If the maximum active sessions is equal to the length of the list of active sessions,
+    //    return error with error code session not created.
+    // FIXME: right now this is a no-op, implement after (2.)
 
     // 4. Let capabilities be the result of trying to process capabilities with parameters as an argument.
     auto capabilities = TRY(Web::WebDriver::process_capabilities(payload));
