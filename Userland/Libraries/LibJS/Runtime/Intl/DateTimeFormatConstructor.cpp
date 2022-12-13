@@ -169,8 +169,10 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     auto default_hour_cycle = ::Locale::get_default_regional_hour_cycle(data_locale);
 
     // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
-    if (!default_hour_cycle.has_value())
+    if (!default_hour_cycle.has_value()) {
+        date_time_format.set_time_zone(default_time_zone());
         return &date_time_format;
+    }
 
     Optional<::Locale::HourCycle> hour_cycle_value;
 
