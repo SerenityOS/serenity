@@ -10,9 +10,9 @@
 
 namespace JS {
 
-PromiseReaction* PromiseReaction::create(VM& vm, Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler)
+NonnullGCPtr<PromiseReaction> PromiseReaction::create(VM& vm, Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler)
 {
-    return vm.heap().allocate_without_realm<PromiseReaction>(type, capability, move(handler));
+    return *vm.heap().allocate_without_realm<PromiseReaction>(type, capability, move(handler));
 }
 
 PromiseReaction::PromiseReaction(Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler)
