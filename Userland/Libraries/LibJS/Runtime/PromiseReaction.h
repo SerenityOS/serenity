@@ -23,7 +23,7 @@ public:
         Reject,
     };
 
-    static PromiseReaction* create(VM& vm, Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler);
+    static NonnullGCPtr<PromiseReaction> create(VM& vm, Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler);
 
     virtual ~PromiseReaction() = default;
 
