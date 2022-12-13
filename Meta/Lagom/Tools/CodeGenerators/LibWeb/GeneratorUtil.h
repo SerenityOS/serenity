@@ -7,15 +7,16 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/JsonObject.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Stream.h>
 #include <ctype.h>
 
-DeprecatedString title_casify(DeprecatedString const& dashy_name)
+ErrorOr<String> title_casify(String const& dashy_name)
 {
-    auto parts = dashy_name.split('-');
+    auto parts = dashy_name.bytes_as_string_view().split_view('-');
     StringBuilder builder;
     for (auto& part : parts) {
         if (part.is_empty())
@@ -25,10 +26,10 @@ DeprecatedString title_casify(DeprecatedString const& dashy_name)
             continue;
         builder.append(part.substring_view(1, part.length() - 1));
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-DeprecatedString camel_casify(StringView dashy_name)
+ErrorOr<String> camel_casify(StringView dashy_name)
 {
     auto parts = dashy_name.split_view('-');
     StringBuilder builder;
@@ -46,10 +47,10 @@ DeprecatedString camel_casify(StringView dashy_name)
             continue;
         builder.append(part.substring_view(1, part.length() - 1));
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-DeprecatedString snake_casify(DeprecatedString const& dashy_name)
+ErrorOr<String> snake_casify(String const& dashy_name)
 {
     return dashy_name.replace("-"sv, "_"sv, ReplaceMode::All);
 }

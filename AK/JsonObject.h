@@ -66,7 +66,7 @@ public:
 
     [[nodiscard]] JsonValue const* get_ptr(StringView key) const
     {
-        auto it = m_members.find(key);
+        auto it = m_members.find(MUST(String::from_utf8(key)));
         if (it == m_members.end())
             return nullptr;
         return &(*it).value;
@@ -74,7 +74,7 @@ public:
 
     [[nodiscard]] [[nodiscard]] bool has(StringView key) const
     {
-        return m_members.contains(key);
+        return m_members.contains(MUST(String::from_utf8(key)));
     }
 
     [[nodiscard]] bool has_null(StringView key) const
@@ -137,6 +137,11 @@ public:
 
     void set(DeprecatedString const& key, JsonValue value)
     {
+        m_members.set(MUST(String::from_deprecated_string(key)), move(value));
+    }
+
+    void set(String const& key, JsonValue value)
+    {
         m_members.set(key, move(value));
     }
 
@@ -157,7 +162,7 @@ public:
 
     bool remove(StringView key)
     {
-        return m_members.remove(key);
+        return m_members.remove(MUST(String::from_utf8(key)));
     }
 
     template<typename Builder>
@@ -169,7 +174,7 @@ public:
     [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>().to_deprecated_string(); }
 
 private:
-    OrderedHashMap<DeprecatedString, JsonValue> m_members;
+    OrderedHashMap<String, JsonValue> m_members;
 };
 
 template<typename Builder>

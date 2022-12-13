@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
@@ -17,7 +17,7 @@ class SourceGenerator {
     AK_MAKE_NONCOPYABLE(SourceGenerator);
 
 public:
-    using MappingType = HashMap<StringView, DeprecatedString>;
+    using MappingType = HashMap<StringView, String>;
 
     explicit SourceGenerator(StringBuilder& builder, char opening = '@', char closing = '@')
         : m_builder(builder)
@@ -37,7 +37,7 @@ public:
 
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
 
-    void set(StringView key, DeprecatedString value)
+    void set(StringView key, String value)
     {
         if (key.contains(m_opening) || key.contains(m_closing)) {
             warnln("SourceGenerator keys cannot contain the opening/closing delimiters `{}` and `{}`. (Keys are only wrapped in these when using them, not when setting them.)", m_opening, m_closing);
@@ -46,7 +46,7 @@ public:
         m_mapping.set(key, move(value));
     }
 
-    DeprecatedString get(StringView key) const
+    String get(StringView key) const
     {
         auto result = m_mapping.get(key);
         if (!result.has_value()) {
@@ -57,7 +57,7 @@ public:
     }
 
     StringView as_string_view() const { return m_builder.string_view(); }
-    DeprecatedString as_string() const { return m_builder.build(); }
+    ErrorOr<String> as_string() const { return m_builder.to_string(); }
 
     void append(StringView pattern)
     {
@@ -92,15 +92,15 @@ public:
     }
 
     template<size_t N>
-    DeprecatedString get(char const (&key)[N])
+    String get(char const (&key)[N])
     {
         return get(StringView { key, N - 1 });
     }
 
     template<size_t N>
-    void set(char const (&key)[N], DeprecatedString value)
+    void set(char const (&key)[N], String value)
     {
-        set(StringView { key, N - 1 }, value);
+        set(StringView { key, N - 1 }, move(value));
     }
 
     template<size_t N>
