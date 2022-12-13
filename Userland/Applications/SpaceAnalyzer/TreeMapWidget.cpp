@@ -6,7 +6,9 @@
  */
 
 #include "TreeMapWidget.h"
+#include "Tree.h"
 #include <AK/Array.h>
+#include <AK/DeprecatedString.h>
 #include <AK/NumberFormat.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
@@ -222,11 +224,11 @@ TreeNode const* TreeMapWidget::path_node(size_t n) const
     TreeNode const* iter = &m_tree->root();
     size_t path_index = 0;
     while (iter && path_index < m_path.size() && path_index < n) {
-        size_t child_index = m_path[path_index];
-        if (child_index >= iter->num_children()) {
+        auto child_name = m_path[path_index];
+        auto maybe_child = iter->child_with_name(child_name);
+        if (!maybe_child.has_value())
             return nullptr;
-        }
-        iter = &iter->child_at(child_index);
+        iter = &maybe_child.release_value();
         path_index++;
     }
     return iter;
@@ -259,16 +261,16 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-Vector<int> TreeMapWidget::path_to_position(Gfx::IntPoint position)
+Vector<DeprecatedString> TreeMapWidget::path_to_position(Gfx::IntPoint position)
 {
     TreeNode const* node = path_node(m_viewpoint);
     if (!node) {
         return {};
     }
-    Vector<int> path;
-    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeNode const&, int index, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
+    Vector<DeprecatedString> path;
+    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](TreeNode const& node, int, Gfx::IntRect const& rect, Gfx::IntRect const&, int, HasLabel, IsRemainder is_remainder) {
         if (is_remainder == IsRemainder::No && rect.contains(position)) {
-            path.append(index);
+            path.append(node.name());
         }
     });
     return path;
@@ -296,7 +298,7 @@ void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
 {
     TreeNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
-        Vector<int> path = path_to_position(event.position());
+        auto path = path_to_position(event.position());
         if (!path.is_empty()) {
             m_path.shrink(m_viewpoint);
             m_path.extend(path);
@@ -314,7 +316,7 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
         return;
     TreeNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
-        Vector<int> path = path_to_position(event.position());
+        auto path = path_to_position(event.position());
         m_path.shrink(m_viewpoint);
         m_path.extend(path);
         m_viewpoint = m_path.size();
