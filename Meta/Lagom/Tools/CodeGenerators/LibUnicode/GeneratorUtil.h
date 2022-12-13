@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
@@ -16,6 +15,7 @@
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
@@ -100,9 +100,9 @@ public:
     void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row)
     requires(!StorageTypeIsList<StorageType>)
     {
-        generator.set("type"sv, type);
-        generator.set("name"sv, name);
-        generator.set("size"sv, DeprecatedString::number(m_storage.size()));
+        generator.set("type"sv, MUST(String::from_utf8(type)));
+        generator.set("name"sv, MUST(String::from_utf8(name)));
+        generator.set("size"sv, MUST(String::number(m_storage.size())));
 
         generator.append(R"~~~(
 static constexpr Array<@type@, @size@ + 1> @name@ { {
@@ -114,10 +114,10 @@ static constexpr Array<@type@, @size@ + 1> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            if constexpr (IsSame<StorageType, DeprecatedString>)
-                generator.append(DeprecatedString::formatted("\"{}\"sv", value));
+            if constexpr (IsSame<StorageType, String>)
+                generator.append(String::formatted("\"{}\"sv", value));
             else
-                generator.append(DeprecatedString::formatted("{}", value));
+                generator.append(String::formatted("{}", value));
 
             if (values_in_current_row == max_values_per_row) {
                 values_in_current_row = 0;
@@ -133,14 +133,14 @@ static constexpr Array<@type@, @size@ + 1> @name@ { {
     void generate(SourceGenerator& generator, StringView type, StringView name)
     requires(StorageTypeIsList<StorageType>)
     {
-        generator.set("type"sv, type);
-        generator.set("name"sv, name);
+        generator.set("type"sv, MUST(String::from_utf8(type)));
+        generator.set("name"sv, MUST(String::from_utf8(name)));
 
         for (size_t i = 0; i < m_storage.size(); ++i) {
             auto const& list = m_storage[i];
 
-            generator.set("index"sv, DeprecatedString::number(i));
-            generator.set("size"sv, DeprecatedString::number(list.size()));
+            generator.set("index"sv, MUST(String::number(i)));
+            generator.set("size"sv, MUST(String::number(list.size())));
 
             generator.append(R"~~~(
 static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
@@ -148,14 +148,14 @@ static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
             bool first = true;
             for (auto const& value : list) {
                 generator.append(first ? " "sv : ", "sv);
-                generator.append(DeprecatedString::formatted("{}", value));
+                generator.append(String::formatted("{}", value));
                 first = false;
             }
 
             generator.append(" } };");
         }
 
-        generator.set("size"sv, DeprecatedString::number(m_storage.size()));
+        generator.set("size"sv, String::number(m_storage.size()));
 
         generator.append(R"~~~(
 
@@ -169,7 +169,7 @@ static constexpr Array<Span<@type@ const>, @size@ + 1> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.set("index"sv, DeprecatedString::number(i));
+            generator.set("index"sv, MUST(String::number(i)));
             generator.append("@name@@index@.span()");
 
             if (values_in_current_row == max_values_per_row) {
@@ -188,8 +188,8 @@ protected:
     HashMap<StorageType, size_t> m_storage_indices;
 };
 
-class UniqueStringStorage : public UniqueStorage<DeprecatedString> {
-    using Base = UniqueStorage<DeprecatedString>;
+class UniqueStringStorage : public UniqueStorage<String> {
+    using Base = UniqueStorage<String>;
 
 public:
     // The goal of the string table generator is to ensure the table is located within the read-only
@@ -205,7 +205,7 @@ public:
             if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.append(DeprecatedString::formatted("{:#x}", value));
+            generator.append(MUST(String::formatted("{:#x}", value)));
 
             if (values_in_current_row == max_values_per_row) {
                 values_in_current_row = 0;
@@ -219,23 +219,23 @@ public:
 
         for (auto const& string : Base::m_storage) {
             // Ensure the string length may be encoded as two u8s.
-            VERIFY(string.length() <= NumericLimits<u16>::max());
+            VERIFY(string.bytes_as_string_view().length() <= NumericLimits<u16>::max());
 
             string_indices.unchecked_append(next_index);
-            next_index += string.length() + 2;
+            next_index += string.bytes_as_string_view().length() + 2;
         }
 
-        generator.set("size", DeprecatedString::number(next_index));
+        generator.set("size", MUST(String::number(next_index)));
         generator.append(R"~~~(
 static constexpr Array<u8, @size@> s_encoded_strings { {
     )~~~");
 
         for (auto const& string : Base::m_storage) {
-            auto length = string.length();
+            auto length = string.bytes_as_string_view().length();
             append_hex_value((length & 0xff00) >> 8);
             append_hex_value(length & 0x00ff);
 
-            for (auto ch : string)
+            for (auto ch : string.bytes_as_string_view())
                 append_hex_value(static_cast<u8>(ch));
         }
 
@@ -243,7 +243,7 @@ static constexpr Array<u8, @size@> s_encoded_strings { {
 } };
 )~~~");
 
-        generator.set("size", DeprecatedString::number(string_indices.size()));
+        generator.set("size", MUST(String::number(string_indices.size())));
         generator.append(R"~~~(
 static constexpr Array<u32, @size@> s_encoded_string_indices { {
     )~~~");
@@ -277,8 +277,8 @@ static constexpr StringView decode_string(size_t index)
 };
 
 struct Alias {
-    DeprecatedString name;
-    DeprecatedString alias;
+    String name;
+    String alias;
 };
 
 struct CanonicalLanguageID {
@@ -291,7 +291,7 @@ struct CanonicalLanguageID {
         size_t index = 0;
 
         if (Locale::is_unicode_language_subtag(segments[index])) {
-            language_id.language = unique_strings.ensure(segments[index]);
+            language_id.language = unique_strings.ensure(MUST(String::from_utf8(segments[index])));
             if (segments.size() == ++index)
                 return language_id;
         } else {
@@ -299,13 +299,13 @@ struct CanonicalLanguageID {
         }
 
         if (Locale::is_unicode_script_subtag(segments[index])) {
-            language_id.script = unique_strings.ensure(segments[index]);
+            language_id.script = unique_strings.ensure(MUST(String::from_utf8(segments[index])));
             if (segments.size() == ++index)
                 return language_id;
         }
 
         if (Locale::is_unicode_region_subtag(segments[index])) {
-            language_id.region = unique_strings.ensure(segments[index]);
+            language_id.region = unique_strings.ensure(MUST(String::from_utf8(segments[index])));
             if (segments.size() == ++index)
                 return language_id;
         }
@@ -313,7 +313,7 @@ struct CanonicalLanguageID {
         while (index < segments.size()) {
             if (!Locale::is_unicode_variant_subtag(segments[index]))
                 return Error::from_string_literal("Expected variant subtag");
-            language_id.variants.append(unique_strings.ensure(segments[index++]));
+            language_id.variants.append(unique_strings.ensure(MUST(String::from_utf8(segments[index]))));
         }
 
         return language_id;
@@ -342,9 +342,9 @@ inline ErrorOr<JsonValue> read_json_file(StringView path)
     return JsonValue::from_string(buffer);
 }
 
-inline ErrorOr<Core::DirIterator> path_to_dir_iterator(DeprecatedString path, StringView subpath = "main"sv)
+inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView subpath = "main"sv)
 {
-    LexicalPath lexical_path(move(path));
+    LexicalPath lexical_path(path.to_deprecated_string());
     if (!subpath.is_empty())
         lexical_path = lexical_path.append(subpath);
 
@@ -359,7 +359,7 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(DeprecatedString path, St
     return iterator;
 }
 
-inline ErrorOr<DeprecatedString> next_path_from_dir_iterator(Core::DirIterator& iterator)
+inline ErrorOr<String> next_path_from_dir_iterator(Core::DirIterator& iterator)
 {
     auto next_path = iterator.next_full_path();
     if (iterator.has_error()) {
@@ -369,7 +369,7 @@ inline ErrorOr<DeprecatedString> next_path_from_dir_iterator(Core::DirIterator& 
         return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
     }
 
-    return next_path;
+    return String::from_deprecated_string(next_path);
 }
 
 inline void ensure_from_string_types_are_generated(SourceGenerator& generator)
@@ -416,11 +416,11 @@ void generate_value_from_string(SourceGenerator& generator, StringView method_na
 {
     ensure_from_string_types_are_generated(generator);
 
-    generator.set("method_name", DeprecatedString::formatted(method_name_format, value_name));
-    generator.set("value_type", value_type);
-    generator.set("value_name", value_name);
-    generator.set("return_type", options.return_type.has_value() ? *options.return_type : value_type);
-    generator.set("size", DeprecatedString::number(hashes.size()));
+    generator.set("method_name", MUST(String::formatted(method_name_format, value_name)));
+    generator.set("value_type", MUST(String::from_utf8(value_type)));
+    generator.set("value_name", MUST(String::from_utf8(value_name)));
+    generator.set("return_type", MUST(String::from_utf8(options.return_type.has_value() ? *options.return_type : value_type)));
+    generator.set("size", MUST(String::number(hashes.size())));
 
     generator.append(R"~~~(
 Optional<@return_type@> @method_name@(StringView key)
@@ -439,11 +439,11 @@ Optional<@return_type@> @method_name@(StringView key)
             generator.append(" ");
 
         if constexpr (IsIntegral<ValueType>)
-            generator.set("value"sv, DeprecatedString::number(hashes.get(hash_key).value()));
+            generator.set("value"sv, String::number(hashes.get(hash_key).value()));
         else
-            generator.set("value"sv, DeprecatedString::formatted("{}::{}", value_type, hashes.get(hash_key).value()));
+            generator.set("value"sv, String::formatted("{}::{}", value_type, hashes.get(hash_key).value()));
 
-        generator.set("hash"sv, DeprecatedString::number(hash_key));
+        generator.set("hash"sv, String::number(hash_key));
         generator.append("{ @hash@U, @value@ },"sv);
 
         if (values_in_current_row == max_values_per_row) {
@@ -452,7 +452,7 @@ Optional<@return_type@> @method_name@(StringView key)
         }
     }
 
-    generator.set("return_statement", DeprecatedString::formatted(options.return_format, "value->value"sv));
+    generator.set("return_statement", MUST(String::formatted(options.return_format, "value->value"sv)));
     generator.append(R"~~~(
     } };
 )~~~");
@@ -476,11 +476,11 @@ Optional<@return_type@> @method_name@(StringView key)
 }
 
 template<typename IdentifierFormatter>
-void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, Span<DeprecatedString const> values)
+void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, Span<String const> values)
 {
-    generator.set("method_name", DeprecatedString::formatted(method_name_format, value_name));
-    generator.set("value_type", value_type);
-    generator.set("value_name", value_name);
+    generator.set("method_name", MUST(String::formatted(method_name_format, value_name)));
+    generator.set("value_type", MUST(String::from_utf8(value_type)));
+    generator.set("value_name", MUST(String::from_utf8(value_name)));
 
     generator.append(R"~~~(
 StringView @method_name@(@value_type@ @value_name@)
@@ -506,19 +506,19 @@ StringView @method_name@(@value_type@ @value_name@)
 }
 
 template<typename IdentifierFormatter>
-void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<DeprecatedString>& values, Vector<Alias> aliases = {})
+void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<String>& values, Vector<Alias> aliases = {})
 {
     quick_sort(values, [](auto const& value1, auto const& value2) { return value1.to_lowercase() < value2.to_lowercase(); });
     quick_sort(aliases, [](auto const& alias1, auto const& alias2) { return alias1.alias.to_lowercase() < alias2.alias.to_lowercase(); });
 
-    generator.set("name", name);
-    generator.set("underlying", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
+    generator.set("name", MUST(String::from_utf8(name)));
+    generator.set("underlying", MUST(String::from_utf8(((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv)));
 
     generator.append(R"~~~(
 enum class @name@ : @underlying@ {)~~~");
 
     if (!default_.is_empty()) {
-        generator.set("default", default_);
+        generator.set("default", MUST(String::from_utf8(default_)));
         generator.append(R"~~~(
     @default@,)~~~");
     }
@@ -545,20 +545,20 @@ template<typename LocalesType, typename IdentifierFormatter, typename ListFormat
 void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, IdentifierFormatter&& format_identifier, ListFormatter&& format_list)
 {
     auto format_mapping_name = [&](StringView format, StringView name) {
-        DeprecatedString mapping_name;
+        String mapping_name;
 
         if constexpr (IsNullPointer<IdentifierFormatter>)
             mapping_name = name.replace("-"sv, "_"sv, ReplaceMode::All);
         else
             mapping_name = format_identifier(type, name);
 
-        return DeprecatedString::formatted(format, mapping_name.to_lowercase());
+        return String::formatted(format, mapping_name.to_lowercase());
     };
 
-    Vector<DeprecatedString> mapping_names;
+    Vector<String> mapping_names;
 
     for (auto const& locale : locales) {
-        DeprecatedString mapping_name;
+        String mapping_name;
 
         if constexpr (requires { locale.key; }) {
             mapping_name = format_mapping_name(format, locale.key);
@@ -575,7 +575,7 @@ void generate_mapping(SourceGenerator& generator, LocalesType const& locales, St
 
     generator.set("type", type);
     generator.set("name", name);
-    generator.set("size", DeprecatedString::number(locales.size()));
+    generator.set("size", String::number(locales.size()));
     generator.append(R"~~~(
 static constexpr Array<Span<@type@ const>, @size@> @name@ { {
     )~~~");
@@ -620,9 +620,9 @@ Span<StringView const> @name@()
         first = false;
 
         if (auto it = aliases.find_if([&](auto const& alias) { return alias.alias == value; }); it != aliases.end())
-            generator.append(DeprecatedString::formatted("\"{}\"sv", it->name));
+            generator.append(String::formatted("\"{}\"sv", it->name));
         else
-            generator.append(DeprecatedString::formatted("\"{}\"sv", value));
+            generator.append(String::formatted("\"{}\"sv", value));
     }
 
     generator.append(R"~~~( };

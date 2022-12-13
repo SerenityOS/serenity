@@ -23,11 +23,11 @@ struct ApprovalDate {
 };
 
 struct PnpIdData {
-    DeprecatedString manufacturer_name;
+    String manufacturer_name;
     ApprovalDate approval_date;
 };
 
-static ErrorOr<DeprecatedString> decode_html_entities(StringView const& str)
+static ErrorOr<String> decode_html_entities(StringView const& str)
 {
     static constexpr struct {
         StringView entity_name;
@@ -86,7 +86,7 @@ static ErrorOr<DeprecatedString> decode_html_entities(StringView const& str)
 
         start = entity_end.value() + 1;
     }
-    return decoded_str.build();
+    return decoded_str.to_string();
 }
 
 static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)
@@ -116,12 +116,12 @@ static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)
     return ApprovalDate { .year = year.value(), .month = month.value(), .day = day.value() };
 }
 
-static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core::Stream::File& pnp_ids_file)
+static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::Stream::File& pnp_ids_file)
 {
     auto pnp_ids_file_bytes = TRY(pnp_ids_file.read_until_eof());
     StringView pnp_ids_file_contents(pnp_ids_file_bytes);
 
-    HashMap<DeprecatedString, PnpIdData> pnp_id_data;
+    HashMap<String, PnpIdData> pnp_id_data;
 
     for (size_t row_content_offset = 0;;) {
         static auto const row_start_tag = "<tr class=\""sv;
@@ -142,7 +142,7 @@ static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core
             return Error::from_string_literal("Invalid row start tag");
 
         auto row_string = pnp_ids_file_contents.substring_view(row_start_tag_end.value() + 1, row_end.value() - row_start_tag_end.value() - 1);
-        Vector<DeprecatedString, (size_t)PnpIdColumns::ColumnCount> columns;
+        Vector<String, (size_t)PnpIdColumns::ColumnCount> columns;
         for (size_t column_row_offset = 0;;) {
             static auto const column_start_tag = "<td>"sv;
             auto column_start = row_string.find(column_start_tag, column_row_offset);
@@ -158,7 +158,7 @@ static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core
             auto column_str = row_string.substring_view(column_content_row_offset, column_end.value() - column_content_row_offset).trim_whitespace();
             if (column_str.find('\"').has_value())
                 return Error::from_string_literal("Found '\"' in column content, escaping not supported!");
-            columns.append(column_str);
+            columns.append(TRY(String::from_utf8(column_str)));
 
             column_row_offset = column_end.value() + column_end_tag.length();
         }
@@ -181,12 +181,12 @@ static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core
     return pnp_id_data;
 }
 
-static ErrorOr<void> generate_header(Core::Stream::File& file, HashMap<DeprecatedString, PnpIdData> const& pnp_ids)
+static ErrorOr<void> generate_header(Core::Stream::File& file, HashMap<String, PnpIdData> const& pnp_ids)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    generator.set("pnp_id_count", DeprecatedString::formatted("{}", pnp_ids.size()));
+    generator.set("pnp_id_count", TRY(String::formatted("{}", pnp_ids.size())));
     generator.append(R"~~~(
 #pragma once
 
@@ -215,7 +215,7 @@ namespace PnpIDs {
     return {};
 }
 
-static ErrorOr<void> generate_source(Core::Stream::File& file, HashMap<DeprecatedString, PnpIdData> const& pnp_ids)
+static ErrorOr<void> generate_source(Core::Stream::File& file, HashMap<String, PnpIdData> const& pnp_ids)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -231,9 +231,9 @@ static constexpr PnpIDData s_pnp_ids[] = {
     for (auto& pnp_id_data : pnp_ids) {
         generator.set("manufacturer_id", pnp_id_data.key);
         generator.set("manufacturer_name", pnp_id_data.value.manufacturer_name);
-        generator.set("approval_year", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.year));
-        generator.set("approval_month", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.month));
-        generator.set("approval_day", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.day));
+        generator.set("approval_year", TRY(String::formatted("{}", pnp_id_data.value.approval_date.year)));
+        generator.set("approval_month", TRY(String::formatted("{}", pnp_id_data.value.approval_date.month)));
+        generator.set("approval_day", TRY(String::formatted("{}", pnp_id_data.value.approval_date.day)));
 
         generator.append(R"~~~(
 { "@manufacturer_id@"sv, "@manufacturer_name@"sv, { @approval_year@, @approval_month@, @approval_day@ } },

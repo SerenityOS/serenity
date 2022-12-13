@@ -9,23 +9,22 @@
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>
 
 struct Parameter {
-    Vector<DeprecatedString> attributes;
-    DeprecatedString type;
-    DeprecatedString name;
+    Vector<String> attributes;
+    String type;
+    String name;
 };
 
-static DeprecatedString pascal_case(DeprecatedString const& identifier)
+static String pascal_case(String const& identifier)
 {
     StringBuilder builder;
     bool was_new_word = true;
-    for (auto ch : identifier) {
+    for (auto ch : identifier.bytes_as_string_view()) {
         if (ch == '_') {
             was_new_word = true;
             continue;
@@ -36,48 +35,48 @@ static DeprecatedString pascal_case(DeprecatedString const& identifier)
         } else
             builder.append(ch);
     }
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 struct Message {
-    DeprecatedString name;
+    String name;
     bool is_synchronous { false };
     Vector<Parameter> inputs;
     Vector<Parameter> outputs;
 
-    DeprecatedString response_name() const
+    String response_name() const
     {
         StringBuilder builder;
         builder.append(pascal_case(name));
         builder.append("Response"sv);
-        return builder.to_deprecated_string();
+        return MUST(builder.to_string());
     }
 };
 
 struct Endpoint {
-    Vector<DeprecatedString> includes;
-    DeprecatedString name;
+    Vector<String> includes;
+    String name;
     u32 magic;
     Vector<Message> messages;
 };
 
-static bool is_primitive_type(DeprecatedString const& type)
+static bool is_primitive_type(String const& type)
 {
-    return type.is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "size_t", "bool", "double", "float", "int", "unsigned", "unsigned int");
+    return type.bytes_as_string_view().is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "size_t", "bool", "double", "float", "int", "unsigned", "unsigned int");
 }
 
-static bool is_simple_type(DeprecatedString const& type)
+static bool is_simple_type(String const& type)
 {
     // Small types that it makes sense just to pass by value.
-    return type.is_one_of("Gfx::Color", "Gfx::IntPoint", "Gfx::FloatPoint", "Gfx::IntSize", "Gfx::FloatSize");
+    return type.bytes_as_string_view().is_one_of("Gfx::Color", "Gfx::IntPoint", "Gfx::FloatPoint", "Gfx::IntSize", "Gfx::FloatSize");
 }
 
-static bool is_primitive_or_simple_type(DeprecatedString const& type)
+static bool is_primitive_or_simple_type(String const& type)
 {
     return is_primitive_type(type) || is_simple_type(type);
 }
 
-static DeprecatedString message_name(DeprecatedString const& endpoint, DeprecatedString const& message, bool is_response)
+static String message_name(String const& endpoint, String const& message, bool is_response)
 {
     StringBuilder builder;
     builder.append("Messages::"sv);
@@ -86,7 +85,7 @@ static DeprecatedString message_name(DeprecatedString const& endpoint, Deprecate
     builder.append(pascal_case(message));
     if (is_response)
         builder.append("Response"sv);
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 Vector<Endpoint> parse(ByteBuffer const& file_contents)
@@ -128,16 +127,16 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
                         consume_whitespace();
                     }
                     auto attribute = lexer.consume_until([](char ch) { return ch == ']' || ch == ','; });
-                    parameter.attributes.append(attribute);
+                    parameter.attributes.append(MUST(String::from_utf8(attribute)));
                     consume_whitespace();
                 }
             }
-            // FIXME: This is not entirely correct. Types can have spaces, for example `HashMap<int, DeprecatedString>`.
+            // FIXME: This is not entirely correct. Types can have spaces, for example `HashMap<int, String>`.
             //        Maybe we should use LibCpp::Parser for parsing types.
-            parameter.type = lexer.consume_until([](char ch) { return isspace(ch); });
+            parameter.type = MUST(String::from_utf8(lexer.consume_until([](char ch) { return isspace(ch); })));
             VERIFY(!lexer.is_eof());
             consume_whitespace();
-            parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
+            parameter.name = MUST(String::from_utf8(lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; })));
             consume_whitespace();
             storage.append(move(parameter));
             if (lexer.consume_specific(','))
@@ -162,7 +161,7 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
     auto parse_message = [&] {
         Message message;
         consume_whitespace();
-        message.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == '('; });
+        message.name = MUST(String::from_utf8(lexer.consume_until([](char ch) { return isspace(ch) || ch == '('; })));
         consume_whitespace();
         assert_specific('(');
         parse_parameters(message.inputs);
@@ -202,9 +201,9 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
     };
 
     auto parse_include = [&] {
-        DeprecatedString include;
+        String include;
         consume_whitespace();
-        include = lexer.consume_while([](char ch) { return ch != '\n'; });
+        include = MUST(String::from_utf8(lexer.consume_while([](char ch) { return ch != '\n'; })));
         consume_whitespace();
 
         endpoints.last().includes.append(move(include));
@@ -227,8 +226,8 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
         consume_whitespace();
         lexer.consume_specific("endpoint");
         consume_whitespace();
-        endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
-        endpoints.last().magic = Traits<DeprecatedString>::hash(endpoints.last().name);
+        endpoints.last().name = MUST(String::from_utf8(lexer.consume_while([](char ch) { return !isspace(ch); })));
+        endpoints.last().magic = Traits<String>::hash(endpoints.last().name);
         consume_whitespace();
         assert_specific('{');
         parse_messages();
@@ -242,22 +241,22 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
     return endpoints;
 }
 
-HashMap<DeprecatedString, int> build_message_ids_for_endpoint(SourceGenerator generator, Endpoint const& endpoint)
+HashMap<String, int> build_message_ids_for_endpoint(SourceGenerator generator, Endpoint const& endpoint)
 {
-    HashMap<DeprecatedString, int> message_ids;
+    HashMap<String, int> message_ids;
 
     generator.appendln("\nenum class MessageID : i32 {");
     for (auto const& message : endpoint.messages) {
 
         message_ids.set(message.name, message_ids.size() + 1);
         generator.set("message.pascal_name", pascal_case(message.name));
-        generator.set("message.id", DeprecatedString::number(message_ids.size()));
+        generator.set("message.id", MUST(String::number(message_ids.size())));
 
         generator.appendln("    @message.pascal_name@ = @message.id@,");
         if (message.is_synchronous) {
             message_ids.set(message.response_name(), message_ids.size() + 1);
             generator.set("message.pascal_name", pascal_case(message.response_name()));
-            generator.set("message.id", DeprecatedString::number(message_ids.size()));
+            generator.set("message.id", MUST(String::number(message_ids.size())));
 
             generator.appendln("    @message.pascal_name@ = @message.id@,");
         }
@@ -266,14 +265,14 @@ HashMap<DeprecatedString, int> build_message_ids_for_endpoint(SourceGenerator ge
     return message_ids;
 }
 
-DeprecatedString constructor_for_message(DeprecatedString const& name, Vector<Parameter> const& parameters)
+String constructor_for_message(String const& name, Vector<Parameter> const& parameters)
 {
     StringBuilder builder;
     builder.append(name);
 
     if (parameters.is_empty()) {
         builder.append("() {}"sv);
-        return builder.to_deprecated_string();
+        return MUST(builder.to_string());
     }
     builder.append('(');
     for (size_t i = 0; i < parameters.size(); ++i) {
@@ -290,10 +289,10 @@ DeprecatedString constructor_for_message(DeprecatedString const& name, Vector<Pa
             builder.append(", "sv);
     }
     builder.append(" {}"sv);
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
-void do_message(SourceGenerator message_generator, DeprecatedString const& name, Vector<Parameter> const& parameters, DeprecatedString const& response_type = {})
+void do_message(SourceGenerator message_generator, String const& name, Vector<Parameter> const& parameters, String const& response_type = {})
 {
     auto pascal_name = pascal_case(name);
     message_generator.set("message.name", name);
@@ -305,7 +304,7 @@ void do_message(SourceGenerator message_generator, DeprecatedString const& name,
 class @message.pascal_name@ final : public IPC::Message {
 public:)~~~");
 
-    if (!response_type.is_null())
+    if (!response_type.is_empty())
         message_generator.appendln(R"~~~(
    typedef class @message.response_type@ ResponseType;)~~~");
 
@@ -349,16 +348,16 @@ public:)~~~");
         parameter_generator.set("parameter.name", parameter.name);
 
         if (parameter.type == "bool")
-            parameter_generator.set("parameter.initial_value", "false");
+            parameter_generator.set("parameter.initial_value", MUST(String::from_utf8("false"sv)));
         else
-            parameter_generator.set("parameter.initial_value", "{}");
+            parameter_generator.set("parameter.initial_value", MUST(String::from_utf8("{}"sv)));
 
         parameter_generator.appendln(R"~~~(
         @parameter.type@ @parameter.name@ = @parameter.initial_value@;
         if (decoder.decode(@parameter.name@).is_error())
             return {};)~~~");
 
-        if (parameter.attributes.contains_slow("UTF8")) {
+        if (parameter.attributes.contains_slow(MUST(String::from_utf8("UTF8"sv)))) {
             parameter_generator.appendln(R"~~~(
         if (!Utf8View(@parameter.name@).validate())
             return {};)~~~");
@@ -373,7 +372,7 @@ public:)~~~");
             builder.append(", "sv);
     }
 
-    message_generator.set("message.constructor_call_parameters", builder.build());
+    message_generator.set("message.constructor_call_parameters", MUST(builder.to_string()));
 
     message_generator.appendln(R"~~~(
         return make<@message.pascal_name@>(@message.constructor_call_parameters@);
@@ -429,23 +428,23 @@ private:
 
 void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& endpoint, Message const& message)
 {
-    auto do_implement_proxy = [&](DeprecatedString const& name, Vector<Parameter> const& parameters, bool is_synchronous, bool is_try) {
-        DeprecatedString return_type = "void";
+    auto do_implement_proxy = [&](String const& name, Vector<Parameter> const& parameters, bool is_synchronous, bool is_try) {
+        String return_type = MUST(String::from_utf8("void"sv));
         if (is_synchronous) {
             if (message.outputs.size() == 1)
                 return_type = message.outputs[0].type;
             else if (!message.outputs.is_empty())
                 return_type = message_name(endpoint.name, message.name, true);
         }
-        DeprecatedString inner_return_type = return_type;
+        String inner_return_type = return_type;
         if (is_try)
-            return_type = DeprecatedString::formatted("IPC::IPCErrorOr<{}>", return_type);
+            return_type = MUST(String::formatted("IPC::IPCErrorOr<{}>", return_type));
 
         message_generator.set("message.name", message.name);
         message_generator.set("message.pascal_name", pascal_case(message.name));
         message_generator.set("message.complex_return_type", return_type);
-        message_generator.set("async_prefix_maybe", is_synchronous ? "" : "async_");
-        message_generator.set("try_prefix_maybe", is_try ? "try_" : "");
+        message_generator.set("async_prefix_maybe", MUST(String::from_utf8(is_synchronous ? ""sv : "async_"sv)));
+        message_generator.set("try_prefix_maybe", MUST(String::from_utf8(is_try ? "try_"sv : ""sv)));
 
         message_generator.set("handler_name", name);
         message_generator.appendln(R"~~~(
@@ -538,14 +537,14 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
 void build_endpoint(SourceGenerator generator, Endpoint const& endpoint)
 {
     generator.set("endpoint.name", endpoint.name);
-    generator.set("endpoint.magic", DeprecatedString::number(endpoint.magic));
+    generator.set("endpoint.magic", MUST(String::number(endpoint.magic)));
 
     generator.appendln("\nnamespace Messages::@endpoint.name@ {");
 
-    HashMap<DeprecatedString, int> message_ids = build_message_ids_for_endpoint(generator.fork(), endpoint);
+    HashMap<String, int> message_ids = build_message_ids_for_endpoint(generator.fork(), endpoint);
 
     for (auto const& message : endpoint.messages) {
-        DeprecatedString response_name;
+        String response_name;
         if (message.is_synchronous) {
             response_name = message.response_name();
             do_message(generator.fork(), response_name, message.outputs);
@@ -625,7 +624,7 @@ public:
         switch (message_id) {)~~~");
 
     for (auto const& message : endpoint.messages) {
-        auto do_decode_message = [&](DeprecatedString const& name) {
+        auto do_decode_message = [&](String const& name) {
             auto message_generator = generator.fork();
 
             message_generator.set("message.name", name);
@@ -672,13 +671,13 @@ public:
     virtual ~@endpoint.name@Stub() override { }
 
     virtual u32 magic() const override { return @endpoint.magic@; }
-    virtual DeprecatedString name() const override { return "@endpoint.name@"; }
+    virtual String name() const override { return "@endpoint.name@"; }
 
     virtual OwnPtr<IPC::MessageBuffer> handle(const IPC::Message& message) override
     {
         switch (message.message_id()) {)~~~");
     for (auto const& message : endpoint.messages) {
-        auto do_handle_message = [&](DeprecatedString const& name, Vector<Parameter> const& parameters, bool returns_something) {
+        auto do_handle_message = [&](String const& name, Vector<Parameter> const& parameters, bool returns_something) {
             auto message_generator = generator.fork();
 
             StringBuilder argument_generator;
@@ -694,7 +693,7 @@ public:
             message_generator.set("message.pascal_name", pascal_case(name));
             message_generator.set("message.response_type", pascal_case(message.response_name()));
             message_generator.set("handler_name", name);
-            message_generator.set("arguments", argument_generator.to_deprecated_string());
+            message_generator.set("arguments", MUST(argument_generator.to_string()));
             message_generator.appendln(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@: {)~~~");
             if (returns_something) {
@@ -732,8 +731,8 @@ public:
     for (auto const& message : endpoint.messages) {
         auto message_generator = generator.fork();
 
-        auto do_handle_message_decl = [&](DeprecatedString const& name, Vector<Parameter> const& parameters, bool is_response) {
-            DeprecatedString return_type = "void";
+        auto do_handle_message_decl = [&](String const& name, Vector<Parameter> const& parameters, bool is_response) {
+            String return_type = MUST(String::from_utf8("void"sv));
             if (message.is_synchronous && !message.outputs.is_empty() && !is_response)
                 return_type = message_name(endpoint.name, message.name, true);
             message_generator.set("message.complex_return_type", return_type);
@@ -742,7 +741,7 @@ public:
             message_generator.appendln(R"~~~(
     virtual @message.complex_return_type@ @handler_name@()~~~");
 
-            auto make_argument_type = [](DeprecatedString const& type) {
+            auto make_argument_type = [](String const& type) {
                 StringBuilder builder;
 
                 bool const_ref = !is_primitive_or_simple_type(type);
@@ -751,7 +750,7 @@ public:
                 if (const_ref)
                     builder.append(" const&"sv);
 
-                return builder.to_deprecated_string();
+                return MUST(builder.to_string());
             };
 
             for (size_t i = 0; i < parameters.size(); ++i) {

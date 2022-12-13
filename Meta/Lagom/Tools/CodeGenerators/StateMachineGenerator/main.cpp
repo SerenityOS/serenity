@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -22,8 +22,8 @@ struct Range {
 };
 
 struct StateTransition {
-    Optional<DeprecatedString> new_state;
-    Optional<DeprecatedString> action;
+    Optional<String> new_state;
+    Optional<String> action;
 };
 
 struct MatchedAction {
@@ -32,18 +32,18 @@ struct MatchedAction {
 };
 
 struct State {
-    DeprecatedString name;
+    String name;
     Vector<MatchedAction> actions;
-    Optional<DeprecatedString> entry_action;
-    Optional<DeprecatedString> exit_action;
+    Optional<String> entry_action;
+    Optional<String> exit_action;
 };
 
 struct StateMachine {
-    DeprecatedString name;
-    DeprecatedString initial_state;
+    String name;
+    String initial_state;
     Vector<State> states;
     Optional<State> anywhere;
-    Optional<DeprecatedString> namespaces;
+    Optional<String> namespaces;
 };
 
 static OwnPtr<StateMachine>
@@ -128,12 +128,12 @@ parse_state_machine(StringView input)
         lexer.consume_specific('(');
         consume_whitespace();
         if (!lexer.consume_specific("_"))
-            action.new_state = consume_identifier();
+            action.new_state = MUST(String::from_utf8(consume_identifier()));
         consume_whitespace();
         lexer.consume_specific(',');
         consume_whitespace();
         if (!lexer.consume_specific("_"))
-            action.action = consume_identifier();
+            action.action = MUST(String::from_utf8(consume_identifier()));
         consume_whitespace();
         lexer.consume_specific(')');
         return action;
@@ -143,7 +143,7 @@ parse_state_machine(StringView input)
         = [&] {
               State state;
               consume_whitespace();
-              state.name = consume_identifier();
+              state.name = MUST(String::from_utf8(consume_identifier()));
               consume_whitespace();
               consume_whitespace();
               lexer.consume_specific('{');
@@ -154,10 +154,10 @@ parse_state_machine(StringView input)
                   }
                   if (lexer.consume_specific("@entry")) {
                       consume_whitespace();
-                      state.entry_action = consume_identifier();
+                      state.entry_action = MUST(String::from_utf8(consume_identifier()));
                   } else if (lexer.consume_specific("@exit")) {
                       consume_whitespace();
-                      state.exit_action = consume_identifier();
+                      state.exit_action = MUST(String::from_utf8(consume_identifier()));
                   } else if (lexer.next_is('@')) {
                       auto directive = consume_identifier().to_deprecated_string();
                       fprintf(stderr, "Unimplemented @ directive %s\n", directive.characters());
@@ -178,13 +178,13 @@ parse_state_machine(StringView input)
             break;
         if (lexer.consume_specific("@namespace")) {
             consume_whitespace();
-            state_machine->namespaces = lexer.consume_while([](char c) { return isalpha(c) || c == ':'; });
+            state_machine->namespaces = MUST(String::from_utf8(lexer.consume_while([](char c) { return isalpha(c) || c == ':'; })));
         } else if (lexer.consume_specific("@begin")) {
             consume_whitespace();
-            state_machine->initial_state = consume_identifier();
+            state_machine->initial_state = MUST(String::from_utf8(consume_identifier()));
         } else if (lexer.consume_specific("@name")) {
             consume_whitespace();
-            state_machine->name = consume_identifier();
+            state_machine->name = MUST(String::from_utf8(consume_identifier()));
         } else if (lexer.next_is("@anywhere")) {
             lexer.consume_specific('@');
             state_machine->anywhere = consume_state_description();
@@ -207,7 +207,7 @@ parse_state_machine(StringView input)
     }
 
     if (state_machine->anywhere.has_value()) {
-        state_machine->anywhere.value().name = "_Anywhere";
+        state_machine->anywhere.value().name = MUST(String::from_utf8("_Anywhere"sv));
     }
     return state_machine;
 }
@@ -232,9 +232,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-HashTable<DeprecatedString> actions(StateMachine const& machine)
+HashTable<String> actions(StateMachine const& machine)
 {
-    HashTable<DeprecatedString> table;
+    HashTable<String> table;
 
     auto do_state = [&](State const& state) {
         if (state.entry_action.has_value())
@@ -267,7 +267,7 @@ void generate_lookup_table(StateMachine const& machine, SourceGenerator& generat
         VERIFY(!s.name.is_empty());
         Vector<StateTransition> row;
         for (int i = 0; i < 256; i++)
-            row.append({ s.name, "_Ignore" });
+            row.append({ s.name, MUST(String::from_utf8("_Ignore"sv)) });
         for (auto action : s.actions) {
             for (int range_element = action.range.begin; range_element <= action.range.end; range_element++) {
                 row[range_element] = { action.action.new_state, action.action.action };
@@ -276,7 +276,7 @@ void generate_lookup_table(StateMachine const& machine, SourceGenerator& generat
         for (int i = 0; i < 256; ++i) {
             auto cell_generator = table_generator.fork();
             cell_generator.set("cell_new_state", row[i].new_state.value_or(s.name));
-            cell_generator.set("cell_action", row[i].action.value_or("_Ignore"));
+            cell_generator.set("cell_action", row[i].action.value_or(MUST(String::from_utf8("_Ignore"sv))));
             cell_generator.append(" {State::@cell_new_state@, Action::@cell_action@}, ");
         }
         table_generator.append("},\n");
@@ -296,7 +296,7 @@ void output_header(StateMachine const& machine, SourceGenerator& generator)
 {
     generator.set("class_name", machine.name);
     generator.set("initial_state", machine.initial_state);
-    generator.set("state_count", DeprecatedString::number(machine.states.size() + 1));
+    generator.set("state_count", MUST(String::number(machine.states.size() + 1)));
 
     generator.append(R"~~~(
 #pragma once
