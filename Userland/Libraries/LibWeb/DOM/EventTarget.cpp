@@ -454,8 +454,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
 
         //  6. Return scope. (NOTE: Not necessary)
 
-        auto* function = JS::ECMAScriptFunctionObject::create(realm, name, builder.to_deprecated_string(), program->body(), program->parameters(), program->function_length(), scope, nullptr, JS::FunctionKind::Normal, program->is_strict_mode(), program->might_need_arguments_object(), is_arrow_function);
-        VERIFY(function);
+        auto function = JS::ECMAScriptFunctionObject::create(realm, name, builder.to_deprecated_string(), program->body(), program->parameters(), program->function_length(), scope, nullptr, JS::FunctionKind::Normal, program->is_strict_mode(), program->might_need_arguments_object(), is_arrow_function);
 
         // 10. Remove settings object's realm execution context from the JavaScript execution context stack.
         VERIFY(vm.execution_context_stack().last() == &settings_object.realm_execution_context());
