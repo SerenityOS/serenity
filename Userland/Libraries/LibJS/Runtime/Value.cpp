@@ -536,7 +536,7 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     // Boolean
     case BOOLEAN_TAG:
         // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument. See 20.3 for a description of Boolean objects.
-        return BooleanObject::create(realm, as_bool());
+        return BooleanObject::create(realm, as_bool()).ptr();
     // String
     case STRING_TAG:
         // Return a new String object whose [[StringData]] internal slot is set to argument. See 22.1 for a description of String objects.
