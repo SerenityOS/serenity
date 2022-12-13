@@ -14,7 +14,7 @@ class NumberObject : public Object {
     JS_OBJECT(NumberObject, Object);
 
 public:
-    static NumberObject* create(Realm&, double);
+    static NonnullGCPtr<NumberObject> create(Realm&, double);
 
     virtual ~NumberObject() override = default;
 
