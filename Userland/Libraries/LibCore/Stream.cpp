@@ -605,15 +605,11 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
         .iov_base = &c,
         .iov_len = 1,
     };
-    struct msghdr msg {
-        .msg_name = NULL,
-        .msg_namelen = 0,
-        .msg_iov = &iov,
-        .msg_iovlen = 1,
-        .msg_control = cmsgu.control,
-        .msg_controllen = sizeof(cmsgu.control),
-        .msg_flags = 0,
-    };
+    struct msghdr msg = {};
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = cmsgu.control;
+    msg.msg_controllen = sizeof(cmsgu.control);
     TRY(Core::System::recvmsg(m_helper.fd(), &msg, 0));
 
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
@@ -652,15 +648,11 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
         char control[CMSG_SPACE(sizeof(int))];
     } cmsgu {};
 
-    struct msghdr msg {
-        .msg_name = NULL,
-        .msg_namelen = 0,
-        .msg_iov = &iov,
-        .msg_iovlen = 1,
-        .msg_control = cmsgu.control,
-        .msg_controllen = sizeof(cmsgu.control),
-        .msg_flags = 0,
-    };
+    struct msghdr msg = {};
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = cmsgu.control;
+    msg.msg_controllen = sizeof(cmsgu.control);
 
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_len = CMSG_LEN(sizeof(int));
