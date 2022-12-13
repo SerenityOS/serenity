@@ -12,6 +12,7 @@
 #import <DOM/NodeIterator.idl>
 #import <DOM/NodeList.idl>
 #import <DOM/ParentNode.idl>
+#import <DOM/ProcessingInstruction.idl>
 #import <DOM/Range.idl>
 #import <DOM/Text.idl>
 #import <DOM/TreeWalker.idl>
@@ -78,6 +79,8 @@ interface Document : Node {
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
     Comment createComment(DOMString data);
+    [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
+
     Range createRange();
     Event createEvent(DOMString interface);
 

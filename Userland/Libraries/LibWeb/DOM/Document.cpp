@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/NodeIterator.h>
+#include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
@@ -1231,6 +1232,17 @@ JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
 {
     return *heap().allocate<Comment>(realm(), *this, data);
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_processing_instruction(DeprecatedString const& target, DeprecatedString const& data)
+{
+    // FIXME: 1. If target does not match the Name production, then throw an "InvalidCharacterError" DOMException.
+
+    // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
+
+    // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
+    return JS::NonnullGCPtr { *heap().allocate<ProcessingInstruction>(realm(), *this, data, target) };
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()

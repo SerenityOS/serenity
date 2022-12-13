@@ -227,6 +227,8 @@ public:
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
     JS::NonnullGCPtr<Text> create_text_node(DeprecatedString const& data);
     JS::NonnullGCPtr<Comment> create_comment(DeprecatedString const& data);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> create_processing_instruction(DeprecatedString const& target, DeprecatedString const& data);
+
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(DeprecatedString const& interface);
     JS::NonnullGCPtr<Range> create_range();
 
