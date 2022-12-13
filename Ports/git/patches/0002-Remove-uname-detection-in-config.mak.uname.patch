@@ -8,7 +8,7 @@ Subject: [PATCH] Remove uname detection in config.mak.uname
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/config.mak.uname b/config.mak.uname
-index 259d151..b072f4c 100644
+index d63629fe807f59deda80ed780c1915df011bf862..eae96e0ab2986c4b96a9786715cf778acdb18736 100644
 --- a/config.mak.uname
 +++ b/config.mak.uname
 @@ -4,12 +4,12 @@
