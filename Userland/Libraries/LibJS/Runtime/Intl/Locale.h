@@ -21,7 +21,7 @@ class Locale final : public Object {
     JS_OBJECT(Locale, Object);
 
 public:
-    static Locale* create(Realm&, ::Locale::LocaleID const&);
+    static NonnullGCPtr<Locale> create(Realm&, ::Locale::LocaleID const&);
 
     static constexpr auto relevant_extension_keys()
     {

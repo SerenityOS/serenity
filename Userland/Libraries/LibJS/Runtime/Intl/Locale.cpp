@@ -14,9 +14,9 @@
 
 namespace JS::Intl {
 
-Locale* Locale::create(Realm& realm, ::Locale::LocaleID const& locale_id)
+NonnullGCPtr<Locale> Locale::create(Realm& realm, ::Locale::LocaleID const& locale_id)
 {
-    return realm.heap().allocate<Locale>(realm, locale_id, *realm.intrinsics().intl_locale_prototype());
+    return *realm.heap().allocate<Locale>(realm, locale_id, *realm.intrinsics().intl_locale_prototype());
 }
 
 // 14 Locale Objects, https://tc39.es/ecma402/#locale-objects
