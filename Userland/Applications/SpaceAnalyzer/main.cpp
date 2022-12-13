@@ -183,7 +183,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Analyze", [&](auto&) {
-        if (auto result = analyze(tree, treemapwidget, statusbar); result.is_error()) {
+        // FIXME: Just modify the tree in memory instead of traversing the entire file system
+        // FIXME: Dispose of the old tree
+        auto new_tree = adopt_ref(*new Tree(""));
+        if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     }));
@@ -237,9 +240,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        // TODO: Refreshing data always causes resetting the viewport back to "/".
-        // It would be great if we found a way to preserve viewport across refreshes.
-        if (auto result = analyze(tree, treemapwidget, statusbar); result.is_error()) {
+        // FIXME: Dispose of the old tree
+        auto new_tree = adopt_ref(*new Tree(""));
+        if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     });

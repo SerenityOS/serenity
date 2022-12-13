@@ -357,11 +357,27 @@ void TreeMapWidget::context_menu_event(GUI::ContextMenuEvent& context_menu_event
         on_context_menu_request(context_menu_event);
 }
 
+void TreeMapWidget::recalculate_path_for_new_tree()
+{
+    TreeNode const* current = &m_tree->root();
+    size_t new_path_length = 0;
+    for (auto& segment : m_path) {
+        auto maybe_child = current->child_with_name(segment);
+        if (!maybe_child.has_value())
+            break;
+        new_path_length++;
+        current = &maybe_child.release_value();
+    }
+    m_path.shrink(new_path_length);
+    if (new_path_length < m_viewpoint)
+        m_viewpoint = new_path_length - 1;
+}
+
 void TreeMapWidget::set_tree(RefPtr<Tree> tree)
 {
     m_tree = tree;
-    m_path.clear();
-    m_viewpoint = 0;
+    recalculate_path_for_new_tree();
+
     if (on_path_change) {
         on_path_change();
     }
