@@ -28,7 +28,7 @@ class PromiseResolvingFunction final : public NativeFunction {
 public:
     using FunctionType = Function<ThrowCompletionOr<Value>(VM&, Promise&, AlreadyResolved&)>;
 
-    static PromiseResolvingFunction* create(Realm&, Promise&, AlreadyResolved&, FunctionType);
+    static NonnullGCPtr<PromiseResolvingFunction> create(Realm&, Promise&, AlreadyResolved&, FunctionType);
 
     virtual void initialize(Realm&) override;
     virtual ~PromiseResolvingFunction() override = default;
