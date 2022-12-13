@@ -15,12 +15,14 @@ class SnakeGame : public GUI::Frame {
     C_OBJECT(SnakeGame);
 
 public:
+    static ErrorOr<NonnullRefPtr<SnakeGame>> create();
     virtual ~SnakeGame() override = default;
 
     void reset();
 
 private:
-    SnakeGame();
+    explicit SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
+
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
