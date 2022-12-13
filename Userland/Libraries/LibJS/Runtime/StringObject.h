@@ -14,7 +14,7 @@ class StringObject : public Object {
     JS_OBJECT(StringObject, Object);
 
 public:
-    static StringObject* create(Realm&, PrimitiveString&, Object& prototype);
+    static NonnullGCPtr<StringObject> create(Realm&, PrimitiveString&, Object& prototype);
 
     virtual void initialize(Realm&) override;
     virtual ~StringObject() override = default;
