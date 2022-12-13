@@ -21,7 +21,7 @@ static ThrowCompletionOr<ProxyObject*> proxy_create(VM& vm, Value target, Value 
         return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
     if (!handler.is_object())
         return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
-    return ProxyObject::create(realm, target.as_object(), handler.as_object());
+    return ProxyObject::create(realm, target.as_object(), handler.as_object()).ptr();
 }
 
 ProxyConstructor::ProxyConstructor(Realm& realm)
