@@ -128,3 +128,13 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
     update_totals();
     return error_accumulator;
 }
+
+Optional<TreeNode const&> TreeNode::child_with_name(DeprecatedString name) const
+{
+    for (auto& child : *m_children) {
+        if (child.name() == name)
+            return child;
+    }
+
+    return {};
+}
