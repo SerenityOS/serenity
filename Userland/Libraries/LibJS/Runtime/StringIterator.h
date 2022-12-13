@@ -15,7 +15,7 @@ class StringIterator final : public Object {
     JS_OBJECT(StringIterator, Object);
 
 public:
-    static StringIterator* create(Realm&, DeprecatedString string);
+    static NonnullGCPtr<StringIterator> create(Realm&, DeprecatedString string);
 
     virtual ~StringIterator() override = default;
 
