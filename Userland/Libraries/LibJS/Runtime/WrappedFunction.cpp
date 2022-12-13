@@ -11,7 +11,7 @@
 namespace JS {
 
 // 3.1.1 WrappedFunctionCreate ( callerRealm: a Realm Record, Target: a function object, ), https://tc39.es/proposal-shadowrealm/#sec-wrappedfunctioncreate
-ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(Realm& realm, Realm& caller_realm, FunctionObject& target)
+ThrowCompletionOr<NonnullGCPtr<WrappedFunction>> WrappedFunction::create(Realm& realm, Realm& caller_realm, FunctionObject& target)
 {
     auto& vm = realm.vm();
 
@@ -32,7 +32,7 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(Realm& realm, Realm&
         return vm.throw_completion<TypeError>(ErrorType::WrappedFunctionCopyNameAndLengthThrowCompletion);
 
     // 9. Return wrapped.
-    return wrapped;
+    return NonnullGCPtr { *wrapped };
 }
 
 // 2 Wrapped Function Exotic Objects, https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects
