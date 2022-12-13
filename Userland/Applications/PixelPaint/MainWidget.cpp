@@ -159,7 +159,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
                 auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
                 image->add_layer(*bg_layer);
-                bg_layer->content_bitmap().fill(Color::White);
+                auto background_color = dialog->background_color();
+                if (background_color != Gfx::Color::Transparent)
+                    bg_layer->content_bitmap().fill(background_color);
 
                 auto& editor = create_new_editor(*image);
                 auto image_title = dialog->image_name().trim_whitespace();
