@@ -42,7 +42,7 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
     auto& vm = this->vm();
 
     // 3. Let realmRec be CreateRealm().
-    auto* realm = Realm::create(vm);
+    auto realm = Realm::create(vm);
 
     // 5. Let context be a new execution context.
     auto context = ExecutionContext { vm.heap() };
