@@ -8,14 +8,14 @@
 
 namespace JS {
 
-WeakRef* WeakRef::create(Realm& realm, Object& value)
+NonnullGCPtr<WeakRef> WeakRef::create(Realm& realm, Object& value)
 {
-    return realm.heap().allocate<WeakRef>(realm, value, *realm.intrinsics().weak_ref_prototype());
+    return *realm.heap().allocate<WeakRef>(realm, value, *realm.intrinsics().weak_ref_prototype());
 }
 
-WeakRef* WeakRef::create(Realm& realm, Symbol& value)
+NonnullGCPtr<WeakRef> WeakRef::create(Realm& realm, Symbol& value)
 {
-    return realm.heap().allocate<WeakRef>(realm, value, *realm.intrinsics().weak_ref_prototype());
+    return *realm.heap().allocate<WeakRef>(realm, value, *realm.intrinsics().weak_ref_prototype());
 }
 
 WeakRef::WeakRef(Object& value, Object& prototype)

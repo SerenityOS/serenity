@@ -18,8 +18,8 @@ class WeakRef final
     JS_OBJECT(WeakRef, Object);
 
 public:
-    static WeakRef* create(Realm&, Object&);
-    static WeakRef* create(Realm&, Symbol&);
+    static NonnullGCPtr<WeakRef> create(Realm&, Object&);
+    static NonnullGCPtr<WeakRef> create(Realm&, Symbol&);
 
     virtual ~WeakRef() override = default;
 
