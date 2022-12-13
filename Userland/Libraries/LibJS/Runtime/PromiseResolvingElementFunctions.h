@@ -71,7 +71,7 @@ class PromiseAllResolveElementFunction final : public PromiseResolvingElementFun
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    static PromiseAllResolveElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
+    static NonnullGCPtr<PromiseAllResolveElementFunction> create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAllResolveElementFunction() override = default;
 
@@ -86,7 +86,7 @@ class PromiseAllSettledResolveElementFunction final : public PromiseResolvingEle
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    static PromiseAllSettledResolveElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
+    static NonnullGCPtr<PromiseAllSettledResolveElementFunction> create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAllSettledResolveElementFunction() override = default;
 
@@ -101,7 +101,7 @@ class PromiseAllSettledRejectElementFunction final : public PromiseResolvingElem
     JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
-    static PromiseAllSettledRejectElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
+    static NonnullGCPtr<PromiseAllSettledRejectElementFunction> create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAllSettledRejectElementFunction() override = default;
 
@@ -116,7 +116,7 @@ class PromiseAnyRejectElementFunction final : public PromiseResolvingElementFunc
     JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
-    static PromiseAnyRejectElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
+    static NonnullGCPtr<PromiseAnyRejectElementFunction> create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAnyRejectElementFunction() override = default;
 
