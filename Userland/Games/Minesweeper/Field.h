@@ -44,6 +44,7 @@ class Field final : public GUI::Frame {
     friend class SquareLabel;
 
 public:
+    static ErrorOr<NonnullRefPtr<Field>> create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
     virtual ~Field() override = default;
 
     enum class Difficulty {
@@ -109,6 +110,8 @@ public:
 
 private:
     Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
+
+    void initialize();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 

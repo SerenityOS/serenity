@@ -57,10 +57,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& flag_label = *widget->find_descendant_of_type_named<GUI::Label>("flag_label");
     auto& time_label = *widget->find_descendant_of_type_named<GUI::Label>("time_label");
     auto& face_button = *widget->find_descendant_of_type_named<GUI::Button>("face_button");
-    auto field = TRY(widget->try_add<Field>(flag_label, time_label, face_button, [&](auto size) {
+    auto field = TRY(Field::create(flag_label, time_label, face_button, [&](auto size) {
         size.set_height(size.height() + separator.height() + container.height());
         window->resize(size);
     }));
+    TRY(widget->try_add_child(field));
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
