@@ -24,7 +24,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
     if (file_size.is_error())
         return vm.throw_completion<JS::TypeError>(strerror(file_size.error().code()));
 
-    auto* array = TRY(JS::Uint8Array::create(realm, file_size.value()));
+    auto array = TRY(JS::Uint8Array::create(realm, file_size.value()));
 
     auto read = file.value()->read(array->data());
     if (read.is_error())

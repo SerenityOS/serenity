@@ -421,22 +421,22 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 }
 
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                       \
-    ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length, FunctionObject& new_target)                        \
+    ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, u32 length, FunctionObject& new_target)           \
     {                                                                                                                            \
         auto* prototype = TRY(get_prototype_from_constructor(realm.vm(), new_target, &Intrinsics::snake_name##_prototype));      \
         auto array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                          \
-        return realm.heap().allocate<ClassName>(realm, *prototype, length, *array_buffer);                                       \
+        return NonnullGCPtr { *realm.heap().allocate<ClassName>(realm, *prototype, length, *array_buffer) };                     \
     }                                                                                                                            \
                                                                                                                                  \
-    ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length)                                                    \
+    ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, u32 length)                                       \
     {                                                                                                                            \
         auto array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                          \
         return create(realm, length, *array_buffer);                                                                             \
     }                                                                                                                            \
                                                                                                                                  \
-    ClassName* ClassName::create(Realm& realm, u32 length, ArrayBuffer& array_buffer)                                            \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, u32 length, ArrayBuffer& array_buffer)                               \
     {                                                                                                                            \
-        return realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype(), length, array_buffer);      \
+        return *realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype(), length, array_buffer);     \
     }                                                                                                                            \
                                                                                                                                  \
     ClassName::ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer)                                               \
@@ -511,11 +511,11 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         auto& realm = *vm.current_realm();                                                                                       \
                                                                                                                                  \
         if (vm.argument_count() == 0)                                                                                            \
-            return TRY(ClassName::create(realm, 0, new_target));                                                                 \
+            return TRY(ClassName::create(realm, 0, new_target)).ptr();                                                           \
                                                                                                                                  \
         auto first_argument = vm.argument(0);                                                                                    \
         if (first_argument.is_object()) {                                                                                        \
-            auto* typed_array = TRY(ClassName::create(realm, 0, new_target));                                                    \
+            auto typed_array = TRY(ClassName::create(realm, 0, new_target));                                                     \
             if (first_argument.as_object().is_typed_array()) {                                                                   \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                \
                 TRY(initialize_typed_array_from_typed_array(vm, *typed_array, arg_typed_array));                                 \
@@ -532,7 +532,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                     TRY(initialize_typed_array_from_array_like(vm, *typed_array, first_argument.as_object()));                   \
                 }                                                                                                                \
             }                                                                                                                    \
-            return typed_array;                                                                                                  \
+            return typed_array.ptr();                                                                                            \
         }                                                                                                                        \
                                                                                                                                  \
         auto array_length_or_error = first_argument.to_index(vm);                                                                \
@@ -550,7 +550,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         /* FIXME: What is the best/correct behavior here? */                                                                     \
         if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type)))                                             \
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");                                     \
-        return TRY(ClassName::create(realm, array_length, new_target));                                                          \
+        return TRY(ClassName::create(realm, array_length, new_target)).ptr();                                                    \
     }
 
 #undef __JS_ENUMERATE

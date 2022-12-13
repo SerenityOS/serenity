@@ -461,47 +461,46 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM&, FunctionObject& const
 ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM&, TypedArrayBase const& exemplar, MarkedVector<Value> arguments);
 ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, FunctionObject* comparefn);
 
-#define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
-    class ClassName : public TypedArray<Type> {                                             \
-        JS_OBJECT(ClassName, TypedArray);                                                   \
-                                                                                            \
-    public:                                                                                 \
-        virtual ~ClassName();                                                               \
-        static ThrowCompletionOr<ClassName*> create(                                        \
-            Realm&, u32 length, FunctionObject& new_target);                                \
-        static ThrowCompletionOr<ClassName*> create(Realm&, u32 length);                    \
-        static ClassName* create(Realm&, u32 length, ArrayBuffer& buffer);                  \
-        virtual FlyString const& element_name() const override;                             \
-                                                                                            \
-    protected:                                                                              \
-        ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                \
-    };                                                                                      \
-    class PrototypeName final : public Object {                                             \
-        JS_OBJECT(PrototypeName, Object);                                                   \
-                                                                                            \
-    public:                                                                                 \
-        virtual void initialize(Realm&) override;                                           \
-        virtual ~PrototypeName() override;                                                  \
-                                                                                            \
-    private:                                                                                \
-        PrototypeName(Object& prototype);                                                   \
-    };                                                                                      \
-    class ConstructorName final : public TypedArrayConstructor {                            \
-        JS_OBJECT(ConstructorName, TypedArrayConstructor);                                  \
-                                                                                            \
-    public:                                                                                 \
-        virtual void initialize(Realm&) override;                                           \
-        virtual ~ConstructorName() override;                                                \
-                                                                                            \
-        virtual ThrowCompletionOr<Value> call() override;                                   \
-        virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;  \
-                                                                                            \
-    private:                                                                                \
-        explicit ConstructorName(Realm&, Object& prototype);                                \
-        virtual bool has_constructor() const override                                       \
-        {                                                                                   \
-            return true;                                                                    \
-        }                                                                                   \
+#define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                       \
+    class ClassName : public TypedArray<Type> {                                                                   \
+        JS_OBJECT(ClassName, TypedArray);                                                                         \
+                                                                                                                  \
+    public:                                                                                                       \
+        virtual ~ClassName();                                                                                     \
+        static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, u32 length, FunctionObject& new_target); \
+        static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, u32 length);                             \
+        static NonnullGCPtr<ClassName> create(Realm&, u32 length, ArrayBuffer& buffer);                           \
+        virtual FlyString const& element_name() const override;                                                   \
+                                                                                                                  \
+    protected:                                                                                                    \
+        ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                                      \
+    };                                                                                                            \
+    class PrototypeName final : public Object {                                                                   \
+        JS_OBJECT(PrototypeName, Object);                                                                         \
+                                                                                                                  \
+    public:                                                                                                       \
+        virtual void initialize(Realm&) override;                                                                 \
+        virtual ~PrototypeName() override;                                                                        \
+                                                                                                                  \
+    private:                                                                                                      \
+        PrototypeName(Object& prototype);                                                                         \
+    };                                                                                                            \
+    class ConstructorName final : public TypedArrayConstructor {                                                  \
+        JS_OBJECT(ConstructorName, TypedArrayConstructor);                                                        \
+                                                                                                                  \
+    public:                                                                                                       \
+        virtual void initialize(Realm&) override;                                                                 \
+        virtual ~ConstructorName() override;                                                                      \
+                                                                                                                  \
+        virtual ThrowCompletionOr<Value> call() override;                                                         \
+        virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;                        \
+                                                                                                                  \
+    private:                                                                                                      \
+        explicit ConstructorName(Realm&, Object& prototype);                                                      \
+        virtual bool has_constructor() const override                                                             \
+        {                                                                                                         \
+            return true;                                                                                          \
+        }                                                                                                         \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
