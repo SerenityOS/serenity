@@ -147,9 +147,10 @@ static double parse_simplified_iso8601(DeprecatedString const& iso_8601)
     return time_clip(time_ms);
 }
 
-static constexpr AK::Array<StringView, 2> extra_formats = {
+static constexpr AK::Array<StringView, 3> extra_formats = {
     "%a %b %e %T %z %Y"sv,
-    "%m/%e/%Y"sv
+    "%m/%e/%Y"sv,
+    "%m/%e/%Y %R %z"sv,
 };
 
 static double parse_date_string(DeprecatedString const& date_string)
@@ -161,6 +162,7 @@ static double parse_date_string(DeprecatedString const& date_string)
     // Date.parse() is allowed to accept an arbitrary number of implementation-defined formats.
     // Parse formats of this type: "Wed Apr 17 23:08:53 +0000 2019"
     // And: "4/17/2019"
+    // And: "12/05/2022 10:00 -0800"
     // FIXME: Exactly what timezone and which additional formats we should support is unclear.
     //        Both Chrome and Firefox seem to support "4/17/2019 11:08 PM +0000" with most parts
     //        being optional, however this is not clearly documented anywhere.

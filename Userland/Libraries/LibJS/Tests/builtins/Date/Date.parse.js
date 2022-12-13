@@ -78,3 +78,9 @@ test("extra date extension", () => {
     expectStringToGiveDate("7/07/1977", 1977, 7, 7);
     expectStringToGiveDate("2/27/3058", 3058, 2, 27);
 });
+
+test("mm/dd/yy hh:mm timezone-offset extension", () => {
+    // Examples from Discord's JavaScript for Christmas 2022.
+    expect(Date.parse("12/05/2022 10:00 -0800")).toBe(1670263200000);
+    expect(Date.parse("01/03/2023 10:00 -0800")).toBe(1672768800000);
+});
