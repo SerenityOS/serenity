@@ -126,6 +126,7 @@ ErrorOr<Optional<struct passwd>> getpwent(Span<char> buffer);
 ErrorOr<Optional<struct passwd>> getpwnam(StringView name);
 ErrorOr<Optional<struct group>> getgrnam(StringView name);
 ErrorOr<Optional<struct passwd>> getpwuid(uid_t);
+ErrorOr<Optional<struct group>> getgrent(Span<char> buffer);
 ErrorOr<Optional<struct group>> getgrgid(gid_t);
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts);
 ErrorOr<pid_t> posix_spawn(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[]);
