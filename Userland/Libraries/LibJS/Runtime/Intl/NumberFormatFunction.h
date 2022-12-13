@@ -16,7 +16,7 @@ class NumberFormatFunction final : public NativeFunction {
     JS_OBJECT(NumberFormatFunction, NativeFunction);
 
 public:
-    static NumberFormatFunction* create(Realm&, NumberFormat&);
+    static NonnullGCPtr<NumberFormatFunction> create(Realm&, NumberFormat&);
 
     virtual ~NumberFormatFunction() override = default;
     virtual void initialize(Realm&) override;

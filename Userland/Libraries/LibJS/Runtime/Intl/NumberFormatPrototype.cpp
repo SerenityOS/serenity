@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
     if (!number_format->bound_format()) {
         // a. Let F be a new built-in function object as defined in Number Format Functions (15.1.4).
         // b. Set F.[[NumberFormat]] to nf.
-        auto* bound_format = NumberFormatFunction::create(realm, *number_format);
+        auto bound_format = NumberFormatFunction::create(realm, *number_format);
 
         // c. Set nf.[[BoundFormat]] to F.
         number_format->set_bound_format(bound_format);
