@@ -14,7 +14,7 @@ class BooleanObject : public Object {
     JS_OBJECT(BooleanObject, Object);
 
 public:
-    static BooleanObject* create(Realm&, bool);
+    static NonnullGCPtr<BooleanObject> create(Realm&, bool);
 
     virtual ~BooleanObject() override = default;
 
