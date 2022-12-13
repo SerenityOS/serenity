@@ -15,8 +15,7 @@ class Date final : public Object {
     JS_OBJECT(Date, Object);
 
 public:
-    static Date* create(Realm&, double date_value);
-    static Date* now(VM&);
+    static NonnullGCPtr<Date> create(Realm&, double date_value);
 
     virtual ~Date() override = default;
 
