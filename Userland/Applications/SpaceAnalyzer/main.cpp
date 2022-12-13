@@ -14,7 +14,6 @@
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/Stream.h>
@@ -32,17 +31,9 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 static constexpr auto APP_NAME = "Space Analyzer"sv;
-static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
-
-struct MountInfo {
-    DeprecatedString mount_point;
-    DeprecatedString source;
-};
 
 static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
 {
@@ -62,36 +53,6 @@ static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
     }));
 
     return {};
-}
-
-static MountInfo* find_mount_for_path(DeprecatedString path, Vector<MountInfo>& mounts)
-{
-    MountInfo* result = nullptr;
-    size_t length = 0;
-    for (auto& mount_info : mounts) {
-        DeprecatedString& mount_point = mount_info.mount_point;
-        if (path.starts_with(mount_point)) {
-            if (!result || mount_point.length() > length) {
-                result = &mount_info;
-                length = mount_point.length();
-            }
-        }
-    }
-    return result;
-}
-
-static long long int update_totals(TreeNode& node)
-{
-    long long int result = 0;
-    if (node.m_children) {
-        for (auto& child : *node.m_children) {
-            result += update_totals(child);
-        }
-        node.m_area = result;
-    } else {
-        result = node.m_area;
-    }
-    return result;
 }
 
 static NonnullRefPtr<GUI::Window> create_progress_window()
@@ -126,78 +87,6 @@ static void update_progress_label(GUI::Label& progresslabel, size_t files_encoun
     Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
 }
 
-struct QueueEntry {
-    QueueEntry(DeprecatedString path, TreeNode* node)
-        : path(move(path))
-        , node(node) {};
-    DeprecatedString path;
-    TreeNode* node { nullptr };
-};
-
-static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
-{
-    VERIFY(!root.m_name.ends_with('/'));
-
-    Queue<QueueEntry> queue;
-    queue.enqueue(QueueEntry(root.m_name, &root));
-    size_t files_encountered_count = 0;
-
-    StringBuilder builder = StringBuilder();
-    builder.append(root.m_name);
-    builder.append('/');
-    MountInfo* root_mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
-    if (!root_mount_info) {
-        return;
-    }
-    while (!queue.is_empty()) {
-        QueueEntry queue_entry = queue.dequeue();
-
-        builder.clear();
-        builder.append(queue_entry.path);
-        builder.append('/');
-
-        MountInfo* mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
-        if (!mount_info || (mount_info != root_mount_info && mount_info->source != root_mount_info->source)) {
-            continue;
-        }
-
-        Core::DirIterator dir_iterator(builder.to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
-        if (dir_iterator.has_error()) {
-            int error_sum = error_accumulator.get(dir_iterator.error()).value_or(0);
-            error_accumulator.set(dir_iterator.error(), error_sum + 1);
-        } else {
-            queue_entry.node->m_children = make<Vector<TreeNode>>();
-            while (dir_iterator.has_next()) {
-                queue_entry.node->m_children->append(TreeNode(dir_iterator.next_path()));
-            }
-            for (auto& child : *queue_entry.node->m_children) {
-                files_encountered_count += 1;
-                if (!(files_encountered_count % FILES_ENCOUNTERED_UPDATE_STEP_SIZE))
-                    update_progress_label(progresslabel, files_encountered_count);
-
-                DeprecatedString& name = child.m_name;
-                int name_len = name.length();
-                builder.append(name);
-                struct stat st;
-                int stat_result = fstatat(dir_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW);
-                if (stat_result < 0) {
-                    int error_sum = error_accumulator.get(errno).value_or(0);
-                    error_accumulator.set(errno, error_sum + 1);
-                } else {
-                    if (S_ISDIR(st.st_mode)) {
-                        queue.enqueue(QueueEntry(builder.to_deprecated_string(), &child));
-                    } else {
-                        child.m_area = st.st_size;
-                    }
-                }
-                builder.trim(name_len);
-            }
-        }
-    }
-
-    update_totals(root);
-}
-
 static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
     statusbar.set_text("");
@@ -209,27 +98,27 @@ static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& tr
 
     // Build an in-memory tree mirroring the filesystem and for each node
     // calculate the sum of the file size for all its descendants.
-    TreeNode* root = &tree->m_root;
     Vector<MountInfo> mounts;
     TRY(fill_mounts(mounts));
-    HashMap<int, int> error_accumulator;
-    populate_filesize_tree(*root, mounts, error_accumulator, progresslabel);
+    auto errors = tree->root().populate_filesize_tree(mounts, [&](size_t processed_file_count) {
+        update_progress_label(progresslabel, processed_file_count);
+    });
 
     progress_window->close();
 
     // Display an error summary in the statusbar.
-    if (!error_accumulator.is_empty()) {
+    if (!errors.is_empty()) {
         StringBuilder builder;
         bool first = true;
         builder.append("Some directories were not analyzed: "sv);
-        for (auto& key : error_accumulator.keys()) {
+        for (auto& key : errors.keys()) {
             if (!first) {
                 builder.append(", "sv);
             }
             auto const* error = strerror(key);
             builder.append({ error, strlen(error) });
             builder.append(" ("sv);
-            int value = error_accumulator.get(key).value();
+            int value = errors.get(key).value();
             builder.append(DeprecatedString::number(value));
             if (value == 1) {
                 builder.append(" time"sv);
