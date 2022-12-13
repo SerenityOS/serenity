@@ -32,6 +32,7 @@ public:
         return 0;
     }
     TreeNode const& child_at(size_t i) const { return m_children->at(i); }
+    Optional<TreeNode const&> child_with_name(DeprecatedString name) const;
     void sort_children_by_area() const;
     HashMap<int, int> populate_filesize_tree(Vector<MountInfo>& mounts, Function<void(size_t)> on_progress);
 
