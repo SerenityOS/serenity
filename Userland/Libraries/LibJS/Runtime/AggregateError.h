@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +15,7 @@ class AggregateError : public Error {
     JS_OBJECT(AggregateError, Error);
 
 public:
-    static AggregateError* create(Realm&);
+    static NonnullGCPtr<AggregateError> create(Realm&);
     virtual ~AggregateError() override = default;
 
 private:
