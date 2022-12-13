@@ -249,7 +249,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
         // c. If IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
             // i. Create an own accessor property named P of object O whose [[Get]], [[Set]], [[Enumerable]], and [[Configurable]] attributes are set to the value of the corresponding field in Desc if Desc has that field, or to the attribute's default value otherwise.
-            auto* accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
+            auto accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
             object->storage_set(property_key, { accessor, descriptor.attributes() });
         }
         // d. Else,
@@ -316,7 +316,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             auto enumerable = descriptor.enumerable.value_or(*current->enumerable);
 
             // iii. Replace the property named P of object O with an accessor property having [[Configurable]] and [[Enumerable]] attributes set to configurable and enumerable, respectively, and each other attribute set to its corresponding value in Desc if present, otherwise to its default value.
-            auto* accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
+            auto accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
             PropertyAttributes attributes;
             attributes.set_enumerable(enumerable);
             attributes.set_configurable(configurable);
