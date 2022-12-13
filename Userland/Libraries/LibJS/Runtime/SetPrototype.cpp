@@ -251,7 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::intersection)
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
 
     // 4. Let resultSetData be a new empty List.
-    auto* result = Set::create(realm);
+    auto result = Set::create(realm);
 
     // 5. Let thisSize be the number of elements in O.[[SetData]].
     auto this_size = set->set_size();
