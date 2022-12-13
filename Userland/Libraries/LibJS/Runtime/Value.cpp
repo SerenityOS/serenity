@@ -544,7 +544,7 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     // Symbol
     case SYMBOL_TAG:
         // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument. See 20.4 for a description of Symbol objects.
-        return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol()));
+        return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol())).ptr();
     // BigInt
     case BIGINT_TAG:
         // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument. See 21.2 for a description of BigInt objects.
