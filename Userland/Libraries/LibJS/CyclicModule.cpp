@@ -473,7 +473,7 @@ void CyclicModule::execute_async_module(VM& vm)
     };
 
     // 5. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
+    auto on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
 
     // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
     auto rejected_closure = [&](VM& vm) -> ThrowCompletionOr<Value> {
@@ -487,7 +487,7 @@ void CyclicModule::execute_async_module(VM& vm)
     };
 
     // 7. Let onRejected be CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-    auto* on_rejected = NativeFunction::create(realm, move(rejected_closure), 0, "");
+    auto on_rejected = NativeFunction::create(realm, move(rejected_closure), 0, "");
 
     // 8. Perform PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
     verify_cast<Promise>(capability->promise().ptr())->perform_then(on_fulfilled, on_rejected, {});

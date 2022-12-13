@@ -1191,7 +1191,7 @@ Value Object::get_without_side_effects(PropertyKey const& property_key) const
 
 void Object::define_native_function(Realm& realm, PropertyKey const& property_key, SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, i32 length, PropertyAttributes attribute)
 {
-    auto* function = NativeFunction::create(realm, move(native_function), length, property_key, &realm);
+    auto function = NativeFunction::create(realm, move(native_function), length, property_key, &realm);
     define_direct_property(property_key, function, attribute);
 }
 

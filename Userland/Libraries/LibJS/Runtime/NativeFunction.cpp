@@ -16,7 +16,7 @@ namespace JS {
 
 // 10.3.3 CreateBuiltinFunction ( behaviour, length, name, additionalInternalSlotsList [ , realm [ , prototype [ , prefix ] ] ] ), https://tc39.es/ecma262/#sec-createbuiltinfunction
 // NOTE: This doesn't consider additionalInternalSlotsList, which is rarely used, and can either be implemented using only the `function` lambda, or needs a NativeFunction subclass.
-NativeFunction* NativeFunction::create(Realm& allocating_realm, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> realm, Optional<Object*> prototype, Optional<StringView> const& prefix)
+NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& allocating_realm, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> realm, Optional<Object*> prototype, Optional<StringView> const& prefix)
 {
     auto& vm = allocating_realm.vm();
 
@@ -48,12 +48,12 @@ NativeFunction* NativeFunction::create(Realm& allocating_realm, SafeFunction<Thr
     function->set_function_name(name, prefix);
 
     // 13. Return func.
-    return function;
+    return *function;
 }
 
-NativeFunction* NativeFunction::create(Realm& realm, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)> function)
+NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& realm, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)> function)
 {
-    return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.intrinsics().function_prototype());
+    return *realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.intrinsics().function_prototype());
 }
 
 NativeFunction::NativeFunction(SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, Object* prototype, Realm& realm)

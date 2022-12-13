@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             };
 
             // iv. Let valueThunk be CreateBuiltinFunction(returnValue, 0, "", « »).
-            auto* value_thunk = NativeFunction::create(realm, move(return_value), 0, "");
+            auto value_thunk = NativeFunction::create(realm, move(return_value), 0, "");
 
             // v. Return ? Invoke(promise, "then", « valueThunk »).
             return TRY(Value(promise).invoke(vm, vm.names.then, value_thunk));
@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             };
 
             // iv. Let thrower be CreateBuiltinFunction(throwReason, 0, "", « »).
-            auto* thrower = NativeFunction::create(realm, move(throw_reason), 0, "");
+            auto thrower = NativeFunction::create(realm, move(throw_reason), 0, "");
 
             // v. Return ? Invoke(promise, "then", « thrower »).
             return TRY(Value(promise).invoke(vm, vm.names.then, thrower));

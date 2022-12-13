@@ -108,7 +108,7 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(JS::PromiseCapability const& prom
     };
 
     // 2. Let onFulfilled be CreateBuiltinFunction(onFulfilledSteps, « »):
-    auto* on_fulfilled = JS::NativeFunction::create(realm, move(on_fulfilled_steps), 1, "");
+    auto on_fulfilled = JS::NativeFunction::create(realm, move(on_fulfilled_steps), 1, "");
 
     // 3. Let onRejectedSteps be the following steps given argument R:
     auto on_rejected_steps = [&realm, on_rejected_callback = move(on_rejected_callback)](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
@@ -125,7 +125,7 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(JS::PromiseCapability const& prom
     };
 
     // 4. Let onRejected be CreateBuiltinFunction(onRejectedSteps, « »):
-    auto* on_rejected = JS::NativeFunction::create(realm, move(on_rejected_steps), 1, "");
+    auto on_rejected = JS::NativeFunction::create(realm, move(on_rejected_steps), 1, "");
 
     // 5. Let constructor be promise.[[Promise]].[[Realm]].[[Intrinsics]].[[%Promise%]].
     auto* constructor = realm.intrinsics().promise_constructor();

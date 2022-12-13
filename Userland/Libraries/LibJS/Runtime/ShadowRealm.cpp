@@ -264,14 +264,14 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, DeprecatedString spec
 
     // 10. Let onFulfilled be CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
     // 11. Set onFulfilled.[[ExportNameString]] to exportNameString.
-    auto* on_fulfilled = NativeFunction::create(realm, move(steps), 1, "", &caller_realm);
+    auto on_fulfilled = NativeFunction::create(realm, move(steps), 1, "", &caller_realm);
 
     // 12. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
-    auto* throw_type_error = NativeFunction::create(realm, {}, [](auto& vm) -> ThrowCompletionOr<Value> {
+    auto throw_type_error = NativeFunction::create(realm, {}, [](auto& vm) -> ThrowCompletionOr<Value> {
         return vm.template throw_completion<TypeError>(vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().deprecated_string());
     });
 

@@ -20,8 +20,8 @@ class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
 
 public:
-    static NativeFunction* create(Realm&, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NativeFunction* create(Realm&, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
+    static NonnullGCPtr<NativeFunction> create(Realm&, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
+    static NonnullGCPtr<NativeFunction> create(Realm&, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
 
     virtual void initialize(Realm&) override { }
     virtual ~NativeFunction() override = default;
