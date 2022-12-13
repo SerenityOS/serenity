@@ -39,6 +39,10 @@
 #    define AK_COMPILER_GCC
 #endif
 
+#if defined(__GLIBC__)
+#   define AK_LIBC_GLIBC
+#endif
+
 #if defined(__serenity__)
 #    define AK_OS_SERENITY
 #endif

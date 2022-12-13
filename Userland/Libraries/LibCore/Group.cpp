@@ -23,7 +23,7 @@ ErrorOr<DeprecatedString> Group::generate_group_file() const
     ScopeGuard grent_guard([] { endgrent(); });
     setgrent();
     errno = 0;
-#ifndef AK_OS_MACOS
+#ifdef AK_LIBC_GLIBC
     struct group group;
     struct group* gr = nullptr;
     char buffer[1024] = { 0 };
@@ -127,7 +127,7 @@ ErrorOr<Vector<Group>> Group::all()
     ScopeGuard grent_guard([] { endgrent(); });
     setgrent();
     errno = 0;
-#ifndef AK_OS_MACOS
+#ifdef AK_LIBC_GLIBC
     struct group group;
     struct group* gr = nullptr;
     char buffer[1024] = { 0 };
