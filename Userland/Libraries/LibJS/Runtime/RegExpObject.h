@@ -36,8 +36,8 @@ public:
         | regex::ECMAScriptFlags::BrowserExtended
     };
 
-    static RegExpObject* create(Realm&);
-    static RegExpObject* create(Realm&, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags);
+    static NonnullGCPtr<RegExpObject> create(Realm&);
+    static NonnullGCPtr<RegExpObject> create(Realm&, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags);
 
     ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_initialize(VM&, Value pattern, Value flags);
     DeprecatedString escape_regexp_pattern() const;
