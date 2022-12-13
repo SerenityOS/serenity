@@ -20,12 +20,17 @@ SCRIPT_DIR="$(dirname "${0}")"
 
 USE_FUSE2FS=0
 
+if ! hash sudo >/dev/null 2>&1
+then
+    SUDO=doas
+fi
+
 if [ "$(id -u)" != 0 ]; then
     if [ -x "$FUSE2FS_PATH" ] && $FUSE2FS_PATH --help 2>&1 |grep fakeroot > /dev/null; then
         USE_FUSE2FS=1
     else
         set +e
-        ${SUDO} -E -- sh -c "\"$0\" $* || exit 42"
+        ${SUDO} -- sh -c "\"$0\" $* || exit 42"
         case $? in
             1)
                 die "this script needs to run as root"
