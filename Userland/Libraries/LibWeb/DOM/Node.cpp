@@ -1274,8 +1274,16 @@ bool Node::is_equal_node(Node const* other_node) const
             return false;
         break;
     }
-    case (u16)NodeType::PROCESSING_INSTRUCTION_NODE:
-        TODO();
+    case (u16)NodeType::PROCESSING_INSTRUCTION_NODE: {
+        // Its target and data.
+        auto& this_processing_instruction = verify_cast<ProcessingInstruction>(*this);
+        auto& other_processing_instruction = verify_cast<ProcessingInstruction>(*other_node);
+        if (this_processing_instruction.target() != other_processing_instruction.target())
+            return false;
+        if (this_processing_instruction.data() != other_processing_instruction.data())
+            return false;
+        break;
+    }
     default:
         break;
     }
