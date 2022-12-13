@@ -52,6 +52,40 @@ static int memfd_create(char const* name, unsigned int flags)
     }                                                                \
     return success_value;
 
+// clang-format off
+template<typename T>
+concept SupportsReentrantGetpwent = requires(T passwd, T* ptr)
+{
+    getpwent_r(&passwd, nullptr, 0, &ptr);
+};
+// clang-format on
+
+// Note: This has to be in the global namespace for the extern declaration to trick the compiler
+// into finding a declaration of getpwent_r when it doesn't actually exist.
+static ErrorOr<Optional<struct passwd>> getpwent_impl(Span<char> buffer)
+{
+    if constexpr (SupportsReentrantGetpwent<struct passwd>) {
+        struct passwd passwd;
+        struct passwd* ptr = nullptr;
+
+        extern int getpwent_r(struct passwd*, char*, size_t, struct passwd**);
+        auto result = getpwent_r(&passwd, buffer.data(), buffer.size(), &ptr);
+
+        if (result == 0 && ptr)
+            return passwd;
+        if (result != 0 && result != ENOENT)
+            return Error::from_errno(result);
+    } else {
+        errno = 0;
+        if (auto const* passwd = ::getpwent())
+            return *passwd;
+        if (errno)
+            return Error::from_errno(errno);
+    }
+
+    return Optional<struct passwd> {};
+}
+
 namespace Core::System {
 
 #ifndef HOST_NAME_MAX
@@ -625,6 +659,11 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
         return Error::from_syscall("lchown"sv, -errno);
     return {};
 #endif
+}
+
+ErrorOr<Optional<struct passwd>> getpwent(Span<char> buffer)
+{
+    return getpwent_impl(buffer);
 }
 
 ErrorOr<Optional<struct passwd>> getpwuid(uid_t uid)
