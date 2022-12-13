@@ -30,12 +30,16 @@ void Presentation::append_slide(Slide slide)
 
 StringView Presentation::title() const
 {
-    return m_metadata.get("title"sv).value_or("Untitled Presentation"sv);
+    if (m_metadata.contains("title"sv))
+        return m_metadata.get("title"sv)->view();
+    return "Untitled Presentation"sv;
 }
 
 StringView Presentation::author() const
 {
-    return m_metadata.get("author"sv).value_or("Unknown Author"sv);
+    if (m_metadata.contains("author"sv))
+        return m_metadata.get("author"sv)->view();
+    return "Unknown Author"sv;
 }
 
 void Presentation::next_frame()
