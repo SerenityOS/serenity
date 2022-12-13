@@ -16,7 +16,7 @@ class DataView : public Object {
     JS_OBJECT(DataView, Object);
 
 public:
-    static DataView* create(Realm&, ArrayBuffer*, size_t byte_length, size_t byte_offset);
+    static NonnullGCPtr<DataView> create(Realm&, ArrayBuffer*, size_t byte_length, size_t byte_offset);
 
     virtual ~DataView() override = default;
 
