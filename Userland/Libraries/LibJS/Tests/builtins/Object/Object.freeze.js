@@ -67,3 +67,11 @@ describe("normal behavior", () => {
         expect(o.foo).toBe("bar");
     });
 });
+
+test("does not override frozen function name", () => {
+    const func = Object.freeze(function () {
+        return 12;
+    });
+    const obj = Object.freeze({ name: func });
+    expect(obj.name()).toBe(12);
+});

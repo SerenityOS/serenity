@@ -1779,7 +1779,10 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             }
             if (is_proto && property_type == ObjectProperty::Type::KeyValue)
                 property_type = ObjectProperty::Type::ProtoSetter;
-            properties.append(create_ast_node<ObjectProperty>({ m_source_code, rule_start.position(), position() }, *property_key, parse_expression(2), property_type, false));
+
+            auto rhs_expression = parse_expression(2);
+            bool is_method = is<FunctionExpression>(*rhs_expression);
+            properties.append(create_ast_node<ObjectProperty>({ m_source_code, rule_start.position(), position() }, *property_key, move(rhs_expression), property_type, is_method));
         } else if (property_key && property_value) {
             if (m_state.strict_mode && is<StringLiteral>(*property_key)) {
                 auto& string_literal = static_cast<StringLiteral const&>(*property_key);

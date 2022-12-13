@@ -3095,18 +3095,21 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
             continue;
         }
 
-        if (value.is_function() && property.is_method())
+        auto property_key = TRY(PropertyKey::from_value(vm, key));
+
+        if (property.is_method()) {
+            VERIFY(value.is_function());
             static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(object);
 
-        auto property_key = TRY(PropertyKey::from_value(vm, key));
-        auto name = TRY(get_function_property_name(property_key));
-        if (property.type() == ObjectProperty::Type::Getter) {
-            name = DeprecatedString::formatted("get {}", name);
-        } else if (property.type() == ObjectProperty::Type::Setter) {
-            name = DeprecatedString::formatted("set {}", name);
-        }
+            auto name = MUST(get_function_property_name(property_key));
+            if (property.type() == ObjectProperty::Type::Getter) {
+                name = DeprecatedString::formatted("get {}", name);
+            } else if (property.type() == ObjectProperty::Type::Setter) {
+                name = DeprecatedString::formatted("set {}", name);
+            }
 
-        update_function_name(value, name);
+            update_function_name(value, name);
+        }
 
         switch (property.type()) {
         case ObjectProperty::Type::Getter:

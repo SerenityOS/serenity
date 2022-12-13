@@ -215,3 +215,42 @@ describe("errors", () => {
         expect("({ ...foo: bar })").not.toEval();
     });
 });
+
+describe("naming of anon functions", () => {
+    test("method has name", () => {
+        expect({ func() {} }.func.name).toBe("func");
+    });
+
+    test("getter has name", () => {
+        expect(Object.getOwnPropertyDescriptor({ get func() {} }, "func").get.name).toBe(
+            "get func"
+        );
+    });
+
+    test("setter has name", () => {
+        expect(Object.getOwnPropertyDescriptor({ set func(v) {} }, "func").set.name).toBe(
+            "set func"
+        );
+    });
+
+    test("anon function property", () => {
+        expect({ func: function () {} }.func.name).toBe("func");
+    });
+
+    test("anon function from within parenthesis", () => {
+        expect({ func: function () {} }.func.name).toBe("func");
+    });
+
+    test("anon function from indirect expression", () => {
+        expect({ func: (0, function () {}) }.func.name).toBe("");
+    });
+
+    test("function from function call does not get named", () => {
+        function f() {
+            return function () {};
+        }
+
+        expect(f().name).toBe("");
+        expect({ func: f() }.func.name).toBe("");
+    });
+});
