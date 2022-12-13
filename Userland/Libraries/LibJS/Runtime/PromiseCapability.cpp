@@ -75,7 +75,7 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
     };
 
     // 5. Let executor be CreateBuiltinFunction(executorClosure, 2, "", « »).
-    auto* executor = NativeFunction::create(realm, move(executor_closure), 2, "");
+    auto executor = NativeFunction::create(realm, move(executor_closure), 2, "");
 
     // 6. Let promise be ? Construct(C, « executor »).
     auto* promise = TRY(construct(vm, constructor.as_function(), executor));
