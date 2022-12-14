@@ -34,7 +34,7 @@ Each widget (or `Core::Object`, more generally) begins with `@`, with the name o
 
 As seen above, C-style single line comments with `//` are possible.
 
-Inside an object, we declare the properties of the object as well as all of its children. The children are other widgets, specified plainly, while the properties take the form `key: value`. For almost all properties, the value is a JSON value, and each property expects a different kind of value. The documentation for each widget object contains information about the supported properties, their possible values, and what the properties do. Quite some properties are common to all widgets, see [GML-Widget(5)](help://man/5/GML-Widget).
+Inside an object, we declare the properties of the object as well as all of its children. The children are other widgets, specified plainly, while the properties take the form `key: value`. For almost all properties, the value is a JSON value, and each property expects a different kind of value. The documentation for each widget object contains information about the supported properties, their possible values, and what the properties do. Quite some properties are common to all widgets, see [GML/Widget(5)](help://man/5/GML/Widget).
 
 ```gml
 // A 20x200 coolbar button with text.
@@ -90,7 +90,7 @@ A property's `value` is required to be either a JSON value or another object. Ob
 Among the supported JSON values, these types can be further distinguished:
 
 -   `int`: Regular JSON integer, note that JSON floats are not currently used.
--   `ui_dimension`: either positive integers, that work just like `int`, or special meaning values as JSON strings; see [UI Dimensions](help://man/5/GML-UI-Dimensions)
+-   `ui_dimension`: either positive integers, that work just like `int`, or special meaning values as JSON strings; see [UI Dimensions](help://man/5/GML/UI-Dimensions)
 -   `bool`: Regular JSON boolean, may be enclosed in quotes but this is discouraged.
 -   `string`: JSON string, also used as a basis for other types.
 -   `readonly_string`: String-valued property that cannot be changed from C++ later.
@@ -230,4 +230,3 @@ GML files can be found in the SerenityOS source tree with the `*.gml` extension.
     }
 }
 ```
-

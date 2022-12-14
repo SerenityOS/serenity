@@ -47,4 +47,4 @@ OutOfProcessWebView::OutOfProcessWebView()
 
 ## See also
 
--   [GML Define property(5)](help://man/5/GML-Define-property)
+-   [GML Define property(5)](help://man/5/GML/Define-property)
