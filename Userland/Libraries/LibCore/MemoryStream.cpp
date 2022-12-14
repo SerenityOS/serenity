@@ -49,7 +49,7 @@ void FixedMemoryStream::close()
 
 ErrorOr<void> FixedMemoryStream::truncate(off_t)
 {
-    return Error::from_errno(ENOTSUP);
+    return Error::from_errno(EBADF);
 }
 
 ErrorOr<Bytes> FixedMemoryStream::read(Bytes bytes)
