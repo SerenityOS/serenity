@@ -113,6 +113,8 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
                 reset();
             }
         }
+    } else {
+        event.ignore();
     }
 
     update();
