@@ -46,7 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 5. Let parts be ! PartitionDurationFormatPattern(df, record).
+    // 5. Let parts be PartitionDurationFormatPattern(df, record).
     auto parts = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be a new empty String.
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 5. Let parts be ! PartitionDurationFormatPattern(df, record).
+    // 5. Let parts be PartitionDurationFormatPattern(df, record).
     auto parts = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be ! ArrayCreate(0).
@@ -89,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     for (size_t n = 0; n < parts.size(); ++n) {
         auto const& part = parts[n];
 
-        // a. Let obj be ! OrdinaryObjectCreate(%ObjectPrototype%).
+        // a. Let obj be OrdinaryObjectCreate(%ObjectPrototype%).
         auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, "type", part.[[Type]]).
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::resolved_options)
     // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
     auto* duration_format = TRY(typed_this_object(vm));
 
-    // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. For each row of Table 2, except the header row, in table order, do

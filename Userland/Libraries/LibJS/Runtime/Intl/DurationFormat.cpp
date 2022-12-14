@@ -204,7 +204,7 @@ i8 duration_record_sign(Temporal::DurationRecord const& record)
 // 1.1.5 IsValidDurationRecord ( record ), https://tc39.es/proposal-intl-duration-format/#sec-isvaliddurationrecord
 bool is_valid_duration_record(Temporal::DurationRecord const& record)
 {
-    // 1. Let sign be ! DurationRecordSign(record).
+    // 1. Let sign be DurationRecordSign(record).
     auto sign = duration_record_sign(record);
 
     // 2. For each row of Table 1, except the header row, in table order, do
@@ -338,7 +338,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         // h. Let value be duration.[[<valueSlot>]].
         auto value = duration.*value_slot;
 
-        // i. Let nfOpts be ! OrdinaryObjectCreate(null).
+        // i. Let nfOpts be OrdinaryObjectCreate(null).
         auto number_format_options = Object::create(realm, nullptr);
 
         // j. If unit is "seconds", "milliseconds", or "microseconds", then
@@ -485,7 +485,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         }
     }
 
-    // 4. Let lfOpts be ! OrdinaryObjectCreate(null).
+    // 4. Let lfOpts be OrdinaryObjectCreate(null).
     auto list_format_options = Object::create(realm, nullptr);
 
     // 5. Perform ! CreateDataPropertyOrThrow(lfOpts, "type", "unit").
