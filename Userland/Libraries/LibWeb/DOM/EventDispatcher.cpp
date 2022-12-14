@@ -285,7 +285,7 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
             }
             // 8. Otherwise, set target to parent and then:
             else {
-                target = parent;
+                target = *parent;
 
                 // 1. If isActivationEvent is true, activationTarget is null, and target has activation behavior, then set activationTarget to target.
                 if (is_activation_event && !activation_target && target->activation_behavior)

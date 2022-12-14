@@ -49,13 +49,6 @@ public:
     {
     }
 
-    NonnullGCPtr& operator=(GCPtr<T> const& other)
-    {
-        m_ptr = const_cast<T*>(other.ptr());
-        VERIFY(m_ptr);
-        return *this;
-    }
-
     NonnullGCPtr& operator=(T const& other)
     {
         m_ptr = &const_cast<T&>(other);
