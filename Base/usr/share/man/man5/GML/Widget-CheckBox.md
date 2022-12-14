@@ -33,4 +33,4 @@ Defines a GUI checkbox widget.
 | checkbox_position | String | "Left" or "Right" | Place the checkbox itself on either the left or right of its label |
 
 ## See also
-- [GML Button](help://man/5/GML-Widget-Button)
+- [GML Button](help://man/5/GML/Widget-Button)

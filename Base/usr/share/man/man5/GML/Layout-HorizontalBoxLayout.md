@@ -18,4 +18,4 @@ Defines a horizontal GUI box layout. This is a layout object that lays out widge
 
 ## See also
 
--   [Layout](help://man/5/GML-Layout)
+-   [Layout](help://man/5/GML/Layout)

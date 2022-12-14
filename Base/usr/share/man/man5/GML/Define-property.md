@@ -12,7 +12,7 @@ Widgets understand all properties defined by their parents. Such as `x`, `y`, `n
 
 ## `REGISTER_*` macros
 
-There is one REGISTER macro for every generic property type, a list of which can be found in [GML Syntax(5)](help://man/5/GML-Syntax#Properties). If you need special behavior for one single property, it is usually enough to re-use one of the property types and do extra handling in the setter and getter.
+There is one REGISTER macro for every generic property type, a list of which can be found in [GML Syntax(5)](help://man/5/GML/Syntax#Properties). If you need special behavior for one single property, it is usually enough to re-use one of the property types and do extra handling in the setter and getter.
 
 The general syntax of the macros is as follows:
 
@@ -37,4 +37,4 @@ REGISTER_ENUM_PROPERTY(
 
 ## See also
 
--   [GML Define widget(5)](help://man/5/GML-Define-widget)
+-   [GML Define widget(5)](help://man/5/GML/Define-widget)

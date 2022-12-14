@@ -15,5 +15,5 @@ Abstract base class for layout objects, not used directly. Common properties of 
 
 ## See also
 
--   [HorizontalBoxLayout](help://man/5/GML-Layout-HorizontalBoxLayout)
--   [VerticalBoxLayout](help://man/5/GML-Layout-VerticalBoxLayout)
+-   [HorizontalBoxLayout](help://man/5/GML/Layout-HorizontalBoxLayout)
+-   [VerticalBoxLayout](help://man/5/GML/Layout-VerticalBoxLayout)
