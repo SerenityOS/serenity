@@ -350,9 +350,9 @@ void ImageEditor::set_editor_color_to_color_at_mouse_position(GUI::MouseEvent co
     if (!color.alpha())
         return;
 
-    if (event.button() == GUI::MouseButton::Primary)
+    if (event.buttons() & GUI::MouseButton::Primary)
         set_primary_color(color);
-    else if (event.button() == GUI::MouseButton::Secondary)
+    if (event.buttons() & GUI::MouseButton::Secondary)
         set_secondary_color(color);
 }
 

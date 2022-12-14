@@ -22,6 +22,24 @@ void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
     m_editor->set_editor_color_to_color_at_mouse_position(layer_event, m_sample_all_layers);
 }
 
+void PickerTool::on_mouseup(Layer*, MouseEvent& event)
+{
+    auto layer_event = event.layer_event();
+    if (layer_event.buttons() & GUI::MouseButton::Primary || layer_event.buttons() & GUI::MouseButton::Secondary)
+        return;
+    m_editor->set_appended_status_info(DeprecatedString::empty());
+}
+
+void PickerTool::on_mousemove(Layer* layer, MouseEvent& event)
+{
+    if (!layer)
+        return;
+    auto layer_event = event.layer_event();
+    if (!(layer_event.buttons() & GUI::MouseButton::Primary || layer_event.buttons() & GUI::MouseButton::Secondary))
+        return;
+    m_editor->set_editor_color_to_color_at_mouse_position(layer_event, m_sample_all_layers);
+}
+
 GUI::Widget* PickerTool::get_properties_widget()
 {
     if (!m_properties_widget) {
