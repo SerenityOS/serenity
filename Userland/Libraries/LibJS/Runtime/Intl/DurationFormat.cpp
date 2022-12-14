@@ -173,7 +173,11 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
     if (!any)
         return vm.throw_completion<TypeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 6. Return result.
+    // 6. If IsValidDurationRecord(result) is false, throw a RangeError exception.
+    if (!is_valid_duration_record(result))
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
+
+    // 7. Return result.
     return result;
 }
 
