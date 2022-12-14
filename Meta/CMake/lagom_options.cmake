@@ -2,7 +2,7 @@
 # Options specific to the Lagom (host) build
 #
 
-include(${CMAKE_CURRENT_LIST_DIR}/common_options.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/common_options.cmake NO_POLICY_SCOPE)
 
 serenity_option(ENABLE_ADDRESS_SANITIZER OFF CACHE BOOL "Enable address sanitizer testing in gcc/clang")
 serenity_option(ENABLE_MEMORY_SANITIZER OFF CACHE BOOL "Enable memory sanitizer testing in gcc/clang")

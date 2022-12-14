@@ -39,7 +39,7 @@ if(NOT COMMAND serenity_option)
         set(${ARGV})
     endmacro()
 endif()
-include(serenity_options)
+include(serenity_options NO_POLICY_SCOPE)
 
 include(setup_ccache)
 
