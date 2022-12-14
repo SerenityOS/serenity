@@ -1117,7 +1117,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         auto const& image_size = current_image_editor()->image().size();
         auto image_rectangle = Gfx::IntRect { 0, 0, image_size.width(), image_size.height() };
         if (image_rectangle.contains(mouse_position)) {
-            m_statusbar->set_override_text(mouse_position.to_deprecated_string());
+            update_status_bar(current_image_editor()->appended_status_info());
             m_histogram_widget->set_color_at_mouseposition(current_image_editor()->image().color_at(mouse_position));
             m_vectorscope_widget->set_color_at_mouseposition(current_image_editor()->image().color_at(mouse_position));
         } else {
@@ -1125,6 +1125,11 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             m_histogram_widget->set_color_at_mouseposition(Color::Transparent);
             m_vectorscope_widget->set_color_at_mouseposition(Color::Transparent);
         }
+        m_last_image_editor_mouse_position = mouse_position;
+    };
+
+    image_editor.on_appended_status_info_change = [&](auto const& appended_status_info) {
+        update_status_bar(appended_status_info);
     };
 
     image_editor.on_leave = [&]() {
@@ -1217,4 +1222,15 @@ void MainWidget::update_window_modified()
 {
     window()->set_modified(m_tab_widget->is_any_tab_modified());
 }
+void MainWidget::update_status_bar(DeprecatedString appended_text)
+{
+    StringBuilder builder = StringBuilder();
+    builder.append(m_last_image_editor_mouse_position.to_deprecated_string());
+    if (!appended_text.is_empty()) {
+        builder.append(" "sv);
+        builder.append(appended_text);
+    }
+    m_statusbar->set_override_text(builder.to_deprecated_string());
+}
+
 }
