@@ -12,7 +12,7 @@
 namespace JS {
 
 AsyncGenerator::AsyncGenerator(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

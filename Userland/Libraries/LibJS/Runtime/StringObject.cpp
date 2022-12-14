@@ -21,7 +21,7 @@ NonnullGCPtr<StringObject> StringObject::create(Realm& realm, PrimitiveString& p
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_string(string)
 {
 }

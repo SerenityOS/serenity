@@ -14,7 +14,7 @@ NonnullGCPtr<Map> Map::create(Realm& realm)
 }
 
 Map::Map(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

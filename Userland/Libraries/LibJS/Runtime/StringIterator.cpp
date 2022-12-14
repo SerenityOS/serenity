@@ -16,7 +16,7 @@ NonnullGCPtr<StringIterator> StringIterator::create(Realm& realm, DeprecatedStri
 }
 
 StringIterator::StringIterator(DeprecatedString string, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_string(move(string))
     , m_iterator(Utf8View(m_string).begin())
 {

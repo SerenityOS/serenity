@@ -14,7 +14,7 @@ NonnullGCPtr<Set> Set::create(Realm& realm)
 }
 
 Set::Set(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

@@ -49,7 +49,7 @@ NonnullGCPtr<Promise> Promise::create(Realm& realm)
 
 // 27.2 Promise Objects, https://tc39.es/ecma262/#sec-promise-objects
 Promise::Promise(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

@@ -11,7 +11,7 @@
 namespace JS {
 
 GeneratorFunctionPrototype::GeneratorFunctionPrototype(Realm& realm)
-    : Object(*realm.intrinsics().function_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().function_prototype())
 {
 }
 

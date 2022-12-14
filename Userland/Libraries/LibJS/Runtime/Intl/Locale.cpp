@@ -21,12 +21,12 @@ NonnullGCPtr<Locale> Locale::create(Realm& realm, ::Locale::LocaleID const& loca
 
 // 14 Locale Objects, https://tc39.es/ecma402/#locale-objects
 Locale::Locale(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 
 Locale::Locale(::Locale::LocaleID const& locale_id, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
     set_locale(locale_id.to_deprecated_string());
 

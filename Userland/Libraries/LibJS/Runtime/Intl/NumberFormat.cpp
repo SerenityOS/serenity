@@ -21,7 +21,7 @@
 namespace JS::Intl {
 
 NumberFormatBase::NumberFormatBase(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

@@ -11,7 +11,7 @@
 namespace Web::Bindings {
 
 WebAssemblyModuleObject::WebAssemblyModuleObject(JS::Realm& realm, size_t index)
-    : Object(Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssemblyModulePrototype"))
+    : Object(ConstructWithPrototypeTag::Tag, Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssemblyModulePrototype"))
     , m_index(index)
 {
 }

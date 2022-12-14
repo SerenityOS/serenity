@@ -15,7 +15,7 @@ NonnullGCPtr<SetIterator> SetIterator::create(Realm& realm, Set& set, Object::Pr
 }
 
 SetIterator::SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_set(set)
     , m_iteration_kind(iteration_kind)
     , m_iterator(static_cast<Set const&>(set).begin())

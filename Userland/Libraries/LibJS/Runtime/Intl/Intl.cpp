@@ -28,7 +28,7 @@ namespace JS::Intl {
 
 // 8 The Intl Object, https://tc39.es/ecma402/#intl-object
 Intl::Intl(Realm& realm)
-    : Object(*realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
 {
 }
 

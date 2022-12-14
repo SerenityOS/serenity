@@ -15,7 +15,7 @@ NonnullGCPtr<ArrayIterator> ArrayIterator::create(Realm& realm, Value array, Obj
 }
 
 ArrayIterator::ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_array(array)
     , m_iteration_kind(iteration_kind)
 {

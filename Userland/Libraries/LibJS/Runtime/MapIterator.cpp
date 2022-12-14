@@ -15,7 +15,7 @@ NonnullGCPtr<MapIterator> MapIterator::create(Realm& realm, Map& map, Object::Pr
 }
 
 MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_map(map)
     , m_iteration_kind(iteration_kind)
     , m_iterator(static_cast<Map const&>(map).begin())

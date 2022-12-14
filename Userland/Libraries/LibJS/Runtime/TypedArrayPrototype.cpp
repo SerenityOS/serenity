@@ -17,7 +17,7 @@
 namespace JS {
 
 TypedArrayPrototype::TypedArrayPrototype(Realm& realm)
-    : Object(*realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
 {
 }
 

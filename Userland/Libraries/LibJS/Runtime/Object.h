@@ -191,11 +191,12 @@ public:
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
+    enum class ConstructWithPrototypeTag { Tag };
 
     Object(GlobalObjectTag, Realm&);
     Object(ConstructWithoutPrototypeTag, Realm&);
     Object(Realm&, Object* prototype);
-    explicit Object(Object& prototype);
+    Object(ConstructWithPrototypeTag, Object& prototype);
     explicit Object(Shape&);
 
     void set_prototype(Object*);

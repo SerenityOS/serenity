@@ -20,7 +20,7 @@ namespace JS::Intl {
 
 // 1 DurationFormat Objects, https://tc39.es/proposal-intl-duration-format/#durationformat-objects
 DurationFormat::DurationFormat(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

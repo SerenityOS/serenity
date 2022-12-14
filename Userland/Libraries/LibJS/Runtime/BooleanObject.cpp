@@ -15,7 +15,7 @@ NonnullGCPtr<BooleanObject> BooleanObject::create(Realm& realm, bool value)
 }
 
 BooleanObject::BooleanObject(bool value, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_value(value)
 {
 }

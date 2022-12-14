@@ -19,7 +19,7 @@ class LocationPrototype final : public JS::Object {
 
 public:
     explicit LocationPrototype(JS::Realm& realm)
-        : JS::Object(*realm.intrinsics().object_prototype())
+        : JS::Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
     {
     }
 };

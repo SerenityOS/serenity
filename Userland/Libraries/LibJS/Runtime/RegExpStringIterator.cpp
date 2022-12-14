@@ -16,7 +16,7 @@ NonnullGCPtr<RegExpStringIterator> RegExpStringIterator::create(Realm& realm, Ob
 }
 
 RegExpStringIterator::RegExpStringIterator(Object& prototype, Object& regexp_object, Utf16String string, bool global, bool unicode)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_regexp_object(regexp_object)
     , m_string(move(string))
     , m_global(global)

@@ -24,7 +24,7 @@ namespace JS::Temporal {
 
 // 3 Temporal.PlainDate Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-objects
 PlainDate::PlainDate(i32 year, u8 month, u8 day, Object& calendar, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_iso_year(year)
     , m_iso_month(month)
     , m_iso_day(day)

@@ -38,7 +38,7 @@ class WebAssemblyModule final : public JS::Object {
 
 public:
     explicit WebAssemblyModule(JS::Object& prototype)
-        : JS::Object(prototype)
+        : JS::Object(ConstructWithPrototypeTag::Tag, prototype)
     {
         m_machine.enable_instruction_count_limit();
     }

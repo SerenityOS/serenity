@@ -371,7 +371,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
 }
 
 WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
-    : JS::Object(*realm.intrinsics().object_prototype())
+    : JS::Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
     , m_workbook(workbook)
 {
 }

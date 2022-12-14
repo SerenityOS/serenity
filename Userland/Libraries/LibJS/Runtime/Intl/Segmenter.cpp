@@ -14,7 +14,7 @@ namespace JS::Intl {
 
 // 18 Segmenter Objects, https://tc39.es/ecma402/#segmenter-objects
 Segmenter::Segmenter(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

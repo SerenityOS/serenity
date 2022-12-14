@@ -20,7 +20,7 @@
 namespace JS {
 
 ShadowRealm::ShadowRealm(Realm& shadow_realm, ExecutionContext execution_context, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_shadow_realm(shadow_realm)
     , m_execution_context(move(execution_context))
 {

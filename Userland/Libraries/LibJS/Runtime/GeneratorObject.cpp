@@ -36,7 +36,7 @@ ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& 
 }
 
 GeneratorObject::GeneratorObject(Realm&, Object& prototype, ExecutionContext context)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_execution_context(move(context))
 {
 }

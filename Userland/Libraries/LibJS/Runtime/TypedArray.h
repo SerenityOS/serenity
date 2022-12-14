@@ -62,7 +62,7 @@ public:
 
 protected:
     TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor)
-        : Object(prototype)
+        : Object(ConstructWithPrototypeTag::Tag, prototype)
         , m_intrinsic_constructor(intrinsic_constructor)
     {
     }

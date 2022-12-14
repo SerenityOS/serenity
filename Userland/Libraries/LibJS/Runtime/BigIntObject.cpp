@@ -15,7 +15,7 @@ NonnullGCPtr<BigIntObject> BigIntObject::create(Realm& realm, BigInt& bigint)
 }
 
 BigIntObject::BigIntObject(BigInt& bigint, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_bigint(bigint)
 {
 }

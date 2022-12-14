@@ -10,7 +10,7 @@ namespace JS::Intl {
 
 // 10 Collator Objects, https://tc39.es/ecma402/#collator-objects
 Collator::Collator(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

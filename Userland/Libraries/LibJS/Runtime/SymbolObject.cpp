@@ -16,7 +16,7 @@ NonnullGCPtr<SymbolObject> SymbolObject::create(Realm& realm, Symbol& primitive_
 }
 
 SymbolObject::SymbolObject(Symbol& symbol, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_symbol(symbol)
 {
 }

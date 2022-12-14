@@ -61,7 +61,7 @@ NonnullGCPtr<Array> Array::create_from(Realm& realm, Vector<Value> const& elemen
 }
 
 Array::Array(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 
