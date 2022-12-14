@@ -268,9 +268,9 @@ public:
     // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
     // Disabled for POD types to avoid weird conversion shenanigans.
     template<typename WrappedValueType>
-    ThrowCompletionOr(WrappedValueType value)
+    ThrowCompletionOr(WrappedValueType const& value)
     requires(!IsPOD<ValueType>)
-        : m_value(move(value))
+        : m_value(value)
     {
     }
 
