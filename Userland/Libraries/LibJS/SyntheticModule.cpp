@@ -61,8 +61,8 @@ ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
         // a. Perform ! envRec.CreateMutableBinding(exportName, false).
         MUST(environment->create_mutable_binding(vm, export_name, false));
 
-        // b. Perform ! envRec.InitializeBinding(exportName, undefined).
-        MUST(environment->initialize_binding(vm, export_name, js_undefined()));
+        // b. Perform ! envRec.InitializeBinding(exportName, undefined, normal).
+        MUST(environment->initialize_binding(vm, export_name, js_undefined(), Environment::InitializeBindingHint::Normal));
     }
 
     // 6. Return unused.

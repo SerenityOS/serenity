@@ -78,20 +78,22 @@ ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(VM& vm, Depr
     return MUST(m_declarative_record->create_immutable_binding(vm, name, strict));
 }
 
-// 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
-ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value)
+// 9.1.1.4.4 InitializeBinding ( N, V, hint ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
+ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value, InitializeBindingHint hint)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        // a. Return ! DclRec.InitializeBinding(N, V).
-        return MUST(m_declarative_record->initialize_binding(vm, name, value));
+        // a. Return ! DclRec.InitializeBinding(N, V, hint).
+        return MUST(m_declarative_record->initialize_binding(vm, name, value, hint));
     }
 
     // 3. Assert: If the binding exists, it must be in the object Environment Record.
-    // 4. Let ObjRec be envRec.[[ObjectRecord]].
-    // 5. Return ? ObjRec.InitializeBinding(N, V).
-    return m_object_record->initialize_binding(vm, name, value);
+    // 4. Assert: hint is normal.
+    VERIFY(hint == Environment::InitializeBindingHint::Normal);
+    // 5. Let ObjRec be envRec.[[ObjectRecord]].
+    // 6. Return ? ObjRec.InitializeBinding(N, V, normal).
+    return m_object_record->initialize_binding(vm, name, value, Environment::InitializeBindingHint::Normal);
 }
 
 // 9.1.1.4.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s
@@ -263,8 +265,8 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(DeprecatedF
         // a. Perform ? ObjRec.CreateMutableBinding(N, D).
         TRY(m_object_record->create_mutable_binding(vm, name, can_be_deleted));
 
-        // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-        TRY(m_object_record->initialize_binding(vm, name, js_undefined()));
+        // b. Perform ? ObjRec.InitializeBinding(N, undefined, normal).
+        TRY(m_object_record->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
     }
 
     // 6. Let varDeclaredNames be envRec.[[VarNames]].

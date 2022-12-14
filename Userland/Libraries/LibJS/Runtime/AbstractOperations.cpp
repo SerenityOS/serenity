@@ -205,8 +205,9 @@ ThrowCompletionOr<void> initialize_bound_name(VM& vm, DeprecatedFlyString const&
 {
     // 1. If environment is not undefined, then
     if (environment) {
-        // a. Perform ! environment.InitializeBinding(name, value).
-        MUST(environment->initialize_binding(vm, name, value));
+        // FIXME: The normal is not included in the explicit resource management spec yet, so there is no spec link for it.
+        // a. Perform ! environment.InitializeBinding(name, value, normal).
+        MUST(environment->initialize_binding(vm, name, value, Environment::InitializeBindingHint::Normal));
 
         // b. Return unused.
         return {};
@@ -729,6 +730,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
 }
 
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
+// 9.1.1.1 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/proposal-explicit-resource-management/#sec-evaldeclarationinstantiation
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
 {
     auto& realm = *vm.current_realm();
@@ -903,9 +905,9 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
                     // ii. If bindingExists is false, then
                     if (!MUST(variable_environment->has_binding(function_name))) {
                         // i. Perform ! varEnv.CreateMutableBinding(F, true).
-                        // ii. Perform ! varEnv.InitializeBinding(F, undefined).
                         MUST(variable_environment->create_mutable_binding(vm, function_name, true));
-                        MUST(variable_environment->initialize_binding(vm, function_name, js_undefined()));
+                        // ii. Perform ! varEnv.InitializeBinding(F, undefined, normal).
+                        MUST(variable_environment->initialize_binding(vm, function_name, js_undefined(), Environment::InitializeBindingHint::Normal));
                     }
                 }
             }
@@ -1003,8 +1005,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
                 // 2. Perform ! varEnv.CreateMutableBinding(fn, true).
                 MUST(variable_environment->create_mutable_binding(vm, declaration.name(), true));
 
-                // 3. Perform ! varEnv.InitializeBinding(fn, fo).
-                MUST(variable_environment->initialize_binding(vm, declaration.name(), function));
+                // 3. Perform ! varEnv.InitializeBinding(fn, fo, normal).
+                MUST(variable_environment->initialize_binding(vm, declaration.name(), function, Environment::InitializeBindingHint::Normal));
             }
             // iii. Else,
             else {
@@ -1033,8 +1035,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
                 // 2. Perform ! varEnv.CreateMutableBinding(vn, true).
                 MUST(variable_environment->create_mutable_binding(vm, var_name, true));
 
-                // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
-                MUST(variable_environment->initialize_binding(vm, var_name, js_undefined()));
+                // 3. Perform ! varEnv.InitializeBinding(vn, undefined, normal).
+                MUST(variable_environment->initialize_binding(vm, var_name, js_undefined(), Environment::InitializeBindingHint::Normal));
             }
         }
     }

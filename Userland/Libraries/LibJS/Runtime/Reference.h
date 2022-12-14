@@ -121,7 +121,7 @@ public:
         return m_base_type == BaseType::Environment;
     }
 
-    ThrowCompletionOr<void> initialize_referenced_binding(VM&, Value value) const;
+    ThrowCompletionOr<void> initialize_referenced_binding(VM&, Value value, Environment::InitializeBindingHint hint = Environment::InitializeBindingHint::Normal) const;
 
     ThrowCompletionOr<void> put_value(VM&, Value);
     ThrowCompletionOr<Value> get_value(VM&) const;

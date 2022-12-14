@@ -367,8 +367,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
             MUST(environment->create_immutable_binding(vm, import_entry.local_name, true));
 
-            // iii. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
-            MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_));
+            // iii. Perform ! env.InitializeBinding(in.[[LocalName]], namespace, normal).
+            MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_, Environment::InitializeBindingHint::Normal));
         }
         // d. Else,
         else {
@@ -387,8 +387,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
                 MUST(environment->create_immutable_binding(vm, import_entry.local_name, true));
 
-                // 3. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
-                MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_));
+                // 3. Perform ! env.InitializeBinding(in.[[LocalName]], namespace, normal).
+                MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_, Environment::InitializeBindingHint::Normal));
             }
             // iv. Else,
             else {
@@ -442,8 +442,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             // 1. Perform ! env.CreateMutableBinding(dn, false).
             MUST(environment->create_mutable_binding(vm, name, false));
 
-            // 2. Perform ! env.InitializeBinding(dn, undefined).
-            MUST(environment->initialize_binding(vm, name, js_undefined()));
+            // 2. Perform ! env.InitializeBinding(dn, undefined, normal).
+            MUST(environment->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
 
             // 3. Append dn to declaredVarNames.
             declared_var_names.empend(name);
@@ -484,8 +484,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                     function_name = "default"sv;
                 auto function = ECMAScriptFunctionObject::create(realm(), function_name, function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
 
-                // 2. Perform ! env.InitializeBinding(dn, fo).
-                MUST(environment->initialize_binding(vm, name, function));
+                // 2. Perform ! env.InitializeBinding(dn, fo, normal).
+                MUST(environment->initialize_binding(vm, name, function, Environment::InitializeBindingHint::Normal));
             }
         });
     });
