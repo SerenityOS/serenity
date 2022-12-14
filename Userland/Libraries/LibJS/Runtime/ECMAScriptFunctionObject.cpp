@@ -407,7 +407,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         MUST(environment->create_mutable_binding(vm, parameter_name, false));
         if (has_duplicates)
-            MUST(environment->initialize_binding(vm, parameter_name, js_undefined()));
+            MUST(environment->initialize_binding(vm, parameter_name, js_undefined(), Environment::InitializeBindingHint::Normal));
     }
 
     if (arguments_object_needed) {
@@ -422,7 +422,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         else
             MUST(environment->create_mutable_binding(vm, vm.names.arguments.as_string(), false));
 
-        MUST(environment->initialize_binding(vm, vm.names.arguments.as_string(), arguments_object));
+        MUST(environment->initialize_binding(vm, vm.names.arguments.as_string(), arguments_object, Environment::InitializeBindingHint::Normal));
         parameter_names.set(vm.names.arguments.as_string());
     }
 
@@ -488,7 +488,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (!parameter_names.contains(name) && instantiated_var_names.set(name) == AK::HashSetResult::InsertedNewEntry) {
                     MUST(environment->create_mutable_binding(vm, name, false));
-                    MUST(environment->initialize_binding(vm, name, js_undefined()));
+                    MUST(environment->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
                 }
             });
         }
@@ -509,7 +509,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 else
                     initial_value = MUST(environment->get_binding_value(vm, name, false));
 
-                MUST(var_environment->initialize_binding(vm, name, initial_value));
+                MUST(var_environment->initialize_binding(vm, name, initial_value, Environment::InitializeBindingHint::Normal));
             });
         }
     }
@@ -523,7 +523,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             // The spec says 'initializedBindings' here but that does not exist and it then adds it to 'instantiatedVarNames' so it probably means 'instantiatedVarNames'.
             if (!instantiated_var_names.contains(function_name) && function_name != vm.names.arguments.as_string()) {
                 MUST(var_environment->create_mutable_binding(vm, function_name, false));
-                MUST(var_environment->initialize_binding(vm, function_name, js_undefined()));
+                MUST(var_environment->initialize_binding(vm, function_name, js_undefined(), Environment::InitializeBindingHint::Normal));
                 instantiated_var_names.set(function_name);
             }
 

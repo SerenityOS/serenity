@@ -23,6 +23,11 @@ class Environment : public Cell {
     JS_CELL(Environment, Cell);
 
 public:
+    enum class InitializeBindingHint {
+        Normal,
+        SyncDispose,
+    };
+
     virtual bool has_this_binding() const { return false; }
     virtual ThrowCompletionOr<Value> get_this_binding(VM&) const { return Value {}; }
 
@@ -31,7 +36,7 @@ public:
     virtual ThrowCompletionOr<bool> has_binding([[maybe_unused]] DeprecatedFlyString const& name, [[maybe_unused]] Optional<size_t>* out_index = nullptr) const { return false; }
     virtual ThrowCompletionOr<void> create_mutable_binding(VM&, [[maybe_unused]] DeprecatedFlyString const& name, [[maybe_unused]] bool can_be_deleted) { return {}; }
     virtual ThrowCompletionOr<void> create_immutable_binding(VM&, [[maybe_unused]] DeprecatedFlyString const& name, [[maybe_unused]] bool strict) { return {}; }
-    virtual ThrowCompletionOr<void> initialize_binding(VM&, [[maybe_unused]] DeprecatedFlyString const& name, Value) { return {}; }
+    virtual ThrowCompletionOr<void> initialize_binding(VM&, [[maybe_unused]] DeprecatedFlyString const& name, Value, InitializeBindingHint) { return {}; }
     virtual ThrowCompletionOr<void> set_mutable_binding(VM&, [[maybe_unused]] DeprecatedFlyString const& name, Value, [[maybe_unused]] bool strict) { return {}; }
     virtual ThrowCompletionOr<Value> get_binding_value(VM&, [[maybe_unused]] DeprecatedFlyString const& name, [[maybe_unused]] bool strict) { return Value {}; }
     virtual ThrowCompletionOr<bool> delete_binding(VM&, [[maybe_unused]] DeprecatedFlyString const& name) { return false; }

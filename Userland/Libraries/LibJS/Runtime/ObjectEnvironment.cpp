@@ -77,9 +77,12 @@ ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(VM&, Depreca
 }
 
 // 9.1.1.2.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v
-ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value)
+ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value, Environment::InitializeBindingHint hint)
 {
-    // 1. Perform ? envRec.SetMutableBinding(N, V, false).
+    // 1. Assert: hint is normal.
+    VERIFY(hint == Environment::InitializeBindingHint::Normal);
+
+    // 2. Perform ? envRec.SetMutableBinding(N, V, false).
     TRY(set_mutable_binding(vm, name, value, false));
 
     // 2. Return unused.

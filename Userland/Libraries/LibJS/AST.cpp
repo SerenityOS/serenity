@@ -323,7 +323,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     // FIXME: 7. Perform MakeConstructor(closure).
 
     if (has_own_name)
-        MUST(environment->initialize_binding(vm, name(), closure));
+        MUST(environment->initialize_binding(vm, name(), closure, Environment::InitializeBindingHint::Normal));
 
     return closure;
 }
@@ -1973,7 +1973,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     restore_environment.disarm();
 
     if (!binding_name.is_null())
-        MUST(class_environment->initialize_binding(vm, binding_name, class_constructor));
+        MUST(class_environment->initialize_binding(vm, binding_name, class_constructor, Environment::InitializeBindingHint::Normal));
 
     for (auto& field : instance_fields)
         class_constructor->add_field(field);
@@ -3864,7 +3864,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
         // 5. Let status be Completion(BindingInitialization of CatchParameter with arguments thrownValue and catchEnv).
         auto status = m_handler->parameter().visit(
             [&](DeprecatedFlyString const& parameter) {
-                return catch_environment->initialize_binding(vm, parameter, thrown_value);
+                return catch_environment->initialize_binding(vm, parameter, thrown_value, Environment::InitializeBindingHint::Normal);
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) {
                 return vm.binding_initialization(pattern, thrown_value, catch_environment);

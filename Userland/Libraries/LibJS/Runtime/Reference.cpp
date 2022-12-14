@@ -231,11 +231,12 @@ DeprecatedString Reference::to_deprecated_string() const
 }
 
 // 6.2.4.8 InitializeReferencedBinding ( V, W ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
-ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value value) const
+// 1.2.1.1 InitializeReferencedBinding ( V, W, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-initializereferencedbinding
+ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value value, Environment::InitializeBindingHint hint) const
 {
     VERIFY(!is_unresolvable());
     VERIFY(m_base_type == BaseType::Environment);
-    return m_base_environment->initialize_binding(vm, m_name.as_string(), value);
+    return m_base_environment->initialize_binding(vm, m_name.as_string(), value, hint);
 }
 
 // 6.2.4.9 MakePrivateReference ( baseValue, privateIdentifier ), https://tc39.es/ecma262/#sec-makeprivatereference

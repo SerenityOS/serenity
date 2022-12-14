@@ -96,26 +96,25 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(VM&, De
 }
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
-ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value)
+// 4.1.1.1.1 InitializeBinding ( N, V, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-declarative-environment-records
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM&, DeprecatedFlyString const& name, Value value, Environment::InitializeBindingHint)
 {
     auto binding_and_index = find_binding_and_index(name);
     VERIFY(binding_and_index.has_value());
+    auto& binding = binding_and_index->binding();
 
-    return initialize_binding_direct(vm, binding_and_index->binding(), value);
-}
-
-ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(VM&, Binding& binding, Value value)
-{
     // 1. Assert: envRec must have an uninitialized binding for N.
     VERIFY(binding.initialized == false);
 
-    // 2. Set the bound value for N in envRec to V.
+    // FIXME: 2. If hint is not normal, perform ? AddDisposableResource(envRec, V, hint).
+
+    // 3. Set the bound value for N in envRec to V.
     binding.value = value;
 
-    // 3. Record that the binding for N in envRec has been initialized.
+    // 4. Record that the binding for N in envRec has been initialized.
     binding.initialized = true;
 
-    // 4. Return unused.
+    // 5. Return unused.
     return {};
 }
 
@@ -132,8 +131,8 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(VM& vm, Depr
         // b. Perform ! envRec.CreateMutableBinding(N, true).
         MUST(create_mutable_binding(vm, name, true));
 
-        // c. Perform ! envRec.InitializeBinding(N, V).
-        MUST(initialize_binding(vm, name, value));
+        // c. Perform ! envRec.InitializeBinding(N, V, normal).
+        MUST(initialize_binding(vm, name, value, Environment::InitializeBindingHint::Normal));
 
         // d. Return unused.
         return {};
@@ -220,7 +219,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::initialize_or_set_mutable_bindin
     VERIFY(binding_and_index.has_value());
 
     if (!binding_and_index->binding().initialized)
-        TRY(initialize_binding(vm, name, value));
+        TRY(initialize_binding(vm, name, value, Environment::InitializeBindingHint::Normal));
     else
         TRY(set_mutable_binding(vm, name, value, false));
     return {};

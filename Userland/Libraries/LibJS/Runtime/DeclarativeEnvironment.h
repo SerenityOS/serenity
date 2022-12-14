@@ -34,7 +34,7 @@ public:
     virtual ThrowCompletionOr<bool> has_binding(DeprecatedFlyString const& name, Optional<size_t>* = nullptr) const override;
     virtual ThrowCompletionOr<void> create_mutable_binding(VM&, DeprecatedFlyString const& name, bool can_be_deleted) override;
     virtual ThrowCompletionOr<void> create_immutable_binding(VM&, DeprecatedFlyString const& name, bool strict) override;
-    virtual ThrowCompletionOr<void> initialize_binding(VM&, DeprecatedFlyString const& name, Value) override;
+    virtual ThrowCompletionOr<void> initialize_binding(VM&, DeprecatedFlyString const& name, Value, InitializeBindingHint) override;
     virtual ThrowCompletionOr<void> set_mutable_binding(VM&, DeprecatedFlyString const& name, Value, bool strict) override;
     virtual ThrowCompletionOr<Value> get_binding_value(VM&, DeprecatedFlyString const& name, bool strict) override;
     virtual ThrowCompletionOr<bool> delete_binding(VM&, DeprecatedFlyString const& name) override;
@@ -60,7 +60,6 @@ public:
     void shrink_to_fit();
 
 private:
-    ThrowCompletionOr<void> initialize_binding_direct(VM&, Binding&, Value);
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, Binding&, Value, bool strict);
 
