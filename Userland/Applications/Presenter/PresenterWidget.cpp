@@ -108,6 +108,7 @@ void PresenterWidget::keydown_event(GUI::KeyEvent& event)
         event.accept();
         break;
     default:
+        event.ignore();
         break;
     }
 }
