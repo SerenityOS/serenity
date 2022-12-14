@@ -28,7 +28,7 @@ public:
     virtual ErrorOr<String> name() const override { return m_page; };
     virtual bool is_page() const override { return true; }
 
-    ErrorOr<String> path() const;
+    virtual ErrorOr<String> path() const override;
 
     static ErrorOr<NonnullRefPtr<PageNode>> help_index_page();
 
