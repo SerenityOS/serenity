@@ -986,8 +986,8 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(VM& vm, Value locales, Value options)
 {
     auto& realm = *vm.current_realm();
-    auto* date_time_format = TRY(construct(vm, *realm.intrinsics().intl_date_time_format_constructor(), locales, options));
-    return static_cast<Intl::DateTimeFormat*>(date_time_format);
+    auto date_time_format = TRY(construct(vm, *realm.intrinsics().intl_date_time_format_constructor(), locales, options));
+    return static_cast<Intl::DateTimeFormat*>(date_time_format.ptr());
 }
 
 // 21.4.4.38 Date.prototype.toLocaleDateString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring

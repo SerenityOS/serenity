@@ -321,12 +321,12 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& co
     if (!arguments.is_empty())
         first_argument = arguments[0];
     // 1. Let newTypedArray be ? Construct(constructor, argumentList).
-    auto* new_typed_array = TRY(construct(vm, constructor, move(arguments)));
+    auto new_typed_array = TRY(construct(vm, constructor, move(arguments)));
 
     // 2. Perform ? ValidateTypedArray(newTypedArray).
     if (!new_typed_array->is_typed_array())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
-    auto& typed_array = *static_cast<TypedArrayBase*>(new_typed_array);
+    auto& typed_array = *static_cast<TypedArrayBase*>(new_typed_array.ptr());
     TRY(validate_typed_array(vm, typed_array));
 
     // 3. If argumentList is a List of a single Number, then

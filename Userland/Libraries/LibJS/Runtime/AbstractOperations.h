@@ -30,7 +30,7 @@ ThrowCompletionOr<Reference> make_super_property_reference(VM&, Value actual_thi
 ThrowCompletionOr<Value> require_object_coercible(VM&, Value);
 ThrowCompletionOr<Value> call_impl(VM&, Value function, Value this_value, Optional<MarkedVector<Value>> = {});
 ThrowCompletionOr<Value> call_impl(VM&, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> = {});
-ThrowCompletionOr<Object*> construct_impl(VM&, FunctionObject&, Optional<MarkedVector<Value>> = {}, FunctionObject* new_target = nullptr);
+ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM&, FunctionObject&, Optional<MarkedVector<Value>> = {}, FunctionObject* new_target = nullptr);
 ThrowCompletionOr<size_t> length_of_array_like(VM&, Object const&);
 ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(VM&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(VM&, Object const&, FunctionObject& default_constructor);
@@ -108,7 +108,7 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Va
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& function, Args&&... args)
+ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedVector<Value> arguments_list { vm.heap() };
@@ -119,12 +119,12 @@ ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& funct
     return construct_impl(vm, function);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
+ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
 {
     return construct_impl(vm, function, move(arguments_list), new_target);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
+ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
 {
     return construct_impl(vm, function, move(arguments_list), new_target);
 }

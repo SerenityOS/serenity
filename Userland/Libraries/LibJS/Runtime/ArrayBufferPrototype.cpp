@@ -85,12 +85,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *realm.intrinsics().array_buffer_constructor()));
 
     // 16. Let new be ? Construct(ctor, « 𝔽(newLen) »).
-    auto* new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));
+    auto new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));
 
     // 17. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
-    if (!is<ArrayBuffer>(new_array_buffer))
+    if (!is<ArrayBuffer>(new_array_buffer.ptr()))
         return vm.throw_completion<TypeError>(ErrorType::SpeciesConstructorDidNotCreate, "an ArrayBuffer");
-    auto* new_array_buffer_object = static_cast<ArrayBuffer*>(new_array_buffer);
+    auto* new_array_buffer_object = static_cast<ArrayBuffer*>(new_array_buffer.ptr());
 
     // 18. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer

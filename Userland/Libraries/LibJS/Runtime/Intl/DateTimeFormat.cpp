@@ -548,8 +548,8 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
     auto const& data_locale = date_time_format.data_locale();
 
     auto construct_number_format = [&](auto& options) -> ThrowCompletionOr<NumberFormat*> {
-        auto* number_format = TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale), options));
-        return static_cast<NumberFormat*>(number_format);
+        auto number_format = TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale), options));
+        return static_cast<NumberFormat*>(number_format.ptr());
     };
 
     // 4. Let nfOptions be OrdinaryObjectCreate(null).

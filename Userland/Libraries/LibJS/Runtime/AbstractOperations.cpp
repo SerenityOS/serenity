@@ -71,7 +71,7 @@ ThrowCompletionOr<Value> call_impl(VM& vm, FunctionObject& function, Value this_
 }
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
-ThrowCompletionOr<Object*> construct_impl(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target)
 {
     // 1. If newTarget is not present, set newTarget to F.
     if (!new_target)
@@ -82,7 +82,7 @@ ThrowCompletionOr<Object*> construct_impl(VM& vm, FunctionObject& function, Opti
         arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 3. Return ? F.[[Construct]](argumentsList, newTarget).
-    return TRY(function.internal_construct(move(*arguments_list), *new_target)).ptr();
+    return function.internal_construct(move(*arguments_list), *new_target);
 }
 
 // 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike

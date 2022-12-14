@@ -620,7 +620,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     bool full_unicode = flags.contains('u') || flags.contains('v');
 
     // 6. Let matcher be ? Construct(C, « R, flags »).
-    auto* matcher = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(flags))));
+    auto matcher = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(flags))));
 
     // 7. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
     auto last_index_value = TRY(regexp_object->get(vm.names.lastIndex));
@@ -630,7 +630,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     TRY(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
 
     // 13. Return CreateRegExpStringIterator(matcher, S, global, fullUnicode).
-    return RegExpStringIterator::create(realm, *matcher, move(string), global, full_unicode);
+    return RegExpStringIterator::create(realm, matcher, move(string), global, full_unicode);
 }
 
 // 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
@@ -923,7 +923,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto new_flags = flags.find('y').has_value() ? move(flags) : DeprecatedString::formatted("{}y", flags);
 
     // 10. Let splitter be ? Construct(C, « rx, newFlags »).
-    auto* splitter = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(new_flags))));
+    auto splitter = TRY(construct(vm, *constructor, regexp_object, PrimitiveString::create(vm, move(new_flags))));
 
     // 11. Let A be ! ArrayCreate(0).
     auto array = MUST(Array::create(realm, 0));
@@ -944,7 +944,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     // 16. If size is 0, then
     if (string.is_empty()) {
         // a. Let z be ? RegExpExec(splitter, S).
-        auto result = TRY(regexp_exec(vm, *splitter, string));
+        auto result = TRY(regexp_exec(vm, splitter, string));
 
         // b. If z is not null, return A.
         if (!result.is_null())
@@ -969,7 +969,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         TRY(splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes));
 
         // b. Let z be ? RegExpExec(splitter, S).
-        auto result = TRY(regexp_exec(vm, *splitter, string));
+        auto result = TRY(regexp_exec(vm, splitter, string));
 
         // c. If z is null, set q to AdvanceStringIndex(S, q, unicodeMatching).
         if (result.is_null()) {
