@@ -412,7 +412,7 @@ FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function
     auto& heap = function.heap();
 
     // 1. Let env be a new function Environment Record containing no bindings.
-    auto* env = heap.allocate_without_realm<FunctionEnvironment>(function.environment());
+    auto env = heap.allocate_without_realm<FunctionEnvironment>(function.environment());
 
     // 2. Set env.[[FunctionObject]] to F.
     env->set_function_object(function);
@@ -1101,7 +1101,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     // 7. Set obj.[[Set]] as specified in 10.4.4.4.
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
-    auto* object = vm.heap().allocate<ArgumentsObject>(realm, realm, environment);
+    auto object = vm.heap().allocate<ArgumentsObject>(realm, realm, environment);
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,

@@ -13,7 +13,7 @@ namespace Web::Encoding {
 
 JS::NonnullGCPtr<TextEncoder> TextEncoder::construct_impl(JS::Realm& realm)
 {
-    return *realm.heap().allocate<TextEncoder>(realm, realm);
+    return realm.heap().allocate<TextEncoder>(realm, realm);
 }
 
 TextEncoder::TextEncoder(JS::Realm& realm)

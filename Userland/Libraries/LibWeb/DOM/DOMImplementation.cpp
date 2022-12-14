@@ -20,7 +20,7 @@ namespace Web::DOM {
 JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document)
 {
     auto& realm = document.realm();
-    return *realm.heap().allocate<DOMImplementation>(realm, document);
+    return realm.heap().allocate<DOMImplementation>(realm, document);
 }
 
 DOMImplementation::DOMImplementation(Document& document)

@@ -125,7 +125,7 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16String string
             return vm.single_ascii_character_string(static_cast<u8>(code_unit));
     }
 
-    return *vm.heap().allocate_without_realm<PrimitiveString>(move(string));
+    return vm.heap().allocate_without_realm<PrimitiveString>(move(string));
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString string)
@@ -142,7 +142,7 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString s
     auto& string_cache = vm.string_cache();
     auto it = string_cache.find(string);
     if (it == string_cache.end()) {
-        auto* new_string = vm.heap().allocate_without_realm<PrimitiveString>(string);
+        auto new_string = vm.heap().allocate_without_realm<PrimitiveString>(string);
         string_cache.set(move(string), new_string);
         return *new_string;
     }
@@ -166,7 +166,7 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, PrimitiveString& l
     if (rhs_empty)
         return lhs;
 
-    return *vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
+    return vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
 }
 
 void PrimitiveString::resolve_rope_if_needed() const

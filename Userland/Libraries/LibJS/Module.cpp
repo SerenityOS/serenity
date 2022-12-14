@@ -114,7 +114,7 @@ Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_na
     // 6. Let sortedExports be a List whose elements are the elements of exports ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using undefined as comparefn.
     // 7. Set M.[[Exports]] to sortedExports.
     // 8. Create own properties of M corresponding to the definitions in 28.3.
-    Object* module_namespace = vm.heap().allocate<ModuleNamespaceObject>(realm, realm, this, move(unambiguous_names));
+    auto module_namespace = vm.heap().allocate<ModuleNamespaceObject>(realm, realm, this, move(unambiguous_names));
 
     // 9. Set module.[[Namespace]] to M.
     m_namespace = make_handle(module_namespace);

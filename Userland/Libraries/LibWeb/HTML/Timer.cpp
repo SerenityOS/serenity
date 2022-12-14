@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<Timer> Timer::create(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
 {
-    return *window.heap().allocate_without_realm<Timer>(window, milliseconds, move(callback), id);
+    return window.heap().allocate_without_realm<Timer>(window, milliseconds, move(callback), id);
 }
 
 Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id)

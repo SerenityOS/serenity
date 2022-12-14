@@ -10,7 +10,7 @@ namespace JS {
 
 NonnullGCPtr<WeakSet> WeakSet::create(Realm& realm)
 {
-    return *realm.heap().allocate<WeakSet>(realm, *realm.intrinsics().weak_set_prototype());
+    return realm.heap().allocate<WeakSet>(realm, *realm.intrinsics().weak_set_prototype());
 }
 
 WeakSet::WeakSet(Object& prototype)

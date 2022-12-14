@@ -15,7 +15,7 @@ namespace Web::HTML {
 JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 {
     auto& realm = element.realm();
-    return *realm.heap().allocate<DOMStringMap>(realm, element);
+    return realm.heap().allocate<DOMStringMap>(realm, element);
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)

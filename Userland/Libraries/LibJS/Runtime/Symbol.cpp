@@ -19,7 +19,7 @@ Symbol::Symbol(Optional<DeprecatedString> description, bool is_global)
 
 NonnullGCPtr<Symbol> Symbol::create(VM& vm, Optional<DeprecatedString> description, bool is_global)
 {
-    return *vm.heap().allocate_without_realm<Symbol>(move(description), is_global);
+    return vm.heap().allocate_without_realm<Symbol>(move(description), is_global);
 }
 
 }

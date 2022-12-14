@@ -19,7 +19,7 @@ Comment::Comment(Document& document, DeprecatedString const& data)
 JS::NonnullGCPtr<Comment> Comment::construct_impl(JS::Realm& realm, DeprecatedString const& data)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return *realm.heap().allocate<Comment>(realm, window.associated_document(), data);
+    return realm.heap().allocate<Comment>(realm, window.associated_document(), data);
 }
 
 }

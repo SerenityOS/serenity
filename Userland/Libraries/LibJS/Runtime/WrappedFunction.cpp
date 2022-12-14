@@ -22,7 +22,7 @@ ThrowCompletionOr<NonnullGCPtr<WrappedFunction>> WrappedFunction::create(Realm& 
     // 5. Set wrapped.[[WrappedTargetFunction]] to Target.
     // 6. Set wrapped.[[Realm]] to callerRealm.
     auto& prototype = *caller_realm.intrinsics().function_prototype();
-    auto* wrapped = vm.heap().allocate<WrappedFunction>(realm, caller_realm, target, prototype);
+    auto wrapped = vm.heap().allocate<WrappedFunction>(realm, caller_realm, target, prototype);
 
     // 7. Let result be CopyNameAndLength(wrapped, Target).
     auto result = copy_name_and_length(vm, *wrapped, target);
@@ -32,7 +32,7 @@ ThrowCompletionOr<NonnullGCPtr<WrappedFunction>> WrappedFunction::create(Realm& 
         return vm.throw_completion<TypeError>(ErrorType::WrappedFunctionCopyNameAndLengthThrowCompletion);
 
     // 9. Return wrapped.
-    return NonnullGCPtr { *wrapped };
+    return wrapped;
 }
 
 // 2 Wrapped Function Exotic Objects, https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects

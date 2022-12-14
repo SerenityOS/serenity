@@ -128,7 +128,7 @@ void EventTarget::add_event_listener(FlyString const& type, IDLEventListener* ca
     // 2. Add an event listener with this and an event listener whose type is type, callback is callback, capture is capture, passive is passive,
     //    once is once, and signal is signal.
 
-    auto* event_listener = heap().allocate_without_realm<DOMEventListener>();
+    auto event_listener = heap().allocate_without_realm<DOMEventListener>();
     event_listener->type = type;
     event_listener->callback = callback;
     event_listener->signal = move(flattened_options.signal);
@@ -464,7 +464,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
         function->set_script_or_module({});
 
         // 12. Set eventHandler's value to the result of creating a Web IDL EventHandler callback function object whose object reference is function and whose callback context is settings object.
-        event_handler->value = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*function, settings_object);
+        event_handler->value = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*function, settings_object).ptr();
     }
 
     // 4. Return eventHandler's value.
@@ -498,7 +498,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, WebIDL::Cal
     //  3. Set eventHandler's value to the given value.
     if (event_handler_iterator == handler_map.end()) {
         // NOTE: See the optimization comment in get_current_value_of_event_handler about why this is done.
-        auto* new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(*value);
+        auto new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(*value);
 
         //  4. Activate an event handler given eventTarget and name.
         // Optimization: We pass in the event handler here instead of having activate_event_handler do another hash map lookup just to get the same object.
@@ -556,10 +556,10 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
         0, "", &realm);
 
     // NOTE: As per the spec, the callback context is arbitrary.
-    auto* callback = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_function, Bindings::host_defined_environment_settings_object(realm));
+    auto callback = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_function, Bindings::host_defined_environment_settings_object(realm));
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
-    auto* listener = realm.heap().allocate_without_realm<DOMEventListener>();
+    auto listener = realm.heap().allocate_without_realm<DOMEventListener>();
     listener->type = name;
     listener->callback = IDLEventListener::create(realm, *callback).ptr();
 
@@ -714,7 +714,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
     // NOTE: See the optimization comments in set_event_handler_attribute.
 
     if (event_handler_iterator == handler_map.end()) {
-        auto* new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(value);
+        auto new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(value);
 
         //  6. Activate an event handler given eventTarget and name.
         event_target->activate_event_handler(local_name, *new_event_handler);

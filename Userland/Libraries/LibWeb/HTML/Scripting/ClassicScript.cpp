@@ -60,14 +60,14 @@ JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename,
         script->m_error_to_rethrow = parse_error;
 
         // 2. Return script.
-        return JS::NonnullGCPtr(*script);
+        return script;
     }
 
     // 12. Set script's record to result.
     script->m_script_record = *result.release_value();
 
     // 13. Return script.
-    return JS::NonnullGCPtr(*script);
+    return script;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script

@@ -19,7 +19,7 @@ JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_radial(JS::Realm& realm,
     (void)x1;
     (void)y1;
     (void)r1;
-    return *realm.heap().allocate<CanvasGradient>(realm, realm, Type::Radial);
+    return realm.heap().allocate<CanvasGradient>(realm, realm, Type::Radial);
 }
 
 JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_linear(JS::Realm& realm, double x0, double y0, double x1, double y1)
@@ -28,7 +28,7 @@ JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_linear(JS::Realm& realm,
     (void)y0;
     (void)x1;
     (void)y1;
-    return *realm.heap().allocate<CanvasGradient>(realm, realm, Type::Linear);
+    return realm.heap().allocate<CanvasGradient>(realm, realm, Type::Linear);
 }
 
 JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_conic(JS::Realm& realm, double start_angle, double x, double y)
@@ -36,7 +36,7 @@ JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_conic(JS::Realm& realm, 
     (void)start_angle;
     (void)x;
     (void)y;
-    return *realm.heap().allocate<CanvasGradient>(realm, realm, Type::Conic);
+    return realm.heap().allocate<CanvasGradient>(realm, realm, Type::Conic);
 }
 
 CanvasGradient::CanvasGradient(JS::Realm& realm, Type type)

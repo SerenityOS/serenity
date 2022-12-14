@@ -50,7 +50,7 @@ public:
     static JS::ThrowCompletionOr<WebAssemblyModule*> create(JS::Realm& realm, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
     {
         auto& vm = realm.vm();
-        auto* instance = realm.heap().allocate<WebAssemblyModule>(realm, *realm.intrinsics().object_prototype());
+        auto instance = realm.heap().allocate<WebAssemblyModule>(realm, *realm.intrinsics().object_prototype());
         instance->m_module = move(module);
         Wasm::Linker linker(*instance->m_module);
         linker.link(imports);
@@ -62,7 +62,7 @@ public:
         if (result.is_error())
             return vm.throw_completion<JS::TypeError>(result.release_error().error);
         instance->m_module_instance = result.release_value();
-        return instance;
+        return instance.ptr();
     }
     void initialize(JS::Realm&) override;
 

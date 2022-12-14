@@ -11,7 +11,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<DocumentType> DocumentType::create(Document& document)
 {
-    return *document.heap().allocate<DocumentType>(document.realm(), document);
+    return document.heap().allocate<DocumentType>(document.realm(), document);
 }
 
 DocumentType::DocumentType(Document& document)

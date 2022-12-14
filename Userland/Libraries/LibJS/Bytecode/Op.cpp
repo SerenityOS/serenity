@@ -816,7 +816,7 @@ void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, Basi
 
 ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* environment = interpreter.vm().heap().allocate_without_realm<DeclarativeEnvironment>(interpreter.vm().lexical_environment());
+    auto environment = interpreter.vm().heap().allocate_without_realm<DeclarativeEnvironment>(interpreter.vm().lexical_environment());
     interpreter.vm().running_execution_context().lexical_environment = environment;
     interpreter.vm().running_execution_context().variable_environment = environment;
     return {};

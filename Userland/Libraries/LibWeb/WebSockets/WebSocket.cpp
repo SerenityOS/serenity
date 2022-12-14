@@ -57,7 +57,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
         return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid");
     // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
     // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
-    return JS::NonnullGCPtr(*realm.heap().allocate<WebSocket>(realm, window, url_record));
+    return realm.heap().allocate<WebSocket>(realm, window, url_record);
 }
 
 WebSocket::WebSocket(HTML::Window& window, AK::URL& url)

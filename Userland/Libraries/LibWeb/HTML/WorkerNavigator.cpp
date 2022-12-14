@@ -13,7 +13,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<WorkerNavigator> WorkerNavigator::create(WorkerGlobalScope& global_scope)
 {
-    return *global_scope.heap().allocate<WorkerNavigator>(global_scope.realm(), global_scope);
+    return global_scope.heap().allocate<WorkerNavigator>(global_scope.realm(), global_scope);
 }
 
 WorkerNavigator::WorkerNavigator(WorkerGlobalScope& global_scope)

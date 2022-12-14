@@ -30,11 +30,11 @@ static HashMap<Object const*, HashMap<FlyString, Object::IntrinsicAccessor>> s_i
 NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return *realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
     else if (prototype == realm.intrinsics().object_prototype())
-        return *realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
     else
-        return *realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
+        return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
 }
 
 Object::Object(GlobalObjectTag, Realm& realm)

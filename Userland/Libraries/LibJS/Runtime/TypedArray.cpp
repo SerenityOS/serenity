@@ -425,7 +425,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                            \
         auto* prototype = TRY(get_prototype_from_constructor(realm.vm(), new_target, &Intrinsics::snake_name##_prototype));      \
         auto array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                          \
-        return NonnullGCPtr { *realm.heap().allocate<ClassName>(realm, *prototype, length, *array_buffer) };                     \
+        return realm.heap().allocate<ClassName>(realm, *prototype, length, *array_buffer);                                       \
     }                                                                                                                            \
                                                                                                                                  \
     ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, u32 length)                                       \
@@ -436,7 +436,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                                                                                                                                  \
     NonnullGCPtr<ClassName> ClassName::create(Realm& realm, u32 length, ArrayBuffer& array_buffer)                               \
     {                                                                                                                            \
-        return *realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype(), length, array_buffer);     \
+        return realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype(), length, array_buffer);      \
     }                                                                                                                            \
                                                                                                                                  \
     ClassName::ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer)                                               \

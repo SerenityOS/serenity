@@ -17,7 +17,7 @@ namespace JS {
 
 NonnullGCPtr<ProxyObject> ProxyObject::create(Realm& realm, Object& target, Object& handler)
 {
-    return *realm.heap().allocate<ProxyObject>(realm, target, handler, *realm.intrinsics().object_prototype());
+    return realm.heap().allocate<ProxyObject>(realm, target, handler, *realm.intrinsics().object_prototype());
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)

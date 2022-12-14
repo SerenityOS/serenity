@@ -13,7 +13,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<MutationObserver> MutationObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
 {
-    return *realm.heap().allocate<MutationObserver>(realm, realm, callback);
+    return realm.heap().allocate<MutationObserver>(realm, realm, callback);
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver
@@ -142,7 +142,7 @@ Vector<JS::Handle<MutationRecord>> MutationObserver::take_records()
 
 JS::NonnullGCPtr<RegisteredObserver> RegisteredObserver::create(MutationObserver& observer, MutationObserverInit const& options)
 {
-    return *observer.heap().allocate_without_realm<RegisteredObserver>(observer, options);
+    return observer.heap().allocate_without_realm<RegisteredObserver>(observer, options);
 }
 
 RegisteredObserver::RegisteredObserver(MutationObserver& observer, MutationObserverInit const& options)
@@ -161,7 +161,7 @@ void RegisteredObserver::visit_edges(Cell::Visitor& visitor)
 
 JS::NonnullGCPtr<TransientRegisteredObserver> TransientRegisteredObserver::create(MutationObserver& observer, MutationObserverInit const& options, RegisteredObserver& source)
 {
-    return *observer.heap().allocate_without_realm<TransientRegisteredObserver>(observer, options, source);
+    return observer.heap().allocate_without_realm<TransientRegisteredObserver>(observer, options, source);
 }
 
 TransientRegisteredObserver::TransientRegisteredObserver(MutationObserver& observer, MutationObserverInit const& options, RegisteredObserver& source)

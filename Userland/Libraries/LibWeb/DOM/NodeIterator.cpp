@@ -45,7 +45,7 @@ JS::NonnullGCPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to
     // 2. Set iterator’s root and iterator’s reference to root.
     // 3. Set iterator’s pointer before reference to true.
     auto& realm = root.realm();
-    auto* iterator = realm.heap().allocate<NodeIterator>(realm, root);
+    auto iterator = realm.heap().allocate<NodeIterator>(realm, root);
 
     // 4. Set iterator’s whatToShow to whatToShow.
     iterator->m_what_to_show = what_to_show;
@@ -54,7 +54,7 @@ JS::NonnullGCPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to
     iterator->m_filter = filter;
 
     // 6. Return iterator.
-    return *iterator;
+    return iterator;
 }
 
 // https://dom.spec.whatwg.org/#dom-nodeiterator-detach

@@ -36,7 +36,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(Fun
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
     auto result = TRY(WebAssemblyObject::instantiate_module(vm, module_object.module()));
-    return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result);
+    return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result).ptr();
 }
 
 void WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)

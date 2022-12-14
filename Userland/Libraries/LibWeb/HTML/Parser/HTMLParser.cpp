@@ -759,7 +759,7 @@ AnythingElse:
 void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(*realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLParser::handle_in_head(HTMLToken& token)
@@ -1071,7 +1071,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        MUST(insertion_location.append_child(*realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
+        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
         return;
     }
 
@@ -3181,8 +3181,8 @@ void HTMLParser::handle_after_frameset(HTMLToken& token)
 void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto* comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
-        MUST(document().append_child(*comment));
+        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
+        MUST(document().append_child(comment));
         return;
     }
 
@@ -3540,21 +3540,21 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
 
 JS::NonnullGCPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& document)
 {
-    return *document.heap().allocate_without_realm<HTMLParser>(document);
+    return document.heap().allocate_without_realm<HTMLParser>(document);
 }
 
 JS::NonnullGCPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
-        return *document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value());
+        return document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value());
     auto encoding = run_encoding_sniffing_algorithm(document, input);
     dbgln_if(HTML_PARSER_DEBUG, "The encoding sniffing algorithm returned encoding '{}'", encoding);
-    return *document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
+    return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
 JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, DeprecatedString const& encoding)
 {
-    return *document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
+    return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm

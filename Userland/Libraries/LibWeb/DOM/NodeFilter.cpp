@@ -11,7 +11,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<NodeFilter> NodeFilter::create(JS::Realm& realm, WebIDL::CallbackType& callback)
 {
-    return *realm.heap().allocate<NodeFilter>(realm, realm, callback);
+    return realm.heap().allocate<NodeFilter>(realm, realm, callback);
 }
 
 NodeFilter::NodeFilter(JS::Realm& realm, WebIDL::CallbackType& callback)

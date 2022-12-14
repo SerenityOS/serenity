@@ -19,7 +19,7 @@ namespace Web::CSS {
 
 CSSRuleList* CSSRuleList::create(JS::Realm& realm, JS::MarkedVector<CSSRule*> const& rules)
 {
-    auto* rule_list = realm.heap().allocate<CSSRuleList>(realm, realm);
+    auto rule_list = realm.heap().allocate<CSSRuleList>(realm, realm);
     for (auto* rule : rules)
         rule_list->m_rules.append(*rule);
     return rule_list;

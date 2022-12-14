@@ -34,9 +34,9 @@ public:
         if (it != m_prototypes.end())
             return *it->value;
         auto& realm = *m_realm;
-        auto* prototype = heap().allocate<T>(realm, realm);
+        auto prototype = heap().allocate<T>(realm, realm);
         m_prototypes.set(class_name, prototype);
-        return *prototype;
+        return prototype;
     }
 
     template<typename T>
@@ -46,9 +46,9 @@ public:
         if (it != m_constructors.end())
             return *it->value;
         auto& realm = *m_realm;
-        auto* constructor = heap().allocate<T>(realm, realm);
+        auto constructor = heap().allocate<T>(realm, realm);
         m_constructors.set(class_name, constructor);
-        return *constructor;
+        return constructor;
     }
 
 private:

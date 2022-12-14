@@ -13,7 +13,7 @@ namespace Web::DOM {
 JS::NonnullGCPtr<AbortController> AbortController::construct_impl(JS::Realm& realm)
 {
     auto signal = AbortSignal::construct_impl(realm);
-    return *realm.heap().allocate<AbortController>(realm, realm, move(signal));
+    return realm.heap().allocate<AbortController>(realm, realm, move(signal));
 }
 
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abortcontroller

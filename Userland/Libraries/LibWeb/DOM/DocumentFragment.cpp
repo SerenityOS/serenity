@@ -30,7 +30,7 @@ void DocumentFragment::set_host(Web::DOM::Element* element)
 JS::NonnullGCPtr<DocumentFragment> DocumentFragment::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return *realm.heap().allocate<DocumentFragment>(realm, window.associated_document());
+    return realm.heap().allocate<DocumentFragment>(realm, window.associated_document());
 }
 
 }

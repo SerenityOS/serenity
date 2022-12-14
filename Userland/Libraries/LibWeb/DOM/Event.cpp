@@ -16,7 +16,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
 {
-    return *realm.heap().allocate<Event>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<Event>(realm, realm, event_name, event_init);
 }
 
 JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)

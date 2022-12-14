@@ -289,7 +289,7 @@ JS::NonnullGCPtr<Document> Document::construct_impl(JS::Realm& realm)
 
 JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url)
 {
-    return *realm.heap().allocate<Document>(realm, realm, url);
+    return realm.heap().allocate<Document>(realm, realm, url);
 }
 
 Document::Document(JS::Realm& realm, const AK::URL& url)
@@ -680,7 +680,7 @@ void Document::set_title(DeprecatedString const& title)
     }
 
     title_element->remove_all_children(true);
-    MUST(title_element->append_child(*heap().allocate<Text>(realm(), *this, title)));
+    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title)));
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
@@ -1221,17 +1221,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 {
-    return *heap().allocate<DocumentFragment>(realm(), *this);
+    return heap().allocate<DocumentFragment>(realm(), *this);
 }
 
 JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 {
-    return *heap().allocate<Text>(realm(), *this, data);
+    return heap().allocate<Text>(realm(), *this, data);
 }
 
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
 {
-    return *heap().allocate<Comment>(realm(), *this, data);
+    return heap().allocate<Comment>(realm(), *this, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction

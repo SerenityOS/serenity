@@ -15,7 +15,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<HTMLCollection> HTMLCollection::create(ParentNode& root, Function<bool(Element const&)> filter)
 {
-    return *root.heap().allocate<HTMLCollection>(root.realm(), root, move(filter));
+    return root.heap().allocate<HTMLCollection>(root.realm(), root, move(filter));
 }
 
 HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter)

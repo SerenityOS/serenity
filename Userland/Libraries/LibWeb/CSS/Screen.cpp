@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +15,7 @@ namespace Web::CSS {
 
 JS::NonnullGCPtr<Screen> Screen::create(HTML::Window& window)
 {
-    return *window.heap().allocate<Screen>(window.realm(), window);
+    return window.heap().allocate<Screen>(window.realm(), window);
 }
 
 Screen::Screen(HTML::Window& window)
