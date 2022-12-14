@@ -44,9 +44,6 @@ public:
 
     bool edid_feature_accepted() const;
 
-    Graphics::VirtIOGPU::ResourceID allocate_resource_id(Badge<VirtIODisplayConnector>);
-    Graphics::VirtIOGPU::ContextID allocate_context_id(Badge<VirtIODisplayConnector>);
-
     ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);
     void set_dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
     void flush_displayed_image(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
