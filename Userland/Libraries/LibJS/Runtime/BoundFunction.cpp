@@ -90,7 +90,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> BoundFunction::internal_construct(Marked
         final_new_target = &target;
 
     // 6. Return ? Construct(target, args, newTarget).
-    return *TRY(construct(vm, target, move(args), final_new_target));
+    return construct(vm, target, move(args), final_new_target);
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)

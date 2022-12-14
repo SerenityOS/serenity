@@ -808,7 +808,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ProxyObject::internal_construct(MarkedVe
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? Construct(target, argumentsList, newTarget).
-        return *TRY(construct(vm, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target));
+        return construct(vm, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target);
     }
 
     // 8. Let argArray be CreateArrayFromList(argumentsList).

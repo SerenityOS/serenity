@@ -145,7 +145,7 @@ static ThrowCompletionOr<Object*> array_species_create(VM& vm, Object& original_
     if (!constructor.is_constructor())
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
-    return TRY(construct(vm, constructor.as_function(), Value(length)));
+    return TRY(construct(vm, constructor.as_function(), Value(length))).ptr();
 }
 
 // 23.1.3.1 Array.prototype.at ( index ), https://tc39.es/ecma262/#sec-array.prototype.at
