@@ -123,7 +123,7 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
         return {};
 
     if (parent->parent() == nullptr) {
-        for (size_t row = 0; row < sizeof(Manual::sections) / sizeof(Manual::sections[0]); row++)
+        for (size_t row = 0; row < Manual::sections.size(); row++)
             if (Manual::sections[row].ptr() == parent)
                 return create_index(row, 0, parent);
         VERIFY_NOT_REACHED();
@@ -139,7 +139,7 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
 int ManualModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
-        return sizeof(Manual::sections) / sizeof(Manual::sections[0]);
+        return static_cast<int>(Manual::sections.size());
     auto* node = static_cast<Manual::Node const*>(index.internal_data());
     return node->children().size();
 }
