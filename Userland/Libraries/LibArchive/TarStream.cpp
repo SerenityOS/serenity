@@ -142,7 +142,7 @@ TarOutputStream::TarOutputStream(Core::Stream::Handle<Core::Stream::Stream> stre
 {
 }
 
-void TarOutputStream::add_directory(DeprecatedString const& path, mode_t mode)
+ErrorOr<void> TarOutputStream::add_directory(DeprecatedString const& path, mode_t mode)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -153,12 +153,13 @@ void TarOutputStream::add_directory(DeprecatedString const& path, mode_t mode)
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.calculate_checksum();
-    MUST(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
+    TRY(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
-    MUST(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
+    TRY(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
+    return {};
 }
 
-void TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, ReadonlyBytes bytes)
+ErrorOr<void> TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -169,17 +170,18 @@ void TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, Readon
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.calculate_checksum();
-    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &header, sizeof(header) }));
+    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &header, sizeof(header) }));
     constexpr Array<u8, block_size> padding { 0 };
-    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - sizeof(header) }));
+    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - sizeof(header) }));
     size_t n_written = 0;
     while (n_written < bytes.size()) {
         n_written += MUST(m_stream->write(bytes.slice(n_written, min(bytes.size() - n_written, block_size))));
     }
-    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
+    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
+    return {};
 }
 
-void TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, StringView link_name)
+ErrorOr<void> TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, StringView link_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -191,19 +193,21 @@ void TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, String
     header.set_version(gnu_version);
     header.set_link_name(link_name);
     header.calculate_checksum();
-    MUST(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
+    TRY(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
-    MUST(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
+    TRY(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
+    return {};
 }
 
-void TarOutputStream::finish()
+ErrorOr<void> TarOutputStream::finish()
 {
     VERIFY(!m_finished);
     constexpr Array<u8, block_size> padding { 0 };
     // 2 empty records that are used to signify the end of the archive.
-    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
-    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
+    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
+    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
     m_finished = true;
+    return {};
 }
 
 }

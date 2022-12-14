@@ -229,7 +229,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             auto statbuf = TRY(Core::System::lstat(path));
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all());
+            TRY(tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all()));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -240,7 +240,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            tar_stream.add_link(canonicalized_path, statbuf.st_mode, TRY(Core::System::readlink(path)));
+            TRY(tar_stream.add_link(canonicalized_path, statbuf.st_mode, TRY(Core::System::readlink(path))));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -251,7 +251,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            tar_stream.add_directory(canonicalized_path, statbuf.st_mode);
+            TRY(tar_stream.add_directory(canonicalized_path, statbuf.st_mode));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -278,7 +278,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        tar_stream.finish();
+        TRY(tar_stream.finish());
 
         return 0;
     }
