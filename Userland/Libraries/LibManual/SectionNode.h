@@ -23,10 +23,10 @@ public:
     {
     }
 
-    virtual NonnullRefPtrVector<Node>& children() const override
+    virtual ErrorOr<Span<NonnullRefPtr<Node>>> children() const override
     {
-        MUST(reify_if_needed());
-        return m_children;
+        TRY(reify_if_needed());
+        return m_children.span();
     }
 
     virtual Node const* parent() const override { return nullptr; }

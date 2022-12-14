@@ -16,10 +16,10 @@ Node const* PageNode::parent() const
     return m_section.ptr();
 }
 
-NonnullRefPtrVector<Node>& PageNode::children() const
+ErrorOr<Span<NonnullRefPtr<Node>>> PageNode::children() const
 {
     static NonnullRefPtrVector<Node> empty_vector;
-    return empty_vector;
+    return empty_vector.span();
 }
 
 ErrorOr<String> PageNode::path() const
