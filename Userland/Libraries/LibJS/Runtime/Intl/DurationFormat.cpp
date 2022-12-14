@@ -134,9 +134,16 @@ StringView DurationFormat::display_to_string(Display display)
 // 1.1.3 ToDurationRecord ( input ), https://tc39.es/proposal-intl-duration-format/#sec-todurationrecord
 ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value input)
 {
-    // 1. If Type(input) is not Object, throw a TypeError exception.
-    if (!input.is_object())
+    // 1. If Type(input) is not Object, then
+    if (!input.is_object()) {
+        // a. If Type(input) is String, throw a RangeError exception.
+        if (input.is_string())
+            return vm.throw_completion<RangeError>(ErrorType::NotAnObject, input);
+
+        // b. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, input);
+    }
+
     auto& input_object = input.as_object();
 
     // 2. Let result be a new Duration Record with each field set to 0.

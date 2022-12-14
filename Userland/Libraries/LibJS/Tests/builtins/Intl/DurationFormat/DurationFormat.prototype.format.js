@@ -92,7 +92,11 @@ describe("correct behavior", () => {
 
 describe("errors", () => {
     test("non-object duration records", () => {
-        [-100, Infinity, NaN, "hello", 152n, Symbol("foo")].forEach(value => {
+        expect(() => {
+            new Intl.DurationFormat().format("hello");
+        }).toThrowWithMessage(RangeError, "is not an object");
+
+        [-100, Infinity, NaN, 152n, Symbol("foo"), true, null, undefined].forEach(value => {
             expect(() => {
                 new Intl.DurationFormat().format(value);
             }).toThrowWithMessage(TypeError, "is not an object");
