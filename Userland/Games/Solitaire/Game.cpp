@@ -207,8 +207,10 @@ void Game::update_score(int to_add)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (is_moving_cards() || m_new_game_animation || m_game_over_animation)
+    if (is_moving_cards() || m_new_game_animation || m_game_over_animation) {
+        event.ignore();
         return;
+    }
 
     if (event.shift() && event.key() == KeyCode::Key_F12) {
         start_game_over_animation();
@@ -220,6 +222,8 @@ void Game::keydown_event(GUI::KeyEvent& event)
         if constexpr (SOLITAIRE_DEBUG) {
             dump_layout();
         }
+    } else {
+        event.ignore();
     }
 }
 
