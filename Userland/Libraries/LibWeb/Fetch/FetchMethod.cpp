@@ -107,7 +107,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
         // 4. Set responseObject to the result of creating a Response object, given response, "immutable", and
         //    relevantRealm.
         auto response_object = Response::create(relevant_realm, response, Headers::Guard::Immutable);
-        response_object_handle = JS::make_handle(response_object.ptr());
+        response_object_handle = JS::make_handle(response_object);
 
         // 5. Resolve p with responseObject.
         WebIDL::resolve_promise(vm, promise_capability, response_object);

@@ -323,7 +323,7 @@ Vector<JS::Handle<DOM::Document>> EventLoop::documents_in_this_event_loop() cons
     Vector<JS::Handle<DOM::Document>> documents;
     for (auto& document : m_documents) {
         VERIFY(document);
-        documents.append(JS::make_handle(*document.ptr()));
+        documents.append(JS::make_handle(*document));
     }
     return documents;
 }

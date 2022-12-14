@@ -3778,7 +3778,7 @@ ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter&
     MUST(template_->set_integrity_level(Object::IntegrityLevel::Frozen));
 
     // 15. Append the Record { [[Site]]: templateLiteral, [[Array]]: template } to templateRegistry.
-    m_cached_values.set(&realm, make_handle(template_.ptr()));
+    m_cached_values.set(&realm, make_handle(template_));
 
     // 16. Return template.
     return template_;
