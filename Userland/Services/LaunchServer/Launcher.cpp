@@ -309,8 +309,10 @@ void Launcher::for_each_handler_for_path(DeprecatedString const& path, Function<
 
     if (S_ISLNK(st.st_mode)) {
         auto link_target_or_error = Core::File::read_link(path);
-        if (link_target_or_error.is_error())
+        if (link_target_or_error.is_error()) {
             perror("read_link");
+            return;
+        }
 
         auto link_target = LexicalPath { link_target_or_error.release_value() };
         LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path), link_target.string());
