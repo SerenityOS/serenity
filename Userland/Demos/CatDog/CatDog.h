@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Types.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
@@ -25,112 +27,61 @@ class CatDog final : public GUI::Widget
 public:
     static ErrorOr<NonnullRefPtr<CatDog>> create();
 
-    // The general state, does not contain movement direction or whether CatDog is roaming.
-    enum class MainState {
-        Idle,      // default state
-        Alerted,   // woken by mouse cursor or speaking after being idle
-        Sleeping,  // mouse hasn't moved in some time
-        Artist,    // PixelPaint or FontEditor are open
-        Inspector, // SystemServer, Profiler or Inspector are open
-    };
-    static bool is_non_application_state(MainState state)
-    {
-        return state == MainState::Idle || state == MainState::Alerted || state == MainState::Sleeping;
-    }
-
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void paint_event(GUI::PaintEvent& event) override;
     virtual void track_mouse_move(Gfx::IntPoint point) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override;
 
-    void start_the_timer() { m_timer.start(); }
-
     Function<void()> on_click;
     Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
-    bool roaming() const { return m_roaming; }
-    void set_roaming(bool roaming)
-    {
-        m_roaming = roaming;
-        if (!roaming) {
-            // If we stop CatDog while it's in a program-specific state, we don't want it to be alerted.
-            if (m_main_state == MainState::Idle || m_main_state == MainState::Sleeping)
-                m_main_state = MainState::Alerted;
-            m_curr_frame = 0;
-            set_image_by_main_state();
-            update();
-        }
-    }
+    void set_roaming(bool roaming);
 
-    MainState main_state() const { return m_main_state; }
+    [[nodiscard]] bool is_artist() const;
+    [[nodiscard]] bool is_inspector() const;
 
 private:
-    Gfx::IntPoint m_temp_pos;
-    Core::ElapsedTimer m_timer;
+    enum class State : u16 {
+        Frame1 = 0x0,
+        Frame2 = 0x1,
 
-    int m_curr_frame = 1;
-    int m_moveX, m_moveY = 0;
-    MainState m_main_state { MainState::Alerted };
-    bool m_up, m_down, m_left, m_right;
-    bool m_roaming { true };
+        Up = 0x10,
+        Down = 0x20,
+        Left = 0x40,
+        Right = 0x80,
+
+        Directions = Up | Down | Left | Right,
+
+        Roaming = 0x0100,
+        Idle = 0x0200,
+        Sleeping = 0x0400,
+        Alert = 0x0800,
+
+        GenericCatDog = 0x0000,
+        Inspector = 0x1000,
+        Artist = 0x2000
+    };
+
+    AK_ENUM_BITWISE_FRIEND_OPERATORS(State);
+
+    struct ImageForState {
+        State state;
+        NonnullRefPtr<Gfx::Bitmap> bitmap;
+    };
+
+    Vector<ImageForState> m_images;
+
+    Gfx::IntPoint m_mouse_offset {};
+    Core::ElapsedTimer m_idle_sleep_timer;
 
     NonnullOwnPtr<Core::Stream::File> m_proc_all;
 
-    RefPtr<Gfx::Bitmap> m_alert;
-    RefPtr<Gfx::Bitmap> m_artist;
-    RefPtr<Gfx::Bitmap> m_erun1;
-    RefPtr<Gfx::Bitmap> m_erun2;
-    RefPtr<Gfx::Bitmap> m_inspector;
-    RefPtr<Gfx::Bitmap> m_nerun1;
-    RefPtr<Gfx::Bitmap> m_nerun2;
-    RefPtr<Gfx::Bitmap> m_nrun1;
-    RefPtr<Gfx::Bitmap> m_nrun2;
-    RefPtr<Gfx::Bitmap> m_nwrun1;
-    RefPtr<Gfx::Bitmap> m_nwrun2;
-    RefPtr<Gfx::Bitmap> m_serun1;
-    RefPtr<Gfx::Bitmap> m_serun2;
-    RefPtr<Gfx::Bitmap> m_sleep1;
-    RefPtr<Gfx::Bitmap> m_sleep2;
-    RefPtr<Gfx::Bitmap> m_srun1;
-    RefPtr<Gfx::Bitmap> m_srun2;
-    RefPtr<Gfx::Bitmap> m_still;
-    RefPtr<Gfx::Bitmap> m_swrun1;
-    RefPtr<Gfx::Bitmap> m_swrun2;
-    RefPtr<Gfx::Bitmap> m_wrun1;
-    RefPtr<Gfx::Bitmap> m_wrun2;
+    State m_state { State::Roaming };
+    State m_frame { State::Frame1 };
 
-    RefPtr<Gfx::Bitmap> m_curr_bmp;
+    CatDog();
 
-    // Used if CatDog is still; may also account for animation frames.
-    void set_image_by_main_state()
-    {
-        switch (m_main_state) {
-        case MainState::Idle:
-            m_curr_bmp = m_still;
-            break;
-        case MainState::Alerted:
-            m_curr_bmp = m_alert;
-            break;
-        case MainState::Sleeping:
-            if (m_curr_frame == 1)
-                m_curr_bmp = m_sleep1;
-            else
-                m_curr_bmp = m_sleep2;
-            break;
-        case MainState::Artist:
-            m_curr_bmp = m_artist;
-            break;
-        case MainState::Inspector:
-            m_curr_bmp = m_inspector;
-            break;
-        }
-    }
-
-    CatDog()
-        : m_temp_pos { 0, 0 }
-        , m_proc_all(MUST(Core::Stream::File::open("/sys/kernel/processes"sv, Core::Stream::OpenMode::Read)))
-    {
-        set_image_by_main_state();
-    }
+    [[nodiscard]] Gfx::Bitmap& bitmap_for_state() const;
+    [[nodiscard]] State special_application_states() const;
 };
