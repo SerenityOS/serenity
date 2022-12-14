@@ -32,7 +32,7 @@ public:
     virtual Node const* parent() const override { return nullptr; }
     virtual ErrorOr<String> name() const override;
     String const& section_name() const { return m_section; }
-    ErrorOr<String> path() const;
+    virtual ErrorOr<String> path() const override;
 
     virtual bool is_open() const override { return m_open; }
     void set_open(bool open);
@@ -40,6 +40,7 @@ public:
     static ErrorOr<NonnullRefPtr<SectionNode>> try_create_from_number(StringView section_number);
 
 protected:
+    // In this class, the section is a number, but in lower sections it might be the same as the name.
     String m_section;
     String m_name;
 
