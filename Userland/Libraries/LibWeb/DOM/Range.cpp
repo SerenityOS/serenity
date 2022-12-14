@@ -116,7 +116,7 @@ RelativeBoundaryPointPosition position_of_boundary_point_relative_to_other_bound
         while (!node_a.is_parent_of(child)) {
             auto* parent = child->parent();
             VERIFY(parent);
-            child = parent;
+            child = *parent;
         }
 
         // 3. If child’s index is less than offsetA, then return after.
@@ -147,12 +147,12 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
 
         // 1. If range’s root is not equal to node’s root, or if bp is after the range’s end, set range’s end to bp.
         if (&root() != &node.root() || position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_end_container, m_end_offset) == RelativeBoundaryPointPosition::After) {
-            m_end_container = &node;
+            m_end_container = node;
             m_end_offset = offset;
         }
 
         // 2. Set range’s start to bp.
-        m_start_container = &node;
+        m_start_container = node;
         m_start_offset = offset;
     } else {
         // -> If these steps were invoked as "set the end"
@@ -160,12 +160,12 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
 
         // 1. If range’s root is not equal to node’s root, or if bp is before the range’s start, set range’s start to bp.
         if (&root() != &node.root() || position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset) == RelativeBoundaryPointPosition::Before) {
-            m_start_container = &node;
+            m_start_container = node;
             m_start_offset = offset;
         }
 
         // 2. Set range’s end to bp.
-        m_end_container = &node;
+        m_end_container = node;
         m_end_offset = offset;
     }
 
@@ -342,11 +342,11 @@ WebIDL::ExceptionOr<void> Range::select(Node& node)
     auto index = node.index();
 
     // 4. Set range’s start to boundary point (parent, index).
-    m_start_container = parent;
+    m_start_container = *parent;
     m_start_offset = index;
 
     // 5. Set range’s end to boundary point (parent, index plus 1).
-    m_end_container = parent;
+    m_end_container = *parent;
     m_end_offset = index + 1;
 
     return {};
@@ -384,11 +384,11 @@ WebIDL::ExceptionOr<void> Range::select_node_contents(Node const& node)
     auto length = node.length();
 
     // 3. Set start to the boundary point (node, 0).
-    m_start_container = &node;
+    m_start_container = node;
     m_start_offset = 0;
 
     // 4. Set end to the boundary point (node, length).
-    m_end_container = &node;
+    m_end_container = node;
     m_end_offset = length;
 
     return {};
@@ -428,7 +428,7 @@ JS::NonnullGCPtr<Node> Range::common_ancestor_container() const
     // 2. While container is not an inclusive ancestor of end node, let container be container’s parent.
     while (!container->is_inclusive_ancestor_of(m_end_container)) {
         VERIFY(container->parent());
-        container = container->parent();
+        container = *container->parent();
     }
 
     // 3. Return container.
@@ -593,7 +593,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
 
     // 6. While common ancestor is not an inclusive ancestor of original end node, set common ancestor to its own parent.
     while (!common_ancestor->is_inclusive_ancestor_of(original_end_node))
-        common_ancestor = common_ancestor->parent_node();
+        common_ancestor = *common_ancestor->parent_node();
 
     // 7. Let first partially contained child be null.
     JS::GCPtr<Node> first_partially_contained_child;
@@ -919,7 +919,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
 
     // 6. While common ancestor is not an inclusive ancestor of original end node, set common ancestor to its own parent.
     while (!common_ancestor->is_inclusive_ancestor_of(original_end_node))
-        common_ancestor = common_ancestor->parent_node();
+        common_ancestor = *common_ancestor->parent_node();
 
     // 7. Let first partially contained child be null.
     JS::GCPtr<Node> first_partially_contained_child;
@@ -1078,7 +1078,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
 
         // 2. While reference node’s parent is not null and is not an inclusive ancestor of original end node, set reference node to its parent.
         while (reference_node->parent_node() && !reference_node->parent_node()->is_inclusive_ancestor_of(original_end_node))
-            reference_node = reference_node->parent_node();
+            reference_node = *reference_node->parent_node();
 
         // 3. Set new node to the parent of reference node, and new offset to one plus the index of reference node.
         new_node = reference_node->parent_node();

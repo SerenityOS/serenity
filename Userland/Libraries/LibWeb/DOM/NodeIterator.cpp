@@ -84,7 +84,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::traverse(Direction directio
                 auto* next_node = m_traversal_pointer->node->next_in_pre_order(m_root.ptr());
                 if (!next_node)
                     return nullptr;
-                m_traversal_pointer->node = next_node;
+                m_traversal_pointer->node = *next_node;
             } else {
                 // If beforeNode is true, then set it to false.
                 m_traversal_pointer->is_before_node = false;
@@ -99,7 +99,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::traverse(Direction directio
                 auto* previous_node = m_traversal_pointer->node->previous_in_pre_order();
                 if (!previous_node)
                     return nullptr;
-                m_traversal_pointer->node = previous_node;
+                m_traversal_pointer->node = *previous_node;
             } else {
                 // If beforeNode is false, then set it to true.
                 m_traversal_pointer->is_before_node = true;
@@ -194,7 +194,7 @@ void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_
             while (node && node->is_descendant_of(to_be_removed_node))
                 node = node->next_in_pre_order(root());
             if (node)
-                pointer.node = node;
+                pointer.node = *node;
             return;
         }
         if (auto* node = to_be_removed_node.previous_in_pre_order()) {
@@ -218,7 +218,7 @@ void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_
                 node = node->previous_in_pre_order();
         }
         if (node)
-            pointer.node = node;
+            pointer.node = *node;
         return;
     }
     auto* node = to_be_removed_node.next_in_pre_order(root());
@@ -227,7 +227,7 @@ void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_
             node = node->previous_in_pre_order();
     }
     if (node)
-        pointer.node = node;
+        pointer.node = *node;
 }
 
 // https://dom.spec.whatwg.org/#nodeiterator-pre-removing-steps
