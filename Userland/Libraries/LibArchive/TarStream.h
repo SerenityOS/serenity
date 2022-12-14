@@ -59,10 +59,10 @@ private:
 class TarOutputStream {
 public:
     TarOutputStream(Core::Stream::Handle<Core::Stream::Stream>);
-    void add_file(DeprecatedString const& path, mode_t, ReadonlyBytes);
-    void add_link(DeprecatedString const& path, mode_t, StringView);
-    void add_directory(DeprecatedString const& path, mode_t);
-    void finish();
+    ErrorOr<void> add_file(DeprecatedString const& path, mode_t, ReadonlyBytes);
+    ErrorOr<void> add_link(DeprecatedString const& path, mode_t, StringView);
+    ErrorOr<void> add_directory(DeprecatedString const& path, mode_t);
+    ErrorOr<void> finish();
 
 private:
     Core::Stream::Handle<Core::Stream::Stream> m_stream;
