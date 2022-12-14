@@ -34,7 +34,7 @@ if(NOT COMMAND serenity_option)
 endif()
 
 include(check_for_dependencies)
-include(lagom_options)
+include(lagom_options NO_POLICY_SCOPE)
 
 if(ENABLE_ALL_THE_DEBUG_MACROS)
     include(all_the_debug_macros)
