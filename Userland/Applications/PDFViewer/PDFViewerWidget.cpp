@@ -6,6 +6,13 @@
  */
 
 #include "PDFViewerWidget.h"
+#include "AK/Assertions.h"
+#include "AK/DeprecatedString.h"
+#include "AK/Format.h"
+#include "LibGUI/Forward.h"
+#include <AK/HashMap.h>
+#include <AK/HashTable.h>
+#include <AK/Variant.h>
 #include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
@@ -15,11 +22,138 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Model.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 
+class PagedErrorsModel : public GUI::Model {
+
+    enum Columns {
+        Page = 0,
+        Message,
+        _Count
+    };
+
+    using PageErrors = AK::OrderedHashTable<DeprecatedString>;
+    using PagedErrors = HashMap<u32, PageErrors>;
+
+public:
+    int row_count(GUI::ModelIndex const& index) const override
+    {
+        // There are two levels: number of pages and number of errors in page
+        if (!index.is_valid()) {
+            return static_cast<int>(m_paged_errors.size());
+        }
+        if (!index.parent().is_valid()) {
+            auto errors_in_page = m_paged_errors.get(index.row()).release_value().size();
+            return static_cast<int>(errors_in_page);
+        }
+        return 0;
+    }
+
+    int column_count(GUI::ModelIndex const&) const override
+    {
+        return Columns::_Count;
+    }
+
+    int tree_column() const override
+    {
+        return Columns::Page;
+    }
+
+    DeprecatedString column_name(int index) const override
+    {
+        switch (index) {
+        case 0:
+            return "Page";
+        case 1:
+            return "Message";
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    GUI::ModelIndex index(int row, int column, GUI::ModelIndex const& parent) const override
+    {
+        if (!parent.is_valid()) {
+            return create_index(row, column);
+        }
+        auto const& page = m_pages_with_errors[parent.row()];
+        return create_index(row, column, &page);
+    }
+
+    GUI::ModelIndex parent_index(GUI::ModelIndex const& index) const override
+    {
+        auto* const internal_data = index.internal_data();
+        if (internal_data == nullptr)
+            return {};
+        auto page = *static_cast<u32 const*>(internal_data);
+        auto page_idx = static_cast<int>(m_pages_with_errors.find_first_index(page).release_value());
+        return create_index(page_idx, index.column());
+    }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole) const override
+    {
+        if (!index.parent().is_valid()) {
+            switch (index.column()) {
+            case Columns::Page:
+                return m_pages_with_errors[index.row()] + 1;
+            case Columns::Message:
+                return DeprecatedString::formatted("{} errors", m_paged_errors.get(index.row()).release_value().size());
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+
+        auto page = *static_cast<u32 const*>(index.internal_data());
+        switch (index.column()) {
+        case Columns::Page:
+            return "";
+        case Columns::Message: {
+            auto page_errors = m_paged_errors.get(page).release_value();
+            // dbgln("Errors on page {}: {}. Requesting data for index {},{}", page, page_errors.size(), index.row(), index.column());
+            auto it = page_errors.begin();
+            auto row = index.row();
+            for (int i = 0; i < row; ++i, ++it)
+                ;
+            return *it;
+        }
+        }
+        VERIFY_NOT_REACHED();
+    }
+
+    void add_errors(u32 page, PDF::Errors const& errors)
+    {
+        auto old_size = total_error_count();
+        if (!m_pages_with_errors.contains_slow(page)) {
+            m_pages_with_errors.append(page);
+        }
+        auto& page_errors = m_paged_errors.ensure(page);
+        for (auto const& error : errors.errors())
+            page_errors.set(error.message());
+        auto new_size = total_error_count();
+        if (old_size != new_size)
+            invalidate();
+    }
+
+private:
+    size_t total_error_count() const
+    {
+        size_t count = 0;
+        for (auto const& entry : m_paged_errors)
+            count += entry.value.size();
+        return count;
+    }
+
+    Vector<u32> m_pages_with_errors;
+    PagedErrors m_paged_errors;
+};
+
 PDFViewerWidget::PDFViewerWidget()
+    : m_paged_errors_model(adopt_ref(*new PagedErrorsModel()))
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
@@ -27,19 +161,33 @@ PDFViewerWidget::PDFViewerWidget()
     auto& toolbar_container = add<GUI::ToolbarContainer>();
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
-    auto& splitter = add<GUI::HorizontalSplitter>();
-    splitter.layout()->set_spacing(4);
+    auto& h_splitter = add<GUI::HorizontalSplitter>();
+    h_splitter.layout()->set_spacing(4);
 
-    m_sidebar = splitter.add<SidebarWidget>();
+    m_sidebar = h_splitter.add<SidebarWidget>();
     m_sidebar->set_preferred_width(200);
     m_sidebar->set_visible(false);
 
-    m_viewer = splitter.add<PDFViewer>();
+    auto& v_splitter = h_splitter.add<GUI::VerticalSplitter>();
+    v_splitter.layout()->set_spacing(4);
+
+    m_viewer = v_splitter.add<PDFViewer>();
     m_viewer->on_page_change = [&](auto new_page) {
         m_page_text_box->set_current_number(new_page + 1, GUI::AllowCallback::No);
         m_go_to_prev_page_action->set_enabled(new_page > 0);
         m_go_to_next_page_action->set_enabled(new_page < m_viewer->document()->get_page_count() - 1);
     };
+    m_viewer->on_render_errors = [&](u32 page, PDF::Errors const& errors) {
+        verify_cast<PagedErrorsModel>(m_paged_errors_model.ptr())->add_errors(page, errors);
+    };
+
+    m_errors_tree_view = v_splitter.add<GUI::TreeView>();
+    m_errors_tree_view->set_preferred_height(10);
+    m_errors_tree_view->column_header().set_visible(true);
+    m_errors_tree_view->set_should_fill_selected_rows(true);
+    m_errors_tree_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectRows);
+    m_errors_tree_view->set_model(MUST(GUI::SortingProxyModel::create(m_paged_errors_model)));
+    m_errors_tree_view->set_key_column(0);
 
     initialize_toolbar(toolbar);
 }
