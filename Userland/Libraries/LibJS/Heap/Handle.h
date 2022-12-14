@@ -121,6 +121,20 @@ inline Handle<T> make_handle(T& cell)
     return Handle<T>::create(&cell);
 }
 
+template<class T>
+inline Handle<T> make_handle(GCPtr<T> cell)
+{
+    if (!cell)
+        return Handle<T> {};
+    return Handle<T>::create(cell.ptr());
+}
+
+template<class T>
+inline Handle<T> make_handle(NonnullGCPtr<T> cell)
+{
+    return Handle<T>::create(cell.ptr());
+}
+
 template<>
 class Handle<Value> {
 public:

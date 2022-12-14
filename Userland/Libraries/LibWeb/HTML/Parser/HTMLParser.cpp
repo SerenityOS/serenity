@@ -1174,7 +1174,7 @@ Create:
     auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name()));
 
     // 9. Replace the entry for entry in the list with an entry for new element.
-    m_list_of_active_formatting_elements.entries().at(index).element = JS::make_handle(new_element.ptr());
+    m_list_of_active_formatting_elements.entries().at(index).element = JS::make_handle(new_element);
 
     // 10. If the entry for new element in the list of active formatting elements is not the last entry in the list, return to the step labeled advance.
     if (index != m_list_of_active_formatting_elements.entries().size() - 1)
