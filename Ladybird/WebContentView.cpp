@@ -647,7 +647,7 @@ void WebContentView::create_client()
         });
     };
 
-    client().async_update_system_theme(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)));
+    client().async_update_system_theme(MUST(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root))));
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
     // FIXME: Get the screen rect.
