@@ -331,6 +331,8 @@ void TreeMapWidget::keydown_event(GUI::KeyEvent& event)
         set_viewpoint(m_viewpoint == 0 ? m_path.size() : m_viewpoint - 1);
     else if (event.key() == KeyCode::Key_Right)
         set_viewpoint(m_viewpoint == m_path.size() ? 0 : m_viewpoint + 1);
+    else
+        event.ignore();
 }
 
 void TreeMapWidget::mousewheel_event(GUI::MouseEvent& event)
