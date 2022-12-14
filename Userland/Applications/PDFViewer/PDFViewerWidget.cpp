@@ -338,7 +338,7 @@ void PDFViewerWidget::open_file(Core::File& file)
 {
     window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", file.filename()));
 
-    auto handle_error = [&]<typename T>(PDF::PDFErrorOr<T> maybe_error) {
+    auto handle_error = [&](auto&& maybe_error) {
         if (maybe_error.is_error()) {
             auto error = maybe_error.release_error();
             warnln("{}", error.message());
