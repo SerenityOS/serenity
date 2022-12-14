@@ -580,8 +580,11 @@ void Game::keydown_event(GUI::KeyEvent& event)
     } else if (event.key() == KeyCode::Key_Space) {
         if (m_human_can_play && m_state == State::Play)
             play_card(m_players[0], pick_first_card_ltr(m_players[0]));
-    } else if (event.shift() && event.key() == KeyCode::Key_F11)
+    } else if (event.shift() && event.key() == KeyCode::Key_F11) {
         dump_state();
+    } else {
+        event.ignore();
+    }
 }
 
 void Game::play_card(Player& player, size_t card_index)
