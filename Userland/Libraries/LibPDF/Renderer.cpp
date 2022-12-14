@@ -13,11 +13,10 @@
 #define RENDERER_HANDLER(name) \
     PDFErrorOr<void> Renderer::handle_##name([[maybe_unused]] Vector<Value> const& args, [[maybe_unused]] Optional<NonnullRefPtr<DictObject>> extra_resources)
 
-#define RENDERER_TODO(name)                                         \
-    RENDERER_HANDLER(name)                                          \
-    {                                                               \
-        dbgln("[PDF::Renderer] Unsupported draw operation " #name); \
-        TODO();                                                     \
+#define RENDERER_TODO(name)                                                        \
+    RENDERER_HANDLER(name)                                                         \
+    {                                                                              \
+        return Error(Error::Type::RenderingUnsupported, "draw operation: " #name); \
     }
 
 namespace PDF {
