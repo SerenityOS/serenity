@@ -365,6 +365,7 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
         playback_move(PlaybackDirection::Last);
         break;
     default:
+        event.ignore();
         return;
     }
     update();
