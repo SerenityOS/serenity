@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Vector.h>
 
 namespace PDF {
 
@@ -52,7 +53,33 @@ private:
     DeprecatedString m_message;
 };
 
+class Errors {
+
+public:
+    Errors() = default;
+    Errors(Error&& error)
+    {
+        m_errors.empend(move(error));
+    }
+
+    Vector<Error> const& errors() const
+    {
+        return m_errors;
+    }
+
+    void add_error(Error&& error)
+    {
+        m_errors.empend(move(error));
+    }
+
+private:
+    Vector<Error> m_errors;
+};
+
 template<typename T>
 using PDFErrorOr = ErrorOr<T, Error>;
+
+template<typename T>
+using PDFErrorsOr = ErrorOr<T, Errors>;
 
 }
