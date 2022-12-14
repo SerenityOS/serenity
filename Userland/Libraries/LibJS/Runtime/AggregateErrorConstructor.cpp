@@ -38,7 +38,7 @@ ThrowCompletionOr<Value> AggregateErrorConstructor::call()
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message [ , options ] ), https://tc39.es/ecma262/#sec-aggregate-error
-ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> AggregateErrorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -69,7 +69,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
     MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(realm, errors_list), .writable = true, .enumerable = false, .configurable = true }));
 
     // 7. Return O.
-    return aggregate_error.ptr();
+    return aggregate_error;
 }
 
 }

@@ -43,7 +43,7 @@ ThrowCompletionOr<Value> PluralRulesConstructor::call()
 }
 
 // 16.1.1 Intl.PluralRules ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.pluralrules
-ThrowCompletionOr<Object*> PluralRulesConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PluralRulesConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -54,7 +54,7 @@ ThrowCompletionOr<Object*> PluralRulesConstructor::construct(FunctionObject& new
     auto plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(vm, new_target, &Intrinsics::intl_plural_rules_prototype));
 
     // 3. Return ? InitializePluralRules(pluralRules, locales, options).
-    return TRY(initialize_plural_rules(vm, plural_rules, locales, options));
+    return *TRY(initialize_plural_rules(vm, plural_rules, locales, options));
 }
 
 // 16.2.2 Intl.PluralRules.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.pluralrules.supportedlocalesof

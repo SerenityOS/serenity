@@ -56,7 +56,7 @@ ThrowCompletionOr<Value> BigIntConstructor::call()
 }
 
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
-ThrowCompletionOr<Object*> BigIntConstructor::construct(FunctionObject&)
+ThrowCompletionOr<NonnullGCPtr<Object>> BigIntConstructor::construct(FunctionObject&)
 {
     return vm().throw_completion<TypeError>(ErrorType::NotAConstructor, "BigInt");
 }

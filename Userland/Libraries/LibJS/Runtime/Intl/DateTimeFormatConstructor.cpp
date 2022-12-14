@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> DateTimeFormatConstructor::call()
 }
 
 // 11.1.1 Intl.DateTimeFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.datetimeformat
-ThrowCompletionOr<Object*> DateTimeFormatConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> DateTimeFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -64,7 +64,7 @@ ThrowCompletionOr<Object*> DateTimeFormatConstructor::construct(FunctionObject& 
     //     b. Return ? ChainDateTimeFormat(dateTimeFormat, NewTarget, this).
 
     // 5. Return dateTimeFormat.
-    return date_time_format.ptr();
+    return date_time_format;
 }
 
 // 11.2.2 Intl.DateTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.datetimeformat.supportedlocalesof

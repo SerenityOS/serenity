@@ -275,7 +275,7 @@ ThrowCompletionOr<Value> PromiseConstructor::call()
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
-ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PromiseConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -305,7 +305,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     }
 
     // 11. Return promise.
-    return promise.ptr();
+    return promise;
 }
 
 // 27.2.4.1 Promise.all ( iterable ), https://tc39.es/ecma262/#sec-promise.all

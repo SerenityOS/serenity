@@ -493,7 +493,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         virtual ~ConstructorName() override;                                                                      \
                                                                                                                   \
         virtual ThrowCompletionOr<Value> call() override;                                                         \
-        virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;                        \
+        virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target) override;           \
                                                                                                                   \
     private:                                                                                                      \
         explicit ConstructorName(Realm&, Object& prototype);                                                      \

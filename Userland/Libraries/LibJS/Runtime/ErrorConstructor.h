@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@ public:
     virtual ~ErrorConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
-    virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target) override;
 
 private:
     explicit ErrorConstructor(Realm&);
@@ -27,23 +27,23 @@ private:
     virtual bool has_constructor() const override { return true; }
 };
 
-#define DECLARE_NATIVE_ERROR_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName) \
-    class ConstructorName final : public NativeFunction {                                       \
-        JS_OBJECT(ConstructorName, NativeFunction);                                             \
-                                                                                                \
-    public:                                                                                     \
-        virtual void initialize(Realm&) override;                                               \
-        virtual ~ConstructorName() override;                                                    \
-        virtual ThrowCompletionOr<Value> call() override;                                       \
-        virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;      \
-                                                                                                \
-    private:                                                                                    \
-        explicit ConstructorName(Realm&);                                                       \
-                                                                                                \
-        virtual bool has_constructor() const override                                           \
-        {                                                                                       \
-            return true;                                                                        \
-        }                                                                                       \
+#define DECLARE_NATIVE_ERROR_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName)         \
+    class ConstructorName final : public NativeFunction {                                               \
+        JS_OBJECT(ConstructorName, NativeFunction);                                                     \
+                                                                                                        \
+    public:                                                                                             \
+        virtual void initialize(Realm&) override;                                                       \
+        virtual ~ConstructorName() override;                                                            \
+        virtual ThrowCompletionOr<Value> call() override;                                               \
+        virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target) override; \
+                                                                                                        \
+    private:                                                                                            \
+        explicit ConstructorName(Realm&);                                                               \
+                                                                                                        \
+        virtual bool has_constructor() const override                                                   \
+        {                                                                                               \
+            return true;                                                                                \
+        }                                                                                               \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \

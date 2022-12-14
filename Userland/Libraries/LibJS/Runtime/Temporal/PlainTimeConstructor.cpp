@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> PlainTimeConstructor::call()
 }
 
 // 4.1.1 Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime
-ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PlainTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -74,7 +74,7 @@ ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_t
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainTime);
 
     // 8. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
-    return TRY(create_temporal_time(vm, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
+    return *TRY(create_temporal_time(vm, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
 }
 
 // 4.2.2 Temporal.PlainTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from

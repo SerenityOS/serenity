@@ -43,7 +43,7 @@ ThrowCompletionOr<Value> ListFormatConstructor::call()
 }
 
 // 13.1.1 Intl.ListFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat
-ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ListFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -91,7 +91,7 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     // Note: The remaining steps are skipped in favor of deferring to LibUnicode.
 
     // 19. Return listFormat.
-    return list_format.ptr();
+    return list_format;
 }
 
 // 13.2.2 Intl.ListFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat.supportedLocalesOf

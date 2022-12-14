@@ -25,7 +25,7 @@ JS::ThrowCompletionOr<JS::Value> WebAssemblyModuleConstructor::call()
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Module");
 }
 
-JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyModuleConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(Funct
     auto* buffer_object = TRY(vm.argument(0).to_object(vm));
     auto result = TRY(parse_module(vm, buffer_object));
 
-    return heap().allocate<WebAssemblyModuleObject>(realm, realm, result).ptr();
+    return heap().allocate<WebAssemblyModuleObject>(realm, realm, result);
 }
 
 void WebAssemblyModuleConstructor::initialize(JS::Realm& realm)

@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> SymbolConstructor::call()
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
-ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
+ThrowCompletionOr<NonnullGCPtr<Object>> SymbolConstructor::construct(FunctionObject&)
 {
     return vm().throw_completion<TypeError>(ErrorType::NotAConstructor, "Symbol");
 }

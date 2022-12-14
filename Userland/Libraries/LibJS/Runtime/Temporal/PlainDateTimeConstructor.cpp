@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> PlainDateTimeConstructor::call()
 }
 
 // 5.1.1 Temporal.PlainDateTime ( isoYear, isoMonth, isoDay [ , hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond [ , calendarLike ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime
-ThrowCompletionOr<Object*> PlainDateTimeConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PlainDateTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -88,7 +88,7 @@ ThrowCompletionOr<Object*> PlainDateTimeConstructor::construct(FunctionObject& n
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
 
     // 12. Return ? CreateTemporalDateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, NewTarget).
-    return TRY(create_temporal_date_time(vm, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target));
+    return *TRY(create_temporal_date_time(vm, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target));
 }
 
 // 5.2.2 Temporal.PlainDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.from

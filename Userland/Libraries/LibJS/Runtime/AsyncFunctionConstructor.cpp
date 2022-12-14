@@ -35,7 +35,7 @@ ThrowCompletionOr<Value> AsyncFunctionConstructor::call()
 }
 
 // 27.7.1.1 AsyncFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-async-function-constructor-arguments
-ThrowCompletionOr<Object*> AsyncFunctionConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> AsyncFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -46,7 +46,7 @@ ThrowCompletionOr<Object*> AsyncFunctionConstructor::construct(FunctionObject& n
     auto& args = vm.running_execution_context().arguments;
 
     // 3. Return CreateDynamicFunction(C, NewTarget, async, args).
-    return TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Async, args));
+    return *TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Async, args));
 }
 
 }

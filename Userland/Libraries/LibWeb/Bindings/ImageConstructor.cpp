@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<JS::Value> ImageConstructor::call()
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-image
-JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> ImageConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
 
@@ -57,7 +57,7 @@ JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
     }
 
     // 5. Return img.
-    return image_element.ptr();
+    return image_element;
 }
 
 }

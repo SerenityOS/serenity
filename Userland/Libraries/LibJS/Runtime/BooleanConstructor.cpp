@@ -37,12 +37,12 @@ ThrowCompletionOr<Value> BooleanConstructor::call()
 }
 
 // 20.3.1.1 Boolean ( value ), https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value
-ThrowCompletionOr<Object*> BooleanConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> BooleanConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
     auto b = vm.argument(0).to_boolean();
-    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &Intrinsics::boolean_prototype, b)).ptr();
+    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &Intrinsics::boolean_prototype, b));
 }
 
 }

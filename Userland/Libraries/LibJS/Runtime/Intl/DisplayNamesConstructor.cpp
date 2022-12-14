@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> DisplayNamesConstructor::call()
 }
 
 // 12.1.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames
-ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -130,7 +130,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     // 29. Set displayNames.[[Fields]] to styleFields.
 
     // 30. Return displayNames.
-    return display_names.ptr();
+    return display_names;
 }
 
 // 12.2.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf

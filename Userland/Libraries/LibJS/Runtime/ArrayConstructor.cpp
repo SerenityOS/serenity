@@ -47,7 +47,7 @@ ThrowCompletionOr<Value> ArrayConstructor::call()
 }
 
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
-ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ArrayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -55,7 +55,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
     auto* proto = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::array_prototype));
 
     if (vm.argument_count() == 0)
-        return MUST(Array::create(realm, 0, proto)).ptr();
+        return MUST(Array::create(realm, 0, proto));
 
     if (vm.argument_count() == 1) {
         auto length = vm.argument(0);
@@ -70,7 +70,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
                 return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array");
         }
         TRY(array->set(vm.names.length, Value(int_length), Object::ShouldThrowExceptions::Yes));
-        return array.ptr();
+        return array;
     }
 
     auto array = TRY(Array::create(realm, vm.argument_count(), proto));
@@ -78,7 +78,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
     for (size_t k = 0; k < vm.argument_count(); ++k)
         MUST(array->create_data_property_or_throw(k, vm.argument(k)));
 
-    return array.ptr();
+    return array;
 }
 
 // 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from

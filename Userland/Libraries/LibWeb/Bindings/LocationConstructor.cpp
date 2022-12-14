@@ -22,7 +22,7 @@ JS::ThrowCompletionOr<JS::Value> LocationConstructor::call()
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Location");
 }
 
-JS::ThrowCompletionOr<JS::Object*> LocationConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> LocationConstructor::construct(FunctionObject&)
 {
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "Location");
 }

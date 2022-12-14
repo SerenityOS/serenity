@@ -227,7 +227,7 @@ ThrowCompletionOr<Value> NativeFunction::call()
     return m_native_function(vm());
 }
 
-ThrowCompletionOr<Object*> NativeFunction::construct(FunctionObject&)
+ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::construct(FunctionObject&)
 {
     // Needs to be overridden if [[Construct]] is needed.
     VERIFY_NOT_REACHED();

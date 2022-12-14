@@ -241,7 +241,7 @@ ThrowCompletionOr<Value> LocaleConstructor::call()
 }
 
 // 14.1.1 Intl.Locale ( tag [ , options ] ), https://tc39.es/ecma402/#sec-Intl.Locale
-ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -362,7 +362,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
         locale->set_numbering_system(result.nu.release_value());
 
     // 37. Return locale.
-    return locale.ptr();
+    return locale;
 }
 
 }

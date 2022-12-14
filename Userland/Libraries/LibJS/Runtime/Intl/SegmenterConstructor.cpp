@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> SegmenterConstructor::call()
 }
 
 // 18.1.1 Intl.Segmenter ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.segmenter
-ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -83,7 +83,7 @@ ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_t
     segmenter->set_segmenter_granularity(granularity.as_string().deprecated_string());
 
     // 14. Return segmenter.
-    return segmenter.ptr();
+    return segmenter;
 }
 
 // 18.2.2 Intl.Segmenter.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.segmenter.supportedlocalesof

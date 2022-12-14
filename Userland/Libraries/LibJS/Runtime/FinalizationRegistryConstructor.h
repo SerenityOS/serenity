@@ -18,7 +18,7 @@ public:
     virtual ~FinalizationRegistryConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
-    virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject&) override;
 
 private:
     explicit FinalizationRegistryConstructor(Realm&);

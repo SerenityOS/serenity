@@ -36,7 +36,7 @@ ThrowCompletionOr<Value> AsyncGeneratorFunctionConstructor::call()
 }
 
 // 27.4.1.1 AsyncGeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-asyncgeneratorfunction
-ThrowCompletionOr<Object*> AsyncGeneratorFunctionConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> AsyncGeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -47,7 +47,7 @@ ThrowCompletionOr<Object*> AsyncGeneratorFunctionConstructor::construct(Function
     auto& args = vm.running_execution_context().arguments;
 
     // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
-    return TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::AsyncGenerator, args));
+    return *TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::AsyncGenerator, args));
 }
 
 }

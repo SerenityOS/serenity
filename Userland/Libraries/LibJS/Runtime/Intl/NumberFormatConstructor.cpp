@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> NumberFormatConstructor::call()
 }
 
 // 15.1.1 Intl.NumberFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.numberformat
-ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> NumberFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -60,7 +60,7 @@ ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& ne
     //     b. Return ? ChainNumberFormat(numberFormat, NewTarget, this).
 
     // 5. Return numberFormat.
-    return number_format.ptr();
+    return number_format;
 }
 
 // 15.2.2 Intl.NumberFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.numberformat.supportedlocalesof

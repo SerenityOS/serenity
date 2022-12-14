@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> PlainMonthDayConstructor::call()
 }
 
 // 10.1.1 Temporal.PlainMonthDay ( isoMonth, isoDay [ , calendarLike [ , referenceISOYear ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday
-ThrowCompletionOr<Object*> PlainMonthDayConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PlainMonthDayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -78,7 +78,7 @@ ThrowCompletionOr<Object*> PlainMonthDayConstructor::construct(FunctionObject& n
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 7. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
-    return TRY(create_temporal_month_day(vm, m, d, *calendar, ref, &new_target));
+    return *TRY(create_temporal_month_day(vm, m, d, *calendar, ref, &new_target));
 }
 
 // 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from

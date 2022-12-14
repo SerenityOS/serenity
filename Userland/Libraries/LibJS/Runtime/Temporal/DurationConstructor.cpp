@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> DurationConstructor::call()
 }
 
 // 7.1.1 Temporal.Duration ( [ years [ , months [ , weeks [ , days [ , hours [ , minutes [ , seconds [ , milliseconds [ , microseconds [ , nanoseconds ] ] ] ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration
-ThrowCompletionOr<Object*> DurationConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> DurationConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -81,7 +81,7 @@ ThrowCompletionOr<Object*> DurationConstructor::construct(FunctionObject& new_ta
     auto ns = TRY(to_integer_if_integral(vm, vm.argument(9), ErrorType::TemporalInvalidDuration));
 
     // 12. Return ? CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget).
-    return TRY(create_temporal_duration(vm, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
+    return *TRY(create_temporal_duration(vm, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
