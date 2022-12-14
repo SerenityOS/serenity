@@ -141,43 +141,68 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
 
     // 2. Let result be a new Duration Record with each field set to 0.
     Temporal::DurationRecord result = {};
+    bool any_defined = false;
 
-    // 3. Let any be false.
-    auto any = false;
+    auto set_duration_record_value = [&](auto const& name, auto& value_slot) -> ThrowCompletionOr<void> {
+        auto value = TRY(input_object.get(name));
 
-    // 4. For each row of Table 1, except the header row, in table order, do
-    for (auto const& duration_instances_component : duration_instances_components) {
-        // a. Let valueSlot be the Value Slot value of the current row.
-        auto value_slot = duration_instances_component.value_slot;
-
-        // b. Let unit be the Unit value of the current row.
-        auto unit = duration_instances_component.unit;
-
-        // c. Let value be ? Get(input, unit).
-        auto value = TRY(input_object.get(FlyString(unit)));
-
-        // d. If value is not undefined, then
         if (!value.is_undefined()) {
-            // i. Set any to true.
-            any = true;
-
-            // ii. Set value to ? ToIntegerIfIntegral(value).
-            auto value_number = TRY(Temporal::to_integer_if_integral(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
-
-            // iii. Set result.[[<valueSlot>]] to value.
-            result.*value_slot = value_number;
+            value_slot = TRY(Temporal::to_integer_if_integral(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, name, value));
+            any_defined = true;
         }
-    }
 
-    // 5. If any is false, throw a TypeError exception.
-    if (!any)
+        return {};
+    };
+
+    // 3. Let days be ? Get(input, "days").
+    // 4. If days is not undefined, set result.[[Days]] to ? ToIntegerIfIntegral(days).
+    TRY(set_duration_record_value(vm.names.days, result.days));
+
+    // 5. Let hours be ? Get(input, "hours").
+    // 6. If hours is not undefined, set result.[[Hours]] to ? ToIntegerIfIntegral(hours).
+    TRY(set_duration_record_value(vm.names.hours, result.hours));
+
+    // 7. Let microseconds be ? Get(input, "microseconds").
+    // 8. If microseconds is not undefined, set result.[[Microseconds]] to ? ToIntegerIfIntegral(microseconds).
+    TRY(set_duration_record_value(vm.names.microseconds, result.microseconds));
+
+    // 9. Let milliseconds be ? Get(input, "milliseconds").
+    // 10. If milliseconds is not undefined, set result.[[Milliseconds]] to ? ToIntegerIfIntegral(milliseconds).
+    TRY(set_duration_record_value(vm.names.milliseconds, result.milliseconds));
+
+    // 11. Let minutes be ? Get(input, "minutes").
+    // 12. If minutes is not undefined, set result.[[Minutes]] to ? ToIntegerIfIntegral(minutes).
+    TRY(set_duration_record_value(vm.names.minutes, result.minutes));
+
+    // 13. Let months be ? Get(input, "months").
+    // 14. If months is not undefined, set result.[[Months]] to ? ToIntegerIfIntegral(months).
+    TRY(set_duration_record_value(vm.names.months, result.months));
+
+    // 15. Let nanoseconds be ? Get(input, "nanoseconds").
+    // 16. If nanoseconds is not undefined, set result.[[Nanoseconds]] to ? ToIntegerIfIntegral(nanoseconds).
+    TRY(set_duration_record_value(vm.names.nanoseconds, result.nanoseconds));
+
+    // 17. Let seconds be ? Get(input, "seconds").
+    // 18. If seconds is not undefined, set result.[[Seconds]] to ? ToIntegerIfIntegral(seconds).
+    TRY(set_duration_record_value(vm.names.seconds, result.seconds));
+
+    // 19. Let weeks be ? Get(input, "weeks").
+    // 20. If weeks is not undefined, set result.[[Weeks]] to ? ToIntegerIfIntegral(weeks).
+    TRY(set_duration_record_value(vm.names.weeks, result.weeks));
+
+    // 21. Let years be ? Get(input, "years").
+    // 22. If years is not undefined, set result.[[Years]] to ? ToIntegerIfIntegral(years).
+    TRY(set_duration_record_value(vm.names.years, result.years));
+
+    // 23. If years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are all undefined, throw a TypeError exception.
+    if (!any_defined)
         return vm.throw_completion<TypeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 6. If IsValidDurationRecord(result) is false, throw a RangeError exception.
+    // 24. If IsValidDurationRecord(result) is false, throw a RangeError exception.
     if (!is_valid_duration_record(result))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 7. Return result.
+    // 25. Return result.
     return result;
 }
 
