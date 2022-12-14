@@ -208,7 +208,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     // 3. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
-        this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype));
+        this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
     }
 
     ExecutionContext callee_context(heap());

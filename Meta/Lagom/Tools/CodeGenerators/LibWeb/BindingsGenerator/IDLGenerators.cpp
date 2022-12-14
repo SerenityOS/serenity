@@ -2436,15 +2436,15 @@ namespace Web::Bindings {
         // https://webidl.spec.whatwg.org/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
-    : Object(*realm.intrinsics().error_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().error_prototype())
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
-    : Object(ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"))
+    : Object(ConstructWithPrototypeTag::Tag, ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"))
 )~~~");
     } else {
         generator.append(R"~~~(
-    : Object(*realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
 )~~~");
     }
 
@@ -2873,7 +2873,7 @@ using namespace Web::WebIDL;
 namespace Web::Bindings {
 
 @prototype_class@::@prototype_class@(JS::Realm& realm)
-    : Object(*realm.intrinsics().iterator_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().iterator_prototype())
 {
 }
 

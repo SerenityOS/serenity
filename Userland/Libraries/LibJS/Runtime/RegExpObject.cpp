@@ -135,12 +135,12 @@ NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm, Regex<ECMA262> reg
 }
 
 RegExpObject::RegExpObject(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 
 RegExpObject::RegExpObject(Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_pattern(move(pattern))
     , m_flags(move(flags))
     , m_regex(move(regex))

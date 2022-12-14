@@ -14,7 +14,7 @@ namespace JS::Intl {
 
 // 13 ListFormat Objects, https://tc39.es/ecma402/#listformat-objects
 ListFormat::ListFormat(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

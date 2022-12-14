@@ -29,7 +29,7 @@ NonnullGCPtr<Error> Error::create(Realm& realm, DeprecatedString const& message)
 }
 
 Error::Error(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
     populate_stack();
 }

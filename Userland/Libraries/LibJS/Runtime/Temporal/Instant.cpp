@@ -24,7 +24,7 @@ namespace JS::Temporal {
 
 // 8 Temporal.Instant Objects, https://tc39.es/proposal-temporal/#sec-temporal-instant-objects
 Instant::Instant(BigInt const& nanoseconds, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_nanoseconds(nanoseconds)
 {
 }

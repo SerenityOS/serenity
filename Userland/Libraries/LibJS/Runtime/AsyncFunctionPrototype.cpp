@@ -10,7 +10,7 @@
 namespace JS {
 
 AsyncFunctionPrototype::AsyncFunctionPrototype(Realm& realm)
-    : Object(*realm.intrinsics().function_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().function_prototype())
 {
 }
 

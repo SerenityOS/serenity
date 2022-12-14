@@ -28,7 +28,7 @@ namespace JS::Temporal {
 
 // 12 Temporal.Calendar Objects, https://tc39.es/proposal-temporal/#sec-temporal-calendar-objects
 Calendar::Calendar(DeprecatedString identifier, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_identifier(move(identifier))
 {
 }

@@ -14,7 +14,7 @@ NonnullGCPtr<WeakMap> WeakMap::create(Realm& realm)
 }
 
 WeakMap::WeakMap(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , WeakContainer(heap())
 {
 }

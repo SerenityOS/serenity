@@ -70,7 +70,7 @@ ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_targ
     auto& realm = *vm.current_realm();
 
     if (&new_target != this)
-        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype));
+        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(realm, realm.intrinsics().object_prototype()).ptr();

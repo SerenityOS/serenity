@@ -24,7 +24,7 @@ namespace JS::Temporal {
 
 // 4 Temporal.PlainTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaintime-objects
 PlainTime::PlainTime(u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Calendar& calendar, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_iso_hour(iso_hour)
     , m_iso_minute(iso_minute)
     , m_iso_second(iso_second)

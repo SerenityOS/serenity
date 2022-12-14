@@ -14,7 +14,7 @@ NonnullGCPtr<WeakSet> WeakSet::create(Realm& realm)
 }
 
 WeakSet::WeakSet(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , WeakContainer(heap())
 {
 }

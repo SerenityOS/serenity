@@ -20,7 +20,7 @@ namespace JS::Temporal {
 
 // 10 Temporal.PlainMonthDay Objects, https://tc39.es/proposal-temporal/#sec-temporal-plainmonthday-objects
 PlainMonthDay::PlainMonthDay(u8 iso_month, u8 iso_day, i32 iso_year, Object& calendar, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_iso_year(iso_year)
     , m_iso_month(iso_month)
     , m_iso_day(iso_day)

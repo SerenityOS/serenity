@@ -17,7 +17,7 @@ PlatformObject::PlatformObject(JS::Realm& realm)
 }
 
 PlatformObject::PlatformObject(JS::Object& prototype)
-    : JS::Object(prototype)
+    : JS::Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

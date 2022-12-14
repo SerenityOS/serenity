@@ -31,14 +31,14 @@ NonnullGCPtr<ArrayBuffer> ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_buffer(move(buffer))
     , m_detach_key(js_undefined())
 {
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer* buffer, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_buffer(buffer)
     , m_detach_key(js_undefined())
 {

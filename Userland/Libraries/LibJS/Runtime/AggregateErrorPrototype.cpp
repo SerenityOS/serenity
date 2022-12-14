@@ -11,7 +11,7 @@
 namespace JS {
 
 AggregateErrorPrototype::AggregateErrorPrototype(Realm& realm)
-    : Object(*realm.intrinsics().error_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().error_prototype())
 {
 }
 

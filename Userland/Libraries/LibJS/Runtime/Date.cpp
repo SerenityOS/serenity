@@ -27,7 +27,7 @@ NonnullGCPtr<Date> Date::create(Realm& realm, double date_value)
 }
 
 Date::Date(double date_value, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_date_value(date_value)
 {
 }

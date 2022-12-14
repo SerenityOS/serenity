@@ -17,7 +17,7 @@ class WindowPrototype final : public JS::Object {
 
 public:
     explicit WindowPrototype(JS::Realm& realm)
-        : JS::Object(cached_web_prototype(realm, "EventTarget"))
+        : JS::Object(ConstructWithPrototypeTag::Tag, cached_web_prototype(realm, "EventTarget"))
     {
     }
 };

@@ -57,7 +57,7 @@ public:
 
 protected:
     explicit PrototypeObject(Object& prototype)
-        : Object(prototype)
+        : Object(ConstructWithPrototypeTag::Tag, prototype)
     {
     }
 };

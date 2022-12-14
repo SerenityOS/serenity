@@ -15,7 +15,7 @@ NonnullGCPtr<NumberObject> NumberObject::create(Realm& realm, double value)
 }
 
 NumberObject::NumberObject(double value, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_value(value)
 {
 }

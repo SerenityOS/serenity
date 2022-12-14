@@ -34,7 +34,7 @@ NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
     else if (prototype == realm.intrinsics().object_prototype())
         return *realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
     else
-        return *realm.heap().allocate<Object>(realm, *prototype);
+        return *realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
 }
 
 Object::Object(GlobalObjectTag, Realm& realm)
@@ -56,7 +56,7 @@ Object::Object(Realm& realm, Object* prototype)
         set_prototype(prototype);
 }
 
-Object::Object(Object& prototype)
+Object::Object(ConstructWithPrototypeTag, Object& prototype)
 {
     m_shape = prototype.shape().realm().intrinsics().empty_object_shape();
     VERIFY(m_shape);

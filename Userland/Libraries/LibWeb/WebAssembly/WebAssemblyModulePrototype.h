@@ -18,7 +18,7 @@ class WebAssemblyModulePrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyModulePrototype(JS::Realm& realm)
-        : JS::Object(*realm.intrinsics().object_prototype())
+        : JS::Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
     {
     }
 };

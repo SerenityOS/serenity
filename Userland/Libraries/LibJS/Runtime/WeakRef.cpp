@@ -19,7 +19,7 @@ NonnullGCPtr<WeakRef> WeakRef::create(Realm& realm, Symbol& value)
 }
 
 WeakRef::WeakRef(Object& value, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , WeakContainer(heap())
     , m_value(&value)
     , m_last_execution_generation(vm().execution_generation())
@@ -27,7 +27,7 @@ WeakRef::WeakRef(Object& value, Object& prototype)
 }
 
 WeakRef::WeakRef(Symbol& value, Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
     , WeakContainer(heap())
     , m_value(&value)
     , m_last_execution_generation(vm().execution_generation())

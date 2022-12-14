@@ -19,7 +19,7 @@ FunctionObject::FunctionObject(Realm& realm, Object* prototype)
 }
 
 FunctionObject::FunctionObject(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 

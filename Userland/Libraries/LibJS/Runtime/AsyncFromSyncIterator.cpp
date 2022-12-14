@@ -17,7 +17,7 @@ NonnullGCPtr<AsyncFromSyncIterator> AsyncFromSyncIterator::create(Realm& realm, 
 }
 
 AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterator_record)
-    : Object(*realm.intrinsics().async_from_sync_iterator_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().async_from_sync_iterator_prototype())
     , m_sync_iterator_record(sync_iterator_record)
 {
 }

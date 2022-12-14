@@ -25,7 +25,7 @@ namespace JS::Temporal {
 
 // 11 Temporal.TimeZone Objects, https://tc39.es/proposal-temporal/#sec-temporal-timezone-objects
 TimeZone::TimeZone(Object& prototype)
-    : Object(prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
 }
 
