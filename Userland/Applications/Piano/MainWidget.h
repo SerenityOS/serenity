@@ -39,8 +39,8 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void custom_event(Core::CustomEvent&) override;
 
-    void note_key_action(int key_code, DSP::Keyboard::Switch);
-    void special_key_action(int key_code);
+    bool note_key_action(int key_code, DSP::Keyboard::Switch);
+    bool special_key_action(int key_code);
 
     void turn_off_pressed_keys();
     void turn_on_pressed_keys();
