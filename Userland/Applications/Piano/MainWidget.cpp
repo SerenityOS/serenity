@@ -79,14 +79,24 @@ void MainWidget::custom_event(Core::CustomEvent&)
 
 void MainWidget::keydown_event(GUI::KeyEvent& event)
 {
-    // This is to stop held-down keys from creating multiple events.
-    if (m_keys_pressed[event.key()])
-        return;
-    else
-        m_keys_pressed[event.key()] = true;
+    if (!event.alt() && !event.ctrl() && !event.shift()) {
+        // This is to stop held-down keys from creating multiple events.
+        if (m_keys_pressed[event.key()])
+            return;
+        else
+            m_keys_pressed[event.key()] = true;
 
-    note_key_action(event.key(), DSP::Keyboard::Switch::On);
-    special_key_action(event.key());
+        bool event_was_accepted = false;
+        if (note_key_action(event.key(), DSP::Keyboard::Switch::On))
+            event_was_accepted = true;
+        if (special_key_action(event.key()))
+            event_was_accepted = true;
+        if (!event_was_accepted)
+            event.ignore();
+    } else {
+        event.ignore();
+    }
+
     m_keys_widget->update();
 }
 
@@ -98,27 +108,30 @@ void MainWidget::keyup_event(GUI::KeyEvent& event)
     m_keys_widget->update();
 }
 
-void MainWidget::note_key_action(int key_code, DSP::Keyboard::Switch switch_note)
+bool MainWidget::note_key_action(int key_code, DSP::Keyboard::Switch switch_note)
 {
     auto key = m_keys_widget->key_code_to_key(key_code);
     if (key == -1)
-        return;
+        return false;
     m_track_manager.keyboard()->set_keyboard_note_in_active_octave(key, switch_note);
+    return true;
 }
 
-void MainWidget::special_key_action(int key_code)
+bool MainWidget::special_key_action(int key_code)
 {
     switch (key_code) {
     case Key_Z:
         set_octave_and_ensure_note_change(DSP::Keyboard::Direction::Down);
-        break;
+        return true;
     case Key_X:
         set_octave_and_ensure_note_change(DSP::Keyboard::Direction::Up);
-        break;
+        return true;
     case Key_Space:
         m_player_widget->toggle_paused();
-        break;
+        return true;
     }
+
+    return false;
 }
 
 void MainWidget::turn_off_pressed_keys()
