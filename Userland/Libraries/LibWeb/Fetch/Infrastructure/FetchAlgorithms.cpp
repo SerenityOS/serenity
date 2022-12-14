@@ -12,7 +12,7 @@ namespace Web::Fetch::Infrastructure {
 
 JS::NonnullGCPtr<FetchAlgorithms> FetchAlgorithms::create(JS::VM& vm, Input input)
 {
-    return { *vm.heap().allocate_without_realm<FetchAlgorithms>(move(input)) };
+    return vm.heap().allocate_without_realm<FetchAlgorithms>(move(input));
 }
 
 FetchAlgorithms::FetchAlgorithms(Input input)

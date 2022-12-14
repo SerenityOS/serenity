@@ -376,7 +376,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         break;
     }
 
-    auto* shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this);
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this);
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
@@ -390,8 +390,8 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         m_text_node->set_is_password_input({}, true);
 
     MUST(element->append_child(*m_text_node));
-    MUST(shadow_root->append_child(move(element)));
-    set_shadow_root(move(shadow_root));
+    MUST(shadow_root->append_child(element));
+    set_shadow_root(shadow_root);
 }
 
 void HTMLInputElement::did_receive_focus()

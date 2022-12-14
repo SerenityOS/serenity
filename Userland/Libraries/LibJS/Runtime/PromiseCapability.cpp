@@ -13,7 +13,7 @@ namespace JS {
 
 NonnullGCPtr<PromiseCapability> PromiseCapability::create(VM& vm, GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject)
 {
-    return NonnullGCPtr { *vm.heap().allocate_without_realm<PromiseCapability>(promise, resolve, reject) };
+    return vm.heap().allocate_without_realm<PromiseCapability>(promise, resolve, reject);
 }
 
 PromiseCapability::PromiseCapability(GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject)

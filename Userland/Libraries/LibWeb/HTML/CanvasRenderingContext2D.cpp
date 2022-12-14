@@ -26,7 +26,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
 {
-    return *realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element);
+    return realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element);
 }
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasElement& element)

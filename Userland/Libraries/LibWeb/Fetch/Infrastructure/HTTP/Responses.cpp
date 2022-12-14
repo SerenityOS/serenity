@@ -29,7 +29,7 @@ void Response::visit_edges(JS::Cell::Visitor& visitor)
 
 JS::NonnullGCPtr<Response> Response::create(JS::VM& vm)
 {
-    return { *vm.heap().allocate_without_realm<Response>(HeaderList::create(vm)) };
+    return vm.heap().allocate_without_realm<Response>(HeaderList::create(vm));
 }
 
 // https://fetch.spec.whatwg.org/#ref-for-concept-network-error%E2%91%A3
@@ -193,7 +193,7 @@ ErrorOr<JS::NonnullGCPtr<BasicFilteredResponse>> BasicFilteredResponse::create(J
             TRY(header_list->append(header));
     }
 
-    return { *vm.heap().allocate_without_realm<BasicFilteredResponse>(internal_response, header_list) };
+    return vm.heap().allocate_without_realm<BasicFilteredResponse>(internal_response, header_list);
 }
 
 BasicFilteredResponse::BasicFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
@@ -223,7 +223,7 @@ ErrorOr<JS::NonnullGCPtr<CORSFilteredResponse>> CORSFilteredResponse::create(JS:
             TRY(header_list->append(header));
     }
 
-    return { *vm.heap().allocate_without_realm<CORSFilteredResponse>(internal_response, header_list) };
+    return vm.heap().allocate_without_realm<CORSFilteredResponse>(internal_response, header_list);
 }
 
 CORSFilteredResponse::CORSFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
@@ -242,7 +242,7 @@ JS::NonnullGCPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(JS::VM& 
 {
     // An opaque filtered response is a filtered response whose type is "opaque", URL list is the empty list,
     // status is 0, status message is the empty byte sequence, header list is empty, and body is null.
-    return { *vm.heap().allocate_without_realm<OpaqueFilteredResponse>(internal_response, HeaderList::create(vm)) };
+    return vm.heap().allocate_without_realm<OpaqueFilteredResponse>(internal_response, HeaderList::create(vm));
 }
 
 OpaqueFilteredResponse::OpaqueFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
@@ -261,7 +261,7 @@ JS::NonnullGCPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse:
 {
     // An opaque-redirect filtered response is a filtered response whose type is "opaqueredirect",
     // status is 0, status message is the empty byte sequence, header list is empty, and body is null.
-    return { *vm.heap().allocate_without_realm<OpaqueRedirectFilteredResponse>(internal_response, HeaderList::create(vm)) };
+    return vm.heap().allocate_without_realm<OpaqueRedirectFilteredResponse>(internal_response, HeaderList::create(vm));
 }
 
 OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)

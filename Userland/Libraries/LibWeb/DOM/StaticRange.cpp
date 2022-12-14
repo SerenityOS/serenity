@@ -33,7 +33,7 @@ WebIDL::ExceptionOr<StaticRange*> StaticRange::construct_impl(JS::Realm& realm, 
         return WebIDL::InvalidNodeTypeError::create(realm, "endContainer cannot be a DocumentType or Attribute node.");
 
     // 2. Set this’s start to (init["startContainer"], init["startOffset"]) and end to (init["endContainer"], init["endOffset"]).
-    return realm.heap().allocate<StaticRange>(realm, *init.start_container, init.start_offset, *init.end_container, init.end_offset);
+    return realm.heap().allocate<StaticRange>(realm, *init.start_container, init.start_offset, *init.end_container, init.end_offset).ptr();
 }
 
 }

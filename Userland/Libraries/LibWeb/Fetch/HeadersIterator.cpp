@@ -14,7 +14,7 @@ namespace Web::Fetch {
 
 JS::NonnullGCPtr<HeadersIterator> HeadersIterator::create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
 {
-    return *headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind);
+    return headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind);
 }
 
 HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKind iteration_kind)

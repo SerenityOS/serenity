@@ -44,7 +44,7 @@ ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value va
 
 NonnullGCPtr<Promise> Promise::create(Realm& realm)
 {
-    return *realm.heap().allocate<Promise>(realm, *realm.intrinsics().promise_prototype());
+    return realm.heap().allocate<Promise>(realm, *realm.intrinsics().promise_prototype());
 }
 
 // 27.2 Promise Objects, https://tc39.es/ecma262/#sec-promise-objects
@@ -62,7 +62,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
     auto& realm = *vm.current_realm();
 
     // 1. Let alreadyResolved be the Record { [[Value]]: false }.
-    auto* already_resolved = vm.heap().allocate_without_realm<AlreadyResolved>();
+    auto already_resolved = vm.heap().allocate_without_realm<AlreadyResolved>();
 
     // 2. Let stepsResolve be the algorithm steps defined in Promise Resolve Functions.
     // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.

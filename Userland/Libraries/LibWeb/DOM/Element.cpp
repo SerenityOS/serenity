@@ -1174,11 +1174,11 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(Depreca
 WebIDL::ExceptionOr<void> Element::insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data)
 {
     // 1. Let text be a new Text node whose data is data and node document is this’s node document.
-    JS::NonnullGCPtr<Text> text = *heap().allocate<DOM::Text>(realm(), document(), data);
+    auto text = heap().allocate<DOM::Text>(realm(), document(), data);
 
     // 2. Run insert adjacent, given this, where, and text.
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.
-    (void)TRY(insert_adjacent(where, move(text)));
+    (void)TRY(insert_adjacent(where, text));
     return {};
 }
 

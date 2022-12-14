@@ -86,7 +86,7 @@ private:
 
 JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
 {
-    return *realm.heap().allocate<Window>(realm, realm);
+    return realm.heap().allocate<Window>(realm, realm);
 }
 
 Window::Window(JS::Realm& realm)
@@ -1340,7 +1340,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::request_animation_frame)
     auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
     return JS::Value(impl->request_animation_frame_impl(*callback));
 }
 
@@ -1363,7 +1363,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::queue_microtask)
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
-    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     impl->queue_microtask_impl(*callback);
     return JS::js_undefined();
@@ -1379,7 +1379,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::request_idle_callback)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     // FIXME: accept options object
 
-    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     return JS::Value(impl->request_idle_callback_impl(*callback));
 }

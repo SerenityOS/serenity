@@ -26,14 +26,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<
         if (node.has<JS::Handle<Node>>())
             return *node.get<JS::Handle<Node>>();
 
-        return *document.heap().allocate<DOM::Text>(document.realm(), document, node.get<DeprecatedString>());
+        return document.heap().allocate<DOM::Text>(document.realm(), document, node.get<DeprecatedString>());
     };
 
     if (nodes.size() == 1)
         return potentially_convert_string_to_text_node(nodes.first());
 
-    // This is NNGCP<Node> instead of NNGCP<DocumentFragment> to be compatible with the return type.
-    JS::NonnullGCPtr<Node> document_fragment = *document.heap().allocate<DOM::DocumentFragment>(document.realm(), document);
+    auto document_fragment = document.heap().allocate<DOM::DocumentFragment>(document.realm(), document);
     for (auto& unconverted_node : nodes) {
         auto node = potentially_convert_string_to_text_node(unconverted_node);
         (void)TRY(document_fragment->append_child(node));

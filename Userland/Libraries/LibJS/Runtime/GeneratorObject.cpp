@@ -32,7 +32,7 @@ ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& 
     object->m_generating_function = generating_function;
     object->m_frame = move(frame);
     object->m_previous_value = initial_value;
-    return NonnullGCPtr { *object };
+    return object;
 }
 
 GeneratorObject::GeneratorObject(Realm&, Object& prototype, ExecutionContext context)

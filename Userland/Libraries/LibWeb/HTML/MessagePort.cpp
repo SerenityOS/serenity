@@ -16,7 +16,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<MessagePort> MessagePort::create(JS::Realm& realm)
 {
-    return *realm.heap().allocate<MessagePort>(realm, realm);
+    return realm.heap().allocate<MessagePort>(realm, realm);
 }
 
 MessagePort::MessagePort(JS::Realm& realm)

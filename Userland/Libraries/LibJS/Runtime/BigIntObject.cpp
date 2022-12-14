@@ -11,7 +11,7 @@ namespace JS {
 
 NonnullGCPtr<BigIntObject> BigIntObject::create(Realm& realm, BigInt& bigint)
 {
-    return *realm.heap().allocate<BigIntObject>(realm, bigint, *realm.intrinsics().bigint_prototype());
+    return realm.heap().allocate<BigIntObject>(realm, bigint, *realm.intrinsics().bigint_prototype());
 }
 
 BigIntObject::BigIntObject(BigInt& bigint, Object& prototype)

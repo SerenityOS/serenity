@@ -44,7 +44,7 @@ JS::NonnullGCPtr<XMLHttpRequest> XMLHttpRequest::construct_impl(JS::Realm& realm
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     auto author_request_headers = Fetch::Infrastructure::HeaderList::create(realm.vm());
-    return *realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers);
+    return realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers);
 }
 
 XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::HeaderList& author_request_headers)

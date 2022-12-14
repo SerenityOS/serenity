@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(Funct
     auto* buffer_object = TRY(vm.argument(0).to_object(vm));
     auto result = TRY(parse_module(vm, buffer_object));
 
-    return heap().allocate<WebAssemblyModuleObject>(realm, realm, result);
+    return heap().allocate<WebAssemblyModuleObject>(realm, realm, result).ptr();
 }
 
 void WebAssemblyModuleConstructor::initialize(JS::Realm& realm)

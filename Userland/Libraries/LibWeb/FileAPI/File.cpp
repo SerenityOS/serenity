@@ -58,7 +58,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
     //    4. F.name is set to n.
     //    5. F.type is set to t.
     //    6. F.lastModified is set to d.
-    return JS::NonnullGCPtr(*realm.heap().allocate<File>(realm, realm, move(bytes), move(name), move(type), last_modified));
+    return realm.heap().allocate<File>(realm, realm, move(bytes), move(name), move(type), last_modified);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)

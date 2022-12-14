@@ -48,7 +48,7 @@ ErrorOr<Header> Header::from_string_pair(StringView name, StringView value)
 
 JS::NonnullGCPtr<HeaderList> HeaderList::create(JS::VM& vm)
 {
-    return { *vm.heap().allocate_without_realm<HeaderList>() };
+    return vm.heap().allocate_without_realm<HeaderList>();
 }
 
 // https://fetch.spec.whatwg.org/#header-list-contains

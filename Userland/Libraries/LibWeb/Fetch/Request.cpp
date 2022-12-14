@@ -77,7 +77,7 @@ JS::NonnullGCPtr<Request> Request::create(JS::Realm& realm, JS::NonnullGCPtr<Inf
 {
     // 1. Let requestObject be a new Request object with realm.
     // 2. Set requestObject’s request to request.
-    auto* request_object = realm.heap().allocate<Request>(realm, realm, request);
+    auto request_object = realm.heap().allocate<Request>(realm, realm, request);
 
     // 3. Set requestObject’s headers to a new Headers object with realm, whose headers list is request’s headers list and guard is guard.
     request_object->m_headers = realm.heap().allocate<Headers>(realm, realm, request->header_list());
@@ -87,7 +87,7 @@ JS::NonnullGCPtr<Request> Request::create(JS::Realm& realm, JS::NonnullGCPtr<Inf
     request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(realm, realm);
 
     // 5. Return requestObject.
-    return JS::NonnullGCPtr { *request_object };
+    return request_object;
 }
 
 // https://fetch.spec.whatwg.org/#dom-request
@@ -96,7 +96,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     auto& vm = realm.vm();
 
     // Referred to as 'this' in the spec.
-    auto request_object = JS::NonnullGCPtr { *realm.heap().allocate<Request>(realm, realm, Infrastructure::Request::create(vm)) };
+    auto request_object = realm.heap().allocate<Request>(realm, realm, Infrastructure::Request::create(vm));
 
     // 1. Let request be null.
     JS::GCPtr<Infrastructure::Request> input_request;

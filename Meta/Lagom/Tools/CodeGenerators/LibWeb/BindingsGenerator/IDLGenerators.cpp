@@ -321,7 +321,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!@js_name@@js_suffix@.is_object())
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-        auto* callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+        auto callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
         @cpp_name@ = @cpp_type@::create(realm, *callback_type).ptr();
     }
 )~~~");
@@ -330,8 +330,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-    auto* callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
-    auto @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
+    auto callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+    auto @cpp_name@ = adopt_ref(*new @cpp_type@(callback_type));
 )~~~");
         }
     } else if (IDL::is_platform_object(*parameter.type)) {

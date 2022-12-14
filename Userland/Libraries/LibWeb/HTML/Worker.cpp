@@ -83,7 +83,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& sc
     worker->run_a_worker(url, outside_settings, *outside_port, options);
 
     // 10. Return worker
-    return JS::NonnullGCPtr(*worker);
+    return worker;
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#run-a-worker

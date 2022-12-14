@@ -11,7 +11,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<TextMetrics> TextMetrics::create(JS::Realm& realm)
 {
-    return *realm.heap().allocate<TextMetrics>(realm, realm);
+    return realm.heap().allocate<TextMetrics>(realm, realm);
 }
 
 TextMetrics::TextMetrics(JS::Realm& realm)

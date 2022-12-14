@@ -10,7 +10,7 @@ namespace JS {
 
 NonnullGCPtr<WeakMap> WeakMap::create(Realm& realm)
 {
-    return *realm.heap().allocate<WeakMap>(realm, *realm.intrinsics().weak_map_prototype());
+    return realm.heap().allocate<WeakMap>(realm, *realm.intrinsics().weak_map_prototype());
 }
 
 WeakMap::WeakMap(Object& prototype)

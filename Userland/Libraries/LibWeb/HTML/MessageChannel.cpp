@@ -13,7 +13,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<MessageChannel> MessageChannel::construct_impl(JS::Realm& realm)
 {
-    return *realm.heap().allocate<MessageChannel>(realm, realm);
+    return realm.heap().allocate<MessageChannel>(realm, realm);
 }
 
 MessageChannel::MessageChannel(JS::Realm& realm)

@@ -28,7 +28,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(Depr
         (void)TRY(fragment->append_child(*child));
     }
 
-    return JS::NonnullGCPtr(*fragment);
+    return fragment;
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml

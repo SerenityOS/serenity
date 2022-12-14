@@ -77,7 +77,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
     for (auto& element : table.elements())
         element = reference;
 
-    return vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address);
+    return vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address).ptr();
 }
 
 void WebAssemblyTableConstructor::initialize(JS::Realm& realm)

@@ -11,12 +11,12 @@ namespace Web::WebIDL {
 
 JS::NonnullGCPtr<DOMException> DOMException::create(JS::Realm& realm, FlyString const& name, FlyString const& message)
 {
-    return *realm.heap().allocate<DOMException>(realm, realm, name, message);
+    return realm.heap().allocate<DOMException>(realm, realm, name, message);
 }
 
 JS::NonnullGCPtr<DOMException> DOMException::construct_impl(JS::Realm& realm, FlyString const& message, FlyString const& name)
 {
-    return *realm.heap().allocate<DOMException>(realm, realm, name, message);
+    return realm.heap().allocate<DOMException>(realm, realm, name, message);
 }
 
 DOMException::DOMException(JS::Realm& realm, FlyString const& name, FlyString const& message)

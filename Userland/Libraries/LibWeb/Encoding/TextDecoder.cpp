@@ -18,7 +18,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(J
     if (!decoder)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Invalid encoding {}", encoding) };
 
-    return JS::NonnullGCPtr(*realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false));
+    return realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false);
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder

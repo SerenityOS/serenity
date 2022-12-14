@@ -12,7 +12,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<NodeList> LiveNodeList::create(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)
 {
-    return *realm.heap().allocate<LiveNodeList>(realm, realm, root, move(filter));
+    return realm.heap().allocate<LiveNodeList>(realm, realm, root, move(filter));
 }
 
 LiveNodeList::LiveNodeList(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)

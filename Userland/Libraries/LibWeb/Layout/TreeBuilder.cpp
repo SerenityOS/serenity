@@ -170,7 +170,7 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     pseudo_element_node->set_generated(true);
     // FIXME: Handle images, and multiple values
     if (pseudo_element_content.type == CSS::ContentData::Type::String) {
-        auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
+        auto text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
         auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
         text_node->set_generated(true);
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
@@ -301,8 +301,8 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
             auto placeholder_style = TRY(style_computer.compute_style(input_element, CSS::Selector::PseudoElement::Placeholder));
             auto placeholder = DOM::Element::create_layout_node_for_display_type(document, placeholder_style->display(), placeholder_style, nullptr);
 
-            auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, *placeholder_value);
-            auto* text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
+            auto text = document.heap().allocate<DOM::Text>(document.realm(), document, *placeholder_value);
+            auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
             text_node->set_generated(true);
 
             push_parent(verify_cast<NodeWithStyle>(*layout_node));

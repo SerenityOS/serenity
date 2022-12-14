@@ -17,7 +17,7 @@ namespace Web::CSS {
 
 JS::NonnullGCPtr<MediaQueryList> MediaQueryList::create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return *document.heap().allocate<MediaQueryList>(document.realm(), document, move(media));
+    return document.heap().allocate<MediaQueryList>(document.realm(), document, move(media));
 }
 
 MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)

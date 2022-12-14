@@ -137,8 +137,8 @@ NonnullGCPtr<Intrinsics> Intrinsics::create(Realm& realm)
     auto& vm = realm.vm();
 
     // 1. Set realmRec.[[Intrinsics]] to a new Record.
-    auto* intrinsics = vm.heap().allocate_without_realm<Intrinsics>(realm);
-    realm.set_intrinsics({}, *intrinsics);
+    auto intrinsics = vm.heap().allocate_without_realm<Intrinsics>(realm);
+    realm.set_intrinsics({}, intrinsics);
 
     // 2. Set fields of realmRec.[[Intrinsics]] with the values listed in Table 6.
     //    The field names are the names listed in column one of the table.

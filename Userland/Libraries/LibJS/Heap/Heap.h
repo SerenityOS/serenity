@@ -33,21 +33,21 @@ public:
     ~Heap();
 
     template<typename T, typename... Args>
-    T* allocate_without_realm(Args&&... args)
+    NonnullGCPtr<T> allocate_without_realm(Args&&... args)
     {
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
-        return static_cast<T*>(memory);
+        return *static_cast<T*>(memory);
     }
 
     template<typename T, typename... Args>
-    T* allocate(Realm& realm, Args&&... args)
+    NonnullGCPtr<T> allocate(Realm& realm, Args&&... args)
     {
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
         memory->initialize(realm);
-        return cell;
+        return *cell;
     }
 
     enum class CollectionType {
