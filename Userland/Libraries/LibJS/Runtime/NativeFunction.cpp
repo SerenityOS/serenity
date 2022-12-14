@@ -160,7 +160,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
 }
 
 // 10.3.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-built-in-function-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -219,7 +219,7 @@ ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedVector<Value
     vm.pop_execution_context();
 
     // 12. Return ? result.
-    return result;
+    return *TRY(result);
 }
 
 ThrowCompletionOr<Value> NativeFunction::call()

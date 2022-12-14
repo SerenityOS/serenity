@@ -25,7 +25,7 @@ public:
     // Table 7: Additional Essential Internal Methods of Function Objects, https://tc39.es/ecma262/#table-additional-essential-internal-methods-of-function-objects
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) = 0;
-    virtual ThrowCompletionOr<Object*> internal_construct([[maybe_unused]] MarkedVector<Value> arguments_list, [[maybe_unused]] FunctionObject& new_target) { VERIFY_NOT_REACHED(); }
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> internal_construct([[maybe_unused]] MarkedVector<Value> arguments_list, [[maybe_unused]] FunctionObject& new_target) { VERIFY_NOT_REACHED(); }
 
     virtual FlyString const& name() const = 0;
 

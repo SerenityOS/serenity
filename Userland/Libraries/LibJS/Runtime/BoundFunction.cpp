@@ -66,7 +66,7 @@ ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value thi
 }
 
 // 10.4.1.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> BoundFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -90,7 +90,7 @@ ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedVector<Value>
         final_new_target = &target;
 
     // 6. Return ? Construct(target, args, newTarget).
-    return construct(vm, target, move(args), final_new_target);
+    return *TRY(construct(vm, target, move(args), final_new_target));
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)
