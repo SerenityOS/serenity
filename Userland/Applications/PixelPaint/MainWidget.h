@@ -60,6 +60,7 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     void update_window_modified();
+    void update_status_bar(DeprecatedString appended_text = DeprecatedString::empty());
 
     ProjectLoader m_loader;
 
@@ -107,6 +108,8 @@ private:
 
     RefPtr<GUI::Action> m_layer_via_copy;
     RefPtr<GUI::Action> m_layer_via_cut;
+
+    Gfx::IntPoint m_last_image_editor_mouse_position;
 };
 
 }

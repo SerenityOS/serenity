@@ -344,6 +344,8 @@ void ImageEditor::set_editor_color_to_color_at_mouse_position(GUI::MouseEvent co
         color = layer->currently_edited_bitmap().get_pixel(position);
     }
 
+    set_appended_status_info(DeprecatedString::formatted("R:{}, G:{}, B:{}, A:{} [{}]", color.red(), color.green(), color.blue(), color.alpha(), color.to_deprecated_string()));
+
     // We picked a transparent pixel, do nothing.
     if (!color.alpha())
         return;
@@ -866,6 +868,13 @@ void ImageEditor::draw_marching_ants_pixel(Gfx::Painter& painter, int x, int y) 
 void ImageEditor::selection_did_change()
 {
     update();
+}
+
+void ImageEditor::set_appended_status_info(DeprecatedString new_status_info)
+{
+    m_appended_status_info = new_status_info;
+    if (on_appended_status_info_change)
+        on_appended_status_info_change(m_appended_status_info);
 }
 
 }

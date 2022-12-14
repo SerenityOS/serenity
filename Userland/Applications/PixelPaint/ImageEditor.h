@@ -123,6 +123,9 @@ public:
     void set_modified(DeprecatedString action_text);
     void set_unmodified();
     void update_modified();
+    Function<void(DeprecatedString)> on_appended_status_info_change;
+    DeprecatedString appended_status_info() { return m_appended_status_info; };
+    void set_appended_status_info(DeprecatedString);
 
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
@@ -192,6 +195,7 @@ private:
     void draw_marching_ants_pixel(Gfx::Painter&, int x, int y) const;
 
     Core::EventLoop& m_gui_event_loop;
+    DeprecatedString m_appended_status_info;
 };
 
 }
