@@ -50,6 +50,9 @@ void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (!layer->rect().contains(layer_event.position()))
         return;
 
+    if (auto selection = layer->image().selection(); !selection.is_empty() && !selection.is_selected(layer_event.position()))
+        return;
+
     GUI::Painter painter(layer->get_scratch_edited_bitmap());
 
     flood_fill(layer->get_scratch_edited_bitmap(), layer_event.position(), m_editor->color_for(layer_event), m_threshold);
