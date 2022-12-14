@@ -22,10 +22,12 @@ public:
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
+    virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
 
 private:
     virtual StringView tool_name() const override { return "Move Tool"sv; }
+    ErrorOr<void> update_cached_preview_bitmap(Layer const* layer);
 
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
@@ -35,6 +37,8 @@ private:
     bool m_scaling { false };
     bool m_mouse_in_resize_corner { false };
     bool m_keep_ascept_ratio { false };
+
+    RefPtr<Gfx::Bitmap> m_cached_preview_bitmap { nullptr };
 };
 
 }
