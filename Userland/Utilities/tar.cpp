@@ -215,12 +215,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        Core::OutputFileStream file_stream(file);
-        Compress::GzipCompressor gzip_stream(file_stream);
+        NonnullOwnPtr<OutputStream> file_output_stream = make<Core::OutputFileStream>(file);
+        NonnullOwnPtr<OutputStream> gzip_output_stream = make<Compress::GzipCompressor>(*file_output_stream);
 
-        OutputStream& file_output_stream = file_stream;
-        OutputStream& gzip_output_stream = gzip_stream;
-        Archive::TarOutputStream tar_stream((gzip) ? gzip_output_stream : file_output_stream);
+        Archive::TarOutputStream tar_stream(make<Core::Stream::WrappedAKOutputStream>(move((gzip) ? gzip_output_stream : file_output_stream)));
 
         auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
             auto file = Core::File::construct(path);

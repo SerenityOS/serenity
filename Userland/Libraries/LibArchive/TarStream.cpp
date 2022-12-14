@@ -137,8 +137,8 @@ TarFileStream TarInputStream::file_contents()
     return TarFileStream(*this);
 }
 
-TarOutputStream::TarOutputStream(OutputStream& stream)
-    : m_stream(stream)
+TarOutputStream::TarOutputStream(Core::Stream::Handle<Core::Stream::Stream> stream)
+    : m_stream(move(stream))
 {
 }
 
@@ -153,9 +153,9 @@ void TarOutputStream::add_directory(DeprecatedString const& path, mode_t mode)
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.calculate_checksum();
-    VERIFY(m_stream.write_or_error(Bytes { &header, sizeof(header) }));
+    MUST(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
-    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
+    MUST(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
 }
 
 void TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, ReadonlyBytes bytes)
@@ -169,14 +169,14 @@ void TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, Readon
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.calculate_checksum();
-    VERIFY(m_stream.write_or_error(ReadonlyBytes { &header, sizeof(header) }));
+    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &header, sizeof(header) }));
     constexpr Array<u8, block_size> padding { 0 };
-    VERIFY(m_stream.write_or_error(ReadonlyBytes { &padding, block_size - sizeof(header) }));
+    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - sizeof(header) }));
     size_t n_written = 0;
     while (n_written < bytes.size()) {
-        n_written += m_stream.write(bytes.slice(n_written, min(bytes.size() - n_written, block_size)));
+        n_written += MUST(m_stream->write(bytes.slice(n_written, min(bytes.size() - n_written, block_size))));
     }
-    VERIFY(m_stream.write_or_error(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
+    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
 }
 
 void TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, StringView link_name)
@@ -191,17 +191,18 @@ void TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, String
     header.set_version(gnu_version);
     header.set_link_name(link_name);
     header.calculate_checksum();
-    VERIFY(m_stream.write_or_error(Bytes { &header, sizeof(header) }));
+    MUST(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
-    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
+    MUST(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
 }
 
 void TarOutputStream::finish()
 {
     VERIFY(!m_finished);
     constexpr Array<u8, block_size> padding { 0 };
-    m_stream.write_or_error(ReadonlyBytes { &padding, block_size }); // 2 empty records that are used to signify the end of the archive
-    m_stream.write_or_error(ReadonlyBytes { &padding, block_size });
+    // 2 empty records that are used to signify the end of the archive.
+    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
+    MUST(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
     m_finished = true;
 }
 

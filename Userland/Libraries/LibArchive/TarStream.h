@@ -58,14 +58,14 @@ private:
 
 class TarOutputStream {
 public:
-    TarOutputStream(OutputStream&);
+    TarOutputStream(Core::Stream::Handle<Core::Stream::Stream>);
     void add_file(DeprecatedString const& path, mode_t, ReadonlyBytes);
     void add_link(DeprecatedString const& path, mode_t, StringView);
     void add_directory(DeprecatedString const& path, mode_t);
     void finish();
 
 private:
-    OutputStream& m_stream;
+    Core::Stream::Handle<Core::Stream::Stream> m_stream;
     bool m_finished { false };
 
     friend class TarFileStream;
