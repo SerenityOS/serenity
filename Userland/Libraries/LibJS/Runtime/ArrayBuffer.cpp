@@ -54,7 +54,7 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
-    auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
+    auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
 
     // 2. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
@@ -67,7 +67,7 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& co
     // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
     // 5. Return obj.
-    return obj;
+    return obj.ptr();
 }
 
 // 25.1.2.3 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer

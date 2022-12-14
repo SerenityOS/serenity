@@ -45,9 +45,9 @@ ThrowCompletionOr<Object*> WeakRefConstructor::construct(FunctionObject& new_tar
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
 
     if (target.is_object())
-        return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_object()));
+        return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_object())).ptr();
     VERIFY(target.is_symbol());
-    return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_symbol()));
+    return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_symbol())).ptr();
 }
 
 }

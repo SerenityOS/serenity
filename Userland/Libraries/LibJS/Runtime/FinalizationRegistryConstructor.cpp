@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionOb
     // 7. Set finalizationRegistry.[[Cells]] to a new empty List.
     // NOTE: This is done inside FinalizationRegistry instead of here.
     // 8. Return finalizationRegistry.
-    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(vm, new_target, &Intrinsics::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
+    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(vm, new_target, &Intrinsics::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function()))).ptr();
 }
 
 }

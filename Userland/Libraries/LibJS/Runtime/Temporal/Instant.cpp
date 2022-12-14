@@ -73,10 +73,10 @@ ThrowCompletionOr<Instant*> create_temporal_instant(VM& vm, BigInt const& epoch_
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Instant.prototype%", « [[InitializedTemporalInstant]], [[Nanoseconds]] »).
     // 5. Set object.[[Nanoseconds]] to epochNanoseconds.
-    auto* object = TRY(ordinary_create_from_constructor<Instant>(vm, *new_target, &Intrinsics::temporal_instant_prototype, epoch_nanoseconds));
+    auto object = TRY(ordinary_create_from_constructor<Instant>(vm, *new_target, &Intrinsics::temporal_instant_prototype, epoch_nanoseconds));
 
     // 6. Return object.
-    return object;
+    return object.ptr();
 }
 
 // 8.5.3 ToTemporalInstant ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalinstant

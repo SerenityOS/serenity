@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     auto options_value = vm.argument(1);
 
     // 2. Let listFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%ListFormat.prototype%", « [[InitializedListFormat]], [[Locale]], [[Type]], [[Style]], [[Templates]] »).
-    auto* list_format = TRY(ordinary_create_from_constructor<ListFormat>(vm, new_target, &Intrinsics::intl_list_format_prototype));
+    auto list_format = TRY(ordinary_create_from_constructor<ListFormat>(vm, new_target, &Intrinsics::intl_list_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));
@@ -91,7 +91,7 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     // Note: The remaining steps are skipped in favor of deferring to LibUnicode.
 
     // 19. Return listFormat.
-    return list_format;
+    return list_format.ptr();
 }
 
 // 13.2.2 Intl.ListFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat.supportedLocalesOf

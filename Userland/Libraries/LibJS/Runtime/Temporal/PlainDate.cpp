@@ -75,9 +75,9 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(VM& vm, i32 iso_year, u8 iso_
     // 10. Set object.[[ISOMonth]] to isoMonth.
     // 11. Set object.[[ISODay]] to isoDay.
     // 12. Set object.[[Calendar]] to calendar.
-    auto* object = TRY(ordinary_create_from_constructor<PlainDate>(vm, *new_target, &Intrinsics::temporal_plain_date_prototype, iso_year, iso_month, iso_day, calendar));
+    auto object = TRY(ordinary_create_from_constructor<PlainDate>(vm, *new_target, &Intrinsics::temporal_plain_date_prototype, iso_year, iso_month, iso_day, calendar));
 
-    return object;
+    return object.ptr();
 }
 
 // 3.5.2 ToTemporalDate ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate

@@ -66,7 +66,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
         new_target = realm.intrinsics().temporal_time_zone_constructor();
 
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
-    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &Intrinsics::temporal_time_zone_prototype));
+    auto object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &Intrinsics::temporal_time_zone_prototype));
 
     // 3. If IsTimeZoneOffsetString(identifier) is true, then
     if (is_time_zone_offset_string(identifier)) {
@@ -92,7 +92,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
     }
 
     // 5. Return object.
-    return object;
+    return object.ptr();
 }
 
 // 11.6.2 GetISOPartsFromEpoch ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-getisopartsfromepoch

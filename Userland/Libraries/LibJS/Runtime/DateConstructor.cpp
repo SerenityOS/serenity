@@ -299,7 +299,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
     // 6. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Date.prototype%", « [[DateValue]] »).
     // 7. Set O.[[DateValue]] to dv.
     // 8. Return O.
-    return TRY(ordinary_create_from_constructor<Date>(vm, new_target, &Intrinsics::date_prototype, date_value));
+    return TRY(ordinary_create_from_constructor<Date>(vm, new_target, &Intrinsics::date_prototype, date_value)).ptr();
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now

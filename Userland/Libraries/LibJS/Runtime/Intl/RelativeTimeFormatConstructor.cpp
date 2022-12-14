@@ -54,10 +54,10 @@ ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObje
     auto options = vm.argument(1);
 
     // 2. Let relativeTimeFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%RelativeTimeFormat.prototype%", « [[InitializedRelativeTimeFormat]], [[Locale]], [[DataLocale]], [[Style]], [[Numeric]], [[NumberFormat]], [[NumberingSystem]], [[PluralRules]] »).
-    auto* relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &Intrinsics::intl_relative_time_format_prototype));
+    auto relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &Intrinsics::intl_relative_time_format_prototype));
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
-    return TRY(initialize_relative_time_format(vm, *relative_time_format, locales, options));
+    return TRY(initialize_relative_time_format(vm, relative_time_format, locales, options));
 }
 
 // 17.2.2 Intl.RelativeTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.supportedLocalesOf

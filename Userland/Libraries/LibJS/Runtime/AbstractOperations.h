@@ -131,11 +131,11 @@ ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& funct
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
-ThrowCompletionOr<T*> ordinary_create_from_constructor(VM& vm, FunctionObject const& constructor, Object* (Intrinsics::*intrinsic_default_prototype)(), Args&&... args)
+ThrowCompletionOr<NonnullGCPtr<T>> ordinary_create_from_constructor(VM& vm, FunctionObject const& constructor, Object* (Intrinsics::*intrinsic_default_prototype)(), Args&&... args)
 {
     auto& realm = *vm.current_realm();
     auto* prototype = TRY(get_prototype_from_constructor(vm, constructor, intrinsic_default_prototype));
-    return realm.heap().allocate<T>(realm, forward<Args>(args)..., *prototype).ptr();
+    return realm.heap().allocate<T>(realm, forward<Args>(args)..., *prototype);
 }
 
 // 14.1 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists

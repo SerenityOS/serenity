@@ -52,7 +52,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     auto options_value = vm.argument(1);
 
     // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[LanguageDisplay]], [[Fields]] »).
-    auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(vm, new_target, &Intrinsics::intl_display_names_prototype));
+    auto display_names = TRY(ordinary_create_from_constructor<DisplayNames>(vm, new_target, &Intrinsics::intl_display_names_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));
@@ -130,7 +130,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     // 29. Set displayNames.[[Fields]] to styleFields.
 
     // 30. Return displayNames.
-    return display_names;
+    return display_names.ptr();
 }
 
 // 12.2.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf

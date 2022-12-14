@@ -194,10 +194,10 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_ye
     // 8. Set object.[[ISOMonth]] to isoMonth.
     // 9. Set object.[[Calendar]] to calendar.
     // 10. Set object.[[ISODay]] to referenceISODay.
-    auto* object = TRY(ordinary_create_from_constructor<PlainYearMonth>(vm, *new_target, &Intrinsics::temporal_plain_year_month_prototype, iso_year, iso_month, reference_iso_day, calendar));
+    auto object = TRY(ordinary_create_from_constructor<PlainYearMonth>(vm, *new_target, &Intrinsics::temporal_plain_year_month_prototype, iso_year, iso_month, reference_iso_day, calendar));
 
     // 11. Return object.
-    return object;
+    return object.ptr();
 }
 
 // 9.5.6 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
