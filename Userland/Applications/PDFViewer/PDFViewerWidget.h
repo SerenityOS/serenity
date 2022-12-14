@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "AK/NonnullRefPtr.h"
 #include "AK/RefPtr.h"
 #include "NumericInput.h"
 #include "PDFViewer.h"
@@ -16,6 +17,7 @@
 #include <LibGUI/Widget.h>
 
 class PDFViewer;
+class PagedErrorsModel;
 
 class PDFViewerWidget final : public GUI::Widget {
     C_OBJECT(PDFViewerWidget)
@@ -33,6 +35,8 @@ private:
 
     RefPtr<PDFViewer> m_viewer;
     RefPtr<SidebarWidget> m_sidebar;
+    NonnullRefPtr<PagedErrorsModel> m_paged_errors_model;
+    RefPtr<GUI::TreeView> m_errors_tree_view;
     RefPtr<NumericInput> m_page_text_box;
     RefPtr<GUI::Label> m_total_page_label;
     RefPtr<GUI::Action> m_go_to_prev_page_action;
