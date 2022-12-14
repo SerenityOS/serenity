@@ -20,7 +20,7 @@ class Node : public RefCounted<Node> {
 public:
     virtual ~Node() = default;
 
-    virtual NonnullRefPtrVector<Node>& children() const = 0;
+    virtual ErrorOr<Span<NonnullRefPtr<Node>>> children() const = 0;
     virtual Node const* parent() const = 0;
     virtual ErrorOr<String> name() const = 0;
     virtual bool is_page() const { return false; }

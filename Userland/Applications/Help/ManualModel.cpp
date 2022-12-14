@@ -109,8 +109,11 @@ GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& p
     if (!parent_index.is_valid())
         return create_index(row, column, Manual::sections[row].ptr());
     auto* parent = static_cast<Manual::Node const*>(parent_index.internal_data());
-    auto* child = &parent->children()[row];
-    return create_index(row, column, child);
+    auto const children = parent->children();
+    if (children.is_error())
+        return {};
+    auto child = children.value()[row];
+    return create_index(row, column, child.ptr());
 }
 
 GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
@@ -128,8 +131,12 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
                 return create_index(row, 0, parent);
         VERIFY_NOT_REACHED();
     }
-    for (size_t row = 0; row < parent->parent()->children().size(); row++) {
-        Manual::Node* child_at_row = &parent->parent()->children()[row];
+    auto maybe_children = parent->parent()->children();
+    if (maybe_children.is_error())
+        return {};
+    auto children = maybe_children.release_value();
+    for (size_t row = 0; row < children.size(); row++) {
+        Manual::Node* child_at_row = children[row];
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
@@ -141,7 +148,10 @@ int ManualModel::row_count(const GUI::ModelIndex& index) const
     if (!index.is_valid())
         return static_cast<int>(Manual::sections.size());
     auto* node = static_cast<Manual::Node const*>(index.internal_data());
-    return node->children().size();
+    auto maybe_children = node->children();
+    if (maybe_children.is_error())
+        return 0;
+    return static_cast<int>(maybe_children.value().size());
 }
 
 int ManualModel::column_count(const GUI::ModelIndex&) const
