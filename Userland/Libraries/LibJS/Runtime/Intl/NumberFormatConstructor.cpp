@@ -50,17 +50,17 @@ ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& ne
     auto options = vm.argument(1);
 
     // 2. Let numberFormat be ? OrdinaryCreateFromConstructor(newTarget, "%NumberFormat.prototype%", « [[InitializedNumberFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[Unit]], [[UnitDisplay]], [[Currency]], [[CurrencyDisplay]], [[CurrencySign]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]], [[Notation]], [[CompactDisplay]], [[UseGrouping]], [[SignDisplay]], [[BoundFormat]] »).
-    auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(vm, new_target, &Intrinsics::intl_number_format_prototype));
+    auto number_format = TRY(ordinary_create_from_constructor<NumberFormat>(vm, new_target, &Intrinsics::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
-    TRY(initialize_number_format(vm, *number_format, locales, options));
+    TRY(initialize_number_format(vm, number_format, locales, options));
 
     // 4. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Let this be the this value.
     //     b. Return ? ChainNumberFormat(numberFormat, NewTarget, this).
 
     // 5. Return numberFormat.
-    return number_format;
+    return number_format.ptr();
 }
 
 // 15.2.2 Intl.NumberFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.numberformat.supportedlocalesof

@@ -42,7 +42,7 @@ ThrowCompletionOr<Object*> BooleanConstructor::construct(FunctionObject& new_tar
     auto& vm = this->vm();
 
     auto b = vm.argument(0).to_boolean();
-    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &Intrinsics::boolean_prototype, b));
+    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &Intrinsics::boolean_prototype, b)).ptr();
 }
 
 }

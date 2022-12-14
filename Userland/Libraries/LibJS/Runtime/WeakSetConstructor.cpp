@@ -41,10 +41,10 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
 {
     auto& vm = this->vm();
 
-    auto* weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &Intrinsics::weak_set_prototype));
+    auto weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &Intrinsics::weak_set_prototype));
 
     if (vm.argument(0).is_nullish())
-        return weak_set;
+        return weak_set.ptr();
 
     auto adder = TRY(weak_set->get(vm.names.add));
     if (!adder.is_function())
@@ -55,7 +55,7 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
         return {};
     }));
 
-    return weak_set;
+    return weak_set.ptr();
 }
 
 }

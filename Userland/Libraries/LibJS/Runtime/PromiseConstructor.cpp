@@ -305,7 +305,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     }
 
     // 11. Return promise.
-    return promise;
+    return promise.ptr();
 }
 
 // 27.2.4.1 Promise.all ( iterable ), https://tc39.es/ecma262/#sec-promise.all

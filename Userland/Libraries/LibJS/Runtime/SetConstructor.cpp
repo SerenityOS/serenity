@@ -43,10 +43,10 @@ ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
-    auto* set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &Intrinsics::set_prototype));
+    auto set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &Intrinsics::set_prototype));
 
     if (vm.argument(0).is_nullish())
-        return set;
+        return set.ptr();
 
     auto adder = TRY(set->get(vm.names.add));
     if (!adder.is_function())
@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
         return {};
     }));
 
-    return set;
+    return set.ptr();
 }
 
 // 24.2.2.2 get Set [ @@species ], https://tc39.es/ecma262/#sec-get-set-@@species

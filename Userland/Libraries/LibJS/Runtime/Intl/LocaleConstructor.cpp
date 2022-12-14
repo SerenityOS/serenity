@@ -258,7 +258,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     //     a. Append [[Numeric]] as the last element of internalSlotsList.
 
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
-    auto* locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &Intrinsics::intl_locale_prototype));
+    auto locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &Intrinsics::intl_locale_prototype));
 
     DeprecatedString tag;
 
@@ -362,7 +362,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
         locale->set_numbering_system(result.nu.release_value());
 
     // 37. Return locale.
-    return locale;
+    return locale.ptr();
 }
 
 }

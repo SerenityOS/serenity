@@ -50,7 +50,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     auto options_value = vm.argument(1);
 
     // 2. Let durationFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%DurationFormatPrototype%", « [[InitializedDurationFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[YearsStyle]], [[YearsDisplay]], [[MonthsStyle]], [[MonthsDisplay]] , [[WeeksStyle]], [[WeeksDisplay]] , [[DaysStyle]], [[DaysDisplay]] , [[HoursStyle]], [[HoursDisplay]] , [[MinutesStyle]], [[MinutesDisplay]] , [[SecondsStyle]], [[SecondsDisplay]] , [[MillisecondsStyle]], [[MillisecondsDisplay]] , [[MicrosecondsStyle]], [[MicrosecondsDisplay]] , [[NanosecondsStyle]], [[NanosecondsDisplay]], [[FractionalDigits]] »).
-    auto* duration_format = TRY(ordinary_create_from_constructor<DurationFormat>(vm, new_target, &Intrinsics::intl_duration_format_prototype));
+    auto duration_format = TRY(ordinary_create_from_constructor<DurationFormat>(vm, new_target, &Intrinsics::intl_duration_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
@@ -138,7 +138,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     duration_format->set_fractional_digits(Optional<u8>(TRY(get_number_option(vm, *options, vm.names.fractionalDigits, 0, 9, 0))));
 
     // 19. Return durationFormat.
-    return duration_format;
+    return duration_format.ptr();
 }
 
 // 1.3.2 Intl.DurationFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.supportedLocalesOf

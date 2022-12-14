@@ -54,17 +54,17 @@ ThrowCompletionOr<Object*> DateTimeFormatConstructor::construct(FunctionObject& 
     auto options = vm.argument(1);
 
     // 2. Let dateTimeFormat be ? OrdinaryCreateFromConstructor(newTarget, "%DateTimeFormat.prototype%", « [[InitializedDateTimeFormat]], [[Locale]], [[Calendar]], [[NumberingSystem]], [[TimeZone]], [[Weekday]], [[Era]], [[Year]], [[Month]], [[Day]], [[DayPeriod]], [[Hour]], [[Minute]], [[Second]], [[FractionalSecondDigits]], [[TimeZoneName]], [[HourCycle]], [[Pattern]], [[BoundFormat]] »).
-    auto* date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(vm, new_target, &Intrinsics::intl_date_time_format_prototype));
+    auto date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(vm, new_target, &Intrinsics::intl_date_time_format_prototype));
 
     // 3. Perform ? InitializeDateTimeFormat(dateTimeFormat, locales, options).
-    TRY(initialize_date_time_format(vm, *date_time_format, locales, options));
+    TRY(initialize_date_time_format(vm, date_time_format, locales, options));
 
     // 4. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Let this be the this value.
     //     b. Return ? ChainDateTimeFormat(dateTimeFormat, NewTarget, this).
 
     // 5. Return dateTimeFormat.
-    return date_time_format;
+    return date_time_format.ptr();
 }
 
 // 11.2.2 Intl.DateTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.datetimeformat.supportedlocalesof

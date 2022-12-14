@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_t
 
     // 2. Let internalSlotsList be « [[InitializedSegmenter]], [[Locale]], [[SegmenterGranularity]] ».
     // 3. Let segmenter be ? OrdinaryCreateFromConstructor(NewTarget, "%Segmenter.prototype%", internalSlotsList).
-    auto* segmenter = TRY(ordinary_create_from_constructor<Segmenter>(vm, new_target, &Intrinsics::intl_segmenter_prototype));
+    auto segmenter = TRY(ordinary_create_from_constructor<Segmenter>(vm, new_target, &Intrinsics::intl_segmenter_prototype));
 
     // 4. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
@@ -83,7 +83,7 @@ ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_t
     segmenter->set_segmenter_granularity(granularity.as_string().deprecated_string());
 
     // 14. Return segmenter.
-    return segmenter;
+    return segmenter.ptr();
 }
 
 // 18.2.2 Intl.Segmenter.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.segmenter.supportedlocalesof

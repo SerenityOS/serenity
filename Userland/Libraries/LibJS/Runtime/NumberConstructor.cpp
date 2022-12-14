@@ -99,7 +99,7 @@ ThrowCompletionOr<Object*> NumberConstructor::construct(FunctionObject& new_targ
     // 4. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Number.prototype%", « [[NumberData]] »).
     // 5. Set O.[[NumberData]] to n.
     // 6. Return O.
-    return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &Intrinsics::number_prototype, number.as_double()));
+    return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &Intrinsics::number_prototype, number.as_double())).ptr();
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite

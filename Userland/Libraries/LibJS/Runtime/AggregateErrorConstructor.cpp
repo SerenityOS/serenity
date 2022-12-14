@@ -48,7 +48,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
     auto options = vm.argument(2);
 
     // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%", « [[ErrorData]] »).
-    auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(vm, new_target, &Intrinsics::aggregate_error_prototype));
+    auto aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(vm, new_target, &Intrinsics::aggregate_error_prototype));
 
     // 3. If message is not undefined, then
     if (!message.is_undefined()) {
@@ -69,7 +69,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
     MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(realm, errors_list), .writable = true, .enumerable = false, .configurable = true }));
 
     // 7. Return O.
-    return aggregate_error;
+    return aggregate_error.ptr();
 }
 
 }

@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     auto options = vm.argument(1);
 
     // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-    auto* error = TRY(ordinary_create_from_constructor<Error>(vm, new_target, &Intrinsics::error_prototype));
+    auto error = TRY(ordinary_create_from_constructor<Error>(vm, new_target, &Intrinsics::error_prototype));
 
     // 3. If message is not undefined, then
     if (!message.is_undefined()) {
@@ -58,7 +58,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     TRY(error->install_error_cause(options));
 
     // 5. Return O.
-    return error;
+    return error.ptr();
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                        \
@@ -96,7 +96,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
         auto options = vm.argument(1);                                                                                          \
                                                                                                                                 \
         /* 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »). */           \
-        auto* error = TRY(ordinary_create_from_constructor<ClassName>(vm, new_target, &Intrinsics::snake_name##_prototype));    \
+        auto error = TRY(ordinary_create_from_constructor<ClassName>(vm, new_target, &Intrinsics::snake_name##_prototype));     \
                                                                                                                                 \
         /* 3. If message is not undefined, then */                                                                              \
         if (!message.is_undefined()) {                                                                                          \
@@ -111,7 +111,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
         TRY(error->install_error_cause(options));                                                                               \
                                                                                                                                 \
         /* 5. Return O. */                                                                                                      \
-        return error;                                                                                                           \
+        return error.ptr();                                                                                                     \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

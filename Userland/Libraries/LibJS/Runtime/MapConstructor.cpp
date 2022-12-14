@@ -43,10 +43,10 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
-    auto* map = TRY(ordinary_create_from_constructor<Map>(vm, new_target, &Intrinsics::map_prototype));
+    auto map = TRY(ordinary_create_from_constructor<Map>(vm, new_target, &Intrinsics::map_prototype));
 
     if (vm.argument(0).is_nullish())
-        return map;
+        return map.ptr();
 
     auto adder = TRY(map->get(vm.names.set));
     if (!adder.is_function())
@@ -63,7 +63,7 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
         return {};
     }));
 
-    return map;
+    return map.ptr();
 }
 
 // 24.1.2.2 get Map [ @@species ], https://tc39.es/ecma262/#sec-get-map-@@species

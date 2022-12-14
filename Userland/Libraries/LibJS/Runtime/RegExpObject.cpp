@@ -263,7 +263,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM& vm, Value patter
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM& vm, FunctionObject& new_target)
 {
     // 1. Let obj be ? OrdinaryCreateFromConstructor(newTarget, "%RegExp.prototype%", « [[OriginalSource]], [[OriginalFlags]], [[RegExpRecord]], [[RegExpMatcher]] »).
-    auto* regexp_object = TRY(ordinary_create_from_constructor<RegExpObject>(vm, new_target, &Intrinsics::regexp_prototype));
+    auto regexp_object = TRY(ordinary_create_from_constructor<RegExpObject>(vm, new_target, &Intrinsics::regexp_prototype));
 
     // 2. Let thisRealm be the current Realm Record.
     auto& this_realm = *vm.current_realm();
@@ -287,7 +287,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM& vm, FunctionObjec
     MUST(regexp_object->define_property_or_throw(vm.names.lastIndex, PropertyDescriptor { .writable = true, .enumerable = false, .configurable = false }));
 
     // 7. Return obj.
-    return NonnullGCPtr { *regexp_object };
+    return regexp_object;
 }
 
 }

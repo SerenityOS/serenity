@@ -78,10 +78,10 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, DeprecatedString c
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Calendar.prototype%", « [[InitializedTemporalCalendar]], [[Identifier]] »).
     // 4. Set object.[[Identifier]] to the ASCII-lowercase of identifier.
-    auto* object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, identifier.to_lowercase()));
+    auto object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, identifier.to_lowercase()));
 
     // 5. Return object.
-    return object;
+    return object.ptr();
 }
 
 // 12.2.2 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar

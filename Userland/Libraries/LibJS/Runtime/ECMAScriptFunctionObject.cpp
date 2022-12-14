@@ -203,7 +203,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     // 2. Let kind be F.[[ConstructorKind]].
     auto kind = m_constructor_kind;
 
-    Object* this_argument = nullptr;
+    GCPtr<Object> this_argument;
 
     // 3. If kind is base, then
     if (kind == ConstructorKind::Base) {
@@ -269,7 +269,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
 
         // b. If kind is base, return thisArgument.
         if (kind == ConstructorKind::Base)
-            return this_argument;
+            return this_argument.ptr();
 
         // c. If result.[[Value]] is not undefined, throw a TypeError exception.
         if (!result.value()->is_undefined())
