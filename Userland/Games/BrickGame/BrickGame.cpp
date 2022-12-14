@@ -6,6 +6,7 @@
 
 #include "BrickGame.h"
 #include <AK/Random.h>
+#include <AK/String.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -496,7 +497,7 @@ void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, bool is_on)
     painter.fill_rect(rect, is_on ? m_front_color : m_shadow_color);
 }
 
-void BrickGame::paint_text(GUI::Painter& painter, int row, DeprecatedString const& text)
+void BrickGame::paint_text(GUI::Painter& painter, int row, StringView text)
 {
     auto const text_width { font().width(text) };
     auto const entire_area_rect { frame_inner_rect() };
@@ -541,10 +542,10 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
                 paint_cell(painter, cell_rect(position), (*m_brick_game)[board_position]);
             }
 
-        paint_text(painter, 0, DeprecatedString::formatted("Score: {}", m_brick_game->score()));
-        paint_text(painter, 1, DeprecatedString::formatted("Level: {}", m_brick_game->level()));
-        paint_text(painter, 4, DeprecatedString::formatted("Hi-Score: {}", m_high_score));
-        paint_text(painter, 12, "Next:");
+        paint_text(painter, 0, MUST(String::formatted("Score: {}", m_brick_game->score())));
+        paint_text(painter, 1, MUST(String::formatted("Level: {}", m_brick_game->level())));
+        paint_text(painter, 4, MUST(String::formatted("Hi-Score: {}", m_high_score)));
+        paint_text(painter, 12, "Next:"sv);
 
         auto const hint_rect = Gfx::IntRect {
             frame_inner_rect().x() + frame_inner_rect().width() - 105,
@@ -582,7 +583,7 @@ void BrickGame::game_over()
         Config::write_i32(m_app_name, m_app_name, "HighScore"sv, int(m_high_score = current_score));
     }
     GUI::MessageBox::show(window(),
-        text.to_deprecated_string(),
+        text.string_view(),
         "Game Over"sv,
         GUI::MessageBox::Type::Information);
 
