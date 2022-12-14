@@ -729,7 +729,7 @@ ErrorOr<void> WrappedAKInputStream::discard(size_t discarded_bytes)
 
 ErrorOr<size_t> WrappedAKInputStream::write(ReadonlyBytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 bool WrappedAKInputStream::is_eof() const
@@ -753,7 +753,7 @@ WrappedAKOutputStream::WrappedAKOutputStream(NonnullOwnPtr<OutputStream> stream)
 
 ErrorOr<Bytes> WrappedAKOutputStream::read(Bytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 ErrorOr<size_t> WrappedAKOutputStream::write(ReadonlyBytes bytes)
@@ -768,7 +768,7 @@ ErrorOr<size_t> WrappedAKOutputStream::write(ReadonlyBytes bytes)
 
 bool WrappedAKOutputStream::is_eof() const
 {
-    VERIFY_NOT_REACHED();
+    return true;
 }
 
 bool WrappedAKOutputStream::is_open() const

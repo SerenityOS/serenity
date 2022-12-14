@@ -302,7 +302,7 @@ bool DeflateDecompressor::is_eof() const { return m_state == State::Idle && m_re
 
 ErrorOr<size_t> DeflateDecompressor::write(ReadonlyBytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 bool DeflateDecompressor::is_open() const

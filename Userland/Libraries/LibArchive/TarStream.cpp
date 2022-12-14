@@ -48,8 +48,7 @@ bool TarFileStream::is_eof() const
 
 ErrorOr<size_t> TarFileStream::write(ReadonlyBytes)
 {
-    // This is purely for wrapping and representing file contents in an archive.
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 ErrorOr<NonnullOwnPtr<TarInputStream>> TarInputStream::construct(NonnullOwnPtr<Core::Stream::Stream> stream)

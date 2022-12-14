@@ -183,7 +183,7 @@ bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
 
 ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 GzipCompressor::GzipCompressor(Core::Stream::Handle<Core::Stream::Stream> stream)

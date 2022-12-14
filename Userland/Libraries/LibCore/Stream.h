@@ -70,6 +70,8 @@ private:
 
 /// The base, abstract class for stream operations. This class defines the
 /// operations one can perform on every stream in LibCore.
+/// Operations without a sensible default that are unsupported by an implementation
+/// of a Stream should return EBADF as an error.
 class Stream {
 public:
     /// Reads into a buffer, with the maximum size being the size of the buffer.
