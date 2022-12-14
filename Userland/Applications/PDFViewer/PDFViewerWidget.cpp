@@ -226,7 +226,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     auto open_outline_action = GUI::Action::create(
         "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
-            m_sidebar->set_visible(m_sidebar_open ? true : false);
+            m_sidebar->set_visible(m_sidebar_open);
         },
         nullptr);
     open_outline_action->set_enabled(false);
