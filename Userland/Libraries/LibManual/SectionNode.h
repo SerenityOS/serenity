@@ -33,6 +33,7 @@ public:
     virtual ErrorOr<String> name() const override;
     String const& section_name() const { return m_section; }
     virtual ErrorOr<String> path() const override;
+    virtual PageNode const* document() const override { return nullptr; }
 
     virtual bool is_open() const override { return m_open; }
     void set_open(bool open);

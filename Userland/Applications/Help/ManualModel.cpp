@@ -58,9 +58,9 @@ Optional<String> ManualModel::page_path(const GUI::ModelIndex& index) const
     if (!index.is_valid())
         return {};
     auto* node = static_cast<Manual::Node const*>(index.internal_data());
-    if (!node->is_page())
+    auto page = node->document();
+    if (!page)
         return {};
-    auto* page = static_cast<Manual::PageNode const*>(node);
     auto path = page->path();
     if (path.is_error())
         return {};

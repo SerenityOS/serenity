@@ -26,6 +26,7 @@ public:
     virtual bool is_page() const { return false; }
     virtual bool is_open() const { return false; }
     virtual ErrorOr<String> path() const = 0;
+    virtual PageNode const* document() const = 0;
 
     // Backend for the command-line argument format that Help and man accept. Handles:
     // [/path/to/documentation.md] (no second argument)
