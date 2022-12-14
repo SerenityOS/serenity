@@ -784,7 +784,7 @@ bool ProxyObject::has_constructor() const
 }
 
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ProxyObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -808,7 +808,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? Construct(target, argumentsList, newTarget).
-        return construct(vm, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target);
+        return *TRY(construct(vm, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target));
     }
 
     // 8. Let argArray be CreateArrayFromList(argumentsList).
@@ -822,7 +822,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
         return vm.throw_completion<TypeError>(ErrorType::ProxyConstructBadReturnType);
 
     // 11. Return newObj.
-    return &new_object.as_object();
+    return new_object.as_object();
 }
 
 void ProxyObject::visit_edges(Cell::Visitor& visitor)

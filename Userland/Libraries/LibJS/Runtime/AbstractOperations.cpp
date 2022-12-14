@@ -82,7 +82,7 @@ ThrowCompletionOr<Object*> construct_impl(VM& vm, FunctionObject& function, Opti
         arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 3. Return ? F.[[Construct]](argumentsList, newTarget).
-    return function.internal_construct(move(*arguments_list), *new_target);
+    return TRY(function.internal_construct(move(*arguments_list), *new_target)).ptr();
 }
 
 // 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike

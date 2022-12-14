@@ -193,7 +193,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 }
 
 // 10.2.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -265,11 +265,11 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
 
         // a. If Type(result.[[Value]]) is Object, return result.[[Value]].
         if (result.value()->is_object())
-            return &result.value()->as_object();
+            return result.value()->as_object();
 
         // b. If kind is base, return thisArgument.
         if (kind == ConstructorKind::Base)
-            return this_argument.ptr();
+            return *this_argument;
 
         // c. If result.[[Value]] is not undefined, throw a TypeError exception.
         if (!result.value()->is_undefined())
@@ -288,7 +288,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     VERIFY(this_binding.is_object());
 
     // 14. Return thisBinding.
-    return &this_binding.as_object();
+    return this_binding.as_object();
 }
 
 void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
