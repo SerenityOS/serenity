@@ -11,6 +11,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibManual/Path.h>
@@ -64,6 +65,37 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     if (Core::File::exists(TRY(page->path())))
         return page;
     return Error::from_string_literal("Page doesn't exist in section");
+}
+
+ErrorOr<NonnullRefPtr<Node>> Node::try_find_from_help_url(URL const& url)
+{
+    if (url.host() != "man")
+        return Error::from_string_view("Bad help operation"sv);
+    if (url.paths().size() < 2)
+        return Error::from_string_view("Bad help page URL"sv);
+
+    auto paths = url.paths();
+    auto const section = paths.take_first();
+    auto maybe_section_number = section.to_uint();
+    if (!maybe_section_number.has_value())
+        return Error::from_string_view("Bad section number"sv);
+    auto section_number = maybe_section_number.value();
+    if (section_number > number_of_sections)
+        return Error::from_string_view("Section number out of bounds"sv);
+
+    NonnullRefPtr<Node> current_node = sections[section_number - 1];
+
+    while (!paths.is_empty()) {
+        auto next_path_segment = TRY(String::from_deprecated_string(paths.take_first()));
+        auto children = TRY(current_node->children());
+        for (auto const& child : children) {
+            if (TRY(child->name()) == next_path_segment) {
+                current_node = child;
+                break;
+            }
+        }
+    }
+    return current_node;
 }
 
 }
