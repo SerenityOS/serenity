@@ -102,6 +102,8 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
     struct stat st;
     if (stat(path.characters(), &st) < 0) {
         perror("stat");
+        auto error_message = DeprecatedString::formatted("Could not stat {}: {}", path, strerror(errno));
+        GUI::MessageBox::show(window(), error_message, "File Manager"sv, GUI::MessageBox::Type::Error);
         return;
     }
 
