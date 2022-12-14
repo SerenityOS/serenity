@@ -250,7 +250,7 @@ void MainWidget::open_url(URL const& url)
         GUI::Application::the()->deferred_invoke([&, path = url.path()] {
             auto browse_view_index = m_manual_model->index_from_path(path);
             if (browse_view_index.has_value()) {
-                m_browse_view->expand_tree(browse_view_index.value().parent());
+                m_browse_view->expand_all_parents_of(browse_view_index.value());
 
                 auto page_and_section = m_manual_model->page_and_section(browse_view_index.value());
                 if (!page_and_section.has_value())
