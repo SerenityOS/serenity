@@ -53,7 +53,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     window->set_always_on_top();
     catdog_widget->start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
-    catdog_widget->start_the_timer(); // timer for "mouse sleep detection"
 
     auto advice_window = TRY(GUI::Window::try_create());
     advice_window->set_title("CatDog Advice");
@@ -68,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     advice_widget->layout()->set_spacing(0);
 
     auto advice_timer = TRY(Core::Timer::try_create());
-    advice_timer->set_interval(15000);
+    advice_timer->set_interval(15'000);
     advice_timer->set_single_shot(true);
     advice_timer->on_timeout = [&] {
         window->move_to_front();

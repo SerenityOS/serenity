@@ -17,7 +17,8 @@ static Array<StringView, 3> default_messages = {
     "It looks like you're trying to shave\na yak. Would you like some help?"sv,
     "Well Hello Friend!"sv,
 };
-static Array<StringView, 3> pixel_paint_messages = {
+
+static Array<StringView, 3> artist_messages = {
     "It looks like you're creating art.\nWould you like some help?"sv,
     "It looks like you're making a meme\nfor Discord. \U0010CD65"sv,
     "It looks like you're using the filter\ngallery. Would you like a suggestion?"sv,
@@ -48,7 +49,7 @@ void SpeechBubble::paint_event(GUI::PaintEvent&)
     painter.draw_line(connector_top_left, Gfx::IntPoint { connector_bottom.x() - 1, connector_bottom.y() }, palette().active_window_border1());
     painter.draw_line(connector_top_right, connector_bottom, palette().active_window_border1());
 
-    auto& message_list = m_cat_dog->main_state() == CatDog::MainState::Artist ? pixel_paint_messages : (m_cat_dog->main_state() == CatDog::MainState::Inspector ? inspector_messages : default_messages);
+    auto& message_list = m_cat_dog->is_artist() ? artist_messages : (m_cat_dog->is_inspector() ? inspector_messages : default_messages);
     auto message = message_list[get_random<u8>() % message_list.size()];
     painter.draw_text(text_area, message, Gfx::TextAlignment::Center);
 }

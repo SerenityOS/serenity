@@ -12,172 +12,165 @@
 
 ErrorOr<NonnullRefPtr<CatDog>> CatDog::create()
 {
+    struct ImageSource {
+        State state;
+        StringView path;
+    };
+
+    // NOTE: The order of the elements is important. Matching is done in best-match order.
+    //       So items with the more bits should be placed before items with less bits to
+    //       ensure correct matching order. This also means that "Frame2" has to be first.
+    static constexpr Array<ImageSource, 24> const image_sources = {
+        ImageSource { State::Up | State::Right | State::Frame2, "/res/icons/catdog/nerun2.png"sv },
+        { State::Up | State::Right, "/res/icons/catdog/nerun1.png"sv },
+        { State::Up | State::Left | State::Frame2, "/res/icons/catdog/nwrun2.png"sv },
+        { State::Up | State::Left, "/res/icons/catdog/nwrun1.png"sv },
+        { State::Down | State::Right | State::Frame2, "/res/icons/catdog/serun2.png"sv },
+        { State::Down | State::Right, "/res/icons/catdog/serun1.png"sv },
+        { State::Down | State::Left | State::Frame2, "/res/icons/catdog/swrun2.png"sv },
+        { State::Down | State::Left, "/res/icons/catdog/swrun1.png"sv },
+        { State::Up | State::Frame2, "/res/icons/catdog/nrun2.png"sv },
+        { State::Up, "/res/icons/catdog/nrun1.png"sv },
+        { State::Down | State::Frame2, "/res/icons/catdog/srun2.png"sv },
+        { State::Down, "/res/icons/catdog/srun1.png"sv },
+        { State::Left | State::Frame2, "/res/icons/catdog/wrun2.png"sv },
+        { State::Left, "/res/icons/catdog/wrun1.png"sv },
+        { State::Right | State::Frame2, "/res/icons/catdog/erun2.png"sv },
+        { State::Right, "/res/icons/catdog/erun1.png"sv },
+        { State::Sleeping | State::Frame2, "/res/icons/catdog/sleep2.png"sv },
+        { State::Sleeping, "/res/icons/catdog/sleep1.png"sv },
+        { State::Idle | State::Artist, "/res/icons/catdog/artist.png"sv },
+        { State::Idle | State::Inspector, "/res/icons/catdog/inspector.png"sv },
+        { State::Idle, "/res/icons/catdog/still.png"sv },
+        { State::Alert | State::Artist, "/res/icons/catdog/artist.png"sv },
+        { State::Alert | State::Inspector, "/res/icons/catdog/inspector.png"sv },
+        { State::Alert, "/res/icons/catdog/alert.png"sv }
+    };
+
     auto catdog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CatDog));
-    catdog->m_alert = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png"sv));
-    catdog->m_artist = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png"sv));
-    catdog->m_erun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png"sv));
-    catdog->m_erun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png"sv));
-    catdog->m_inspector = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/inspector.png"sv));
-    catdog->m_nerun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png"sv));
-    catdog->m_nerun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png"sv));
-    catdog->m_nrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png"sv));
-    catdog->m_nrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png"sv));
-    catdog->m_nwrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png"sv));
-    catdog->m_nwrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png"sv));
-    catdog->m_serun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png"sv));
-    catdog->m_serun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png"sv));
-    catdog->m_sleep1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png"sv));
-    catdog->m_sleep2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png"sv));
-    catdog->m_srun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png"sv));
-    catdog->m_srun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png"sv));
-    catdog->m_still = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png"sv));
-    catdog->m_swrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png"sv));
-    catdog->m_swrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png"sv));
-    catdog->m_wrun1 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png"sv));
-    catdog->m_wrun2 = *TRY(Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png"sv));
-    catdog->m_curr_bmp = catdog->m_alert;
+    for (auto const& image_source : image_sources)
+        TRY(catdog->m_images.try_append({ image_source.state, *TRY(Gfx::Bitmap::try_load_from_file(image_source.path)) }));
+
     return catdog;
+}
+
+CatDog::CatDog()
+    : m_proc_all(MUST(Core::Stream::File::open("/sys/kernel/processes"sv, Core::Stream::OpenMode::Read)))
+{
+    m_idle_sleep_timer.start();
+}
+
+void CatDog::set_roaming(bool roaming)
+{
+    m_state = (roaming ? State::Idle : State::Alert) | special_application_states();
+    update();
+}
+
+CatDog::State CatDog::special_application_states() const
+{
+    auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(*m_proc_all);
+    if (maybe_proc_info.is_error())
+        return State::GenericCatDog;
+
+    auto proc_info = maybe_proc_info.release_value();
+    auto maybe_paint_program = proc_info.processes.first_matching([](auto& process) {
+        return process.name.equals_ignoring_case("pixelpaint"sv) || process.name.equals_ignoring_case("fonteditor"sv);
+    });
+    if (maybe_paint_program.has_value())
+        return State::Artist;
+
+    auto maybe_inspector_program = proc_info.processes.first_matching([](auto& process) {
+        return process.name.equals_ignoring_case("inspector"sv) || process.name.equals_ignoring_case("systemmonitor"sv) || process.name.equals_ignoring_case("profiler"sv);
+    });
+    if (maybe_inspector_program.has_value())
+        return State::Inspector;
+
+    return State::GenericCatDog;
+}
+
+bool CatDog::is_artist() const
+{
+    return has_flag(special_application_states(), State::Artist);
+}
+
+bool CatDog::is_inspector() const
+{
+    return has_flag(special_application_states(), State::Inspector);
 }
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
-    auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(*m_proc_all);
-    if (!maybe_proc_info.is_error()) {
-        auto proc_info = maybe_proc_info.release_value();
-
-        auto maybe_paint_program = proc_info.processes.first_matching([](auto& process) {
-            return process.name.equals_ignoring_case("pixelpaint"sv) || process.name.equals_ignoring_case("fonteditor"sv);
-        });
-        if (maybe_paint_program.has_value()) {
-            m_main_state = MainState::Artist;
-        } else {
-            auto maybe_inspector_program = proc_info.processes.first_matching([](auto& process) {
-                return process.name.equals_ignoring_case("inspector"sv) || process.name.equals_ignoring_case("systemmonitor"sv) || process.name.equals_ignoring_case("profiler"sv);
-            });
-
-            if (maybe_inspector_program.has_value())
-                m_main_state = MainState::Inspector;
-            // If we currently have an application state but that app isn't open anymore, go back to idle.
-            else if (!is_non_application_state(m_main_state))
-                m_main_state = MainState::Idle;
-        }
-    }
-
-    if (!m_roaming)
+    if (has_flag(m_state, State::Alert))
         return;
-    if (m_temp_pos.x() > 48) {
-        m_left = false;
-        m_right = true;
-        m_moveX = 16;
 
-        m_curr_bmp = m_erun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_erun2;
-    } else if (m_temp_pos.x() < -16) {
-        m_left = true;
-        m_right = false;
-        m_moveX = -16;
+    m_state = special_application_states();
 
-        m_curr_bmp = m_wrun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_wrun2;
+    auto const size = window()->size();
+    Gfx::IntPoint move;
+
+    if (m_mouse_offset.x() < 0) {
+        m_state |= State::Left;
+        move.set_x(max(m_mouse_offset.x(), -size.width() / 2));
+    } else if (m_mouse_offset.x() > size.width()) {
+        m_state |= State::Right;
+        move.set_x(min(m_mouse_offset.x(), size.width() / 2));
+    }
+
+    if (m_mouse_offset.y() < 0) {
+        m_state |= State::Up;
+        move.set_y(max(m_mouse_offset.y(), -size.height() / 2));
+    } else if (m_mouse_offset.y() > size.height()) {
+        m_state |= State::Down;
+        move.set_y(min(m_mouse_offset.y(), size.height() / 2));
+    }
+
+    if (has_any_flag(m_state, State::Directions)) {
+        m_idle_sleep_timer.start();
     } else {
-        m_left = false;
-        m_right = false;
-        m_moveX = 0;
+        if (m_idle_sleep_timer.elapsed() > 5'000)
+            m_state |= State::Sleeping;
+        else
+            m_state |= State::Idle;
     }
 
-    if (m_temp_pos.y() > 48) {
-        m_up = false;
-        m_down = true;
-        m_moveY = 10;
+    window()->move_to(window()->position() + move);
+    m_mouse_offset -= move;
 
-        m_curr_bmp = m_srun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_srun2;
-    } else if (m_temp_pos.y() < -16) {
-        m_up = true;
-        m_down = false;
-        m_moveY = -10;
-
-        m_curr_bmp = m_nrun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_nrun2;
-    } else {
-        m_up = false;
-        m_down = false;
-        m_moveY = 0;
-    }
-
-    if (m_up && m_left) {
-        m_curr_bmp = m_nwrun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_nwrun2;
-    } else if (m_up && m_right) {
-        m_curr_bmp = m_nerun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_nerun2;
-    } else if (m_down && m_left) {
-        m_curr_bmp = m_swrun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_swrun2;
-    } else if (m_down && m_right) {
-        m_curr_bmp = m_serun1;
-        if (m_curr_frame == 2)
-            m_curr_bmp = m_serun2;
-    }
-
-    window()->move_to(window()->position().x() + m_moveX, window()->position().y() + m_moveY);
-    m_temp_pos.set_x(m_temp_pos.x() + (-m_moveX));
-    m_temp_pos.set_y(m_temp_pos.y() + (-m_moveY));
-
-    if (m_curr_frame == 1) {
-        m_curr_frame = 2;
-    } else {
-        m_curr_frame = 1;
-    }
-
-    if (!m_up && !m_down && !m_left && !m_right) {
-        // Select the movement-free image based on the main state.
-        if (m_timer.elapsed() > 5000)
-            m_main_state = MainState::Sleeping;
-        set_image_by_main_state();
-    } else if (is_non_application_state(m_main_state)) {
-        // If CatDog currently moves, it should be idle the next time it stops.
-        m_main_state = MainState::Idle;
-    }
+    m_frame = m_frame == State::Frame1 ? State::Frame2 : State::Frame1;
+    m_state |= m_frame;
 
     update();
 }
 
+Gfx::Bitmap& CatDog::bitmap_for_state() const
+{
+    auto const iter = m_images.find_if([&](auto const& image) { return (m_state & image.state) == image.state; });
+    return iter != m_images.end() ? *iter->bitmap : *m_images[m_images.size() - 1].bitmap;
+}
+
 void CatDog::paint_event(GUI::PaintEvent& event)
 {
+    auto const& bmp = bitmap_for_state();
     GUI::Painter painter(*this);
     painter.clear_rect(event.rect(), Gfx::Color());
-    painter.blit(Gfx::IntPoint(0, 0), *m_curr_bmp, m_curr_bmp->rect());
+    painter.blit(Gfx::IntPoint(0, 0), bmp, bmp.rect());
 }
 
 void CatDog::track_mouse_move(Gfx::IntPoint point)
 {
-    if (!m_roaming)
+    if (has_flag(m_state, State::Alert))
         return;
-    Gfx::IntPoint relative_point = point - window()->position();
-    if (m_temp_pos == relative_point)
-        return;
-    m_temp_pos = relative_point;
-    m_timer.start();
-    if (m_main_state == MainState::Sleeping) {
-        m_main_state = MainState::Alerted;
-        set_image_by_main_state();
-        update();
+
+    Gfx::IntPoint relative_offset = point - window()->position();
+    if (m_mouse_offset != relative_offset) {
+        m_mouse_offset = relative_offset;
+        m_idle_sleep_timer.start();
     }
 }
 
 void CatDog::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Primary)
-        return;
-    if (on_click)
+    if (event.button() == GUI::MouseButton::Primary && on_click)
         on_click();
 }
 
