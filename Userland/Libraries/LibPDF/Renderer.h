@@ -96,12 +96,12 @@ struct RenderingPreferences {
 
 class Renderer {
 public:
-    static PDFErrorOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences preferences);
+    static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences preferences);
 
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences);
 
-    PDFErrorOr<void> render();
+    PDFErrorsOr<void> render();
 
     PDFErrorOr<void> handle_operator(Operator const&, Optional<NonnullRefPtr<DictObject>> = {});
 #define V(name, snake_name, symbol) \

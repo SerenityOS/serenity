@@ -22,7 +22,7 @@
 
 namespace PDF {
 
-PDFErrorOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
+PDFErrorsOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
 {
     return Renderer(document, page, bitmap, rendering_preferences).render();
 }
@@ -91,7 +91,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     m_bitmap->fill(Gfx::Color::NamedColor::White);
 }
 
-PDFErrorOr<void> Renderer::render()
+PDFErrorsOr<void> Renderer::render()
 {
     // Use our own vector, as the /Content can be an array with multiple
     // streams which gets concatenated
@@ -113,26 +113,32 @@ PDFErrorOr<void> Renderer::render()
 
     auto operators = TRY(Parser::parse_operators(m_document, byte_buffer));
 
-    for (auto& op : operators)
-        TRY(handle_operator(op));
-
+    Errors errors;
+    for (auto& op : operators) {
+        auto maybe_error = handle_operator(op);
+        if (maybe_error.is_error()) {
+            errors.add_error(maybe_error.release_error());
+        }
+    }
+    if (!errors.errors().is_empty())
+        return errors;
     return {};
 }
 
 PDFErrorOr<void> Renderer::handle_operator(Operator const& op, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
     switch (op.type()) {
-#define V(name, snake_name, symbol)                                 \
-    case OperatorType::name:                                        \
-        MUST(handle_##snake_name(op.arguments(), extra_resources)); \
+#define V(name, snake_name, symbol)                                \
+    case OperatorType::name:                                       \
+        TRY(handle_##snake_name(op.arguments(), extra_resources)); \
         break;
         ENUMERATE_OPERATORS(V)
 #undef V
     case OperatorType::TextNextLineShowString:
-        MUST(handle_text_next_line_show_string(op.arguments()));
+        TRY(handle_text_next_line_show_string(op.arguments()));
         break;
     case OperatorType::TextNextLineShowStringSetSpacing:
-        MUST(handle_text_next_line_show_string_set_spacing(op.arguments()));
+        TRY(handle_text_next_line_show_string_set_spacing(op.arguments()));
         break;
     }
 

@@ -53,6 +53,7 @@ public:
     PDF::PDFErrorOr<void> set_document(RefPtr<PDF::Document>);
 
     Function<void(u32 new_page)> on_page_change;
+    Function<void(u32 page, PDF::Errors const& errors)> on_render_errors;
 
     void zoom_in();
     void zoom_out();
