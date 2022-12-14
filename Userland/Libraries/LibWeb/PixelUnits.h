@@ -17,33 +17,33 @@ namespace Web {
 /// DevicePixels: A position or length on the physical display.
 AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, DevicePixels, Arithmetic, CastToUnderlying, Comparison, Increment);
 
-template<Arithmetic T>
+template<Integral T>
 constexpr bool operator==(DevicePixels left, T right) { return left.value() == right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr bool operator!=(DevicePixels left, T right) { return left.value() != right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr bool operator>(DevicePixels left, T right) { return left.value() > right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr bool operator<(DevicePixels left, T right) { return left.value() < right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr bool operator>=(DevicePixels left, T right) { return left.value() >= right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr bool operator<=(DevicePixels left, T right) { return left.value() <= right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr DevicePixels operator*(DevicePixels left, T right) { return left.value() * right; }
-template<Arithmetic T>
+template<Integral T>
 constexpr DevicePixels operator*(T left, DevicePixels right) { return right * left; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr DevicePixels operator/(DevicePixels left, T right) { return left.value() / right; }
 
-template<Arithmetic T>
+template<Integral T>
 constexpr DevicePixels operator%(DevicePixels left, T right) { return left.value() % right; }
 
 /// CSSPixels: A position or length in CSS "reference pixels", independent of zoom or screen DPI.
