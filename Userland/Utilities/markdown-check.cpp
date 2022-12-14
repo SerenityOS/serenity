@@ -196,7 +196,9 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
                 m_has_invalid_link = true;
                 return RecursionDecision::Recurse;
             }
-            auto file = DeprecatedString::formatted("../man{}/{}.md", url.paths()[0], url.paths()[1]);
+
+            // Remove leading '/' from the path.
+            auto file = DeprecatedString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, url.path().substring(1));
 
             m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
             return RecursionDecision::Recurse;
