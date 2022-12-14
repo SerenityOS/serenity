@@ -34,7 +34,7 @@ requires(AK::Detail::IsIntegral<T>)
 
 }
 
-#if !USING_AK_GLOBALLY
+#if !USING_AK_GLOBALLY || defined(AK_DONT_REPLACE_STD)
 #    define AK_REPLACED_STD_NAMESPACE AK::replaced_std
 #else
 #    define AK_REPLACED_STD_NAMESPACE std
