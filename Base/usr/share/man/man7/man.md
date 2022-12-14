@@ -47,7 +47,7 @@ The currently existing subsections are not listed here, as they are subject to f
 
 Manpages are named via standard POSIX convention, where the section number follows the page name in brackets. For example, this page is called `man(7)`, but there's also a page called `man(1)` (the _program_ named `man`) and a page named [`Mitigations(7)`](help://man/7/Mitigations). This naming convention also applies to subsections.
 
-For pages in subsections, conventional directory notation with slashes is used. For example, the page `Widget-Button` in the subsection `GML(5)` has the full name `GML/Widget-Button(5)`.
+For pages in subsections, conventional directory notation with slashes is used. For example, the page `Widget/Button` in the subsection `GML(5)` has the full name `GML/Widget/Button(5)`.
 
 When you open a page via command-line arguments, the section is specified separately before the page name, for example `7 man`, `1 man`, or `7 Mitigations`.
 
