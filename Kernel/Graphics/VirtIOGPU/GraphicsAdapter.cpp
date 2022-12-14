@@ -161,17 +161,6 @@ void VirtIOGraphicsAdapter::initialize()
     }
 }
 
-Graphics::VirtIOGPU::ResourceID VirtIOGraphicsAdapter::allocate_resource_id(Badge<VirtIODisplayConnector>)
-{
-    return m_resource_id_counter++;
-}
-
-Graphics::VirtIOGPU::ContextID VirtIOGraphicsAdapter::allocate_context_id(Badge<VirtIODisplayConnector>)
-{
-    // FIXME: This should really be tracked using a bitmap, instead of an atomic counter
-    return m_context_id_counter++;
-}
-
 bool VirtIOGraphicsAdapter::handle_device_config_change()
 {
     auto events = get_pending_events();
