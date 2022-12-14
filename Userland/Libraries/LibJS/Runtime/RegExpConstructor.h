@@ -19,7 +19,7 @@ public:
     virtual ~RegExpConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
-    virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target) override;
 
     RegExpLegacyStaticProperties& legacy_static_properties() { return m_legacy_static_properties; }
 

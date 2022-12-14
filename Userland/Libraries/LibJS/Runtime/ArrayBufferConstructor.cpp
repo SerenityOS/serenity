@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
-ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto byte_length_or_error = vm.argument(0).to_index(vm);
@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new
         }
         return error;
     }
-    return TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
+    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

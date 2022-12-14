@@ -45,7 +45,7 @@ ThrowCompletionOr<Value> TypedArrayConstructor::call()
 }
 
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%
-ThrowCompletionOr<Object*> TypedArrayConstructor::construct(FunctionObject&)
+ThrowCompletionOr<NonnullGCPtr<Object>> TypedArrayConstructor::construct(FunctionObject&)
 {
     return vm().throw_completion<TypeError>(ErrorType::ClassIsAbstract, "TypedArray");
 }

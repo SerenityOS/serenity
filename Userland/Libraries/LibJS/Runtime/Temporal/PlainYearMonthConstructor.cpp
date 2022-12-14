@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> PlainYearMonthConstructor::call()
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth
-ThrowCompletionOr<Object*> PlainYearMonthConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PlainYearMonthConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -80,7 +80,7 @@ ThrowCompletionOr<Object*> PlainYearMonthConstructor::construct(FunctionObject& 
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
     // 7. Return ? CreateTemporalYearMonth(y, m, calendar, ref, NewTarget).
-    return TRY(create_temporal_year_month(vm, y, m, *calendar, ref, &new_target));
+    return *TRY(create_temporal_year_month(vm, y, m, *calendar, ref, &new_target));
 }
 
 // 9.2.2 Temporal.PlainYearMonth.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from

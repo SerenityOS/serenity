@@ -26,7 +26,7 @@ JS::ThrowCompletionOr<JS::Value> WebAssemblyTableConstructor::call()
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Table");
 }
 
-JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -77,7 +77,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
     for (auto& element : table.elements())
         element = reference;
 
-    return vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address).ptr();
+    return vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address);
 }
 
 void WebAssemblyTableConstructor::initialize(JS::Realm& realm)

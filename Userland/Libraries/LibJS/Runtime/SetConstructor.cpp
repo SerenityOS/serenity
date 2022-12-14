@@ -39,14 +39,14 @@ ThrowCompletionOr<Value> SetConstructor::call()
 }
 
 // 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
-ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> SetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
     auto set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &Intrinsics::set_prototype));
 
     if (vm.argument(0).is_nullish())
-        return set.ptr();
+        return set;
 
     auto adder = TRY(set->get(vm.names.add));
     if (!adder.is_function())
@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
         return {};
     }));
 
-    return set.ptr();
+    return set;
 }
 
 // 24.2.2.2 get Set [ @@species ], https://tc39.es/ecma262/#sec-get-set-@@species

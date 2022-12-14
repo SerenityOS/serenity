@@ -37,14 +37,14 @@ ThrowCompletionOr<Value> WeakSetConstructor::call()
 }
 
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
-ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> WeakSetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
     auto weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &Intrinsics::weak_set_prototype));
 
     if (vm.argument(0).is_nullish())
-        return weak_set.ptr();
+        return weak_set;
 
     auto adder = TRY(weak_set->get(vm.names.add));
     if (!adder.is_function())
@@ -55,7 +55,7 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
         return {};
     }));
 
-    return weak_set.ptr();
+    return weak_set;
 }
 
 }

@@ -49,7 +49,7 @@ ThrowCompletionOr<Value> InstantConstructor::call()
 }
 
 // 8.1.1 Temporal.Instant ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant
-ThrowCompletionOr<Object*> InstantConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> InstantConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -61,7 +61,7 @@ ThrowCompletionOr<Object*> InstantConstructor::construct(FunctionObject& new_tar
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Return ? CreateTemporalInstant(epochNanoseconds, NewTarget).
-    return TRY(create_temporal_instant(vm, *epoch_nanoseconds, &new_target));
+    return *TRY(create_temporal_instant(vm, *epoch_nanoseconds, &new_target));
 }
 
 // 8.2.2 Temporal.Instant.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.from

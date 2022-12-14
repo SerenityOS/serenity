@@ -2004,7 +2004,7 @@ public:
     virtual ~@constructor_class@() override;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;
-    virtual JS::ThrowCompletionOr<JS::Object*> construct(JS::FunctionObject& new_target) override;
+    virtual JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> construct(JS::FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }
@@ -2135,7 +2135,7 @@ JS::ThrowCompletionOr<JS::Value> @constructor_class@::call()
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "@name@");
 }
 
-JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct(FunctionObject&)
 {
 )~~~");
 
@@ -2172,7 +2172,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 )~~~");
         }
         generator.append(R"~~~(
-    return &(*impl);
+    return *impl;
 )~~~");
     } else {
         // Multiple constructor overloads - can't do that yet.

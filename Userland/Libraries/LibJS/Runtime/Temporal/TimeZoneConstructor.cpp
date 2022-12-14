@@ -43,7 +43,7 @@ ThrowCompletionOr<Value> TimeZoneConstructor::call()
 }
 
 // 11.2.1 Temporal.TimeZone ( identifier ), https://tc39.es/proposal-temporal/#sec-temporal.timezone
-ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> TimeZoneConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -63,7 +63,7 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
     }
 
     // 4. Return ? CreateTemporalTimeZone(identifier, NewTarget).
-    return TRY(create_temporal_time_zone(vm, identifier, &new_target));
+    return *TRY(create_temporal_time_zone(vm, identifier, &new_target));
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from

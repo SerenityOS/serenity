@@ -47,10 +47,10 @@ ThrowCompletionOr<Value> ProxyConstructor::call()
 }
 
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
-ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
+ThrowCompletionOr<NonnullGCPtr<Object>> ProxyConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    return TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
+    return *TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable

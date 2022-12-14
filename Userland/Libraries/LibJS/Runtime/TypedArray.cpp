@@ -505,13 +505,13 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                            \
                                                                                                                                  \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                               \
-    ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                            \
+    ThrowCompletionOr<NonnullGCPtr<Object>> ConstructorName::construct(FunctionObject& new_target)                               \
     {                                                                                                                            \
         auto& vm = this->vm();                                                                                                   \
         auto& realm = *vm.current_realm();                                                                                       \
                                                                                                                                  \
         if (vm.argument_count() == 0)                                                                                            \
-            return TRY(ClassName::create(realm, 0, new_target)).ptr();                                                           \
+            return TRY(ClassName::create(realm, 0, new_target));                                                                 \
                                                                                                                                  \
         auto first_argument = vm.argument(0);                                                                                    \
         if (first_argument.is_object()) {                                                                                        \
@@ -532,7 +532,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                     TRY(initialize_typed_array_from_array_like(vm, *typed_array, first_argument.as_object()));                   \
                 }                                                                                                                \
             }                                                                                                                    \
-            return typed_array.ptr();                                                                                            \
+            return typed_array;                                                                                                  \
         }                                                                                                                        \
                                                                                                                                  \
         auto array_length_or_error = first_argument.to_index(vm);                                                                \
@@ -550,7 +550,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         /* FIXME: What is the best/correct behavior here? */                                                                     \
         if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type)))                                             \
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");                                     \
-        return TRY(ClassName::create(realm, array_length, new_target)).ptr();                                                    \
+        return TRY(ClassName::create(realm, array_length, new_target));                                                          \
     }
 
 #undef __JS_ENUMERATE

@@ -80,7 +80,7 @@ ThrowCompletionOr<Value> RegExpConstructor::call()
 }
 
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
-ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> RegExpConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -137,7 +137,7 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject& new_targ
     auto regexp_object = TRY(regexp_alloc(vm, new_target));
 
     // 8. Return ? RegExpInitialize(O, P, F).
-    return TRY(regexp_object->regexp_initialize(vm, pattern_value, flags_value)).ptr();
+    return TRY(regexp_object->regexp_initialize(vm, pattern_value, flags_value));
 }
 
 // 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species

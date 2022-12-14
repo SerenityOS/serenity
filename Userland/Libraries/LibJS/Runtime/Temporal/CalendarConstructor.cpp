@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> CalendarConstructor::call()
 }
 
 // 12.2.1 Temporal.Calendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal.calendar
-ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> CalendarConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_ta
     }
 
     // 4. Return ? CreateTemporalCalendar(id, NewTarget).
-    return TRY(create_temporal_calendar(vm, identifier, &new_target));
+    return *TRY(create_temporal_calendar(vm, identifier, &new_target));
 }
 
 // 12.3.2 Temporal.Calendar.from ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from

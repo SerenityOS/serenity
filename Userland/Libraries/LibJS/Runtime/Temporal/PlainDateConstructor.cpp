@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> PlainDateConstructor::call()
 }
 
 // 3.1.1 Temporal.PlainDate ( isoYear, isoMonth, isoDay [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate
-ThrowCompletionOr<Object*> PlainDateConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> PlainDateConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -69,7 +69,7 @@ ThrowCompletionOr<Object*> PlainDateConstructor::construct(FunctionObject& new_t
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
     // 6. Return ? CreateTemporalDate(y, m, d, calendar, NewTarget).
-    return TRY(create_temporal_date(vm, y, m, d, *calendar, &new_target));
+    return *TRY(create_temporal_date(vm, y, m, d, *calendar, &new_target));
 }
 
 // 3.2.2 Temporal.PlainDate.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.from

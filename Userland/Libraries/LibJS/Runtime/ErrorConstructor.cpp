@@ -35,7 +35,7 @@ ThrowCompletionOr<Value> ErrorConstructor::call()
 }
 
 // 20.5.1.1 Error ( message [ , options ] ), https://tc39.es/ecma262/#sec-error-message
-ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -58,7 +58,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     TRY(error->install_error_cause(options));
 
     // 5. Return O.
-    return error.ptr();
+    return error;
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                        \
@@ -88,7 +88,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     }                                                                                                                           \
                                                                                                                                 \
     /* 20.5.6.1.1 NativeError ( message [ , options ] ), https://tc39.es/ecma262/#sec-nativeerror */                            \
-    ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                           \
+    ThrowCompletionOr<NonnullGCPtr<Object>> ConstructorName::construct(FunctionObject& new_target)                              \
     {                                                                                                                           \
         auto& vm = this->vm();                                                                                                  \
                                                                                                                                 \
@@ -111,7 +111,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
         TRY(error->install_error_cause(options));                                                                               \
                                                                                                                                 \
         /* 5. Return O. */                                                                                                      \
-        return error.ptr();                                                                                                     \
+        return error;                                                                                                           \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

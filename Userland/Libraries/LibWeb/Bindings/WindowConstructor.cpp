@@ -22,7 +22,7 @@ JS::ThrowCompletionOr<JS::Value> WindowConstructor::call()
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Window");
 }
 
-JS::ThrowCompletionOr<JS::Object*> WindowConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WindowConstructor::construct(FunctionObject&)
 {
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "Window");
 }

@@ -48,7 +48,7 @@ ThrowCompletionOr<Value> ZonedDateTimeConstructor::call()
 }
 
 // 6.1.1 Temporal.ZonedDateTime ( epochNanoseconds, timeZoneLike [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime
-ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ZonedDateTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -66,7 +66,7 @@ ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& n
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, vm.argument(2)));
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
-    return TRY(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
+    return *TRY(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
 }
 
 // 6.2.2 Temporal.ZonedDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from

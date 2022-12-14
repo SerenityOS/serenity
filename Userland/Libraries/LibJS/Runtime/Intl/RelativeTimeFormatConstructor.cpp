@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> RelativeTimeFormatConstructor::call()
 }
 
 // 17.1.1 Intl.RelativeTimeFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat
-ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> RelativeTimeFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObje
     auto relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &Intrinsics::intl_relative_time_format_prototype));
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
-    return TRY(initialize_relative_time_format(vm, relative_time_format, locales, options));
+    return *TRY(initialize_relative_time_format(vm, relative_time_format, locales, options));
 }
 
 // 17.2.2 Intl.RelativeTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.supportedLocalesOf

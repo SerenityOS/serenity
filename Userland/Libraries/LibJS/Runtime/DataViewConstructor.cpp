@@ -38,7 +38,7 @@ ThrowCompletionOr<Value> DataViewConstructor::call()
 }
 
 // 25.3.2.1 DataView ( buffer [ , byteOffset [ , byteLength ] ] ), https://tc39.es/ecma262/#sec-dataview-buffer-byteoffset-bytelength
-ThrowCompletionOr<Object*> DataViewConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> DataViewConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -72,7 +72,7 @@ ThrowCompletionOr<Object*> DataViewConstructor::construct(FunctionObject& new_ta
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    return data_view.ptr();
+    return data_view;
 }
 
 }

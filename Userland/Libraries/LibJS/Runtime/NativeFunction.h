@@ -32,7 +32,7 @@ public:
     // Used for [[Call]] / [[Construct]]'s "...result of evaluating F in a manner that conforms to the specification of F".
     // Needs to be overridden by all NativeFunctions without an m_native_function.
     virtual ThrowCompletionOr<Value> call();
-    virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target);
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target);
 
     virtual FlyString const& name() const override { return m_name; };
     virtual bool is_strict_mode() const override;

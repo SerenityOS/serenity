@@ -64,17 +64,17 @@ ThrowCompletionOr<Value> ObjectConstructor::call()
 }
 
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
-ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ObjectConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
     if (&new_target != this)
-        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag)).ptr();
+        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
     auto value = vm.argument(0);
     if (value.is_nullish())
-        return Object::create(realm, realm.intrinsics().object_prototype()).ptr();
-    return value.to_object(vm);
+        return Object::create(realm, realm.intrinsics().object_prototype());
+    return *TRY(value.to_object(vm));
 }
 
 enum class GetOwnPropertyKeysType {

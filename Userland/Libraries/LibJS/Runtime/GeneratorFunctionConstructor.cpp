@@ -34,7 +34,7 @@ ThrowCompletionOr<Value> GeneratorFunctionConstructor::call()
 }
 
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
-ThrowCompletionOr<Object*> GeneratorFunctionConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> GeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -45,7 +45,7 @@ ThrowCompletionOr<Object*> GeneratorFunctionConstructor::construct(FunctionObjec
     auto& args = vm.running_execution_context().arguments;
 
     // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
-    return TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Generator, args));
+    return *TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Generator, args));
 }
 
 }

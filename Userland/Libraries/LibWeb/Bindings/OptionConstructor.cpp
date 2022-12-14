@@ -35,7 +35,7 @@ JS::ThrowCompletionOr<JS::Value> OptionConstructor::call()
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option
-JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> OptionConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -74,7 +74,7 @@ JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
     option_element->m_selected = vm.argument(3).to_boolean();
 
     // 7. Return option.
-    return option_element.ptr();
+    return option_element;
 }
 
 }

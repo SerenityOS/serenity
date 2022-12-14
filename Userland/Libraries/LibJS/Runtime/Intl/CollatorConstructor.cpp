@@ -157,7 +157,7 @@ ThrowCompletionOr<Value> CollatorConstructor::call()
 }
 
 // 10.1.1 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator
-ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> CollatorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -174,7 +174,7 @@ ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_ta
     auto collator = TRY(ordinary_create_from_constructor<Collator>(vm, new_target, &Intrinsics::intl_collator_prototype));
 
     // 6. Return ? InitializeCollator(collator, locales, options).
-    return TRY(initialize_collator(vm, collator, locales, options));
+    return *TRY(initialize_collator(vm, collator, locales, options));
 }
 
 // 10.2.2 Intl.Collator.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.collator.supportedlocalesof

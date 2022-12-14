@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<JS::Value> AudioConstructor::call()
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-audio
-JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> AudioConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
 
@@ -57,7 +57,7 @@ JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
     }
 
     // 5. Return audio.
-    return audio.ptr();
+    return audio;
 }
 
 }

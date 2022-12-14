@@ -265,7 +265,7 @@ ThrowCompletionOr<Value> FunctionConstructor::call()
 }
 
 // 20.2.1.1 Function ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-function-p1-p2-pn-body
-ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> FunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -276,7 +276,7 @@ ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_ta
     auto& args = vm.running_execution_context().arguments;
 
     // 3. Return ? CreateDynamicFunction(C, NewTarget, normal, args).
-    return TRY(create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Normal, args));
+    return *TRY(create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Normal, args));
 }
 
 }

@@ -37,7 +37,7 @@ ThrowCompletionOr<Value> ShadowRealmConstructor::call()
 }
 
 // 3.2.1 ShadowRealm ( ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealm
-ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ShadowRealmConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -71,7 +71,7 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
     global_object.initialize(object->shadow_realm());
 
     // 13. Return O.
-    return object.ptr();
+    return object;
 }
 
 }

@@ -37,14 +37,14 @@ ThrowCompletionOr<Value> WeakMapConstructor::call()
 }
 
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
-ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> WeakMapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
     auto weak_map = TRY(ordinary_create_from_constructor<WeakMap>(vm, new_target, &Intrinsics::weak_map_prototype));
 
     if (vm.argument(0).is_nullish())
-        return weak_map.ptr();
+        return weak_map;
 
     auto adder = TRY(weak_map->get(vm.names.set));
     if (!adder.is_function())
@@ -61,7 +61,7 @@ ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_tar
         return {};
     }));
 
-    return weak_map.ptr();
+    return weak_map;
 }
 
 }
