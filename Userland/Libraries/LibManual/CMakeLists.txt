@@ -3,6 +3,7 @@ set(SOURCES
     PageNode.cpp
     Path.cpp
     SectionNode.cpp
+    SubsectionNode.cpp
 )
 
 serenity_lib(LibManual manual)
