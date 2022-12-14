@@ -33,6 +33,10 @@ public:
     // [section] [page]
     // Help can also (externally) handle search queries, which is not possible (yet) in man.
     static ErrorOr<NonnullRefPtr<PageNode>> try_create_from_query(Vector<StringView, 2> const& query_parameters);
+
+    // Finds a page via the help://man/<number>/<subsections...>/page URLs.
+    // This will automatically start discovering pages by inspecting the filesystem.
+    static ErrorOr<NonnullRefPtr<Node>> try_find_from_help_url(URL const&);
 };
 
 }

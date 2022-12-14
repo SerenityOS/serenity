@@ -116,35 +116,15 @@ MainWidget::MainWidget()
                 return;
             open_page(string_path.value());
         } else if (url.scheme() == "help") {
-            if (url.host() == "man") {
-                if (url.paths().size() != 2) {
-                    dbgln("Bad help page URL '{}'", url);
-                    return;
-                }
-                auto const section = url.paths()[0];
-                auto maybe_section_number = section.to_uint();
-                if (!maybe_section_number.has_value()) {
-                    dbgln("Bad section number '{}'", section);
-                    return;
-                }
-                auto section_number = maybe_section_number.value();
-                auto page = String::from_utf8(url.paths()[1]);
-                if (page.is_error())
-                    return;
-
-                auto const page_object = try_make_ref_counted<Manual::PageNode>(Manual::sections[section_number - 1], page.release_value());
-                if (page_object.is_error())
-                    return;
-                auto const maybe_path = page_object.value()->path();
-                if (maybe_path.is_error())
-                    return;
-
-                auto path = maybe_path.value().to_deprecated_string();
-                m_history.push(path);
-                open_url(URL::create_with_file_scheme(path, url.fragment()));
-            } else {
-                dbgln("Bad help operation '{}' in URL '{}'", url.host(), url);
+            auto maybe_page = Manual::Node::try_find_from_help_url(url);
+            if (maybe_page.is_error()) {
+                dbgln("Error opening page: {}", maybe_page.error());
+                return;
             }
+            auto maybe_path = maybe_page.value()->path();
+            if (!maybe_path.is_error())
+                return;
+            open_page(maybe_path.release_value());
         } else {
             open_external(url);
         }
