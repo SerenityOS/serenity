@@ -14,7 +14,9 @@
 #include <LibGUI/Window.h>
 
 class TimeZoneSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(TimeZoneSettingsWidget)
+    C_OBJECT_ABSTRACT(TimeZoneSettingsWidget)
+public:
+    static ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> create();
 
 private:
     TimeZoneSettingsWidget();
