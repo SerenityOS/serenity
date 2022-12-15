@@ -10,9 +10,13 @@
 
 namespace AK {
 
-// TODO: Add an optional base here for binary vs si units
-DeprecatedString human_readable_size(u64 size);
-DeprecatedString human_readable_quantity(u64 quantity, StringView unit = "B"sv);
+enum class HumanReadableBasedOn {
+    Base2,
+    Base10
+};
+
+DeprecatedString human_readable_size(u64 size, HumanReadableBasedOn based_on = HumanReadableBasedOn::Base2);
+DeprecatedString human_readable_quantity(u64 quantity, HumanReadableBasedOn based_on = HumanReadableBasedOn::Base2, StringView unit = "B"sv);
 
 DeprecatedString human_readable_size_long(u64 size);
 DeprecatedString human_readable_time(i64 time_in_seconds);

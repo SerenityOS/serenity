@@ -23,12 +23,12 @@ static DeprecatedString number_string_with_one_decimal(u64 number, u64 unit, Str
     return DeprecatedString::formatted("{}.{} {}", integer_part, decimal_part, suffix);
 }
 
-DeprecatedString human_readable_quantity(u64 quantity, StringView unit)
+DeprecatedString human_readable_quantity(u64 quantity, HumanReadableBasedOn based_on, StringView unit)
 {
-    constexpr u64 size_of_unit = 1024;
+    u64 size_of_unit = based_on == HumanReadableBasedOn::Base2 ? 1024 : 1000;
     constexpr auto unit_prefixes = AK::Array { "", "K", "M", "G", "T", "P", "E" };
     auto full_unit_suffix = [&](int index) {
-        auto binary_infix = (size_of_unit == 1024 && index != 0) ? "i"sv : ""sv;
+        auto binary_infix = (based_on == HumanReadableBasedOn::Base2 && index != 0) ? "i"sv : ""sv;
         return DeprecatedString::formatted("{}{}{}",
             unit_prefixes[index], binary_infix, unit);
     };
@@ -51,9 +51,9 @@ DeprecatedString human_readable_quantity(u64 quantity, StringView unit)
         size_of_current_unit, full_unit_suffix(unit_prefixes.size() - 1));
 }
 
-DeprecatedString human_readable_size(u64 size)
+DeprecatedString human_readable_size(u64 size, HumanReadableBasedOn based_on)
 {
-    return human_readable_quantity(size, "B"sv);
+    return human_readable_quantity(size, based_on, "B"sv);
 }
 
 DeprecatedString human_readable_size_long(u64 size)
