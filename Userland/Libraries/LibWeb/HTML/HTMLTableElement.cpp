@@ -62,16 +62,15 @@ JS::GCPtr<HTMLTableCaptionElement> HTMLTableElement::caption()
     return first_child_of_type<HTMLTableCaptionElement>();
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-caption
 void HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
 {
-    // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
-    VERIFY(caption);
-
-    // FIXME: The spec requires deleting the current caption if caption is null
-    //        Currently the wrapper generator doesn't send us a nullable value
+    // On setting, the first caption element child of the table element, if any, must be removed,
+    // and the new value, if not null, must be inserted as the first node of the table element.
     delete_caption();
 
-    MUST(pre_insert(*caption, first_child()));
+    if (caption)
+        MUST(pre_insert(*caption, first_child()));
 }
 
 JS::NonnullGCPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
