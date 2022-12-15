@@ -45,6 +45,7 @@ enum class NeedsBigProcessLock {
     S(alarm, NeedsBigProcessLock::Yes)                      \
     S(allocate_tls, NeedsBigProcessLock::Yes)               \
     S(anon_create, NeedsBigProcessLock::No)                 \
+    S(annotate_mapping, NeedsBigProcessLock::No)            \
     S(beep, NeedsBigProcessLock::No)                        \
     S(bind, NeedsBigProcessLock::No)                        \
     S(chdir, NeedsBigProcessLock::No)                       \
@@ -124,7 +125,6 @@ enum class NeedsBigProcessLock {
     S(mprotect, NeedsBigProcessLock::Yes)                   \
     S(mremap, NeedsBigProcessLock::Yes)                     \
     S(msync, NeedsBigProcessLock::Yes)                      \
-    S(msyscall, NeedsBigProcessLock::No)                    \
     S(munmap, NeedsBigProcessLock::Yes)                     \
     S(open, NeedsBigProcessLock::Yes)                       \
     S(perf_event, NeedsBigProcessLock::Yes)                 \

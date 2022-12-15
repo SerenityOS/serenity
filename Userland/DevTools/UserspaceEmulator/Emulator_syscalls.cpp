@@ -46,6 +46,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$allocate_tls(arg1, arg2);
     case SC_anon_create:
         return virt$anon_create(arg1, arg2);
+    case SC_annotate_mapping:
+        return virt$annotate_mapping(arg1);
     case SC_beep:
         return virt$beep();
     case SC_bind:
@@ -165,8 +167,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$mprotect(arg1, arg2, arg3);
     case SC_mremap:
         return virt$mremap(arg1);
-    case SC_msyscall:
-        return virt$msyscall(arg1);
     case SC_munmap:
         return virt$munmap(arg1, arg2);
     case SC_open:
@@ -1635,7 +1635,7 @@ u32 Emulator::virt$sysconf(u32 name)
     return syscall(SC_sysconf, name);
 }
 
-int Emulator::virt$msyscall(FlatPtr)
+int Emulator::virt$annotate_mapping(FlatPtr)
 {
     // FIXME: Implement this.
     return 0;

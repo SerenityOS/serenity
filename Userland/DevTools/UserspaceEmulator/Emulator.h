@@ -204,7 +204,7 @@ private:
     u32 virt$mount(u32);
     u32 virt$mprotect(FlatPtr, size_t, int);
     FlatPtr virt$mremap(FlatPtr);
-    int virt$msyscall(FlatPtr);
+    int virt$annotate_mapping(FlatPtr);
     u32 virt$munmap(FlatPtr address, size_t size);
     u32 virt$open(u32);
     FlatPtr virt$perf_event(int type, FlatPtr arg1, FlatPtr arg2);

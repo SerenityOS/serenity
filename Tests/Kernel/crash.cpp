@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     args_parser.add_option(do_invalid_stack_pointer_on_syscall, "Make a syscall while using an invalid stack pointer", nullptr, 'T');
     args_parser.add_option(do_invalid_stack_pointer_on_page_fault, "Trigger a page fault while using an invalid stack pointer", nullptr, 't');
     args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
-    args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside msyscall)", nullptr, 'y');
+    args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside syscall-code mapped region)", nullptr, 'y');
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
     args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
 #if ARCH(I386) || ARCH(X86_64)
@@ -262,7 +262,7 @@ int main(int argc, char** argv)
     }
 
     if (do_legitimate_syscall || do_all_crash_types) {
-        any_failures |= !Crash("Regular syscall from outside msyscall", []() {
+        any_failures |= !Crash("Regular syscall from outside syscall-code mapped region", []() {
             // Since 'crash' is dynamically linked, and DynamicLoader only allows LibSystem to make syscalls, this should kill us:
             Syscall::invoke(Syscall::SC_getuid);
             return Crash::Failure::DidNotCrash;

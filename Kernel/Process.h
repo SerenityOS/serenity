@@ -320,6 +320,7 @@ public:
     ErrorOr<FlatPtr> sys$pwritev(int fd, Userspace<const struct iovec*> iov, int iov_count, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$fstat(int fd, Userspace<stat*>);
     ErrorOr<FlatPtr> sys$stat(Userspace<Syscall::SC_stat_params const*>);
+    ErrorOr<FlatPtr> sys$annotate_mapping(Userspace<void*>, int flags);
     ErrorOr<FlatPtr> sys$lseek(int fd, Userspace<off_t*>, int whence);
     ErrorOr<FlatPtr> sys$ftruncate(int fd, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$posix_fallocate(int fd, Userspace<off_t const*>, Userspace<off_t const*>);
@@ -333,7 +334,6 @@ public:
     ErrorOr<FlatPtr> sys$set_mmap_name(Userspace<Syscall::SC_set_mmap_name_params const*>);
     ErrorOr<FlatPtr> sys$mprotect(Userspace<void*>, size_t, int prot);
     ErrorOr<FlatPtr> sys$madvise(Userspace<void*>, size_t, int advice);
-    ErrorOr<FlatPtr> sys$msyscall(Userspace<void*>);
     ErrorOr<FlatPtr> sys$msync(Userspace<void*>, size_t, int flags);
     ErrorOr<FlatPtr> sys$purge(int mode);
     ErrorOr<FlatPtr> sys$poll(Userspace<Syscall::SC_poll_params const*>);
