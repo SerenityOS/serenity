@@ -23,7 +23,7 @@ NonnullGCPtr<DeclarativeEnvironment> new_declarative_environment(Environment&);
 NonnullGCPtr<ObjectEnvironment> new_object_environment(Object&, bool is_with_environment, Environment*);
 NonnullGCPtr<FunctionEnvironment> new_function_environment(ECMAScriptFunctionObject&, Object* new_target);
 NonnullGCPtr<PrivateEnvironment> new_private_environment(VM& vm, PrivateEnvironment* outer);
-Environment& get_this_environment(VM&);
+NonnullGCPtr<Environment> get_this_environment(VM&);
 bool can_be_held_weakly(Value);
 Object* get_super_constructor(VM&);
 ThrowCompletionOr<Reference> make_super_property_reference(VM&, Value actual_this, PropertyKey const&, bool strict);

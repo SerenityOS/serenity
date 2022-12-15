@@ -513,7 +513,7 @@ Completion SuperCall::execute(Interpreter& interpreter) const
     auto result = TRY(construct(vm, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
 
     // 7. Let thisER be GetThisEnvironment().
-    auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(vm));
+    auto& this_er = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
 
     // 8. Perform ? thisER.BindThisValue(result).
     TRY(this_er.bind_this_value(vm, result));
@@ -1430,10 +1430,10 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
     // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
     if (is<SuperExpression>(object())) {
         // 1. Let env be GetThisEnvironment().
-        auto& environment = get_this_environment(vm);
+        auto environment = get_this_environment(vm);
 
         // 2. Let actualThis be ? env.GetThisBinding().
-        auto actual_this = TRY(environment.get_this_binding(vm));
+        auto actual_this = TRY(environment->get_this_binding(vm));
 
         PropertyKey property_key;
 

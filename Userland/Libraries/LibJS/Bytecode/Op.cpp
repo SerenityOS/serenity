@@ -682,7 +682,7 @@ ThrowCompletionOr<void> SuperCall::execute_impl(Bytecode::Interpreter& interpret
     auto result = TRY(construct(vm, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
 
     // 7. Let thisER be GetThisEnvironment().
-    auto& this_environment = verify_cast<FunctionEnvironment>(get_this_environment(vm));
+    auto& this_environment = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
 
     // 8. Perform ? thisER.BindThisValue(result).
     TRY(this_environment.bind_this_value(vm, result));
