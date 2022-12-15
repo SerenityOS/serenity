@@ -16,6 +16,7 @@ constexpr size_t DRAWTARGET_HEIGHT = 500;
 class Demo final : public GUI::Widget {
     C_OBJECT(Demo)
 public:
+    static ErrorOr<NonnullRefPtr<Demo>> create();
     virtual ~Demo() override;
     bool show_window_frame() const { return m_show_window_frame; }
 
