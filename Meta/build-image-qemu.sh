@@ -119,11 +119,7 @@ if [ $USE_EXISTING -ne 1 ]; then
         (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
         newfs_ext2fs -D $INODE_SIZE -n $INODE_COUNT "/dev/r${VND}i" || die "could not create filesystem"
     else
-        if [ -x /sbin/mke2fs ]; then
-            /sbin/mke2fs -q -I $INODE_SIZE -N $INODE_COUNT _disk_image || die "could not create filesystem"
-        else
-            mke2fs -q -I $INODE_SIZE -N $INODE_COUNT _disk_image || die "could not create filesystem"
-        fi
+        "${MKE2FS_PATH}" -q -I "${INODE_SIZE}" -N "${INODE_COUNT}" _disk_image || die "could not create filesystem"
     fi
     echo "done"
 fi

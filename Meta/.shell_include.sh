@@ -20,9 +20,8 @@ die() {
 find_executable() {
   paths=("/usr/sbin" "/sbin")
 
-  if [ "$(uname -s)" = "Darwin" ]; then
-    paths+=("/usr/local/opt/e2fsprogs/bin" "/usr/local/opt/e2fsprogs/sbin")
-    paths+=("/opt/homebrew/opt/e2fsprogs/bin" "/opt/homebrew/opt/e2fsprogs/sbin")
+  if [ "$(uname -s)" = "Darwin" ] && [ -n "${HOMEBREW_PREFIX}" ]; then
+    paths+=("${HOMEBREW_PREFIX}/opt/e2fsprogs/bin" "${HOMEBREW_PREFIX}/opt/e2fsprogs/sbin")
   fi
 
   executable="${1}"
@@ -45,3 +44,4 @@ find_executable() {
 FUSE2FS_PATH="$(find_executable fuse2fs)"
 RESIZE2FS_PATH="$(find_executable resize2fs)"
 E2FSCK_PATH="$(find_executable e2fsck)"
+MKE2FS_PATH="$(find_executable mke2fs)"
