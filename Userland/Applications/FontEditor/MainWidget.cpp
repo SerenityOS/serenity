@@ -399,6 +399,7 @@ ErrorOr<void> MainWidget::create_models()
     m_unicode_block_listview->set_activates_on_selection(true);
     m_unicode_block_listview->horizontal_scrollbar().set_visible(false);
     m_unicode_block_listview->set_cursor(m_unicode_block_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+    m_unicode_block_listview->set_focus_proxy(m_search_textbox);
 
     return {};
 }
