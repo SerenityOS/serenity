@@ -28,6 +28,8 @@ public:
 
     StringView title() const;
     StringView author() const;
+    Gfx::Color background_color() const;
+    Gfx::Color foreground_color() const;
     Gfx::IntSize normative_size() const { return m_normative_size; }
 
     Slide const& current_slide() const { return m_slides[m_current_slide.value()]; }
@@ -37,6 +39,7 @@ public:
     void next_frame();
     void previous_frame();
     void go_to_first_slide();
+    void set_color_scheme(Gfx::Color, Gfx::Color);
 
     // This assumes that the caller has clipped the painter to exactly the display area.
     void paint(Gfx::Painter& painter) const;
@@ -57,4 +60,7 @@ private:
 
     Checked<unsigned> m_current_slide { 0 };
     Checked<unsigned> m_current_frame_in_slide { 0 };
+
+    Gfx::Color m_background_color;
+    Gfx::Color m_foreground_color;
 };

@@ -18,7 +18,7 @@
 #include <LibGfx/TextWrapping.h>
 #include <LibImageDecoderClient/Client.h>
 
-ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window)
+ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window, Gfx::Color default_color)
 {
     auto image_decoder_client = TRY(ImageDecoderClient::Client::try_create());
 
@@ -29,7 +29,7 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
     auto type = maybe_type.as_string();
     RefPtr<SlideObject> object;
     if (type == "text"sv)
-        object = TRY(try_make_ref_counted<Text>());
+        object = TRY(try_make_ref_counted<Text>(default_color));
     else if (type == "image"sv)
         object = TRY(try_make_ref_counted<Image>(image_decoder_client, window));
     else
@@ -80,6 +80,16 @@ Text::Text()
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text-alignment", text_alignment, set_text_alignment);
     REGISTER_INT_PROPERTY("font-size", font_size, set_font_size);
     REGISTER_STRING_PROPERTY("font", font, set_font);
+}
+
+Text::Text(Gfx::Color default_color)
+{
+    REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_FONT_WEIGHT_PROPERTY("font-weight", font_weight, set_font_weight);
+    REGISTER_TEXT_ALIGNMENT_PROPERTY("text-alignment", text_alignment, set_text_alignment);
+    REGISTER_INT_PROPERTY("font-size", font_size, set_font_size);
+    REGISTER_STRING_PROPERTY("font", font, set_font);
+    this->set_color(default_color);
 }
 
 void Text::paint(Gfx::Painter& painter, Gfx::FloatSize display_scale) const

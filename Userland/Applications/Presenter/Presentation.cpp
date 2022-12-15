@@ -16,6 +16,7 @@ Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString
     : m_normative_size(normative_size)
     , m_metadata(move(metadata))
 {
+    m_background_color = Color::White;
 }
 
 NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
@@ -42,6 +43,28 @@ StringView Presentation::author() const
     return "Unknown Author"sv;
 }
 
+Color Presentation::background_color() const
+{
+    if (m_metadata.contains("background-color"sv)) {
+        auto color = Color::from_string(m_metadata.get("background-color"sv)->view());
+        if (color.has_value()) {
+            return color.value();
+        }
+    }
+    return Color::White;
+}
+
+Color Presentation::foreground_color() const
+{
+    if (m_metadata.contains("foreground-color"sv)) {
+        auto color = Color::from_string(m_metadata.get("foreground-color"sv)->view());
+        if (color.has_value()) {
+            return color.value();
+        }
+    }
+    return Color::DarkGray;
+}
+
 void Presentation::next_frame()
 {
     m_current_frame_in_slide++;
@@ -64,6 +87,12 @@ void Presentation::go_to_first_slide()
 {
     m_current_frame_in_slide = 0;
     m_current_slide = 0;
+}
+
+void Presentation::set_color_scheme(Color background_color, Color foreground_color)
+{
+    m_background_color = background_color;
+    m_foreground_color = foreground_color;
 }
 
 ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView file_name, NonnullRefPtr<GUI::Window> window)
@@ -104,7 +133,7 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
             return Error::from_string_view("Slides must be objects"sv);
         auto const& slide_object = maybe_slide.as_object();
 
-        auto slide = TRY(Slide::parse_slide(slide_object, window));
+        auto slide = TRY(Slide::parse_slide(slide_object, window, presentation->foreground_color()));
         presentation->append_slide(move(slide));
     }
 
@@ -155,7 +184,6 @@ void Presentation::paint(Gfx::Painter& painter) const
     auto height_scale = static_cast<double>(display_area.height()) / static_cast<double>(m_normative_size.height());
     auto scale = Gfx::FloatSize { static_cast<float>(width_scale), static_cast<float>(height_scale) };
 
-    // FIXME: Fill the background with a color depending on the color scheme
-    painter.clear_rect(painter.clip_rect(), Color::White);
+    painter.clear_rect(painter.clip_rect(), m_background_color);
     current_slide().paint(painter, m_current_frame_in_slide.value(), scale);
 }

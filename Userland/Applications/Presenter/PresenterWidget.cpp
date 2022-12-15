@@ -68,6 +68,23 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         this->window()->set_fullscreen(true);
     })));
 
+    auto black_background_action = GUI::Action::create("&Black background", { KeyCode::Key_B }, [this](auto&) {
+        if (m_current_presentation) {
+            m_current_presentation->set_color_scheme(Color::Black, Color::LightGray);
+            update();
+        }
+    });
+    auto white_background_action = GUI::Action::create("&White background", { KeyCode::Key_W }, [this](auto&) {
+        if (m_current_presentation) {
+            m_current_presentation->set_color_scheme(Color::White, Color::DarkGray);
+            update();
+        }
+    });
+    TRY(presentation_menu.try_add_action(black_background_action));
+    TRY(presentation_menu.try_add_action(white_background_action));
+    m_black_background_action = black_background_action;
+    m_white_background_action = white_background_action;
+
     return {};
 }
 
@@ -79,6 +96,7 @@ void PresenterWidget::set_file(StringView file_name)
     } else {
         m_current_presentation = presentation.release_value();
         window()->set_title(DeprecatedString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
+        m_current_presentation->set_color_scheme(m_current_presentation->background_color(), m_current_presentation->foreground_color());
         set_min_size(m_current_presentation->normative_size());
         // This will apply the new minimum size.
         update();

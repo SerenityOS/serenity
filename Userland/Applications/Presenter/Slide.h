@@ -15,7 +15,7 @@
 // A single slide of a presentation.
 class Slide final {
 public:
-    static ErrorOr<Slide> parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window);
+    static ErrorOr<Slide> parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window, Color default_color);
 
     // FIXME: shouldn't be hard-coded to 1.
     unsigned frame_count() const { return 1; }

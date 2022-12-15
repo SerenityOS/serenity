@@ -29,7 +29,7 @@ class SlideObject : public Core::Object {
 public:
     virtual ~SlideObject() = default;
 
-    static ErrorOr<NonnullRefPtr<SlideObject>> parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window);
+    static ErrorOr<NonnullRefPtr<SlideObject>> parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window, Color default_color);
 
     // FIXME: Actually determine this from the file data.
     bool is_visible_during_frame([[maybe_unused]] unsigned frame_number) const { return true; }
@@ -68,6 +68,7 @@ class Text : public GraphicsObject {
 
 public:
     Text();
+    Text(Color);
     virtual ~Text() = default;
 
     virtual void paint(Gfx::Painter&, Gfx::FloatSize display_scale) const override;

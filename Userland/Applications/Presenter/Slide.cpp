@@ -18,7 +18,7 @@ Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString ti
 {
 }
 
-ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window)
+ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window, Color default_color)
 {
     // FIXME: Use the text with the "title" role for a title, if there is no title given.
     auto title = slide_json.get("title"sv).as_string_or("Untitled slide");
@@ -34,7 +34,7 @@ ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GU
             return Error::from_string_view("Slides must be objects"sv);
         auto const& slide_object_json = maybe_slide_object_json.as_object();
 
-        auto slide_object = TRY(SlideObject::parse_slide_object(slide_object_json, window));
+        auto slide_object = TRY(SlideObject::parse_slide_object(slide_object_json, window, default_color));
         slide_objects.append(move(slide_object));
     }
 
