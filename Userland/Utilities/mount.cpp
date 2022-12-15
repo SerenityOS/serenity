@@ -7,6 +7,8 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/StringUtils.h>
+#include <Kernel/API/FileSystem/MountSpecificFlags.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Stream.h>
@@ -189,12 +191,52 @@ static ErrorOr<void> print_mounts()
     return {};
 }
 
+static ErrorOr<void> apply_file_system_specific_options(int mount_fd, Vector<String> const& filesystem_specific_options)
+{
+    for (auto& option : filesystem_specific_options) {
+        auto key_value_option = TRY(option.split_limit('=', 2));
+        mount_specific_flag flag;
+        flag.key_string_length = key_value_option[0].bytes().size();
+        flag.key_string_addr = key_value_option[0].bytes().data();
+        if (key_value_option.size() > 1 && !key_value_option[1].is_empty()) {
+            auto possible_int_value = AK::StringUtils::convert_to_int<i64>(key_value_option[1]);
+            auto possible_uint_value = AK::StringUtils::convert_to_uint<u64>(key_value_option[1]);
+            if (possible_uint_value.has_value() && possible_int_value.has_value()) {
+                flag.value_type = mount_specific_flag::ValueType::UnsignedInteger;
+                flag.value_length = 8;
+                u64 value = possible_uint_value.value();
+                flag.value_addr = &value;
+                TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+            } else if (possible_int_value.has_value()) {
+                VERIFY(!possible_uint_value.has_value());
+                flag.value_type = mount_specific_flag::ValueType::SignedInteger;
+                flag.value_length = 8;
+                u64 value = possible_int_value.value();
+                flag.value_addr = &value;
+                TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+            } else {
+                flag.value_type = mount_specific_flag::ValueType::ASCIIString;
+                flag.value_addr = key_value_option[1].bytes().data();
+                flag.value_length = key_value_option[1].bytes().size();
+                TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+            }
+            continue;
+        }
+        flag.value_type = mount_specific_flag::ValueType::None;
+        flag.value_addr = nullptr;
+        flag.value_length = 0;
+        TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+    }
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView source;
     StringView mountpoint;
     StringView fs_type;
     StringView options;
+    Vector<String> filesystem_specific_options;
     bool should_mount_all = false;
 
     Core::ArgsParser args_parser;
@@ -202,6 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
     args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
     args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
+    args_parser.add_option(filesystem_specific_options, "Mount filesystem-specific options", "fs-specific-option", 'O', "filesystem-specific options");
     args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a');
     args_parser.parse(arguments);
 
@@ -220,10 +263,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             fs_type = "ext2"sv;
         int flags = !options.is_empty() ? parse_options(options) : 0;
 
-        int const fd = TRY(get_source_fd(source));
+        int const source_fd = TRY(get_source_fd(source));
 
-        TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
-
+        if (flags & MS_REMOUNT) {
+            TRY(Core::System::remount(mountpoint, flags));
+            return 0;
+        }
+        if (flags & MS_BIND) {
+            TRY(Core::System::bindmount(source_fd, mountpoint, fs_type, flags));
+            return 0;
+        }
+        int mount_fd = TRY(Core::System::fsopen(fs_type, flags));
+        TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_FILE_SOURCE, source_fd));
+        if (!filesystem_specific_options.is_empty())
+            TRY(apply_file_system_specific_options(mount_fd, filesystem_specific_options));
+        TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_CREATE_FILESYSTEM, 0));
+        TRY(Core::System::fsmount(mount_fd, mountpoint));
         return 0;
     }
 
