@@ -9,6 +9,7 @@
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -98,6 +99,7 @@ public:
     void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
     // Note: This option is being used when we expect the user to use the same option
     // multiple times (e.g. "program --option=example --option=anotherexample ...").
+    void add_option(Vector<String>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
 
     void add_positional_argument(Arg&&);
