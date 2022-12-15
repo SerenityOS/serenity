@@ -127,7 +127,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
     // NOTE: This would be unused due to step 11 and is omitted for that reason.
 
     // 5. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
-    Environment* lexical_environment = new_declarative_environment(eval_realm.global_environment());
+    Environment* lexical_environment = new_declarative_environment(eval_realm.global_environment()).ptr();
 
     // 6. Let varEnv be evalRealm.[[GlobalEnv]].
     Environment* variable_environment = &eval_realm.global_environment();

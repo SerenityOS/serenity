@@ -242,7 +242,7 @@ Completion BlockStatement::execute(Interpreter& interpreter) const
     // Optimization: We only need a new lexical environment if there are any lexical declarations. :^)
     if (has_lexical_declarations()) {
         old_environment = vm.running_execution_context().lexical_environment;
-        auto* block_environment = new_declarative_environment(*old_environment);
+        auto block_environment = new_declarative_environment(*old_environment);
         block_declaration_instantiation(interpreter, block_environment);
         vm.running_execution_context().lexical_environment = block_environment;
     } else {
@@ -308,7 +308,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     auto has_own_name = !name().is_empty();
 
     auto const& used_name = has_own_name ? name() : given_name;
-    auto* environment = interpreter.lexical_environment();
+    auto environment = NonnullGCPtr { *interpreter.lexical_environment() };
     if (has_own_name) {
         VERIFY(environment);
         environment = new_declarative_environment(*environment);
@@ -768,7 +768,7 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyStr
 
     if (m_init) {
         if (is<VariableDeclaration>(*m_init) && static_cast<VariableDeclaration const&>(*m_init).declaration_kind() != DeclarationKind::Var) {
-            auto* loop_environment = new_declarative_environment(*old_environment);
+            auto loop_environment = new_declarative_environment(*old_environment);
             auto& declaration = static_cast<VariableDeclaration const&>(*m_init);
             declaration.for_each_bound_name([&](auto const& name) {
                 if (declaration.declaration_kind() == DeclarationKind::Const) {
@@ -900,7 +900,7 @@ struct ForInOfHeadState {
         auto& vm = interpreter.vm();
 
         Optional<Reference> lhs_reference;
-        Environment* iteration_environment = nullptr;
+        GCPtr<Environment> iteration_environment;
 
         // g. If lhsKind is either assignment or varBinding, then
         if (lhs_kind == Assignment || lhs_kind == VarBinding) {
@@ -1841,7 +1841,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
-    auto* class_environment = new_declarative_environment(*environment);
+    auto class_environment = new_declarative_environment(*environment);
 
     // We might not set the lexical environment but we always want to restore it eventually.
     ArmedScopeGuard restore_environment = [&] {
@@ -3842,7 +3842,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
         auto* old_environment = vm.running_execution_context().lexical_environment;
 
         // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
-        auto* catch_environment = new_declarative_environment(*old_environment);
+        auto catch_environment = new_declarative_environment(*old_environment);
 
         m_handler->parameter().visit(
             [&](FlyString const& parameter) {
@@ -4160,7 +4160,7 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter) const
     // Optimization: Avoid creating a lexical environment if there are no lexical declarations.
     if (has_lexical_declarations()) {
         // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-        auto* block_environment = new_declarative_environment(*old_environment);
+        auto block_environment = new_declarative_environment(*old_environment);
 
         // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
         block_declaration_instantiation(interpreter, block_environment);
