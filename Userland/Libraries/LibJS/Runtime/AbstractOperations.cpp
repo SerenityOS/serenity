@@ -394,7 +394,7 @@ NonnullGCPtr<DeclarativeEnvironment> new_declarative_environment(Environment& en
 }
 
 // 9.1.2.3 NewObjectEnvironment ( O, W, E ), https://tc39.es/ecma262/#sec-newobjectenvironment
-ObjectEnvironment* new_object_environment(Object& object, bool is_with_environment, Environment* environment)
+NonnullGCPtr<ObjectEnvironment> new_object_environment(Object& object, bool is_with_environment, Environment* environment)
 {
     auto& heap = object.heap();
 
