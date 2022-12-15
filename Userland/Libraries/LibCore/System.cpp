@@ -263,14 +263,43 @@ ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int fl
     if (target.is_null() || fs_type.is_null())
         return Error::from_errno(EFAULT);
 
-    Syscall::SC_mount_params params {
-        { target.characters_without_null_termination(), target.length() },
+    if (flags & MS_REMOUNT) {
+        TRY(remount(target, flags));
+        return {};
+    }
+    if (flags & MS_BIND) {
+        TRY(bindmount(source_fd, target, flags));
+        return {};
+    }
+    int mount_fd = TRY(fsopen(fs_type, flags));
+    return fsmount(mount_fd, source_fd, target);
+}
+
+ErrorOr<int> fsopen(StringView fs_type, int flags)
+{
+    if (fs_type.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_fsopen_params params {
         { fs_type.characters_without_null_termination(), fs_type.length() },
-        source_fd,
-        flags
+        flags,
     };
-    int rc = syscall(SC_mount, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("mount", rc, {});
+    int rc = syscall(SC_fsopen, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("fsopen", rc, rc);
+}
+
+ErrorOr<void> fsmount(int mount_fd, int source_fd, StringView target)
+{
+    if (target.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_fsmount_params params {
+        mount_fd,
+        { target.characters_without_null_termination(), target.length() },
+        source_fd,
+    };
+    int rc = syscall(SC_fsmount, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("fsmount", rc, {});
 }
 
 ErrorOr<void> umount(StringView mount_point)

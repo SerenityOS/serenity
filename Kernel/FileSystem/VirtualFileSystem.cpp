@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +24,59 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>
 
+#include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
+#include <Kernel/FileSystem/Ext2FS/FileSystem.h>
+#include <Kernel/FileSystem/FATFS/FileSystem.h>
+#include <Kernel/FileSystem/ISO9660FS/FileSystem.h>
+#include <Kernel/FileSystem/Plan9FS/FileSystem.h>
+#include <Kernel/FileSystem/ProcFS/FileSystem.h>
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
+#include <Kernel/FileSystem/SysFS/FileSystem.h>
+
 namespace Kernel {
 
 static Singleton<VirtualFileSystem> s_the;
 static constexpr int root_mount_flags = 0;
+
+static ErrorOr<void> handle_mount_boolean_flag_as_invalid(Span<u8>, StringView, bool)
+{
+    return EINVAL;
+}
+
+static ErrorOr<void> handle_mount_unsigned_integer_flag_as_invalid(Span<u8>, StringView, u64)
+{
+    return EINVAL;
+}
+
+static ErrorOr<void> handle_mount_signed_integer_flag_as_invalid(Span<u8>, StringView, i64)
+{
+    return EINVAL;
+}
+
+static ErrorOr<void> handle_mount_ascii_string_flag_as_invalid(Span<u8>, StringView, StringView)
+{
+    return EINVAL;
+}
+
+static constexpr FileSystemInitializer s_initializers[] = {
+    { "proc"sv, "ProcFS"sv, false, false, false, {}, ProcFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "ram"sv, "RAMFS"sv, false, false, false, {}, RAMFS::try_create, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+    { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {}, handle_mount_boolean_flag_as_invalid, handle_mount_unsigned_integer_flag_as_invalid, handle_mount_signed_integer_flag_as_invalid, handle_mount_ascii_string_flag_as_invalid },
+};
+
+ErrorOr<FileSystemInitializer const*> VirtualFileSystem::find_filesystem_type_initializer(StringView fs_type)
+{
+    for (auto& initializer_entry : s_initializers) {
+        if (fs_type == initializer_entry.short_name || fs_type == initializer_entry.name)
+            return &initializer_entry;
+    }
+    return ENODEV;
+}
 
 UNMAP_AFTER_INIT void VirtualFileSystem::initialize()
 {
@@ -59,14 +109,14 @@ bool VirtualFileSystem::mount_point_exists_at_inode(InodeIdentifier inode_identi
     });
 }
 
-ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
+ErrorOr<void> VirtualFileSystem::add_file_system_to_mount_table(FileSystem& file_system, Custody& mount_point, int flags)
 {
-    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs, &mount_point, flags)));
+    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(file_system, &mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
-        dbgln("VirtualFileSystem: FileSystemID {}, Mounting {} at inode {} with flags {}",
-            fs.fsid(),
-            fs.class_name(),
+        dbgln("VirtualFileSystem: FileSystemID {} (non file-backed), Mounting {} at inode {} with flags {}",
+            file_system.fsid(),
+            file_system.class_name(),
             inode.identifier(),
             flags);
         if (mount_point_exists_at_inode(inode.identifier())) {
@@ -84,20 +134,73 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
             // the FileSystem once it is no longer mounted).
             if (mounted_count == 1) {
                 m_file_systems_list.with([&](auto& fs_list) {
-                    fs_list.append(fs);
+                    fs_list.append(file_system);
                 });
-                if (fs.is_file_backed()) {
-                    auto& file_backed_fs = static_cast<FileBackedFileSystem&>(fs);
-                    m_file_backed_file_systems_list.with([&](auto& fs_list) {
-                        fs_list.append(file_backed_fs);
-                    });
-                }
             }
         });
 
         // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
         // deleted after being added.
         mounts.append(*new_mount.leak_ptr());
+        return {};
+    });
+}
+
+ErrorOr<void> VirtualFileSystem::mount(MountFile& mount_file, OpenFileDescription* source_description, Custody& mount_point, int flags)
+{
+    auto const& file_system_initializer = mount_file.file_system_initializer();
+    if (!source_description) {
+        if (file_system_initializer.requires_open_file_description)
+            return ENOTSUP;
+        if (!file_system_initializer.create)
+            return ENOTSUP;
+        RefPtr<FileSystem> fs;
+        TRY(mount_file.mount_file_system_specific_data().with_exclusive([&](auto& mount_specific_data) -> ErrorOr<void> {
+            fs = TRY(file_system_initializer.create(mount_specific_data->bytes()));
+            return {};
+        }));
+        VERIFY(fs);
+        TRY(fs->initialize());
+        TRY(add_file_system_to_mount_table(*fs, mount_point, flags));
+        return {};
+    }
+
+    // NOTE: Although it might be OK to support creating filesystems
+    // without providing an actual file descriptor to their create() method
+    // because the caller of this function actually supplied a valid file descriptor,
+    // this will only make things complicated in the future, so we should block
+    // this kind of behavior.
+    if (!file_system_initializer.requires_open_file_description)
+        return ENOTSUP;
+
+    if (file_system_initializer.requires_block_device && !source_description->file().is_block_device())
+        return ENOTBLK;
+    if (file_system_initializer.requires_seekable_file && !source_description->file().is_seekable()) {
+        dbgln("mount: this is not a seekable file");
+        return ENODEV;
+    }
+
+    // NOTE: If there's an associated file description with the filesystem, we could
+    // try to first find it from the VirtualFileSystem filesystem list and if it was not found,
+    // then create it and add it.
+    VERIFY(file_system_initializer.create_with_fd);
+    return m_file_backed_file_systems_list.with_exclusive([&](auto& list) -> ErrorOr<void> {
+        RefPtr<FileSystem> fs;
+        for (auto& node : list) {
+            if ((&node.file_description() == source_description) || (&node.file() == &source_description->file())) {
+                fs = node;
+                break;
+            }
+        }
+        if (!fs) {
+            TRY(mount_file.mount_file_system_specific_data().with_exclusive([&](auto& mount_specific_data) -> ErrorOr<void> {
+                fs = TRY(file_system_initializer.create_with_fd(*source_description, mount_specific_data->bytes()));
+                return {};
+            }));
+            TRY(fs->initialize());
+        }
+        TRY(add_file_system_to_mount_table(*fs, mount_point, flags));
+        list.append(static_cast<FileBackedFileSystem&>(*fs));
         return {};
     });
 }
@@ -163,41 +266,42 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
     auto custody_path = TRY(mountpoint_custody.try_serialize_absolute_path());
     dbgln("VirtualFileSystem: unmount called with inode {} on mountpoint {}", guest_inode.identifier(), custody_path->view());
 
-    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
-        for (auto& mount : mounts) {
-            if (&mount.guest() != &guest_inode)
-                continue;
-            auto mountpoint_path = TRY(mount.absolute_path());
-            if (custody_path->view() != mountpoint_path->view())
-                continue;
-            NonnullRefPtr<FileSystem> fs = mount.guest_fs();
-            TRY(fs->prepare_to_unmount());
-            fs->mounted_count({}).with([&](auto& mounted_count) {
-                VERIFY(mounted_count > 0);
-                if (mounted_count == 1) {
-                    dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());
-                    m_file_systems_list.with([&](auto& list) {
-                        list.remove(*fs);
-                    });
-                    if (fs->is_file_backed()) {
-                        dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
-                        auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
-                        m_file_backed_file_systems_list.with([&](auto& list) {
-                            list.remove(file_backed_fs);
+    return m_file_backed_file_systems_list.with_exclusive([&](auto& file_backed_fs_list) -> ErrorOr<void> {
+        TRY(m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
+            for (auto& mount : mounts) {
+                if (&mount.guest() != &guest_inode)
+                    continue;
+                auto mountpoint_path = TRY(mount.absolute_path());
+                if (custody_path->view() != mountpoint_path->view())
+                    continue;
+                NonnullRefPtr<FileSystem> fs = mount.guest_fs();
+                TRY(fs->prepare_to_unmount());
+                fs->mounted_count({}).with([&](auto& mounted_count) {
+                    VERIFY(mounted_count > 0);
+                    if (mounted_count == 1) {
+                        dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());
+                        m_file_systems_list.with([&](auto& list) {
+                            list.remove(*fs);
                         });
+                        if (fs->is_file_backed()) {
+                            dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
+                            auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
+                            file_backed_fs_list.remove(file_backed_fs);
+                        }
+                    } else {
+                        mounted_count--;
                     }
-                } else {
-                    mounted_count--;
-                }
-            });
-            dbgln("VirtualFileSystem: Unmounting file system {}...", fs->fsid());
-            mount.m_vfs_list_node.remove();
-            // Note: This is balanced by a `new` statement that is happening in various places before inserting the Mount object to the list.
-            delete &mount;
-            return {};
-        }
-        dbgln("VirtualFileSystem: Nothing mounted on inode {}", guest_inode.identifier());
-        return ENODEV;
+                });
+                dbgln("VirtualFileSystem: Unmounting file system {}...", fs->fsid());
+                mount.m_vfs_list_node.remove();
+                // NOTE: This is balanced by a `new` statement that is happening in various places before inserting the Mount object to the list.
+                delete &mount;
+                return {};
+            }
+            dbgln("VirtualFileSystem: Nothing mounted on inode {}", guest_inode.identifier());
+            return ENODEV;
+        }));
+        return {};
     });
 }
 
@@ -219,7 +323,7 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     if (fs.is_file_backed()) {
         auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
         dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
-        m_file_backed_file_systems_list.with([&](auto& list) {
+        m_file_backed_file_systems_list.with_exclusive([&](auto& list) {
             list.append(static_cast<FileBackedFileSystem&>(fs));
         });
     } else {
@@ -337,28 +441,6 @@ ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(Credentials const& cre
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
     return custody->inode().metadata();
-}
-
-ErrorOr<NonnullRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullRefPtr<FileSystem>>(OpenFileDescription&)> callback)
-{
-    return TRY(m_file_backed_file_systems_list.with([&](auto& list) -> ErrorOr<NonnullRefPtr<FileBackedFileSystem>> {
-        for (auto& node : list) {
-            if (&node.file_description() == &description) {
-                return node;
-            }
-            if (&node.file() == &description.file()) {
-                return node;
-            }
-        }
-        auto fs = TRY(callback(description));
-
-        // The created FileSystem is only added to the file_systems_lists
-        // when the FS has been successfully initialized and mounted
-        // (in VirtualFileSystem::mount()). This prevents file systems which
-        // fail to initialize or mount from existing in the list when the
-        // FileSystem is destroyed after failure.
-        return static_ptr_cast<FileBackedFileSystem>(fs);
-    }));
 }
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credentials const& credentials, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
