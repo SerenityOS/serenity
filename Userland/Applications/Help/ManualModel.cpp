@@ -9,6 +9,7 @@
 #include <AK/Utf8View.h>
 #include <LibManual/Node.h>
 #include <LibManual/PageNode.h>
+#include <LibManual/Path.h>
 #include <LibManual/SectionNode.h>
 
 ManualModel::ManualModel()
@@ -20,22 +21,34 @@ ManualModel::ManualModel()
 
 Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
 {
-    for (int section = 0; section < row_count(); ++section) {
-        auto parent_index = index(section, 0);
-        for (int row = 0; row < row_count(parent_index); ++row) {
-            auto child_index = index(row, 0, parent_index);
-            auto* node = static_cast<Manual::Node const*>(child_index.internal_data());
-            if (!node->is_page())
-                continue;
-            auto* page = static_cast<Manual::PageNode const*>(node);
-            auto const maybe_path = page->path();
-            if (maybe_path.is_error())
-                return {};
-            if (maybe_path.value().bytes_as_string_view() != path)
-                continue;
-            return child_index;
+    // The first slice removes the man pages base path plus the `/man` from the main section subdirectory.
+    // The second slice removes the trailing `.md`.
+    auto path_without_base = path.substring_view(Manual::manual_base_path.string().length() + 4);
+    auto url = URL::create_with_help_scheme(path_without_base.substring_view(0, path_without_base.length() - 3), {}, "man");
+
+    auto maybe_page = Manual::Node::try_find_from_help_url(url);
+    if (maybe_page.is_error())
+        return {};
+
+    auto page = maybe_page.release_value();
+    // Main section
+    if (page->parent() == nullptr) {
+        for (size_t section = 0; section < Manual::number_of_sections; ++section) {
+            auto main_section_index = index(static_cast<int>(section), 0);
+            if (main_section_index.internal_data() == page.ptr())
+                return main_section_index;
         }
+        return {};
     }
+    auto maybe_siblings = page->parent()->children();
+    if (maybe_siblings.is_error())
+        return {};
+    auto siblings = maybe_siblings.release_value();
+    for (size_t row = 0; row < siblings.size(); ++row) {
+        if (siblings[row] == page)
+            return create_index(static_cast<int>(row), 0, page.ptr());
+    }
+
     return {};
 }
 
