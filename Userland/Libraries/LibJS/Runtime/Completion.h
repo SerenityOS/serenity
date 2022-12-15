@@ -131,10 +131,7 @@ class Optional<JS::Completion> {
 public:
     using ValueType = JS::Completion;
 
-    Optional()
-        : m_value(JS::Completion(JS::Completion::EmptyTag {}))
-    {
-    }
+    Optional() = default;
 
     Optional(Optional<JS::Completion> const& other)
     {
@@ -228,7 +225,7 @@ public:
     JS::Completion* operator->() { return &value(); }
 
 private:
-    JS::Completion m_value;
+    JS::Completion m_value { JS::Completion::EmptyTag {} };
 };
 
 }
