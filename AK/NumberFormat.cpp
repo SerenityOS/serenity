@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
 #include <AK/NumberFormat.h>
+#include <AK/NumericLimits.h>
 #include <AK/StringView.h>
 
 namespace AK {
@@ -13,8 +15,12 @@ namespace AK {
 // FIXME: Remove this hackery once printf() supports floats.
 static DeprecatedString number_string_with_one_decimal(u64 number, u64 unit, StringView suffix)
 {
-    int decimal = (number % unit) * 10 / unit;
-    return DeprecatedString::formatted("{}.{} {}", number / unit, decimal, suffix);
+    constexpr auto max_unit_size = NumericLimits<u64>::max() / 10;
+    VERIFY(unit < max_unit_size);
+
+    auto integer_part = number / unit;
+    auto decimal_part = (number % unit) * 10 / unit;
+    return DeprecatedString::formatted("{}.{} {}", integer_part, decimal_part, suffix);
 }
 
 DeprecatedString human_readable_quantity(u64 quantity, StringView unit)
