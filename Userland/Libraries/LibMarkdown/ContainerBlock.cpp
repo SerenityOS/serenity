@@ -91,7 +91,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
     NonnullOwnPtrVector<Block> blocks;
 
     StringBuilder paragraph_text;
-    Heading* current_section;
+    Heading* current_section = nullptr;
 
     auto flush_paragraph = [&] {
         if (paragraph_text.is_empty())
