@@ -257,7 +257,7 @@ ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::Pa
     auto socket = TRY(Core::Stream::LocalSocket::connect(webdriver_ipc_path));
 
     dbgln_if(WEBDRIVER_DEBUG, "Connected to WebDriver");
-    return try_create(move(socket), page_client);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) WebDriverConnection(move(socket), page_client));
 }
 
 WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Web::PageClient& page_client)
