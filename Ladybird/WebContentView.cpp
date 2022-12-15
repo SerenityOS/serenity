@@ -55,8 +55,8 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
-WebContentView::WebContentView(int webdriver_fd_passing_socket)
-    : m_webdriver_fd_passing_socket(webdriver_fd_passing_socket)
+WebContentView::WebContentView(StringView webdriver_content_ipc_path)
+    : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     setMouseTracking(true);
 
@@ -588,30 +588,30 @@ void WebContentView::create_client()
         MUST(Core::System::close(ui_fd_passing_fd));
         MUST(Core::System::close(ui_fd));
 
-        DeprecatedString takeover_string;
-        if (auto* socket_takeover = getenv("SOCKET_TAKEOVER"))
-            takeover_string = DeprecatedString::formatted("{} WebContent:{}", socket_takeover, wc_fd);
-        else
-            takeover_string = DeprecatedString::formatted("WebContent:{}", wc_fd);
+        auto takeover_string = DeprecatedString::formatted("WebContent:{}", wc_fd);
         MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
         auto webcontent_fd_passing_socket_string = DeprecatedString::number(wc_fd_passing_fd);
-        auto webdriver_fd_passing_socket_string = DeprecatedString::number(m_webdriver_fd_passing_socket);
 
-        char const* argv[] = {
-            "WebContent",
-            "--webcontent-fd-passing-socket",
-            webcontent_fd_passing_socket_string.characters(),
-            "--webdriver-fd-passing-socket",
-            webdriver_fd_passing_socket_string.characters(),
-            nullptr,
+        Vector<StringView> arguments {
+            "WebContent"sv,
+            "--webcontent-fd-passing-socket"sv,
+            webcontent_fd_passing_socket_string
         };
 
-        auto rc = execvp("./WebContent/WebContent", const_cast<char**>(argv));
-        if (rc < 0)
-            rc = execvp((QCoreApplication::applicationDirPath() + "/WebContent").toStdString().c_str(), const_cast<char**>(argv));
-        if (rc < 0)
-            perror("execvp");
+        if (!m_webdriver_content_ipc_path.is_empty()) {
+            arguments.append("--webdriver-content-path"sv);
+            arguments.append(m_webdriver_content_ipc_path);
+        }
+
+        auto result = Core::System::exec("./WebContent/WebContent"sv, arguments, Core::System::SearchInPath::Yes);
+        if (result.is_error()) {
+            auto web_content_path = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath() + "/WebContent");
+            result = Core::System::exec(web_content_path, arguments, Core::System::SearchInPath::Yes);
+        }
+
+        if (result.is_error())
+            warnln("Could not launch WebContent: {}", result.error());
         VERIFY_NOT_REACHED();
     }
 

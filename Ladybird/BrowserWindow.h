@@ -25,7 +25,7 @@ class CookieJar;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Browser::CookieJar&, int webdriver_fd_passing_socket);
+    explicit BrowserWindow(Browser::CookieJar&, StringView webdriver_content_ipc_path);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -52,5 +52,5 @@ private:
 
     Browser::CookieJar& m_cookie_jar;
 
-    int m_webdriver_fd_passing_socket { -1 };
+    StringView m_webdriver_content_ipc_path;
 };

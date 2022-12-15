@@ -8,13 +8,50 @@
 
 #include "../Utilities.h"
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibMain/Main.h>
 #include <WebDriver/Client.h>
 
 extern DeprecatedString s_serenity_resource_root;
+
+static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
+{
+    char const* argv[] = {
+        "ladybird",
+        "--webdriver-content-path",
+        socket_path.characters(),
+        nullptr,
+    };
+
+    return Core::System::posix_spawn("./ladybird"sv, nullptr, nullptr, const_cast<char**>(argv), environ);
+}
+
+static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
+{
+    auto resouces = DeprecatedString::formatted("{}/res", s_serenity_resource_root);
+    auto error_page = DeprecatedString::formatted("{}/res/html/error.html", s_serenity_resource_root);
+    auto certs = DeprecatedString::formatted("{}/etc/ca_certs.ini", s_serenity_resource_root);
+
+    char const* argv[] = {
+        "headless-browser",
+        "--resources",
+        resouces.characters(),
+        "--error-page",
+        error_page.characters(),
+        "--certs",
+        certs.characters(),
+        "--webdriver-ipc-path",
+        socket_path.characters(),
+        "about:blank",
+        nullptr,
+    };
+
+    return Core::System::posix_spawn("./_deps/lagom-build/headless-browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ);
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -39,6 +76,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     platform_init();
 
+    auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
+    TRY(Core::Directory::create(webdriver_socket_path, Core::Directory::CreateDirectories::Yes));
+
     Core::EventLoop loop;
     auto server = TRY(Core::TCPServer::try_create());
 
@@ -56,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto maybe_client = WebDriver::Client::try_create(maybe_buffered_socket.release_value(), server);
+        auto maybe_client = WebDriver::Client::try_create(maybe_buffered_socket.release_value(), { launch_browser, launch_headless_browser }, server);
         if (maybe_client.is_error()) {
             warnln("Could not create a WebDriver client: {}", maybe_client.error());
             return;

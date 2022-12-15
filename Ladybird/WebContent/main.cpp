@@ -44,24 +44,17 @@ struct DeferredInvokerQt final : IPC::DeferredInvoker {
     }
 };
 
-template<typename ConnectionType, typename... Args>
-static ErrorOr<NonnullRefPtr<ConnectionType>> create_connection_from_passed_socket(int passing_socket_fd, StringView socket_name, QSocketNotifier& notifier, Args&&... args)
+template<typename ClientType>
+static void proxy_socket_through_notifier(ClientType& client, QSocketNotifier& notifier)
 {
-    auto socket = TRY(Core::take_over_socket_from_system_server(socket_name));
-    auto client = TRY(ConnectionType::try_create(move(socket), std::forward<Args>(args)...));
-
-    VERIFY(passing_socket_fd >= 0);
-    client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(passing_socket_fd)));
-
-    notifier.setSocket(client->socket().fd().value());
+    notifier.setSocket(client.socket().fd().value());
     notifier.setEnabled(true);
 
-    QObject::connect(&notifier, &QSocketNotifier::activated, [client]() mutable {
-        client->socket().notifier()->on_ready_to_read();
+    QObject::connect(&notifier, &QSocketNotifier::activated, [&client]() mutable {
+        client.socket().notifier()->on_ready_to_read();
     });
 
-    client->set_deferred_invoker(make<DeferredInvokerQt>());
-    return client;
+    client.set_deferred_invoker(make<DeferredInvokerQt>());
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -91,20 +84,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dbgln("Failed to load content filters: {}", maybe_content_filter_error.error());
 
     int webcontent_fd_passing_socket { -1 };
-    int webdriver_fd_passing_socket { -1 };
+    DeprecatedString webdriver_content_ipc_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
-    args_parser.add_option(webdriver_fd_passing_socket, "File descriptor of the passing socket for the WebDriver connection", "webdriver-fd-passing-socket", 'd', "webdriver_fd_passing_socket");
+    args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
     args_parser.parse(arguments);
 
+    VERIFY(webcontent_fd_passing_socket >= 0);
+
+    auto webcontent_socket = TRY(Core::take_over_socket_from_system_server("WebContent"sv));
+    auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
+    webcontent_client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
+
     QSocketNotifier webcontent_notifier(QSocketNotifier::Type::Read);
-    auto webcontent_client = TRY(create_connection_from_passed_socket<WebContent::ConnectionFromClient>(webcontent_fd_passing_socket, "WebContent"sv, webcontent_notifier));
+    proxy_socket_through_notifier(*webcontent_client, webcontent_notifier);
 
     QSocketNotifier webdriver_notifier(QSocketNotifier::Type::Read);
     RefPtr<WebContent::WebDriverConnection> webdriver_client;
-    if (webdriver_fd_passing_socket >= 0)
-        webdriver_client = TRY(create_connection_from_passed_socket<WebContent::WebDriverConnection>(webdriver_fd_passing_socket, "WebDriver"sv, webdriver_notifier, webcontent_client->page_host()));
+    if (!webdriver_content_ipc_path.is_empty()) {
+        webdriver_client = TRY(WebContent::WebDriverConnection::connect(webcontent_client->page_host(), webdriver_content_ipc_path));
+        proxy_socket_through_notifier(*webdriver_client, webdriver_notifier);
+    }
 
     return app.exec();
 }

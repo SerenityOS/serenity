@@ -22,9 +22,9 @@
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, int webdriver_fd_passing_socket)
+BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path)
     : m_cookie_jar(cookie_jar)
-    , m_webdriver_fd_passing_socket(webdriver_fd_passing_socket)
+    , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     m_tabs_container = new QTabWidget(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
@@ -294,7 +294,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
 
 void BrowserWindow::new_tab()
 {
-    auto tab = make<Tab>(this, m_webdriver_fd_passing_socket);
+    auto tab = make<Tab>(this, m_webdriver_content_ipc_path);
     auto tab_ptr = tab.ptr();
     m_tabs.append(std::move(tab));
 
