@@ -6,13 +6,9 @@
  */
 
 #include "GlyphEditorWidget.h"
-#include <AK/StringBuilder.h>
-#include <AK/UnicodeUtils.h>
-#include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
-#include <string.h>
 
 REGISTER_WIDGET(FontEditor, GlyphEditorWidget);
 

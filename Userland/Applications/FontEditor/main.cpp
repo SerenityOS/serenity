@@ -12,11 +12,8 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Menubar.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/BitmapFont.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
