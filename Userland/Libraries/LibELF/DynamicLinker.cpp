@@ -394,17 +394,25 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
         VERIFY(!result.is_error());
         auto& object = result.value();
 
+        if (loader.filepath().ends_with("/libc.so"sv)) {
+            initialize_libc(*object);
+        }
+
         if (loader.filepath().ends_with("/libsystem.so"sv)) {
             VERIFY(!loader.text_segments().is_empty());
             for (auto const& segment : loader.text_segments()) {
-                if (syscall(SC_annotate_mapping, segment.address().get(), static_cast<int>(VirtualMemoryRangeFlags::SyscallCode))) {
+                auto flags = static_cast<int>(VirtualMemoryRangeFlags::SyscallCode) | static_cast<int>(VirtualMemoryRangeFlags::Immutable);
+                if (syscall(SC_annotate_mapping, segment.address().get(), flags)) {
                     VERIFY_NOT_REACHED();
                 }
             }
-        }
-
-        if (loader.filepath().ends_with("/libc.so"sv)) {
-            initialize_libc(*object);
+        } else {
+            for (auto const& segment : loader.text_segments()) {
+                auto flags = static_cast<int>(VirtualMemoryRangeFlags::Immutable);
+                if (syscall(SC_annotate_mapping, segment.address().get(), flags)) {
+                    VERIFY_NOT_REACHED();
+                }
+            }
         }
     }
 
