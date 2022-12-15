@@ -67,8 +67,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
     TRY(Core::Directory::create(webdriver_socket_path, Core::Directory::CreateDirectories::Yes));
 
-    TRY(Core::System::pledge("stdio accept rpath recvfd inet unix proc exec fattr"));
-
     Core::EventLoop loop;
 
     auto server = TRY(Core::TCPServer::try_create());
@@ -106,6 +104,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(webdriver_socket_path, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Core::System::pledge("stdio accept rpath recvfd unix proc exec fattr"));
+    TRY(Core::System::pledge("stdio accept cpath rpath recvfd unix proc exec fattr"));
     return loop.exec();
 }

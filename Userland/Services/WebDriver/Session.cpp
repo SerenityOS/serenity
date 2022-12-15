@@ -31,12 +31,12 @@ Session::~Session()
         warnln("Failed to stop session {}: {}", m_id, error.error());
 }
 
-ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(DeprecatedString const& socket_path, NonnullRefPtr<ServerPromise> promise)
+ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<ServerPromise> promise)
 {
-    dbgln("Listening for WebDriver connection on {}", socket_path);
+    dbgln("Listening for WebDriver connection on {}", *m_web_content_socket_path);
 
     auto server = TRY(Core::LocalServer::try_create());
-    server->listen(socket_path);
+    server->listen(*m_web_content_socket_path);
 
     server->on_accept = [this, promise](auto client_socket) {
         auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
@@ -62,13 +62,13 @@ ErrorOr<void> Session::start(LaunchBrowserCallbacks const& callbacks)
 {
     auto promise = TRY(ServerPromise::try_create());
 
-    auto web_content_socket_path = DeprecatedString::formatted("{}/webdriver/session_{}_{}", TRY(Core::StandardPaths::runtime_directory()), getpid(), m_id);
-    auto web_content_server = TRY(create_server(web_content_socket_path, promise));
+    m_web_content_socket_path = DeprecatedString::formatted("{}/webdriver/session_{}_{}", TRY(Core::StandardPaths::runtime_directory()), getpid(), m_id);
+    auto web_content_server = TRY(create_server(promise));
 
     if (m_options.headless)
-        m_browser_pid = TRY(callbacks.launch_headless_browser(web_content_socket_path));
+        m_browser_pid = TRY(callbacks.launch_headless_browser(*m_web_content_socket_path));
     else
-        m_browser_pid = TRY(callbacks.launch_browser(web_content_socket_path));
+        m_browser_pid = TRY(callbacks.launch_browser(*m_web_content_socket_path));
 
     // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propagate
     //        errors received while accepting the Browser and WebContent sockets.
@@ -95,6 +95,10 @@ Web::WebDriver::Response Session::stop()
     if (m_browser_pid.has_value()) {
         MUST(Core::System::kill(*m_browser_pid, SIGTERM));
         m_browser_pid = {};
+    }
+    if (m_web_content_socket_path.has_value()) {
+        MUST(Core::System::unlink(*m_web_content_socket_path));
+        m_web_content_socket_path = {};
     }
 
     m_started = false;
