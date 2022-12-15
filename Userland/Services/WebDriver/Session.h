@@ -39,7 +39,7 @@ public:
 
 private:
     using ServerPromise = Core::Promise<ErrorOr<void>>;
-    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(DeprecatedString const& socket_path, NonnullRefPtr<ServerPromise> promise);
+    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(NonnullRefPtr<ServerPromise> promise);
 
     NonnullRefPtr<Client> m_client;
     Web::WebDriver::LadybirdOptions m_options;
@@ -48,6 +48,7 @@ private:
     unsigned m_id { 0 };
 
     RefPtr<WebContentConnection> m_web_content_connection;
+    Optional<DeprecatedString> m_web_content_socket_path;
     Optional<pid_t> m_browser_pid;
 };
 
