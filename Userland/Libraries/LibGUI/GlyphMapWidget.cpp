@@ -264,78 +264,107 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    int range_offset = m_active_range.first;
-
     if (!event.ctrl() && !event.shift() && event.key() != KeyCode::Key_Delete) {
         m_selection.set_size(1);
         m_selection.set_start(m_active_glyph);
     }
 
+    int first_glyph = m_active_range.first;
+    int last_glyph = m_active_range.last;
+    auto selection = m_selection.normalized();
+
     if (event.key() == KeyCode::Key_Up) {
-        if (m_selection.start() - range_offset >= m_columns) {
-            if (event.shift())
-                m_selection.resize_by(-m_columns);
-            else
-                m_selection.set_start(m_selection.start() - m_columns);
-            set_active_glyph(m_active_glyph - m_columns, ShouldResetSelection::No);
-            scroll_to_glyph(m_active_glyph);
+        if (m_active_glyph - m_columns < first_glyph)
             return;
-        }
-    }
-    if (event.key() == KeyCode::Key_Down) {
-        if (m_selection.start() < m_glyph_count + range_offset - m_columns) {
-            if (event.shift())
-                m_selection.resize_by(m_columns);
-            else
-                m_selection.set_start(m_selection.start() + m_columns);
-            set_active_glyph(m_active_glyph + m_columns, ShouldResetSelection::No);
-            scroll_to_glyph(m_active_glyph);
+        if (event.ctrl() && selection.start() - m_columns < first_glyph)
             return;
-        }
-    }
-    if (event.key() == KeyCode::Key_Left) {
-        if (m_selection.start() > range_offset) {
-            if (event.shift())
-                m_selection.resize_by(-1);
-            else
-                m_selection.set_start(m_selection.start() - 1);
-            set_active_glyph(m_active_glyph - 1, ShouldResetSelection::No);
-            scroll_to_glyph(m_active_glyph);
-            return;
-        }
-    }
-    if (event.key() == KeyCode::Key_Right) {
-        if (m_selection.start() < m_glyph_count + range_offset - 1) {
-            if (event.shift())
-                m_selection.resize_by(1);
-            else
-                m_selection.set_start(m_selection.start() + 1);
-            set_active_glyph(m_active_glyph + 1, ShouldResetSelection::No);
-            scroll_to_glyph(m_active_glyph);
-            return;
-        }
+        if (event.shift())
+            m_selection.extend_to(m_active_glyph - m_columns);
+        else
+            m_selection.set_start(m_selection.start() - m_columns);
+        set_active_glyph(m_active_glyph - m_columns, ShouldResetSelection::No);
+        scroll_to_glyph(m_active_glyph);
+        return;
     }
 
-    // FIXME: Support selection for these.
-    if (event.ctrl() && event.key() == KeyCode::Key_Home) {
-        set_active_glyph(m_active_range.first);
+    if (event.key() == KeyCode::Key_Down) {
+        if (m_active_glyph + m_columns > last_glyph)
+            return;
+        if (event.ctrl() && selection.start() + selection.size() - 1 + m_columns > last_glyph)
+            return;
+        if (event.shift())
+            m_selection.extend_to(m_active_glyph + m_columns);
+        else
+            m_selection.set_start(m_selection.start() + m_columns);
+        set_active_glyph(m_active_glyph + m_columns, ShouldResetSelection::No);
         scroll_to_glyph(m_active_glyph);
         return;
     }
-    if (event.ctrl() && event.key() == KeyCode::Key_End) {
-        set_active_glyph(m_active_range.last);
+
+    if (event.key() == KeyCode::Key_Left) {
+        if (m_active_glyph - 1 < first_glyph)
+            return;
+        if (event.ctrl() && selection.start() - 1 < first_glyph)
+            return;
+        if (event.shift())
+            m_selection.resize_by(-1);
+        else
+            m_selection.set_start(m_selection.start() - 1);
+        set_active_glyph(m_active_glyph - 1, ShouldResetSelection::No);
         scroll_to_glyph(m_active_glyph);
         return;
     }
-    if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
-        auto start_of_row = (m_active_glyph - range_offset) / m_columns * m_columns;
-        set_active_glyph(start_of_row + range_offset);
+
+    if (event.key() == KeyCode::Key_Right) {
+        if (m_active_glyph + 1 > last_glyph)
+            return;
+        if (event.ctrl() && selection.start() + selection.size() > last_glyph)
+            return;
+        if (event.shift())
+            m_selection.resize_by(1);
+        else
+            m_selection.set_start(m_selection.start() + 1);
+        set_active_glyph(m_active_glyph + 1, ShouldResetSelection::No);
+        scroll_to_glyph(m_active_glyph);
         return;
     }
-    if (!event.ctrl() && event.key() == KeyCode::Key_End) {
-        auto end_of_row = (m_active_glyph - range_offset) / m_columns * m_columns + (m_columns - 1);
-        end_of_row = clamp(end_of_row + range_offset, m_active_range.first, m_active_range.last);
-        set_active_glyph(end_of_row);
+
+    if (event.key() == KeyCode::Key_Home) {
+        if (event.alt()) {
+            set_active_glyph(first_glyph);
+            scroll_to_glyph(m_active_glyph);
+            return;
+        }
+        if (event.ctrl() && event.shift()) {
+            m_selection.extend_to(first_glyph);
+            set_active_glyph(first_glyph, ShouldResetSelection::No);
+            scroll_to_glyph(m_active_glyph);
+            return;
+        }
+        auto start_of_row = (m_active_glyph - first_glyph) / m_columns * m_columns;
+        if (event.shift())
+            m_selection.extend_to(start_of_row + first_glyph);
+        set_active_glyph(start_of_row + first_glyph, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
+        return;
+    }
+
+    if (event.key() == KeyCode::Key_End) {
+        if (event.alt()) {
+            set_active_glyph(last_glyph);
+            scroll_to_glyph(m_active_glyph);
+            return;
+        }
+        if (event.ctrl() && event.shift()) {
+            m_selection.extend_to(last_glyph);
+            set_active_glyph(last_glyph, ShouldResetSelection::No);
+            scroll_to_glyph(m_active_glyph);
+            return;
+        }
+        auto end_of_row = (m_active_glyph - first_glyph) / m_columns * m_columns + (m_columns - 1);
+        end_of_row = clamp(end_of_row + first_glyph, first_glyph, last_glyph);
+        if (event.shift())
+            m_selection.extend_to(end_of_row);
+        set_active_glyph(end_of_row, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
         return;
     }
 
