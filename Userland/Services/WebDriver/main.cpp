@@ -7,6 +7,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibMain/Main.h>
@@ -38,7 +39,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio accept cpath rpath recvfd inet unix proc exec fattr"));
 
-    TRY(Core::Directory::create("/tmp/webdriver"sv, Core::Directory::CreateDirectories::Yes));
+    auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
+    TRY(Core::Directory::create(webdriver_socket_path, Core::Directory::CreateDirectories::Yes));
+
     TRY(Core::System::pledge("stdio accept rpath recvfd inet unix proc exec fattr"));
 
     Core::EventLoop loop;
@@ -74,7 +77,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/headless-browser", "rx"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res/icons", "r"));
-    TRY(Core::System::unveil("/tmp/webdriver", "rwc"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
+    TRY(Core::System::unveil(webdriver_socket_path, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     TRY(Core::System::pledge("stdio accept rpath recvfd unix proc exec fattr"));
