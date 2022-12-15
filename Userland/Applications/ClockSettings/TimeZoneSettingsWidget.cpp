@@ -40,6 +40,25 @@ static constexpr auto TIME_ZONE_TEXT_HEIGHT = 40;
 static constexpr auto TIME_ZONE_TEXT_PADDING = 5;
 static constexpr auto TIME_ZONE_TEXT_COLOR = Gfx::Color::from_rgb(0xeaf688);
 
+ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
+{
+    auto timezonesettings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TimeZoneSettingsWidget));
+
+    auto time_zone_map_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/graphics/map.png"sv));
+    auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
+    time_zone_map_bitmap = TRY(time_zone_map_bitmap->cropped(time_zone_rect));
+
+    timezonesettings_widget->m_time_zone_map = *timezonesettings_widget->find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
+    timezonesettings_widget->m_time_zone_map->set_bitmap(time_zone_map_bitmap);
+
+    auto time_zone_marker = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/ladyball.png"sv));
+    timezonesettings_widget->m_time_zone_marker = TRY(time_zone_marker->scaled(0.75f, 0.75f));
+
+    timezonesettings_widget->set_time_zone_location();
+
+    return timezonesettings_widget;
+}
+
 TimeZoneSettingsWidget::TimeZoneSettingsWidget()
 {
     load_from_gml(time_zone_settings_widget_gml);
@@ -54,18 +73,6 @@ TimeZoneSettingsWidget::TimeZoneSettingsWidget()
     m_time_zone_combo_box->on_change = [&](auto, auto) {
         set_modified(true);
     };
-
-    auto time_zone_map_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/map.png"sv).release_value_but_fixme_should_propagate_errors();
-    auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
-    time_zone_map_bitmap = time_zone_map_bitmap->cropped(time_zone_rect).release_value_but_fixme_should_propagate_errors();
-
-    m_time_zone_map = *find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
-    m_time_zone_map->set_bitmap(time_zone_map_bitmap);
-
-    auto time_zone_marker = Gfx::Bitmap::try_load_from_file("/res/icons/32x32/ladyball.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_time_zone_marker = time_zone_marker->scaled(0.75f, 0.75f).release_value_but_fixme_should_propagate_errors();
-
-    set_time_zone_location();
 }
 
 void TimeZoneSettingsWidget::second_paint_event(GUI::PaintEvent& event)
