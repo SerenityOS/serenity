@@ -14,6 +14,7 @@ namespace Kernel {
 enum class VirtualMemoryRangeFlags : u32 {
     None = 0,
     SyscallCode = 1 << 0,
+    Immutable = 1 << 1,
 };
 
 AK_ENUM_BITWISE_OPERATORS(VirtualMemoryRangeFlags);

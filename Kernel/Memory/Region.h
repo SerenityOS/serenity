@@ -88,6 +88,9 @@ public:
     [[nodiscard]] bool is_stack() const { return m_stack; }
     void set_stack(bool stack) { m_stack = stack; }
 
+    [[nodiscard]] bool is_immutable() const { return m_immutable; }
+    void set_immutable() { m_immutable = true; }
+
     [[nodiscard]] bool is_mmap() const { return m_mmap; }
 
     void set_mmap(bool mmap, bool description_was_readable, bool description_was_writable)
@@ -235,6 +238,7 @@ private:
     bool m_cacheable : 1 { false };
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
+    bool m_immutable : 1 { false };
     bool m_syscall_region : 1 { false };
     bool m_write_combine : 1 { false };
     bool m_mmapped_from_readable : 1 { false };

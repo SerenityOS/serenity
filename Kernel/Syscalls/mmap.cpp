@@ -284,6 +284,8 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         if (auto* whole_region = space->find_region_from_range(range_to_mprotect)) {
             if (!whole_region->is_mmap())
                 return EPERM;
+            if (whole_region->is_immutable())
+                return EPERM;
             TRY(validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region));
             if (whole_region->access() == Memory::prot_to_region_access_flags(prot))
                 return 0;
@@ -300,6 +302,8 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         // Check if we can carve out the desired range from an existing region
         if (auto* old_region = space->find_region_containing(range_to_mprotect)) {
             if (!old_region->is_mmap())
+                return EPERM;
+            if (old_region->is_immutable())
                 return EPERM;
             TRY(validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region));
             if (old_region->access() == Memory::prot_to_region_access_flags(prot))
@@ -335,6 +339,8 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
             // Check that all intersecting regions are compatible.
             for (auto const* region : regions) {
                 if (!region->is_mmap())
+                    return EPERM;
+                if (region->is_immutable())
                     return EPERM;
                 TRY(validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region));
                 if (region->vmobject().is_inode())
@@ -415,6 +421,8 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
             return EINVAL;
         if (!region->is_mmap())
             return EPERM;
+        if (region->is_immutable())
+            return EPERM;
         if (advice == MADV_SET_VOLATILE || advice == MADV_SET_NONVOLATILE) {
             if (!region->vmobject().is_anonymous())
                 return EINVAL;
@@ -448,6 +456,9 @@ ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<Syscall::SC_set_mmap_name_
         if (!region->is_mmap())
             return EPERM;
 
+        if (region->is_immutable())
+            return EPERM;
+
         region->set_name(move(name));
         PerformanceManager::add_mmap_perf_event(*this, *region);
 
@@ -479,6 +490,9 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
             return EINVAL;
 
         if (!old_region->is_mmap())
+            return EPERM;
+
+        if (old_region->is_immutable())
             return EPERM;
 
         if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & (MAP_ANONYMOUS | MAP_NORESERVE))) {
@@ -567,7 +581,10 @@ ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int fla
     VERIFY_NO_PROCESS_BIG_LOCK(this);
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
-        if (space->enforces_syscall_regions())
+        if (flags == to_underlying(VirtualMemoryRangeFlags::None))
+            return EINVAL;
+
+        if (space->enforces_syscall_regions() && (flags & to_underlying(VirtualMemoryRangeFlags::SyscallCode)))
             return EPERM;
 
         if (!address) {
@@ -584,10 +601,13 @@ ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int fla
 
         if (!region->is_mmap())
             return EINVAL;
+        if (region->is_immutable())
+            return EPERM;
 
-        if (flags == to_underlying(VirtualMemoryRangeFlags::None))
-            return EINVAL;
-        region->set_syscall_region(true);
+        if (flags & to_underlying(VirtualMemoryRangeFlags::SyscallCode))
+            region->set_syscall_region(true);
+        if (flags & to_underlying(VirtualMemoryRangeFlags::Immutable))
+            region->set_immutable();
         return 0;
     });
 }
