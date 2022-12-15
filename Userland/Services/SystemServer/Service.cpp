@@ -202,7 +202,7 @@ void Service::spawn(int socket_fd)
 
                 int new_fd = dup(socket.fd);
                 if (i != 0)
-                    builder.append(' ');
+                    builder.append(';');
                 builder.appendff("{}:{}", socket.path, new_fd);
             }
         }

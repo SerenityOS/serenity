@@ -23,7 +23,7 @@ static void parse_sockets_from_system_server()
         return;
     }
 
-    for (auto& socket : StringView { sockets, strlen(sockets) }.split_view(' ')) {
+    for (auto const socket : StringView { sockets, strlen(sockets) }.split_view(';')) {
         auto params = socket.split_view(':');
         s_overtaken_sockets.set(params[0].to_deprecated_string(), strtol(params[1].to_deprecated_string().characters(), nullptr, 10));
     }
