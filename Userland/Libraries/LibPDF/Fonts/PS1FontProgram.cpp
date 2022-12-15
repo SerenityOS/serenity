@@ -38,6 +38,7 @@ enum ExtendedCommand {
     DotSection,
     VStem3,
     HStem3,
+    Seac = 6,
     Div = 12,
     CallOtherSubr = 16,
     Pop,
@@ -315,6 +316,7 @@ PDFErrorOr<PS1FontProgram::Glyph> PS1FontProgram::parse_glyph(ReadonlyBytes cons
                 case DotSection:
                 case VStem3:
                 case HStem3:
+                case Seac:
                     // FIXME: Do something with these?
                     state.sp = 0;
                     break;
