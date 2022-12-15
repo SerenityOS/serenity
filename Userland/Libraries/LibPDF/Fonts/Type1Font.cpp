@@ -27,8 +27,8 @@ PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRef
         if (!font_file_dict->contains(CommonNames::Length1, CommonNames::Length2))
             return Error { Error::Type::Parse, "Embedded type 1 font is incomplete" };
 
-        auto length1 = font_file_dict->get_value(CommonNames::Length1).get<int>();
-        auto length2 = font_file_dict->get_value(CommonNames::Length2).get<int>();
+        auto length1 = TRY(document->resolve(font_file_dict->get_value(CommonNames::Length1))).get<int>();
+        auto length2 = TRY(document->resolve(font_file_dict->get_value(CommonNames::Length2))).get<int>();
 
         data.font_program = adopt_ref(*new PS1FontProgram());
         TRY(data.font_program->create(font_file_stream->bytes(), data.encoding, length1, length2));
