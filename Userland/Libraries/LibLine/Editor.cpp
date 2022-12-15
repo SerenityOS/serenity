@@ -8,6 +8,7 @@
 #include "Editor.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/Error.h>
 #include <AK/FileStream.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
@@ -28,6 +29,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
+#include <sys/poll.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -2006,38 +2008,23 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
     return state;
 }
 
-static Result<char, Editor::Error> read_cursor_position_response_char_with_retries()
+static ErrorOr<char, Editor::Error> read_cursor_position_response_char()
 {
-    char c;
-    Editor::Error error;
-    bool read_success = false;
-
     // Sometimes you have to be a little patient for terminal to start outputting
     // the response for "Report cursor position". For example, this happens after
     // Ctrl+C'ing the "top" command.
-    for (auto retries = 0; !read_success && retries < 5; ++retries) {
-        auto nread = read(0, &c, 1);
-        if (nread < 0) {
-            if (errno == 0 || errno == EINTR) {
-                // ????
-                continue;
-            }
-            dbgln("Error while reading DSR: {}", strerror(errno));
-            error = Editor::Error::ReadFailure;
-            continue;
-        }
-        if (nread == 0) {
-            dbgln("Terminal DSR issue; received no response");
-            error = Editor::Error::Empty;
-            continue;
-        }
-        read_success = true;
-    }
+    pollfd poll_params { STDIN_FILENO, POLLIN, 0 };
+    poll(&poll_params, 1, -1 /* infinite timeout */);
 
-    if (read_success) {
-        return c;
+    char c;
+    auto nread = read(STDIN_FILENO, &c, 1);
+    if (nread < 0) {
+        dbgln("Error while reading DSR: {}", strerror(errno));
+        return Editor::Error::ReadFailure;
     }
-    return error;
+    return c;
+
+    VERIFY_NOT_REACHED();
 }
 
 Result<Vector<size_t, 2>, Editor::Error> Editor::get_cursor_position()
@@ -2094,7 +2081,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::get_cursor_position()
     size_t row { 1 }, col { 1 };
 
     do {
-        char c = TRY(read_cursor_position_response_char_with_retries());
+        char c = TRY(read_cursor_position_response_char());
 
         switch (state) {
         case Free:
