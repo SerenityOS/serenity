@@ -44,7 +44,7 @@ bool GlyphMapWidget::Selection::contains(int i) const
 void GlyphMapWidget::Selection::extend_to(int glyph)
 {
     m_size = glyph - m_start;
-    if (m_size > 0)
+    if (m_size >= 0)
         m_size++;
 }
 
