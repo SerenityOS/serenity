@@ -77,7 +77,7 @@ void GlyphMapWidget::resize_event(ResizeEvent& event)
 
 void GlyphMapWidget::set_active_glyph(int glyph, ShouldResetSelection should_reset_selection)
 {
-    if (m_active_glyph == glyph)
+    if (m_active_glyph == glyph && should_reset_selection == ShouldResetSelection::No)
         return;
     m_active_glyph = glyph;
     if (should_reset_selection == ShouldResetSelection::Yes) {
