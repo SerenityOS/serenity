@@ -356,7 +356,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         date_time_format.clear_hour_cycle();
     }
 
-    // 46. If dateTimeformat.[[HourCycle]] is "h11" or "h12", then
+    // 46. If dateTimeFormat.[[HourCycle]] is "h11" or "h12", then
     if ((hour_cycle_value == ::Locale::HourCycle::H11) || (hour_cycle_value == ::Locale::HourCycle::H12)) {
         // a. Let pattern be bestFormat.[[pattern12]].
         if (best_format->pattern12.has_value()) {
