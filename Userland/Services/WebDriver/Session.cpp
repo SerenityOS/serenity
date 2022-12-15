@@ -58,33 +58,17 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(DeprecatedStrin
     return server;
 }
 
-ErrorOr<void> Session::start()
+ErrorOr<void> Session::start(LaunchBrowserCallbacks const& callbacks)
 {
     auto promise = TRY(ServerPromise::try_create());
 
     auto web_content_socket_path = DeprecatedString::formatted("{}/webdriver/session_{}_{}", TRY(Core::StandardPaths::runtime_directory()), getpid(), m_id);
     auto web_content_server = TRY(create_server(web_content_socket_path, promise));
 
-    if (m_options.headless) {
-        char const* argv[] = {
-            "/bin/headless-browser",
-            "--webdriver-ipc-path",
-            web_content_socket_path.characters(),
-            "about:blank",
-            nullptr,
-        };
-
-        m_browser_pid = TRY(Core::System::posix_spawn("/bin/headless-browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
-    } else {
-        char const* argv[] = {
-            "/bin/Browser",
-            "--webdriver-content-path",
-            web_content_socket_path.characters(),
-            nullptr,
-        };
-
-        m_browser_pid = TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
-    }
+    if (m_options.headless)
+        m_browser_pid = TRY(callbacks.launch_headless_browser(web_content_socket_path));
+    else
+        m_browser_pid = TRY(callbacks.launch_browser(web_content_socket_path));
 
     // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propagate
     //        errors received while accepting the Browser and WebContent sockets.

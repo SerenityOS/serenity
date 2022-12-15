@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Object.h>
 #include <LibCore/Stream.h>
@@ -18,17 +19,22 @@
 
 namespace WebDriver {
 
+struct LaunchBrowserCallbacks {
+    Function<ErrorOr<pid_t>(DeprecatedString const&)> launch_browser;
+    Function<ErrorOr<pid_t>(DeprecatedString const&)> launch_headless_browser;
+};
+
 class Client final : public Web::WebDriver::Client {
     C_OBJECT_ABSTRACT(Client);
 
 public:
-    static ErrorOr<NonnullRefPtr<Client>> try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
+    static ErrorOr<NonnullRefPtr<Client>> try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, LaunchBrowserCallbacks, Core::Object* parent);
     virtual ~Client() override;
 
     void close_session(unsigned session_id);
 
 private:
-    Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
+    Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, LaunchBrowserCallbacks, Core::Object* parent);
 
     ErrorOr<Session*, Web::WebDriver::Error> find_session_with_id(StringView session_id);
     ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> take_session_with_id(StringView session_id);
@@ -87,6 +93,8 @@ private:
 
     static NonnullOwnPtrVector<Session> s_sessions;
     static Atomic<unsigned> s_next_session_id;
+
+    LaunchBrowserCallbacks m_callbacks;
 };
 
 }

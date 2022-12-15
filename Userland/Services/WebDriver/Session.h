@@ -19,6 +19,8 @@
 
 namespace WebDriver {
 
+struct LaunchBrowserCallbacks;
+
 class Session {
 public:
     Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriver::LadybirdOptions options);
@@ -32,7 +34,7 @@ public:
         return *m_web_content_connection;
     }
 
-    ErrorOr<void> start();
+    ErrorOr<void> start(LaunchBrowserCallbacks const&);
     Web::WebDriver::Response stop();
 
 private:
