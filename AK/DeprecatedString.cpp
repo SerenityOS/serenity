@@ -172,7 +172,8 @@ Optional<T> DeprecatedString::to_int(TrimWhitespace trim_whitespace) const
 template Optional<i8> DeprecatedString::to_int(TrimWhitespace) const;
 template Optional<i16> DeprecatedString::to_int(TrimWhitespace) const;
 template Optional<i32> DeprecatedString::to_int(TrimWhitespace) const;
-template Optional<i64> DeprecatedString::to_int(TrimWhitespace) const;
+template Optional<long> DeprecatedString::to_int(TrimWhitespace) const;
+template Optional<long long> DeprecatedString::to_int(TrimWhitespace) const;
 
 template<typename T>
 Optional<T> DeprecatedString::to_uint(TrimWhitespace trim_whitespace) const
