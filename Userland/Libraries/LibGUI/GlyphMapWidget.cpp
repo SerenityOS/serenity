@@ -103,10 +103,10 @@ Gfx::IntRect GlyphMapWidget::get_outer_rect(int glyph) const
     int row = glyph / columns();
     int column = glyph % columns();
     return Gfx::IntRect {
-        column * (font().max_glyph_width() + m_horizontal_spacing) + 1,
-        row * (font().glyph_height() + m_vertical_spacing) + 1,
+        column * (font().max_glyph_width() + m_horizontal_spacing),
+        row * (font().glyph_height() + m_vertical_spacing),
         font().max_glyph_width() + m_horizontal_spacing,
-        font().glyph_height() + m_horizontal_spacing
+        font().glyph_height() + m_vertical_spacing
     }
         .translated(frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value());
 }
@@ -383,10 +383,10 @@ void GlyphMapWidget::scroll_to_glyph(int glyph)
     int row = glyph / columns();
     int column = glyph % columns();
     auto scroll_rect = Gfx::IntRect {
-        column * (font().max_glyph_width() + m_horizontal_spacing) + 1,
-        row * (font().glyph_height() + m_vertical_spacing) + 1,
+        column * (font().max_glyph_width() + m_horizontal_spacing),
+        row * (font().glyph_height() + m_vertical_spacing),
         font().max_glyph_width() + m_horizontal_spacing,
-        font().glyph_height() + m_horizontal_spacing
+        font().glyph_height() + m_vertical_spacing
     };
     scroll_into_view(scroll_rect, true, true);
 }
@@ -435,15 +435,14 @@ void GlyphMapWidget::select_next_existing_glyph()
 
 void GlyphMapWidget::recalculate_content_size()
 {
-    auto inner_rect = frame_inner_rect();
-    int event_width = inner_rect.width() - vertical_scrollbar().width() - m_horizontal_spacing;
-    int event_height = inner_rect.height();
+    auto event_width = widget_inner_rect().width();
+    auto event_height = widget_inner_rect().height();
     m_visible_glyphs = (event_width * event_height) / (font().max_glyph_width() * font().glyph_height());
     m_columns = max(event_width / (font().max_glyph_width() + m_horizontal_spacing), 1);
     m_rows = ceil_div(m_glyph_count, m_columns);
 
     int content_width = columns() * (font().max_glyph_width() + m_horizontal_spacing);
-    int content_height = rows() * (font().glyph_height() + m_vertical_spacing) + frame_thickness();
+    int content_height = rows() * (font().glyph_height() + m_vertical_spacing);
     set_content_size({ content_width, content_height });
 
     scroll_to_glyph(m_active_glyph);
