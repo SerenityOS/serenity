@@ -146,7 +146,7 @@ private:
 
     PDFErrorOr<void> build_outline();
     PDFErrorOr<NonnullRefPtr<OutlineItem>> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict);
-    PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref, Value const& last_ref);
+    PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref);
 
     PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>);
 
