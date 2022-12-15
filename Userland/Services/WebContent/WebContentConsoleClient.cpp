@@ -36,7 +36,7 @@ void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
     auto& settings = Web::HTML::relevant_settings_object(*m_console_global_environment_extensions);
     auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
 
-    JS::Environment* with_scope = JS::new_object_environment(*m_console_global_environment_extensions, true, &settings.realm().global_environment());
+    JS::NonnullGCPtr<JS::Environment> with_scope = JS::new_object_environment(*m_console_global_environment_extensions, true, &settings.realm().global_environment());
 
     // FIXME: Add parse error printouts back once ClassicScript can report parse errors.
     auto result = script->run(Web::HTML::ClassicScript::RethrowErrors::No, with_scope);

@@ -621,7 +621,7 @@ Completion WithStatement::execute(Interpreter& interpreter) const
     auto* old_environment = vm.running_execution_context().lexical_environment;
 
     // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-    auto* new_environment = new_object_environment(*object, true, old_environment);
+    auto new_environment = new_object_environment(*object, true, old_environment);
 
     // 5. Set the running execution context's LexicalEnvironment to newEnv.
     vm.running_execution_context().lexical_environment = new_environment;

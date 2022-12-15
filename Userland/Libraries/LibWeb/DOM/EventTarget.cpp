@@ -437,7 +437,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
         auto& realm = settings_object.realm();
 
         //  2. Let scope be realm.[[GlobalEnv]].
-        JS::Environment* scope = &realm.global_environment();
+        auto scope = JS::NonnullGCPtr<JS::Environment> { realm.global_environment() };
 
         // 3. If eventHandler is an element's event handler, then set scope to NewObjectEnvironment(document, true, scope).
         //    (Otherwise, eventHandler is a Window object's event handler.)
