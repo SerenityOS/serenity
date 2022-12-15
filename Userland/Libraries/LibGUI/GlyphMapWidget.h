@@ -100,6 +100,7 @@ private:
     int m_glyph_count { 0x110000 };
     int m_columns { 0 };
     int m_rows { 0 };
+    int m_visible_rows { 0 };
     int m_horizontal_spacing { 4 };
     int m_vertical_spacing { 4 };
     Selection m_selection;

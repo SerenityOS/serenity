@@ -128,12 +128,11 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
     painter.set_font(font());
     painter.fill_rect(widget_inner_rect(), palette().window().darkened(0.8f));
 
-    int scroll_steps = vertical_scrollbar().value() / vertical_scrollbar().step();
-    int first_visible_glyph = scroll_steps * columns();
-    int range_offset = m_active_range.first;
-    int last_glyph = m_active_range.last + 1;
+    auto first_row = vertical_scrollbar().value() / vertical_scrollbar().step();
+    auto first_glyph = first_row * columns() + m_active_range.first;
+    auto last_glyph = m_active_range.last;
 
-    for (int glyph = first_visible_glyph + range_offset; glyph <= first_visible_glyph + m_visible_glyphs + range_offset && glyph < last_glyph; ++glyph) {
+    for (u32 glyph = first_glyph; glyph <= first_glyph + m_visible_glyphs && glyph <= last_glyph; ++glyph) {
         Gfx::IntRect outer_rect = get_outer_rect(glyph);
         Gfx::IntRect inner_rect(
             outer_rect.x() + m_horizontal_spacing / 2,
@@ -437,9 +436,13 @@ void GlyphMapWidget::recalculate_content_size()
 {
     auto event_width = widget_inner_rect().width();
     auto event_height = widget_inner_rect().height();
-    m_visible_glyphs = (event_width * event_height) / (font().max_glyph_width() * font().glyph_height());
     m_columns = max(event_width / (font().max_glyph_width() + m_horizontal_spacing), 1);
     m_rows = ceil_div(m_glyph_count, m_columns);
+
+    constexpr auto overdraw_margins = 2;
+    auto max_visible_rows = event_height / (font().glyph_height() + m_vertical_spacing);
+    m_visible_rows = min(max_visible_rows, m_rows);
+    m_visible_glyphs = (m_visible_rows + overdraw_margins) * m_columns;
 
     int content_width = columns() * (font().max_glyph_width() + m_horizontal_spacing);
     int content_height = rows() * (font().glyph_height() + m_vertical_spacing);
