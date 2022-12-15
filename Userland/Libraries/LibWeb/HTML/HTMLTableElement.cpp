@@ -54,8 +54,11 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-caption
 JS::GCPtr<HTMLTableCaptionElement> HTMLTableElement::caption()
 {
+    // The caption IDL attribute must return, on getting, the first caption element child of the table element,
+    // if any, or null otherwise.
     return first_child_of_type<HTMLTableCaptionElement>();
 }
 
