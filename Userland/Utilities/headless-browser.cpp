@@ -116,18 +116,6 @@ public:
         return {};
     }
 
-    ErrorOr<void> connect_to_webdriver(int webdriver_fd_passing_socket)
-    {
-        VERIFY(!m_webdriver);
-        VERIFY(webdriver_fd_passing_socket >= 0);
-
-        auto socket = TRY(Core::take_over_socket_from_system_server("WebDriver"sv));
-        m_webdriver = TRY(WebContent::WebDriverConnection::try_create(move(socket), *this));
-        m_webdriver->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(webdriver_fd_passing_socket)));
-
-        return {};
-    }
-
     // ^Web::PageClient
     virtual bool is_connection_open() const override
     {
@@ -725,7 +713,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView error_page_url;
     StringView ca_certs_path;
     StringView webdriver_ipc_path;
-    int webdriver_fd_passing_socket { -1 };
 
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
@@ -735,12 +722,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url");
     args_parser.add_option(ca_certs_path, "The bundled ca certificates file", "certs", 'c', "ca-certs-path");
     args_parser.add_option(webdriver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
-    args_parser.add_option(webdriver_fd_passing_socket, "File descriptor of the passing socket for the WebDriver connection", "webdriver-fd-passing-socket", 'd', "webdriver_fd_passing_socket");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
-
-    if (!webdriver_ipc_path.is_empty() && webdriver_fd_passing_socket >= 0)
-        return Error::from_string_view("Only one of --webdriver-ipc-path and --webdriver-fd-passing-socket may be used"sv);
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
@@ -788,8 +771,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!webdriver_ipc_path.is_empty())
         TRY(page_client->connect_to_webdriver(webdriver_ipc_path));
-    else if (webdriver_fd_passing_socket >= 0)
-        TRY(page_client->connect_to_webdriver(webdriver_fd_passing_socket));
     else
         load_page_for_screenshot_and_exit(*page_client, take_screenshot_after);
 
