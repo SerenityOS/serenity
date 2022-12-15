@@ -178,8 +178,9 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
 
 void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, bool const open)
 {
-    auto* node = static_cast<Manual::SectionNode*>(index.internal_data());
-    node->set_open(open);
+    auto* node = static_cast<Manual::Node*>(index.internal_data());
+    if (is<Manual::SectionNode>(*node))
+        static_cast<Manual::SectionNode*>(node)->set_open(open);
 }
 
 TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
