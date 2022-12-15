@@ -414,7 +414,7 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
 ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto make_and_swap_envs = [&](auto*& old_environment) {
-        Environment* environment = new_declarative_environment(*old_environment);
+        Environment* environment = new_declarative_environment(*old_environment).ptr();
         swap(old_environment, environment);
         return environment;
     };

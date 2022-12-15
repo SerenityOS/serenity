@@ -383,7 +383,7 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(VM& vm, FunctionObject
 }
 
 // 9.1.2.2 NewDeclarativeEnvironment ( E ), https://tc39.es/ecma262/#sec-newdeclarativeenvironment
-DeclarativeEnvironment* new_declarative_environment(Environment& environment)
+NonnullGCPtr<DeclarativeEnvironment> new_declarative_environment(Environment& environment)
 {
     auto& heap = environment.heap();
 

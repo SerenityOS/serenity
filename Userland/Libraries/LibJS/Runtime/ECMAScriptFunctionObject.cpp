@@ -391,7 +391,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         arguments_object_needed = false;
     }
 
-    Environment* environment;
+    GCPtr<Environment> environment;
 
     if (is_strict_mode() || !has_parameter_expressions) {
         environment = callee_context.lexical_environment;
@@ -477,7 +477,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             }));
     }
 
-    Environment* var_environment;
+    GCPtr<Environment> var_environment;
 
     HashTable<FlyString> instantiated_var_names;
     if (scope_body)
@@ -531,7 +531,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         });
     }
 
-    Environment* lex_environment;
+    GCPtr<Environment> lex_environment;
 
     // 30. If strict is false, then
     if (!is_strict_mode()) {
@@ -578,9 +578,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     }
 
     if (is<DeclarativeEnvironment>(*lex_environment))
-        static_cast<DeclarativeEnvironment*>(lex_environment)->shrink_to_fit();
+        static_cast<DeclarativeEnvironment*>(lex_environment.ptr())->shrink_to_fit();
     if (is<DeclarativeEnvironment>(*var_environment))
-        static_cast<DeclarativeEnvironment*>(var_environment)->shrink_to_fit();
+        static_cast<DeclarativeEnvironment*>(var_environment.ptr())->shrink_to_fit();
 
     return {};
 }
