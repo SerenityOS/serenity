@@ -48,10 +48,10 @@ Note that:
 When SystemServer runs a service which has `Socket` defined, it will create the sockets and then pass an environment variable named `SOCKET_TAKEOVER` to the launched service. This environment variable is structured as follows:
 
 ```console
-SOCKET_TAKEOVER=/tmp/socket1:3 /tmp/socket2:4
+SOCKET_TAKEOVER=/tmp/socket1:3;/tmp/socket2:4
 ```
 
-Items in the variable are separated by spaces, and each item has two components separated by a colon. The first part is the path of the socket requested, and the second part is the file descriptor number that was passed to the newly created service. The service can then parse this information and obtain file descriptors for each socket.
+Items in the variable are separated by semicolons, and each item has two components separated by a colon. The first part is the path of the socket requested, and the second part is the file descriptor number that was passed to the newly created service. The service can then parse this information and obtain file descriptors for each socket.
 
 ## Examples
 
