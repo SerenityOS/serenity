@@ -73,6 +73,7 @@ void HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
         MUST(pre_insert(*caption, first_child()));
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-createcaption
 JS::NonnullGCPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
 {
     auto maybe_caption = caption();
@@ -85,6 +86,7 @@ JS::NonnullGCPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
     return static_cast<HTMLTableCaptionElement&>(*caption);
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-deletecaption
 void HTMLTableElement::delete_caption()
 {
     auto maybe_caption = caption();
@@ -150,6 +152,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* 
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-createthead
 JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
 {
     auto maybe_thead = t_head();
@@ -181,6 +184,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
     return static_cast<HTMLTableSectionElement&>(*thead);
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-deletethead
 void HTMLTableElement::delete_t_head()
 {
     auto maybe_thead = t_head();
@@ -224,6 +228,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* 
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-createtfoot
 JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_foot()
 {
     auto maybe_tfoot = t_foot();
@@ -235,6 +240,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_foot()
     return static_cast<HTMLTableSectionElement&>(*tfoot);
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-deletetfoot
 void HTMLTableElement::delete_t_foot()
 {
     auto maybe_tfoot = t_foot();
@@ -256,6 +262,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
     return *m_t_bodies;
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-createtbody
 JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
 {
     auto tbody = DOM::create_element(document(), TagNames::tbody, Namespace::HTML);
@@ -312,6 +319,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
     return *m_rows;
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-insertrow
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert_row(long index)
 {
     auto rows = this->rows();
