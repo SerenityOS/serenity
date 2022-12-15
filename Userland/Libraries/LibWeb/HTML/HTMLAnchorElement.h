@@ -19,6 +19,7 @@ class HTMLAnchorElement final
 public:
     virtual ~HTMLAnchorElement() override;
 
+    DeprecatedString rel() const { return attribute(HTML::AttributeNames::rel); }
     DeprecatedString target() const { return attribute(HTML::AttributeNames::target); }
     DeprecatedString download() const { return attribute(HTML::AttributeNames::download); }
 
@@ -44,6 +45,7 @@ private:
     virtual bool hyperlink_element_utils_is_html_anchor_element() const final { return true; }
     virtual bool hyperlink_element_utils_is_connected() const final { return is_connected(); }
     virtual DeprecatedString hyperlink_element_utils_target() const final { return target(); }
+    virtual DeprecatedString hyperlink_element_utils_rel() const final { return rel(); }
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) override
     {
         queue_an_element_task(source, move(steps));

@@ -55,6 +55,7 @@ protected:
     virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
     virtual bool hyperlink_element_utils_is_connected() const = 0;
     virtual DeprecatedString hyperlink_element_utils_target() const = 0;
+    virtual DeprecatedString hyperlink_element_utils_rel() const = 0;
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();

@@ -7,6 +7,7 @@
 #include <AK/URLParser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Loader/FrameLoader.h>
 
 namespace Web::HTML {
@@ -555,16 +556,20 @@ DeprecatedString HTMLHyperlinkElementUtils::get_an_elements_target() const
     return "";
 }
 
+// https://html.spec.whatwg.org/multipage/links.html#get-an-element's-noopener
 bool HTMLHyperlinkElementUtils::get_an_elements_noopener(StringView target) const
 {
     // To get an element's noopener, given an a, area, or form element element and a string target:
+    auto rel = hyperlink_element_utils_rel().to_lowercase();
+    auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
 
-    // FIXME: 1. If element's link types include the noopener or noreferrer
-    // keyword, then return true.
+    // 1. If element's link types include the noopener or noreferrer keyword, then return true.
+    if (link_types.contains_slow("noopener"sv) || link_types.contains_slow("noreferrer"sv))
+        return true;
 
-    // FIXME: 2. If element's link types do not include the opener keyword and
-    // target is an ASCII case-insensitive match for "_blank", then return true.
-    if (target.equals_ignoring_case("_blank"sv))
+    // 2. If element's link types do not include the opener keyword and
+    //    target is an ASCII case-insensitive match for "_blank", then return true.
+    if (!link_types.contains_slow("opener"sv) && target.equals_ignoring_case("_blank"sv))
         return true;
 
     // 3. Return false.
