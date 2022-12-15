@@ -8,6 +8,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/String.h>
+#include <Kernel/API/FileSystem/MountSpecificFlags.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -217,12 +218,49 @@ static ErrorOr<void> mount_using_loop_device(int inode_fd, StringView mountpoint
     return result;
 }
 
+static ErrorOr<void> apply_file_system_specific_options(int mount_fd, Vector<String> const& filesystem_specific_options)
+{
+    for (auto& option : filesystem_specific_options) {
+        auto key_value_option = TRY(option.split_limit('=', 2));
+        MountSpecificFlag flag;
+        flag.key_string_length = key_value_option[0].bytes().size();
+        flag.key_string_addr = key_value_option[0].bytes().data();
+        if (key_value_option.size() > 1 && !key_value_option[1].is_empty()) {
+            auto possible_int_value = key_value_option[1].to_number<i64>();
+            auto possible_uint_value = key_value_option[1].to_number<u64>();
+            if (possible_uint_value.has_value()) {
+                flag.value_type = MountSpecificFlag::ValueType::UnsignedInteger;
+                flag.value_length = 8;
+                u64 value = possible_uint_value.value();
+                flag.value_addr = &value;
+                TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+            } else if (possible_int_value.has_value()) {
+                VERIFY(!possible_uint_value.has_value());
+                flag.value_type = MountSpecificFlag::ValueType::SignedInteger;
+                flag.value_length = 8;
+                u64 value = possible_int_value.value();
+                flag.value_addr = &value;
+                TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+            } else {
+                return Error::from_string_literal("Filesystem specific option is not an unsigned or signed value.");
+            }
+            continue;
+        }
+        flag.value_type = MountSpecificFlag::ValueType::Boolean;
+        flag.value_addr = nullptr;
+        flag.value_length = 0;
+        TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+    }
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView source;
     StringView mountpoint;
     StringView fs_type;
     StringView options;
+    Vector<String> filesystem_specific_options;
     bool should_mount_all = false;
 
     Core::ArgsParser args_parser;
@@ -230,6 +268,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
     args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
     args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
+    args_parser.add_option(filesystem_specific_options, "Filesystem-specific options", "fs-specific-option", 'O', "filesystem-specific options");
     args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a');
     args_parser.parse(arguments);
 
@@ -243,37 +282,34 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    if (source.is_empty() && !mountpoint.is_empty()) {
-        int flags = !options.is_empty() ? parse_options(options) : 0;
-        if (!(flags & MS_REMOUNT))
-            return Error::from_string_literal("Expected valid source.");
-        TRY(Core::System::remount(mountpoint, flags & ~MS_REMOUNT));
-        return 0;
-    }
-
     if (!source.is_empty() && !mountpoint.is_empty()) {
         int flags = !options.is_empty() ? parse_options(options) : 0;
-        int const fd = TRY(get_source_fd(source));
+        int const source_fd = TRY(get_source_fd(source));
 
         if (flags & MS_BIND) {
-            TRY(Core::System::bindmount(fd, mountpoint, flags & ~MS_BIND));
+            TRY(Core::System::bindmount(source_fd, mountpoint, flags & ~MS_BIND));
         } else if (flags & MS_REMOUNT) {
             TRY(Core::System::remount(mountpoint, flags & ~MS_REMOUNT));
         } else {
             if (fs_type.is_empty())
                 fs_type = "ext2"sv;
-            if (fd >= 0) {
-                auto stat = TRY(Core::System::fstat(fd));
+            if (source_fd >= 0) {
+                auto stat = TRY(Core::System::fstat(source_fd));
                 if (!S_ISBLK(stat.st_mode)) {
-                    TRY(mount_using_loop_device(fd, mountpoint, fs_type, flags));
+                    TRY(mount_using_loop_device(source_fd, mountpoint, fs_type, flags));
                     return 0;
                 }
             }
-            TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
+            auto mount_fd = TRY(Core::System::fsopen(fs_type, flags));
+            if (!filesystem_specific_options.is_empty())
+                TRY(apply_file_system_specific_options(mount_fd, filesystem_specific_options));
+            TRY(Core::System::fsmount(mount_fd, source_fd, mountpoint));
         }
         return 0;
     }
 
+    // NOTE: Either source or mountpoint are not specified, which is not the intended use
+    // when actually creating a new mount, so just print the usage and exit.
     args_parser.print_usage(stderr, arguments.strings[0]);
 
     return 1;
