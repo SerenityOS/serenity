@@ -11,6 +11,7 @@
 #include "Session.h"
 #include "Client.h"
 #include <LibCore/LocalServer.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <unistd.h>
@@ -61,7 +62,7 @@ ErrorOr<void> Session::start()
 {
     auto promise = TRY(ServerPromise::try_create());
 
-    auto web_content_socket_path = DeprecatedString::formatted("/tmp/webdriver/session_{}_{}", getpid(), m_id);
+    auto web_content_socket_path = DeprecatedString::formatted("{}/webdriver/session_{}_{}", TRY(Core::StandardPaths::runtime_directory()), getpid(), m_id);
     auto web_content_server = TRY(create_server(web_content_socket_path, promise));
 
     if (m_options.headless) {
