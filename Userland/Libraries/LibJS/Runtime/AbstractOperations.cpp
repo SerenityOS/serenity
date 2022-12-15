@@ -435,7 +435,7 @@ NonnullGCPtr<FunctionEnvironment> new_function_environment(ECMAScriptFunctionObj
 }
 
 // 9.2.1.1 NewPrivateEnvironment ( outerPrivEnv ), https://tc39.es/ecma262/#sec-newprivateenvironment
-PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer)
+NonnullGCPtr<PrivateEnvironment> new_private_environment(VM& vm, PrivateEnvironment* outer)
 {
     // 1. Let names be a new empty List.
     // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
