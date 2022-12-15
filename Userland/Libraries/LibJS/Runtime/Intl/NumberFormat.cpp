@@ -756,8 +756,20 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
             // iii. Else if p is equal to "number", then
             else if (part == "number"sv) {
                 // 1. If the numberFormat.[[NumberingSystem]] matches one of the values in the "Numbering System" column of Table 12 below, then
-                //     a. Let digits be a List whose 10 String valued elements are the UTF-16 string representations of the 10 digits specified in the "Digits" column of the matching row in Table 12.
-                //     b. Replace each digit in n with the value of digits[digit].
+                //     a. Let digits be a List whose elements are the code points specified in the "Digits" column of the matching row in Table 13.
+                //     b. Assert: The length of digits is 10.
+                //     c. Let transliterated be the empty String.
+                //     d. Let len be the length of n.
+                //     e. Let position be 0.
+                //     f. Repeat, while position < len,
+                //         i. Let c be the code unit at index position within n.
+                //         ii. If 0x0030 ≤ c ≤ 0x0039, then
+                //             i. NOTE: c is an ASCII digit.
+                //             ii. Let i be c - 0x0030.
+                //             iii. Set c to CodePointsToString(« digits[i] »).
+                //         iii. Set transliterated to the string-concatenation of transliterated and c.
+                //         iv. Set position to position + 1.
+                //     g. Set n to transliterated.
                 // 2. Else use an implementation dependent algorithm to map n to the appropriate representation of n in the given numbering system.
                 formatted_string = ::Locale::replace_digits_for_number_system(number_format.numbering_system(), formatted_string);
 
