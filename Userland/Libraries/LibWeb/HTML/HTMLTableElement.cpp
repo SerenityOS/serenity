@@ -189,8 +189,11 @@ void HTMLTableElement::delete_t_head()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-tfoot
 JS::GCPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
 {
+    // The tFoot IDL attribute must return, on getting, the first tfoot element child of the table element,
+    // if any, or null otherwise.
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<HTMLTableSectionElement>(*child)) {
             auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
@@ -202,20 +205,21 @@ JS::GCPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-tfoot
 WebIDL::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* tfoot)
 {
-    // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
-    VERIFY(tfoot);
-
-    if (tfoot->local_name() != TagNames::tfoot)
+    // If the new value is neither null nor a tfoot element, then a "HierarchyRequestError" DOMException must be thrown instead.
+    if (tfoot && tfoot->local_name() != TagNames::tfoot)
         return WebIDL::HierarchyRequestError::create(realm(), "Element is not tfoot");
 
-    // FIXME: The spec requires deleting the current tfoot if tfoot is null
-    //        Currently the wrapper generator doesn't send us a nullable value
+    // On setting, if the new value is null or a tfoot element, the first tfoot element child of the table element,
+    // if any, must be removed,
     delete_t_foot();
 
-    // We insert the new tfoot at the end of the table
-    TRY(append_child(*tfoot));
+    // and the new value, if not null, must be inserted at the end of the table.
+    if (tfoot) {
+        TRY(append_child(*tfoot));
+    }
 
     return {};
 }
