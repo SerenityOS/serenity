@@ -36,7 +36,7 @@ if [ "${ENABLE_LADYBIRD}" = "true" ]; then
     apt install -y libgl1-mesa-dev qt6-base-dev qt6-tools-dev-tools qt6-wayland
 fi
 if [ "${ENABLE_SERENITY}" = "true" ]; then
-    apt install -y curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs genext2fs qemu-system-gui qemu-system-x86 qemu-utils rsync unzip texinfo
+    apt install -y curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs genext2fs qemu-system-gui qemu-system-x86 qemu-utils rsync unzip texinfo libssl-dev
 fi
 
 ### Ensure new enough host compiler is available
