@@ -8,8 +8,8 @@
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/SessionManagement.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/System.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -92,7 +92,7 @@ ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
     StringBuilder builder;
 
 #if defined(AK_OS_SERENITY)
-    auto sid = TRY(Core::System::getsid());
+    auto sid = TRY(Core::SessionManagement::root_session_id());
     builder.appendff("/tmp/session/{}", sid);
 #elif defined(AK_OS_MACOS)
     builder.append(home_directory());
