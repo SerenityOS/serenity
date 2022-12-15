@@ -622,7 +622,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     callee_context.script_or_module = m_script_or_module;
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
-    auto* local_environment = new_function_environment(*this, new_target);
+    auto local_environment = new_function_environment(*this, new_target);
 
     // 8. Set the LexicalEnvironment of calleeContext to localEnv.
     callee_context.lexical_environment = local_environment;

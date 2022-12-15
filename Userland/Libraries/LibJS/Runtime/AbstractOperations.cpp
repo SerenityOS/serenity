@@ -407,7 +407,7 @@ NonnullGCPtr<ObjectEnvironment> new_object_environment(Object& object, bool is_w
 }
 
 // 9.1.2.4 NewFunctionEnvironment ( F, newTarget ), https://tc39.es/ecma262/#sec-newfunctionenvironment
-FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function, Object* new_target)
+NonnullGCPtr<FunctionEnvironment> new_function_environment(ECMAScriptFunctionObject& function, Object* new_target)
 {
     auto& heap = function.heap();
 
