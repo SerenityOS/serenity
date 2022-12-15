@@ -383,7 +383,10 @@ public:
     ErrorOr<FlatPtr> sys$unlink(int dirfd, Userspace<char const*> pathname, size_t path_length, int flags);
     ErrorOr<FlatPtr> sys$symlink(Userspace<Syscall::SC_symlink_params const*>);
     ErrorOr<FlatPtr> sys$rmdir(Userspace<char const*> pathname, size_t path_length);
-    ErrorOr<FlatPtr> sys$mount(Userspace<Syscall::SC_mount_params const*>);
+    ErrorOr<FlatPtr> sys$fsmount(Userspace<Syscall::SC_fsmount_params const*>);
+    ErrorOr<FlatPtr> sys$remount(Userspace<Syscall::SC_remount_params const*>);
+    ErrorOr<FlatPtr> sys$bindmount(Userspace<Syscall::SC_bindmount_params const*>);
+    ErrorOr<FlatPtr> sys$fsopen(Userspace<Syscall::SC_fsopen_params const*>);
     ErrorOr<FlatPtr> sys$umount(Userspace<char const*> mountpoint, size_t mountpoint_length);
     ErrorOr<FlatPtr> sys$chmod(Userspace<Syscall::SC_chmod_params const*>);
     ErrorOr<FlatPtr> sys$fchmod(int fd, mode_t);

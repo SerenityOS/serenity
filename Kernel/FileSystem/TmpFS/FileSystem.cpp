@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<FileSystem>> TmpFS::try_create()
+ErrorOr<NonnullLockRefPtr<FileSystem>> TmpFS::try_create(Span<u8 const>)
 {
     return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFS));
 }

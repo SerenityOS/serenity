@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description)
+ErrorOr<NonnullLockRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description, Span<u8 const>)
 {
     return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Ext2FS(file_description)));
 }

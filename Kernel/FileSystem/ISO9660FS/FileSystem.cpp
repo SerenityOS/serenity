@@ -16,7 +16,7 @@ constexpr u32 first_data_area_block = 16;
 constexpr u32 logical_sector_size = 2048;
 constexpr u32 max_cached_directory_entries = 128;
 
-ErrorOr<NonnullLockRefPtr<FileSystem>> ISO9660FS::try_create(OpenFileDescription& description)
+ErrorOr<NonnullLockRefPtr<FileSystem>> ISO9660FS::try_create(OpenFileDescription& description, Span<u8 const>)
 {
     return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ISO9660FS(description)));
 }

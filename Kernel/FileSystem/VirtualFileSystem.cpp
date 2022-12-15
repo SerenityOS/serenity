@@ -318,7 +318,7 @@ ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(Credentials const& cre
     return custody->inode().metadata();
 }
 
-ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&)> callback)
+ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Span<u8 const> mount_specific_data, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&, Span<u8 const>)> callback)
 {
     return TRY(m_file_backed_file_systems_list.with([&](auto& list) -> ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> {
         for (auto& node : list) {
@@ -329,7 +329,7 @@ ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already
                 return node;
             }
         }
-        auto fs = TRY(callback(description));
+        auto fs = TRY(callback(description, mount_specific_data));
         VERIFY(fs->is_file_backed());
         list.append(static_cast<FileBackedFileSystem&>(*fs));
         m_file_systems_list.with([&](auto& fs_list) {

@@ -114,6 +114,7 @@ public:
     virtual bool is_character_device() const { return false; }
     virtual bool is_socket() const { return false; }
     virtual bool is_inode_watcher() const { return false; }
+    virtual bool is_mount_file() const { return false; }
 
     virtual bool is_regular_file() const { return false; }
 

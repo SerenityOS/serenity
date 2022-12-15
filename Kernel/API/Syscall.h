@@ -47,6 +47,7 @@ enum class NeedsBigProcessLock {
     S(anon_create, NeedsBigProcessLock::No)                 \
     S(beep, NeedsBigProcessLock::No)                        \
     S(bind, NeedsBigProcessLock::No)                        \
+    S(bindmount, NeedsBigProcessLock::No)                   \
     S(chdir, NeedsBigProcessLock::No)                       \
     S(chmod, NeedsBigProcessLock::No)                       \
     S(chown, NeedsBigProcessLock::No)                       \
@@ -76,6 +77,8 @@ enum class NeedsBigProcessLock {
     S(fstat, NeedsBigProcessLock::No)                       \
     S(fstatvfs, NeedsBigProcessLock::No)                    \
     S(fsync, NeedsBigProcessLock::No)                       \
+    S(fsopen, NeedsBigProcessLock::No)                      \
+    S(fsmount, NeedsBigProcessLock::No)                     \
     S(ftruncate, NeedsBigProcessLock::No)                   \
     S(futex, NeedsBigProcessLock::Yes)                      \
     S(get_dir_entries, NeedsBigProcessLock::Yes)            \
@@ -120,7 +123,6 @@ enum class NeedsBigProcessLock {
     S(mkdir, NeedsBigProcessLock::No)                       \
     S(mknod, NeedsBigProcessLock::No)                       \
     S(mmap, NeedsBigProcessLock::Yes)                       \
-    S(mount, NeedsBigProcessLock::Yes)                      \
     S(mprotect, NeedsBigProcessLock::Yes)                   \
     S(mremap, NeedsBigProcessLock::Yes)                     \
     S(msync, NeedsBigProcessLock::Yes)                      \
@@ -140,6 +142,7 @@ enum class NeedsBigProcessLock {
     S(ptrace, NeedsBigProcessLock::Yes)                     \
     S(purge, NeedsBigProcessLock::Yes)                      \
     S(read, NeedsBigProcessLock::Yes)                       \
+    S(remount, NeedsBigProcessLock::No)                     \
     S(pread, NeedsBigProcessLock::Yes)                      \
     S(readlink, NeedsBigProcessLock::No)                    \
     S(readv, NeedsBigProcessLock::Yes)                      \
@@ -425,9 +428,23 @@ struct SC_rename_params {
     StringArgument new_path;
 };
 
-struct SC_mount_params {
-    StringArgument target;
+struct SC_fsopen_params {
     StringArgument fs_type;
+    int flags;
+};
+
+struct SC_fsmount_params {
+    int mount_fd;
+    StringArgument target;
+};
+
+struct SC_remount_params {
+    StringArgument target;
+    int flags;
+};
+
+struct SC_bindmount_params {
+    StringArgument target;
     int source_fd;
     int flags;
 };

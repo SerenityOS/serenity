@@ -21,7 +21,7 @@ class FATFS final : public BlockBasedFileSystem {
     friend FATInode;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&, Span<u8 const>);
 
     virtual ~FATFS() override = default;
     virtual StringView class_name() const override { return "FATFS"sv; }

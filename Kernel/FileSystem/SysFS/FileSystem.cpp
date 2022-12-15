@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<FileSystem>> SysFS::try_create()
+ErrorOr<NonnullLockRefPtr<FileSystem>> SysFS::try_create(Span<u8 const>)
 {
     return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFS));
 }

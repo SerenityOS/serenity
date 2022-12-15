@@ -412,7 +412,9 @@ NonnullLockRefPtr<FileSystem> StorageManagement::root_filesystem() const
     auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
     VERIFY(!description_or_error.is_error());
 
-    auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
+    Array<u8, 4096> mount_specific_data;
+    memset(mount_specific_data.data(), 0, mount_specific_data.size());
+    auto file_system = Ext2FS::try_create(description_or_error.release_value(), mount_specific_data.span()).release_value();
 
     if (auto result = file_system->initialize(); result.is_error()) {
         dump_storage_devices_and_partitions();

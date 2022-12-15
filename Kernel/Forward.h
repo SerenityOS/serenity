@@ -29,6 +29,7 @@ class IPv4Socket;
 class Inode;
 class InodeIdentifier;
 class InodeWatcher;
+class MountFile;
 class Jail;
 class KBuffer;
 class KString;

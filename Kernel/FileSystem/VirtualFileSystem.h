@@ -81,7 +81,7 @@ public:
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
-    ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&)> callback);
+    ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Span<u8 const>, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&, Span<u8 const>)> callback);
 
     InodeIdentifier root_inode_id() const;
 
