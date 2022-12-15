@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/x86/MSR.h>
@@ -561,7 +562,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
     });
 }
 
-ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
+ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int flags)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
 
@@ -584,6 +585,8 @@ ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
         if (!region->is_mmap())
             return EINVAL;
 
+        if (flags == to_underlying(VirtualMemoryRangeFlags::None))
+            return EINVAL;
         region->set_syscall_region(true);
         return 0;
     });

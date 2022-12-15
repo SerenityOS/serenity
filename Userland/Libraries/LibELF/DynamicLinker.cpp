@@ -16,6 +16,7 @@
 #include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
+#include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/link.h>
 #include <LibC/sys/mman.h>
@@ -396,7 +397,7 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
         if (loader.filepath().ends_with("/libsystem.so"sv)) {
             VERIFY(!loader.text_segments().is_empty());
             for (auto const& segment : loader.text_segments()) {
-                if (syscall(SC_msyscall, segment.address().get())) {
+                if (syscall(SC_annotate_mapping, segment.address().get(), static_cast<int>(VirtualMemoryRangeFlags::SyscallCode))) {
                     VERIFY_NOT_REACHED();
                 }
             }
@@ -660,7 +661,7 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
 
     s_loaders.clear();
 
-    int rc = syscall(SC_msyscall, nullptr);
+    int rc = syscall(SC_annotate_mapping, nullptr);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
