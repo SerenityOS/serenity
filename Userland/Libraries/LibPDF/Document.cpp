@@ -211,9 +211,8 @@ PDFErrorOr<void> Document::build_outline()
         return {};
 
     auto first_ref = outline_dict->get_value(CommonNames::First);
-    auto last_ref = outline_dict->get_value(CommonNames::Last);
 
-    auto children = TRY(build_outline_item_chain(first_ref, last_ref));
+    auto children = TRY(build_outline_item_chain(first_ref));
 
     m_outline = adopt_ref(*new OutlineDict());
     m_outline->children = move(children);
@@ -273,9 +272,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
     if (outline_item_dict->contains(CommonNames::First)) {
         VERIFY(outline_item_dict->contains(CommonNames::Last));
         auto first_ref = outline_item_dict->get_value(CommonNames::First);
-        auto last_ref = outline_item_dict->get_value(CommonNames::Last);
-
-        auto children = TRY(build_outline_item_chain(first_ref, last_ref));
+        auto children = TRY(build_outline_item_chain(first_ref));
         outline_item->children = move(children);
     }
 
@@ -326,10 +323,14 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
     return outline_item;
 }
 
-PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(Value const& first_ref, Value const& last_ref)
+PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(Value const& first_ref)
 {
+    // We used to receive a last_ref parameter, which was what the parent of this chain
+    // thought was this chain's last child. There are documents out there in the wild
+    // where this cross-references don't match though, and it seems like simply following
+    // the /First and /Next links is the way to go to construct the whole Outline
+    // (we already ignore the /Parent attribute too, which can also be out of sync).
     VERIFY(first_ref.has<Reference>());
-    VERIFY(last_ref.has<Reference>());
 
     NonnullRefPtrVector<OutlineItem> children;
 
@@ -351,8 +352,6 @@ PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(
 
         current_child_dict = move(next_child_dict);
     }
-
-    VERIFY(last_ref.as_ref_index() == current_child_index);
 
     return children;
 }
