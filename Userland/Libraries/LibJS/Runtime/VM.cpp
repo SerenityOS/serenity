@@ -603,21 +603,21 @@ ThrowCompletionOr<Value> VM::resolve_this_binding()
     auto& vm = *this;
 
     // 1. Let envRec be GetThisEnvironment().
-    auto& environment = get_this_environment(vm);
+    auto environment = get_this_environment(vm);
 
     // 2. Return ? envRec.GetThisBinding().
-    return TRY(environment.get_this_binding(vm));
+    return TRY(environment->get_this_binding(vm));
 }
 
 // 9.4.5 GetNewTarget ( ), https://tc39.es/ecma262/#sec-getnewtarget
 Value VM::get_new_target()
 {
     // 1. Let envRec be GetThisEnvironment().
-    auto& env = get_this_environment(*this);
+    auto env = get_this_environment(*this);
 
     // 2. Assert: envRec has a [[NewTarget]] field.
     // 3. Return envRec.[[NewTarget]].
-    return verify_cast<FunctionEnvironment>(env).new_target();
+    return verify_cast<FunctionEnvironment>(*env).new_target();
 }
 
 // 9.4.5 GetGlobalObject ( ), https://tc39.es/ecma262/#sec-getglobalobject

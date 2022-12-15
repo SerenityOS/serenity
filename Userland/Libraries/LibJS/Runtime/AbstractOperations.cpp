@@ -443,7 +443,7 @@ NonnullGCPtr<PrivateEnvironment> new_private_environment(VM& vm, PrivateEnvironm
 }
 
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
-Environment& get_this_environment(VM& vm)
+NonnullGCPtr<Environment> get_this_environment(VM& vm)
 {
     // 1. Let env be the running execution context's LexicalEnvironment.
     // 2. Repeat,
@@ -483,12 +483,12 @@ bool can_be_held_weakly(Value value)
 Object* get_super_constructor(VM& vm)
 {
     // 1. Let envRec be GetThisEnvironment().
-    auto& env = get_this_environment(vm);
+    auto env = get_this_environment(vm);
 
     // 2. Assert: envRec is a function Environment Record.
     // 3. Let activeFunction be envRec.[[FunctionObject]].
     // 4. Assert: activeFunction is an ECMAScript function object.
-    auto& active_function = verify_cast<FunctionEnvironment>(env).function_object();
+    auto& active_function = verify_cast<FunctionEnvironment>(*env).function_object();
 
     // 5. Let superConstructor be ! activeFunction.[[GetPrototypeOf]]().
     auto* super_constructor = MUST(active_function.internal_get_prototype_of());
@@ -501,7 +501,7 @@ Object* get_super_constructor(VM& vm)
 ThrowCompletionOr<Reference> make_super_property_reference(VM& vm, Value actual_this, PropertyKey const& property_key, bool strict)
 {
     // 1. Let env be GetThisEnvironment().
-    auto& env = verify_cast<FunctionEnvironment>(get_this_environment(vm));
+    auto& env = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
 
     // 2. Assert: env.HasSuperBinding() is true.
     VERIFY(env.has_super_binding());
@@ -548,11 +548,11 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     // 10. If direct is true, then
     if (direct == EvalMode::Direct) {
         // a. Let thisEnvRec be GetThisEnvironment().
-        auto& this_environment_record = get_this_environment(vm);
+        auto this_environment_record = get_this_environment(vm);
 
         // b. If thisEnvRec is a function Environment Record, then
-        if (is<FunctionEnvironment>(this_environment_record)) {
-            auto& this_function_environment_record = static_cast<FunctionEnvironment&>(this_environment_record);
+        if (is<FunctionEnvironment>(*this_environment_record)) {
+            auto& this_function_environment_record = static_cast<FunctionEnvironment&>(*this_environment_record);
 
             // i. Let F be thisEnvRec.[[FunctionObject]].
             auto& function = this_function_environment_record.function_object();
