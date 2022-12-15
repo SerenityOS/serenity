@@ -13,6 +13,31 @@
 #include <LibMain/Main.h>
 #include <WebDriver/Client.h>
 
+static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
+{
+    char const* argv[] = {
+        "/bin/Browser",
+        "--webdriver-content-path",
+        socket_path.characters(),
+        nullptr,
+    };
+
+    return Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ);
+}
+
+static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
+{
+    char const* argv[] = {
+        "/bin/headless-browser",
+        "--webdriver-ipc-path",
+        socket_path.characters(),
+        "about:blank",
+        nullptr,
+    };
+
+    return Core::System::posix_spawn("/bin/headless-browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ);
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     DeprecatedString default_listen_address = "0.0.0.0";
@@ -62,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto maybe_client = WebDriver::Client::try_create(maybe_buffered_socket.release_value(), server);
+        auto maybe_client = WebDriver::Client::try_create(maybe_buffered_socket.release_value(), { launch_browser, launch_headless_browser }, server);
         if (maybe_client.is_error()) {
             warnln("Could not create a WebDriver client: {}", maybe_client.error());
             return;

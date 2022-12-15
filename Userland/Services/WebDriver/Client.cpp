@@ -20,14 +20,18 @@ namespace WebDriver {
 Atomic<unsigned> Client::s_next_session_id;
 NonnullOwnPtrVector<Session> Client::s_sessions;
 
-ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
+ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
 {
+    if (!callbacks.launch_browser || !callbacks.launch_headless_browser)
+        return Error::from_string_view("All callbacks to launch a browser must be provided"sv);
+
     TRY(socket->set_blocking(true));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Client(move(socket), parent));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Client(move(socket), move(callbacks), parent));
 }
 
-Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
+Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
     : Web::WebDriver::Client(move(socket), parent)
+    , m_callbacks(move(callbacks))
 {
 }
 
@@ -154,7 +158,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     Web::WebDriver::LadybirdOptions options { capabilities.as_object() };
     auto session = make<Session>(session_id, *this, move(options));
 
-    if (auto start_result = session->start(); start_result.is_error())
+    if (auto start_result = session->start(m_callbacks); start_result.is_error())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, DeprecatedString::formatted("Failed to start session: {}", start_result.error().string_literal()));
 
     auto& web_content_connection = session->web_content_connection();
