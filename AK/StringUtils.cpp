@@ -157,8 +157,6 @@ template Optional<u16> convert_to_uint(StringView str, TrimWhitespace);
 template Optional<u32> convert_to_uint(StringView str, TrimWhitespace);
 template Optional<unsigned long> convert_to_uint(StringView str, TrimWhitespace);
 template Optional<unsigned long long> convert_to_uint(StringView str, TrimWhitespace);
-template Optional<long> convert_to_uint(StringView str, TrimWhitespace);
-template Optional<long long> convert_to_uint(StringView str, TrimWhitespace);
 
 template<typename T>
 Optional<T> convert_to_uint_from_hex(StringView str, TrimWhitespace trim_whitespace)

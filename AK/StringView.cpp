@@ -239,8 +239,6 @@ template Optional<u16> StringView::to_uint() const;
 template Optional<u32> StringView::to_uint() const;
 template Optional<unsigned long> StringView::to_uint() const;
 template Optional<unsigned long long> StringView::to_uint() const;
-template Optional<long> StringView::to_uint() const;
-template Optional<long long> StringView::to_uint() const;
 
 #ifndef KERNEL
 Optional<double> StringView::to_double(TrimWhitespace trim_whitespace) const
