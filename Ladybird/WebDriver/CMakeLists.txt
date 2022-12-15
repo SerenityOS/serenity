@@ -2,9 +2,9 @@ set(WEBDRIVER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Services/WebDriver)
 
 set(SOURCES
     ${WEBDRIVER_SOURCE_DIR}/Client.cpp
+    ${WEBDRIVER_SOURCE_DIR}/Session.cpp
     ${WEBDRIVER_SOURCE_DIR}/WebContentConnection.cpp
     ../Utilities.cpp
-    Session.cpp
     main.cpp
 )
 

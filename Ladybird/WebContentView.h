@@ -48,7 +48,7 @@ class WebContentView final
     , public WebView::ViewImplementation {
     Q_OBJECT
 public:
-    explicit WebContentView(int webdriver_fd_passing_socket);
+    explicit WebContentView(StringView webdriver_content_ipc_path);
     virtual ~WebContentView() override;
 
     void load(AK::URL const&);
@@ -219,5 +219,5 @@ private:
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
 
-    int m_webdriver_fd_passing_socket { -1 };
+    StringView m_webdriver_content_ipc_path;
 };
