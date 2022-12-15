@@ -27,7 +27,7 @@ public:
         FileSize64bits = 1 << 1,
     };
 
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
 
     virtual ~Ext2FS() override;
 

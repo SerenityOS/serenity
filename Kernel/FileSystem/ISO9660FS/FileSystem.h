@@ -29,7 +29,7 @@ class ISO9660FS final : public BlockBasedFileSystem {
     friend ISO9660DirectoryIterator;
 
 public:
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
 
     virtual ~ISO9660FS() override;
     virtual StringView class_name() const override { return "ISO9660FS"sv; }

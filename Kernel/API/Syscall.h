@@ -82,6 +82,8 @@ enum class NeedsBigProcessLock {
     S(fork, NeedsBigProcessLock::No)                       \
     S(fstat, NeedsBigProcessLock::No)                      \
     S(fstatvfs, NeedsBigProcessLock::No)                   \
+    S(fsopen, NeedsBigProcessLock::No)                     \
+    S(fsmount, NeedsBigProcessLock::No)                    \
     S(fsync, NeedsBigProcessLock::No)                      \
     S(ftruncate, NeedsBigProcessLock::No)                  \
     S(futex, NeedsBigProcessLock::Yes)                     \
@@ -128,7 +130,6 @@ enum class NeedsBigProcessLock {
     S(mkdir, NeedsBigProcessLock::No)                      \
     S(mknod, NeedsBigProcessLock::No)                      \
     S(mmap, NeedsBigProcessLock::No)                       \
-    S(mount, NeedsBigProcessLock::Yes)                     \
     S(mprotect, NeedsBigProcessLock::No)                   \
     S(mremap, NeedsBigProcessLock::No)                     \
     S(msync, NeedsBigProcessLock::No)                      \
@@ -432,21 +433,25 @@ struct SC_rename_params {
     StringArgument new_path;
 };
 
-struct SC_mount_params {
-    StringArgument target;
+struct SC_fsopen_params {
     StringArgument fs_type;
+    int flags;
+};
+
+struct SC_fsmount_params {
+    int mount_fd;
+    StringArgument target;
+    int source_fd;
+};
+
+struct SC_bindmount_params {
+    StringArgument target;
     int source_fd;
     int flags;
 };
 
 struct SC_remount_params {
     StringArgument target;
-    int flags;
-};
-
-struct SC_bindmount_params {
-    StringArgument target;
-    int source_fd;
     int flags;
 };
 

@@ -70,6 +70,7 @@ UnixDateTime kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(map_fixed) \
     __ENUMERATE_PLEDGE_PROMISE(getkeymap) \
     __ENUMERATE_PLEDGE_PROMISE(jail)      \
+    __ENUMERATE_PLEDGE_PROMISE(mount)     \
     __ENUMERATE_PLEDGE_PROMISE(no_error)
 
 enum class Pledge : u32 {
@@ -395,7 +396,8 @@ public:
     ErrorOr<FlatPtr> sys$unlink(int dirfd, Userspace<char const*> pathname, size_t path_length, int flags);
     ErrorOr<FlatPtr> sys$symlink(Userspace<Syscall::SC_symlink_params const*>);
     ErrorOr<FlatPtr> sys$rmdir(Userspace<char const*> pathname, size_t path_length);
-    ErrorOr<FlatPtr> sys$mount(Userspace<Syscall::SC_mount_params const*>);
+    ErrorOr<FlatPtr> sys$fsmount(Userspace<Syscall::SC_fsmount_params const*>);
+    ErrorOr<FlatPtr> sys$fsopen(Userspace<Syscall::SC_fsopen_params const*>);
     ErrorOr<FlatPtr> sys$umount(Userspace<char const*> mountpoint, size_t mountpoint_length);
     ErrorOr<FlatPtr> sys$chmod(Userspace<Syscall::SC_chmod_params const*>);
     ErrorOr<FlatPtr> sys$fchmod(int fd, mode_t);
@@ -826,9 +828,23 @@ public:
         return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
+    ErrorOr<RefPtr<OpenFileDescription>> open_file_description_ignoring_negative(int fd)
+    {
+        if (fd < 0)
+            return nullptr;
+        return open_file_description(fd);
+    }
+
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const
     {
         return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
+    }
+
+    ErrorOr<RefPtr<OpenFileDescription>> open_file_description_ignoring_negative(int fd) const
+    {
+        if (fd < 0)
+            return nullptr;
+        return open_file_description(fd);
     }
 
     ErrorOr<ScopedDescriptionAllocation> allocate_fd()

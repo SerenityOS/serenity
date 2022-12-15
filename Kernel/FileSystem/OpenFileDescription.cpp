@@ -12,6 +12,7 @@
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -311,6 +312,25 @@ InodeWatcher* OpenFileDescription::inode_watcher()
     if (!is_inode_watcher())
         return nullptr;
     return static_cast<InodeWatcher*>(m_file.ptr());
+}
+
+bool OpenFileDescription::is_mount_file() const
+{
+    return m_file->is_mount_file();
+}
+
+MountFile const* OpenFileDescription::mount_file() const
+{
+    if (!is_mount_file())
+        return nullptr;
+    return static_cast<MountFile const*>(m_file.ptr());
+}
+
+MountFile* OpenFileDescription::mount_file()
+{
+    if (!is_mount_file())
+        return nullptr;
+    return static_cast<MountFile*>(m_file.ptr());
 }
 
 bool OpenFileDescription::is_master_pty() const

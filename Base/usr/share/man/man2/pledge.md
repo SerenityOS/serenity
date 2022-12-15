@@ -54,6 +54,7 @@ If the process later attempts to use any system functionality it has previously 
 * `ptrace`: The [`ptrace`(2)](help://man/2/ptrace) syscall (\*)
 * `prot_exec`: [`mmap`(2)](help://man/2/mmap) and [`mprotect`(2)](help://man/2/mprotect) with `PROT_EXEC`
 * `map_fixed`: [`mmap`(2)](help://man/2/mmap) with `MAP_FIXED` or `MAP_FIXED_NOREPLACE` (\*)
+* `mount`: [`mount`(2)](help://man/2/mount) Various filesystem mount related syscalls (\*)
 * `no_error`: Ignore requests of pledge elevation going forwards, this is useful for enforcing _execpromises_ while the child process wants to ask for more upfront (Note that the elevation requests are _not_ granted, merely ignored), this is similar to the `error` pledge in OpenBSD.
 * `jail`: Various jail-specific syscalls (\*)
 

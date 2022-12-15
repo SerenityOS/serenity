@@ -14,11 +14,14 @@
 #include <AK/RefPtr.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/Initializer.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/Mount.h>
+#include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
@@ -49,11 +52,13 @@ public:
     static void initialize();
     static VirtualFileSystem& the();
 
+    static ErrorOr<FileSystemInitializer const*> find_filesystem_type_initializer(StringView fs_type);
+
     VirtualFileSystem();
     ~VirtualFileSystem();
 
     ErrorOr<void> mount_root(FileSystem&);
-    ErrorOr<void> mount(FileSystem&, Custody& mount_point, int flags);
+    ErrorOr<void> mount(MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
     ErrorOr<void> bind_mount(Custody& source, Custody& mount_point, int flags);
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(Custody& mount_point);
@@ -82,8 +87,6 @@ public:
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
-    ErrorOr<NonnullRefPtr<FileBackedFileSystem>> find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullRefPtr<FileSystem>>(OpenFileDescription&)> callback);
-
     InodeIdentifier root_inode_id() const;
 
     void sync_filesystems();
@@ -105,6 +108,8 @@ private:
     ErrorOr<void> validate_path_against_process_veil(Custody const& path, int options);
     ErrorOr<void> validate_path_against_process_veil(StringView path, int options);
 
+    ErrorOr<void> add_file_system_to_mount_table(FileSystem& file_system, Custody& mount_point, int flags);
+
     bool is_vfs_root(InodeIdentifier) const;
 
     ErrorOr<void> traverse_directory_inode(Inode&, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>);
@@ -120,7 +125,14 @@ private:
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_root_custody {};
 
     SpinlockProtected<IntrusiveList<&Mount::m_vfs_list_node>, LockRank::None> m_mounts {};
-    SpinlockProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>, LockRank::None> m_file_backed_file_systems_list {};
+
+    // NOTE: The FileBackedFileSystem list is protected by a mutex because we need to scan it
+    // to search for existing filesystems for already used block devices and therefore when doing
+    // that we could fail to find a filesystem so we need to create a new filesystem which might
+    // need to do disk access (i.e. taking Mutexes in other places) and then register that new filesystem
+    // in this list, to avoid TOCTOU bugs.
+    MutexProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>> m_file_backed_file_systems_list {};
+
     SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>, LockRank::FileSystem> m_file_systems_list {};
 };
 
