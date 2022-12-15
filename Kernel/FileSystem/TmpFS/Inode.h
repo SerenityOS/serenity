@@ -37,9 +37,9 @@ public:
     virtual ErrorOr<void> update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime) override;
 
 private:
-    TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
+    TmpFSInode(TmpFS& fs, Optional<u64> max_inode_size, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
     explicit TmpFSInode(TmpFS& fs);
-    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
+    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create(TmpFS&, Optional<u64> max_inode_size, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_root(TmpFS&);
 
     // ^Inode
@@ -65,6 +65,8 @@ private:
     ErrorOr<size_t> read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const;
     ErrorOr<size_t> write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer);
 
+    ErrorOr<void> ensure_safely_allocated_blocks(size_t last_block_index);
+
     struct DataBlock {
     public:
         using List = Vector<OwnPtr<DataBlock>>;
@@ -89,6 +91,8 @@ private:
 
     DataBlock::List m_blocks;
     Child::List m_children;
+
+    Optional<u64> const m_max_inode_size;
 };
 
 }

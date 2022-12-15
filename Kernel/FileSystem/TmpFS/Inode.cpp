@@ -10,10 +10,11 @@
 
 namespace Kernel {
 
-TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
+TmpFSInode::TmpFSInode(TmpFS& fs, Optional<u64> max_inode_size, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
     , m_parent(move(parent))
+    , m_max_inode_size(max_inode_size)
 {
     m_metadata.inode = identifier();
 }
@@ -21,6 +22,7 @@ TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<Tmp
 TmpFSInode::TmpFSInode(TmpFS& fs)
     : Inode(fs, 1)
     , m_root_directory_inode(true)
+    , m_max_inode_size({})
 {
     auto now = kgettimeofday();
     m_metadata.inode = identifier();
@@ -32,9 +34,9 @@ TmpFSInode::TmpFSInode(TmpFS& fs)
 
 TmpFSInode::~TmpFSInode() = default;
 
-ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
+ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, Optional<u64> max_inode_size, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, max_inode_size, metadata, move(parent)));
 }
 
 ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
@@ -95,23 +97,63 @@ ErrorOr<NonnullOwnPtr<TmpFSInode::DataBlock>> TmpFSInode::DataBlock::create()
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(move(data_block_buffer_vmobject))));
 }
 
+ErrorOr<void> TmpFSInode::ensure_safely_allocated_blocks(size_t last_block_index)
+{
+    VERIFY(m_inode_lock.is_locked());
+    TRY(fs().current_storage_usage_size({}).with_exclusive([&](auto& current_storage_usage_size) -> ErrorOr<void> {
+        int64_t storage_diff = (last_block_index * DataBlock::block_size) - (m_blocks.size() * DataBlock::block_size);
+        u64 kept_current_storage_usage_size = current_storage_usage_size;
+        ArmedScopeGuard revert_current_storage_usage_size([&] {
+            current_storage_usage_size = kept_current_storage_usage_size;
+        });
+        if (storage_diff > 0 && fs().max_size().has_value()) {
+            if (Checked<u64>::addition_would_overflow(current_storage_usage_size, static_cast<u64>(storage_diff)))
+                return Error::from_errno(EOVERFLOW);
+            if (Checked<u64>::addition_would_overflow(fs().max_size().value(), current_storage_usage_size + static_cast<u64>(storage_diff)))
+                return Error::from_errno(EOVERFLOW);
+            if (fs().max_size().value() < current_storage_usage_size + static_cast<u64>(storage_diff))
+                return Error::from_errno(EFBIG);
+            current_storage_usage_size += static_cast<u64>(storage_diff);
+        } else if (storage_diff < 0) {
+            storage_diff = (m_blocks.size() * DataBlock::block_size) - (last_block_index * DataBlock::block_size);
+            current_storage_usage_size -= static_cast<u64>(storage_diff);
+        }
+
+        TRY(m_blocks.try_resize(last_block_index));
+        revert_current_storage_usage_size.disarm();
+        return {};
+    }));
+    return {};
+}
+
 ErrorOr<void> TmpFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
 {
     VERIFY(m_inode_lock.is_locked());
+    if (m_max_inode_size.has_value()) {
+        if (offset + io_size > m_max_inode_size.value())
+            return Error::from_errno(E2BIG);
+    }
+
+    if (Checked<size_t>::addition_would_overflow(offset, io_size))
+        return Error::from_errno(EOVERFLOW);
+    if (Checked<size_t>::addition_would_overflow(((offset + io_size) / DataBlock::block_size), (((offset + io_size) % DataBlock::block_size) == 0 ? 0 : 1)))
+        return Error::from_errno(EOVERFLOW);
     size_t block_start_index = offset / DataBlock::block_size;
     size_t block_last_index = ((offset + io_size) / DataBlock::block_size) + (((offset + io_size) % DataBlock::block_size) == 0 ? 0 : 1);
     VERIFY(block_start_index <= block_last_index);
 
     size_t original_size = m_blocks.size();
+    VERIFY(original_size <= block_last_index);
     Vector<size_t> allocated_block_indices;
     ArmedScopeGuard clean_allocated_blocks_on_failure([&] {
         for (auto index : allocated_block_indices)
             m_blocks[index].clear();
-        MUST(m_blocks.try_resize(original_size));
+        MUST(ensure_safely_allocated_blocks(original_size));
     });
 
-    if (m_blocks.size() < (block_last_index))
-        TRY(m_blocks.try_resize(block_last_index));
+    if (m_blocks.size() < (block_last_index)) {
+        TRY(ensure_safely_allocated_blocks(block_last_index));
+    }
 
     for (size_t block_index = block_start_index; block_index < block_last_index; block_index++) {
         if (!m_blocks[block_index]) {
@@ -230,7 +272,11 @@ ErrorOr<size_t> TmpFSInode::do_io_on_content_space(Memory::Region& mapping_regio
 ErrorOr<void> TmpFSInode::truncate_to_block_index(size_t block_index)
 {
     VERIFY(m_inode_lock.is_locked());
-    TRY(m_blocks.try_resize(block_index));
+    if (m_max_inode_size.has_value()) {
+        if ((block_index * DataBlock::block_size) > m_max_inode_size.value())
+            return Error::from_errno(E2BIG);
+    }
+    TRY(ensure_safely_allocated_blocks(block_index));
     return {};
 }
 
@@ -307,7 +353,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode
     metadata.major_device = major_from_encoded_device(dev);
     metadata.minor_device = minor_from_encoded_device(dev);
 
-    auto child = TRY(TmpFSInode::try_create(fs(), metadata, *this));
+    auto child = TRY(TmpFSInode::try_create(fs(), fs().max_inode_size(), metadata, *this));
     TRY(add_child(*child, name, mode));
     return child;
 }
