@@ -21,7 +21,7 @@ namespace JS {
 
 NonnullGCPtr<DeclarativeEnvironment> new_declarative_environment(Environment&);
 NonnullGCPtr<ObjectEnvironment> new_object_environment(Object&, bool is_with_environment, Environment*);
-FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject&, Object* new_target);
+NonnullGCPtr<FunctionEnvironment> new_function_environment(ECMAScriptFunctionObject&, Object* new_target);
 PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer);
 Environment& get_this_environment(VM&);
 bool can_be_held_weakly(Value);
