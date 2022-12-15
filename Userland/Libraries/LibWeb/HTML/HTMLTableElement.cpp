@@ -93,8 +93,11 @@ void HTMLTableElement::delete_caption()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-thead
 JS::GCPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
 {
+    // The tHead IDL attribute must return, on getting, the first thead element child of the table element,
+    // if any, or null otherwise.
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<HTMLTableSectionElement>(*child)) {
             auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
@@ -106,17 +109,23 @@ JS::GCPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-thead
 WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* thead)
 {
-    // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
-    VERIFY(thead);
-
-    if (thead->local_name() != TagNames::thead)
+    // If the new value is neither null nor a thead element, then a "HierarchyRequestError" DOMException must be thrown instead.
+    if (thead && thead->local_name() != TagNames::thead)
         return WebIDL::HierarchyRequestError::create(realm(), "Element is not thead");
 
-    // FIXME: The spec requires deleting the current thead if thead is null
-    //        Currently the wrapper generator doesn't send us a nullable value
+    // On setting, if the new value is null or a thead element, the first thead element child of the table element,
+    // if any, must be removed,
     delete_t_head();
+
+    if (!thead)
+        return {};
+
+    // and the new value, if not null, must be inserted immediately before the first element in the table element
+    // that is neither a caption element nor a colgroup element, if any,
+    // or at the end of the table if there are no such elements.
 
     // We insert the new thead after any <caption> or <colgroup> elements
     DOM::Node* child_to_append_after = nullptr;
