@@ -316,7 +316,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_has_alpha_channel(false);
     window->set_alpha_hit_threshold(1);
 
-    auto demo = TRY(window->try_set_main_widget<Demo>());
+    auto demo = TRY(Demo::create());
+    window->set_main_widget(demo);
 
     auto app_icon = GUI::Icon::default_icon("app-cube"sv);
     window->set_icon(app_icon.bitmap_for_size(16));

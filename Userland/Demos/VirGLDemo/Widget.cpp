@@ -9,11 +9,18 @@
 
 #include "Widget.h"
 
+ErrorOr<NonnullRefPtr<Demo>> Demo::create()
+{
+    auto demo = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Demo));
+
+    demo->m_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { DRAWTARGET_WIDTH, DRAWTARGET_HEIGHT }));
+    demo->m_bitmap->fill(Gfx::Color::Black);
+
+    return demo;
+}
+
 Demo::Demo()
 {
-    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { DRAWTARGET_WIDTH, DRAWTARGET_HEIGHT }).release_value_but_fixme_should_propagate_errors();
-    m_bitmap->fill(Gfx::Color::Black);
-
     m_cycles = 0;
 
     stop_timer();
