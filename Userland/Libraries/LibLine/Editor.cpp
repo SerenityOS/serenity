@@ -259,7 +259,7 @@ bool Editor::load_history(DeprecatedString const& path)
     auto hist = StringView { data.data(), data.size() };
     for (auto& str : hist.split_view("\n\n"sv)) {
         auto it = str.find("::"sv).value_or(0);
-        auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
+        auto time = str.substring_view(0, it).to_int<time_t>().value_or(0);
         auto string = str.substring_view(it == 0 ? it : it + 2);
         m_history.append({ string, time });
     }
@@ -320,7 +320,7 @@ bool Editor::save_history(DeprecatedString const& path)
             file->line_begin(), file->line_end(), m_history.begin(), m_history.end(), final_history,
             [](StringView str) {
                 auto it = str.find("::"sv).value_or(0);
-                auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
+                auto time = str.substring_view(0, it).to_int<time_t>().value_or(0);
                 auto string = str.substring_view(it == 0 ? it : it + 2);
                 return HistoryEntry { string, time };
             },
