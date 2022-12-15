@@ -11,12 +11,30 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(FileSystemSpecificOptions const&)
+ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(FileSystemSpecificOptions const& filesystem_specific_options)
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS));
+    Optional<u64> max_size = parse_unsigned_filesystem_specific_option(filesystem_specific_options, "max_size"sv);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS(max_size)));
 }
 
-RAMFS::RAMFS() = default;
+ErrorOr<void> RAMFS::validate_mount_unsigned_integer_flag(StringView key, u64 value)
+{
+    if (key == "max_size"sv) {
+        if ((value % RAMFSInode::data_block_size) != 0)
+            return EINVAL;
+        return {};
+    }
+    return ENOTSUP;
+}
+
+RAMFS::RAMFS(Optional<u64> max_size)
+    : m_max_size(max_size)
+{
+    m_current_storage_usage_size.with_exclusive([](auto& current_size) {
+        current_size = 0;
+    });
+}
+
 RAMFS::~RAMFS() = default;
 
 ErrorOr<void> RAMFS::initialize()

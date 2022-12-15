@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/Forward.h>
@@ -18,6 +19,8 @@ class RAMFSInode final : public Inode {
     friend class RAMFS;
 
 public:
+    constexpr static size_t data_block_size = PAGE_SIZE;
+
     virtual ~RAMFSInode() override;
 
     RAMFS& fs() { return static_cast<RAMFS&>(Inode::fs()); }
@@ -47,6 +50,9 @@ private:
     virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
 
+    ErrorOr<size_t> write_bytes_locked_increasing_allocated_blocks_count(size_t last_block_index, off_t offset, size_t size, UserOrKernelBuffer const&, OpenFileDescription*);
+    ErrorOr<size_t> write_bytes_locked_with_same_blocks_count(off_t offset, size_t size, UserOrKernelBuffer const&, OpenFileDescription*);
+
     ErrorOr<size_t> do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write);
 
     struct Child {
@@ -61,18 +67,22 @@ private:
     InodeMetadata m_metadata;
     LockWeakPtr<RAMFSInode> m_parent;
 
-    ErrorOr<void> ensure_allocated_blocks(size_t offset, size_t io_size);
-    ErrorOr<void> truncate_to_block_index(size_t block_index);
     ErrorOr<size_t> read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const;
     ErrorOr<size_t> write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer);
+
+    ErrorOr<void> increase_blocks_count(size_t last_block_index);
+    ErrorOr<void> decrease_blocks_count(size_t last_block_index);
+    enum class TruncateToLastBlock {
+        Yes,
+        No,
+    };
+    ErrorOr<void> change_blocks_list_size(TruncateToLastBlock, size_t last_block_index);
 
     struct DataBlock {
     public:
         using List = Vector<OwnPtr<DataBlock>>;
 
         static ErrorOr<NonnullOwnPtr<DataBlock>> create();
-
-        constexpr static size_t block_size = 128 * KiB;
 
         Memory::AnonymousVMObject& vmobject() { return *m_content_buffer_vmobject; }
         Memory::AnonymousVMObject const& vmobject() const { return *m_content_buffer_vmobject; }

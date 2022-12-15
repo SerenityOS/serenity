@@ -93,36 +93,72 @@ ErrorOr<void> RAMFSInode::replace_child(StringView name, Inode& new_child)
 
 ErrorOr<NonnullOwnPtr<RAMFSInode::DataBlock>> RAMFSInode::DataBlock::create()
 {
-    auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(DataBlock::block_size, AllocationStrategy::AllocateNow));
+    auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(data_block_size, AllocationStrategy::AllocateNow));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(move(data_block_buffer_vmobject))));
 }
 
-ErrorOr<void> RAMFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
+ErrorOr<void> RAMFSInode::increase_blocks_count(size_t last_block_index)
 {
     VERIFY(m_inode_lock.is_locked());
-    size_t block_start_index = offset / DataBlock::block_size;
-    size_t block_last_index = ((offset + io_size) / DataBlock::block_size) + (((offset + io_size) % DataBlock::block_size) == 0 ? 0 : 1);
-    VERIFY(block_start_index <= block_last_index);
+    VERIFY(last_block_index > m_blocks.size());
+    // NOTE: The reason why we have quite excessive lock around is because
+    // this lock implicitly protects the size of m_blocks as well.
+    TRY(fs().current_storage_usage_size({}).with_exclusive([&](auto& current_storage_usage_size) -> ErrorOr<void> {
+        if (Checked<u64>::multiplication_would_overflow(static_cast<u64>(last_block_index - m_blocks.size()), data_block_size))
+            return Error::from_errno(EOVERFLOW);
 
-    size_t original_size = m_blocks.size();
-    Vector<size_t> allocated_block_indices;
-    ArmedScopeGuard clean_allocated_blocks_on_failure([&] {
-        for (auto index : allocated_block_indices)
-            m_blocks[index].clear();
-        MUST(m_blocks.try_resize(original_size));
-    });
-
-    if (m_blocks.size() < (block_last_index))
-        TRY(m_blocks.try_resize(block_last_index));
-
-    for (size_t block_index = block_start_index; block_index < block_last_index; block_index++) {
-        if (!m_blocks[block_index]) {
-            TRY(allocated_block_indices.try_append(block_index));
-            m_blocks[block_index] = TRY(DataBlock::create());
+        u64 storage_diff = static_cast<u64>(last_block_index - m_blocks.size()) * data_block_size;
+        if (Checked<u64>::addition_would_overflow(current_storage_usage_size, storage_diff))
+            return Error::from_errno(EOVERFLOW);
+        if (fs().max_size().has_value()) {
+            if (Checked<u64>::addition_would_overflow(fs().max_size().value(), current_storage_usage_size + storage_diff))
+                return Error::from_errno(EOVERFLOW);
+            if (fs().max_size().value() < (current_storage_usage_size + storage_diff)) {
+                VERIFY((fs().max_size().value() % data_block_size) == 0);
+                return Error::from_errno(ENOSPC);
+            }
         }
-    }
-    clean_allocated_blocks_on_failure.disarm();
+
+        TRY(m_blocks.try_resize(last_block_index));
+        current_storage_usage_size += storage_diff;
+        return {};
+    }));
     return {};
+}
+
+ErrorOr<void> RAMFSInode::decrease_blocks_count(size_t last_block_index)
+{
+    VERIFY(m_inode_lock.is_locked());
+    VERIFY(last_block_index < m_blocks.size());
+    return fs().current_storage_usage_size({}).with_exclusive([&](auto& current_storage_usage_size) -> ErrorOr<void> {
+        auto storage_diff = m_blocks.size() - last_block_index;
+        VERIFY(!Checked<u64>::multiplication_would_overflow(static_cast<u64>(storage_diff), data_block_size));
+        MUST(m_blocks.try_resize(last_block_index));
+        VERIFY(current_storage_usage_size >= (storage_diff * data_block_size));
+        current_storage_usage_size = current_storage_usage_size - (storage_diff * data_block_size);
+        return {};
+    });
+}
+
+ErrorOr<void> RAMFSInode::change_blocks_list_size(TruncateToLastBlock truncate_to_last_block, size_t last_block_index)
+{
+    VERIFY(m_inode_lock.is_locked());
+    if (last_block_index == m_blocks.size()) {
+        return {};
+    }
+
+    if (last_block_index > m_blocks.size()) {
+        return increase_blocks_count(last_block_index);
+    }
+
+    if (truncate_to_last_block == TruncateToLastBlock::No)
+        return {};
+
+    if (last_block_index < m_blocks.size()) {
+        return decrease_blocks_count(last_block_index);
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<size_t> RAMFSInode::read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const
@@ -131,7 +167,7 @@ ErrorOr<size_t> RAMFSInode::read_bytes_from_content_space(size_t offset, size_t 
     VERIFY(m_metadata.size >= 0);
     if (offset >= static_cast<size_t>(m_metadata.size))
         return 0;
-    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Read, AllocationStrategy::Reserve));
+    auto mapping_region = TRY(MM.allocate_kernel_region(data_block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Read, AllocationStrategy::Reserve));
     return const_cast<RAMFSInode&>(*this).do_io_on_content_space(*mapping_region, offset, io_size, buffer, false);
 }
 
@@ -145,17 +181,56 @@ ErrorOr<size_t> RAMFSInode::read_bytes_locked(off_t offset, size_t size, UserOrK
 ErrorOr<size_t> RAMFSInode::write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer)
 {
     VERIFY(m_inode_lock.is_locked());
-    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
+    auto mapping_region = TRY(MM.allocate_kernel_region(data_block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
     return do_io_on_content_space(*mapping_region, offset, io_size, const_cast<UserOrKernelBuffer&>(buffer), true);
 }
 
-ErrorOr<size_t> RAMFSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> RAMFSInode::write_bytes_locked_increasing_allocated_blocks_count(size_t last_block_index, off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription* description)
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
-    TRY(ensure_allocated_blocks(offset, size));
+    auto original_last_block_index = m_blocks.size();
+    VERIFY(original_last_block_index < last_block_index);
+    TRY(change_blocks_list_size(TruncateToLastBlock::No, last_block_index));
+
+    ArmedScopeGuard clean_allocated_blocks_on_failure([&] {
+        for (size_t block_index = original_last_block_index; block_index < last_block_index; block_index++) {
+            if (m_blocks[block_index])
+                m_blocks[block_index].clear();
+        }
+        MUST(change_blocks_list_size(TruncateToLastBlock::Yes, original_last_block_index));
+    });
+
+    auto nwritten = TRY(write_bytes_locked_with_same_blocks_count(offset, size, buffer, description));
+    clean_allocated_blocks_on_failure.disarm();
+    return nwritten;
+}
+
+static ErrorOr<size_t> calculate_last_block_index(off_t offset, size_t size)
+{
+    if (Checked<size_t>::addition_would_overflow(offset, size))
+        return Error::from_errno(EOVERFLOW);
+    if (Checked<size_t>::addition_would_overflow(((offset + size) / RAMFSInode::data_block_size), (((offset + size) % RAMFSInode::data_block_size) == 0 ? 0 : 1)))
+        return Error::from_errno(EOVERFLOW);
+    return ((offset + size) / RAMFSInode::data_block_size) + (((offset + size) % RAMFSInode::data_block_size) == 0 ? 0 : 1);
+}
+
+ErrorOr<size_t> RAMFSInode::write_bytes_locked_with_same_blocks_count(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+{
+    VERIFY(m_inode_lock.is_locked());
+    VERIFY(!is_directory());
+    VERIFY(offset >= 0);
+
+    size_t last_block_index = MUST(calculate_last_block_index(offset, size));
+
+    size_t first_block_index = ((offset) / data_block_size);
+    for (size_t block_index = first_block_index; block_index < last_block_index; block_index++) {
+        if (!m_blocks[block_index])
+            m_blocks[block_index] = TRY(DataBlock::create());
+    }
+
     auto nwritten = TRY(write_bytes_to_content_space(offset, size, buffer));
 
     off_t old_size = m_metadata.size;
@@ -169,6 +244,18 @@ ErrorOr<size_t> RAMFSInode::write_bytes_locked(off_t offset, size_t size, UserOr
     }
     did_modify_contents();
     return nwritten;
+}
+
+ErrorOr<size_t> RAMFSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription* description)
+{
+    VERIFY(m_inode_lock.is_locked());
+    VERIFY(!is_directory());
+    VERIFY(offset >= 0);
+
+    size_t last_block_index = TRY(calculate_last_block_index(offset, size));
+    if (last_block_index > m_blocks.size())
+        return write_bytes_locked_increasing_allocated_blocks_count(last_block_index, offset, size, buffer, description);
+    return write_bytes_locked_with_same_blocks_count(offset, size, buffer, description);
 }
 
 ErrorOr<size_t> RAMFSInode::do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write)
@@ -187,12 +274,12 @@ ErrorOr<size_t> RAMFSInode::do_io_on_content_space(Memory::Region& mapping_regio
     VERIFY(remaining_bytes != 0);
 
     UserOrKernelBuffer current_buffer = buffer.offset(0);
-    auto block_start_index = offset / DataBlock::block_size;
-    auto offset_in_block = offset % DataBlock::block_size;
+    auto block_start_index = offset / data_block_size;
+    auto offset_in_block = offset % data_block_size;
     u64 block_index = block_start_index;
     size_t nio = 0;
     while (remaining_bytes > 0) {
-        size_t current_io_size = min(DataBlock::block_size - offset_in_block, remaining_bytes);
+        size_t current_io_size = min(data_block_size - offset_in_block, remaining_bytes);
         auto& block = m_blocks[block_index];
         if (!block && !write) {
             // Note: If the block does not exist then it's just a gap in the file,
@@ -227,13 +314,6 @@ ErrorOr<size_t> RAMFSInode::do_io_on_content_space(Memory::Region& mapping_regio
     }
     VERIFY(nio <= io_size);
     return nio;
-}
-
-ErrorOr<void> RAMFSInode::truncate_to_block_index(size_t block_index)
-{
-    VERIFY(m_inode_lock.is_locked());
-    TRY(m_blocks.try_resize(block_index));
-    return {};
 }
 
 ErrorOr<NonnullRefPtr<Inode>> RAMFSInode::lookup(StringView name)
@@ -366,17 +446,17 @@ ErrorOr<void> RAMFSInode::truncate_locked(u64 size)
     VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
 
-    u64 block_index = size / DataBlock::block_size + ((size % DataBlock::block_size == 0) ? 0 : 1);
-    TRY(truncate_to_block_index(block_index));
+    u64 last_block_index = size / data_block_size + ((size % data_block_size == 0) ? 0 : 1);
+    TRY(change_blocks_list_size(TruncateToLastBlock::Yes, last_block_index));
 
-    u64 last_possible_block_index = size / DataBlock::block_size;
-    if ((size % DataBlock::block_size != 0) && m_blocks[last_possible_block_index]) {
-        auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
+    u64 last_possible_block_index = size / data_block_size;
+    if ((size % data_block_size != 0) && m_blocks[last_possible_block_index]) {
+        auto mapping_region = TRY(MM.allocate_kernel_region(data_block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
         VERIFY(m_blocks[last_possible_block_index]);
         NonnullLockRefPtr<Memory::AnonymousVMObject> block_vmobject = m_blocks[last_possible_block_index]->vmobject();
         mapping_region->set_vmobject(block_vmobject);
         mapping_region->remap();
-        memset(mapping_region->vaddr().offset(size % DataBlock::block_size).as_ptr(), 0, DataBlock::block_size - (size % DataBlock::block_size));
+        memset(mapping_region->vaddr().offset(size % data_block_size).as_ptr(), 0, data_block_size - (size % data_block_size));
     }
     m_metadata.size = size;
     set_metadata_dirty(true);
