@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/Forward.h>
@@ -38,9 +39,9 @@ public:
     virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
 
 private:
-    RAMFSInode(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
+    RAMFSInode(RAMFS& fs, Optional<u64> inode_max_size, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
     explicit RAMFSInode(RAMFS& fs);
-    static ErrorOr<NonnullRefPtr<RAMFSInode>> try_create(RAMFS&, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
+    static ErrorOr<NonnullRefPtr<RAMFSInode>> try_create(RAMFS&, Optional<u64>, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
     static ErrorOr<NonnullRefPtr<RAMFSInode>> try_create_root(RAMFS&);
 
     // ^Inode
@@ -66,13 +67,15 @@ private:
     ErrorOr<size_t> read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const;
     ErrorOr<size_t> write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer);
 
+    ErrorOr<void> ensure_safely_allocated_blocks(size_t last_block_index);
+
     struct DataBlock {
     public:
         using List = Vector<OwnPtr<DataBlock>>;
 
         static ErrorOr<NonnullOwnPtr<DataBlock>> create();
 
-        constexpr static size_t block_size = 128 * KiB;
+        constexpr static size_t block_size = PAGE_SIZE;
 
         Memory::AnonymousVMObject& vmobject() { return *m_content_buffer_vmobject; }
         Memory::AnonymousVMObject const& vmobject() const { return *m_content_buffer_vmobject; }
@@ -90,6 +93,8 @@ private:
 
     DataBlock::List m_blocks;
     Child::List m_children;
+
+    Optional<u64> const m_max_inode_size;
 };
 
 }
