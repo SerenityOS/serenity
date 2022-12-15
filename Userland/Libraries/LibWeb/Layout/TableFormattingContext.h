@@ -22,23 +22,23 @@ public:
 private:
     void calculate_row_column_grid(Box const&);
     void compute_table_measures();
-    void compute_table_width(float&);
-    void distribute_width_to_columns(float extra_width);
+    void compute_table_width(CSSPixels&);
+    void distribute_width_to_columns(CSSPixels extra_width);
     void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
 
-    float m_automatic_content_height { 0 };
+    CSSPixels m_automatic_content_height { 0 };
 
     struct Column {
-        float left_offset { 0 };
-        float min_width { 0 };
-        float max_width { 0 };
-        float used_width { 0 };
+        CSSPixels left_offset { 0 };
+        CSSPixels min_width { 0 };
+        CSSPixels max_width { 0 };
+        CSSPixels used_width { 0 };
     };
 
     struct Row {
         Box& box;
-        float used_width { 0 };
-        float baseline { 0 };
+        CSSPixels used_width { 0 };
+        CSSPixels baseline { 0 };
     };
 
     struct Cell {
@@ -47,7 +47,7 @@ private:
         size_t row_index;
         size_t column_span;
         size_t row_span;
-        float baseline { 0 };
+        CSSPixels baseline { 0 };
     };
 
     Vector<Cell> m_cells;
