@@ -55,6 +55,15 @@ public:
         return tab;
     }
 
+    ErrorOr<void> add_tab(NonnullRefPtr<Tab> const& tab, DeprecatedString title, StringView id)
+    {
+        tab->set_title(move(title));
+        TRY(m_tab_widget->try_add_widget(*tab));
+        TRY(m_tabs.try_set(id, tab));
+        tab->set_settings_window(*this);
+        return {};
+    }
+
     Optional<NonnullRefPtr<Tab>> get_tab(StringView id) const;
     void set_active_tab(StringView id);
 
