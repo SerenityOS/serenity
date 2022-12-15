@@ -29,10 +29,17 @@ DeprecatedString CodeBlock::render_to_html(bool) const
     else
         builder.appendff("<code class=\"language-{}\">", escape_html_entities(m_language));
 
-    if (m_language == "js")
-        builder.append(JS::MarkupGenerator::html_from_source(m_code).release_value_but_fixme_should_propagate_errors());
-    else
+    if (m_language == "js") {
+        auto html_or_error = JS::MarkupGenerator::html_from_source(m_code);
+        if (html_or_error.is_error()) {
+            warnln("Could not render js code to html: {}", html_or_error.error());
+            builder.append(escape_html_entities(m_code));
+        } else {
+            builder.append(html_or_error.release_value());
+        }
+    } else {
         builder.append(escape_html_entities(m_code));
+    }
 
     builder.append("</code>"sv);
 
