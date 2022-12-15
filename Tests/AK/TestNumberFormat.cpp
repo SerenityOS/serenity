@@ -125,3 +125,11 @@ TEST_CASE(extremes_8byte)
         warnln("(Skipping 8-byte-size_t test on 32-bit platform)");
     }
 }
+
+TEST_CASE(base10_units)
+{
+    EXPECT_EQ(human_readable_size(999, AK::HumanReadableBasedOn::Base10), "999 B");
+    EXPECT_EQ(human_readable_size(1024, AK::HumanReadableBasedOn::Base10), "1.0 KB");
+    EXPECT_EQ(human_readable_size(1100, AK::HumanReadableBasedOn::Base10), "1.1 KB");
+    EXPECT_EQ(human_readable_size(1000000, AK::HumanReadableBasedOn::Base10), "1.0 MB");
+}
