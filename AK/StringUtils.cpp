@@ -405,6 +405,17 @@ Optional<size_t> find_last(StringView haystack, char needle)
     return {};
 }
 
+Optional<size_t> find_last(StringView haystack, StringView needle)
+{
+    for (size_t i = haystack.length(); i > 0; --i) {
+        auto value = StringUtils::find(haystack, needle, i - 1);
+        if (value.has_value())
+            return value;
+    }
+
+    return {};
+}
+
 Optional<size_t> find_last_not(StringView haystack, char needle)
 {
     for (size_t i = haystack.length(); i > 0; --i) {
