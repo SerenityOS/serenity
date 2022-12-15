@@ -242,6 +242,39 @@ bool String::is_empty() const
     return bytes().size() == 0;
 }
 
+ErrorOr<Vector<String>> String::split_limit(char separator, size_t limit, SplitBehavior split_behavior) const
+{
+    Vector<String> v;
+    if (is_empty())
+        return v;
+
+    auto code_points_view = code_points();
+    auto code_points_view_length = code_points_view.byte_length();
+    size_t substart = 0;
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+    bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
+    for (auto k = code_points_view.begin(); k != code_points_view.end(); ++k) {
+        if (v.size() > limit)
+            return Error::from_string_literal("StringData::split_limit: Limit exceeded");
+        if (*k == (u32)separator) {
+            size_t sublen = (code_points_view_length - k.remaining_byte_length()) - substart;
+            if (sublen != 0 || keep_empty) {
+                auto substring = TRY(substring_from_byte_offset(substart, keep_separator ? sublen + 1 : sublen));
+                v.append(substring);
+            }
+            substart = (code_points_view_length - k.remaining_byte_length()) + 1;
+        }
+    }
+    size_t taillen = code_points_view_length - substart;
+    if (taillen != 0 || keep_empty) {
+        auto substring = TRY(substring_from_byte_offset(substart, taillen));
+        v.append(substring);
+    }
+    if (v.size() > limit)
+        return Error::from_string_literal("StringData::split_limit: Limit exceeded");
+    return v;
+}
+
 ErrorOr<String> String::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;

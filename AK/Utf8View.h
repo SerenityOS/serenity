@@ -42,6 +42,7 @@ public:
     size_t underlying_code_point_length_in_bytes() const;
     ReadonlyBytes underlying_code_point_bytes() const;
     bool done() const { return m_length == 0; }
+    size_t remaining_byte_length() const { return m_length; }
 
 private:
     Utf8CodePointIterator(u8 const* ptr, size_t length)

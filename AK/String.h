@@ -14,6 +14,7 @@
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
@@ -39,6 +40,8 @@ public:
 
     // Creates an empty (zero-length) String.
     String();
+
+    [[nodiscard]] ErrorOr<Vector<String>> split_limit(char separator, size_t limit, SplitBehavior split_behavior = SplitBehavior::Nothing) const;
 
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
