@@ -1852,7 +1852,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         MUST(class_environment->create_immutable_binding(vm, binding_name, true));
 
     auto* outer_private_environment = vm.running_execution_context().private_environment;
-    auto* class_private_environment = new_private_environment(vm, outer_private_environment);
+    auto class_private_environment = new_private_environment(vm, outer_private_environment);
 
     for (auto const& element : m_elements) {
         auto opt_private_name = element.private_bound_identifier();
