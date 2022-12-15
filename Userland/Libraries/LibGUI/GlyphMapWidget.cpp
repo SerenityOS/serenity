@@ -259,6 +259,11 @@ void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 
 void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
+    if (event.key() == KeyCode::Key_Tab) {
+        AbstractScrollableWidget::keydown_event(event);
+        return;
+    }
+
     int range_offset = m_active_range.first;
 
     if (!event.ctrl() && !event.shift() && event.key() != KeyCode::Key_Delete) {
