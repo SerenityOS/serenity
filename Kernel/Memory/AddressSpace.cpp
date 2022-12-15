@@ -59,6 +59,8 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     if (auto* whole_region = find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return EPERM;
+        if (whole_region->is_immutable())
+            return EPERM;
 
         PerformanceManager::add_unmap_perf_event(Process::current(), whole_region->range());
 
@@ -68,6 +70,8 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
     if (auto* old_region = find_region_containing(range_to_unmap)) {
         if (!old_region->is_mmap())
+            return EPERM;
+        if (old_region->is_immutable())
             return EPERM;
 
         // Remove the old region from our regions tree, since were going to add another region
@@ -98,6 +102,8 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     // error out with just half a region map left.
     for (auto* region : regions) {
         if (!region->is_mmap())
+            return EPERM;
+        if (region->is_immutable())
             return EPERM;
     }
 
