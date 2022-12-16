@@ -19,7 +19,7 @@ class AsyncBlockDeviceRequest;
 class PCIIDELegacyModeController final : public IDEController
     , public PCI::Device {
 public:
-    static NonnullLockRefPtr<PCIIDELegacyModeController> initialize(PCI::DeviceIdentifier const&, bool force_pio);
+    static ErrorOr<NonnullLockRefPtr<PCIIDELegacyModeController>> initialize(PCI::DeviceIdentifier const&, bool force_pio);
 
     bool is_bus_master_capable() const;
     bool is_pci_native_mode_enabled() const;
@@ -27,10 +27,10 @@ public:
 private:
     bool is_pci_native_mode_enabled_on_primary_channel() const;
     bool is_pci_native_mode_enabled_on_secondary_channel() const;
-    PCIIDELegacyModeController(PCI::DeviceIdentifier const&, bool force_pio);
+    explicit PCIIDELegacyModeController(PCI::DeviceIdentifier const&);
 
     LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
-    void initialize(bool force_pio);
+    ErrorOr<void> initialize_and_enumerate_channels(bool force_pio);
 
     // FIXME: Find a better way to get the ProgrammingInterface
     PCI::ProgrammingInterface m_prog_if;
