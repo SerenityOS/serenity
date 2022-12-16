@@ -143,10 +143,7 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
         // 3. Set newBrowsingContext's popup sandboxing flag set to a clone of sandboxFlags.
     }
 
-    // 6. Discard browsingContext.
-    browsing_context.discard();
-
-    // 7. Return newBrowsingContext.
+    // 6. Return newBrowsingContext.
     return new_browsing_context;
 }
 
