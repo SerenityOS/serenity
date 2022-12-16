@@ -38,11 +38,11 @@ Plan9FSMessage& Plan9FSMessage::operator<<(StringView string)
     return *this;
 }
 
-void Plan9FSMessage::append_data(StringView data)
+ErrorOr<void> Plan9FSMessage::append_data(StringView data)
 {
     *this << static_cast<u32>(data.length());
-    // FIXME: Handle append failure.
-    (void)m_builder.append(data);
+    TRY(m_builder.append(data));
+    return {};
 }
 
 Plan9FSMessage::Decoder& Plan9FSMessage::Decoder::operator>>(u8& number)
