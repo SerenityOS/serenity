@@ -135,7 +135,7 @@ public:
     Plan9FSMessage& operator<<(u32);
     Plan9FSMessage& operator<<(u64);
     Plan9FSMessage& operator<<(StringView);
-    void append_data(StringView);
+    ErrorOr<void> append_data(StringView);
 
     template<typename T>
     Plan9FSMessage& operator>>(T& t)

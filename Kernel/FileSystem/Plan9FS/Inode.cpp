@@ -111,7 +111,7 @@ ErrorOr<size_t> Plan9FSInode::write_bytes_locked(off_t offset, size_t size, User
 
     Plan9FSMessage message { fs(), Plan9FSMessage::Type::Twrite };
     message << fid() << (u64)offset;
-    message.append_data(data_copy->view());
+    TRY(message.append_data(data_copy->view()));
     TRY(fs().post_message_and_wait_for_a_reply(message));
 
     u32 nwritten;
