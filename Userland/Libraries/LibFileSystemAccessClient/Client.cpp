@@ -205,9 +205,14 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         return;
     }
 
-    auto file_or_error = Core::Stream::File::adopt_fd(ipc_file->take_fd(), Core::Stream::OpenMode::ReadWrite);
+    auto file_or_error = [&]() -> ErrorOr<File> {
+        auto stream = TRY(Core::Stream::File::adopt_fd(ipc_file->take_fd(), Core::Stream::OpenMode::ReadWrite));
+        auto filename = TRY(String::from_deprecated_string(*chosen_file));
+        return File({}, move(stream), filename);
+    }();
     if (file_or_error.is_error()) {
         resolve_any_promise(file_or_error.release_error());
+        return;
     }
 
     request_data.promise.get<PromiseType<Result>>()->resolve(file_or_error.release_value());

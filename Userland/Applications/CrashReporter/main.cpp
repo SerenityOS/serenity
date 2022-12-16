@@ -280,7 +280,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto file = file_or_error.release_value();
+        auto file = file_or_error.release_value().release_stream();
         if (auto result = file->write(full_backtrace.to_byte_buffer()); result.is_error())
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", result.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
