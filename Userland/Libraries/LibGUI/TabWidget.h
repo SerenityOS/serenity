@@ -73,6 +73,13 @@ public:
         return *t;
     }
 
+    ErrorOr<void> add_tab(NonnullRefPtr<Widget> const& tab, DeprecatedString title)
+    {
+        tab->set_title(move(title));
+        TRY(try_add_widget(*tab));
+        return {};
+    }
+
     void remove_tab(Widget& tab) { remove_widget(tab); }
     void remove_all_tabs_except(Widget& tab);
 
