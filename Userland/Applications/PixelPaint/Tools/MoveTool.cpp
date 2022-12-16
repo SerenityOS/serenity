@@ -50,9 +50,11 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
         return;
 
     constexpr int sensitivity = 20;
-    Gfx::IntPoint grab_rect_position = Gfx::IntPoint(layer->location().x() + layer->size().width() - sensitivity / 2, layer->location().y() + layer->size().height() - sensitivity / 2);
-    Gfx::IntRect grab_rect = Gfx::IntRect(grab_rect_position, Gfx::IntSize(sensitivity, sensitivity));
-    auto updated_is_in_lower_right_corner = grab_rect.contains(event.image_event().position()); // check if the mouse is in the lower right corner
+    auto bottom_right_layer_coordinates = layer->relative_rect().bottom_right().translated(1);
+    auto bottom_right_frame_coordinates = m_editor->content_to_frame_position(bottom_right_layer_coordinates).to_rounded<int>();
+    auto grab_rect_top_left = bottom_right_frame_coordinates.translated(-sensitivity / 2);
+    auto grab_rect = Gfx::IntRect(grab_rect_top_left, Gfx::IntSize(sensitivity, sensitivity));
+    auto updated_is_in_lower_right_corner = grab_rect.contains(event.raw_event().position()); // check if the mouse is in the lower right corner
     if (m_mouse_in_resize_corner != updated_is_in_lower_right_corner) {
         m_mouse_in_resize_corner = updated_is_in_lower_right_corner;
         m_editor->update_tool_cursor();
