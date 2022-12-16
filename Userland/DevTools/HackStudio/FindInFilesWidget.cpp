@@ -131,7 +131,7 @@ FindInFilesWidget::FindInFilesWidget()
         auto& match = *(const Match*)index.internal_data();
         open_file(match.filename);
         current_editor().set_selection(match.range);
-        current_editor().set_focus(true);
+        focus_current_editor();
     };
 
     m_button->on_click = [this](auto) {

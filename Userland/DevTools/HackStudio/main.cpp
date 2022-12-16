@@ -152,6 +152,11 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
+void focus_current_editor()
+{
+    return s_hack_studio_widget->focus_current_editor();
+}
+
 void open_file(DeprecatedString const& filename)
 {
     s_hack_studio_widget->open_file(filename);

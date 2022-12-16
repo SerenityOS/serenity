@@ -80,6 +80,7 @@ public:
 
     static Vector<DeprecatedString> read_recent_projects();
 
+    void focus_current_editor();
     void update_current_editor_title();
     void update_window_title();
 
@@ -260,5 +261,7 @@ private:
     Mode m_mode { Mode::Code };
     OwnPtr<Coredump::Inspector> m_coredump_inspector;
     OwnPtr<ProjectBuilder> m_project_builder;
+
+    RefPtr<EditorWrapper> m_expected_focus_editor { nullptr };
 };
 }

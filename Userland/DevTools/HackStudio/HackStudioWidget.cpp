@@ -381,7 +381,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
 
     current_editor_wrapper().set_filename(filename);
     update_current_editor_title();
-    current_editor().set_focus(true);
+    focus_current_editor();
 
     current_editor().on_cursor_change = [this] { on_cursor_change(); };
     current_editor().on_change = [this] { update_window_title(); };
@@ -756,7 +756,7 @@ void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
     tab_widget->on_change = [&](auto& widget) {
         auto& wrapper = static_cast<EditorWrapper&>(widget);
         set_current_editor_wrapper(wrapper);
-        current_editor().set_focus(true);
+        focus_current_editor();
     };
 
     tab_widget->on_middle_click = [](auto& widget) {
@@ -782,7 +782,7 @@ void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
     auto previous_editor_wrapper = m_current_editor_wrapper;
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
-    wrapper.editor().set_focus(true);
+    focus_current_editor();
     wrapper.editor().set_font(*m_editor_font);
     wrapper.set_project_root(m_project->root_path());
     wrapper.editor().on_cursor_change = [this] { on_cursor_change(); };
@@ -828,7 +828,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_tab_wi
                     m_current_editor_tab_widget = tab_widgets[i + 1];
                 auto wrapper = static_cast<EditorWrapper*>(m_current_editor_tab_widget->active_widget());
                 set_current_editor_wrapper(wrapper);
-                current_editor().set_focus(true);
+                focus_current_editor();
                 break;
             }
         }
@@ -1167,6 +1167,15 @@ void HackStudioWidget::set_current_editor_tab_widget(RefPtr<GUI::TabWidget> tab_
 
 void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_wrapper)
 {
+    // This is kind of a hack, but is here to stop infinite editor switching loops.
+    // If you do:
+    //    current_editor().set_focus(true);
+    // But the current editor changes by the time the (deferred) focus event fires,
+    // then you'll end up changing the editor tab, which can in awkward situations
+    // lead to infinte loops of tab switching (see https://github.com/SerenityOS/serenity/issues/16263)
+    //    focus_current_editor() is a workaround that prevents this edge case.
+    if (m_expected_focus_editor && m_expected_focus_editor != editor_wrapper)
+        return;
     m_current_editor_wrapper = editor_wrapper;
     update_window_title();
     update_current_editor_title();
@@ -1174,6 +1183,15 @@ void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_w
     set_current_editor_tab_widget(static_cast<GUI::TabWidget*>(m_current_editor_wrapper->parent()));
     m_current_editor_tab_widget->set_active_widget(editor_wrapper);
     update_statusbar();
+}
+
+void HackStudioWidget::focus_current_editor()
+{
+    m_expected_focus_editor = current_editor_wrapper();
+    current_editor().set_focus(true);
+    deferred_invoke([this] {
+        m_expected_focus_editor = nullptr;
+    });
 }
 
 void HackStudioWidget::file_renamed(DeprecatedString const& old_name, DeprecatedString const& new_name)
