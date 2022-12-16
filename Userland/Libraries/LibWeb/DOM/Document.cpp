@@ -2594,6 +2594,31 @@ Vector<JS::Handle<HTML::Navigable>> Document::inclusive_ancestor_navigables()
     return navigables;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#document-tree-child-navigables
+Vector<JS::Handle<HTML::Navigable>> Document::document_tree_child_navigables()
+{
+    // 1. If document's node navigable is null, then return the empty list.
+    if (!navigable())
+        return {};
+
+    // 2. Let navigables be new list.
+    Vector<JS::Handle<HTML::Navigable>> navigables;
+
+    // 3. Let navigableContainers be a list of all descendants of document that are navigable containers, in tree order.
+    // 4. For each navigableContainer of navigableContainers:
+    for_each_in_subtree_of_type<HTML::NavigableContainer>([&](HTML::NavigableContainer& navigable_container) {
+        // 1. If navigableContainer's content navigable is null, then continue.
+        if (!navigable_container.content_navigable())
+            return IterationDecision::Continue;
+        // 2. Append navigableContainer's content navigable to navigables.
+        navigables.append(*navigable_container.content_navigable());
+        return IterationDecision::Continue;
+    });
+
+    // 5. Return navigables.
+    return navigables;
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
 Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
 {
