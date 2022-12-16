@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Forward.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 
@@ -14,7 +15,7 @@
 
 namespace AK {
 
-template<typename T>
+template<typename T, typename TDeleter>
 class [[nodiscard]] OwnPtr {
 public:
     OwnPtr() = default;
@@ -105,7 +106,7 @@ public:
 
     void clear()
     {
-        delete m_ptr;
+        TDeleter {}(m_ptr);
         m_ptr = nullptr;
     }
 

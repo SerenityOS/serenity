@@ -1334,11 +1334,7 @@ ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servnam
     for (auto* result = results; result != nullptr; result = result->ai_next)
         TRY(addresses.try_append(*result));
 
-    return AddressInfoVector { move(addresses), results,
-        [](struct addrinfo* ptr) {
-            if (ptr)
-                ::freeaddrinfo(ptr);
-        } };
+    return AddressInfoVector { move(addresses), results };
 }
 
 ErrorOr<void> getsockopt(int sockfd, int level, int option, void* value, socklen_t* value_size)

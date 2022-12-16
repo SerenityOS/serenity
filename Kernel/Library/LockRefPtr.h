@@ -24,9 +24,6 @@
 namespace AK {
 
 template<typename T>
-class OwnPtr;
-
-template<typename T>
 struct LockRefPtrTraits {
     ALWAYS_INLINE static T* as_ptr(FlatPtr bits)
     {

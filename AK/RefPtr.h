@@ -12,15 +12,13 @@
 #include <AK/Atomic.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
+#include <AK/Forward.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace AK {
-
-template<typename T>
-class OwnPtr;
 
 template<typename T>
 class [[nodiscard]] RefPtr {

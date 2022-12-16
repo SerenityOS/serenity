@@ -17,8 +17,6 @@
 namespace AK {
 
 template<typename T>
-class OwnPtr;
-template<typename T>
 class RefPtr;
 
 template<typename T>
