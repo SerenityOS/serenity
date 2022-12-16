@@ -42,7 +42,7 @@ public:
 private:
     void initialize_console();
     virtual bool mutable_mode_setting_capable() const override { return true; }
-    virtual bool double_framebuffering_capable() const override { return true; }
+    virtual bool double_framebuffering_capable() const override { return false; }
     virtual bool partial_flush_support() const override { return true; }
     virtual ErrorOr<void> set_mode_setting(ModeSetting const&) override;
     virtual ErrorOr<void> set_safe_mode_setting() override;
@@ -85,9 +85,6 @@ private:
     LockRefPtr<Graphics::Console> m_console;
     Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display m_display_info {};
     Graphics::VirtIOGPU::ScanoutID m_scanout_id;
-
-    // 2D framebuffer Member data
-    Atomic<size_t, AK::memory_order_relaxed> m_last_set_buffer_index { 0 };
 
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;
 };
