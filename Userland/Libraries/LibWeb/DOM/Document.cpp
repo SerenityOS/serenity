@@ -2732,17 +2732,19 @@ void Document::destroy()
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
 void Document::abort()
 {
-    // 1. Abort the active documents of every child browsing context.
+    // 1. Abort the active documents of each of document's descendant navigables.
     //    If this results in any of those Document objects having their salvageable state set to false,
     //    then set document's salvageable state to false also.
-    if (browsing_context()) {
-        browsing_context()->for_each_child([this](HTML::BrowsingContext& child_browsing_context) {
-            if (auto* child_document = child_browsing_context.active_document()) {
-                child_document->abort();
-                if (!child_document->m_salvageable)
-                    m_salvageable = false;
-            }
-        });
+    for (auto navigable : descendant_navigables()) {
+        if (auto document = navigable->active_document()) {
+            // NOTE: This is not in the spec but we need to abort ongoing navigations in all descendandt navigables.
+            //       See https://github.com/whatwg/html/issues/9711
+            navigable->set_ongoing_navigation({});
+
+            document->abort();
+            if (!document->m_salvageable)
+                m_salvageable = false;
+        }
     }
 
     // FIXME: 2. Cancel any instances of the fetch algorithm in the context of document,
