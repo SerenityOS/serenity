@@ -33,9 +33,10 @@
 namespace HackStudio {
 
 class HackStudioWidget : public GUI::Widget {
-    C_OBJECT(HackStudioWidget)
+    C_OBJECT_ABSTRACT(HackStudioWidget)
 
 public:
+    static ErrorOr<NonnullRefPtr<HackStudioWidget>> create(DeprecatedString path_to_project);
     virtual ~HackStudioWidget() override;
 
     bool open_file(DeprecatedString const& filename, size_t line = 0, size_t column = 0);
@@ -89,7 +90,6 @@ private:
     DeprecatedString get_absolute_path(DeprecatedString const&) const;
     Vector<DeprecatedString> selected_file_paths() const;
 
-    HackStudioWidget(DeprecatedString path_to_project);
     void open_project(DeprecatedString const& root_path);
 
     enum class EditMode {

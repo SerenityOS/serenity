@@ -78,113 +78,117 @@
 
 namespace HackStudio {
 
-HackStudioWidget::HackStudioWidget(DeprecatedString path_to_project)
-    : m_editor_font(read_editor_font_from_config())
+ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedString path_to_project)
 {
-    set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_spacing(2);
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) HackStudioWidget));
 
-    open_project(path_to_project);
+    widget->m_editor_font = widget->read_editor_font_from_config();
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<GUI::VerticalBoxLayout>();
+    widget->layout()->set_spacing(2);
 
-    auto& toolbar_container = add<GUI::ToolbarContainer>();
+    widget->open_project(path_to_project);
 
-    auto& outer_splitter = add<GUI::HorizontalSplitter>();
+    auto& toolbar_container = widget->add<GUI::ToolbarContainer>();
+
+    auto& outer_splitter = widget->add<GUI::HorizontalSplitter>();
     outer_splitter.layout()->set_spacing(4);
 
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     left_hand_splitter.layout()->set_spacing(6);
     left_hand_splitter.set_preferred_width(150);
-    create_project_tab(left_hand_splitter);
-    m_project_tree_view_context_menu = create_project_tree_view_context_menu();
+    widget->create_project_tab(left_hand_splitter);
+    widget->m_project_tree_view_context_menu = widget->create_project_tree_view_context_menu();
 
-    create_open_files_view(left_hand_splitter);
+    widget->create_open_files_view(left_hand_splitter);
 
-    m_right_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
-    m_right_hand_stack = m_right_hand_splitter->add<GUI::StackWidget>();
+    widget->m_right_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
+    widget->m_right_hand_stack = widget->m_right_hand_splitter->add<GUI::StackWidget>();
 
     // Put a placeholder widget front & center since we don't have a file open yet.
-    m_right_hand_stack->add<GUI::Widget>();
+    widget->m_right_hand_stack->add<GUI::Widget>();
 
-    m_diff_viewer = m_right_hand_stack->add<DiffViewer>();
+    widget->m_diff_viewer = widget->m_right_hand_stack->add<DiffViewer>();
 
-    m_editors_splitter = m_right_hand_stack->add<GUI::VerticalSplitter>();
-    m_editors_splitter->layout()->set_margins({ 3, 0, 0 });
-    add_new_editor_tab_widget(*m_editors_splitter);
+    widget->m_editors_splitter = widget->m_right_hand_stack->add<GUI::VerticalSplitter>();
+    widget->m_editors_splitter->layout()->set_margins({ 3, 0, 0 });
+    widget->add_new_editor_tab_widget(*widget->m_editors_splitter);
 
-    m_switch_to_next_editor_tab_widget = create_switch_to_next_editor_tab_widget_action();
-    m_switch_to_next_editor = create_switch_to_next_editor_action();
-    m_switch_to_previous_editor = create_switch_to_previous_editor_action();
+    widget->m_switch_to_next_editor_tab_widget = widget->create_switch_to_next_editor_tab_widget_action();
+    widget->m_switch_to_next_editor = widget->create_switch_to_next_editor_action();
+    widget->m_switch_to_previous_editor = widget->create_switch_to_previous_editor_action();
 
-    m_remove_current_editor_tab_widget_action = create_remove_current_editor_tab_widget_action();
-    m_remove_current_editor_action = create_remove_current_editor_action();
-    m_open_action = create_open_action();
-    m_save_action = create_save_action();
-    m_save_as_action = create_save_as_action();
-    m_new_project_action = create_new_project_action();
+    widget->m_remove_current_editor_tab_widget_action = widget->create_remove_current_editor_tab_widget_action();
+    widget->m_remove_current_editor_action = widget->create_remove_current_editor_action();
+    widget->m_open_action = widget->create_open_action();
+    widget->m_save_action = widget->create_save_action();
+    widget->m_save_as_action = widget->create_save_as_action();
+    widget->m_new_project_action = widget->create_new_project_action();
 
-    create_action_tab(*m_right_hand_splitter);
+    widget->create_action_tab(*widget->m_right_hand_splitter);
 
-    m_add_editor_tab_widget_action = create_add_editor_tab_widget_action();
-    m_add_editor_action = create_add_editor_action();
-    m_add_terminal_action = create_add_terminal_action();
-    m_remove_current_terminal_action = create_remove_current_terminal_action();
+    widget->m_add_editor_tab_widget_action = widget->create_add_editor_tab_widget_action();
+    widget->m_add_editor_action = widget->create_add_editor_action();
+    widget->m_add_terminal_action = widget->create_add_terminal_action();
+    widget->m_remove_current_terminal_action = widget->create_remove_current_terminal_action();
 
-    m_locator = add<Locator>();
+    widget->m_locator = widget->add<Locator>();
 
-    m_terminal_wrapper->on_command_exit = [this] {
-        m_stop_action->set_enabled(false);
+    widget->m_terminal_wrapper->on_command_exit = [widget] {
+        widget->m_stop_action->set_enabled(false);
     };
 
-    m_open_project_configuration_action = create_open_project_configuration_action();
+    widget->m_open_project_configuration_action = widget->create_open_project_configuration_action();
 
-    m_build_action = create_build_action();
-    m_run_action = create_run_action();
-    m_stop_action = create_stop_action();
-    m_debug_action = create_debug_action();
+    widget->m_build_action = widget->create_build_action();
+    widget->m_run_action = widget->create_run_action();
+    widget->m_stop_action = widget->create_stop_action();
+    widget->m_debug_action = widget->create_debug_action();
 
-    initialize_debugger();
+    widget->initialize_debugger();
 
-    create_toolbar(toolbar_container);
+    widget->create_toolbar(toolbar_container);
 
-    m_statusbar = add<GUI::Statusbar>(3);
-    m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
-    m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    auto width = font().width("Ln 0000, Col 000"sv) + font().max_glyph_width();
-    m_statusbar->segment(2).set_fixed_width(width);
-    update_statusbar();
+    widget->m_statusbar = widget->add<GUI::Statusbar>(3);
+    widget->m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
+    widget->m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
+    auto width = widget->font().width("Ln 0000, Col 000"sv) + widget->font().max_glyph_width();
+    widget->m_statusbar->segment(2).set_fixed_width(width);
+    widget->update_statusbar();
 
-    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+    GUI::Application::the()->on_action_enter = [widget](GUI::Action& action) {
         auto text = action.status_tip();
         if (text.is_empty())
             text = Gfx::parse_ampersand_string(action.text());
-        m_statusbar->set_override_text(move(text));
+        widget->m_statusbar->set_override_text(move(text));
     };
 
-    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
-        m_statusbar->set_override_text({});
+    GUI::Application::the()->on_action_leave = [widget](GUI::Action&) {
+        widget->m_statusbar->set_override_text({});
     };
 
     auto maybe_watcher = Core::FileWatcher::create();
     if (maybe_watcher.is_error()) {
         warnln("Couldn't create a file watcher, deleted files won't be noticed! Error: {}", maybe_watcher.error());
     } else {
-        m_file_watcher = maybe_watcher.release_value();
-        m_file_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
+        widget->m_file_watcher = maybe_watcher.release_value();
+        widget->m_file_watcher->on_change = [widget](Core::FileWatcherEvent const& event) {
             if (event.type != Core::FileWatcherEvent::Type::Deleted)
                 return;
 
-            if (event.event_path.starts_with(project().root_path())) {
-                DeprecatedString relative_path = LexicalPath::relative_path(event.event_path, project().root_path());
-                handle_external_file_deletion(relative_path);
+            if (event.event_path.starts_with(widget->project().root_path())) {
+                DeprecatedString relative_path = LexicalPath::relative_path(event.event_path, widget->project().root_path());
+                widget->handle_external_file_deletion(relative_path);
             } else {
-                handle_external_file_deletion(event.event_path);
+                widget->handle_external_file_deletion(event.event_path);
             }
         };
     }
 
-    m_project_builder = make<ProjectBuilder>(*m_terminal_wrapper, *m_project);
-    project().model().set_should_show_dotfiles(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
+    widget->m_project_builder = make<ProjectBuilder>(*widget->m_terminal_wrapper, *widget->m_project);
+    widget->project().model().set_should_show_dotfiles(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
+
+    return widget;
 }
 
 void HackStudioWidget::update_actions()
