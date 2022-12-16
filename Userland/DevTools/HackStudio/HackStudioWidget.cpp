@@ -125,7 +125,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->m_save_as_action = widget->create_save_as_action();
     widget->m_new_project_action = widget->create_new_project_action();
 
-    widget->create_action_tab(*widget->m_right_hand_splitter);
+    TRY(widget->create_action_tab(*widget->m_right_hand_splitter));
 
     widget->m_add_editor_tab_widget_action = widget->create_add_editor_tab_widget_action();
     widget->m_add_editor_action = widget->create_add_editor_action();
@@ -1300,7 +1300,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_run_action()
     });
 }
 
-void HackStudioWidget::create_action_tab(GUI::Widget& parent)
+ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
 {
     m_action_tab_widget = parent.add<GUI::TabWidget>();
 
@@ -1317,7 +1317,9 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
     m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO");
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console", false);
-    m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
+    auto debug_info_widget = TRY(DebugInfoWidget::create());
+    TRY(m_action_tab_widget->add_tab(debug_info_widget, "Debug"));
+    m_debug_info_widget = debug_info_widget;
 
     m_debug_info_widget->on_backtrace_frame_selection = [this](Debug::DebugInfo::SourcePosition const& source_position) {
         open_file(get_absolute_path(source_position.file_path), source_position.line_number - 1);
@@ -1334,6 +1336,8 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     ToDoEntries::the().on_update = [this]() {
         m_todo_entries_widget->refresh();
     };
+
+    return {};
 }
 
 void HackStudioWidget::create_project_tab(GUI::Widget& parent)

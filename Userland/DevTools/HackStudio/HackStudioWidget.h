@@ -145,7 +145,7 @@ private:
 
     void create_open_files_view(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
-    void create_action_tab(GUI::Widget& parent);
+    ErrorOr<void> create_action_tab(GUI::Widget& parent);
     void create_file_menu(GUI::Window&);
     void update_recent_projects_submenu();
     void create_edit_menu(GUI::Window&);
