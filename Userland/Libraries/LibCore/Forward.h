@@ -38,6 +38,7 @@ class UDPServer;
 enum class TimerShouldFireWhenNotVisible;
 
 namespace Stream {
+class File;
 class Socket;
 class Stream;
 class BufferedSocketBase;
