@@ -522,7 +522,7 @@ Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
 
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
+    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window(), path);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else

@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window, file_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window, file_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
         if (response.is_error())
             return;
 
@@ -171,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window);
         if (response.is_error())
             return;
 
@@ -295,7 +295,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor->set_cursor(4, 28); // after "...widgets!"
         update_title();
     } else {
-        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path));
+        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, path));
         file_path = path;
         editor->set_text(file->read_all());
         update_title();

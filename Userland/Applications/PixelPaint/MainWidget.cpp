@@ -192,7 +192,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window);
         if (response.is_error())
             return;
         open_image(response.value());
@@ -415,7 +415,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Load Color Palette", g_icon_bag.load_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Load Color Palette");
+            auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window, "Load Color Palette");
             if (response.is_error())
                 return;
 
@@ -1264,7 +1264,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), url.path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         open_image(response.value());

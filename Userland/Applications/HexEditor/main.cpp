@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (arguments.argc > 1) {
         // FIXME: Using `try_request_file_read_only_approved` doesn't work here since the file stored in the editor is only readable.
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window, arguments.strings[1], Core::OpenMode::ReadWrite);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window, arguments.strings[1], Core::OpenMode::ReadWrite);
         if (response.is_error())
             return 1;
         hex_editor_widget->open_file(response.value());

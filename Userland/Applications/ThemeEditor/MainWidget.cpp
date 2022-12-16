@@ -238,7 +238,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes"sv);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window, "Select theme file", "/res/themes"sv);
         if (response.is_error())
             return;
         auto load_from_file_result = load_from_file(*response.value());
@@ -250,7 +250,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.has_value()) {
-            auto result = FileSystemAccessClient::Client::the().try_request_file(&window, *m_path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().try_request_file_deprecated(&window, *m_path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value());
