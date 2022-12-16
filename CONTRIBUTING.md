@@ -80,6 +80,10 @@ While unadvertised PRs may get randomly merged by curious maintainers, you will 
 
 Ping them right away if it's something urgent! If it's less urgent, advertise your PR on Discord (`#code-review`) and ask if someone could review it.
 
+### How do I open a PR for early feedback?
+
+Prefer not to open PRs that aren't ready for final review. For early feedback, either discussion on Discord or opening a PR against your own fork is more appropriate. But if you must, you can put `[skip ci]` anywhere in the HEAD commit of your PR to at least prevent CI from running against your PR. When the PR is ready for review, remove the `[skip ci]` text.
+
 ### Who are the project maintainers?
 
 The project maintainers at this time are [@awesomekling](https://github.com/awesomekling), [@linusg](https://github.com/linusg), [@alimpfard](https://github.com/alimpfard), [@gunnarbeutner](https://github.com/gunnarbeutner), [@bgianfo](https://github.com/bgianfo), [@IdanHo](https://github.com/IdanHo), [@trflynn89](https://github.com/trflynn89), [@AtkinsSJ](https://github.com/AtkinsSJ), and [@ADKaster](https://github.com/ADKaster).
