@@ -498,4 +498,12 @@ ErrorOr<void> GlyphMapWidget::set_font(Gfx::Font const& font)
     return {};
 }
 
+Optional<UISize> GlyphMapWidget::calculated_min_size() const
+{
+    auto scrollbar = vertical_scrollbar().effective_min_size().height().as_int();
+    auto min_height = max(font().glyph_height() + m_vertical_spacing, scrollbar);
+    auto min_width = font().max_glyph_width() + m_horizontal_spacing + width_occupied_by_vertical_scrollbar();
+    return { { min_width + frame_thickness() * 2, min_height + frame_thickness() * 2 } };
+}
+
 }
