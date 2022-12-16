@@ -4,6 +4,7 @@ parameters:
 steps:
   - checkout: self
     persistCredentials: true
+    fetchDepth: 1
 
   - ${{ if eq(parameters.os, 'Serenity') }}:
     - script: |
