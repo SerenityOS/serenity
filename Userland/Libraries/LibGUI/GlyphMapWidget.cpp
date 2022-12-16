@@ -367,6 +367,49 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
+    {
+        auto first_visible_row = vertical_scrollbar().value() / vertical_scrollbar().step();
+        auto last_visible_row = first_visible_row + m_visible_rows;
+        auto current_row = (m_active_glyph - first_glyph) / columns();
+        auto page = m_active_glyph;
+
+        if (event.key() == KeyCode::Key_PageDown) {
+            auto current_page = m_active_glyph + m_columns * (last_visible_row - current_row);
+            auto next_page = m_active_glyph + m_columns * m_visible_rows;
+            auto remainder = m_active_glyph + m_columns * ((last_glyph - first_glyph) / columns() - current_row);
+            if (current_row < last_visible_row && current_page <= last_glyph)
+                page = current_page;
+            else if (next_page <= last_glyph)
+                page = next_page;
+            else if (remainder <= last_glyph)
+                page = remainder;
+            else
+                page = remainder - m_columns; // Bottom rows do not always extend across all columns
+            if (event.shift())
+                m_selection.extend_to(page);
+            set_active_glyph(page, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
+            scroll_to_glyph(m_active_glyph);
+            return;
+        }
+
+        if (event.key() == KeyCode::Key_PageUp) {
+            auto current_page = m_active_glyph - m_columns * (current_row - first_visible_row);
+            auto previous_page = m_active_glyph - m_columns * m_visible_rows;
+            auto remainder = m_active_glyph - m_columns * current_row;
+            if (current_row > first_visible_row && current_page >= first_glyph)
+                page = current_page;
+            else if (previous_page >= first_glyph)
+                page = previous_page;
+            else
+                page = remainder;
+            if (event.shift())
+                m_selection.extend_to(page);
+            set_active_glyph(page, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
+            scroll_to_glyph(m_active_glyph);
+            return;
+        }
+    }
+
     event.ignore();
 }
 
