@@ -68,7 +68,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             project_path = path.release_value();
     }
 
-    auto hack_studio_widget = TRY(window->try_set_main_widget<HackStudioWidget>(project_path));
+    auto hack_studio_widget = TRY(HackStudioWidget::create(project_path));
+    window->set_main_widget(hack_studio_widget);
     s_hack_studio_widget = hack_studio_widget;
 
     window->set_title(DeprecatedString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
