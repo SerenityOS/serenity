@@ -497,6 +497,8 @@ void ImageEditor::set_active_layer(Layer* layer)
         if (on_active_layer_change)
             on_active_layer_change({});
     }
+    if (m_show_active_layer_boundary)
+        update();
 }
 
 ErrorOr<void> ImageEditor::add_new_layer_from_selection()
