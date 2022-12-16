@@ -80,6 +80,12 @@ Attr const* NamedNodeMap::get_named_item(StringView qualified_name) const
     return get_attribute(qualified_name);
 }
 
+// https://dom.spec.whatwg.org/#dom-namednodemap-getnameditemns
+Attr const* NamedNodeMap::get_named_item_ns(StringView namespace_, StringView local_name) const
+{
+    return get_attribute_ns(namespace_, local_name);
+}
+
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditem
 WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_named_item(Attr& attribute)
 {
