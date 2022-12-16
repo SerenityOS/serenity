@@ -96,16 +96,13 @@ ErrorOr<void> VirtIODisplayConnector::set_safe_mode_setting()
     return set_mode_setting(safe_mode_setting);
 }
 
-ErrorOr<void> VirtIODisplayConnector::set_y_offset(size_t y)
+ErrorOr<void> VirtIODisplayConnector::set_y_offset(size_t)
 {
-    VERIFY(m_control_lock.is_locked());
-    if (y == 0)
-        m_last_set_buffer_index.store(0);
-    else if (y == m_display_info.rect.height)
-        m_last_set_buffer_index.store(1);
-    else
-        return Error::from_errno(EINVAL);
-    return {};
+    // NOTE (FIXME?): We don't do double buffering because when using double buffering,
+    // perfomance visually looks terrible (everything look sluggish) compared to not using it,
+    // so until we figure out why (and we might not figure this and double buffering is simply not needed)
+    // this happens, we simply don't support it.
+    return Error::from_errno(ENOTSUP);
 }
 ErrorOr<void> VirtIODisplayConnector::unblank()
 {
@@ -125,14 +122,9 @@ ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRec
         .height = rect.height
     };
 
-    bool main_buffer = (buffer_index == 0);
-    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, main_buffer);
-    if (m_last_set_buffer_index.load() == buffer_index) {
-        // Flushing directly to screen
-        flush_displayed_image(dirty_rect, main_buffer);
-    } else {
-        set_dirty_displayed_rect(dirty_rect, main_buffer);
-    }
+    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true);
+    // Flushing directly to screen
+    flush_displayed_image(dirty_rect, true);
     return {};
 }
 
@@ -147,13 +139,9 @@ ErrorOr<void> VirtIODisplayConnector::flush_first_surface()
         .height = m_display_info.rect.height
     };
 
-    auto current_buffer_index = m_last_set_buffer_index.load();
-    VERIFY(is_valid_buffer_index(current_buffer_index));
-
-    bool main_buffer = (current_buffer_index == 0);
-    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, main_buffer);
+    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true);
     // Flushing directly to screen
-    flush_displayed_image(dirty_rect, main_buffer);
+    flush_displayed_image(dirty_rect, true);
     return {};
 }
 

@@ -56,7 +56,6 @@ ErrorOr<void> VirtIOGraphicsAdapter::mode_set_resolution(Badge<VirtIODisplayConn
     VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
     auto rounded_buffer_size = TRY(calculate_framebuffer_size(width, height));
     TRY(attach_physical_range_to_framebuffer(connector, true, 0, rounded_buffer_size));
-    TRY(attach_physical_range_to_framebuffer(connector, false, rounded_buffer_size, rounded_buffer_size));
     return {};
 }
 
