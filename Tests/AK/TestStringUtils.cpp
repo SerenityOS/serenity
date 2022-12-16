@@ -76,6 +76,21 @@ TEST_CASE(matches_trailing)
     EXPECT(AK::StringUtils::matches("ab"sv, "*ab****"sv));
 }
 
+TEST_CASE(match_backslash_escape)
+{
+    EXPECT(AK::StringUtils::matches("ab*"sv, "ab\\*"sv));
+    EXPECT(!AK::StringUtils::matches("abc"sv, "ab\\*"sv));
+    EXPECT(!AK::StringUtils::matches("abcd"sv, "ab\\*"sv));
+    EXPECT(AK::StringUtils::matches("ab?"sv, "ab\\?"sv));
+    EXPECT(!AK::StringUtils::matches("abc"sv, "ab\\?"sv));
+}
+
+TEST_CASE(match_trailing_backslash)
+{
+    EXPECT(AK::StringUtils::matches("x\\"sv, "x\\"sv));
+    EXPECT(AK::StringUtils::matches("x\\"sv, "x\\\\"sv));
+}
+
 TEST_CASE(convert_to_int)
 {
     auto value = AK::StringUtils::convert_to_int(StringView());
