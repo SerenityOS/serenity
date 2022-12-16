@@ -105,7 +105,10 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
             auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
 #if ARCH(X86_64)
             if (subclass_code == SubclassID::IDEController && kernel_command_line().is_ide_enabled()) {
-                m_controllers.append(PCIIDELegacyModeController::initialize(device_identifier, force_pio));
+                if (auto ide_controller_or_error = PCIIDELegacyModeController::initialize(device_identifier, force_pio); !ide_controller_or_error.is_error())
+                    m_controllers.append(ide_controller_or_error.release_value());
+                else
+                    dmesgln("Unable to initialize IDE controller: {}", ide_controller_or_error.error());
             }
 #elif ARCH(AARCH64)
             (void)force_pio;
