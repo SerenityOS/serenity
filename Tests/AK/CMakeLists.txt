@@ -1,5 +1,4 @@
 set(AK_TEST_SOURCES
-    TestFixedPoint.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
     TestArbitrarySizedEnum.cpp
@@ -27,6 +26,7 @@ set(AK_TEST_SOURCES
     TestEnumBits.cpp
     TestFind.cpp
     TestFixedArray.cpp
+    TestFixedPoint.cpp
     TestFloatingPoint.cpp
     TestFloatingPointParsing.cpp
     TestFormat.cpp
