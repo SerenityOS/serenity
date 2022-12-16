@@ -448,6 +448,8 @@ public:
     Vector<JS::Handle<HTML::Navigable>> descendant_navigables();
     Vector<JS::Handle<HTML::Navigable>> inclusive_descendant_navigables();
 
+    void destroy();
+
     // https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
     void discard();
 

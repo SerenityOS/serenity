@@ -42,6 +42,7 @@
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -2404,6 +2405,39 @@ void Document::discard()
     // 7. Set document's browsing context to null.
     tear_down_layout_tree();
     m_browsing_context = nullptr;
+
+    // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
+
+    // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
+}
+
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
+void Document::destroy()
+{
+    // 1. Destroy the active documents of each of document's descendant navigables.
+    for (auto navigable : descendant_navigables()) {
+        if (auto document = navigable->active_document())
+            document->destroy();
+    }
+
+    // 2. Set document's salvageable state to false.
+    m_salvageable = false;
+
+    // FIXME: 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+
+    // 4. Abort document.
+    abort();
+
+    // 5. Remove any tasks whose document is document from any task queue (without running those tasks).
+    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
+        return task.document() == this;
+    });
+
+    // 6. Set document's browsing context to null.
+    m_browsing_context = nullptr;
+
+    // 7. Set document's node navigable's active session history entry's document state's document to null.
+    navigable()->active_session_history_entry()->document_state->set_document(nullptr);
 
     // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
 
