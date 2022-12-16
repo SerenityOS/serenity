@@ -6,7 +6,7 @@ interface NamedNodeMap {
 
     getter Attr? item(unsigned long index);
     getter Attr? getNamedItem(DOMString qualifiedName);
-    // Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
+    Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
 
     [CEReactions] Attr? setNamedItem(Attr attr);
     // [CEReactions] Attr? setNamedItemNS(Attr attr);
