@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alexander Narsudinov <a.narsudinov@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +41,9 @@ public:
 
     // Methods defined by the spec for internal use:
     Attr* get_attribute(StringView qualified_name, size_t* item_index = nullptr);
+    Attr* get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index = nullptr);
     Attr const* get_attribute(StringView qualified_name, size_t* item_index = nullptr) const;
+    Attr const* get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index = nullptr) const;
     WebIDL::ExceptionOr<Attr const*> set_attribute(Attr& attribute);
     void replace_attribute(Attr& old_attribute, Attr& new_attribute, size_t old_attribute_index);
     void append_attribute(Attr& attribute);
