@@ -31,7 +31,6 @@ private:
 
     LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     void initialize(bool force_pio);
-    void detect_disks();
 
     // FIXME: Find a better way to get the ProgrammingInterface
     PCI::ProgrammingInterface m_prog_if;
