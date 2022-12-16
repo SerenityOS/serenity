@@ -18,12 +18,12 @@ class AsyncBlockDeviceRequest;
 
 class ISAIDEController final : public IDEController {
 public:
-    static NonnullLockRefPtr<ISAIDEController> initialize();
+    static ErrorOr<NonnullLockRefPtr<ISAIDEController>> initialize();
 
 private:
     ISAIDEController();
 
     LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
-    void initialize_channels();
+    ErrorOr<void> initialize_channels();
 };
 }
