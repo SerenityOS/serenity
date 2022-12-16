@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alexander Narsudinov <a.narsudinov@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -125,6 +126,33 @@ Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_
                 return attribute.ptr();
         }
 
+        if (item_index)
+            ++(*item_index);
+    }
+
+    return nullptr;
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
+Attr* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index)
+{
+    return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute_ns(namespace_, local_name, item_index));
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
+Attr const* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index) const
+{
+    if (item_index)
+        *item_index = 0;
+
+    // 1. If namespace is the empty string, then set it to null.
+    if (namespace_.is_empty())
+        namespace_ = {};
+
+    // 2. Return the attribute in element’s attribute list whose namespace is namespace and local name is localName, if any; otherwise null.
+    for (auto const& attribute : m_attributes) {
+        if (attribute->namespace_uri() == namespace_ && attribute->local_name() == local_name)
+            return attribute.ptr();
         if (item_index)
             ++(*item_index);
     }
