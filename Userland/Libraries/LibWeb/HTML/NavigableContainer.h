@@ -33,6 +33,8 @@ public:
 
     DOM::Document const* get_svg_document() const;
 
+    void destroy_the_child_navigable();
+
 protected:
     NavigableContainer(DOM::Document&, DOM::QualifiedName);
 
