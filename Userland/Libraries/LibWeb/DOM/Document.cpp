@@ -2316,6 +2316,45 @@ HTML::PolicyContainer Document::policy_container() const
     return m_policy_container;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#descendant-navigables
+Vector<JS::Handle<HTML::Navigable>> Document::descendant_navigables()
+{
+    // 1. Let navigables be new list.
+    Vector<JS::Handle<HTML::Navigable>> navigables;
+
+    // 2. Let navigableContainers be a list of all shadow-including descendants of document that are navigable containers, in shadow-including tree order.
+    // 3. For each navigableContainer of navigableContainers:
+    for_each_shadow_including_descendant([&](DOM::Node& node) {
+        if (is<HTML::NavigableContainer>(node)) {
+            auto& navigable_container = static_cast<HTML::NavigableContainer&>(node);
+            // 1. If navigableContainer's content navigable is null, then continue.
+            if (!navigable_container.content_navigable())
+                return IterationDecision::Continue;
+
+            // 2. Extend navigables with navigableContainer's content navigable's active document's inclusive descendant navigables.
+            navigables.extend(navigable_container.content_navigable()->active_document()->inclusive_descendant_navigables());
+        }
+        return IterationDecision::Continue;
+    });
+
+    // 4. Return navigables.
+    return navigables;
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#inclusive-descendant-navigables
+Vector<JS::Handle<HTML::Navigable>> Document::inclusive_descendant_navigables()
+{
+    // 1. Let navigables be « document's node navigable ».
+    Vector<JS::Handle<HTML::Navigable>> navigables;
+    navigables.append(*navigable());
+
+    // 2. Extend navigables with document's descendant navigables.
+    navigables.extend(descendant_navigables());
+
+    // 3. Return navigables.
+    return navigables;
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
 Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
 {
