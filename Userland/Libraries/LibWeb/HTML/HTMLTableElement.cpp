@@ -130,7 +130,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* 
     // or at the end of the table if there are no such elements.
 
     // We insert the new thead after any <caption> or <colgroup> elements
-    DOM::Node* child_to_append_after = nullptr;
+    DOM::Node* child_to_insert_before = nullptr;
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (!is<HTMLElement>(*child))
             continue;
@@ -143,11 +143,11 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* 
         }
 
         // We have found an element which is not a <caption> or <colgroup>, we'll insert before this
-        child_to_append_after = child;
+        child_to_insert_before = child;
         break;
     }
 
-    TRY(pre_insert(*thead, child_to_append_after));
+    TRY(pre_insert(*thead, child_to_insert_before));
 
     return {};
 }
@@ -162,7 +162,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
     auto thead = DOM::create_element(document(), TagNames::thead, Namespace::HTML);
 
     // We insert the new thead after any <caption> or <colgroup> elements
-    DOM::Node* child_to_append_after = nullptr;
+    DOM::Node* child_to_insert_before = nullptr;
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (!is<HTMLElement>(*child))
             continue;
@@ -175,11 +175,11 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
         }
 
         // We have found an element which is not a <caption> or <colgroup>, we'll insert before this
-        child_to_append_after = child;
+        child_to_insert_before = child;
         break;
     }
 
-    MUST(pre_insert(thead, child_to_append_after));
+    MUST(pre_insert(thead, child_to_insert_before));
 
     return static_cast<HTMLTableSectionElement&>(*thead);
 }
@@ -268,7 +268,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
     auto tbody = DOM::create_element(document(), TagNames::tbody, Namespace::HTML);
 
     // We insert the new tbody after the last <tbody> element
-    DOM::Node* child_to_append_after = nullptr;
+    DOM::Node* child_to_insert_before = nullptr;
     for (auto* child = last_child(); child; child = child->previous_sibling()) {
         if (!is<HTMLElement>(*child))
             continue;
@@ -276,13 +276,13 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
             auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
             if (table_section_element->local_name() == TagNames::tbody) {
                 // We have found an element which is a <tbody> we'll insert after this
-                child_to_append_after = child->next_sibling();
+                child_to_insert_before = child->next_sibling();
                 break;
             }
         }
     }
 
-    MUST(pre_insert(tbody, child_to_append_after));
+    MUST(pre_insert(tbody, child_to_insert_before));
 
     return static_cast<HTMLTableSectionElement&>(*tbody);
 }
