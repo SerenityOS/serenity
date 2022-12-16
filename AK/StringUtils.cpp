@@ -62,8 +62,11 @@ bool matches(StringView str, StringView mask, CaseSensitivity case_sensitivity, 
             record_span(string_ptr - string_start, 1);
             break;
         case '\\':
-            ++mask_ptr;
-            break;
+            // if backslash is last character in mask, just treat it as an exact match
+            // otherwise use it as escape for next character
+            if (mask_ptr + 1 < mask_end)
+                ++mask_ptr;
+            [[fallthrough]];
         default:
             auto p = *mask_ptr;
             auto ch = *string_ptr;
