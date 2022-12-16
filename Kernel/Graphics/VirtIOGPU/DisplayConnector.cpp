@@ -122,9 +122,9 @@ ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRec
         .height = rect.height
     };
 
-    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true);
+    TRY(m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true));
     // Flushing directly to screen
-    flush_displayed_image(dirty_rect, true);
+    TRY(flush_displayed_image(dirty_rect, true));
     return {};
 }
 
@@ -139,9 +139,9 @@ ErrorOr<void> VirtIODisplayConnector::flush_first_surface()
         .height = m_display_info.rect.height
     };
 
-    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true);
+    TRY(m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true));
     // Flushing directly to screen
-    flush_displayed_image(dirty_rect, true);
+    TRY(flush_displayed_image(dirty_rect, true));
     return {};
 }
 
@@ -241,10 +241,11 @@ void VirtIODisplayConnector::draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>
     dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
 }
 
-void VirtIODisplayConnector::flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
+ErrorOr<void> VirtIODisplayConnector::flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
 {
     VERIFY(m_graphics_adapter->operation_lock().is_locked());
-    m_graphics_adapter->flush_displayed_image({}, *this, dirty_rect, main_buffer);
+    TRY(m_graphics_adapter->flush_displayed_image({}, *this, dirty_rect, main_buffer));
+    return {};
 }
 
 void VirtIODisplayConnector::set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)

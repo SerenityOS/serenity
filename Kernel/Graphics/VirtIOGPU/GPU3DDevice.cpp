@@ -94,12 +94,12 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
         SpinlockLocker locker(m_graphics_adapter->operation_lock());
         auto user_command_buffer = static_ptr_cast<VirGLCommandBuffer const*>(arg);
         auto command_buffer = TRY(copy_typed_from_user(user_command_buffer));
-        m_graphics_adapter->submit_command_buffer(context_id, [&](Bytes buffer) {
+        TRY(m_graphics_adapter->submit_command_buffer(context_id, [&](Bytes buffer) {
             auto num_bytes = command_buffer.num_elems * sizeof(u32);
             VERIFY(num_bytes <= buffer.size());
             MUST(copy_from_user(buffer.data(), command_buffer.data, num_bytes));
             return num_bytes;
-        });
+        }));
         return {};
     }
     case VIRGL_IOCTL_CREATE_RESOURCE: {
@@ -121,10 +121,12 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
             .padding = 0,
         };
         SpinlockLocker locker(m_graphics_adapter->operation_lock());
-        auto resource_id = m_graphics_adapter->create_3d_resource(resource_spec).value();
-        m_graphics_adapter->attach_resource_to_context(resource_id, per_context_state->context_id());
-        m_graphics_adapter->ensure_backing_storage(resource_id, per_context_state->transfer_buffer_region(), 0, NUM_TRANSFER_REGION_PAGES * PAGE_SIZE);
-        spec.created_resource_id = resource_id;
+        // FIXME: What would be an appropriate resource free-ing mechanism to use in case anything
+        // after this fails?
+        auto resource_id = TRY(m_graphics_adapter->create_3d_resource(resource_spec));
+        TRY(m_graphics_adapter->attach_resource_to_context(resource_id, per_context_state->context_id()));
+        TRY(m_graphics_adapter->ensure_backing_storage(resource_id, per_context_state->transfer_buffer_region(), 0, NUM_TRANSFER_REGION_PAGES * PAGE_SIZE));
+        spec.created_resource_id = resource_id.value();
         // FIXME: We should delete the resource we just created if we fail to copy the resource id out
         return copy_to_user(static_ptr_cast<VirGL3DResourceSpec*>(arg), &spec);
     }
