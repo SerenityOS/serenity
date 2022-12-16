@@ -10,7 +10,7 @@
 
 #include <AK/Error.h>
 #include <AK/Noncopyable.h>
-#include <AK/OwnPtrWithCustomDeleter.h>
+#include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <dirent.h>
@@ -226,14 +226,18 @@ public:
 private:
     friend ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servname, struct addrinfo const& hints);
 
-    AddressInfoVector(Vector<struct addrinfo>&& addresses, struct addrinfo* ptr, AK::Function<void(struct addrinfo*)> deleter)
+    AddressInfoVector(Vector<struct addrinfo>&& addresses, struct addrinfo* ptr)
         : m_addresses(move(addresses))
-        , m_ptr(ptr, move(deleter))
+        , m_ptr(adopt_own_if_nonnull(ptr))
     {
     }
 
+    struct AddrInfoDeleter {
+        void operator()(struct addrinfo* ptr) { ::freeaddrinfo(ptr); }
+    };
+
     Vector<struct addrinfo> m_addresses {};
-    OwnPtrWithCustomDeleter<struct addrinfo> m_ptr;
+    OwnPtr<struct addrinfo, AddrInfoDeleter> m_ptr {};
 };
 
 ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servname, struct addrinfo const& hints);

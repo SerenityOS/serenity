@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/DefaultDelete.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -133,7 +134,7 @@ class LockRefPtr;
 template<typename T>
 class RefPtr;
 
-template<typename T>
+template<typename T, typename TDeleter = DefaultDelete<T>>
 class OwnPtr;
 
 template<typename T>

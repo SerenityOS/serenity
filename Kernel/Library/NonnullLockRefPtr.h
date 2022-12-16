@@ -21,8 +21,6 @@
 
 namespace AK {
 
-template<typename T>
-class OwnPtr;
 template<typename T, typename PtrTraits>
 class LockRefPtr;
 
