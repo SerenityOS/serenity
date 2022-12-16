@@ -429,7 +429,8 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
 #if ARCH(I386) || ARCH(X86_64)
         // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
         // to probe and use
-        m_controllers.append(ISAIDEController::initialize());
+        auto isa_ide_controller = MUST(ISAIDEController::initialize());
+        m_controllers.append(isa_ide_controller);
 #endif
     } else {
         enumerate_pci_controllers(force_pio, poll);
