@@ -88,6 +88,7 @@ private:
     virtual void resize_event(ResizeEvent&) override;
     virtual void did_change_font() override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual Optional<UISize> calculated_min_size() const override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
     Optional<int> glyph_at_position(Gfx::IntPoint) const;
