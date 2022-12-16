@@ -7,7 +7,7 @@ print_help() {
     NAME=$(basename "$ARG0")
     cat <<EOF
 Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
-  Supported TARGETs: aarch64, i686, x86_64, lagom. Defaults to SERENITY_ARCH, or i686 if not set.
+  Supported TARGETs: aarch64, i686, x86_64, lagom. Defaults to SERENITY_ARCH, or x86_64 if not set.
   Supported TOOLCHAINs: GNU, Clang. Defaults to SERENITY_TOOLCHAIN, or GNU if not set.
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja

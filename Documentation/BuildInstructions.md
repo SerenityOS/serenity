@@ -85,7 +85,7 @@ Run the following command to build and run SerenityOS:
 Meta/serenity.sh run
 ```
 
-This will compile all of SerenityOS and install the built files into the `Build/i686/Root` directory inside your Git
+This will compile all of SerenityOS and install the built files into the `Build/x86_64/Root` directory inside your Git
 repository. It will also build a disk image and start SerenityOS using QEMU.
 
 Note that the `anon` user is able to become `root` without a password by default, as a development convenience.
