@@ -193,6 +193,19 @@ JS::GCPtr<NavigableContainer> Navigable::container() const
     return NavigableContainer::navigable_container_with_content_navigable(const_cast<Navigable&>(*this));
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#nav-container-document
+JS::GCPtr<DOM::Document> Navigable::container_document() const
+{
+    auto container = this->container();
+
+    // 1. If navigable's container is null, then return null.
+    if (!container)
+        return nullptr;
+
+    // 2. Return navigable's container's node document.
+    return container->document();
+}
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-traversable
 JS::GCPtr<TraversableNavigable> Navigable::traversable_navigable() const
 {
