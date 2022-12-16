@@ -21,25 +21,24 @@ VirtIOGPU3DDevice::PerContextState::PerContextState(Graphics::VirtIOGPU::Context
 {
 }
 
-NonnullLockRefPtr<VirtIOGPU3DDevice> VirtIOGPU3DDevice::must_create(VirtIOGraphicsAdapter const& adapter)
+ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGraphicsAdapter& adapter)
 {
     // Setup memory transfer region
-    auto region_result = MM.allocate_kernel_region(
+    auto region_result = TRY(MM.allocate_kernel_region(
         NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
         "VIRGL3D kernel upload buffer"sv,
         Memory::Region::Access::ReadWrite,
-        AllocationStrategy::AllocateNow);
-    VERIFY(!region_result.is_error());
-    auto device = MUST(DeviceManagement::try_create_device<VirtIOGPU3DDevice>(adapter, region_result.release_value()));
-    return device;
+        AllocationStrategy::AllocateNow));
+    auto kernel_context_id = TRY(adapter.create_context());
+    return TRY(DeviceManagement::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
 }
 
-VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region)
+VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id)
     : CharacterDevice(28, 0)
     , m_graphics_adapter(graphics_adapter)
+    , m_kernel_context_id(kernel_context_id)
     , m_transfer_buffer_region(move(transfer_buffer_region))
 {
-    m_kernel_context_id = MUST(m_graphics_adapter->create_context());
 }
 
 void VirtIOGPU3DDevice::detach(OpenFileDescription& description)

@@ -40,6 +40,7 @@ NonnullLockRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::
 ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
 {
     VERIFY(m_num_scanouts <= VIRTIO_GPU_MAX_SCANOUTS);
+    TRY(initialize_3d_device());
     for (size_t index = 0; index < m_num_scanouts; index++) {
         auto display_connector = VirtIODisplayConnector::must_create(*this, index);
         m_scanouts[index].display_connector = display_connector;
@@ -450,12 +451,13 @@ void VirtIOGraphicsAdapter::delete_resource(Graphics::VirtIOGPU::ResourceID reso
     VERIFY(response.type == to_underlying(Graphics::VirtIOGPU::Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
-void VirtIOGraphicsAdapter::initialize_3d_device()
+ErrorOr<void> VirtIOGraphicsAdapter::initialize_3d_device()
 {
     if (m_has_virgl_support) {
         SpinlockLocker locker(m_operation_lock);
-        m_3d_device = VirtIOGPU3DDevice::must_create(*this);
+        m_3d_device = TRY(VirtIOGPU3DDevice::try_create(*this));
     }
+    return {};
 }
 
 ErrorOr<Graphics::VirtIOGPU::ContextID> VirtIOGraphicsAdapter::create_context()

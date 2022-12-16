@@ -95,10 +95,10 @@ class VirtIOGPU3DDevice : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<VirtIOGPU3DDevice> must_create(VirtIOGraphicsAdapter const&);
+    static ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> try_create(VirtIOGraphicsAdapter&);
 
 private:
-    VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region);
+    VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id);
 
     class PerContextState final : public AtomicRefCounted<PerContextState> {
     public:

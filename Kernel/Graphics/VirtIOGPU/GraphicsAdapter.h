@@ -40,7 +40,6 @@ public:
     static NonnullLockRefPtr<VirtIOGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
 
     virtual void initialize() override;
-    void initialize_3d_device();
 
     ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);
     void set_dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
@@ -49,6 +48,8 @@ public:
 
 private:
     ErrorOr<void> attach_physical_range_to_framebuffer(VirtIODisplayConnector& connector, bool main_buffer, size_t framebuffer_offset, size_t framebuffer_size);
+
+    ErrorOr<void> initialize_3d_device();
 
     void flush_dirty_rectangle(Graphics::VirtIOGPU::ScanoutID, Graphics::VirtIOGPU::ResourceID, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect);
     struct Scanout {
