@@ -163,6 +163,37 @@ Date:  Tue Feb 2 19:56:11 2021 +0100
 Kernel: Add a way to specify which memory regions can make syscalls
 ```
 
+### Immutable memory mappings
+
+[Immutable memory mappings](https://lwn.net/SubscriberLink/915640/53bc300d11179c62/) is
+a mitigation which originated from OpenBSD.
+In short the annotation of a particular Kernel Region as immutable implies that
+that these virtual memory mappings are locked to their last state (in regard to protection bits, etc),
+and they cannot be unmapped by a process until that process gets finalized.
+
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8585b2dc23ec206777a4cfbd558766d90fc577e7):
+
+```
+commit 8585b2dc23ec206777a4cfbd558766d90fc577e7
+Author: Liav A <liavalb@gmail.com>
+Date:   Thu Dec 15 21:08:57 2022 +0200
+
+Kernel/Memory: Add option to annotate region mapping as immutable
+
+We add this basic functionality to the Kernel so Userspace can request a
+particular virtual memory mapping to be immutable. This will be useful
+later on in the DynamicLoader code.
+
+The annotation of a particular Kernel Region as immutable implies that
+the following restrictions apply, so these features are prohibited:
+- Changing the region's protection bits
+- Unmapping the region
+- Annotating the region with other virtual memory flags
+- Applying further memory advises on the region
+- Changing the region name
+- Re-mapping the region
+```
+
 ### Post-init read-only memory
 
 [Post-init read-only memory](https://lwn.net/Articles/666550/) is
