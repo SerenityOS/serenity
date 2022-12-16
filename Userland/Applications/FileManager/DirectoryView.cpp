@@ -546,6 +546,7 @@ void DirectoryView::do_delete(bool should_confirm)
     auto paths = selected_file_paths();
     VERIFY(!paths.is_empty());
     delete_paths(paths, should_confirm, window());
+    current_view().selection().clear();
 }
 
 bool DirectoryView::can_modify_current_selection()
