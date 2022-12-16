@@ -24,6 +24,7 @@ namespace HackStudio {
 class DebugInfoWidget final : public GUI::Widget {
     C_OBJECT(DebugInfoWidget)
 public:
+    static ErrorOr<NonnullRefPtr<DebugInfoWidget>> create();
     virtual ~DebugInfoWidget() override { }
 
     void update_state(Debug::ProcessInspector&, PtraceRegisters const&);
@@ -34,7 +35,7 @@ public:
 
 private:
     explicit DebugInfoWidget();
-    void init_toolbar();
+    ErrorOr<void> init_toolbar();
 
     NonnullRefPtr<GUI::Widget> build_variables_tab();
     NonnullRefPtr<GUI::Widget> build_registers_tab();
