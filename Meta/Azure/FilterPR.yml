@@ -1,0 +1,19 @@
+jobs:
+  - job: 'Filter_PR'
+
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+    - checkout: self
+      persistCredentials: true
+      fetchDepth: 2
+
+    - script: |
+        commit_message=$(git log --skip 1 --max-count 1)
+
+        if [[ "${commit_message}" == *"[skip ci]"* ]]; then
+          echo "Skipping CI due to [skip ci] in commit message"
+          exit 1
+        fi
+      displayName: 'Skip CI'

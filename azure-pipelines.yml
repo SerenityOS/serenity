@@ -5,8 +5,16 @@ trigger:
     - master
 
 stages:
-  - stage: Lagom
+  - stage: FilterPR
     dependsOn: []
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+
+    jobs:
+      - template: Meta/Azure/FilterPR.yml
+
+  - stage: Lagom
+    dependsOn: FilterPR
+    condition: in(dependencies.FilterPR.result, 'Succeeded', 'Skipped')
 
     jobs:
       - template: Meta/Azure/Lagom.yml
@@ -24,7 +32,8 @@ stages:
           os: 'macOS'
 
   - stage: SerenityOS
-    dependsOn: []
+    dependsOn: FilterPR
+    condition: in(dependencies.FilterPR.result, 'Succeeded', 'Skipped')
 
     jobs:
       - template: Meta/Azure/Serenity.yml
