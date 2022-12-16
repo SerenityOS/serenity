@@ -272,7 +272,7 @@ MainWidget::MainWidget()
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
         if (response.is_error())
             return;
 
@@ -303,7 +303,7 @@ MainWidget::MainWidget()
             m_save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
         if (response.is_error())
             return;
 
@@ -804,7 +804,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         read_file(*response.value());

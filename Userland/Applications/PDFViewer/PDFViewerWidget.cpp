@@ -211,7 +211,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window);
         if (!response.is_error())
             open_file(*response.value());
     }));

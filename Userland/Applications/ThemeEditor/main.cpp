@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // Note: This is deferred to ensure that the window has already popped and thus proper window stealing can be performed.
         app->event_loop().deferred_invoke(
             [&window, &path, &main_widget]() {
-                auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path.value());
+                auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, path.value());
                 if (response.is_error())
                     GUI::MessageBox::show_error(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", path.value(), response.error()));
                 else {

@@ -127,14 +127,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
         if (response.is_error())
             return;
         load_file(*response.value());
     });
 
     m_import_action = GUI::Action::create("Import sheets...", [&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
         if (response.is_error())
             return;
 
@@ -147,7 +147,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), current_filename(), Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), current_filename(), Core::OpenMode::WriteOnly);
         if (response.is_error())
             return;
         save(*response.value());

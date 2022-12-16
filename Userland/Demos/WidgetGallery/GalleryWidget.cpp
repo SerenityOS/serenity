@@ -108,7 +108,7 @@ GalleryWidget::GalleryWidget()
     m_file_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_file_button->on_click = [&](auto) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
         if (response.is_error())
             return;
         m_text_editor->set_text(response.release_value()->filename());

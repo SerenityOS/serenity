@@ -23,7 +23,7 @@ Client& Client::the()
     return *s_the;
 }
 
-DeprecatedResult Client::try_request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path)
+DeprecatedResult Client::try_request_file_read_only_approved_deprecated(GUI::Window* parent_window, DeprecatedString const& path)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<DeprecatedResult>::construct() }, parent_window });
@@ -69,7 +69,7 @@ static Core::Stream::OpenMode to_stream_open_mode(Core::OpenMode open_mode)
     return result;
 }
 
-DeprecatedResult Client::try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode deprecated_mode)
+DeprecatedResult Client::try_request_file_deprecated(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode deprecated_mode)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<DeprecatedResult>::construct() }, parent_window });
@@ -96,7 +96,7 @@ DeprecatedResult Client::try_request_file(GUI::Window* parent_window, Deprecated
     return handle_promise<DeprecatedResult>(id);
 }
 
-DeprecatedResult Client::try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode deprecated_requested_access)
+DeprecatedResult Client::try_open_file_deprecated(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode deprecated_requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<DeprecatedResult>::construct() }, parent_window });

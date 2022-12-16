@@ -170,7 +170,7 @@ void PreviewWidget::drop_event(GUI::DropEvent& event)
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
 

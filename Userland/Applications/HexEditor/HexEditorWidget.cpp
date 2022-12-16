@@ -121,7 +121,7 @@ HexEditorWidget::HexEditorWidget()
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
         if (response.is_error())
             return;
 
@@ -586,7 +586,7 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         open_file(response.value());

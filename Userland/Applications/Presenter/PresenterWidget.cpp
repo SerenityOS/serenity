@@ -30,7 +30,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     // Set up the menu bar.
     auto& file_menu = window->add_menu("&File");
     auto open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(this->window());
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(this->window());
         if (response.is_error())
             return;
         this->set_file(response.value()->filename());

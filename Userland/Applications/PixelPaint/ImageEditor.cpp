@@ -710,7 +710,7 @@ void ImageEditor::save_project()
         save_project_as();
         return;
     }
-    auto response = FileSystemAccessClient::Client::the().try_request_file(window(), path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+    auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
     if (response.is_error())
         return;
     auto result = save_project_to_file(*response.value());

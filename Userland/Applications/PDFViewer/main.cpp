@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (file_path) {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, file_path);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, file_path);
         if (response.is_error())
             return 1;
         pdf_viewer_widget->open_file(*response.value());

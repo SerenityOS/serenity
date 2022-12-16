@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_separator());
 
     TRY(game_menu->try_add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().try_open_file(window);
+        auto result = FileSystemAccessClient::Client::the().try_open_file_deprecated(window);
         if (result.is_error())
             return;
 
