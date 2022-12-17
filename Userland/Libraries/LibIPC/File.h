@@ -9,6 +9,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
+#include <LibCore/Stream.h>
 #include <unistd.h>
 
 namespace IPC {
@@ -36,6 +37,12 @@ public:
     File(int fd, Tag)
         : m_fd(fd)
         , m_close_on_destruction(true)
+    {
+    }
+
+    template<typename... Args>
+    File(Core::Stream::File& file, Args... args)
+        : File(file.leak_fd(Badge<File> {}), args...)
     {
     }
 
