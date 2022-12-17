@@ -41,6 +41,15 @@ Note that you might need additional dev packages in order to build QEMU on your 
 sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libspice-server-dev
 ```
 
+#### CMake version 3.25.0 or later
+
+Serenity-specific patches were upstreamed to CMake in major version 3.25. To avoid carrying
+patches to CMake, the minimum required CMake to build Serenity is set to that version.
+If more patches are upstreamed to CMake, the minimum will be bumped again once that version releases.
+
+To accomodate distributions that do not ship bleeding-edge CMake versions, the build scripts will
+attempt to build CMake from source if the version on your path is older than 3.25.x.
+
 ### Windows
 
 If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](BuildInstructionsWindows.md)
