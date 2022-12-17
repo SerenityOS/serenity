@@ -17,6 +17,9 @@ class TraversableNavigable final : public Navigable {
     JS_CELL(TraversableNavigable, Navigable);
 
 public:
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_new_top_level_traversable(Page&, JS::GCPtr<BrowsingContext> opener, String target_name);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_fresh_top_level_traversable(Page&, AK::URL const& initial_navigation_url, Variant<Empty, String, POSTResource> = Empty {});
+
     virtual ~TraversableNavigable() override;
 
     bool is_top_level_traversable() const;
