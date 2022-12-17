@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alexander Narsudinov <a.narsudinov@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,7 +72,12 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
 
     m_notifier = Core::Notifier::construct(helper_pipe_fd, Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
-        auto line_buffer = ByteBuffer::create_zeroed(1 * KiB).release_value_but_fixme_should_propagate_errors();
+        auto line_buffer_or_error = ByteBuffer::create_zeroed(1 * KiB);
+        if (line_buffer_or_error.is_error()) {
+            did_error("Failed to allocate ByteBuffer for reading data."sv);
+            return;
+        }
+        auto line_buffer = line_buffer_or_error.release_value();
         auto line_or_error = m_helper_pipe->read_line(line_buffer.bytes());
         if (line_or_error.is_error() || line_or_error.value().is_empty()) {
             did_error("Read from pipe returned null."sv);
