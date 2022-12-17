@@ -45,6 +45,8 @@ public:
     void clear_the_forward_session_history();
     void traverse_the_history_by_delta(int delta);
 
+    void destroy_top_level_traversable();
+
 private:
     TraversableNavigable();
 
