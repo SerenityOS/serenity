@@ -38,10 +38,10 @@ class MainWidget : public GUI::Widget {
 public:
     virtual ~MainWidget() {};
 
-    void initialize_menubar(GUI::Window&);
+    ErrorOr<void> initialize_menubar(GUI::Window&);
 
     void open_image(Core::File&);
-    void create_default_image();
+    ErrorOr<void> create_default_image();
 
     bool request_close();
 
@@ -50,7 +50,7 @@ private:
 
     ImageEditor* current_image_editor();
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
-    void create_image_from_clipboard();
+    ErrorOr<void> create_image_from_clipboard();
 
     void image_editor_did_update_undo_stack();
 

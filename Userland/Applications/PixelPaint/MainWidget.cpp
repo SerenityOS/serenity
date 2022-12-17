@@ -145,7 +145,7 @@ static constexpr int s_zoom_level_fit_height = 9;
 static constexpr int s_zoom_level_fit_image = 10;
 // Note: Update these together! ^
 
-void MainWidget::initialize_menubar(GUI::Window& window)
+ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
 
@@ -153,8 +153,18 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
-                auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
+                auto image_result = PixelPaint::Image::try_create_with_size(dialog->image_size());
+                if (image_result.is_error()) {
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image with size {}, error: {}", dialog->image_size(), image_result.error()));
+                    return;
+                }
+                auto image = image_result.release_value();
+                auto bg_layer_result = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background");
+                if (bg_layer_result.is_error()) {
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer with size {}, error: {}", image->size(), bg_layer_result.error()));
+                    return;
+                }
+                auto bg_layer = bg_layer_result.release_value();
                 image->add_layer(*bg_layer);
                 auto background_color = dialog->background_color();
                 if (background_color != Gfx::Color::Transparent)
@@ -174,7 +184,10 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_new_image_from_clipboard_action = GUI::Action::create(
         "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, g_icon_bag.new_clipboard, [&](auto&) {
-            create_image_from_clipboard();
+            auto result = create_image_from_clipboard();
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image from clipboard: {}", result.error()));
+            }
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
@@ -314,7 +327,10 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         auto* editor = current_image_editor();
         if (!editor) {
-            create_image_from_clipboard();
+            auto result = create_image_from_clipboard();
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image from clipboard: {}", result.error()));
+            }
             return;
         }
 
@@ -322,7 +338,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (!bitmap)
             return;
 
-        auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
+        auto layer_result = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer");
+        if (layer_result.is_error()) {
+            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Could not create bitmap when pasting: {}", layer_result.error()));
+            return;
+        }
+        auto layer = layer_result.release_value();
         editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
         editor->image().selection().clear();
@@ -556,7 +577,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_image_menu->add_separator();
 
-    m_image_menu->add_action(GUI::Action::create("Rotate Image &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(),
+    m_image_menu->add_action(GUI::Action::create("Rotate Image &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv)),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -564,7 +585,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Rotate Image Counterclockwise"sv);
         }));
 
-    m_image_menu->add_action(GUI::Action::create("Rotate Image Clock&wise", { Mod_Ctrl | Mod_Shift, Key_GreaterThan }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv).release_value_but_fixme_should_propagate_errors(),
+    m_image_menu->add_action(GUI::Action::create("Rotate Image Clock&wise", { Mod_Ctrl | Mod_Shift, Key_GreaterThan }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv)),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -750,7 +771,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto& next_active_layer = editor->image().layer(active_layer_index > 0 ? active_layer_index - 1 : 0);
                 editor->set_active_layer(&next_active_layer);
             } else {
-                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background").release_value_but_fixme_should_propagate_errors();
+                auto layer_result = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background");
+                if (layer_result.is_error()) {
+                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer with size {}, error: {}", editor->image().size(), layer_result.error()));
+                    return;
+                }
+                auto layer = layer_result.release_value();
                 editor->image().add_layer(move(layer));
                 editor->layers_did_change();
                 m_layer_list_widget->select_top_layer();
@@ -822,7 +848,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_layer_menu->add_separator();
 
-    m_layer_menu->add_action(GUI::Action::create("Rotate Layer &Counterclockwise", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(),
+    m_layer_menu->add_action(GUI::Action::create("Rotate Layer &Counterclockwise", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv)),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -833,7 +859,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Rotate Layer Counterclockwise"sv);
         }));
 
-    m_layer_menu->add_action(GUI::Action::create("Rotate Layer Clock&wise", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv).release_value_but_fixme_should_propagate_errors(),
+    m_layer_menu->add_action(GUI::Action::create("Rotate Layer Clock&wise", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv)),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -967,6 +993,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     toolbar.add_separator();
     toolbar.add_action(*m_levels_dialog_action);
+
+    return {};
 }
 
 void MainWidget::set_actions_enabled(bool enabled)
@@ -1006,11 +1034,11 @@ void MainWidget::open_image(Core::File& file)
     m_layer_list_widget->set_image(&image);
 }
 
-void MainWidget::create_default_image()
+ErrorOr<void> MainWidget::create_default_image()
 {
-    auto image = Image::try_create_with_size({ 510, 356 }).release_value_but_fixme_should_propagate_errors();
+    auto image = TRY(Image::try_create_with_size({ 510, 356 }));
 
-    auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
+    auto bg_layer = TRY(Layer::try_create_with_size(*image, image->size(), "Background"));
     image->add_layer(*bg_layer);
     bg_layer->content_bitmap().fill(Color::Transparent);
 
@@ -1020,18 +1048,19 @@ void MainWidget::create_default_image()
     editor.set_title("Untitled");
     editor.set_active_layer(bg_layer);
     editor.set_unmodified();
+
+    return {};
 }
 
-void MainWidget::create_image_from_clipboard()
+ErrorOr<void> MainWidget::create_image_from_clipboard()
 {
     auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
     if (!bitmap) {
-        GUI::MessageBox::show(window(), "There is no image in a clipboard to paste."sv, "PixelPaint"sv, GUI::MessageBox::Type::Warning);
-        return;
+        return Error::from_string_view("There is no image in a clipboard to paste."sv);
     }
 
-    auto image = PixelPaint::Image::try_create_with_size(bitmap->size()).release_value_but_fixme_should_propagate_errors();
-    auto layer = PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
+    auto image = TRY(PixelPaint::Image::try_create_with_size(bitmap->size()));
+    auto layer = TRY(PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer"));
     image->add_layer(*layer);
 
     auto& editor = create_new_editor(*image);
@@ -1039,6 +1068,7 @@ void MainWidget::create_image_from_clipboard()
 
     m_layer_list_widget->set_image(image);
     m_layer_list_widget->set_selected_layer(layer);
+    return {};
 }
 
 bool MainWidget::request_close()
