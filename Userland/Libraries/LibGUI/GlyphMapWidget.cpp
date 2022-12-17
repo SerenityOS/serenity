@@ -276,6 +276,12 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         m_selection.set_start(m_active_glyph);
     }
 
+    if (event.shift() && event.is_arrow_key()) {
+        auto resizing_end = m_selection.start() + m_selection.size() - (m_selection.size() > 0 ? 1 : 0);
+        set_active_glyph(resizing_end, ShouldResetSelection::No);
+        scroll_to_glyph(resizing_end);
+    }
+
     int first_glyph = m_active_range.first;
     int last_glyph = m_active_range.last;
     auto selection = m_selection.normalized();
