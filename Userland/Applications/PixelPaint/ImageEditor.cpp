@@ -733,26 +733,26 @@ void ImageEditor::save_project_as()
     set_unmodified();
 }
 
-Result<void, DeprecatedString> ImageEditor::save_project_to_file(Core::File& file) const
+ErrorOr<void> ImageEditor::save_project_to_file(Core::File& file) const
 {
     StringBuilder builder;
-    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
-    m_image->serialize_as_json(json);
-    auto json_guides = MUST(json.add_array("guides"sv));
+    auto json = TRY(JsonObjectSerializer<>::try_create(builder));
+    TRY(m_image->serialize_as_json(json));
+    auto json_guides = TRY(json.add_array("guides"sv));
     for (auto const& guide : m_guides) {
-        auto json_guide = MUST(json_guides.add_object());
-        MUST(json_guide.add("offset"sv, (double)guide.offset()));
+        auto json_guide = TRY(json_guides.add_object());
+        TRY(json_guide.add("offset"sv, (double)guide.offset()));
         if (guide.orientation() == Guide::Orientation::Vertical)
-            MUST(json_guide.add("orientation"sv, "vertical"));
+            TRY(json_guide.add("orientation"sv, "vertical"));
         else if (guide.orientation() == Guide::Orientation::Horizontal)
-            MUST(json_guide.add("orientation"sv, "horizontal"));
-        MUST(json_guide.finish());
+            TRY(json_guide.add("orientation"sv, "horizontal"));
+        TRY(json_guide.finish());
     }
-    MUST(json_guides.finish());
-    MUST(json.finish());
+    TRY(json_guides.finish());
+    TRY(json.finish());
 
     if (!file.write(builder.string_view()))
-        return DeprecatedString { file.error_string() };
+        return Error::from_errno(file.error());
     return {};
 }
 

@@ -121,31 +121,32 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
     return image;
 }
 
-void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
+ErrorOr<void> Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
 {
-    MUST(json.add("width"sv, m_size.width()));
-    MUST(json.add("height"sv, m_size.height()));
+    TRY(json.add("width"sv, m_size.width()));
+    TRY(json.add("height"sv, m_size.height()));
     {
-        auto json_layers = MUST(json.add_array("layers"sv));
+        auto json_layers = TRY(json.add_array("layers"sv));
         for (auto const& layer : m_layers) {
             Gfx::BMPWriter bmp_writer;
-            auto json_layer = MUST(json_layers.add_object());
-            MUST(json_layer.add("width"sv, layer.size().width()));
-            MUST(json_layer.add("height"sv, layer.size().height()));
-            MUST(json_layer.add("name"sv, layer.name()));
-            MUST(json_layer.add("locationx"sv, layer.location().x()));
-            MUST(json_layer.add("locationy"sv, layer.location().y()));
-            MUST(json_layer.add("opacity_percent"sv, layer.opacity_percent()));
-            MUST(json_layer.add("visible"sv, layer.is_visible()));
-            MUST(json_layer.add("selected"sv, layer.is_selected()));
-            MUST(json_layer.add("bitmap"sv, encode_base64(bmp_writer.dump(layer.content_bitmap()))));
+            auto json_layer = TRY(json_layers.add_object());
+            TRY(json_layer.add("width"sv, layer.size().width()));
+            TRY(json_layer.add("height"sv, layer.size().height()));
+            TRY(json_layer.add("name"sv, layer.name()));
+            TRY(json_layer.add("locationx"sv, layer.location().x()));
+            TRY(json_layer.add("locationy"sv, layer.location().y()));
+            TRY(json_layer.add("opacity_percent"sv, layer.opacity_percent()));
+            TRY(json_layer.add("visible"sv, layer.is_visible()));
+            TRY(json_layer.add("selected"sv, layer.is_selected()));
+            TRY(json_layer.add("bitmap"sv, encode_base64(bmp_writer.dump(layer.content_bitmap()))));
             if (layer.is_masked())
-                MUST(json_layer.add("mask"sv, encode_base64(bmp_writer.dump(*layer.mask_bitmap()))));
-            MUST(json_layer.finish());
+                TRY(json_layer.add("mask"sv, encode_base64(bmp_writer.dump(*layer.mask_bitmap()))));
+            TRY(json_layer.finish());
         }
 
-        MUST(json_layers.finish());
+        TRY(json_layers.finish());
     }
+    return {};
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
