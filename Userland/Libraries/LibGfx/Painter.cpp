@@ -1832,7 +1832,7 @@ void Painter::set_pixel(IntPoint p, Color color, bool blend)
     if (!clip_rect().contains(point / scale()))
         return;
     auto& dst = m_target->scanline(point.y())[point.x()];
-    if (!blend)
+    if (!blend || color.alpha() == 255)
         dst = color.value();
     else if (color.alpha())
         dst = Color::from_argb(dst).blend(color).value();
