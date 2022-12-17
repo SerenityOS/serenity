@@ -23,6 +23,8 @@ public:
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 
+    static PDF::Destination const& get_destination(GUI::ModelIndex const&);
+
 private:
     OutlineModel(NonnullRefPtr<PDF::OutlineDict> const& outline);
 

@@ -10,6 +10,7 @@
 #include <LibGUI/ModelRole.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/TextAlignment.h>
+#include <LibPDF/Document.h>
 
 enum Columns {
     Page,
@@ -58,6 +59,12 @@ int OutlineModel::tree_column() const
 int OutlineModel::column_count(const GUI::ModelIndex&) const
 {
     return Columns::_Count;
+}
+
+PDF::Destination const& OutlineModel::get_destination(GUI::ModelIndex const& index)
+{
+    auto* outline_item = static_cast<PDF::OutlineItem*>(index.internal_data());
+    return outline_item->dest;
 }
 
 GUI::Variant OutlineModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
