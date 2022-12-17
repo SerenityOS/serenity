@@ -798,12 +798,25 @@ ErrorOr<void> VirtualFileSystem::unlink(Credentials const& credentials, StringVi
 
 ErrorOr<void> VirtualFileSystem::symlink(Credentials const& credentials, StringView target, StringView linkpath, Custody& base)
 {
+    // NOTE: Check that the actual target (if it exists right now) is unveiled and prevent creating symlinks on veiled paths!
+    if (auto target_custody_or_error = resolve_path_without_veil(credentials, target, base, nullptr, O_RDWR, 0); !target_custody_or_error.is_error()) {
+        auto target_custody = target_custody_or_error.release_value();
+        TRY(validate_path_against_process_veil(*target_custody, O_RDWR));
+    }
+
     RefPtr<Custody> parent_custody;
-    auto existing_custody_or_error = resolve_path(credentials, linkpath, base, &parent_custody);
+    auto existing_custody_or_error = resolve_path(credentials, linkpath, base, &parent_custody, O_RDWR);
     if (!existing_custody_or_error.is_error())
         return EEXIST;
     if (!parent_custody)
         return ENOENT;
+
+    // NOTE: VERY IMPORTANT! We prevent creating symlinks in case the program didn't unveil the parent_custody
+    // path! For example, say the program wanted to create a symlink in /tmp/symlink to /tmp/test/pointee_symlink
+    // and unveiled the /tmp/test/ directory path beforehand, but not the /tmp directory path - the symlink syscall will
+    // fail here because we can't create the symlink in a parent directory path we didn't unveil beforehand.
+    TRY(validate_path_against_process_veil(*parent_custody, O_RDWR));
+
     if (existing_custody_or_error.is_error() && existing_custody_or_error.error().code() != ENOENT)
         return existing_custody_or_error.release_error();
     auto& parent_inode = parent_custody->inode();
