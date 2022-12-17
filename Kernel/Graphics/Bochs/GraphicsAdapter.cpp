@@ -22,17 +22,25 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> BochsGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     PCI::HardwareID id = pci_device_identifier.hardware_id();
-    VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
-    auto adapter = adopt_lock_ref(*new BochsGraphicsAdapter(pci_device_identifier));
+    if (id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111)
+        return true;
+    if (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef)
+        return true;
+    return false;
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> BochsGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BochsGraphicsAdapter(pci_device_identifier.address())));
     MUST(adapter->initialize_adapter(pci_device_identifier));
     return adapter;
 }
 
-UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
-    : PCI::Device(pci_device_identifier.address())
+UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address const& address)
+    : PCI::Device(address)
 {
 }
 

@@ -37,7 +37,8 @@ class VirtIOGraphicsAdapter final
     friend class VirtIOGPU3DDevice;
 
 public:
-    static NonnullLockRefPtr<VirtIOGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
 
     virtual void initialize() override;
 

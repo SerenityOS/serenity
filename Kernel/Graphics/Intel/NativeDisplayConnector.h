@@ -81,7 +81,7 @@ class IntelNativeDisplayConnector final
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
+    static ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> try_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
 
 private:
     // ^DisplayConnector
