@@ -690,10 +690,6 @@ public:
         if (buffer.is_empty())
             return Error::from_errno(ENOBUFS);
 
-        // We fill the buffer through can_read_line.
-        if (!TRY(can_read_line()))
-            return Bytes {};
-
         auto const candidate = TRY(find_and_populate_until_any_of(candidates, buffer.size()));
 
         if (stream().is_eof()) {
