@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/CircularBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
@@ -594,7 +595,7 @@ class BufferedHelper {
 
 public:
     template<StreamLike U>
-    BufferedHelper(Badge<U>, NonnullOwnPtr<T> stream, ByteBuffer buffer)
+    BufferedHelper(Badge<U>, NonnullOwnPtr<T> stream, CircularBuffer buffer)
         : m_stream(move(stream))
         , m_buffer(move(buffer))
     {
@@ -603,7 +604,6 @@ public:
     BufferedHelper(BufferedHelper&& other)
         : m_stream(move(other.m_stream))
         , m_buffer(move(other.m_buffer))
-        , m_buffered_size(exchange(other.m_buffered_size, 0))
     {
     }
 
@@ -611,7 +611,6 @@ public:
     {
         m_stream = move(other.m_stream);
         m_buffer = move(other.m_buffer);
-        m_buffered_size = exchange(other.m_buffered_size, 0);
         return *this;
     }
 
@@ -623,7 +622,7 @@ public:
         if (!stream->is_open())
             return Error::from_errno(ENOTCONN);
 
-        auto buffer = TRY(ByteBuffer::create_uninitialized(buffer_size));
+        auto buffer = TRY(CircularBuffer::create_empty(buffer_size));
 
         return adopt_nonnull_own_or_enomem(new BufferedType<T>(move(stream), move(buffer)));
     }
@@ -639,28 +638,11 @@ public:
             return Error::from_errno(ENOBUFS);
 
         // Fill the internal buffer if it has run dry.
-        if (m_buffered_size == 0)
+        if (m_buffer.used_space() == 0)
             TRY(populate_read_buffer());
 
         // Let's try to take all we can from the buffer first.
-        size_t buffer_nread = 0;
-        if (m_buffered_size > 0) {
-            // FIXME: Use a circular buffer to avoid shifting the buffer
-            //        contents.
-            size_t amount_to_take = min(buffer.size(), m_buffered_size);
-            auto slice_to_take = m_buffer.span().slice(0, amount_to_take);
-            auto slice_to_shift = m_buffer.span().slice(amount_to_take);
-
-            slice_to_take.copy_to(buffer);
-            buffer_nread += amount_to_take;
-
-            if (amount_to_take < m_buffered_size) {
-                m_buffer.overwrite(0, slice_to_shift.data(), m_buffered_size - amount_to_take);
-            }
-            m_buffered_size -= amount_to_take;
-        }
-
-        return Bytes { buffer.data(), buffer_nread };
+        return m_buffer.read(buffer);
     }
 
     // Reads into the buffer until \n is encountered.
@@ -690,7 +672,7 @@ public:
             return Bytes {};
 
         if (stream().is_eof()) {
-            if (buffer.size() < m_buffered_size) {
+            if (buffer.size() < m_buffer.used_space()) {
                 // Normally, reading from an EOFed stream and receiving bytes
                 // would mean that the stream is no longer EOF. However, it's
                 // possible with a buffered stream that the user is able to read
@@ -705,7 +687,7 @@ public:
             }
         }
 
-        auto readable_size = min(m_buffered_size, buffer.size());
+        auto const readable_size = min(m_buffer.used_space(), buffer.size());
 
         // The intention here is to try to match all of the possible
         // delimiter candidates and try to find the longest one we can
@@ -714,7 +696,7 @@ public:
         Optional<size_t> longest_match;
         size_t match_size = 0;
         for (auto& candidate : candidates) {
-            auto result = AK::memmem_optional(m_buffer.data(), readable_size, candidate.bytes().data(), candidate.bytes().size());
+            auto const result = m_buffer.offset_of(candidate, readable_size);
             if (result.has_value()) {
                 auto previous_match = longest_match.value_or(*result);
                 if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {
@@ -724,57 +706,44 @@ public:
             }
         }
         if (longest_match.has_value()) {
-            auto size_written_to_user_buffer = *longest_match;
-            auto buffer_to_take = m_buffer.span().slice(0, size_written_to_user_buffer);
-            auto buffer_to_shift = m_buffer.span().slice(size_written_to_user_buffer + match_size);
-
-            buffer_to_take.copy_to(buffer);
-            m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
-
-            m_buffered_size -= size_written_to_user_buffer + match_size;
-
-            return buffer.slice(0, size_written_to_user_buffer);
+            auto const read_bytes = m_buffer.read(buffer.trim(*longest_match));
+            TRY(m_buffer.discard(match_size));
+            return read_bytes;
         }
 
         // If we still haven't found anything, then it's most likely the case
         // that the delimiter ends beyond the length of the caller-passed
         // buffer. Let's just fill the caller's buffer up.
-        auto buffer_to_take = m_buffer.span().slice(0, readable_size);
-        auto buffer_to_shift = m_buffer.span().slice(readable_size);
-
-        buffer_to_take.copy_to(buffer);
-        m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
-
-        m_buffered_size -= readable_size;
-
-        return buffer.slice(0, readable_size);
+        return m_buffer.read(buffer);
     }
 
     // Returns whether a line can be read, populating the buffer in the process.
     ErrorOr<bool> can_read_line()
     {
-        if (stream().is_eof() && m_buffered_size > 0)
+        if (stream().is_eof() && m_buffer.used_space() > 0)
             return true;
 
-        if (m_buffer.span().slice(0, m_buffered_size).contains_slow('\n'))
+        if (m_buffer.offset_of("\n"sv).has_value())
             return true;
 
         if (stream().is_eof())
             return false;
 
-        while (m_buffered_size < m_buffer.size()) {
-            auto populated_slice = TRY(populate_read_buffer());
+        while (m_buffer.empty_space() > 0) {
+            auto populated_byte_count = TRY(populate_read_buffer());
 
             if (stream().is_eof()) {
                 // We give the user one last hurrah to read the remaining
                 // contents as a "line".
-                return m_buffered_size > 0;
+                return m_buffer.used_space() > 0;
             }
 
-            if (populated_slice.contains_slow('\n'))
+            // FIXME: This currently searches through the buffer from the start,
+            //        even if we just appended a small number of bytes at the end.
+            if (m_buffer.offset_of("\n"sv).has_value())
                 return true;
 
-            if (populated_slice.is_empty())
+            if (populated_byte_count == 0)
                 break;
         }
 
@@ -783,7 +752,7 @@ public:
 
     bool is_eof() const
     {
-        if (m_buffered_size > 0) {
+        if (m_buffer.used_space() > 0) {
             return false;
         }
 
@@ -792,26 +761,28 @@ public:
 
     size_t buffer_size() const
     {
-        return m_buffer.size();
+        return m_buffer.capacity();
     }
 
     size_t buffered_data_size() const
     {
-        return m_buffered_size;
+        return m_buffer.used_space();
     }
 
     void clear_buffer()
     {
-        m_buffered_size = 0;
+        m_buffer.clear();
     }
 
 private:
-    ErrorOr<ReadonlyBytes> populate_read_buffer()
+    ErrorOr<size_t> populate_read_buffer()
     {
-        if (m_buffered_size == m_buffer.size())
-            return ReadonlyBytes {};
+        if (m_buffer.empty_space() == 0)
+            return 0;
 
-        auto fillable_slice = m_buffer.span().slice(m_buffered_size);
+        // TODO: Figure out if we can do direct writes in a comfortable way.
+        Array<u8, 1024> temporary_buffer;
+        auto const fillable_slice = temporary_buffer.span().trim(min(temporary_buffer.size(), m_buffer.empty_space()));
         size_t nread = 0;
         do {
             auto result = stream().read(fillable_slice);
@@ -824,24 +795,16 @@ private:
                     break;
                 return result.error();
             }
-            auto read_size = result.value().size();
-            m_buffered_size += read_size;
-            nread += read_size;
+            auto const filled_slice = result.value();
+            VERIFY(m_buffer.write(filled_slice) == filled_slice.size());
+            nread += filled_slice.size();
             break;
         } while (true);
-        return fillable_slice.slice(0, nread);
+        return nread;
     }
 
     NonnullOwnPtr<T> m_stream;
-    // FIXME: Replacing this with a circular buffer would be really nice and
-    //        would avoid excessive copies; however, right now
-    //        AK::CircularDuplexBuffer inlines its entire contents, and that
-    //        would make for a very large object on the stack.
-    //
-    //        The proper fix is to make a CircularQueue which uses a buffer on
-    //        the heap.
-    ByteBuffer m_buffer;
-    size_t m_buffered_size { 0 };
+    CircularBuffer m_buffer;
 };
 
 // NOTE: A Buffered which accepts any Stream could be added here, but it is not
@@ -887,8 +850,8 @@ public:
     virtual ~BufferedSeekable() override = default;
 
 private:
-    BufferedSeekable(NonnullOwnPtr<T> stream, ByteBuffer buffer)
-        : m_helper(Badge<BufferedSeekable<T>> {}, move(stream), buffer)
+    BufferedSeekable(NonnullOwnPtr<T> stream, CircularBuffer buffer)
+        : m_helper(Badge<BufferedSeekable<T>> {}, move(stream), move(buffer))
     {
     }
 
@@ -954,8 +917,8 @@ public:
     virtual ~BufferedSocket() override = default;
 
 private:
-    BufferedSocket(NonnullOwnPtr<T> stream, ByteBuffer buffer)
-        : m_helper(Badge<BufferedSocket<T>> {}, move(stream), buffer)
+    BufferedSocket(NonnullOwnPtr<T> stream, CircularBuffer buffer)
+        : m_helper(Badge<BufferedSocket<T>> {}, move(stream), move(buffer))
     {
         setup_notifier();
     }
