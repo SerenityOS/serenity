@@ -1,12 +1,12 @@
 #include <AK/URL.h>
-#include <LibCore/IODevice.h>
+#include <LibCore/Stream.h>
 
 endpoint FileSystemAccessServer
 {
     request_file_read_only_approved(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString path) =|
-    request_file(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString path, Core::OpenMode requested_access) =|
-    prompt_open_file(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString window_title, DeprecatedString path_to_view, Core::OpenMode requested_access) =|
-    prompt_save_file(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString title, DeprecatedString ext, DeprecatedString path_to_view, Core::OpenMode requested_access) =|
+    request_file(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString path, Core::Stream::OpenMode requested_access) =|
+    prompt_open_file(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString window_title, DeprecatedString path_to_view, Core::Stream::OpenMode requested_access) =|
+    prompt_save_file(i32 request_id, i32 window_server_client_id, i32 window_id, DeprecatedString title, DeprecatedString ext, DeprecatedString path_to_view, Core::Stream::OpenMode requested_access) =|
 
     expose_window_server_client_id() => (i32 client_id)
 }

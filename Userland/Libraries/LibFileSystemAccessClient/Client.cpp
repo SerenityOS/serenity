@@ -48,7 +48,28 @@ DeprecatedResult Client::try_request_file_read_only_approved(GUI::Window* parent
     return handle_promise<DeprecatedResult>(id);
 }
 
-DeprecatedResult Client::try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode mode)
+static Core::Stream::OpenMode to_stream_open_mode(Core::OpenMode open_mode)
+{
+    Core::Stream::OpenMode result {};
+    if ((open_mode & Core::OpenMode::ReadOnly) == Core::OpenMode::ReadOnly)
+        result |= Core::Stream::OpenMode::Read;
+    if ((open_mode & Core::OpenMode::WriteOnly) == Core::OpenMode::WriteOnly)
+        result |= Core::Stream::OpenMode::Write;
+    if ((open_mode & Core::OpenMode::ReadWrite) == Core::OpenMode::ReadWrite)
+        result |= Core::Stream::OpenMode::ReadWrite;
+    if ((open_mode & Core::OpenMode::Append) == Core::OpenMode::Append)
+        result |= Core::Stream::OpenMode::Append;
+    if ((open_mode & Core::OpenMode::Truncate) == Core::OpenMode::Truncate)
+        result |= Core::Stream::OpenMode::Truncate;
+    if ((open_mode & Core::OpenMode::MustBeNew) == Core::OpenMode::MustBeNew)
+        result |= Core::Stream::OpenMode::MustBeNew;
+    if ((open_mode & Core::OpenMode::KeepOnExec) == Core::OpenMode::KeepOnExec)
+        result |= Core::Stream::OpenMode::KeepOnExec;
+
+    return result;
+}
+
+DeprecatedResult Client::try_request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::OpenMode deprecated_mode)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<DeprecatedResult>::construct() }, parent_window });
@@ -62,6 +83,8 @@ DeprecatedResult Client::try_request_file(GUI::Window* parent_window, Deprecated
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
+
+    auto const mode = to_stream_open_mode(deprecated_mode);
 
     if (path.starts_with('/')) {
         async_request_file(id, parent_window_server_client_id, parent_window_id, path, mode);
@@ -73,7 +96,7 @@ DeprecatedResult Client::try_request_file(GUI::Window* parent_window, Deprecated
     return handle_promise<DeprecatedResult>(id);
 }
 
-DeprecatedResult Client::try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode requested_access)
+DeprecatedResult Client::try_open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::OpenMode deprecated_requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<DeprecatedResult>::construct() }, parent_window });
@@ -87,13 +110,15 @@ DeprecatedResult Client::try_open_file(GUI::Window* parent_window, DeprecatedStr
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
+
+    auto const requested_access = to_stream_open_mode(deprecated_requested_access);
 
     async_prompt_open_file(id, parent_window_server_client_id, parent_window_id, window_title, path, requested_access);
 
     return handle_promise<DeprecatedResult>(id);
 }
 
-DeprecatedResult Client::try_save_file_deprecated(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode requested_access)
+DeprecatedResult Client::try_save_file_deprecated(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::OpenMode deprecated_requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<DeprecatedResult>::construct() }, parent_window });
@@ -107,6 +132,8 @@ DeprecatedResult Client::try_save_file_deprecated(GUI::Window* parent_window, De
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
+
+    auto const requested_access = to_stream_open_mode(deprecated_requested_access);
 
     async_prompt_save_file(id, parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), requested_access);
 
@@ -128,10 +155,7 @@ Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& nam
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    // The endpoint only cares about ReadOnly, WriteOnly and ReadWrite and both enum shares the same layout for these.
-    Core::OpenMode deprecated_requested_access = static_cast<Core::OpenMode>(requested_access);
-
-    async_prompt_save_file(id, parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), deprecated_requested_access);
+    async_prompt_save_file(id, parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), requested_access);
 
     return handle_promise<Result>(id);
 }
