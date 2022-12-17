@@ -811,7 +811,7 @@ void MainWidget::undo()
     deferred_invoke([this, glyph] {
         auto start = m_undo_selection->restored_start();
         auto size = m_undo_selection->restored_size();
-        m_glyph_map_widget->set_selection(start, size, glyph);
+        m_glyph_map_widget->restore_selection(start, size, glyph);
         m_glyph_map_widget->scroll_to_glyph(glyph);
         m_glyph_map_widget->set_focus(true);
     });
@@ -841,7 +841,7 @@ void MainWidget::redo()
     deferred_invoke([this, glyph] {
         auto start = m_undo_selection->restored_start();
         auto size = m_undo_selection->restored_size();
-        m_glyph_map_widget->set_selection(start, size, glyph);
+        m_glyph_map_widget->restore_selection(start, size, glyph);
         m_glyph_map_widget->scroll_to_glyph(glyph);
         m_glyph_map_widget->set_focus(true);
     });
