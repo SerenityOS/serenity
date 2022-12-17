@@ -7,16 +7,17 @@
 #include "OutlineModel.h"
 #include <LibGfx/Font/FontDatabase.h>
 
-NonnullRefPtr<OutlineModel> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict> const& outline)
+ErrorOr<NonnullRefPtr<OutlineModel>> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict> const& outline)
 {
-    return adopt_ref(*new OutlineModel(outline));
+    auto outline_model = adopt_ref(*new OutlineModel(outline));
+    outline_model->m_closed_item_icon.set_bitmap_for_size(16, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png"sv)));
+    outline_model->m_open_item_icon.set_bitmap_for_size(16, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"sv)));
+    return outline_model;
 }
 
 OutlineModel::OutlineModel(NonnullRefPtr<PDF::OutlineDict> const& outline)
     : m_outline(outline)
 {
-    m_closed_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_open_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
 }
 
 void OutlineModel::set_index_open_state(const GUI::ModelIndex& index, bool is_open)

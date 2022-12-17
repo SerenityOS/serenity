@@ -376,11 +376,11 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(Core::File& file)
 
     if (document->outline()) {
         auto outline = document->outline();
-        m_sidebar->set_outline(outline.release_nonnull());
+        TRY(m_sidebar->set_outline(outline.release_nonnull()));
         m_sidebar->set_visible(true);
         m_sidebar_open = true;
     } else {
-        m_sidebar->set_outline({});
+        TRY(m_sidebar->set_outline({}));
         m_sidebar->set_visible(false);
         m_sidebar_open = false;
     }
