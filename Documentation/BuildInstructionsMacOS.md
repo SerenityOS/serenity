@@ -13,7 +13,7 @@ Make sure you also have all the following dependencies installed:
 
 ```console
 # core
-brew install coreutils e2fsprogs qemu bash gcc@12 imagemagick ninja cmake ccache rsync zstd
+brew install coreutils e2fsprogs qemu bash imagemagick ninja cmake ccache rsync zstd
 
 # (option 1) fuse + ext2
 brew install m4 autoconf automake libtool
@@ -24,14 +24,22 @@ Toolchain/BuildFuseExt2.sh
 brew install genext2fs
 ```
 
+If you have Xcode version 13 or older, also install a newer host compiler from homebrew. Xcode 14 is known to work.
+
+```console
+brew install llvm@15
+# OR
+brew install gcc@12
+```
+
+# Notes
+
 If you're building on M1 Mac and have Homebrew installed in both Rosetta and native environments,
 you have to make sure that required packages are installed only in one of the environments. Otherwise,
 these installations can conflict during the build process, which is manifested in hard to diagnose issues.
 Building on M1 natively without Rosetta is recommended, as the build process should be faster without Rosetta
 overhead.
 
-Notes:
+Installing macfuse for the first time requires enabling its system extension in System Preferences and then restarting your machine. The output from installing macfuse with brew says this, but it's easy to miss.
 
-- Installing macfuse for the first time requires enabling its system extension in System Preferences and then restarting
-  your machine. The output from installing macfuse with brew says this, but it's easy to miss.
-- It's important to make sure that Xcode is not only installed but also accordingly updated, otherwise CMake will run into incompatibilities with GCC.
+It's important to make sure that Xcode is not only installed but also accordingly updated, otherwise CMake will run into incompatibilities with GCC.
