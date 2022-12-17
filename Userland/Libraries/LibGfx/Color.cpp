@@ -330,7 +330,7 @@ Color Color::mixed_with(Color other, float weight) const
     // This is needed for linear-gradient()s in LibWeb.
     auto mixed_alpha = mix<float>(alpha(), other.alpha(), weight);
     auto premultiplied_mix_channel = [&](float channel, float other_channel, float weight) {
-        return round_to<u8>(mix<float>(channel * (alpha() / 255.0f), other_channel * (other.alpha() / 255.0f), weight) / (mixed_alpha / 255.0f));
+        return round_to<u8>(mix<float>(channel * alpha(), other_channel * other.alpha(), weight) / mixed_alpha);
     };
     return Gfx::Color {
         premultiplied_mix_channel(red(), other.red(), weight),
