@@ -22,6 +22,8 @@ SidebarWidget::SidebarWidget()
 
     m_outline_tree_view = outline_container.add<GUI::TreeView>();
     m_outline_tree_view->set_activates_on_selection(true);
+    m_outline_tree_view->set_should_fill_selected_rows(true);
+    m_outline_tree_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectRows);
 
     auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails");
     thumbnails_container.set_layout<GUI::VerticalBoxLayout>();
