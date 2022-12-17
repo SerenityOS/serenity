@@ -515,6 +515,7 @@ void GlyphMapWidget::set_active_range(Unicode::CodePointRange range)
     m_active_range = range;
     m_glyph_count = range.last - range.first + 1;
     set_active_glyph(range.first);
+    vertical_scrollbar().set_value(0);
     recalculate_content_size();
     update();
 }
