@@ -50,7 +50,7 @@ struct Destination {
     };
 
     Type type;
-    Value page;
+    Optional<u32> page;
     Vector<float> parameters;
 };
 
@@ -145,10 +145,10 @@ private:
     PDFErrorOr<void> add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree);
 
     PDFErrorOr<void> build_outline();
-    PDFErrorOr<NonnullRefPtr<OutlineItem>> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict);
-    PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref);
+    PDFErrorOr<NonnullRefPtr<OutlineItem>> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict, HashMap<u32, u32> const&);
+    PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const&);
 
-    PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>);
+    PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>, HashMap<u32, u32> const&);
 
     PDFErrorOr<NonnullRefPtr<Object>> get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject>);
 
@@ -227,10 +227,16 @@ struct Formatter<PDF::Destination> : Formatter<FormatString> {
         }
 
         StringBuilder param_builder;
-        for (auto& param : destination.parameters)
-            param_builder.appendff("{} ", param);
-
-        return Formatter<FormatString>::format(builder, "{{ type={} page={} params={} }}"sv, type_str, destination.page, param_builder.to_deprecated_string());
+        TRY(Formatter<FormatString>::format(builder, "{{ type={} page="sv, type_str));
+        if (destination.page.has_value())
+            TRY(builder.put_literal("{}"sv));
+        else
+            TRY(builder.put_u64(destination.page.value()));
+        for (auto& param : destination.parameters) {
+            TRY(builder.put_f64(double(param)));
+            TRY(builder.put_literal(" "sv));
+        }
+        return builder.put_literal("}}"sv);
     }
 };
 

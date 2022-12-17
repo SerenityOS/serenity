@@ -210,20 +210,24 @@ PDFErrorOr<void> Document::build_outline()
     if (!outline_dict->contains(CommonNames::Last))
         return {};
 
+    HashMap<u32, u32> page_number_by_index_ref;
+    for (u32 page_number = 0; page_number < m_page_object_indices.size(); ++page_number) {
+        page_number_by_index_ref.set(m_page_object_indices[page_number], page_number);
+    }
+
     auto first_ref = outline_dict->get_value(CommonNames::First);
 
-    auto children = TRY(build_outline_item_chain(first_ref));
+    auto children = TRY(build_outline_item_chain(first_ref, page_number_by_index_ref));
 
     m_outline = adopt_ref(*new OutlineDict());
     m_outline->children = move(children);
-
     if (outline_dict->contains(CommonNames::Count))
         m_outline->count = outline_dict->get_value(CommonNames::Count).get<int>();
 
     return {};
 }
 
-PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefPtr<ArrayObject> array)
+PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefPtr<ArrayObject> array, HashMap<u32, u32> const& page_number_by_index_ref)
 {
     auto page_ref = array->at(0);
     auto type_name = TRY(array->get_name_at(this, 1))->name();
@@ -253,7 +257,7 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
         VERIFY_NOT_REACHED();
     }
 
-    return Destination { type, page_ref, parameters };
+    return Destination { type, page_number_by_index_ref.get(page_ref.as_ref_index()), parameters };
 }
 
 PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject> object)
@@ -265,14 +269,14 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(FlyString con
     return object->get_object(this, name);
 }
 
-PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
+PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict, HashMap<u32, u32> const& page_number_by_index_ref)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
 
     if (outline_item_dict->contains(CommonNames::First)) {
         VERIFY(outline_item_dict->contains(CommonNames::Last));
         auto first_ref = outline_item_dict->get_value(CommonNames::First);
-        auto children = TRY(build_outline_item_chain(first_ref));
+        auto children = TRY(build_outline_item_chain(first_ref, page_number_by_index_ref));
         for (auto& child : children) {
             child.parent = outline_item;
         }
@@ -289,7 +293,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
 
         if (dest_obj->is<ArrayObject>()) {
             auto dest_arr = dest_obj->cast<ArrayObject>();
-            outline_item->dest = TRY(create_destination_from_parameters(dest_arr));
+            outline_item->dest = TRY(create_destination_from_parameters(dest_arr, page_number_by_index_ref));
         } else if (dest_obj->is<NameObject>()) {
             auto dest_name = dest_obj->cast<NameObject>()->name();
             if (auto dests_value = m_catalog->get(CommonNames::Dests); dests_value.has_value()) {
@@ -297,11 +301,11 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
                 auto entry = MUST(dests->get_object(this, dest_name));
                 if (entry->is<ArrayObject>()) {
                     auto entry_array = entry->cast<ArrayObject>();
-                    outline_item->dest = TRY(create_destination_from_parameters(entry_array));
+                    outline_item->dest = TRY(create_destination_from_parameters(entry_array, page_number_by_index_ref));
                 } else {
                     auto entry_dictionary = entry->cast<DictObject>();
                     auto d_array = MUST(entry_dictionary->get_array(this, CommonNames::D));
-                    outline_item->dest = TRY(create_destination_from_parameters(d_array));
+                    outline_item->dest = TRY(create_destination_from_parameters(d_array, page_number_by_index_ref));
                 }
             } else {
                 return Error { Error::Type::MalformedPDF, "Malformed outline destination" };
@@ -326,7 +330,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
     return outline_item;
 }
 
-PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(Value const& first_ref)
+PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const& page_number_by_index_ref)
 {
     // We used to receive a last_ref parameter, which was what the parent of this chain
     // thought was this chain's last child. There are documents out there in the wild
@@ -339,7 +343,7 @@ PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(
 
     auto first_value = TRY(get_or_load_value(first_ref.as_ref_index())).get<NonnullRefPtr<Object>>();
     auto first_dict = first_value->cast<DictObject>();
-    auto first = TRY(build_outline_item(first_dict));
+    auto first = TRY(build_outline_item(first_dict, page_number_by_index_ref));
     children.append(first);
 
     auto current_child_dict = first_dict;
@@ -350,7 +354,7 @@ PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(
         current_child_index = next_child_dict_ref.as_ref_index();
         auto next_child_value = TRY(get_or_load_value(current_child_index)).get<NonnullRefPtr<Object>>();
         auto next_child_dict = next_child_value->cast<DictObject>();
-        auto next_child = TRY(build_outline_item(next_child_dict));
+        auto next_child = TRY(build_outline_item(next_child_dict, page_number_by_index_ref));
         children.append(next_child);
 
         current_child_dict = move(next_child_dict);
