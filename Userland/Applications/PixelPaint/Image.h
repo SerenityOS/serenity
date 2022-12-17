@@ -72,7 +72,7 @@ public:
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
 
-    void serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
+    ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
     ErrorOr<void> export_bmp_to_file(Core::File&, bool preserve_alpha_channel);
     ErrorOr<void> export_png_to_file(Core::File&, bool preserve_alpha_channel);
     ErrorOr<void> export_qoi_to_file(Core::File&) const;
