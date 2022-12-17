@@ -19,9 +19,7 @@
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>
-#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
-#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
@@ -192,10 +190,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window);
+        auto response = FileSystemAccessClient::Client::the().open_file(&window);
         if (response.is_error())
             return;
-        open_image(response.value());
+        open_image(response.release_value());
     });
 
     m_save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -223,11 +221,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, editor->title(), "bmp");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title(), "bmp");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_bmp_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
+                auto result = editor->image().export_bmp_to_file(response.value().release_stream(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to BMP failed: {}", result.error()));
             }));
@@ -238,11 +236,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
-                auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, editor->title(), "png");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title(), "png");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
+                auto result = editor->image().export_png_to_file(response.value().release_stream(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to PNG failed: {}", result.error()));
             }));
@@ -252,10 +250,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             "As &QOI", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, editor->title(), "qoi");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title(), "qoi");
                 if (response.is_error())
                     return;
-                auto result = editor->image().export_qoi_to_file(response.value());
+                auto result = editor->image().export_qoi_to_file(response.value().release_stream());
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to QOI failed: {}", result.error()));
             }));
@@ -415,11 +413,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Load Color Palette", g_icon_bag.load_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window, "Load Color Palette");
+            auto response = FileSystemAccessClient::Client::the().open_file(&window, "Load Color Palette");
             if (response.is_error())
                 return;
 
-            auto result = PixelPaint::PaletteWidget::load_palette_file(*response.value());
+            auto result = PixelPaint::PaletteWidget::load_palette_file(response.release_value().release_stream());
             if (result.is_error()) {
                 GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Loading color palette failed: {}", result.error()));
                 return;
@@ -429,11 +427,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "Sa&ve Color Palette", g_icon_bag.save_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, "untitled", "palette");
+            auto response = FileSystemAccessClient::Client::the().save_file(&window, "untitled", "palette");
             if (response.is_error())
                 return;
 
-            auto result = PixelPaint::PaletteWidget::save_palette_file(m_palette_widget->colors(), *response.value());
+            auto result = PixelPaint::PaletteWidget::save_palette_file(m_palette_widget->colors(), response.release_value().release_stream());
             if (result.is_error())
                 GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Writing color palette failed: {}", result.error()));
         }));
@@ -1070,10 +1068,9 @@ void MainWidget::set_actions_enabled(bool enabled)
     m_zoom_combobox->set_enabled(enabled);
 }
 
-void MainWidget::open_image(Core::File& file)
+void MainWidget::open_image(FileSystemAccessClient::File file)
 {
-    auto try_load = m_loader.try_load_from_file(file);
-
+    auto try_load = m_loader.try_load_from_file(file.release_stream());
     if (try_load.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
         return;
@@ -1082,7 +1079,7 @@ void MainWidget::open_image(Core::File& file)
     auto& image = *m_loader.release_image();
     auto& editor = create_new_editor(image);
     editor.set_loaded_from_image(m_loader.is_raw_image());
-    editor.set_path(file.filename());
+    editor.set_path(file.filename().to_deprecated_string());
     editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
 }
@@ -1264,10 +1261,10 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), url.path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), url.path(), Core::Stream::OpenMode::Read);
         if (response.is_error())
             return;
-        open_image(response.value());
+        open_image(response.release_value());
     }
 }
 

@@ -11,7 +11,6 @@
 #include "ImageEditor.h"
 #include <AK/Result.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/MessageBox.h>
@@ -225,11 +224,14 @@ Vector<Color> PaletteWidget::colors()
     return colors;
 }
 
-Result<Vector<Color>, DeprecatedString> PaletteWidget::load_palette_file(Core::File& file)
+ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::Stream::File> file)
 {
     Vector<Color> palette;
+    Array<u8, PAGE_SIZE> buffer;
+    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
 
-    for (auto line : file.lines()) {
+    while (TRY(buffered_file->can_read_line())) {
+        auto line = TRY(buffered_file->read_line(buffer));
         if (line.is_whitespace())
             continue;
 
@@ -242,29 +244,23 @@ Result<Vector<Color>, DeprecatedString> PaletteWidget::load_palette_file(Core::F
         palette.append(color.value());
     }
 
-    file.close();
-
     if (palette.is_empty())
-        return DeprecatedString { "The palette file did not contain any usable colors"sv };
+        return Error::from_string_literal("The palette file did not contain any usable colors");
 
     return palette;
 }
 
-Result<Vector<Color>, DeprecatedString> PaletteWidget::load_palette_path(DeprecatedString const& file_path)
+ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(DeprecatedString const& file_path)
 {
-    auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error())
-        return DeprecatedString { strerror(file_or_error.error().code()) };
-
-    auto& file = *file_or_error.value();
-    return load_palette_file(file);
+    auto file = TRY(Core::Stream::File::open(file_path, Core::Stream::OpenMode::Read));
+    return load_palette_file(move(file));
 }
 
-Result<void, DeprecatedString> PaletteWidget::save_palette_file(Vector<Color> palette, Core::File& file)
+ErrorOr<void> PaletteWidget::save_palette_file(Vector<Color> palette, NonnullOwnPtr<Core::Stream::File> file)
 {
     for (auto& color : palette) {
-        file.write(color.to_deprecated_string_without_alpha());
-        file.write("\n"sv);
+        TRY(file->write_entire_buffer(color.to_deprecated_string_without_alpha().bytes()));
+        TRY(file->write_entire_buffer({ "\n", 1 }));
     }
     return {};
 }

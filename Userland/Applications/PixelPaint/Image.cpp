@@ -171,40 +171,33 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream> stream, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
-
-    if (!file.write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file.error());
-
+    TRY(stream->write_entire_buffer(encoded_data));
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<Core::Stream::Stream> stream, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     auto encoded_data = TRY(Gfx::PNGWriter::encode(*bitmap));
-    if (!file.write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file.error());
-
+    TRY(stream->write_entire_buffer(encoded_data));
     return {};
 }
 
-ErrorOr<void> Image::export_qoi_to_file(Core::File& file) const
+ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Core::Stream::Stream> stream) const
 {
     auto bitmap = TRY(try_compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
     auto encoded_data = Gfx::QOIWriter::encode(bitmap);
-    if (!file.write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file.error());
-
+    TRY(stream->write_entire_buffer(encoded_data));
     return {};
 }
 

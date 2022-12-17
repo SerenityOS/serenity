@@ -10,15 +10,14 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
 #include <AK/Result.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibImageDecoderClient/Client.h>
 
 namespace PixelPaint {
 
-ErrorOr<void> ProjectLoader::try_load_from_file(Core::File& file)
+ErrorOr<void> ProjectLoader::try_load_from_file(NonnullOwnPtr<Core::Stream::File> file)
 {
-    auto contents = file.read_all();
+    auto contents = TRY(file->read_until_eof());
 
     auto json_or_error = JsonValue::from_string(contents);
     if (json_or_error.is_error()) {
