@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto main_widget = TRY(window->try_set_main_widget<PixelPaint::MainWidget>());
 
-    main_widget->initialize_menubar(*window);
+    TRY(main_widget->initialize_menubar(*window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (main_widget->request_close())
@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         main_widget->open_image(response.value());
     } else {
-        main_widget->create_default_image();
+        TRY(main_widget->create_default_image());
     }
 
     return app->exec();
