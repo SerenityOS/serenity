@@ -5,6 +5,7 @@
  */
 
 #include "SidebarWidget.h"
+#include "OutlineModel.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/TabWidget.h>
 
@@ -24,6 +25,13 @@ SidebarWidget::SidebarWidget()
     m_outline_tree_view->set_activates_on_selection(true);
     m_outline_tree_view->set_should_fill_selected_rows(true);
     m_outline_tree_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectRows);
+    m_outline_tree_view->on_selection_change = [this]() {
+        auto& selection = m_outline_tree_view->selection();
+        if (selection.is_empty())
+            return;
+        auto destination = OutlineModel::get_destination(selection.first());
+        on_destination_selected(destination);
+    };
 
     auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails");
     thumbnails_container.set_layout<GUI::VerticalBoxLayout>();
