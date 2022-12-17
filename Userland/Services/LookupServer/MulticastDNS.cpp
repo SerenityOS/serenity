@@ -44,26 +44,28 @@ MulticastDNS::MulticastDNS(Object* parent)
     bind(IPv4Address(), 5353);
 
     on_ready_to_receive = [this]() {
-        handle_packet();
+        if (auto result = handle_packet(); result.is_error()) {
+            dbgln("Failed to handle packet: {}", result.error());
+        }
     };
 
     // TODO: Announce on startup. We cannot just call announce() here,
     // because it races with the network interfaces getting configured.
 }
 
-void MulticastDNS::handle_packet()
+ErrorOr<void> MulticastDNS::handle_packet()
 {
-    // TODO: propagate the error somehow
-    auto buffer = MUST(receive(1024));
+    auto buffer = TRY(receive(1024));
     auto optional_packet = Packet::from_raw_packet(buffer.data(), buffer.size());
     if (!optional_packet.has_value()) {
         dbgln("Got an invalid mDNS packet");
-        return;
+        return {};
     }
     auto& packet = optional_packet.value();
 
     if (packet.is_query())
         handle_query(packet);
+    return {};
 }
 
 void MulticastDNS::handle_query(Packet const& packet)

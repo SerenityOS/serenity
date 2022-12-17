@@ -29,7 +29,7 @@ private:
     void announce();
     ErrorOr<size_t> emit_packet(Packet const&, sockaddr_in const* destination = nullptr);
 
-    void handle_packet();
+    ErrorOr<void> handle_packet();
     void handle_query(Packet const&);
 
     Vector<IPv4Address> local_addresses() const;
