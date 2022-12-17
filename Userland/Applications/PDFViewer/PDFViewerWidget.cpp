@@ -336,35 +336,28 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 
 void PDFViewerWidget::open_file(Core::File& file)
 {
+    auto maybe_error = try_open_file(file);
+    if (maybe_error.is_error()) {
+        auto error = maybe_error.release_error();
+        warnln("{}", error.message());
+        GUI::MessageBox::show_error(nullptr, "Failed to load the document."sv);
+    }
+}
+
+PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(Core::File& file)
+{
     window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", file.filename()));
 
-    auto handle_error = [&](auto&& maybe_error) {
-        if (maybe_error.is_error()) {
-            auto error = maybe_error.release_error();
-            warnln("{}", error.message());
-            GUI::MessageBox::show_error(nullptr, "Failed to load the document."sv);
-            return true;
-        }
-        return false;
-    };
-
     m_buffer = file.read_all();
-    auto maybe_document = PDF::Document::create(m_buffer);
-    if (handle_error(maybe_document))
-        return;
-
-    auto document = maybe_document.release_value();
+    auto document = TRY(PDF::Document::create(m_buffer));
 
     if (auto sh = document->security_handler(); sh && !sh->has_user_password()) {
         // FIXME: Prompt the user for a password
         VERIFY_NOT_REACHED();
     }
 
-    if (handle_error(document->initialize()))
-        return;
-
-    if (handle_error(m_viewer->set_document(document)))
-        return;
+    TRY(document->initialize());
+    TRY(m_viewer->set_document(document));
 
     m_total_page_label->set_text(DeprecatedString::formatted("of {}", document->get_page_count()));
 
@@ -391,4 +384,6 @@ void PDFViewerWidget::open_file(Core::File& file)
         m_sidebar->set_visible(false);
         m_sidebar_open = false;
     }
+
+    return {};
 }

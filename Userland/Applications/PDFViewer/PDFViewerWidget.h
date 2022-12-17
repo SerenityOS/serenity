@@ -32,6 +32,7 @@ private:
     PDFViewerWidget();
 
     void initialize_toolbar(GUI::Toolbar&);
+    PDF::PDFErrorOr<void> try_open_file(Core::File&);
 
     RefPtr<PDFViewer> m_viewer;
     RefPtr<SidebarWidget> m_sidebar;
