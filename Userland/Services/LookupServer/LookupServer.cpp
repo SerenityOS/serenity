@@ -183,7 +183,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
 
     // Fourth, look up .local names using mDNS instead of DNS nameservers.
     if (name.as_string().ends_with(".local"sv)) {
-        answers = m_mdns->lookup(name, record_type);
+        answers = TRY(m_mdns->lookup(name, record_type));
         for (auto& answer : answers)
             put_in_cache(answer);
         return answers;
