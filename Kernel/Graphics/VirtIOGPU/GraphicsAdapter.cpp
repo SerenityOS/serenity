@@ -22,19 +22,23 @@ namespace Kernel {
 #define DEVICE_EVENTS_CLEAR 0x4
 #define DEVICE_NUM_SCANOUTS 0x8
 
-NonnullLockRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<bool> VirtIOGraphicsAdapter::probe(PCI::DeviceIdentifier const& device_identifier)
 {
-    VERIFY(device_identifier.hardware_id().vendor_id == PCI::VendorID::VirtIO);
+    return device_identifier.hardware_id().vendor_id == PCI::VendorID::VirtIO;
+}
+
+ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VirtIOGraphicsAdapter::create(PCI::DeviceIdentifier const& device_identifier)
+{
     // Setup memory transfer region
-    auto scratch_space_region = MUST(MM.allocate_contiguous_kernel_region(
+    auto scratch_space_region = TRY(MM.allocate_contiguous_kernel_region(
         32 * PAGE_SIZE,
         "VirtGPU Scratch Space"sv,
         Memory::Region::Access::ReadWrite));
 
-    auto active_context_ids = MUST(Bitmap::create(VREND_MAX_CTX, false));
-    auto adapter = adopt_lock_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(active_context_ids), move(scratch_space_region)));
+    auto active_context_ids = TRY(Bitmap::create(VREND_MAX_CTX, false));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(active_context_ids), move(scratch_space_region))));
     adapter->initialize();
-    MUST(adapter->initialize_adapter());
+    TRY(adapter->initialize_adapter());
     return adapter;
 }
 
