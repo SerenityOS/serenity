@@ -20,7 +20,9 @@ class NE2000NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static ErrorOr<LockRefPtr<NE2000NetworkAdapter>> try_to_initialize(PCI::DeviceIdentifier const&);
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~NE2000NetworkAdapter() override;
 
