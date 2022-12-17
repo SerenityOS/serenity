@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alexander Narsudinov <a.narsudinov@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,8 +24,8 @@ public:
     bool is_bound() const { return m_bound; }
 
     bool bind(IPv4Address const& address, u16 port);
-    ByteBuffer receive(size_t size, sockaddr_in& from);
-    ByteBuffer receive(size_t size)
+    ErrorOr<ByteBuffer> receive(size_t size, sockaddr_in& from);
+    ErrorOr<ByteBuffer> receive(size_t size)
     {
         struct sockaddr_in saddr;
         return receive(size, saddr);

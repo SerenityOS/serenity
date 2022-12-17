@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Alexander Narsudinov <a.narsudinov@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/IPv4Address.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/System.h>
 #include <LibCore/UDPServer.h>
 #include <errno.h>
 #include <stdio.h>
@@ -61,18 +63,12 @@ bool UDPServer::bind(IPv4Address const& address, u16 port)
     return true;
 }
 
-ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
+ErrorOr<ByteBuffer> UDPServer::receive(size_t size, sockaddr_in& in)
 {
-    // FIXME: Handle possible OOM situation.
-    auto buf = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
+    auto buf = TRY(ByteBuffer::create_uninitialized(size));
     socklen_t in_len = sizeof(in);
-    ssize_t rlen = ::recvfrom(m_fd, buf.data(), size, 0, (sockaddr*)&in, &in_len);
-    if (rlen < 0) {
-        dbgln("recvfrom: {}", strerror(errno));
-        return {};
-    }
-
-    buf.resize(rlen);
+    auto bytes_received = TRY(Core::System::recvfrom(m_fd, buf.data(), size, 0, (sockaddr*)&in, &in_len));
+    buf.resize(bytes_received);
     return buf;
 }
 

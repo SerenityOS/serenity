@@ -291,7 +291,9 @@ TEST_CASE(udp_socket_read_write)
     usleep(100000);
 
     struct sockaddr_in client_address;
-    auto server_receive_buffer = udp_server->receive(64, client_address);
+    auto server_receive_buffer_or_error = udp_server->receive(64, client_address);
+    EXPECT(!server_receive_buffer_or_error.is_error());
+    auto server_receive_buffer = server_receive_buffer_or_error.release_value();
     EXPECT(!server_receive_buffer.is_empty());
 
     StringView server_received_data { server_receive_buffer.bytes() };
