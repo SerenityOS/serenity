@@ -1057,6 +1057,7 @@ void MainWidget::paste_glyphs()
 
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
+    update_preview();
     update_statusbar();
 }
 
@@ -1078,6 +1079,7 @@ void MainWidget::delete_selected_glyphs()
 
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
+    update_preview();
     update_statusbar();
 }
 
