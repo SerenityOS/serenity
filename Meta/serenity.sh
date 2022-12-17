@@ -154,7 +154,8 @@ is_supported_compiler() {
     local MAJOR_VERSION=""
     MAJOR_VERSION="${VERSION%%.*}"
     if $COMPILER --version 2>&1 | grep "Apple clang" >/dev/null; then
-        return 1
+        # Apple Clang version check
+        [ "$MAJOR_VERSION" -ge 14 ] && return 0
     elif $COMPILER --version 2>&1 | grep "clang" >/dev/null; then
         # Clang version check
         [ "$MAJOR_VERSION" -ge 13 ] && return 0
@@ -170,9 +171,6 @@ find_newest_compiler() {
     local BEST_CANDIDATE=""
     for CANDIDATE in "$@"; do
         if ! command -v "$CANDIDATE" >/dev/null 2>&1; then
-            continue
-        fi
-        if $CANDIDATE --version 2>&1 | grep "Apple clang" >/dev/null; then
             continue
         fi
         if ! $CANDIDATE -dumpversion >/dev/null 2>&1; then
