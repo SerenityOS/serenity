@@ -53,6 +53,7 @@ enum class PosixFlags : FlagsUnderlyingType {
     SkipSubExprResults = (FlagsUnderlyingType)AllFlags::SkipSubExprResults,
     SkipTrimEmptyMatches = (FlagsUnderlyingType)AllFlags::SkipTrimEmptyMatches,
     Multiline = (FlagsUnderlyingType)AllFlags::Multiline,
+    SingleMatch = (FlagsUnderlyingType)AllFlags::SingleMatch,
     StringCopyMatches = (FlagsUnderlyingType)AllFlags::StringCopyMatches,
 };
 
