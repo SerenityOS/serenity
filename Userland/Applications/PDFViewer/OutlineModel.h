@@ -12,7 +12,7 @@
 
 class OutlineModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<OutlineModel> create(NonnullRefPtr<PDF::OutlineDict> const& outline);
+    static ErrorOr<NonnullRefPtr<OutlineModel>> create(NonnullRefPtr<PDF::OutlineDict> const& outline);
 
     void set_index_open_state(const GUI::ModelIndex& index, bool is_open);
 
