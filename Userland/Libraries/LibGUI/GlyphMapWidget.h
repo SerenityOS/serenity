@@ -57,7 +57,10 @@ public:
 
     void set_active_range(Unicode::CodePointRange);
     void set_active_glyph(int, ShouldResetSelection = ShouldResetSelection::Yes);
+
     void set_selection(int start, int size, Optional<u32> active_glyph = {});
+    void restore_selection(int start, int size, int active_glyph);
+
     void scroll_to_glyph(int);
     void update_glyph(int);
 

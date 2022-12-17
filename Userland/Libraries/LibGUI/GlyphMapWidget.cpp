@@ -97,6 +97,17 @@ void GlyphMapWidget::set_selection(int start, int size, Optional<u32> active_gly
         set_active_glyph(active_glyph.value(), ShouldResetSelection::No);
 }
 
+void GlyphMapWidget::restore_selection(int start, int size, int active_glyph)
+{
+    if (start == active_glyph && size > 1) {
+        start = active_glyph + size - 1;
+        size = -size + 1;
+    }
+    m_selection.set_start(start);
+    m_selection.set_size(size);
+    set_active_glyph(active_glyph, ShouldResetSelection::No);
+}
+
 Gfx::IntRect GlyphMapWidget::get_outer_rect(int glyph) const
 {
     glyph -= m_active_range.first;
