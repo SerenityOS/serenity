@@ -92,6 +92,12 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_named_item(Attr& attribute)
     return set_attribute(attribute);
 }
 
+// https://dom.spec.whatwg.org/#dom-namednodemap-setnameditemns
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_named_item_ns(Attr& attribute)
+{
+    return set_attribute(attribute);
+}
+
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditem
 WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qualified_name)
 {
