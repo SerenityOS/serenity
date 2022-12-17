@@ -172,6 +172,7 @@ ErrorOr<void> MainWidget::create_actions()
         auto selection = m_glyph_map_widget->selection().normalized();
         m_undo_selection->set_start(selection.start());
         m_undo_selection->set_size(selection.size());
+        update_statusbar();
     });
 
     m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
@@ -459,6 +460,10 @@ MainWidget::MainWidget()
         m_context_menu->popup(event.screen_position());
     };
 
+    m_glyph_map_widget->on_escape_pressed = [this]() {
+        update_statusbar();
+    };
+
     m_name_textbox = find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_name_textbox->on_change = [&] {
         m_edited_font->set_name(m_name_textbox->text());
@@ -567,6 +572,12 @@ MainWidget::MainWidget()
     };
 
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
+    m_statusbar->segment(1).set_clickable(true);
+    m_statusbar->segment(1).on_click = [&](auto) {
+        m_show_unicode_blocks_action->activate();
+    };
+
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
         if (text.is_empty())
@@ -753,6 +764,10 @@ void MainWidget::set_show_unicode_blocks(bool show)
         return;
     m_unicode_blocks = show;
     m_unicode_block_container->set_visible(m_unicode_blocks);
+    if (show)
+        m_search_textbox->set_focus(true);
+    else
+        m_glyph_map_widget->set_focus(true);
 }
 
 void MainWidget::set_highlight_modifications(bool highlight_modifications)
@@ -922,6 +937,15 @@ void MainWidget::update_statusbar()
     else if (Gfx::Emoji::emoji_for_code_point(glyph))
         builder.appendff(" [emoji]");
     m_statusbar->set_text(builder.to_deprecated_string());
+
+    builder.clear();
+
+    auto selection = m_glyph_map_widget->selection().normalized();
+    if (selection.size() > 1)
+        builder.appendff("{} glyphs selected", selection.size());
+    else
+        builder.appendff("U+{:04X}-U+{:04X}", m_range.first, m_range.last);
+    m_statusbar->set_text(1, builder.to_deprecated_string());
 }
 
 void MainWidget::update_preview()
