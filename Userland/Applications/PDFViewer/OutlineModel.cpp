@@ -5,6 +5,7 @@
  */
 
 #include "OutlineModel.h"
+#include <AK/NonnullRefPtrVector.h>
 #include <LibGfx/Font/FontDatabase.h>
 
 ErrorOr<NonnullRefPtr<OutlineModel>> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict> const& outline)
@@ -73,19 +74,11 @@ GUI::ModelIndex OutlineModel::parent_index(const GUI::ModelIndex& index) const
     if (!parent)
         return {};
 
-    if (parent->parent) {
-        auto& grandparent = parent->parent;
-        for (size_t i = 0; i < grandparent->children.size(); i++) {
-            auto* sibling = &grandparent->children[i];
-            if (sibling == index.internal_data())
-                return create_index(static_cast<int>(i), 0, sibling);
-        }
-    } else {
-        for (size_t i = 0; i < m_outline->children.size(); i++) {
-            auto* sibling = &m_outline->children[i];
-            if (sibling == index.internal_data())
-                return create_index(static_cast<int>(i), 0, sibling);
-        }
+    NonnullRefPtrVector<PDF::OutlineItem> parent_siblings = (parent->parent ? parent->parent->children : m_outline->children);
+    for (size_t i = 0; i < parent_siblings.size(); i++) {
+        auto* parent_sibling = &parent_siblings[i];
+        if (parent_sibling == parent.ptr())
+            return create_index(static_cast<int>(i), index.column(), parent.ptr());
     }
 
     VERIFY_NOT_REACHED();
