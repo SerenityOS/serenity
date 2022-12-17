@@ -168,9 +168,8 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_attribute(Attr& attribute)
         return WebIDL::InUseAttributeError::create(realm(), "Attribute must not already be in use"sv);
 
     // 2. Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
-    // FIXME: When getNamedItemNS is implemented, use that instead.
     size_t old_attribute_index = 0;
-    auto* old_attribute = get_attribute(attribute.local_name(), &old_attribute_index);
+    auto* old_attribute = get_attribute_ns(attribute.namespace_uri(), attribute.local_name(), &old_attribute_index);
 
     // 3. If oldAttr is attr, return attr.
     if (old_attribute == &attribute)
