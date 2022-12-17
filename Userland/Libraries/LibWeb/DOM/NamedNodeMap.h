@@ -38,6 +38,7 @@ public:
     Attr const* get_named_item(StringView qualified_name) const;
     Attr const* get_named_item_ns(StringView namespace_, StringView local_name) const;
     WebIDL::ExceptionOr<Attr const*> set_named_item(Attr& attribute);
+    WebIDL::ExceptionOr<Attr const*> set_named_item_ns(Attr& attribute);
     WebIDL::ExceptionOr<Attr const*> remove_named_item(StringView qualified_name);
     WebIDL::ExceptionOr<Attr const*> remove_named_item_ns(StringView namespace_, StringView local_name);
 
