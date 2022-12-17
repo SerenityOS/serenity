@@ -694,6 +694,8 @@ public:
         if (!TRY(can_read_line()))
             return Bytes {};
 
+        auto const candidate = TRY(find_and_populate_until_any_of(candidates, buffer.size()));
+
         if (stream().is_eof()) {
             if (buffer.size() < m_buffer.used_space()) {
                 // Normally, reading from an EOFed stream and receiving bytes
@@ -710,27 +712,9 @@ public:
             }
         }
 
-        auto const readable_size = min(m_buffer.used_space(), buffer.size());
-
-        // The intention here is to try to match all of the possible
-        // delimiter candidates and try to find the longest one we can
-        // remove from the buffer after copying up to the delimiter to the
-        // user buffer.
-        Optional<size_t> longest_match;
-        size_t match_size = 0;
-        for (auto& candidate : candidates) {
-            auto const result = m_buffer.offset_of(candidate, {}, readable_size);
-            if (result.has_value()) {
-                auto previous_match = longest_match.value_or(*result);
-                if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {
-                    longest_match = result;
-                    match_size = candidate.length();
-                }
-            }
-        }
-        if (longest_match.has_value()) {
-            auto const read_bytes = m_buffer.read(buffer.trim(*longest_match));
-            TRY(m_buffer.discard(match_size));
+        if (candidate.has_value()) {
+            auto const read_bytes = m_buffer.read(buffer.trim(candidate->offset));
+            TRY(m_buffer.discard(candidate->size));
             return read_bytes;
         }
 
@@ -740,37 +724,72 @@ public:
         return m_buffer.read(buffer);
     }
 
+    struct Match {
+        size_t offset {};
+        size_t size {};
+    };
+
+    template<size_t N>
+    ErrorOr<Optional<Match>> find_and_populate_until_any_of(Array<StringView, N> const& candidates, Optional<size_t> max_offset = {})
+    {
+        Optional<size_t> longest_candidate;
+        for (auto& candidate : candidates) {
+            if (candidate.length() >= longest_candidate.value_or(candidate.length()))
+                longest_candidate = candidate.length();
+        }
+
+        // The intention here is to try to match all the possible
+        // delimiter candidates and try to find the longest one we can
+        // remove from the buffer after copying up to the delimiter to the
+        // user buffer.
+
+        auto const find_candidates = [this, &candidates, &longest_candidate](Optional<size_t> max_offset = {}) -> Optional<Match> {
+            max_offset = max_offset.value_or(m_buffer.used_space());
+
+            Optional<size_t> longest_match;
+            size_t match_size = 0;
+            for (auto& candidate : candidates) {
+                // FIXME: This currently searches through the buffer from the start,
+                //        even if we just appended a small number of bytes at the end.
+                auto const result = m_buffer.offset_of(candidate, {}, *max_offset);
+
+                if (result.has_value()) {
+                    auto previous_match = longest_match.value_or(*result);
+                    if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {
+                        longest_match = result;
+                        match_size = candidate.length();
+                    }
+                }
+            }
+
+            if (longest_match.has_value())
+                return Match { *longest_match, match_size };
+
+            return {};
+        };
+
+        if (auto first_find = find_candidates(max_offset); first_find.has_value())
+            return first_find;
+
+        while (m_buffer.used_space() < max_offset.value_or(m_buffer.capacity())) {
+            auto const read_bytes = TRY(populate_read_buffer());
+            if (read_bytes == 0)
+                break;
+
+            if (auto first_find = find_candidates(max_offset); first_find.has_value())
+                return first_find;
+        }
+
+        return Optional<Match> {};
+    }
+
     // Returns whether a line can be read, populating the buffer in the process.
     ErrorOr<bool> can_read_line()
     {
-        if (stream().is_eof() && m_buffer.used_space() > 0)
-            return true;
-
-        if (m_buffer.offset_of("\n"sv).has_value())
-            return true;
-
         if (stream().is_eof())
-            return false;
+            return m_buffer.used_space() > 0;
 
-        while (m_buffer.empty_space() > 0) {
-            auto populated_byte_count = TRY(populate_read_buffer());
-
-            if (stream().is_eof()) {
-                // We give the user one last hurrah to read the remaining
-                // contents as a "line".
-                return m_buffer.used_space() > 0;
-            }
-
-            // FIXME: This currently searches through the buffer from the start,
-            //        even if we just appended a small number of bytes at the end.
-            if (m_buffer.offset_of("\n"sv).has_value())
-                return true;
-
-            if (populated_byte_count == 0)
-                break;
-        }
-
-        return false;
+        return TRY(find_and_populate_until_any_of(Array<StringView, 1> { "\n"sv })).has_value();
     }
 
     bool is_eof() const
