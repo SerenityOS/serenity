@@ -103,7 +103,7 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qual
         return WebIDL::NotFoundError::create(realm(), DeprecatedString::formatted("Attribute with name '{}' not found", qualified_name));
 
     // 3. Return attr.
-    return nullptr;
+    return attribute;
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
