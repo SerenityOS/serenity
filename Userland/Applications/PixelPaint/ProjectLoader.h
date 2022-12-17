@@ -18,7 +18,7 @@ public:
     ProjectLoader() = default;
     ~ProjectLoader() = default;
 
-    ErrorOr<void> try_load_from_file(Core::File&);
+    ErrorOr<void> try_load_from_file(NonnullOwnPtr<Core::Stream::File>);
 
     bool is_raw_image() const { return m_is_raw_image; }
     bool has_image() const { return !m_image.is_null(); }

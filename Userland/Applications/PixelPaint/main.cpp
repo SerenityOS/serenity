@@ -74,10 +74,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     if (image_file) {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, image_file);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, image_file);
         if (response.is_error())
             return 1;
-        main_widget->open_image(response.value());
+        main_widget->open_image(response.release_value());
     } else {
         TRY(main_widget->create_default_image());
     }

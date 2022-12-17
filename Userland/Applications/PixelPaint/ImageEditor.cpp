@@ -710,10 +710,10 @@ void ImageEditor::save_project()
         save_project_as();
         return;
     }
-    auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+    auto response = FileSystemAccessClient::Client::the().request_file(window(), path(), Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
     if (response.is_error())
         return;
-    auto result = save_project_to_file(*response.value());
+    auto result = save_project_to_file(response.value().release_stream());
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", path(), result.error()));
         return;
@@ -723,21 +723,21 @@ void ImageEditor::save_project()
 
 void ImageEditor::save_project_as()
 {
-    auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_title, "pp");
+    auto response = FileSystemAccessClient::Client::the().save_file(window(), m_title, "pp");
     if (response.is_error())
         return;
-    auto file = response.value();
-    auto result = save_project_to_file(*file);
+    auto file = response.release_value();
+    auto result = save_project_to_file(file.release_stream());
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", file->filename(), result.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", file.filename(), result.error()));
         return;
     }
-    set_path(file->filename());
+    set_path(file.filename().to_deprecated_string());
     set_loaded_from_image(false);
     set_unmodified();
 }
 
-ErrorOr<void> ImageEditor::save_project_to_file(Core::File& file) const
+ErrorOr<void> ImageEditor::save_project_to_file(NonnullOwnPtr<Core::Stream::File> file) const
 {
     StringBuilder builder;
     auto json = TRY(JsonObjectSerializer<>::try_create(builder));
@@ -755,8 +755,7 @@ ErrorOr<void> ImageEditor::save_project_to_file(Core::File& file) const
     TRY(json_guides.finish());
     TRY(json.finish());
 
-    if (!file.write(builder.string_view()))
-        return Error::from_errno(file.error());
+    TRY(file->write_entire_buffer(builder.string_view().bytes()));
     return {};
 }
 
