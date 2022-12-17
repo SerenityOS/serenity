@@ -5,8 +5,17 @@
  */
 
 #include "OutlineModel.h"
+#include <AK/Assertions.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <LibGUI/ModelRole.h>
 #include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/TextAlignment.h>
+
+enum Columns {
+    Page,
+    Title,
+    _Count
+};
 
 ErrorOr<NonnullRefPtr<OutlineModel>> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict> const& outline)
 {
@@ -41,9 +50,14 @@ int OutlineModel::row_count(const GUI::ModelIndex& index) const
     return static_cast<int>(outline_item->children.size());
 }
 
+int OutlineModel::tree_column() const
+{
+    return Columns::Title;
+}
+
 int OutlineModel::column_count(const GUI::ModelIndex&) const
 {
-    return 1;
+    return Columns::_Count;
 }
 
 GUI::Variant OutlineModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
@@ -53,13 +67,36 @@ GUI::Variant OutlineModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
     switch (role) {
     case GUI::ModelRole::Display:
-        return outline_item->title;
+        switch (index.column()) {
+        case Columns::Title:
+            return outline_item->title;
+        case Columns::Page: {
+            auto maybe_page_number = outline_item->dest.page;
+            if (maybe_page_number.has_value()) {
+                return maybe_page_number.release_value();
+            }
+            return {};
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
     case GUI::ModelRole::Icon:
         if (m_open_outline_items.contains(outline_item))
             return m_open_item_icon;
         return m_closed_item_icon;
     default:
         return {};
+
+    case GUI::ModelRole::TextAlignment:
+        switch (index.column()) {
+        case Columns::Title:
+            return Gfx::TextAlignment::CenterLeft;
+        case Columns::Page:
+            return Gfx::TextAlignment::CenterRight;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 }
 
