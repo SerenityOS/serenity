@@ -304,18 +304,18 @@ void paint_conic_gradient(PaintContext& context, DevicePixelRect const& gradient
     });
 }
 
-void paint_radial_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, RadialGradientData const& data, DevicePixelPoint center, Gfx::FloatSize size)
+void paint_radial_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, RadialGradientData const& data, DevicePixelPoint center, DevicePixelSize size)
 {
     // A conservative guesstimate on how many colors we need to generate:
     auto max_dimension = max(gradient_rect.width(), gradient_rect.height());
-    int max_visible_gradient = max(max_dimension.value() / 2, min(size.width(), max_dimension.value()));
+    auto max_visible_gradient = max(max_dimension / 2, min(size.width(), max_dimension.value())).value();
     GradientLine gradient_line(max_visible_gradient, data.color_stops);
     auto center_point = Gfx::FloatPoint { center.to_type<int>() }.translated(0.5, 0.5);
     gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](DevicePixels x, DevicePixels y) {
         // FIXME: See if there's a more efficient calculation we do there :^)
-        auto point = context.scale_to_css_point({ x, y }).to_type<float>() - center_point;
-        auto gradient_x = point.x() / size.width();
-        auto gradient_y = point.y() / size.height();
+        auto point = Gfx::FloatPoint(x.value(), y.value()) - center_point;
+        auto gradient_x = point.x() / size.width().value();
+        auto gradient_y = point.y() / size.height().value();
         return AK::sqrt(gradient_x * gradient_x + gradient_y * gradient_y) * max_visible_gradient;
     });
 }

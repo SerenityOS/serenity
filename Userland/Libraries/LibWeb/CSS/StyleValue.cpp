@@ -2178,7 +2178,9 @@ bool RadialGradientStyleValue::equals(StyleValue const& other) const
 void RadialGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_radial_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data, m_resolved->center.to_rounded<DevicePixels>(), m_resolved->gradient_size);
+    Painting::paint_radial_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data,
+        context.rounded_device_point(m_resolved->center.to_type<CSSPixels>()),
+        context.rounded_device_size(m_resolved->gradient_size.to_type<CSSPixels>()));
 }
 
 DeprecatedString ConicGradientStyleValue::to_deprecated_string() const

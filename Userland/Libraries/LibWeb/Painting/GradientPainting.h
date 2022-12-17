@@ -47,6 +47,6 @@ RadialGradientData resolve_radial_gradient_data(Layout::Node const&, CSSPixelSiz
 
 void paint_linear_gradient(PaintContext&, DevicePixelRect const&, LinearGradientData const&);
 void paint_conic_gradient(PaintContext&, DevicePixelRect const&, ConicGradientData const&, DevicePixelPoint position);
-void paint_radial_gradient(PaintContext&, DevicePixelRect const&, RadialGradientData const&, DevicePixelPoint position, Gfx::FloatSize size);
+void paint_radial_gradient(PaintContext&, DevicePixelRect const&, RadialGradientData const&, DevicePixelPoint position, DevicePixelSize size);
 
 }
