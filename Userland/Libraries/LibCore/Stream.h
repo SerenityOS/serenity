@@ -657,8 +657,8 @@ public:
     {
         if (!stream().is_open())
             return Error::from_errno(ENOTCONN);
-        if (!buffer.size())
-            return Error::from_errno(ENOBUFS);
+        if (buffer.is_empty())
+            return buffer;
 
         // Fill the internal buffer if it has run dry.
         if (m_buffer.used_space() == 0)
@@ -688,7 +688,7 @@ public:
             return Error::from_errno(ENOTCONN);
 
         if (buffer.is_empty())
-            return Error::from_errno(ENOBUFS);
+            return buffer;
 
         auto const candidate = TRY(find_and_populate_until_any_of(candidates, buffer.size()));
 
