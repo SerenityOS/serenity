@@ -10,6 +10,7 @@
 #include "AK/DeprecatedString.h"
 #include "AK/Format.h"
 #include "LibGUI/Forward.h"
+#include "LibPDF/Document.h"
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/Variant.h>
@@ -167,6 +168,13 @@ PDFViewerWidget::PDFViewerWidget()
     m_sidebar = h_splitter.add<SidebarWidget>();
     m_sidebar->set_preferred_width(200);
     m_sidebar->set_visible(false);
+    m_sidebar->on_destination_selected = [&](PDF::Destination const& destination) {
+        auto maybe_page = destination.page;
+        if (!maybe_page.has_value())
+            return;
+        auto page = maybe_page.release_value();
+        m_viewer->set_current_page(page);
+    };
 
     auto& v_splitter = h_splitter.add<GUI::VerticalSplitter>();
     v_splitter.layout()->set_spacing(4);
