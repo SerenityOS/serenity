@@ -168,9 +168,20 @@ UNMAP_AFTER_INIT ErrorOr<LockRefPtr<E1000NetworkAdapter>> E1000NetworkAdapter::t
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), move(interface_name))));
-    adapter->m_rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
-    adapter->m_tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
+
+    auto rx_buffer_region = TRY(MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers"sv, Memory::Region::Access::ReadWrite));
+    auto tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers"sv, Memory::Region::Access::ReadWrite).release_value();
+    auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
+    auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
+
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(),
+        irq, move(registers_io_window),
+        move(rx_buffer_region),
+        move(tx_buffer_region),
+        move(rx_descriptors_region),
+        move(tx_descriptors_region),
+        move(interface_name))));
+
     if (!adapter->initialize())
         return Error::from_string_literal("E1000NetworkAdapter: Unable to initialize adapter");
     return adapter;
@@ -215,11 +226,18 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
     return true;
 }
 
-UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq,
+    NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
+    NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
+    NonnullOwnPtr<Memory::Region> tx_descriptors_region, NonnullOwnPtr<KString> interface_name)
     : NetworkAdapter(move(interface_name))
     , PCI::Device(address)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
+    , m_rx_descriptors_region(move(rx_descriptors_region))
+    , m_tx_descriptors_region(move(tx_descriptors_region))
+    , m_rx_buffer_region(move(rx_buffer_region))
+    , m_tx_buffer_region(move(tx_buffer_region))
 {
 }
 
@@ -308,10 +326,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 {
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
-    constexpr auto rx_buffer_size = 8192;
     constexpr auto rx_buffer_page_count = rx_buffer_size / PAGE_SIZE;
-
-    m_rx_buffer_region = MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers"sv, Memory::Region::Access::ReadWrite).release_value();
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
         m_rx_buffers[i] = m_rx_buffer_region->vaddr().as_ptr() + rx_buffer_size * i;
@@ -331,10 +346,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
-
-    constexpr auto tx_buffer_size = 8192;
     constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
-    m_tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers"sv, Memory::Region::Access::ReadWrite).release_value();
 
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = tx_descriptors[i];

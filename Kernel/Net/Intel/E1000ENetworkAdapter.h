@@ -30,7 +30,10 @@ public:
     virtual StringView purpose() const override { return class_name(); }
 
 private:
-    E1000ENetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
+    E1000ENetworkAdapter(PCI::Address, u8 irq,
+        NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
+        NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
+        NonnullOwnPtr<Memory::Region> tx_descriptors_region, NonnullOwnPtr<KString>);
 
     virtual StringView class_name() const override { return "E1000ENetworkAdapter"sv; }
 
