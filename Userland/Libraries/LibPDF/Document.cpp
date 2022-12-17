@@ -273,6 +273,9 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
         VERIFY(outline_item_dict->contains(CommonNames::Last));
         auto first_ref = outline_item_dict->get_value(CommonNames::First);
         auto children = TRY(build_outline_item_chain(first_ref));
+        for (auto& child : children) {
+            child.parent = outline_item;
+        }
         outline_item->children = move(children);
     }
 
