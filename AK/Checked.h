@@ -328,26 +328,26 @@ public:
     template<typename U, typename V>
     [[nodiscard]] static constexpr bool addition_would_overflow(U u, V v)
     {
-#if defined(AK_COMPILER_CLANG)
+#if __has_builtin(__builtin_add_overflow_p)
+        return __builtin_add_overflow_p(u, v, (T)0);
+#else
         Checked checked;
         checked = u;
         checked += v;
         return checked.has_overflow();
-#else
-        return __builtin_add_overflow_p(u, v, (T)0);
 #endif
     }
 
     template<typename U, typename V>
     [[nodiscard]] static constexpr bool multiplication_would_overflow(U u, V v)
     {
-#if defined(AK_COMPILER_CLANG)
+#if __has_builtin(__builtin_mul_overflow_p)
+        return __builtin_mul_overflow_p(u, v, (T)0);
+#else
         Checked checked;
         checked = u;
         checked *= v;
         return checked.has_overflow();
-#else
-        return __builtin_mul_overflow_p(u, v, (T)0);
 #endif
     }
 
