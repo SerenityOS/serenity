@@ -169,6 +169,8 @@ UNMAP_AFTER_INIT ErrorOr<LockRefPtr<E1000NetworkAdapter>> E1000NetworkAdapter::t
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
     auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), move(interface_name))));
+    adapter->m_rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
+    adapter->m_tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
     if (!adapter->initialize())
         return Error::from_string_literal("E1000NetworkAdapter: Unable to initialize adapter");
     return adapter;
@@ -217,8 +219,6 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     , PCI::Device(address)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
-    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors).release_value_but_fixme_should_propagate_errors(), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite).release_value())
-    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors).release_value_but_fixme_should_propagate_errors(), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite).release_value())
 {
 }
 
