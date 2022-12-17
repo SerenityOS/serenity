@@ -138,7 +138,7 @@ struct [[gnu::packed]] received_packet_header {
     u16 length;
 };
 
-UNMAP_AFTER_INIT ErrorOr<LockRefPtr<NE2000NetworkAdapter>> NE2000NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> NE2000NetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     constexpr auto ne2k_ids = Array {
         PCI::HardwareID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
@@ -155,19 +155,18 @@ UNMAP_AFTER_INIT ErrorOr<LockRefPtr<NE2000NetworkAdapter>> NE2000NetworkAdapter:
         PCI::HardwareID { 0x12c3, 0x5598 }, // Holtek HT80229
         PCI::HardwareID { 0x8c4a, 0x1980 }, // Winbond W89C940 (misprogrammed)
     };
-    if (!ne2k_ids.span().contains_slow(pci_device_identifier.hardware_id()))
-        return nullptr;
+    return ne2k_ids.span().contains_slow(pci_device_identifier.hardware_id());
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> NE2000NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
     return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NE2000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), move(interface_name))));
 }
 
-UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
-    : NetworkAdapter(move(interface_name))
-    , PCI::Device(address)
-    , IRQHandler(irq)
-    , m_registers_io_window(move(registers_io_window))
+UNMAP_AFTER_INIT ErrorOr<void> NE2000NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
     dmesgln_pci(*this, "Found @ {}", pci_address());
 
@@ -181,6 +180,15 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
     set_mac_address(m_mac_address);
     dmesgln_pci(*this, "MAC address: {}", m_mac_address.to_string());
     enable_irq();
+    return {};
+}
+
+UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
+    : NetworkAdapter(move(interface_name))
+    , PCI::Device(address)
+    , IRQHandler(irq)
+    , m_registers_io_window(move(registers_io_window))
+{
 }
 
 UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter() = default;

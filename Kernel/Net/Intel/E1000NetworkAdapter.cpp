@@ -159,12 +159,15 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     }
 }
 
-UNMAP_AFTER_INIT ErrorOr<LockRefPtr<E1000NetworkAdapter>> E1000NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> E1000NetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Intel)
-        return nullptr;
-    if (!is_valid_device_id(pci_device_identifier.hardware_id().device_id))
-        return nullptr;
+        return false;
+    return is_valid_device_id(pci_device_identifier.hardware_id().device_id);
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> E1000NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
@@ -174,34 +177,16 @@ UNMAP_AFTER_INIT ErrorOr<LockRefPtr<E1000NetworkAdapter>> E1000NetworkAdapter::t
     auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
     auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
 
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(),
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(),
         irq, move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
         move(rx_descriptors_region),
         move(tx_descriptors_region),
         move(interface_name))));
-
-    if (!adapter->initialize())
-        return Error::from_string_literal("E1000NetworkAdapter: Unable to initialize adapter");
-    return adapter;
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
-{
-    u32 flags = in32(REG_CTRL);
-    out32(REG_CTRL, flags | ECTRL_SLU);
-}
-
-UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
-{
-    out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
-    in32(REG_INTERRUPT_CAUSE_READ);
-    enable_irq();
-}
-
-UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
     dmesgln_pci(*this, "Found @ {}", pci_address());
 
@@ -223,7 +208,21 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
 
     m_link_up = ((in32(REG_STATUS) & STATUS_LU) != 0);
 
-    return true;
+    return {};
+}
+
+UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
+{
+    u32 flags = in32(REG_CTRL);
+    out32(REG_CTRL, flags | ECTRL_SLU);
+}
+
+UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
+{
+    out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
+    in32(REG_INTERRUPT_CAUSE_READ);
+    enable_irq();
 }
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq,

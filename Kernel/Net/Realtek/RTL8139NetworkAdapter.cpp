@@ -112,11 +112,14 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-UNMAP_AFTER_INIT ErrorOr<LockRefPtr<RTL8139NetworkAdapter>> RTL8139NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> RTL8139NetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     constexpr PCI::HardwareID rtl8139_id = { 0x10EC, 0x8139 };
-    if (pci_device_identifier.hardware_id() != rtl8139_id)
-        return nullptr;
+    return pci_device_identifier.hardware_id() == rtl8139_id;
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> RTL8139NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto rx_buffer = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX)), "RTL8139 RX"sv, Memory::Region::Access::ReadWrite));
     auto packet_buffer = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(PACKET_SIZE_MAX)), "RTL8139 Packet buffer"sv, Memory::Region::Access::ReadWrite));
@@ -125,15 +128,9 @@ UNMAP_AFTER_INIT ErrorOr<LockRefPtr<RTL8139NetworkAdapter>> RTL8139NetworkAdapte
     return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, move(rx_buffer), move(packet_buffer), move(registers_io_window), move(interface_name))));
 }
 
-UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<Memory::Region> rx_buffer, NonnullOwnPtr<Memory::Region> packet_buffer, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
-    : NetworkAdapter(move(interface_name))
-    , PCI::Device(address)
-    , IRQHandler(irq)
-    , m_registers_io_window(move(registers_io_window))
-    , m_rx_buffer(move(rx_buffer))
-    , m_packet_buffer(move(packet_buffer))
+UNMAP_AFTER_INIT ErrorOr<void> RTL8139NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
-    m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
+    TRY(m_tx_buffers.try_ensure_capacity(RTL8139_TX_BUFFER_COUNT));
 
     dmesgln_pci(*this, "Found @ {}", pci_address());
 
@@ -148,7 +145,8 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
     dbgln("RTL8139: RX buffer: {}", m_rx_buffer->physical_page(0)->paddr());
 
     for (int i = 0; i < RTL8139_TX_BUFFER_COUNT; i++) {
-        m_tx_buffers.append(MM.allocate_contiguous_kernel_region(Memory::page_round_up(TX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8139 TX"sv, Memory::Region::Access::Write | Memory::Region::Access::Read).release_value());
+        auto buffer = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(TX_BUFFER_SIZE)), "RTL8139 TX"sv, Memory::Region::Access::Write | Memory::Region::Access::Read));
+        m_tx_buffers.append(move(buffer));
         dbgln("RTL8139: TX buffer {}: {}", i, m_tx_buffers[i]->physical_page(0)->paddr());
     }
 
@@ -159,6 +157,17 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
 
     enable_irq();
+    return {};
+}
+
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<Memory::Region> rx_buffer, NonnullOwnPtr<Memory::Region> packet_buffer, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
+    : NetworkAdapter(move(interface_name))
+    , PCI::Device(address)
+    , IRQHandler(irq)
+    , m_registers_io_window(move(registers_io_window))
+    , m_rx_buffer(move(rx_buffer))
+    , m_packet_buffer(move(packet_buffer))
+{
 }
 
 UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter() = default;

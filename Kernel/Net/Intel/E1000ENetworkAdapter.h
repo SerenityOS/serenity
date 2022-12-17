@@ -21,9 +21,9 @@ namespace Kernel {
 class E1000ENetworkAdapter final
     : public E1000NetworkAdapter {
 public:
-    static ErrorOr<LockRefPtr<E1000ENetworkAdapter>> try_to_initialize(PCI::DeviceIdentifier const&);
-
-    virtual bool initialize() override;
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~E1000ENetworkAdapter() override;
 
