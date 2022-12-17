@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/RemoteBrowsingContext.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
@@ -288,6 +289,16 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_last_child);
     visitor.visit(m_next_sibling);
     visitor.visit(m_previous_sibling);
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#bc-traversable
+JS::NonnullGCPtr<HTML::TraversableNavigable> BrowsingContext::top_level_traversable() const
+{
+    // A browsing context's top-level traversable is its active document's node navigable's top-level traversable.
+    auto traversable = active_document()->navigable()->top_level_traversable();
+    VERIFY(traversable);
+    VERIFY(traversable->is_top_level_traversable());
+    return *traversable;
 }
 
 void BrowsingContext::did_edit(Badge<EditEventHandler>)
