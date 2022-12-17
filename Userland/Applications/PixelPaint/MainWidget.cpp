@@ -1075,12 +1075,13 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_tab_widget->set_tab_title(image_editor, title);
     };
 
-    image_editor.on_modified_change = [&](auto const modified) {
+    image_editor.on_modified_change = Core::debounce([&](auto const modified) {
         m_tab_widget->set_tab_modified(image_editor, modified);
         update_window_modified();
         m_histogram_widget->image_changed();
         m_vectorscope_widget->image_changed();
-    };
+    },
+        100);
 
     image_editor.on_image_mouse_position_change = [&](auto const& mouse_position) {
         auto const& image_size = current_image_editor()->image().size();
