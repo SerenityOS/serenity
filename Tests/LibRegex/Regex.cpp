@@ -1089,6 +1089,18 @@ TEST_CASE(single_match_flag)
     }
 }
 
+TEST_CASE(empty_string_wildcard_match)
+{
+    {
+        // Ensure that the wildcard ".*" matches the empty string exactly once
+        Regex<ECMA262> re(".*"sv, ECMAScriptFlags::Global);
+        auto result = re.match(""sv);
+        EXPECT_EQ(result.success, true);
+        EXPECT_EQ(result.matches.size(), 1u);
+        EXPECT_EQ(result.matches.first().view.to_deprecated_string(), ""sv);
+    }
+}
+
 TEST_CASE(inversion_state_in_char_class)
 {
     {
