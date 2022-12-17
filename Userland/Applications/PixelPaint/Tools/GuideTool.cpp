@@ -91,7 +91,7 @@ void GuideTool::on_mouseup(Layer*, MouseEvent&)
         || (m_selected_guide->orientation() == Guide::Orientation::Horizontal && m_selected_guide->offset() > editor()->image().size().height())
         || (m_selected_guide->orientation() == Guide::Orientation::Vertical && m_selected_guide->offset() > editor()->image().size().width())) {
         editor()->remove_guide(*m_selected_guide);
-        editor()->layers_did_change();
+        editor()->update();
     }
 
     m_selected_guide = nullptr;
@@ -122,7 +122,7 @@ void GuideTool::on_mousemove(Layer*, MouseEvent& event)
 
     GUI::Application::the()->show_tooltip_immediately(DeprecatedString::formatted("{}", new_offset), GUI::Application::the()->tooltip_source_widget());
 
-    editor()->layers_did_change();
+    editor()->update();
 }
 
 void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
