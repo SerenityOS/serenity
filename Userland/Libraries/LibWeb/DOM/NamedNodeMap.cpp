@@ -106,6 +106,20 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qual
     return attribute;
 }
 
+// https://dom.spec.whatwg.org/#dom-namednodemap-removenameditemns
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(StringView namespace_, StringView local_name)
+{
+    // 1. Let attr be the result of removing an attribute given namespace, localName, and element.
+    auto const* attribute = remove_attribute_ns(namespace_, local_name);
+
+    // 2. If attr is null, then throw a "NotFoundError" DOMException.
+    if (!attribute)
+        return WebIDL::NotFoundError::create(realm(), DeprecatedString::formatted("Attribute with namespace '{}' and local name '{}' not found", namespace_, local_name));
+
+    // 3. Return attr.
+    return attribute;
+}
+
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
 Attr* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index)
 {
@@ -248,6 +262,22 @@ Attr const* NamedNodeMap::remove_attribute(StringView qualified_name)
 
     // 1. Let attr be the result of getting an attribute given qualifiedName and element.
     auto const* attribute = get_attribute(qualified_name, &item_index);
+
+    // 2. If attr is non-null, then remove attr.
+    if (attribute)
+        remove_attribute_at_index(item_index);
+
+    // 3. Return attr.
+    return attribute;
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-namespace
+Attr const* NamedNodeMap::remove_attribute_ns(StringView namespace_, StringView local_name)
+{
+    size_t item_index = 0;
+
+    // 1. Let attr be the result of getting an attribute given namespace, localName, and element.
+    auto const* attribute = get_attribute_ns(namespace_, local_name, &item_index);
 
     // 2. If attr is non-null, then remove attr.
     if (attribute)
