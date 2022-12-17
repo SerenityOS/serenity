@@ -263,7 +263,15 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (!event.ctrl() && !event.shift() && event.key() != KeyCode::Key_Delete) {
+    if (event.key() == KeyCode::Key_Escape) {
+        m_selection.set_size(1);
+        m_selection.set_start(m_active_glyph);
+        if (on_escape_pressed)
+            on_escape_pressed();
+        return;
+    }
+
+    if (!event.modifiers() && event.is_arrow_key()) {
         m_selection.set_size(1);
         m_selection.set_start(m_active_glyph);
     }

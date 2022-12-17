@@ -73,6 +73,7 @@ public:
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
 
+    Function<void()> on_escape_pressed;
     Function<void(int)> on_active_glyph_changed;
     Function<void(int)> on_glyph_double_clicked;
     Function<void(ContextMenuEvent&)> on_context_menu_request;
