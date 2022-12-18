@@ -18,6 +18,8 @@ public:
     static ErrorOr<NonnullRefPtr<SnakeGame>> create();
     virtual ~SnakeGame() override = default;
 
+    void start();
+    void pause();
     void reset();
 
 private:

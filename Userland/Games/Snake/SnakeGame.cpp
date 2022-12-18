@@ -59,6 +59,17 @@ SnakeGame::SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
     m_high_score_text = DeprecatedString::formatted("Best: {}", m_high_score);
 }
 
+void SnakeGame::pause()
+{
+    stop_timer();
+}
+
+void SnakeGame::start()
+{
+    static constexpr int timer_ms = 100;
+    start_timer(timer_ms);
+}
+
 void SnakeGame::reset()
 {
     m_head = { m_rows / 2, m_columns / 2 };
@@ -68,8 +79,8 @@ void SnakeGame::reset()
     m_score_text = "Score: 0";
     m_is_new_high_score = false;
     m_velocity_queue.clear();
-    stop_timer();
-    start_timer(100);
+    pause();
+    start();
     spawn_fruit();
     update();
 }
