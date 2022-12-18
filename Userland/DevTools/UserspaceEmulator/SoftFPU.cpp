@@ -1024,9 +1024,16 @@ void SoftFPU::F2XM1(const X86::Instruction&)
 {
     // FIXME: Raise #IA #D #U #P
     // FIXME: Set C1 on when result was rounded up, cleared otherwise
-    // FIXME: Validate ST(0) is in range –1.0 to +1.0
     auto val = fpu_get(0);
-    fpu_set(0, exp2(val) - 1.0l);
+    // Validate ST(0) is in range –1.0 to +1.0.
+    // If the source value is outside this range, the result is undefined.
+    // In practice, the result is the input value.
+    if (val >= -1.0 && val <= 1.0) {
+        fpu_set(0, exp2(val) - 1.0l);
+    } else {
+        fpu_set(0, val);
+        reportln("\033[31;1mWarning! Source operand for F2XM1 is out of range! ({}, should be in range -1.0 to +1.0)\033[0m\n"sv, val);
+    }
 }
 void SoftFPU::FYL2X(const X86::Instruction&)
 {
