@@ -237,6 +237,12 @@ if command -v wslpath >/dev/null; then
    SERENITY_DISABLE_GDB_SOCKET=1
 fi
 
+if [ "$(uname)" = "Darwin" ] &&
+   [ "${SERENITY_VIRT_TECH_ARG}" = "--accel hvf" ]; then
+  # HVF doesn't support gdbstub per https://wiki.qemu.org/Features/HVF
+  SERENITY_DISABLE_GDB_SOCKET=1
+fi
+
 if [ -z "$SERENITY_DISABLE_GDB_SOCKET" ]; then
     SERENITY_EXTRA_QEMU_ARGS="$SERENITY_EXTRA_QEMU_ARGS -gdb tcp:${SERENITY_HOST_IP}:1234"
 fi
