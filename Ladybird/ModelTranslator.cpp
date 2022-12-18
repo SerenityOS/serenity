@@ -12,20 +12,19 @@
 
 namespace Ladybird {
 
-ModelTranslator::ModelTranslator(NonnullRefPtr<GUI::Model> model)
-    : m_model(move(model))
-{
-}
-
 ModelTranslator::~ModelTranslator() = default;
 
 int ModelTranslator::columnCount(QModelIndex const& parent) const
 {
+    if (!m_model)
+        return 0;
     return m_model->column_count(to_gui(parent));
 }
 
 int ModelTranslator::rowCount(QModelIndex const& parent) const
 {
+    if (!m_model)
+        return 0;
     return m_model->row_count(to_gui(parent));
 }
 
@@ -47,6 +46,7 @@ static QVariant convert_variant(GUI::Variant const& value)
 
 QVariant ModelTranslator::data(QModelIndex const& index, int role) const
 {
+    VERIFY(m_model);
     switch (role) {
     case Qt::DisplayRole:
         return convert_variant(m_model->data(to_gui(index), GUI::ModelRole::Display));
@@ -59,11 +59,13 @@ QVariant ModelTranslator::data(QModelIndex const& index, int role) const
 
 QModelIndex ModelTranslator::index(int row, int column, QModelIndex const& parent) const
 {
+    VERIFY(m_model);
     return to_qt(m_model->index(row, column, to_gui(parent)));
 }
 
 QModelIndex ModelTranslator::parent(QModelIndex const& index) const
 {
+    VERIFY(m_model);
     return to_qt(m_model->parent_index(to_gui(index)));
 }
 
@@ -76,6 +78,7 @@ QModelIndex ModelTranslator::to_qt(GUI::ModelIndex const& index) const
 
 GUI::ModelIndex ModelTranslator::to_gui(QModelIndex const& index) const
 {
+    VERIFY(m_model);
     if (!index.isValid())
         return {};
     return m_model->unsafe_create_index(index.row(), index.column(), index.internalPointer());

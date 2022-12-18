@@ -14,8 +14,14 @@ namespace Ladybird {
 class ModelTranslator final : public QAbstractItemModel {
     Q_OBJECT
 public:
-    explicit ModelTranslator(NonnullRefPtr<GUI::Model>);
     virtual ~ModelTranslator() override;
+
+    void set_underlying_model(RefPtr<GUI::Model> model)
+    {
+        beginResetModel();
+        m_model = model;
+        endResetModel();
+    }
 
     virtual int columnCount(QModelIndex const& parent) const override;
     virtual int rowCount(QModelIndex const& parent) const override;
