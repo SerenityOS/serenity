@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DefaultDelete.h>
+#include <AK/SinglyLinkedListSizePolicy.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -64,7 +65,7 @@ using Bytes = Span<u8>;
 template<typename T, AK::MemoryOrder DefaultMemoryOrder>
 class Atomic;
 
-template<typename T>
+template<typename T, typename TSizeCalculationPolicy = DefaultSizeCalculationPolicy>
 class SinglyLinkedList;
 
 template<typename T>
