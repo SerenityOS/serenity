@@ -13,6 +13,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ColorPicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -67,6 +68,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             action.set_text(pause_text);
             action.set_icon(pause_icon);
         }
+    })));
+    TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
+        game->pause();
+        auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
+        if (dialog->exec() == GUI::Dialog::ExecResult::OK)
+            game->set_snake_base_color(dialog->color());
+        game->start();
     })));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {

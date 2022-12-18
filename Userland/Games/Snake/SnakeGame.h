@@ -22,6 +22,8 @@ public:
     void pause();
     void reset();
 
+    void set_snake_base_color(Color color) { m_snake_base_color = color; };
+
 private:
     explicit SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
 
