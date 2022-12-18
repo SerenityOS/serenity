@@ -8,6 +8,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/Command.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibRegex/Regex.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -111,7 +112,8 @@ ErrorOr<void> ProjectBuilder::build_serenity_component()
 
 ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_path)
 {
-    auto content = TRY(Core::File::open(cmake_file_path, Core::OpenMode::ReadOnly))->read_all();
+    auto file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Read));
+    auto content = TRY(file->read_until_eof());
 
     static Regex<ECMA262> const component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
     RegexResult result;
@@ -133,8 +135,8 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
     if (Core::File::exists(cmake_file_path))
         MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed, false));
 
-    auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::OpenMode::WriteOnly));
-    cmake_file->write(generate_cmake_file_content());
+    auto cmake_file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Write));
+    TRY(cmake_file->write_entire_buffer(generate_cmake_file_content().bytes()));
 
     TRY(m_terminal->run_command(DeprecatedString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
                                                             " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",

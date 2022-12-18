@@ -17,6 +17,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibCpp/SemanticSyntaxHighlighter.h>
 #include <LibCpp/SyntaxHighlighter.h>
@@ -231,14 +232,19 @@ void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hov
     }
 
     dbgln_if(EDITOR_DEBUG, "opening {}", it->value);
-    auto file = Core::File::construct(it->value);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        dbgln("failed to open {}, {}", it->value, file->error_string());
+    auto file_or_error = Core::Stream::File::open(it->value, Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error()) {
+        dbgln("Failed to open {}, {}", it->value, file_or_error.error());
         return;
     }
 
-    auto man_document = Markdown::Document::parse(file->read_all());
+    auto buffer_or_error = file_or_error.release_value()->read_until_eof();
+    if (buffer_or_error.is_error()) {
+        dbgln("Couldn't read file: {}", buffer_or_error.error());
+        return;
+    }
 
+    auto man_document = Markdown::Document::parse(buffer_or_error.release_value());
     if (!man_document) {
         dbgln("failed to parse markdown");
         return;
