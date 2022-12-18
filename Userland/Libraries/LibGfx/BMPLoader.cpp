@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Bruno Conde <brunompconde@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -133,6 +134,8 @@ struct BMPLoadingContext {
     u8 const* file_bytes { nullptr };
     size_t file_size { 0 };
     u32 data_offset { 0 };
+
+    bool is_included_in_ico { false };
 
     DIB dib;
     DIBType dib_type;
@@ -749,23 +752,33 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
     if (context.state >= BMPLoadingContext::State::DIBDecoded)
         return true;
 
-    if (context.state < BMPLoadingContext::State::HeaderDecoded && !decode_bmp_header(context))
+    if (!context.is_included_in_ico && context.state < BMPLoadingContext::State::HeaderDecoded && !decode_bmp_header(context))
         return false;
 
-    if (context.file_size < bmp_header_size + 4)
+    u8 header_size = context.is_included_in_ico ? 0 : bmp_header_size;
+
+    if (!context.is_included_in_ico && context.file_size < (u8)(header_size + 4))
         return false;
 
-    InputStreamer streamer(context.file_bytes + bmp_header_size, 4);
+    if (context.is_included_in_ico && context.file_size < 4)
+        return false;
+
+    InputStreamer streamer(context.file_bytes + (context.is_included_in_ico ? 0 : header_size), 4);
+
     u32 dib_size = streamer.read_u32();
 
-    if (context.file_size < bmp_header_size + dib_size)
+    if (context.file_size < header_size + dib_size)
         return false;
-    if (context.data_offset < bmp_header_size + dib_size) {
+
+    if (!context.is_included_in_ico && (context.data_offset < header_size + dib_size)) {
         dbgln("Shenanigans! BMP pixel data and header usually don't overlap.");
         return false;
     }
 
-    streamer = InputStreamer(context.file_bytes + bmp_header_size + 4, context.data_offset - bmp_header_size - 4);
+    // NOTE: If this is a headless BMP (embedded on ICO files), then we can only infer the data_offset after we know the data table size.
+    // We are also assuming that no Extra bit masks are present
+    u32 dib_offset = context.is_included_in_ico ? dib_size : context.data_offset - header_size - 4;
+    streamer = InputStreamer(context.file_bytes + header_size + 4, dib_offset);
 
     dbgln_if(BMP_DEBUG, "BMP dib size: {}", dib_size);
 
@@ -833,6 +846,18 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
         return false;
     }
 
+    // NOTE: If this is a headless BMP (included on ICOns), the data_offset is set based on the number_of_palette_colors found on the DIB header
+    if (context.is_included_in_ico) {
+        if (context.dib.core.bpp > 8)
+            context.data_offset = dib_size;
+        else {
+            auto bytes_per_color = context.dib_type == DIBType::Core ? 3 : 4;
+            u32 max_colors = 1 << context.dib.core.bpp;
+            auto size_of_color_table = (context.dib.info.number_of_palette_colors > 0 ? context.dib.info.number_of_palette_colors : max_colors) * bytes_per_color;
+            context.data_offset = dib_size + size_of_color_table;
+        }
+    }
+
     context.state = BMPLoadingContext::State::DIBDecoded;
 
     return true;
@@ -856,8 +881,16 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
 
     auto bytes_per_color = context.dib_type == DIBType::Core ? 3 : 4;
     u32 max_colors = 1 << context.dib.core.bpp;
-    VERIFY(context.data_offset >= bmp_header_size + context.dib_size());
-    auto size_of_color_table = context.data_offset - bmp_header_size - context.dib_size();
+
+    u8 header_size = !context.is_included_in_ico ? bmp_header_size : 0;
+    VERIFY(context.data_offset >= header_size + context.dib_size());
+
+    u32 size_of_color_table;
+    if (!context.is_included_in_ico) {
+        size_of_color_table = context.data_offset - header_size - context.dib_size();
+    } else {
+        size_of_color_table = (context.dib.info.number_of_palette_colors > 0 ? context.dib.info.number_of_palette_colors : max_colors) * bytes_per_color;
+    }
 
     if (context.dib_type <= DIBType::OSV2) {
         // Partial color tables are not supported, so the space of the color
@@ -868,7 +901,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
         }
     }
 
-    InputStreamer streamer(context.file_bytes + bmp_header_size + context.dib_size(), size_of_color_table);
+    InputStreamer streamer(context.file_bytes + header_size + context.dib_size(), size_of_color_table);
     for (u32 i = 0; !streamer.at_end() && i < max_colors; ++i) {
         if (bytes_per_color == 4) {
             if (!streamer.has_u32())
@@ -882,6 +915,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
     }
 
     context.state = BMPLoadingContext::State::ColorTableDecoded;
+
     return true;
 }
 
@@ -1140,6 +1174,14 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
     const u16 bits_per_pixel = context.dib.core.bpp;
 
     BitmapFormat format = [&]() -> BitmapFormat {
+        // NOTE: If this is an BMP included in an ICO, the bitmap format will be converted to BGRA8888.
+        //       This is because images with less than 32 bits of color depth follow a particular format:
+        //       the image is encoded with a color mask (the "XOR mask") together with an opacity mask (the "AND mask") of 1 bit per pixel.
+        //       The height of the encoded image must be exactly twice the real height, before both masks are combined.
+        //       Bitmaps have no knowledge of this format as they do not store extra rows for the AND mask.
+        if (context.is_included_in_ico)
+            return BitmapFormat::BGRA8888;
+
         switch (bits_per_pixel) {
         case 1:
             return BitmapFormat::Indexed1;
@@ -1169,7 +1211,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
     }
 
     const u32 width = abs(context.dib.core.width);
-    const u32 height = abs(context.dib.core.height);
+    const u32 height = !context.is_included_in_ico ? context.dib.core.height : (context.dib.core.height / 2);
 
     auto bitmap_or_error = Bitmap::try_create(format, { static_cast<int>(width), static_cast<int>(height) });
     if (bitmap_or_error.is_error()) {
@@ -1191,6 +1233,18 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
 
     InputStreamer streamer(bytes.data(), bytes.size());
 
+    auto process_row_padding = [&](const u8 consumed) -> bool {
+        // Calculate padding
+        u8 remaining = consumed % 4;
+        u8 bytes_to_drop = remaining == 0 ? 0 : 4 - remaining;
+
+        if (streamer.remaining() < bytes_to_drop)
+            return false;
+        streamer.drop_bytes(bytes_to_drop);
+
+        return true;
+    };
+
     auto process_row = [&](u32 row) -> bool {
         u32 space_remaining_before_consuming_row = streamer.remaining();
 
@@ -1203,7 +1257,13 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
                 u8 mask = 8;
                 while (column < width && mask > 0) {
                     mask -= 1;
-                    context.bitmap->scanline_u8(row)[column++] = (byte >> mask) & 0x1;
+                    auto color_idx = (byte >> mask) & 0x1;
+                    if (context.is_included_in_ico) {
+                        auto color = context.color_table[color_idx];
+                        context.bitmap->scanline(row)[column++] = color;
+                    } else {
+                        context.bitmap->scanline_u8(row)[column++] = color_idx;
+                    }
                 }
                 break;
             }
@@ -1214,24 +1274,52 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
                 u8 mask = 8;
                 while (column < width && mask > 0) {
                     mask -= 2;
-                    context.bitmap->scanline_u8(row)[column++] = (byte >> mask) & 0x3;
+                    auto color_idx = (byte >> mask) & 0x3;
+                    if (context.is_included_in_ico) {
+                        auto color = context.color_table[color_idx];
+                        context.bitmap->scanline(row)[column++] = color;
+                    } else {
+                        context.bitmap->scanline_u8(row)[column++] = color_idx;
+                    }
                 }
                 break;
             }
             case 4: {
-                if (!streamer.has_u8())
+                if (!streamer.has_u8()) {
                     return false;
+                }
                 u8 byte = streamer.read_u8();
-                context.bitmap->scanline_u8(row)[column++] = (byte >> 4) & 0xf;
-                if (column < width)
-                    context.bitmap->scanline_u8(row)[column++] = byte & 0xf;
+
+                u32 high_color_idx = (byte >> 4) & 0xf;
+                u32 low_color_idx = byte & 0xf;
+
+                if (context.is_included_in_ico) {
+                    auto high_color = context.color_table[high_color_idx];
+                    auto low_color = context.color_table[low_color_idx];
+                    context.bitmap->scanline(row)[column++] = high_color;
+                    if (column < width) {
+                        context.bitmap->scanline(row)[column++] = low_color;
+                    }
+                } else {
+                    context.bitmap->scanline_u8(row)[column++] = high_color_idx;
+                    if (column < width)
+                        context.bitmap->scanline_u8(row)[column++] = low_color_idx;
+                }
                 break;
             }
-            case 8:
+            case 8: {
                 if (!streamer.has_u8())
                     return false;
-                context.bitmap->scanline_u8(row)[column++] = streamer.read_u8();
+
+                u8 byte = streamer.read_u8();
+                if (context.is_included_in_ico) {
+                    auto color = context.color_table[byte];
+                    context.bitmap->scanline(row)[column++] = color;
+                } else {
+                    context.bitmap->scanline_u8(row)[column++] = byte;
+                }
                 break;
+            }
             case 16: {
                 if (!streamer.has_u16())
                     return false;
@@ -1248,7 +1336,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
                 if (!streamer.has_u32())
                     return false;
                 if (context.dib.info.masks.is_empty()) {
-                    context.bitmap->scanline(row)[column++] = streamer.read_u32() | 0xff000000;
+                    context.bitmap->scanline(row)[column++] = streamer.read_u32();
                 } else {
                     context.bitmap->scanline(row)[column++] = int_to_scaled_rgb(context, streamer.read_u32());
                 }
@@ -1258,25 +1346,38 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
 
         auto consumed = space_remaining_before_consuming_row - streamer.remaining();
 
-        // Calculate padding
-        u8 bytes_to_drop = [consumed]() -> u8 {
-            switch (consumed % 4) {
-            case 0:
-                return 0;
-            case 1:
-                return 3;
-            case 2:
-                return 2;
-            case 3:
-                return 1;
-            }
-            VERIFY_NOT_REACHED();
-        }();
-        if (streamer.remaining() < bytes_to_drop)
-            return false;
-        streamer.drop_bytes(bytes_to_drop);
+        return process_row_padding(consumed);
+    };
 
-        return true;
+    auto process_mask_row = [&](u32 row) -> bool {
+        u32 space_remaining_before_consuming_row = streamer.remaining();
+
+        for (u32 column = 0; column < width;) {
+            if (!streamer.has_u8())
+                return false;
+
+            u8 byte = streamer.read_u8();
+            u8 mask = 8;
+            while (column < width && mask > 0) {
+                mask -= 1;
+                // apply transparency mask
+                // AND mask = 0 -> fully opaque
+                // AND mask = 1 -> fully transparent
+                u8 and_byte = (byte >> (mask)) & 0x1;
+                auto pixel = context.bitmap->scanline(row)[column];
+
+                if (and_byte) {
+                    pixel &= 0x00ffffff;
+                } else if (context.dib.core.bpp < 32) {
+                    pixel |= 0xff000000;
+                }
+
+                context.bitmap->scanline(row)[column++] = pixel;
+            }
+        }
+
+        auto consumed = space_remaining_before_consuming_row - streamer.remaining();
+        return process_row_padding(consumed);
     };
 
     if (context.dib.core.height < 0) {
@@ -1285,26 +1386,45 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
             if (!process_row(row))
                 return false;
         }
+
+        if (context.is_included_in_ico) {
+            for (u32 row = 0; row < height; ++row) {
+                if (!process_mask_row(row))
+                    return false;
+            }
+        }
     } else {
+        // BMP is stored bottom-up
         for (i32 row = height - 1; row >= 0; --row) {
             if (!process_row(row))
                 return false;
         }
+
+        if (context.is_included_in_ico) {
+            for (i32 row = height - 1; row >= 0; --row) {
+                if (!process_mask_row(row))
+                    return false;
+            }
+        }
     }
 
-    for (size_t i = 0; i < context.color_table.size(); ++i)
-        context.bitmap->set_palette_color(i, Color::from_rgb(context.color_table[i]));
+    if (!context.is_included_in_ico) {
+        for (size_t i = 0; i < context.color_table.size(); ++i) {
+            context.bitmap->set_palette_color(i, Color::from_rgb(context.color_table[i]));
+        }
+    }
 
     context.state = BMPLoadingContext::State::PixelDataDecoded;
 
     return true;
 }
 
-BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size)
+BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, bool is_included_in_ico)
 {
     m_context = make<BMPLoadingContext>();
     m_context->file_bytes = data;
     m_context->file_size = data_size;
+    m_context->is_included_in_ico = is_included_in_ico;
 }
 
 BMPImageDecoderPlugin::~BMPImageDecoderPlugin() = default;
@@ -1336,6 +1456,11 @@ bool BMPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 bool BMPImageDecoderPlugin::sniff()
 {
     return decode_bmp_header(*m_context);
+}
+
+bool BMPImageDecoderPlugin::sniff_dib()
+{
+    return decode_bmp_dib(*m_context);
 }
 
 bool BMPImageDecoderPlugin::is_animated()
