@@ -23,6 +23,8 @@
 #include <QAbstractScrollArea>
 #include <QPointer>
 
+#include "DOMNodeProperties.h"
+
 class QTextEdit;
 class QLineEdit;
 
@@ -189,9 +191,9 @@ private:
 
     bool is_inspector_open() const;
     void inspect_dom_tree();
-    void inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
     void clear_inspected_dom_node();
     void clear_inspector_callbacks();
+    ErrorOr<Ladybird::DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
