@@ -497,6 +497,22 @@ if (BUILD_LAGOM)
         add_executable(test262-runner ../../Tests/LibJS/test262-runner.cpp)
         target_link_libraries(test262-runner LibJS LibCore)
 
+        if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            include(CheckCSourceCompiles)
+            # Check for musl's declaration of __assert_fail
+            check_c_source_compiles(
+                "
+                #include <assert.h>
+                __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, int line, char const* function) {}
+                int main() {}
+                "
+                ASSERT_FAIL_HAS_INT
+            )
+        endif()
+        if (ASSERT_FAIL_HAS_INT OR EMSCRIPTEN)
+            target_compile_definitions(test262-runner PRIVATE ASSERT_FAIL_HAS_INT)
+        endif()
+
         add_executable(wasm ../../Userland/Utilities/wasm.cpp)
         target_link_libraries(wasm LibCore LibWasm LibLine LibMain)
 
