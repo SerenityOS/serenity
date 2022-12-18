@@ -49,7 +49,7 @@ public:
     virtual void notify_server_did_request_dismiss_dialog(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_get_source(const AK::URL& url, DeprecatedString const& source) = 0;
     virtual void notify_server_did_get_dom_tree(DeprecatedString const& dom_tree) = 0;
-    virtual void notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) = 0;
+    virtual void notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) = 0;
     virtual void notify_server_did_output_js_console_message(i32 message_index) = 0;
     virtual void notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages) = 0;
     virtual void notify_server_did_change_favicon(Gfx::Bitmap const& favicon) = 0;

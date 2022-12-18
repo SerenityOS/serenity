@@ -161,9 +161,9 @@ void WebContentClient::did_get_dom_tree(DeprecatedString const& dom_tree)
     m_view.notify_server_did_get_dom_tree(dom_tree);
 }
 
-void WebContentClient::did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
+void WebContentClient::did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
 {
-    m_view.notify_server_did_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
+    m_view.notify_server_did_get_dom_node_properties(node_id, computed_style, resolved_style, custom_properties, node_box_sizing);
 }
 
 void WebContentClient::did_output_js_console_message(i32 message_index)

@@ -53,7 +53,7 @@ private:
     virtual void did_request_image_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_get_source(AK::URL const&, DeprecatedString const&) override;
     virtual void did_get_dom_tree(DeprecatedString const&) override;
-    virtual void did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
+    virtual void did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
     virtual void did_output_js_console_message(i32 message_index) override;
     virtual void did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;

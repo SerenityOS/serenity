@@ -44,8 +44,8 @@ public:
 
     void inspect_dom_tree();
     struct DOMNodeProperties {
-        DeprecatedString specified_values_json;
         DeprecatedString computed_values_json;
+        DeprecatedString resolved_values_json;
         DeprecatedString custom_properties_json;
         DeprecatedString node_box_sizing_json;
     };
@@ -96,7 +96,7 @@ public:
     Function<void(Web::DOM::Document*)> on_set_document;
     Function<void(const AK::URL&, DeprecatedString const&)> on_get_source;
     Function<void(DeprecatedString const&)> on_get_dom_tree;
-    Function<void(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)> on_get_dom_node_properties;
+    Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)> on_get_dom_node_properties;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_get_js_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
@@ -169,7 +169,7 @@ private:
     virtual void notify_server_did_request_dismiss_dialog(Badge<WebContentClient>) override;
     virtual void notify_server_did_get_source(const AK::URL& url, DeprecatedString const& source) override;
     virtual void notify_server_did_get_dom_tree(DeprecatedString const& dom_tree) override;
-    virtual void notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
+    virtual void notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
     virtual void notify_server_did_output_js_console_message(i32 message_index) override;
     virtual void notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages) override;
     virtual void notify_server_did_change_favicon(Gfx::Bitmap const& favicon) override;
