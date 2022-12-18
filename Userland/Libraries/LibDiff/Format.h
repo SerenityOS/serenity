@@ -9,5 +9,5 @@
 #include <AK/DeprecatedString.h>
 
 namespace Diff {
-DeprecatedString generate_only_additions(DeprecatedString const&);
+DeprecatedString generate_only_additions(StringView);
 };
