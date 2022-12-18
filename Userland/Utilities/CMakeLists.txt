@@ -121,7 +121,7 @@ target_link_libraries(test-fuzz PRIVATE LibGemini LibGfx LibHTTP LibIPC LibJS Li
 target_link_libraries(test-imap PRIVATE LibIMAP)
 target_link_libraries(test-pthread PRIVATE LibThreading)
 target_link_libraries(unveil PRIVATE LibMain)
-target_link_libraries(unzip PRIVATE LibArchive LibCompress)
+target_link_libraries(unzip PRIVATE LibArchive LibCompress LibCrypto)
 target_link_libraries(update-cpp-test-results PRIVATE LibCpp)
 target_link_libraries(useradd PRIVATE LibCrypt)
 target_link_libraries(wallpaper PRIVATE LibGfx LibGUI)
