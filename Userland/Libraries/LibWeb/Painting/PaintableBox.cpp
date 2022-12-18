@@ -58,15 +58,13 @@ PaintableWithLines::~PaintableWithLines()
 void PaintableBox::set_offset(CSSPixelPoint offset)
 {
     m_offset = offset;
-    // FIXME: This const_cast is gross.
-    const_cast<Layout::Box&>(layout_box()).did_set_rect();
+    layout_box().did_set_rect();
 }
 
 void PaintableBox::set_content_size(CSSPixelSize size)
 {
     m_content_size = size;
-    // FIXME: This const_cast is gross.
-    const_cast<Layout::Box&>(layout_box()).did_set_rect();
+    layout_box().did_set_rect();
 }
 
 CSSPixelPoint PaintableBox::effective_offset() const
@@ -647,7 +645,7 @@ bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, u
         return false;
     auto new_offset = layout_box().scroll_offset();
     new_offset.translate_by(wheel_delta_x, wheel_delta_y);
-    const_cast<Layout::BlockContainer&>(layout_box()).set_scroll_offset(new_offset);
+    layout_box().set_scroll_offset(new_offset);
     return true;
 }
 
