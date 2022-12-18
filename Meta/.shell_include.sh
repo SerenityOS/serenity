@@ -20,8 +20,14 @@ die() {
 find_executable() {
   paths=("/usr/sbin" "/sbin")
 
-  if [ "$(uname -s)" = "Darwin" ] && [ -n "${HOMEBREW_PREFIX}" ]; then
-    paths+=("${HOMEBREW_PREFIX}/opt/e2fsprogs/bin" "${HOMEBREW_PREFIX}/opt/e2fsprogs/sbin")
+  if [ "$(uname -s)" = "Darwin" ]; then
+    if [ -n "${HOMEBREW_PREFIX}" ]; then
+      paths+=("${HOMEBREW_PREFIX}/opt/e2fsprogs/bin" "${HOMEBREW_PREFIX}/opt/e2fsprogs/sbin")
+    elif command -v brew > /dev/null 2>&1; then
+      if prefix=$(brew --prefix e2fsprogs 2>/dev/null); then
+        paths+=("${prefix}/bin" "${prefix}/sbin")
+      fi
+    fi
   fi
 
   executable="${1}"
