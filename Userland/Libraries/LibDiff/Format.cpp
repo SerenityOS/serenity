@@ -10,9 +10,9 @@
 #include <AK/Vector.h>
 
 namespace Diff {
-DeprecatedString generate_only_additions(DeprecatedString const& text)
+DeprecatedString generate_only_additions(StringView text)
 {
-    auto lines = text.split('\n', SplitBehavior::KeepEmpty);
+    auto lines = text.split_view('\n', SplitBehavior::KeepEmpty);
     StringBuilder builder;
     builder.appendff("@@ -0,0 +1,{} @@\n", lines.size());
     for (auto const& line : lines) {
