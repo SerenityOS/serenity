@@ -16,6 +16,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWebView/ViewImplementation.h>
 
 #include <LibWeb/Forward.h>
@@ -27,6 +28,7 @@ class QLineEdit;
 
 namespace Ladybird {
 class ConsoleWidget;
+class InspectorWidget;
 }
 
 namespace WebView {
@@ -185,13 +187,19 @@ private:
     void ensure_js_console_widget();
     void ensure_inspector_widget();
 
+    bool is_inspector_open() const;
+    void inspect_dom_tree();
+    void inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
+    void clear_inspected_dom_node();
+    void clear_inspector_callbacks();
+
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
-    QPointer<QWidget> m_inspector_widget;
     QPointer<QDialog> m_dialog;
 
     Ladybird::ConsoleWidget* m_console_widget { nullptr };
+    Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 
     Gfx::IntRect m_viewport_rect;
 

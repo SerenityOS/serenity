@@ -8,7 +8,7 @@
 
 #include "WebContentView.h"
 #include "ConsoleWidget.h"
-#include "ModelTranslator.h"
+#include "InspectorWidget.h"
 #include "Utilities.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -33,10 +33,10 @@
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/SystemTheme.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Loader/ContentFilter.h>
-#include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/WebContentClient.h>
 #include <QApplication>
 #include <QCursor>
@@ -52,8 +52,6 @@
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolTip>
-#include <QTreeView>
-#include <QVBoxLayout>
 
 WebContentView::WebContentView(StringView webdriver_content_ipc_path)
     : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
@@ -79,6 +77,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
 
 WebContentView::~WebContentView()
 {
+    clear_inspector_callbacks();
 }
 
 void WebContentView::load(AK::URL const& url)
@@ -504,34 +503,50 @@ void WebContentView::ensure_inspector_widget()
 {
     if (m_inspector_widget)
         return;
-#if 0
-    m_inspector_widget = new QWidget;
+    m_inspector_widget = new Ladybird::InspectorWidget;
     m_inspector_widget->setWindowTitle("Inspector");
-    auto* layout = new QVBoxLayout;
-    m_inspector_widget->setLayout(layout);
-    auto* tree_view = new QTreeView;
-    layout->addWidget(tree_view);
-
-    auto dom_tree = m_page_client->page().top_level_browsing_context().active_document()->dump_dom_tree_as_json();
-    auto dom_tree_model = ::WebView::DOMTreeModel::create(dom_tree);
-    auto* model = new Ladybird::ModelTranslator(dom_tree_model);
-    tree_view->setModel(model);
-    tree_view->setHeaderHidden(true);
-    tree_view->expandToDepth(3);
-
     m_inspector_widget->resize(640, 480);
+    m_inspector_widget->on_close = [this] {
+        clear_inspected_dom_node();
+    };
 
-    QObject::connect(tree_view->selectionModel(), &QItemSelectionModel::currentChanged, [this](QModelIndex const& index, QModelIndex const&) {
-        auto const* json = (JsonObject const*)index.internalPointer();
-        m_page_client->page().top_level_browsing_context().active_document()->set_inspected_node(Web::DOM::Node::from_id(json->get("id"sv).to_i32()));
-    });
-#endif
+    m_inspector_widget->on_dom_node_inspected = [&](auto id, auto pseudo_element) {
+        inspect_dom_node(id, pseudo_element);
+    };
+}
+
+void WebContentView::clear_inspector_callbacks()
+{
+    if (m_inspector_widget)
+        m_inspector_widget->on_close = nullptr;
+}
+
+bool WebContentView::is_inspector_open() const
+{
+    return m_inspector_widget && m_inspector_widget->isVisible();
+}
+
+void WebContentView::inspect_dom_tree()
+{
+    client().async_inspect_dom_tree();
+}
+
+void WebContentView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
+{
+    // TODO: Use and display response
+    (void)client().inspect_dom_node(node_id, pseudo_element);
+}
+
+void WebContentView::clear_inspected_dom_node()
+{
+    inspect_dom_node(0, {});
 }
 
 void WebContentView::show_inspector()
 {
     ensure_inspector_widget();
     m_inspector_widget->show();
+    inspect_dom_tree();
 }
 
 void WebContentView::set_color_scheme(ColorScheme color_scheme)
@@ -806,11 +821,15 @@ void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK
 {
     m_url = url;
     emit load_started(url, is_redirect);
+    if (m_inspector_widget)
+        m_inspector_widget->clear_dom_json();
 }
 
 void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
 {
     m_url = url;
+    if (is_inspector_open())
+        inspect_dom_tree();
 }
 
 void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
@@ -916,6 +935,8 @@ void WebContentView::notify_server_did_get_dom_tree(DeprecatedString const& dom_
 {
     if (on_get_dom_tree)
         on_get_dom_tree(dom_tree);
+    if (m_inspector_widget)
+        m_inspector_widget->set_dom_json(dom_tree);
 }
 
 void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
