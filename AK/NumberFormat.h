@@ -44,6 +44,9 @@ static inline DeprecatedString human_readable_size_long(u64 size)
 
 static inline DeprecatedString human_readable_time(i64 time_in_seconds)
 {
+    auto days = time_in_seconds / 86400;
+    time_in_seconds = time_in_seconds % 86400;
+
     auto hours = time_in_seconds / 3600;
     time_in_seconds = time_in_seconds % 3600;
 
@@ -51,6 +54,9 @@ static inline DeprecatedString human_readable_time(i64 time_in_seconds)
     time_in_seconds = time_in_seconds % 60;
 
     StringBuilder builder;
+
+    if (days > 0)
+        builder.appendff("{} day{} ", days, days == 1 ? "" : "s");
 
     if (hours > 0)
         builder.appendff("{} hour{} ", hours, hours == 1 ? "" : "s");
