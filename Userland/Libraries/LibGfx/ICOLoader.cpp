@@ -9,6 +9,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
+#include <LibGfx/BMPLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <string.h>
@@ -34,38 +35,6 @@ struct ICONDIRENTRY {
     u32 offset;
 };
 static_assert(AssertSize<ICONDIRENTRY, 16>());
-
-struct [[gnu::packed]] BMPFILEHEADER {
-    u8 signature[2];
-    u32 size;
-    u16 reserved1;
-    u16 reserved2;
-    u32 offset;
-};
-static_assert(sizeof(BMPFILEHEADER) == 14);
-
-struct BITMAPINFOHEADER {
-    u32 size;
-    i32 width;
-    i32 height;
-    u16 planes;
-    u16 bpp;
-    u32 compression;
-    u32 size_image;
-    u32 vres;
-    u32 hres;
-    u32 palette_size;
-    u32 important_colors;
-};
-static_assert(sizeof(BITMAPINFOHEADER) == 40);
-
-struct [[gnu::packed]] BMP_ARGB {
-    u8 b;
-    u8 g;
-    u8 r;
-    u8 a;
-};
-static_assert(sizeof(BMP_ARGB) == 4);
 
 struct ICOImageDescriptor {
     u16 width;
@@ -162,87 +131,6 @@ static bool load_ico_directory(ICOLoadingContext& context)
     return true;
 }
 
-static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
-{
-    BITMAPINFOHEADER info;
-    if (desc.size < sizeof(info))
-        return false;
-
-    memcpy(&info, context.data + desc.offset, sizeof(info));
-    if (info.size != sizeof(info)) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: info size: {}, expected: {}", info.size, sizeof(info));
-        return false;
-    }
-
-    if (info.width < 0) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: width {} < 0", info.width);
-        return false;
-    }
-
-    if (info.height == NumericLimits<i32>::min()) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: height == NumericLimits<i32>::min()");
-        return false;
-    }
-
-    bool topdown = false;
-    if (info.height < 0) {
-        topdown = true;
-        info.height = -info.height;
-    }
-
-    if (info.planes != 1) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: planes: {} != 1", info.planes);
-        return false;
-    }
-
-    if (info.bpp != 32) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: unsupported bpp: {}", info.bpp);
-        return false;
-    }
-
-    dbgln_if(ICO_DEBUG, "load_ico_bmp: width: {} height: {} direction: {} bpp: {} size_image: {}",
-        info.width, info.height, topdown ? "TopDown" : "BottomUp", info.bpp, info.size_image);
-
-    if (info.compression != 0 || info.palette_size != 0 || info.important_colors != 0) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: following fields must be 0: compression: {} palette_size: {} important_colors: {}", info.compression, info.palette_size, info.important_colors);
-        return false;
-    }
-
-    if (info.width != desc.width || info.height != 2 * desc.height) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: size mismatch: ico {}x{}, bmp {}x{}", desc.width, desc.height, info.width, info.height);
-        return false;
-    }
-
-    // Mask is 1bpp, and each row must be 4-byte aligned
-    size_t mask_row_len = align_up_to(align_up_to(desc.width, 8) / 8, 4);
-    size_t required_len = desc.height * (desc.width * sizeof(BMP_ARGB) + mask_row_len);
-    size_t available_len = desc.size - sizeof(info);
-    if (required_len > available_len) {
-        dbgln_if(ICO_DEBUG, "load_ico_bmp: required_len: {} > available_len: {}", required_len, available_len);
-        return false;
-    }
-
-    auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRA8888, { desc.width, desc.height });
-    if (bitmap_or_error.is_error())
-        return false;
-    desc.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-    Bitmap& bitmap = *desc.bitmap;
-    u8 const* image_base = context.data + desc.offset + sizeof(info);
-    const BMP_ARGB* data_base = (const BMP_ARGB*)image_base;
-    u8 const* mask_base = image_base + desc.width * desc.height * sizeof(BMP_ARGB);
-    for (int y = 0; y < desc.height; y++) {
-        u8 const* row_mask = mask_base + mask_row_len * y;
-        const BMP_ARGB* row_data = data_base + desc.width * y;
-        for (int x = 0; x < desc.width; x++) {
-            u8 mask = !!(row_mask[x / 8] & (0x80 >> (x % 8)));
-            BMP_ARGB data = row_data[x];
-            bitmap.set_pixel(x, topdown ? y : desc.height - y - 1,
-                Color(data.r, data.g, data.b, mask ? 0 : data.a));
-        }
-    }
-    return true;
-}
-
 static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 {
     if (context.state < ICOLoadingContext::State::DirectoryDecoded) {
@@ -271,8 +159,16 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
         desc.bitmap = decoded_png_frame.value().image;
         return true;
     } else {
-        if (!load_ico_bmp(context, desc)) {
-            dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load BMP encoded image index: {}", real_index);
+        BMPImageDecoderPlugin bmp_decoder(context.data + desc.offset, desc.size, true);
+        if (bmp_decoder.sniff_dib()) {
+            auto decoded_bmp_frame = bmp_decoder.frame(0);
+            if (decoded_bmp_frame.is_error() || !decoded_bmp_frame.value().image) {
+                dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load BMP encoded image index: {}", real_index);
+                return false;
+            }
+            desc.bitmap = decoded_bmp_frame.value().image;
+        } else {
+            dbgln_if(ICO_DEBUG, "load_ico_bitmap: encoded image not supported at index: {}", real_index);
             return false;
         }
         return true;

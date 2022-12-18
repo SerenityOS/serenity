@@ -49,9 +49,8 @@ TEST_CASE(test_gif)
     EXPECT(frame.duration == 400);
 }
 
-TEST_CASE(test_ico)
+TEST_CASE(test_not_ico)
 {
-    // FIXME: Use an ico file
     auto file = Core::MappedFile::map("/res/graphics/buggie.png"sv).release_value();
     auto ico = Gfx::ICOImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(ico.frame_count());
@@ -61,6 +60,19 @@ TEST_CASE(test_ico)
     EXPECT(!ico.loop_count());
 
     EXPECT(ico.frame(0).is_error());
+}
+
+TEST_CASE(test_bmp_embedded_in_ico)
+{
+    auto file = Core::MappedFile::map("/res/icons/16x16/serenity.ico"sv).release_value();
+    auto ico = Gfx::ICOImageDecoderPlugin((u8 const*)file->data(), file->size());
+    EXPECT(ico.frame_count());
+
+    EXPECT(ico.sniff());
+    EXPECT(!ico.is_animated());
+    EXPECT(!ico.loop_count());
+
+    EXPECT(!ico.frame(0).is_error());
 }
 
 TEST_CASE(test_jpg)
