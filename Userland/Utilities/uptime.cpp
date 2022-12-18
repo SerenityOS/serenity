@@ -1,57 +1,30 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Karol Kosek <krkk@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
+#include <AK/NumberFormat.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    FILE* fp = fopen("/sys/kernel/uptime", "r");
-    if (!fp) {
-        perror("fopen(/sys/kernel/uptime)");
-        return 1;
-    }
+    auto file = TRY(Core::Stream::File::open("/sys/kernel/uptime"sv, Core::Stream::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 
-    char buffer[BUFSIZ];
-    auto* p = fgets(buffer, sizeof(buffer), fp);
-    if (!p) {
-        perror("fgets");
-        return 1;
-    }
+    Array<u8, BUFSIZ> buffer;
+    auto read_buffer = TRY(file->read(buffer));
+    auto maybe_seconds = AK::StringUtils::convert_to_uint(StringView(read_buffer));
+    if (!maybe_seconds.has_value())
+        return Error::from_string_literal("Couldn't convert to number");
+    auto seconds = maybe_seconds.release_value();
 
-    unsigned seconds;
-    sscanf(buffer, "%u", &seconds);
-
-    out("Up ");
-
-    if (seconds / 86400 > 0) {
-        out("{} day{}, ", seconds / 86400, (seconds / 86400) == 1 ? "" : "s");
-        seconds %= 86400;
-    }
-
-    if (seconds / 3600 > 0) {
-        out("{} hour{}, ", seconds / 3600, (seconds / 3600) == 1 ? "" : "s");
-        seconds %= 3600;
-    }
-
-    if (seconds / 60 > 0) {
-        out("{} minute{}, ", seconds / 60, (seconds / 60) == 1 ? "" : "s");
-        seconds %= 60;
-    }
-
-    out("{} second{}", seconds, seconds == 1 ? "" : "s");
-    outln();
-
-    fclose(fp);
+    outln("Up {}", human_readable_time(seconds));
     return 0;
 }
