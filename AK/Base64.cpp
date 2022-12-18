@@ -100,7 +100,7 @@ ErrorOr<ByteBuffer> decode_base64(StringView input)
     return ByteBuffer::copy(output);
 }
 
-DeprecatedString encode_base64(ReadonlyBytes input)
+ErrorOr<String> encode_base64(ReadonlyBytes input)
 {
     StringBuilder output(calculate_base64_encoded_length(input));
 
@@ -131,13 +131,13 @@ DeprecatedString encode_base64(ReadonlyBytes input)
         char const out2 = is_16bit ? '=' : alphabet[index2];
         char const out3 = is_8bit ? '=' : alphabet[index3];
 
-        output.append(out0);
-        output.append(out1);
-        output.append(out2);
-        output.append(out3);
+        TRY(output.try_append(out0));
+        TRY(output.try_append(out1));
+        TRY(output.try_append(out2));
+        TRY(output.try_append(out3));
     }
 
-    return output.to_deprecated_string();
+    return output.to_string();
 }
 
 }

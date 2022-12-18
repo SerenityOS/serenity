@@ -134,18 +134,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto get_salt = []() {
+    auto get_salt = []() -> ErrorOr<DeprecatedString> {
         char random_data[12];
         fill_with_random(random_data, sizeof(random_data));
 
         StringBuilder builder;
         builder.append("$5$"sv);
-        builder.append(encode_base64(ReadonlyBytes(random_data, sizeof(random_data))));
+        builder.append(TRY(encode_base64({ random_data, sizeof(random_data) })));
 
         return builder.build();
     };
 
-    char* hash = crypt(password.characters(), get_salt().characters());
+    char* hash = crypt(password.characters(), TRY(get_salt()).characters());
 
     struct passwd p;
     p.pw_name = const_cast<char*>(username.characters());

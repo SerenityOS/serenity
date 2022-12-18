@@ -42,8 +42,8 @@ TEST_CASE(test_decode_invalid)
 TEST_CASE(test_encode)
 {
     auto encode_equal = [&](StringView input, StringView expected) {
-        auto encoded = encode_base64(input.bytes());
-        EXPECT(encoded == DeprecatedString(expected));
+        auto encoded = MUST(encode_base64(input.bytes()));
+        EXPECT(encoded == expected);
         EXPECT_EQ(expected.length(), calculate_base64_encoded_length(input.bytes()));
     };
 

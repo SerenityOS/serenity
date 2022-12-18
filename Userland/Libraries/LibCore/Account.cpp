@@ -34,7 +34,10 @@ static DeprecatedString get_salt()
 
     StringBuilder builder;
     builder.append("$5$"sv);
-    builder.append(encode_base64(ReadonlyBytes(random_data, sizeof(random_data))));
+
+    // FIXME: change to TRY() and make method fallible
+    auto salt_string = MUST(encode_base64({ random_data, sizeof(random_data) }));
+    builder.append(salt_string);
 
     return builder.build();
 }
