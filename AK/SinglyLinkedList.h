@@ -63,7 +63,7 @@ private:
     bool m_removed { false };
 };
 
-template<typename T>
+template<typename T, typename TSizeCalculationPolicy>
 class SinglyLinkedList {
 private:
     struct Node {
@@ -96,12 +96,9 @@ public:
 
     bool is_empty() const { return !head(); }
 
-    inline size_t size_slow() const
+    inline size_t size() const
     {
-        size_t size = 0;
-        for (auto* node = m_head; node; node = node->next)
-            ++size;
-        return size;
+        return m_size_policy.size(m_head);
     }
 
     void clear()
@@ -113,6 +110,7 @@ public:
         }
         m_head = nullptr;
         m_tail = nullptr;
+        m_size_policy.reset();
     }
 
     T& first()
@@ -144,6 +142,7 @@ public:
         if (m_tail == m_head)
             m_tail = nullptr;
         m_head = m_head->next;
+        m_size_policy.decrease_size(value);
         delete prev_head;
         return value;
     }
@@ -154,6 +153,7 @@ public:
         auto* node = new (nothrow) Node(forward<U>(value));
         if (!node)
             return Error::from_errno(ENOMEM);
+        m_size_policy.increase_size(value);
         if (!m_head) {
             m_head = node;
             m_tail = node;
@@ -170,6 +170,7 @@ public:
         auto* node = new (nothrow) Node(forward<U>(value));
         if (!node)
             return Error::from_errno(ENOMEM);
+        m_size_policy.increase_size(value);
         if (!m_head) {
             m_head = node;
             m_tail = node;
@@ -237,6 +238,7 @@ public:
         auto* node = new (nothrow) Node(forward<U>(value));
         if (!node)
             return Error::from_errno(ENOMEM);
+        m_size_policy.increase_size(value);
         node->next = iterator.m_node;
         if (m_head == iterator.m_node)
             m_head = node;
@@ -254,6 +256,7 @@ public:
         auto* node = new (nothrow) Node(forward<U>(value));
         if (!node)
             return Error::from_errno(ENOMEM);
+        m_size_policy.increase_size(value);
         node->next = iterator.m_node->next;
 
         iterator.m_node->next = node;
@@ -286,6 +289,7 @@ public:
             m_tail = iterator.m_prev;
         if (iterator.m_prev)
             iterator.m_prev->next = iterator.m_node->next;
+        m_size_policy.decrease_size(iterator.m_node->value);
         delete iterator.m_node;
     }
 
@@ -298,8 +302,8 @@ private:
 
     Node* m_head { nullptr };
     Node* m_tail { nullptr };
+    TSizeCalculationPolicy m_size_policy {};
 };
-
 }
 
 #if USING_AK_GLOBALLY

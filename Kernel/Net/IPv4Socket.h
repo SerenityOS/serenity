@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/SinglyLinkedListWithCount.h>
+#include <AK/SinglyLinkedList.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Locking/MutexProtected.h>
@@ -116,7 +116,7 @@ private:
         OwnPtr<KBuffer> data;
     };
 
-    SinglyLinkedListWithCount<ReceivedPacket> m_receive_queue;
+    SinglyLinkedList<ReceivedPacket, CountingSizeCalculationPolicy> m_receive_queue;
 
     OwnPtr<DoubleBuffer> m_receive_buffer;
 
