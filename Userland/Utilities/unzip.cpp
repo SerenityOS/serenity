@@ -85,19 +85,17 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* path;
+    StringView zip_file_path;
     bool quiet { false };
-    DeprecatedString output_directory_path;
+    StringView output_directory_path;
     Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
-    args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(zip_file_path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
     args_parser.add_positional_argument(file_filters, "Files or filters in the archive to extract", "files", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
-
-    DeprecatedString zip_file_path { path };
 
     struct stat st = TRY(Core::System::stat(zip_file_path));
 
