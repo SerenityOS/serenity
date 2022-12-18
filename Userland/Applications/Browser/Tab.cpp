@@ -42,6 +42,11 @@
 
 namespace Browser {
 
+Tab::~Tab()
+{
+    close_sub_widgets();
+}
+
 URL url_from_user_input(DeprecatedString const& input)
 {
     if (input.starts_with('?') && !g_search_engine.is_empty())
@@ -672,6 +677,19 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     auto* window = m_dom_inspector_widget->window();
     window->show();
     window->move_to_front();
+}
+
+void Tab::close_sub_widgets()
+{
+    auto close_widget_window = [](auto& widget) {
+        if (widget) {
+            auto* window = widget->window();
+            window->close();
+        }
+    };
+    close_widget_window(m_dom_inspector_widget);
+    close_widget_window(m_console_widget);
+    close_widget_window(m_storage_widget);
 }
 
 void Tab::show_console_window()
