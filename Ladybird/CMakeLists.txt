@@ -82,6 +82,7 @@ set(SOURCES
     ${BROWSER_SOURCE_DIR}/History.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
+    InspectorWidget.cpp
     ModelTranslator.cpp
     Settings.cpp
     SettingsDialog.cpp
