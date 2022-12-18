@@ -511,7 +511,7 @@ void WebContentView::ensure_inspector_widget()
     };
 
     m_inspector_widget->on_dom_node_inspected = [&](auto id, auto pseudo_element) {
-        inspect_dom_node(id, pseudo_element);
+        return inspect_dom_node(id, pseudo_element);
     };
 }
 
@@ -531,15 +531,21 @@ void WebContentView::inspect_dom_tree()
     client().async_inspect_dom_tree();
 }
 
-void WebContentView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
+ErrorOr<Ladybird::DOMNodeProperties> WebContentView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
 {
-    // TODO: Use and display response
-    (void)client().inspect_dom_node(node_id, pseudo_element);
+    auto response = client().inspect_dom_node(node_id, pseudo_element);
+    if (!response.has_style())
+        return Error::from_string_view("Inspected node returned no style"sv);
+    return Ladybird::DOMNodeProperties {
+        .computed_style_json = TRY(String::from_deprecated_string(response.take_computed_style())),
+        .resolved_style_json = TRY(String::from_deprecated_string(response.take_resolved_style())),
+        .custom_properties_json = TRY(String::from_deprecated_string(response.take_custom_properties())),
+    };
 }
 
 void WebContentView::clear_inspected_dom_node()
 {
-    inspect_dom_node(0, {});
+    (void)inspect_dom_node(0, {});
 }
 
 void WebContentView::show_inspector()

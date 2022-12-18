@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "DOMNodeProperties.h"
 #include "ModelTranslator.h"
 #include <AK/Optional.h>
 #include <AK/StringView.h>
@@ -13,6 +14,7 @@
 #include <QWidget>
 
 class QTreeView;
+class QTableView;
 
 namespace Ladybird {
 
@@ -31,16 +33,22 @@ public:
     void clear_dom_json();
     void set_dom_json(StringView dom_json);
 
-    Function<void(i32, Optional<Web::CSS::Selector::PseudoElement>)> on_dom_node_inspected;
+    void load_style_json(StringView computed_style_json, StringView resolved_style_json, StringView custom_properties_json);
+    void clear_style_json();
+
+    Function<ErrorOr<DOMNodeProperties>(i32, Optional<Web::CSS::Selector::PseudoElement>)> on_dom_node_inspected;
     Function<void()> on_close;
 
 private:
     void set_selection(GUI::ModelIndex);
     void closeEvent(QCloseEvent*) override;
 
-    QTreeView* m_tree_view { nullptr };
-    ModelTranslator m_dom_model {};
     Selection m_selection;
+
+    ModelTranslator m_dom_model {};
+    ModelTranslator m_computed_style_model {};
+    ModelTranslator m_resolved_style_model {};
+    ModelTranslator m_custom_properties_model {};
 };
 
 }
