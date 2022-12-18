@@ -53,6 +53,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game->reset();
     })));
+    static DeprecatedString const pause_text = "&Pause Game"sv;
+    auto const pause_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv));
+    static DeprecatedString const continue_text = "&Continue Game"sv;
+    auto const continue_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv));
+    TRY(game_menu->try_add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
+        if (game->has_timer()) {
+            game->pause();
+            action.set_text(continue_text);
+            action.set_icon(continue_icon);
+        } else {
+            game->start();
+            action.set_text(pause_text);
+            action.set_icon(pause_icon);
+        }
+    })));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
