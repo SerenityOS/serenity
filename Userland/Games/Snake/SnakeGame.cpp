@@ -236,19 +236,19 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::Black);
 
-    painter.fill_rect(cell_rect(m_head), Color::Yellow);
+    painter.fill_rect(cell_rect(m_head), m_snake_base_color);
     for (auto& part : m_tail) {
         auto rect = cell_rect(part);
-        painter.fill_rect(rect, Color::from_rgb(0xaaaa00));
+        painter.fill_rect(rect, m_snake_base_color.darkened(0.77));
 
         Gfx::IntRect left_side(rect.x(), rect.y(), 2, rect.height());
         Gfx::IntRect top_side(rect.x(), rect.y(), rect.width(), 2);
         Gfx::IntRect right_side(rect.right() - 1, rect.y(), 2, rect.height());
         Gfx::IntRect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
-        painter.fill_rect(left_side, Color::from_rgb(0xcccc00));
-        painter.fill_rect(right_side, Color::from_rgb(0x888800));
-        painter.fill_rect(top_side, Color::from_rgb(0xcccc00));
-        painter.fill_rect(bottom_side, Color::from_rgb(0x888800));
+        painter.fill_rect(left_side, m_snake_base_color.darkened(0.88));
+        painter.fill_rect(right_side, m_snake_base_color.darkened(0.55));
+        painter.fill_rect(top_side, m_snake_base_color.darkened(0.88));
+        painter.fill_rect(bottom_side, m_snake_base_color.darkened(0.55));
     }
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type].rect());

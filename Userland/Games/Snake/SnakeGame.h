@@ -75,4 +75,6 @@ private:
     bool m_is_new_high_score { false };
 
     NonnullRefPtrVector<Gfx::Bitmap> m_food_bitmaps;
+
+    Gfx::Color m_snake_base_color { Color::Yellow };
 };
