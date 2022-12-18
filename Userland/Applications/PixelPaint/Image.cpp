@@ -137,9 +137,9 @@ ErrorOr<void> Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json
             TRY(json_layer.add("opacity_percent"sv, layer.opacity_percent()));
             TRY(json_layer.add("visible"sv, layer.is_visible()));
             TRY(json_layer.add("selected"sv, layer.is_selected()));
-            TRY(json_layer.add("bitmap"sv, encode_base64(TRY(Gfx::PNGWriter::encode(layer.content_bitmap())))));
+            TRY(json_layer.add("bitmap"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(layer.content_bitmap()))))));
             if (layer.is_masked())
-                TRY(json_layer.add("mask"sv, encode_base64(TRY(Gfx::PNGWriter::encode(*layer.mask_bitmap())))));
+                TRY(json_layer.add("mask"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(*layer.mask_bitmap()))))));
             TRY(json_layer.finish());
         }
 

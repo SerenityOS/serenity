@@ -137,7 +137,7 @@ WebIDL::ExceptionOr<DeprecatedString> WorkerGlobalScope::btoa(DeprecatedString c
 
     // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data,
     // and then must apply forgiving-base64 encode to that byte sequence and return the result.
-    return encode_base64(byte_string.span());
+    return TRY_OR_RETURN_OOM(realm(), encode_base64(byte_string.span())).to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob

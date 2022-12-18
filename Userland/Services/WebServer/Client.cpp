@@ -238,7 +238,8 @@ static DeprecatedString folder_image_data()
     static DeprecatedString cache;
     if (cache.is_empty()) {
         auto file = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors();
-        cache = encode_base64(file->bytes());
+        // FIXME: change to TRY() and make method fallible
+        cache = MUST(encode_base64(file->bytes())).to_deprecated_string();
     }
     return cache;
 }
@@ -248,7 +249,8 @@ static DeprecatedString file_image_data()
     static DeprecatedString cache;
     if (cache.is_empty()) {
         auto file = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors();
-        cache = encode_base64(file->bytes());
+        // FIXME: change to TRY() and make method fallible
+        cache = MUST(encode_base64(file->bytes())).to_deprecated_string();
     }
     return cache;
 }

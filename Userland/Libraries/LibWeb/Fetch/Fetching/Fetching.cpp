@@ -1305,7 +1305,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 //    true, set authorizationValue to httpRequest’s current URL, converted to an `Authorization` value.
                 else if (http_request->current_url().includes_credentials() && is_authentication_fetch == IsAuthenticationFetch::Yes) {
                     auto const& url = http_request->current_url();
-                    authorization_value = encode_base64(DeprecatedString::formatted("{}:{}", url.username(), url.password()).bytes());
+                    auto payload = DeprecatedString::formatted("{}:{}", url.username(), url.password());
+                    authorization_value = TRY_OR_RETURN_OOM(realm, encode_base64(payload.bytes())).to_deprecated_string();
                 }
 
                 // 4. If authorizationValue is non-null, then append (`Authorization`, authorizationValue) to

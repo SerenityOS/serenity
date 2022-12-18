@@ -1423,8 +1423,8 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
         byte_string.append(code_point);
     }
 
-    auto encoded = encode_base64(byte_string.span());
-    return JS::PrimitiveString::create(vm, move(encoded));
+    auto encoded = MUST(encode_base64(byte_string.span()));
+    return JS::PrimitiveString::create(vm, encoded.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus

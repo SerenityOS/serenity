@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace AK {
@@ -19,7 +19,7 @@ namespace AK {
 
 [[nodiscard]] ErrorOr<ByteBuffer> decode_base64(StringView);
 
-[[nodiscard]] DeprecatedString encode_base64(ReadonlyBytes);
+[[nodiscard]] ErrorOr<String> encode_base64(ReadonlyBytes);
 }
 
 #if USING_AK_GLOBALLY

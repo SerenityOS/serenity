@@ -181,7 +181,12 @@ DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, [[
         dbgln("Gfx::PNGWriter failed to encode the HTMLCanvasElement: {}", encoded_bitmap_or_error.error());
         return {};
     }
-    return AK::URL::create_with_data(type, encode_base64(encoded_bitmap_or_error.value()), true).to_deprecated_string();
+    auto base64_encoded_or_error = encode_base64(encoded_bitmap_or_error.value());
+    if (base64_encoded_or_error.is_error()) {
+        // FIXME: propagate error
+        return {};
+    }
+    return AK::URL::create_with_data(type, base64_encoded_or_error.release_value().to_deprecated_string(), true).to_deprecated_string();
 }
 
 void HTMLCanvasElement::present()

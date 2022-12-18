@@ -242,7 +242,9 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
     builder.append(url.username());
     builder.append(':');
     builder.append(url.password());
-    auto token = encode_base64(builder.to_deprecated_string().bytes());
+
+    // FIXME: change to TRY() and make method fallible
+    auto token = MUST(encode_base64(MUST(builder.to_string()).bytes()));
     builder.clear();
     builder.append("Basic "sv);
     builder.append(token);

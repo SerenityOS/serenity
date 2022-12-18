@@ -52,8 +52,13 @@ char* crypt_r(char const* key, char const* salt, struct crypt_data* data)
     sha.update(reinterpret_cast<u8 const*>(salt_value), salt_len);
 
     auto digest = sha.digest();
-    auto string = encode_base64(ReadonlyBytes(digest.immutable_data(), digest.data_length()));
+    auto string_or_error = encode_base64({ digest.immutable_data(), digest.data_length() });
+    if (string_or_error.is_error()) {
+        errno = ENOMEM;
+        return nullptr;
+    }
 
+    auto string = string_or_error.value().bytes_as_string_view();
     fits = string.copy_characters_to_buffer(data->result + header_len + 1, sizeof(data->result) - header_len - 1);
     if (!fits) {
         errno = EINVAL;

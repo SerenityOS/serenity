@@ -180,7 +180,8 @@ void WebSocket::send_client_handshake()
     // 7. 16-byte nonce encoded as Base64
     u8 nonce_data[16];
     fill_with_random(nonce_data, 16);
-    m_websocket_key = encode_base64(ReadonlyBytes(nonce_data, 16));
+    // FIXME: change to TRY() and make method fallible
+    m_websocket_key = MUST(encode_base64({ nonce_data, 16 })).to_deprecated_string();
     builder.appendff("Sec-WebSocket-Key: {}\r\n", m_websocket_key);
 
     // 8. Origin (optional field)
@@ -322,7 +323,8 @@ void WebSocket::read_server_handshake()
             hash.initialize(Crypto::Hash::HashKind::SHA1);
             hash.update(expected_content);
             auto expected_sha1 = hash.digest();
-            auto expected_sha1_string = encode_base64(ReadonlyBytes(expected_sha1.immutable_data(), expected_sha1.data_length()));
+            // FIXME: change to TRY() and make method fallible
+            auto expected_sha1_string = MUST(encode_base64({ expected_sha1.immutable_data(), expected_sha1.data_length() }));
             if (!parts[1].trim_whitespace().equals_ignoring_case(expected_sha1_string)) {
                 dbgln("WebSocket: Server HTTP Handshake Header |Sec-Websocket-Accept| should be '{}', got '{}'. Failing connection.", expected_sha1_string, parts[1]);
                 fatal_error(WebSocket::Error::ConnectionUpgradeFailed);
