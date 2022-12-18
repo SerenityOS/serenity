@@ -1015,7 +1015,7 @@ bool Node::is_uninteresting_whitespace_node() const
         return false;
     if (!layout_node())
         return true;
-    if (layout_node()->parent()->is_anonymous())
+    if (auto parent = layout_node()->parent(); parent && parent->is_anonymous())
         return true;
     return false;
 }
