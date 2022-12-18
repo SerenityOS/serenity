@@ -49,8 +49,7 @@ public:
             return static_cast<int>(m_paged_errors.size());
         }
         if (!index.parent().is_valid()) {
-            auto errors_in_page = m_paged_errors.get(index.row()).release_value().size();
-            return static_cast<int>(errors_in_page);
+            return static_cast<int>(error_count_in_page(index));
         }
         return 0;
     }
@@ -103,7 +102,7 @@ public:
             case Columns::Page:
                 return m_pages_with_errors[index.row()] + 1;
             case Columns::Message:
-                return DeprecatedString::formatted("{} errors", m_paged_errors.get(index.row()).release_value().size());
+                return DeprecatedString::formatted("{} errors", error_count_in_page(index));
             default:
                 VERIFY_NOT_REACHED();
             }
@@ -147,6 +146,13 @@ private:
         for (auto const& entry : m_paged_errors)
             count += entry.value.size();
         return count;
+    }
+
+    size_t error_count_in_page(GUI::ModelIndex const& index) const
+    {
+        VERIFY(!index.parent().is_valid());
+        auto page = m_pages_with_errors[index.row()];
+        return m_paged_errors.get(page).release_value().size();
     }
 
     Vector<u32> m_pages_with_errors;
