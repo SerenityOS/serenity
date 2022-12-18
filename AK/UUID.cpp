@@ -97,19 +97,20 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> UUID::to_string() const
     return Kernel::KString::try_create(builder.string_view());
 }
 #else
-DeprecatedString UUID::to_deprecated_string() const
+ErrorOr<String> UUID::to_string() const
 {
+    auto buffer_span = m_uuid_buffer.span();
     StringBuilder builder(36);
-    builder.append(encode_hex(m_uuid_buffer.span().trim(4)).view());
-    builder.append('-');
-    builder.append(encode_hex(m_uuid_buffer.span().slice(4).trim(2)).view());
-    builder.append('-');
-    builder.append(encode_hex(m_uuid_buffer.span().slice(6).trim(2)).view());
-    builder.append('-');
-    builder.append(encode_hex(m_uuid_buffer.span().slice(8).trim(2)).view());
-    builder.append('-');
-    builder.append(encode_hex(m_uuid_buffer.span().slice(10).trim(6)).view());
-    return builder.to_deprecated_string();
+    TRY(builder.try_append(encode_hex(buffer_span.trim(4)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(4, 2)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(6, 2)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(8, 2)).view()));
+    TRY(builder.try_append('-'));
+    TRY(builder.try_append(encode_hex(buffer_span.slice(10, 6)).view()));
+    return builder.to_string();
 }
 #endif
 
