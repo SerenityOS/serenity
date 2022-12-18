@@ -651,7 +651,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
     else if (parser.consume_specific('p'))
         m_mode = Mode::Pointer;
     else if (parser.consume_specific('f'))
-        m_mode = Mode::Float;
+        m_mode = Mode::FixedPoint;
     else if (parser.consume_specific('a'))
         m_mode = Mode::Hexfloat;
     else if (parser.consume_specific('A'))
@@ -794,7 +794,7 @@ ErrorOr<void> Formatter<long double>::format(FormatBuilder& builder, long double
 {
     u8 base;
     bool upper_case;
-    if (m_mode == Mode::Default || m_mode == Mode::Float) {
+    if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
         base = 10;
         upper_case = false;
     } else if (m_mode == Mode::Hexfloat) {
@@ -817,7 +817,7 @@ ErrorOr<void> Formatter<double>::format(FormatBuilder& builder, double value)
 {
     u8 base;
     bool upper_case;
-    if (m_mode == Mode::Default || m_mode == Mode::Float) {
+    if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
         base = 10;
         upper_case = false;
     } else if (m_mode == Mode::Hexfloat) {
