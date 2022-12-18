@@ -292,7 +292,7 @@ struct StandardFormatter {
         Character,
         String,
         Pointer,
-        Float,
+        FixedPoint,
         Hexfloat,
         HexfloatUppercase,
         HexDump,
@@ -520,7 +520,7 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
     {
         u8 base;
         bool upper_case;
-        if (m_mode == Mode::Default || m_mode == Mode::Float) {
+        if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
             base = 10;
             upper_case = false;
         } else if (m_mode == Mode::Hexfloat) {
