@@ -56,7 +56,7 @@ public:
     GUI::TabWidget const& current_editor_tab_widget() const;
 
     DeprecatedString const& active_file() const { return m_current_editor_wrapper->filename(); }
-    void initialize_menubar(GUI::Window&);
+    ErrorOr<void> initialize_menubar(GUI::Window&);
 
     Locator& locator()
     {
@@ -100,35 +100,35 @@ private:
 
     void set_edit_mode(EditMode);
 
-    NonnullRefPtr<GUI::Menu> create_project_tree_view_context_menu();
-    NonnullRefPtr<GUI::Action> create_new_file_action(DeprecatedString const& label, DeprecatedString const& icon, DeprecatedString const& extension);
-    NonnullRefPtr<GUI::Action> create_new_directory_action();
-    NonnullRefPtr<GUI::Action> create_open_selected_action();
+    ErrorOr<NonnullRefPtr<GUI::Menu>> create_project_tree_view_context_menu();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_file_action(DeprecatedString const& label, DeprecatedString const& icon, DeprecatedString const& extension);
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_directory_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_open_selected_in_new_tab_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
-    NonnullRefPtr<GUI::Action> create_new_project_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_project_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_tab_widget_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_action();
     NonnullRefPtr<GUI::Action> create_switch_to_previous_editor_action();
     NonnullRefPtr<GUI::Action> create_remove_current_editor_tab_widget_action();
-    NonnullRefPtr<GUI::Action> create_remove_current_editor_action();
-    NonnullRefPtr<GUI::Action> create_open_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_remove_current_editor_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_open_action();
     NonnullRefPtr<GUI::Action> create_save_action();
     NonnullRefPtr<GUI::Action> create_save_as_action();
     NonnullRefPtr<GUI::Action> create_show_in_file_manager_action();
     NonnullRefPtr<GUI::Action> create_copy_relative_path_action();
     NonnullRefPtr<GUI::Action> create_copy_full_path_action();
     NonnullRefPtr<GUI::Action> create_add_editor_tab_widget_action();
-    NonnullRefPtr<GUI::Action> create_add_editor_action();
-    NonnullRefPtr<GUI::Action> create_add_terminal_action();
-    NonnullRefPtr<GUI::Action> create_remove_current_terminal_action();
-    NonnullRefPtr<GUI::Action> create_debug_action();
-    NonnullRefPtr<GUI::Action> create_build_action();
-    NonnullRefPtr<GUI::Action> create_run_action();
-    NonnullRefPtr<GUI::Action> create_stop_action();
-    NonnullRefPtr<GUI::Action> create_toggle_syntax_highlighting_mode_action();
-    NonnullRefPtr<GUI::Action> create_open_project_configuration_action();
-    void create_location_history_actions();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_add_editor_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_add_terminal_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_remove_current_terminal_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_debug_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_build_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_run_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_stop_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_toggle_syntax_highlighting_mode_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_open_project_configuration_action();
+    ErrorOr<void> create_location_history_actions();
 
     void add_new_editor_tab_widget(GUI::Widget& parent);
     void add_new_editor(GUI::TabWidget& parent);
@@ -147,11 +147,11 @@ private:
     void create_open_files_view(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     ErrorOr<void> create_action_tab(GUI::Widget& parent);
-    void create_file_menu(GUI::Window&);
+    ErrorOr<void> create_file_menu(GUI::Window&);
     void update_recent_projects_submenu();
-    void create_edit_menu(GUI::Window&);
+    ErrorOr<void> create_edit_menu(GUI::Window&);
     void create_build_menu(GUI::Window&);
-    void create_view_menu(GUI::Window&);
+    ErrorOr<void> create_view_menu(GUI::Window&);
     void create_help_menu(GUI::Window&);
     void create_project_tab(GUI::Widget& parent);
     void configure_project_tree_view();
