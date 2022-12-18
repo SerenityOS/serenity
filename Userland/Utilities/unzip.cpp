@@ -14,6 +14,7 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
+#include <LibCrypto/Checksum/CRC32.h>
 #include <sys/stat.h>
 
 static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
@@ -37,13 +38,14 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
     if (!quiet)
         outln(" extracting: {}", zip_member.name);
 
-    // TODO: verify CRC32s match!
+    Crypto::Checksum::CRC32 checksum;
     switch (zip_member.compression_method) {
     case Archive::ZipCompressionMethod::Store: {
         if (!new_file->write(zip_member.compressed_data.data(), zip_member.compressed_data.size())) {
             warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
             return false;
         }
+        checksum.update({ zip_member.compressed_data.data(), zip_member.compressed_data.size() });
         break;
     }
     case Archive::ZipCompressionMethod::Deflate: {
@@ -60,6 +62,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
             warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
             return false;
         }
+        checksum.update({ decompressed_data.value().data(), decompressed_data.value().size() });
         break;
     }
     default:
@@ -68,6 +71,12 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
     if (!new_file->close()) {
         warnln("Can't close file {}: {}", zip_member.name, new_file->error_string());
+        return false;
+    }
+
+    if (checksum.digest() != zip_member.crc32) {
+        warnln("Failed decompressing file {}: CRC32 mismatch", zip_member.name);
+        MUST(new_file->remove(zip_member.name, Core::File::RecursionMode::Disallowed, true));
         return false;
     }
 
