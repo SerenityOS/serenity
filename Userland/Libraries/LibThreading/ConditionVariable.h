@@ -9,7 +9,6 @@
 #include <AK/Function.h>
 #include <LibThreading/Mutex.h>
 #include <pthread.h>
-#include <sys/cdefs.h>
 #include <sys/types.h>
 
 namespace Threading {
