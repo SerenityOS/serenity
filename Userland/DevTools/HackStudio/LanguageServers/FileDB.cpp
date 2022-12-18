@@ -8,7 +8,6 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
-#include <LibCore/File.h>
 
 namespace LanguageServers {
 
@@ -37,10 +36,12 @@ Optional<DeprecatedString> FileDB::get_or_read_from_filesystem(StringView filena
     if (document)
         return document->text();
 
-    document = create_from_filesystem(absolute_path);
-    if (document)
-        return document->text();
-    return {};
+    auto document_or_error = create_from_filesystem(absolute_path);
+    if (document_or_error.is_error()) {
+        dbgln("Failed to create document '{}': {}", absolute_path, document_or_error.error());
+        return {};
+    }
+    return document_or_error.value()->text();
 }
 
 bool FileDB::is_open(DeprecatedString const& filename) const
@@ -50,11 +51,13 @@ bool FileDB::is_open(DeprecatedString const& filename) const
 
 bool FileDB::add(DeprecatedString const& filename, int fd)
 {
-    auto document = create_from_fd(fd);
-    if (!document)
+    auto document_or_error = create_from_fd(fd);
+    if (document_or_error.is_error()) {
+        dbgln("Failed to create document: {}", document_or_error.error());
         return false;
+    }
 
-    m_open_files.set(to_absolute_path(filename), document.release_nonnull());
+    m_open_files.set(to_absolute_path(filename), document_or_error.release_value());
     return true;
 }
 
@@ -68,26 +71,16 @@ DeprecatedString FileDB::to_absolute_path(DeprecatedString const& filename) cons
     return LexicalPath { DeprecatedString::formatted("{}/{}", m_project_root, filename) }.string();
 }
 
-RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(DeprecatedString const& filename) const
+ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_filesystem(DeprecatedString const& filename) const
 {
-    auto file = Core::File::open(to_absolute_path(filename), Core::OpenMode::ReadOnly);
-    if (file.is_error()) {
-        dbgln("failed to create document for {} from filesystem", filename);
-        return nullptr;
-    }
-    return create_from_file(*file.value());
+    auto file = TRY(Core::Stream::File::open(to_absolute_path(filename), Core::Stream::OpenMode::Read));
+    return create_from_file(move(file));
 }
 
-RefPtr<GUI::TextDocument> FileDB::create_from_fd(int fd) const
+ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_fd(int fd) const
 {
-    auto file = Core::File::construct();
-    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
-        errno = file->error();
-        perror("open");
-        dbgln("Failed to open project file");
-        return nullptr;
-    }
-    return create_from_file(*file);
+    auto file = TRY(Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read));
+    return create_from_file(move(file));
 }
 
 class DefaultDocumentClient final : public GUI::TextDocument::Client {
@@ -107,12 +100,11 @@ public:
 };
 static DefaultDocumentClient s_default_document_client;
 
-RefPtr<GUI::TextDocument> FileDB::create_from_file(Core::File& file) const
+ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_file(NonnullOwnPtr<Core::Stream::File> file) const
 {
-    auto content = file.read_all();
-    StringView content_view(content);
+    auto content = TRY(file->read_until_eof());
     auto document = GUI::TextDocument::create(&s_default_document_client);
-    document->set_text(content_view);
+    document->set_text(content);
     return document;
 }
 

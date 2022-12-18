@@ -31,6 +31,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
+#include <LibCore/System.h>
 #include <LibDebug/DebugSession.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -550,9 +551,9 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(DeprecatedSt
 
         filepath = DeprecatedString::formatted("{}{}", filepath, filename);
 
-        auto file = Core::File::construct(filepath);
-        if (!file->open((Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::MustBeNew))) {
-            GUI::MessageBox::show(window(), DeprecatedString::formatted("Failed to create '{}'", filepath), "Error"sv, GUI::MessageBox::Type::Error);
+        auto file_or_error = Core::Stream::File::open(filepath, Core::Stream::OpenMode::Write | Core::Stream::OpenMode::MustBeNew);
+        if (file_or_error.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to create '{}': {}", filepath, file_or_error.error()));
             return;
         }
         open_file(filepath);
@@ -1731,21 +1732,31 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_project_configuration_a
         auto parent_directory = LexicalPath::dirname(Project::config_file_path);
         auto absolute_config_file_path = LexicalPath::absolute_path(m_project->root_path(), Project::config_file_path);
 
-        if (!Core::File::exists(absolute_config_file_path)) {
+        DeprecatedString formatted_error_string_holder;
+        auto save_configuration_or_error = [&]() -> ErrorOr<void> {
+            if (Core::File::exists(absolute_config_file_path))
+                return {};
+
             if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
-                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory));
-                return;
+                formatted_error_string_holder = DeprecatedString::formatted("Cannot create directory the '{}' directory because there is already a file with that name", parent_directory);
+                return Error::from_string_view(formatted_error_string_holder);
             }
 
-            mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory).characters(), 0755);
+            auto maybe_error = Core::System::mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory), 0755);
+            if (maybe_error.is_error() && maybe_error.error().code() != EEXIST)
+                return maybe_error.error();
 
-            auto file = Core::File::open(absolute_config_file_path, Core::OpenMode::WriteOnly);
-            file.value()->write(
+            auto file = TRY(Core::Stream::File::open(absolute_config_file_path, Core::Stream::OpenMode::Write));
+            TRY(file->write_entire_buffer(
                 "{\n"
                 "    \"build_command\": \"your build command here\",\n"
                 "    \"run_command\": \"your run command here\"\n"
-                "}\n"sv);
-            file.value()->close();
+                "}\n"sv.bytes()));
+            return {};
+        }();
+        if (save_configuration_or_error.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Saving configuration failed: {}.", save_configuration_or_error.error()));
+            return;
         }
 
         open_file(Project::config_file_path);

@@ -6,7 +6,7 @@
 
 #include "ProjectConfig.h"
 #include <AK/NonnullOwnPtr.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 
 namespace HackStudio {
 
@@ -17,11 +17,10 @@ ProjectConfig::ProjectConfig(JsonObject config)
 
 ErrorOr<NonnullOwnPtr<ProjectConfig>> ProjectConfig::try_load_project_config(DeprecatedString path)
 {
-    auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
-    auto file_contents = file->read_all();
-    file->close();
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file_contents = TRY(file->read_until_eof());
 
-    auto json = TRY(JsonValue::from_string(StringView { file_contents }));
+    auto json = TRY(JsonValue::from_string(file_contents));
     if (!json.is_object())
         return Error::from_string_literal("The topmost JSON element is not an object");
 
