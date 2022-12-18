@@ -150,6 +150,12 @@ public:
         Default = OnlyIfNeeded,
     };
 
+    enum class RealNumberDisplayMode {
+        FixedPoint,
+        General,
+        Default = General,
+    };
+
     explicit FormatBuilder(StringBuilder& builder)
         : m_builder(builder)
     {
@@ -200,7 +206,8 @@ public:
         size_t min_width = 0,
         size_t precision = 6,
         char fill = ' ',
-        SignMode sign_mode = SignMode::OnlyIfNeeded);
+        SignMode sign_mode = SignMode::OnlyIfNeeded,
+        RealNumberDisplayMode = RealNumberDisplayMode::Default);
 
 #ifndef KERNEL
     ErrorOr<void> put_f80(
@@ -211,7 +218,8 @@ public:
         size_t min_width = 0,
         size_t precision = 6,
         char fill = ' ',
-        SignMode sign_mode = SignMode::OnlyIfNeeded);
+        SignMode sign_mode = SignMode::OnlyIfNeeded,
+        RealNumberDisplayMode = RealNumberDisplayMode::Default);
 
     ErrorOr<void> put_f64(
         double value,
@@ -222,7 +230,8 @@ public:
         size_t min_width = 0,
         size_t precision = 6,
         char fill = ' ',
-        SignMode sign_mode = SignMode::OnlyIfNeeded);
+        SignMode sign_mode = SignMode::OnlyIfNeeded,
+        RealNumberDisplayMode = RealNumberDisplayMode::Default);
 #endif
 
     ErrorOr<void> put_hexdump(
@@ -520,9 +529,12 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
     {
         u8 base;
         bool upper_case;
+        FormatBuilder::RealNumberDisplayMode real_number_display_mode = FormatBuilder::RealNumberDisplayMode::General;
         if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
             base = 10;
             upper_case = false;
+            if (m_mode == Mode::FixedPoint)
+                real_number_display_mode = FormatBuilder::RealNumberDisplayMode::FixedPoint;
         } else if (m_mode == Mode::Hexfloat) {
             base = 16;
             upper_case = false;
@@ -539,7 +551,7 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
         i64 integer = value.ltrunk();
         constexpr u64 one = static_cast<Underlying>(1) << precision;
         u64 fraction_raw = value.raw() & (one - 1);
-        return builder.put_fixed_point(integer, fraction_raw, one, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
+        return builder.put_fixed_point(integer, fraction_raw, one, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode, real_number_display_mode);
     }
 };
 
