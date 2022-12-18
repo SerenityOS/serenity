@@ -367,7 +367,8 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
     size_t min_width,
     size_t precision,
     char fill,
-    SignMode sign_mode)
+    SignMode sign_mode,
+    RealNumberDisplayMode display_mode)
 {
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
@@ -395,7 +396,7 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
         {
             auto fraction_tmp = fraction;
             for (; visible_precision < precision; ++visible_precision) {
-                if (fraction_tmp == 0)
+                if (fraction_tmp == 0 && display_mode != RealNumberDisplayMode::FixedPoint)
                     break;
                 fraction_tmp /= 10;
             }
@@ -425,7 +426,8 @@ ErrorOr<void> FormatBuilder::put_f64(
     size_t min_width,
     size_t precision,
     char fill,
-    SignMode sign_mode)
+    SignMode sign_mode,
+    RealNumberDisplayMode display_mode)
 {
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
@@ -464,7 +466,7 @@ ErrorOr<void> FormatBuilder::put_f64(
 
         size_t visible_precision = 0;
         for (; visible_precision < precision; ++visible_precision) {
-            if (value - static_cast<i64>(value) < epsilon)
+            if (value - static_cast<i64>(value) < epsilon && display_mode != RealNumberDisplayMode::FixedPoint)
                 break;
             value *= 10.0;
             epsilon *= 10.0;
@@ -492,7 +494,8 @@ ErrorOr<void> FormatBuilder::put_f80(
     size_t min_width,
     size_t precision,
     char fill,
-    SignMode sign_mode)
+    SignMode sign_mode,
+    RealNumberDisplayMode display_mode)
 {
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
@@ -531,7 +534,7 @@ ErrorOr<void> FormatBuilder::put_f80(
 
         size_t visible_precision = 0;
         for (; visible_precision < precision; ++visible_precision) {
-            if (value - static_cast<i64>(value) < epsilon)
+            if (value - static_cast<i64>(value) < epsilon && display_mode != RealNumberDisplayMode::FixedPoint)
                 break;
             value *= 10.0l;
             epsilon *= 10.0l;
@@ -794,9 +797,12 @@ ErrorOr<void> Formatter<long double>::format(FormatBuilder& builder, long double
 {
     u8 base;
     bool upper_case;
+    FormatBuilder::RealNumberDisplayMode real_number_display_mode = FormatBuilder::RealNumberDisplayMode::General;
     if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
         base = 10;
         upper_case = false;
+        if (m_mode == Mode::FixedPoint)
+            real_number_display_mode = FormatBuilder::RealNumberDisplayMode::FixedPoint;
     } else if (m_mode == Mode::Hexfloat) {
         base = 16;
         upper_case = false;
@@ -810,16 +816,19 @@ ErrorOr<void> Formatter<long double>::format(FormatBuilder& builder, long double
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(6);
 
-    return builder.put_f80(value, base, upper_case, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
+    return builder.put_f80(value, base, upper_case, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode, real_number_display_mode);
 }
 
 ErrorOr<void> Formatter<double>::format(FormatBuilder& builder, double value)
 {
     u8 base;
     bool upper_case;
+    FormatBuilder::RealNumberDisplayMode real_number_display_mode = FormatBuilder::RealNumberDisplayMode::General;
     if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
         base = 10;
         upper_case = false;
+        if (m_mode == Mode::FixedPoint)
+            real_number_display_mode = FormatBuilder::RealNumberDisplayMode::FixedPoint;
     } else if (m_mode == Mode::Hexfloat) {
         base = 16;
         upper_case = false;
@@ -833,7 +842,7 @@ ErrorOr<void> Formatter<double>::format(FormatBuilder& builder, double value)
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(6);
 
-    return builder.put_f64(value, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
+    return builder.put_f64(value, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode, real_number_display_mode);
 }
 
 ErrorOr<void> Formatter<float>::format(FormatBuilder& builder, float value)
