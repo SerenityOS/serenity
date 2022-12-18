@@ -105,7 +105,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(Deprecat
     return loader;
 }
 
-static Optional<DeprecatedString> resolve_library(DeprecatedString const& name, DynamicObject const& parent_object)
+Optional<DeprecatedString> DynamicLinker::resolve_library(DeprecatedString const& name, DynamicObject const& parent_object)
 {
     // Absolute and relative (to the current working directory) paths are already considered resolved.
     // However, ensure that the returned path is absolute and canonical, so pass it through LexicalPath.
@@ -185,7 +185,7 @@ static Result<void, DlErrorMessage> map_dependencies(DeprecatedString const& pat
     for (auto const& needed_name : get_dependencies(path)) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
 
-        auto dependency_path = resolve_library(needed_name, parent_object);
+        auto dependency_path = DynamicLinker::resolve_library(needed_name, parent_object);
 
         if (!dependency_path.has_value())
             return DlErrorMessage { DeprecatedString::formatted("Could not find required shared library: {}", needed_name) };
@@ -340,7 +340,7 @@ static void for_each_unfinished_dependency_of(DeprecatedString const& path, Hash
     seen_names.set(path);
 
     for (auto const& needed_name : get_dependencies(path)) {
-        auto dependency_path = *resolve_library(needed_name, loader.value()->dynamic_object());
+        auto dependency_path = *DynamicLinker::resolve_library(needed_name, loader.value()->dynamic_object());
         for_each_unfinished_dependency_of(dependency_path, seen_names, callback);
     }
 
@@ -493,7 +493,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     auto const& parent_object = **s_global_objects.get(s_main_program_path);
 
-    auto library_path = (filename ? resolve_library(filename, parent_object) : s_main_program_path);
+    auto library_path = (filename ? DynamicLinker::resolve_library(filename, parent_object) : s_main_program_path);
 
     if (!library_path.has_value())
         return DlErrorMessage { DeprecatedString::formatted("Could not find required shared library: {}", filename) };
