@@ -34,7 +34,7 @@ class Tab final : public GUI::Widget {
     friend class BrowserWindow;
 
 public:
-    virtual ~Tab() override = default;
+    virtual ~Tab() override;
 
     URL url() const;
 
@@ -106,6 +106,7 @@ private:
     void start_download(const URL& url);
     void view_source(const URL& url, DeprecatedString const& source);
     void update_status(Optional<DeprecatedString> text_override = {}, i32 count_waiting = 0);
+    void close_sub_widgets();
 
     enum class MayAppendTLD {
         No,
