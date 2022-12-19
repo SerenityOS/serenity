@@ -5,9 +5,9 @@
  */
 
 #include <AK/Optional.h>
-#include <LibGfx/Font/TrueType/Cmap.h>
+#include <LibGfx/Font/OpenType/Cmap.h>
 
-namespace TTF {
+namespace OpenType {
 
 extern u16 be_u16(u8 const*);
 extern u32 be_u32(u8 const*);

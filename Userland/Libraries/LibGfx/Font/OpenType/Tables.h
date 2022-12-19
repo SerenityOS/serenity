@@ -12,7 +12,7 @@
 #include <AK/FixedArray.h>
 #include <AK/Span.h>
 
-namespace TTF {
+namespace OpenType {
 
 enum class IndexToLocFormat {
     Offset16,

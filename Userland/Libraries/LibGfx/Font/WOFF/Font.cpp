@@ -7,7 +7,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/IntegralMath.h>
 #include <LibCompress/Zlib.h>
-#include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/WOFF/Font.h>
 
 namespace WOFF {
@@ -142,7 +142,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         font_buffer_offset += orig_length;
     }
 
-    auto input_font = TRY(TTF::Font::try_load_from_externally_owned_memory(font_buffer.bytes(), index));
+    auto input_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_buffer.bytes(), index));
     auto font = adopt_ref(*new Font(input_font, move(font_buffer)));
     return font;
 }

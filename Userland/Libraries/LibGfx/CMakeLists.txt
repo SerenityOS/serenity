@@ -17,11 +17,11 @@ set(SOURCES
     Font/BitmapFont.cpp
     Font/Emoji.cpp
     Font/FontDatabase.cpp
+    Font/OpenType/Cmap.cpp
+    Font/OpenType/Font.cpp
+    Font/OpenType/Glyf.cpp
     Font/PathRasterizer.cpp
     Font/ScaledFont.cpp
-    Font/TrueType/Cmap.cpp
-    Font/TrueType/Font.cpp
-    Font/TrueType/Glyf.cpp
     Font/Typeface.cpp
     Font/WOFF/Font.cpp
     GIFLoader.cpp

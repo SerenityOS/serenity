@@ -9,15 +9,15 @@
 #include <AK/Checked.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/Font/TrueType/Cmap.h>
-#include <LibGfx/Font/TrueType/Font.h>
-#include <LibGfx/Font/TrueType/Glyf.h>
-#include <LibGfx/Font/TrueType/Tables.h>
+#include <LibGfx/Font/OpenType/Cmap.h>
+#include <LibGfx/Font/OpenType/Font.h>
+#include <LibGfx/Font/OpenType/Glyf.h>
+#include <LibGfx/Font/OpenType/Tables.h>
 #include <LibTextCodec/Decoder.h>
 #include <math.h>
 #include <sys/mman.h>
 
-namespace TTF {
+namespace OpenType {
 
 u16 be_u16(u8 const*);
 u32 be_u32(u8 const*);
@@ -206,12 +206,12 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
         auto coverage = be_u16(subtable_slice.offset(2 * sizeof(u16)));
 
         if (version != 0) {
-            dbgln("TTF::Kern: unsupported subtable version {}", version);
+            dbgln("OpenType::Kern: unsupported subtable version {}", version);
             continue;
         }
 
         if (subtable_slice.size() < length) {
-            dbgln("TTF::Kern: subtable has an invalid size {}", length);
+            dbgln("OpenType::Kern: subtable has an invalid size {}", length);
             continue;
         }
 
@@ -224,7 +224,7 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 
         // FIXME: implement support for these features
         if (!is_horizontal || is_minimum || is_cross_stream || (reserved_bits > 0)) {
-            dbgln("TTF::Kern: FIXME: implement missing feature support for subtable");
+            dbgln("OpenType::Kern: FIXME: implement missing feature support for subtable");
             continue;
         }
 
@@ -235,7 +235,7 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
             subtable_kerning = read_glyph_kerning_format0(subtable_slice.slice(Sizes::SubtableHeader), left_glyph_id, right_glyph_id);
             break;
         default:
-            dbgln("TTF::Kern: FIXME: subtable format {} is unsupported", format);
+            dbgln("OpenType::Kern: FIXME: subtable format {} is unsupported", format);
             continue;
         }
         if (!subtable_kerning.has_value())

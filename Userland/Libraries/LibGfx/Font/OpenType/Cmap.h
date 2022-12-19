@@ -9,7 +9,7 @@
 #include <AK/Span.h>
 #include <stdint.h>
 
-namespace TTF {
+namespace OpenType {
 
 class Cmap {
 public:
