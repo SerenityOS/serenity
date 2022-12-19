@@ -77,7 +77,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
 
 WebContentView::~WebContentView()
 {
-    clear_inspector_callbacks();
+    close_sub_widgets();
 }
 
 void WebContentView::load(AK::URL const& url)
@@ -515,10 +515,14 @@ void WebContentView::ensure_inspector_widget()
     };
 }
 
-void WebContentView::clear_inspector_callbacks()
+void WebContentView::close_sub_widgets()
 {
-    if (m_inspector_widget)
-        m_inspector_widget->on_close = nullptr;
+    auto close_widget_window = [](auto* widget) {
+        if (widget)
+            widget->close();
+    };
+    close_widget_window(m_console_widget);
+    close_widget_window(m_inspector_widget);
 }
 
 bool WebContentView::is_inspector_open() const
