@@ -47,6 +47,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
         m_scanouts[index].display_connector = display_connector;
         MUST(query_and_set_edid(index, *display_connector));
         display_connector->set_safe_mode_setting_after_initialization({});
+        display_connector->initialize_console({});
     }
     return {};
 }

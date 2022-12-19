@@ -39,8 +39,9 @@ public:
 
     void draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>);
 
+    void initialize_console(Badge<VirtIOGraphicsAdapter>);
+
 private:
-    void initialize_console();
     virtual bool mutable_mode_setting_capable() const override { return true; }
     virtual bool double_framebuffering_capable() const override { return false; }
     virtual bool partial_flush_support() const override { return true; }
@@ -82,7 +83,7 @@ private:
     Graphics::VirtIOGPU::ContextID m_kernel_context_id;
 
     NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
-    LockRefPtr<Graphics::Console> m_console;
+    LockRefPtr<Graphics::VirtIOGPU::Console> m_console;
     Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display m_display_info {};
     Graphics::VirtIOGPU::ScanoutID m_scanout_id;
 

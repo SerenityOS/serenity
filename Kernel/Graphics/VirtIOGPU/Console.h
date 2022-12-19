@@ -20,9 +20,14 @@ public:
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
     virtual void enable() override;
 
+    virtual void set_cursor(size_t x, size_t y) override;
+
 private:
     void enqueue_refresh_timer();
     virtual u8* framebuffer_data() override;
+
+    virtual void hide_cursor() override;
+    virtual void show_cursor() override;
 
     Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution);
     NonnullLockRefPtr<VirtIODisplayConnector> m_parent_display_connector;
