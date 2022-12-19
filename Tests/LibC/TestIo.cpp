@@ -317,6 +317,26 @@ TEST_CASE(tmpfs_massive_file)
     EXPECT_EQ(rc, 0);
 }
 
+TEST_CASE(rmdir_dot)
+{
+    int rc = mkdir("/home/anon/rmdir-test-1", 0700);
+    EXPECT_EQ(rc, 0);
+
+    rc = rmdir("/home/anon/rmdir-test-1/.");
+    EXPECT_NE(rc, 0);
+    EXPECT_EQ(errno, EINVAL);
+
+    rc = chdir("/home/anon/rmdir-test-1");
+    EXPECT_EQ(rc, 0);
+
+    rc = rmdir(".");
+    VERIFY(rc != 0);
+    EXPECT_EQ(errno, EINVAL);
+
+    rc = rmdir("/home/anon/rmdir-test-1");
+    EXPECT_EQ(rc, 0);
+}
+
 TEST_CASE(rmdir_while_inside_dir)
 {
     int rc = mkdir("/home/anon/testdir", 0700);

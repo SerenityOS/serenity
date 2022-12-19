@@ -841,7 +841,12 @@ ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringVie
     auto custody = TRY(resolve_path(credentials, path, base, &parent_custody));
     auto& inode = custody->inode();
 
-    // FIXME: We should return EINVAL if the last component of the path is "."
+    auto last_component = KLexicalPath::basename(path);
+
+    // [EINVAL] The path argument contains a last component that is dot.
+    if (last_component == "."sv)
+        return EINVAL;
+
     // FIXME: We should return ENOTEMPTY if the last component of the path is ".."
 
     if (!inode.is_directory())
