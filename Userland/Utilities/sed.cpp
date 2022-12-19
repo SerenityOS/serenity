@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
@@ -17,7 +18,30 @@ struct SubstitutionCommand {
     Regex<PosixExtended> regex;
     StringView replacement;
     PosixOptions options;
+    Optional<StringView> output_filepath;
 };
+
+static Vector<StringView> split_flags(StringView const& input)
+{
+    Vector<StringView> flags;
+
+    auto lexer = GenericLexer(input);
+    while (!lexer.is_eof()) {
+        StringView flag;
+
+        if (lexer.next_is(is_ascii_digit)) {
+            flag = lexer.consume_while(is_ascii_digit);
+        } else if (lexer.peek() == 'w') {
+            flag = lexer.consume_all();
+        } else {
+            flag = lexer.consume(1);
+        }
+
+        flags.append(flag);
+    }
+
+    return flags;
+}
 
 static ErrorOr<SubstitutionCommand> parse_command(StringView command)
 {
@@ -53,18 +77,30 @@ static ErrorOr<SubstitutionCommand> parse_command(StringView command)
     if (!lexer.consume_specific(delimiter))
         return Error::from_string_literal("The substitution command was not properly terminated.");
 
-    PosixOptions const options = PosixOptions(PosixFlags::Global | PosixFlags::SingleMatch);
+    PosixOptions options = PosixOptions(PosixFlags::Global | PosixFlags::SingleMatch);
+    Optional<StringView> output_filepath;
 
-    auto flags = lexer.consume_all();
-    if (!flags.is_empty())
-        warnln("sed: Flags are currently ignored");
+    auto flags = split_flags(lexer.consume_all());
+    for (auto const& flag : flags) {
+        if (flag.starts_with('w')) {
+            auto flag_filepath = flag.substring_view(1).trim_whitespace();
+            if (flag_filepath.is_empty())
+                return Error::from_string_literal("No filepath was provided for the 'w' flag.");
+            output_filepath = flag_filepath;
+        } else if (flag == "g"sv) {
+            // Allow multiple matches per line by un-setting the SingleMatch flag
+            options &= ~PosixFlags::SingleMatch;
+        } else {
+            warnln("sed: Unsupported flag: {}", flag);
+        }
+    }
 
-    return SubstitutionCommand { Regex<PosixExtended> { pattern }, replacement, options };
+    return SubstitutionCommand { Regex<PosixExtended> { pattern }, replacement, options, output_filepath };
 }
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::pledge("stdio cpath rpath wpath"));
 
     Core::ArgsParser args_parser;
 
@@ -77,6 +113,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.parse(args);
 
     auto command = TRY(parse_command(command_input));
+
+    Optional<NonnullOwnPtr<Core::Stream::File>> maybe_output_file;
+    if (command.output_filepath.has_value())
+        maybe_output_file = TRY(Core::Stream::File::open_file_or_standard_stream(command.output_filepath.release_value(), Core::Stream::OpenMode::Write));
 
     if (filepaths.is_empty())
         filepaths = { "-"sv };
@@ -96,6 +136,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
             auto result = command.regex.replace(line, command.replacement, command.options);
             outln(result);
+
+            if (maybe_output_file.has_value()) {
+                auto const& output_file = maybe_output_file.value();
+                TRY(output_file->write(result.bytes()));
+                TRY(output_file->write("\n"sv.bytes()));
+            }
         }
     }
 
