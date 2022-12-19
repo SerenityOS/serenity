@@ -36,6 +36,7 @@ struct Version16Dot16 {
 using FWord = BigEndian<i16>;
 using UFWord = BigEndian<u16>;
 using Tag = BigEndian<u32>;
+using Offset16 = BigEndian<u16>;
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
@@ -253,15 +254,15 @@ private:
 // name: Naming Table
 class Name {
 public:
-    enum class Platform {
+    enum class Platform : u16 {
         Unicode = 0,
         Macintosh = 1,
         Windows = 3,
     };
-    enum class MacintoshLanguage {
+    enum class MacintoshLanguage : u16 {
         English = 0,
     };
-    enum class WindowsLanguage {
+    enum class WindowsLanguage : u16 {
         EnglishUnitedStates = 0x0409,
     };
     static Optional<Name> from_slice(ReadonlyBytes);
@@ -272,7 +273,27 @@ public:
     DeprecatedString typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
 
 private:
-    enum class NameId {
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/name#name-records
+    struct NameRecord {
+        BigEndian<u16> platform_id;
+        BigEndian<u16> encoding_id;
+        BigEndian<u16> language_id;
+        BigEndian<u16> name_id;
+        BigEndian<u16> length;
+        Offset16 string_offset;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/name#naming-table-version-0
+    struct NamingTableVersion0 {
+        BigEndian<u16> version;
+        BigEndian<u16> count;
+        Offset16 storage_offset;
+        NameRecord name_record[0];
+    };
+
+    NamingTableVersion0 const& header() const { return *bit_cast<NamingTableVersion0 const*>(m_slice.data()); }
+
+    enum class NameId : u16 {
         Copyright = 0,
         FamilyName = 1,
         SubfamilyName = 2,
@@ -293,7 +314,7 @@ private:
     {
     }
 
-    DeprecatedString string_for_id(NameId id) const;
+    DeprecatedString string_for_id(NameId) const;
 
     ReadonlyBytes m_slice;
 };
