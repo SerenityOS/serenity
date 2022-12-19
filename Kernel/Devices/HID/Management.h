@@ -12,7 +12,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
-#include <Kernel/Devices/HID/HIDDevice.h>
+#include <Kernel/Devices/HID/Device.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>

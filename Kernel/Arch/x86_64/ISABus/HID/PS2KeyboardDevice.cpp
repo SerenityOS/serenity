@@ -9,7 +9,7 @@
 #include <Kernel/Arch/x86_64/ISABus/HID/PS2KeyboardDevice.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>

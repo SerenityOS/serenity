@@ -69,8 +69,8 @@ set(KERNEL_SOURCES
     Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
     Devices/ZeroDevice.cpp
-    Devices/HID/HIDManagement.cpp
     Devices/HID/KeyboardDevice.cpp
+    Devices/HID/Management.cpp
     Devices/HID/MouseDevice.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Bochs/QEMUDisplayConnector.cpp

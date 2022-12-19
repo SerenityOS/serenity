@@ -17,7 +17,7 @@
 #include <Kernel/Devices/DeviceControlDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
