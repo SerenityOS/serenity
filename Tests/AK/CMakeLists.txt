@@ -28,6 +28,7 @@ set(AK_TEST_SOURCES
     TestFixedArray.cpp
     TestFixedPoint.cpp
     TestFloatingPoint.cpp
+    TestFloatingPointMath.cpp    
     TestFloatingPointParsing.cpp
     TestFormat.cpp
     TestGenericLexer.cpp

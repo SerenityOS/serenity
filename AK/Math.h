@@ -728,6 +728,30 @@ ALWAYS_INLINE I round_to(double value)
 }
 #endif
 
+template<FloatingPoint T, Integral I>
+constexpr T upow(T x, I n)
+{
+    T y = 1.0;
+
+    do {
+        if (n & 1)
+            y *= x;
+        x *= x;
+        n >>= 1;
+    } while (n);
+
+    return y;
+}
+
+template<FloatingPoint T, Integral I>
+constexpr T ipow(T x, I n)
+{
+    if (n < 0)
+        return upow(1.0l / x, -n);
+
+    return upow(x, n);
+}
+
 template<FloatingPoint T>
 constexpr T pow(T x, T y)
 {
@@ -741,15 +765,10 @@ constexpr T pow(T x, T y)
         return 0;
     if (y == 1)
         return x;
+
     int y_as_int = (int)y;
-    if (y == (T)y_as_int) {
-        T result = x;
-        for (int i = 0; i < fabs<T>(y) - 1; ++i)
-            result *= x;
-        if (y < 0)
-            result = 1.0l / result;
-        return result;
-    }
+    if (y == (T)y_as_int)
+        return ipow(x, y_as_int);
 
     return exp2<T>(y * log2<T>(x));
 }
