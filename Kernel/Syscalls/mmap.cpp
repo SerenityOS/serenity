@@ -8,7 +8,9 @@
 #include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/Arch/x86/MSR.h>
+#if ARCH(X86_64) || ARCH(I386)
+#    include <Kernel/Arch/x86/MSR.h>
+#endif
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -567,9 +569,11 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
         auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
         tls_descriptor.set_base(main_thread->thread_specific_data());
         tls_descriptor.set_limit(main_thread->thread_specific_region_size());
-#else
+#elif ARCH(X86_64)
         MSR fs_base_msr(MSR_FS_BASE);
         fs_base_msr.set(main_thread->thread_specific_data().get());
+#elif ARCH(AARCH64)
+        TODO_AARCH64();
 #endif
 
         return m_master_tls_region.unsafe_ptr()->vaddr().get();

@@ -107,8 +107,10 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
+#if !ARCH(AARCH64)
         if ((peer_saved_registers.cs & 0x03) != 3)
             return EFAULT;
+#endif
 
         tracer->set_regs(regs);
         copy_ptrace_registers_into_kernel_registers(peer_saved_registers, regs);
@@ -143,6 +145,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         break;
     }
 
+#if !ARCH(AARCH64)
     case PT_PEEKDEBUG: {
         auto data = TRY(peer->peek_debug_register(reinterpret_cast<uintptr_t>(params.addr)));
         TRY(copy_to_user((FlatPtr*)params.data, &data));
@@ -151,6 +154,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
     case PT_POKEDEBUG:
         TRY(peer->poke_debug_register(reinterpret_cast<uintptr_t>(params.addr), params.data));
         return 0;
+#endif
     default:
         return EINVAL;
     }
@@ -227,6 +231,7 @@ ErrorOr<void> Process::poke_user_data(Userspace<FlatPtr*> address, FlatPtr data)
     });
 }
 
+#if !ARCH(AARCH64)
 ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
 {
     FlatPtr data;
@@ -278,5 +283,6 @@ ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
     }
     return {};
 }
+#endif
 
 }

@@ -260,6 +260,8 @@ public:
     FlatPtr init_context(Thread& thread, bool leave_crit);
     static ErrorOr<Vector<FlatPtr, 32>> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
+    static StringView platform_string();
+
 private:
     Thread* m_current_thread;
     Thread* m_idle_thread;

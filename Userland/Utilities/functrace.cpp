@@ -16,8 +16,13 @@
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
 #include <LibMain/Main.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/Instruction.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Disassembler.h>
+#    include <LibX86/Instruction.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Disassembler.h>
+#    include <LibARM64/Instruction.h>
+#endif
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,15 +72,19 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
         regs.rbx,
         end_color);
 #elif ARCH(AARCH64)
-    (void)regs;
-    (void)begin_color;
-    (void)end_color;
-    TODO_AARCH64();
+    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}){}",
+        begin_color,
+        Syscall::to_string((Syscall::Function)regs.x8),
+        regs.x1,
+        regs.x2,
+        regs.x3,
+        end_color);
 #else
 #    error Unknown architecture
 #endif
 }
 
+#if ARCH(I386) || ARCH(X86_64)
 static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
 {
     auto instrumented = make<HashMap<FlatPtr, X86::Instruction>>();
@@ -103,6 +112,35 @@ static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
     });
     return instrumented;
 }
+#elif ARCH(AARCH64)
+static NonnullOwnPtr<HashMap<FlatPtr, ARM64::Instruction>> instrument_code()
+{
+    auto instrumented = make<HashMap<FlatPtr, ARM64::Instruction>>();
+    g_debug_session->for_each_loaded_library([&](Debug::LoadedLibrary const& lib) {
+        lib.debug_info->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
+            if (section.name() != ".text")
+                return IterationDecision::Continue;
+
+            ARM64::SimpleInstructionStream stream((const u8*)((uintptr_t)lib.file->data() + section.offset()), section.size());
+            ARM64::Disassembler disassembler(stream);
+            for (;;) {
+                auto offset = stream.offset();
+                auto instruction_address = section.address() + offset + lib.base_address;
+                auto insn = disassembler.next();
+                if (!insn.has_value())
+                    break;
+                if (insn.value().mnemonic() == "RET" || insn.value().mnemonic() == "CALL") {
+                    g_debug_session->insert_breakpoint(instruction_address);
+                    instrumented->set(instruction_address, insn.value());
+                }
+            }
+            return IterationDecision::Continue;
+        });
+        return IterationDecision::Continue;
+    });
+    return instrumented;
+}
+#endif
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -151,8 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #elif ARCH(X86_64)
         const FlatPtr ip = regs.value().rip;
 #elif ARCH(AARCH64)
-        const FlatPtr ip = 0; // FIXME
-        TODO_AARCH64();
+        const FlatPtr ip = regs.value().pc;
 #else
 #    error Unknown architecture
 #endif

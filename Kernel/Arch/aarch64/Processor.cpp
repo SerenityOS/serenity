@@ -105,4 +105,9 @@ void Processor::check_invoke_scheduler()
     TODO_AARCH64();
 }
 
+StringView Processor::platform_string()
+{
+    return "aarch64"sv; // FIXME
+}
+
 }

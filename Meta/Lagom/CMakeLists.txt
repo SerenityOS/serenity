@@ -456,6 +456,11 @@ if (BUILD_LAGOM)
             target_link_libraries(disasm LibCore LibELF LibX86 LibMain)
         endif()
 
+        if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
+            add_executable(disasm ../../Userland/Utilities/disasm.cpp)
+            target_link_libraries(disasm LibCore LibELF LibARM64 LibMain)
+        endif()
+
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
         target_link_libraries(gml-format LibCore LibGUI LibMain)
 

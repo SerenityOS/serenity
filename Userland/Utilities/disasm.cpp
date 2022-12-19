@@ -14,8 +14,13 @@
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibMain/Main.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Disassembler.h>
+#    include <LibX86/ELFSymbolProvider.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Disassembler.h>
+#    include <LibARM64/ELFSymbolProvider.h>
+#endif
 #include <string.h>
 
 ErrorOr<int> serenity_main(Main::Arguments args)
@@ -26,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.set_general_help(
         "Disassemble an executable, and show human-readable "
         "assembly code for each function.");
-    args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
+    args_parser.add_positional_argument(path, "Path to x86/arm64 binary file", "path");
     args_parser.parse(args);
 
     RefPtr<Core::MappedFile> file;
@@ -52,12 +57,20 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     size_t file_offset = 0;
     Vector<Symbol>::Iterator current_symbol = symbols.begin();
+#if ARCH(I386) || ARCH(X86_64)
     OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
+#elif ARCH(AARCH64)
+    OwnPtr<ARM64::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
+#endif
     OwnPtr<ELF::Image> elf;
     if (asm_size >= 4 && strncmp(reinterpret_cast<char const*>(asm_data), "\u007fELF", 4) == 0) {
         elf = make<ELF::Image>(asm_data, asm_size);
         if (elf->is_valid()) {
+#if ARCH(I386) || ARCH(X86_64)
             symbol_provider = make<X86::ELFSymbolProvider>(*elf);
+#elif ARCH(AARCH64)
+            symbol_provider = make<ARM64::ELFSymbolProvider>(*elf);
+#endif
             elf->for_each_section_of_type(SHT_PROGBITS, [&](ELF::Image::Section const& section) {
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
                 if (section.name() != ".text")
@@ -87,8 +100,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
     }
 
+#if ARCH(I386) || ARCH(X86_64)
     X86::SimpleInstructionStream stream(asm_data, asm_size);
     X86::Disassembler disassembler(stream);
+#elif ARCH(AARCH64)
+    ARM64::SimpleInstructionStream stream(asm_data, asm_size);
+    ARM64::Disassembler disassembler(stream);
+#endif
 
     bool is_first_symbol = true;
     bool current_instruction_is_in_symbol = false;

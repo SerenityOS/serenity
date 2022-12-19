@@ -17,6 +17,10 @@
 #if ARCH(I386) || ARCH(X86_64)
 #    include <Kernel/Arch/x86/ASM_wrapper.h>
 #    include <Kernel/Arch/x86/CPUID.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/ASM_wrapper.h>
+#else
+#    error Unknown architecture
 #endif
 
 // Defined in the linker script

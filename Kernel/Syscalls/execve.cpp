@@ -162,6 +162,10 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     regs.rdi = argv_entries.size();
     regs.rsi = argv;
     regs.rdx = envp;
+#elif ARCH(AARCH64)
+    (void)argv_entries;
+    (void)argv;
+    (void)envp;
 #else
 #    error Unknown architecture
 #endif
@@ -684,9 +688,10 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     }
     new_main_thread->reset_fpu_state();
 
+#if ARCH(I386) || ARCH(X86_64)
     auto& regs = new_main_thread->m_regs;
     regs.cs = GDT_SELECTOR_CODE3 | 3;
-#if ARCH(I386)
+#    if ARCH(I386)
     regs.ds = GDT_SELECTOR_DATA3 | 3;
     regs.es = GDT_SELECTOR_DATA3 | 3;
     regs.ss = GDT_SELECTOR_DATA3 | 3;
@@ -694,11 +699,15 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     regs.gs = GDT_SELECTOR_TLS | 3;
     regs.eip = load_result.entry_eip;
     regs.esp = new_userspace_sp;
-#else
+#    else
     regs.rip = load_result.entry_eip;
     regs.rsp = new_userspace_sp;
-#endif
+#    endif
     regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
+#elif ARCH(AARCH64)
+    (void)new_userspace_sp;
+    TODO_AARCH64();
+#endif
 
     {
         TemporaryChange profiling_disabler(m_profiling, was_profiling);
@@ -727,9 +736,14 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
         { ELF::AuxiliaryValue::Gid, (long)gid.value() },
         { ELF::AuxiliaryValue::EGid, (long)egid.value() },
 
+#if ARCH(I386) || ARCH(X86_64)
         { ELF::AuxiliaryValue::Platform, Processor::platform_string() },
         // FIXME: This is platform specific
         { ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() },
+#elif ARCH(AARCH64)
+        { ELF::AuxiliaryValue::Platform, Processor::platform_string() },
+        { ELF::AuxiliaryValue::HwCap, 0L }, // TODO
+#endif
 
         { ELF::AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() },
 

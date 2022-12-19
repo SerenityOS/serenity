@@ -77,8 +77,12 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
 
     reset_fpu_state();
 
+#if ARCH(I386) || ARCH(X86_64)
     // Only IF is set when a process boots.
     m_regs.set_flags(0x0202);
+#elif ARCH(AARCH64)
+    TODO_AARCH64();
+#endif
 
 #if ARCH(I386)
     if (m_process->is_kernel_process()) {
@@ -107,7 +111,9 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
 #    error Unknown architecture
 #endif
 
+#if ARCH(I386) || ARCH(X86_64)
     m_regs.cr3 = m_process->address_space().with([](auto& space) { return space->page_directory().cr3(); });
+#endif
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
@@ -1078,7 +1084,14 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             },
             .uc_mcontext = {},
         };
+
+#if ARCH(I386) || ARCH(X86_64)
         copy_kernel_registers_into_ptrace_registers(static_cast<PtraceRegisters&>(ucontext.uc_mcontext), state);
+#elif ARCH(AARCH64)
+        TODO_AARCH64();
+#else
+#    error Unknown architecture
+#endif
 
         auto fill_signal_info_for_signal = [&](siginfo& signal_info) {
             if (signal == SIGCHLD) {
@@ -1243,7 +1256,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     regs.set_flags(2 | (regs.rflags & ~safe_eflags_mask));
 #endif
 
+#if ARCH(I386) || ARCH(X86_64)
     dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
+#elif ARCH(AARCH64)
+    // TODO
+    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:p} ({:p}) to deliver {}", state_string(), m_regs.ip0, m_regs.ip1, signal);
+#endif
 
     return DispatchSignalResult::Continue;
 }

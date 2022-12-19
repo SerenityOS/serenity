@@ -12,8 +12,13 @@
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Disassembler.h>
+#    include <LibX86/ELFSymbolProvider.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Disassembler.h>
+#    include <LibARM64/ELFSymbolProvider.h>
+#endif
 #include <stdio.h>
 
 namespace Profiler {
@@ -90,9 +95,15 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
     auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
+#if ARCH(I386) || ARCH(X86_64)
     X86::ELFSymbolProvider symbol_provider(*elf, base_address);
     X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
+#elif ARCH(AARCH64)
+    ARM64::ELFSymbolProvider symbol_provider(*elf, base_address);
+    ARM64::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    ARM64::Disassembler disassembler(stream);
+#endif
 
     size_t offset_into_symbol = 0;
     FlatPtr last_instruction_offset = 0;

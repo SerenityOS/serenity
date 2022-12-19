@@ -13,8 +13,13 @@
 #include "SoftVPU.h"
 #include "ValueWithShadow.h"
 #include <AK/ByteReader.h>
-#include <LibX86/Instruction.h>
-#include <LibX86/Interpreter.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Instruction.h>
+#    include <LibX86/Interpreter.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Instruction.h>
+#    include <LibARM64/Interpreter.h>
+#endif
 
 namespace UserspaceEmulator {
 

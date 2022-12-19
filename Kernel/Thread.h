@@ -67,7 +67,7 @@ struct ThreadRegisters {
     FlatPtr eip;
     FlatPtr esp0;
     FlatPtr ss0;
-#else
+#elif ARCH(X86_64)
     FlatPtr rdi;
     FlatPtr rsi;
     FlatPtr rbp;
@@ -86,8 +86,57 @@ struct ThreadRegisters {
     FlatPtr r15;
     FlatPtr rip;
     FlatPtr rsp0;
+#elif ARCH(AARCH64)
+    // params & results
+    FlatPtr x0;
+    FlatPtr x1;
+    FlatPtr x2;
+    FlatPtr x3;
+    FlatPtr x4;
+    FlatPtr x5;
+    FlatPtr x6;
+    FlatPtr x7;
+
+    FlatPtr xr; // x8, syscall name
+
+    // corruptible, temporary
+    FlatPtr x9;
+    FlatPtr x10;
+    FlatPtr x11;
+    FlatPtr x12;
+    FlatPtr x13;
+    FlatPtr x14;
+    FlatPtr x15;
+
+    // intra-procedure-call and platform
+    FlatPtr ip0; // xip0
+    FlatPtr ip1; // xip1
+    FlatPtr pr;
+
+    // callee-saved
+    FlatPtr x19;
+    FlatPtr x20;
+    FlatPtr x21;
+    FlatPtr x22;
+    FlatPtr x23;
+    FlatPtr x24;
+    FlatPtr x25;
+    FlatPtr x26;
+    FlatPtr x27;
+    FlatPtr x28;
+
+    FlatPtr fp; // x29, frame
+    FlatPtr lr; // x30, link
+
+    FlatPtr rsp; // x31 or zero
+
+    FlatPtr pc;
+#else
+#    error Unsupported architecture
 #endif
+#if ARCH(I386) || ARCH(X86_64)
     FlatPtr cs;
+#endif
 
 #if ARCH(I386)
     FlatPtr eflags;
@@ -96,23 +145,38 @@ struct ThreadRegisters {
     void set_sp(FlatPtr value) { esp = value; }
     void set_sp0(FlatPtr value) { esp0 = value; }
     void set_ip(FlatPtr value) { eip = value; }
-#else
+#elif ARCH(X86_64)
     FlatPtr rflags;
     FlatPtr flags() const { return rflags; }
     void set_flags(FlatPtr value) { rflags = value; }
     void set_sp(FlatPtr value) { rsp = value; }
     void set_sp0(FlatPtr value) { rsp0 = value; }
     void set_ip(FlatPtr value) { rip = value; }
+#elif ARCH(AARCH64)
+    FlatPtr nzcv;
+    FlatPtr flags() const { return nzcv; }
+    void set_flags(FlatPtr value) { nzcv = value; }
+    void set_sp(FlatPtr value) { rsp = value; }
+    void set_sp0(FlatPtr value) { pr = value; } // FIXME
+    void set_ip(FlatPtr value) { pc = value; }
+#else
+#    error Unsupported architecture
 #endif
 
+#if ARCH(I386) || ARCH(X86_64)
     FlatPtr cr3;
+#endif
 
     FlatPtr ip() const
     {
 #if ARCH(I386)
         return eip;
-#else
+#elif ARCH(X86_64)
         return rip;
+#elif ARCH(AARCH64)
+        return pc;
+#else
+#    error Unsupported architecture
 #endif
     }
 
@@ -120,8 +184,12 @@ struct ThreadRegisters {
     {
 #if ARCH(I386)
         return esp;
-#else
+#elif ARCH(X86_64)
         return rsp;
+#elif ARCH(AARCH64)
+        return rsp;
+#else
+#    error Unsupported architecture
 #endif
     }
 };

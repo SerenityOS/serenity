@@ -49,16 +49,17 @@ static void serial_putch(char ch)
     debug_output(ch);
 }
 
+#if ARCH(I386) || ARCH(X86_64)
 static void critical_console_out(char ch)
 {
     if (s_serial_debug_enabled)
         serial_putch(ch);
 
-#if ARCH(I386) || ARCH(X86_64)
+#    if ARCH(I386) || ARCH(X86_64)
     // No need to output things to the real ConsoleDevice as no one is likely
     // to read it (because we are in a fatal situation, so only print things and halt)
     bochs_debug_output(ch);
-#endif
+#    endif
 
     // We emit chars directly to the string. this is necessary in few cases,
     // especially when we want to avoid any memory allocations...
@@ -79,9 +80,9 @@ static void console_out(char ch)
     if (DeviceManagement::the().is_console_device_attached()) {
         DeviceManagement::the().console_device().put_char(ch);
     } else {
-#if ARCH(I386) || ARCH(X86_64)
+#    if ARCH(I386) || ARCH(X86_64)
         bochs_debug_output(ch);
-#endif
+#    endif
     }
     if (ConsoleManagement::is_initialized()) {
         ConsoleManagement::the().debug_tty()->emit_char(ch);
@@ -89,6 +90,8 @@ static void console_out(char ch)
         boot_console->write(ch, true);
     }
 }
+
+#endif
 
 static void buffer_putch(char*& bufptr, char ch)
 {
@@ -163,6 +166,8 @@ void dbgputstr(StringView view)
     ::dbgputstr(view.characters_without_null_termination(), view.length());
 }
 
+#if ARCH(i386) || ARCH(x86_X86_64)
+
 extern "C" void kernelputstr(char const* characters, size_t length)
 {
     if (!characters)
@@ -191,3 +196,4 @@ extern "C" void kernelearlyputstr(char const* characters, size_t length)
     for (size_t i = 0; i < length; ++i)
         internal_dbgputch(characters[i]);
 }
+#endif

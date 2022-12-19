@@ -111,7 +111,11 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     auto sp = registers.esp;
 #endif
 
+#if ARCH(I386) || ARCH(X86_64)
     copy_ptrace_registers_into_kernel_registers(registers, static_cast<PtraceRegisters const&>(ucontext.uc_mcontext));
+#else
+    TODO_AARCH64();
+#endif
 
 #if ARCH(X86_64)
     registers.set_userspace_sp(registers.rsp);

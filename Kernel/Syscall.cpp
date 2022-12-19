@@ -7,8 +7,11 @@
 
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/TrapFrame.h>
-#include <Kernel/Arch/x86/Interrupts.h>
-#include <Kernel/Memory/MemoryManager.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/Interrupts.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Memory/MemoryManager.h>
+#endif
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
@@ -87,7 +90,11 @@ static ErrorOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, F
 
 UNMAP_AFTER_INIT void initialize()
 {
+#if ARCH(I386) || ARCH(X86_64)
     register_user_callable_interrupt_handler(syscall_vector, syscall_asm_entry);
+#elif ARCH(AARCH64)
+    TODO_AARCH64();
+#endif
 }
 
 using Handler = auto(Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
@@ -166,8 +173,10 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
 
 NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
+#if ARCH(I386) || ARCH(X86_64)
     // Make sure SMAP protection is enabled on syscall entry.
     clac();
+#endif
 
     auto& regs = *trap->regs;
     auto* current_thread = Thread::current();
@@ -187,6 +196,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     current_thread->yield_if_stopped();
 
+#if ARCH(I386) || ARCH(X86_64)
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
     u32 lsw;
@@ -196,13 +206,16 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     auto* ptr = (char*)__builtin_alloca(lsw & 0xff);
     asm volatile(""
                  : "=m"(*ptr));
+#endif
 
+#if ARCH(I386) || ARCH(X86_64)
     constexpr FlatPtr iopl_mask = 3u << 12;
 
     FlatPtr flags = regs.flags();
     if ((flags & (iopl_mask)) != 0) {
         PANIC("Syscall from process with IOPL != 0");
     }
+#endif
 
     Memory::MemoryManager::validate_syscall_preconditions(process, regs);
 

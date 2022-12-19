@@ -53,17 +53,24 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     if (!is_thread_joinable)
         thread->detach();
 
+#if ARCH(i386) || ARCH(X86_64)
     auto& regs = thread->regs();
     regs.set_ip((FlatPtr)entry);
     regs.set_flags(0x0202);
     regs.set_sp(user_sp.value());
-#if ARCH(X86_64)
+#    if ARCH(X86_64)
     regs.rdi = params.rdi;
     regs.rsi = params.rsi;
     regs.rdx = params.rdx;
     regs.rcx = params.rcx;
-#endif
+#    endif
     regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
+#elif ARCH(AARCH64)
+    auto& regs = thread->regs();
+    regs.set_ip((FlatPtr)entry);
+    // TODO flags
+    regs.set_sp(user_sp.value());
+#endif
 
     TRY(thread->make_thread_specific_region({}));
 

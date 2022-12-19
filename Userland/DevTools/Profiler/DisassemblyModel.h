@@ -9,7 +9,11 @@
 
 #include <LibDebug/DebugInfo.h>
 #include <LibGUI/Model.h>
-#include <LibX86/Instruction.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Instruction.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Instruction.h>
+#endif
 
 namespace Profiler {
 
@@ -17,7 +21,11 @@ class Profile;
 class ProfileNode;
 
 struct InstructionData {
+#if ARCH(I386) || ARCH(X86_64)
     X86::Instruction insn;
+#elif ARCH(AARCH64)
+    ARM64::Instruction insn;
+#endif
     DeprecatedString disassembly;
     StringView bytes;
     FlatPtr address { 0 };

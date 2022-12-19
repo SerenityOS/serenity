@@ -101,8 +101,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_first_thread->m_alternative_signal_stack = Thread::current()->m_alternative_signal_stack;
     child_first_thread->m_alternative_signal_stack_size = Thread::current()->m_alternative_signal_stack_size;
 
-#if ARCH(I386)
     auto& child_regs = child_first_thread->m_regs;
+#if ARCH(I386)
     child_regs.eax = 0; // fork() returns 0 in the child :^)
     child_regs.ebx = regs.ebx;
     child_regs.ecx = regs.ecx;
@@ -123,7 +123,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:#04x}:{:p}, kstack {:#04x}:{:p}",
         child_regs.cs, child_regs.eip, child_regs.ss, child_regs.esp, child_regs.ss0, child_regs.esp0);
 #elif ARCH(X86_64)
-    auto& child_regs = child_first_thread->m_regs;
     child_regs.rax = 0; // fork() returns 0 in the child :^)
     child_regs.rbx = regs.rbx;
     child_regs.rcx = regs.rcx;
@@ -146,6 +145,45 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
         child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
+#elif ARCH(AARCH64)
+    child_regs.x0 = 0; // fork() returns 0 in the child :^)
+    child_regs.x1 = regs.x[1];
+    child_regs.x2 = regs.x[2];
+    child_regs.x3 = regs.x[3];
+    child_regs.x4 = regs.x[4];
+    child_regs.x5 = regs.x[5];
+    child_regs.x6 = regs.x[6];
+    child_regs.x7 = regs.x[7];
+    child_regs.xr = regs.x[8];
+    child_regs.x9 = regs.x[9];
+    child_regs.x10 = regs.x[10];
+    child_regs.x11 = regs.x[11];
+    child_regs.x12 = regs.x[12];
+    child_regs.x13 = regs.x[13];
+    child_regs.x14 = regs.x[14];
+    child_regs.x15 = regs.x[15];
+    child_regs.ip0 = regs.x[16];
+    child_regs.ip1 = regs.x[17];
+    child_regs.pr = regs.x[18];
+    child_regs.x19 = regs.x[19];
+    child_regs.x20 = regs.x[20];
+    child_regs.x21 = regs.x[21];
+    child_regs.x22 = regs.x[22];
+    child_regs.x23 = regs.x[23];
+    child_regs.x24 = regs.x[24];
+    child_regs.x25 = regs.x[25];
+    child_regs.x26 = regs.x[26];
+    child_regs.x27 = regs.x[27];
+    child_regs.x28 = regs.x[28];
+    child_regs.fp = regs.x[29];
+    child_regs.lr = regs.x[30];
+    child_regs.rsp = regs.x[31];
+
+    child_regs.nzcv = regs.nzcv;
+    child_regs.pc = regs.pc;
+
+//    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
+//        child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
 #else
 #    error Unknown architecture
 #endif

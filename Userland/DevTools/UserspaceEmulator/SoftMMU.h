@@ -13,7 +13,11 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <LibX86/Instruction.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Instruction.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Instruction.h>
+#endif
 
 namespace UserspaceEmulator {
 

@@ -11,15 +11,20 @@
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
-#include <LibC/sys/arch/i386/regs.h>
+#include <LibC/sys/arch/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/Instruction.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Disassembler.h>
+#    include <LibX86/Instruction.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Disassembler.h>
+#    include <LibARM64/Instruction.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,8 +55,15 @@ static void handle_print_registers(PtraceRegisters const& regs)
     outln("r12={:p} r13={:p} r14={:p} r15={:p}", regs.r12, regs.r13, regs.r14, regs.r15);
     outln("rip={:p} rflags={:p}", regs.rip, regs.rflags);
 #elif ARCH(AARCH64)
-    (void)regs;
-    TODO_AARCH64();
+    outln("x0 ={:p} x1 ={:p} x2 ={:p} x3 ={:p}", regs.x0, regs.x1, regs.x2, regs.x3);
+    outln("x4 ={:p} x5 ={:p} x6 ={:p} x7 ={:p}", regs.x4, regs.x5, regs.x6, regs.x7);
+    outln("x8 ={:p} x9 ={:p} x10={:p} x11={:p}", regs.x8, regs.x9, regs.x10, regs.x11);
+    outln("x12={:p} x13={:p} x14={:p} x15={:p}", regs.x12, regs.x13, regs.x14, regs.x15);
+    outln("x16={:p} x17={:p} x18={:p} x19={:p}", regs.x16, regs.x17, regs.x18, regs.x19);
+    outln("x20={:p} x21={:p} x22={:p} x22={:p}", regs.x20, regs.x21, regs.x22, regs.x22);
+    outln("x24={:p} x25={:p} x26={:p} x27={:p}", regs.x24, regs.x25, regs.x26, regs.x27);
+    outln("x28={:p} x29={:p} x30={:p} x31={:p}", regs.x28, regs.x29, regs.x30, regs.x31);
+    outln("sp ={:p} pc ={:p}", regs.sp, regs.pc);
 #else
 #    error Unknown architecture
 #endif
@@ -80,8 +92,13 @@ static bool handle_disassemble_command(DeprecatedString const& command, FlatPtr 
             break;
     }
 
+#if ARCH(I386) || ARCH(X86_64)
     X86::SimpleInstructionStream stream(code.data(), code.size());
     X86::Disassembler disassembler(stream);
+#elif ARCH(AARCH64)
+    ARM64::SimpleInstructionStream stream(code.data(), code.size());
+    ARM64::Disassembler disassembler(stream);
+#endif
 
     for (size_t i = 0; i < number_of_instructions_to_disassemble; ++i) {
         auto offset = stream.offset();
@@ -115,9 +132,14 @@ static bool handle_backtrace_command(PtraceRegisters const& regs)
         eip_val = (u32)next_eip.value();
         ebp_val = (u32)next_ebp.value();
     }
-#else
+#elif ARCH(X86_64)
     (void)regs;
     TODO();
+#elif ARCH(AARCH64)
+    (void)regs;
+    TODO();
+#else
+#    error Unsupported architecture
 #endif
     return true;
 }
@@ -254,8 +276,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #elif ARCH(X86_64)
         const FlatPtr ip = regs.rip;
 #elif ARCH(AARCH64)
-        const FlatPtr ip = 0; // FIXME
-        TODO_AARCH64();
+        const FlatPtr ip = regs.pc;
 #else
 #    error Unknown architecture
 #endif

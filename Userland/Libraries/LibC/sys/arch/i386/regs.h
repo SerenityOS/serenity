@@ -52,7 +52,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
 #        elif ARCH(X86_64)
         return rbp;
 #        elif ARCH(AARCH64)
-        return r29;
+        return x29;
 #        else
 #            error Unknown architecture
 #        endif
@@ -65,7 +65,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
 #        elif ARCH(X86_64)
         rbp = bp;
 #        elif ARCH(AARCH64)
-        r29 = bp;
+        x29 = bp;
 #        else
 #            error Unknown architecture
 #        endif

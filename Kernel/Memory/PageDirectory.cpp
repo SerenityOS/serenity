@@ -52,16 +52,17 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
     }
 #endif
 
+#if ARCH(I386) || ARCH(X86_64)
     {
         InterruptDisabler disabler;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_directory_table);
         for (size_t i = 0; i < sizeof(m_directory_pages) / sizeof(m_directory_pages[0]); i++) {
             if (directory->m_directory_pages[i]) {
-#if ARCH(I386)
+#    if ARCH(I386)
                 table.raw[i] = (FlatPtr)directory->m_directory_pages[i]->paddr().as_ptr() | 1;
-#else
+#    else
                 table.raw[i] = (FlatPtr)directory->m_directory_pages[i]->paddr().as_ptr() | 7;
-#endif
+#    endif
             }
         }
 
@@ -90,6 +91,7 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
 
         MM.unquickmap_page();
     }
+#endif
 
     register_page_directory(directory);
     return directory;

@@ -477,6 +477,9 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/vector_table.S
+
+        Arch/aarch64/ASM_wrapper.h
+        Arch/aarch64/CPU.h
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'

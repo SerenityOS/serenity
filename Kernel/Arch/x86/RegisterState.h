@@ -109,13 +109,21 @@ struct [[gnu::packed]] RegisterState {
         arg2 = ecx;
         arg3 = ebx;
         arg4 = esi;
-#else
+#elif ARCH(X86_64)
         // The syscall instruction clobbers rcx, so we must use a different calling convention to 32-bit.
         function = rax;
         arg1 = rdx;
         arg2 = rdi;
         arg3 = rbx;
         arg4 = rsi;
+#elif ARCH(AARCH64)
+        function = x8;
+        arg1 = x1;
+        arg2 = x2;
+        arg3 = x3;
+        arg4 = x4;
+#else
+#    error Unsupported architecture
 #endif
     }
 };

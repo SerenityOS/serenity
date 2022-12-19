@@ -9,8 +9,12 @@
 
 #include <AK/Vector.h>
 #include <LibGUI/Model.h>
-#include <LibX86/Instruction.h>
-#include <sys/arch/i386/regs.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Instruction.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Instruction.h>
+#endif
+#include <sys/arch/regs.h>
 
 namespace Debug {
 
@@ -21,7 +25,11 @@ class DebugSession;
 namespace HackStudio {
 
 struct InstructionData {
+#if ARCH(I386) || ARCH(X86_64)
     X86::Instruction insn;
+#elif ARCH(AARCH64)
+    ARM64::Instruction insn;
+#endif
     DeprecatedString disassembly;
     StringView bytes;
     FlatPtr address { 0 };

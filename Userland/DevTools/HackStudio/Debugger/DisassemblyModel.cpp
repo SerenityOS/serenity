@@ -11,8 +11,13 @@
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Disassembler.h>
+#    include <LibX86/ELFSymbolProvider.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Disassembler.h>
+#    include <LibARM64/ELFSymbolProvider.h>
+#endif
 #include <stdio.h>
 
 namespace HackStudio {
@@ -50,9 +55,15 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
 
     auto view = symbol.value().raw_data();
 
+#if ARCH(I386) || ARCH(X86_64)
     X86::ELFSymbolProvider symbol_provider(*elf);
     X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
+#elif ARCH(AARCH64)
+    ARM64::ELFSymbolProvider symbol_provider(*elf);
+    ARM64::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    ARM64::Disassembler disassembler(stream);
+#endif
 
     size_t offset_into_symbol = 0;
     for (;;) {

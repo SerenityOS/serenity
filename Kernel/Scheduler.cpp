@@ -222,10 +222,22 @@ void Scheduler::pick_next()
 
     auto& thread_to_schedule = pull_next_runnable_thread();
     if constexpr (SCHEDULER_DEBUG) {
+#if ARCH(I386) || ARCH(X86_64)
         dbgln("Scheduler[{}]: Switch to {} @ {:#04x}:{:p}",
             Processor::current_id(),
             thread_to_schedule,
             thread_to_schedule.regs().cs, thread_to_schedule.regs().ip());
+#elif ARCH(AARCH64)
+        // TODO
+        dbgln("Scheduler[{}]: Switch to {} @ {:p} ({:p})",
+            Processor::current_id(),
+            thread_to_schedule,
+            thread_to_schedule.regs().ip0, thread_to_schedule.regs().ip1);
+#else
+        dbgln("Scheduler[{}]: Switch to {}",
+            Processor::current_id(),
+            thread_to_schedule);
+#endif
     }
 
     // We need to leave our first critical section before switching context,
@@ -270,11 +282,19 @@ void Scheduler::context_switch(Thread* thread)
         from_thread->set_state(Thread::State::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
+#    if ARCH(AARCH64)
+    auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:p} ({:p})";
+
+    dbgln(msg,
+        Processor::current_id(), from_thread->tid().value(),
+        thread->tid().value(), thread->priority(), thread->regs().ip0, thread->regs().ip1);
+#    else
     auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
 
     dbgln(msg,
         Processor::current_id(), from_thread->tid().value(),
         thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().ip());
+#    endif
 #endif
 
     auto& proc = Processor::current();

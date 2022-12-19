@@ -20,7 +20,11 @@
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
-#include <LibX86/ELFSymbolProvider.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/ELFSymbolProvider.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/ELFSymbolProvider.h>
+#endif
 #include <fcntl.h>
 #include <syscall.h>
 #include <unistd.h>

@@ -69,6 +69,8 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             current_time += 0x40b2u;
         }
     }
+#elif ARCH(AARCH64)
+    dmesgln("KernelRng: No entropy source available!");
 #else
     dmesgln("KernelRng: No entropy source available!");
 #endif

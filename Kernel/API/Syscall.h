@@ -541,6 +541,8 @@ inline uintptr_t invoke(Function function)
                  : "r"(x8)
                  : "memory");
     result = x0;
+#        else
+#            error Unsupported architecture
 #        endif
     return result;
 }
@@ -559,7 +561,7 @@ inline uintptr_t invoke(Function function, T1 arg1)
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1)
                  : "rcx", "r11", "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x8 asm("x8") = function;
@@ -568,6 +570,8 @@ inline uintptr_t invoke(Function function, T1 arg1)
                  : "r"(x1), "r"(x8)
                  : "memory");
     result = x0;
+#        else
+#            error Unsupported architecture
 #        endif
     return result;
 }
@@ -586,7 +590,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2)
                  : "rcx", "r11", "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x2 asm("x2") = arg2;
@@ -596,6 +600,8 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
                  : "r"(x1), "r"(x2), "r"(x8)
                  : "memory");
     result = x0;
+#        else
+#            error Unsupported architecture
 #        endif
     return result;
 }
@@ -614,7 +620,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3)
                  : "rcx", "r11", "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x2 asm("x2") = arg2;
@@ -625,6 +631,8 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
                  : "r"(x1), "r"(x2), "r"(x3), "r"(x8)
                  : "memory");
     result = x0;
+#        else
+#            error Unsupported architecture
 #        endif
     return result;
 }
@@ -643,7 +651,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
                  : "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x2 asm("x2") = arg2;
@@ -655,6 +663,8 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
                  : "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x8)
                  : "memory");
     result = x0;
+#        else
+#            error Unsupported architecture
 #        endif
     return result;
 }

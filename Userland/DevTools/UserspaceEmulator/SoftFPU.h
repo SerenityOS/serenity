@@ -10,8 +10,13 @@
 #include <AK/Concepts.h>
 #include <AK/FPControl.h>
 #include <AK/SIMD.h>
-#include <LibX86/Instruction.h>
-#include <LibX86/Interpreter.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <LibX86/Instruction.h>
+#    include <LibX86/Interpreter.h>
+#elif ARCH(AARCH64)
+#    include <LibARM64/Instruction.h>
+#    include <LibARM64/Interpreter.h>
+#endif
 
 #include <math.h>
 #include <string.h>

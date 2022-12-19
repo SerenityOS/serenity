@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <LibX86/Instruction.h>
+#include <LibARM64/Instruction.h>
 
-namespace X86 {
+namespace ARM64 {
 
 class Disassembler {
 public:
@@ -22,16 +22,8 @@ public:
     {
         if (!m_stream.can_read())
             return {};
-#if ARCH(I386)
-        return Instruction::from_stream(m_stream, ProcessorMode::Protected);
-#elif ARCH(X86_64)
-        return Instruction::from_stream(m_stream, ProcessorMode::Long);
-#elif ARCH(AARCH64)
+
         return Instruction::from_stream(m_stream);
-#else
-        dbgln("Unsupported platform");
-        return {};
-#endif
     }
 
 private:
