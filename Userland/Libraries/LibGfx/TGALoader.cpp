@@ -222,6 +222,8 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
     auto data_type = m_context->header.data_type_code;
     auto width = m_context->header.width;
     auto height = m_context->header.height;
+    auto x_origin = m_context->header.x_origin;
+    auto y_origin = m_context->header.y_origin;
 
     if (index != 0)
         return Error::from_string_literal("TGAImageDecoderPlugin: frame index must be 0");
@@ -242,12 +244,32 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
         // FIXME: Implement other TGA bit depths
         return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle 24 and 32 bits per pixel");
     }
+
+    // FIXME: Try to understand the Image origin (instead of X and Y origin coordinates)
+    // based on the Image descriptor, Field 5.6, bits 4 and 5.
+
+    // NOTE: If Y origin is set to a negative number, just assume the generating software
+    // meant that we start with Y origin at the top height of the picture.
+    // At least this is the observed behavior when generating some pictures in GIMP.
+    if (y_origin < 0)
+        y_origin = height;
+    if (y_origin != 0 && y_origin != height)
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle Y origin which is 0 or the entire height");
+    if (x_origin != 0 && x_origin != width)
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle X origin which is 0 or the entire width");
+
     switch (data_type) {
     case TGADataType::UncompressedRGB: {
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
                 auto pixel = m_context->reader->read_pixel(bits_per_pixel);
-                m_context->bitmap->scanline(row)[col] = pixel.data;
+                auto actual_row = row;
+                if (y_origin < height)
+                    actual_row = height - 1 - row;
+                auto actual_col = col;
+                if (x_origin > width)
+                    actual_col = width - 1 - col;
+                m_context->bitmap->scanline(actual_row)[actual_col] = pixel.data;
             }
         }
         break;
