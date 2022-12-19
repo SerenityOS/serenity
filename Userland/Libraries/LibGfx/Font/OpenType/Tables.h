@@ -327,10 +327,32 @@ public:
     i16 get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
 
 private:
-    enum Sizes : size_t {
-        SubtableHeader = 6,
-        Format0Entry = 6,
+    struct Header {
+        BigEndian<u16> version;
+        BigEndian<u16> n_tables;
     };
+
+    struct SubtableHeader {
+        BigEndian<u16> version;
+        BigEndian<u16> length;
+        BigEndian<u16> coverage;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/kern#format-0
+    struct Format0 {
+        BigEndian<u16> n_pairs;
+        BigEndian<u16> search_range;
+        BigEndian<u16> entry_selector;
+        BigEndian<u16> range_shift;
+    };
+
+    struct Format0Pair {
+        BigEndian<u16> left;
+        BigEndian<u16> right;
+        FWord value;
+    };
+
+    Header const& header() const { return *bit_cast<Header const*>(m_slice.data()); }
 
     Kern(ReadonlyBytes slice, FixedArray<size_t> subtable_offsets)
         : m_slice(slice)

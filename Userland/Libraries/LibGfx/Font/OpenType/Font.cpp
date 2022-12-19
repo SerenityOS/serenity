@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/Checked.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
@@ -166,12 +167,13 @@ Optional<Name> Name::from_slice(ReadonlyBytes slice)
 
 ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < sizeof(u32))
+    if (slice.size() < sizeof(Header))
         return Error::from_string_literal("Invalid kern table header");
 
     // We only support the old (2x u16) version of the header
-    auto version = be_u16(slice.data());
-    auto number_of_subtables = be_u16(slice.offset(sizeof(u16)));
+    auto const& header = *bit_cast<Header const*>(slice.data());
+    auto version = header.version;
+    auto number_of_subtables = header.n_tables;
     if (version != 0)
         return Error::from_string_literal("Unsupported kern table version");
     if (number_of_subtables == 0)
@@ -179,14 +181,13 @@ ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
 
     // Read all subtable offsets
     auto subtable_offsets = TRY(FixedArray<size_t>::try_create(number_of_subtables));
-    size_t offset = 2 * sizeof(u16);
+    size_t offset = sizeof(Header);
     for (size_t i = 0; i < number_of_subtables; ++i) {
-        if (slice.size() < offset + Sizes::SubtableHeader)
+        if (slice.size() < offset + sizeof(SubtableHeader))
             return Error::from_string_literal("Invalid kern subtable header");
-
+        auto const& subtable_header = *bit_cast<SubtableHeader const*>(slice.offset_pointer(offset));
         subtable_offsets[i] = offset;
-        auto subtable_size = be_u16(slice.offset(offset + sizeof(u16)));
-        offset += subtable_size;
+        offset += subtable_header.length;
     }
 
     return Kern(slice, move(subtable_offsets));
@@ -199,10 +200,11 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
     i16 glyph_kerning = 0;
     for (auto subtable_offset : m_subtable_offsets) {
         auto subtable_slice = m_slice.slice(subtable_offset);
+        auto const& subtable_header = *bit_cast<SubtableHeader const*>(subtable_slice.data());
 
-        auto version = be_u16(subtable_slice.data());
-        auto length = be_u16(subtable_slice.offset(sizeof(u16)));
-        auto coverage = be_u16(subtable_slice.offset(2 * sizeof(u16)));
+        auto version = subtable_header.version;
+        auto length = subtable_header.version;
+        auto coverage = subtable_header.coverage;
 
         if (version != 0) {
             dbgln("OpenType::Kern: unsupported subtable version {}", version);
@@ -231,7 +233,7 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
         Optional<i16> subtable_kerning;
         switch (format) {
         case 0:
-            subtable_kerning = read_glyph_kerning_format0(subtable_slice.slice(Sizes::SubtableHeader), left_glyph_id, right_glyph_id);
+            subtable_kerning = read_glyph_kerning_format0(subtable_slice.slice(sizeof(SubtableHeader)), left_glyph_id, right_glyph_id);
             break;
         default:
             dbgln("OpenType::Kern: FIXME: subtable format {} is unsupported", format);
@@ -251,48 +253,39 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 
 Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_glyph_id, u16 right_glyph_id)
 {
-    if (slice.size() < 4 * sizeof(u16))
+    if (slice.size() < sizeof(Format0))
         return {};
 
-    u16 number_of_pairs = be_u16(slice.data());
-    u16 search_range = be_u16(slice.offset_pointer(sizeof(u16)));
-    u16 entry_selector = be_u16(slice.offset_pointer(2 * sizeof(u16)));
-    u16 range_shift = be_u16(slice.offset_pointer(3 * sizeof(u16)));
+    auto const& format0 = *bit_cast<Format0 const*>(slice.data());
+    u16 number_of_pairs = format0.n_pairs;
+    u16 search_range = format0.search_range;
+    u16 entry_selector = format0.entry_selector;
+    u16 range_shift = format0.range_shift;
 
     // Sanity checks for this table format
-    auto pairs_in_search_range = search_range / Sizes::Format0Entry;
+    auto pairs_in_search_range = search_range / sizeof(Format0Pair);
     if (number_of_pairs == 0)
         return {};
     if (pairs_in_search_range > number_of_pairs)
         return {};
-    if ((1 << entry_selector) * Sizes::Format0Entry != search_range)
+    if ((1 << entry_selector) * sizeof(Format0Pair) != search_range)
         return {};
-    if ((number_of_pairs - pairs_in_search_range) * Sizes::Format0Entry != range_shift)
+    if ((number_of_pairs - pairs_in_search_range) * sizeof(Format0Pair) != range_shift)
         return {};
 
     // FIXME: implement a possibly slightly more efficient binary search using the parameters above
-    auto search_slice = slice.slice(4 * sizeof(u16));
-    size_t left_idx = 0;
-    size_t right_idx = number_of_pairs - 1;
-    for (auto i = 0; i < 16; ++i) {
-        size_t pivot_idx = (left_idx + right_idx) / 2;
+    Span<Format0Pair const> pairs { bit_cast<Format0Pair const*>(slice.slice(sizeof(Format0)).data()), number_of_pairs };
 
-        u16 pivot_left_glyph_id = be_u16(search_slice.offset(pivot_idx * Sizes::Format0Entry + 0));
-        u16 pivot_right_glyph_id = be_u16(search_slice.offset(pivot_idx * Sizes::Format0Entry + 2));
+    // The left and right halves of the kerning pair make an unsigned 32-bit number, which is then used to order the kerning pairs numerically.
+    auto needle = (static_cast<u32>(left_glyph_id) << 16u) | static_cast<u32>(right_glyph_id);
+    auto* pair = binary_search(pairs, nullptr, nullptr, [&](void*, Format0Pair const& pair) {
+        auto as_u32 = (static_cast<u32>(pair.left) << 16u) | static_cast<u32>(pair.right);
+        return needle - as_u32;
+    });
 
-        // Match
-        if (pivot_left_glyph_id == left_glyph_id && pivot_right_glyph_id == right_glyph_id)
-            return be_i16(search_slice.offset(pivot_idx * Sizes::Format0Entry + 4));
-
-        // Narrow search area
-        if (pivot_left_glyph_id < left_glyph_id || (pivot_left_glyph_id == left_glyph_id && pivot_right_glyph_id < right_glyph_id))
-            left_idx = pivot_idx + 1;
-        else if (pivot_idx == left_idx)
-            break;
-        else
-            right_idx = pivot_idx - 1;
-    }
-    return 0;
+    if (!pair)
+        return 0;
+    return pair->value;
 }
 
 DeprecatedString Name::string_for_id(NameId id) const
