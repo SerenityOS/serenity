@@ -4,11 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NonnullOwnPtr.h>
 #include <LibVirtGPU/Device.h>
 #include <LibVirtGPU/Image.h>
 #include <LibVirtGPU/Shader.h>
 
 namespace VirtGPU {
+
+ErrorOr<NonnullOwnPtr<Device>> Device::create(Gfx::IntSize)
+{
+    return make<Device>();
+}
 
 GPU::DeviceInfo Device::info() const
 {
@@ -172,4 +178,13 @@ void Device::bind_fragment_shader(RefPtr<GPU::Shader>)
     dbgln("VirtGPU::Device::bind_fragment_shader(): unimplemented");
 }
 
+}
+
+extern "C" GPU::Device* serenity_gpu_create_device(Gfx::IntSize size)
+{
+    auto device_or_error = VirtGPU::Device::create(size);
+    if (device_or_error.is_error())
+        return nullptr;
+
+    return device_or_error.release_value().leak_ptr();
 }
