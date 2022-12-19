@@ -32,6 +32,8 @@ struct TextStyle {
     bool const bold { false };
 };
 
+StringView language_to_string(Language);
+
 class Highlighter {
     AK_MAKE_NONCOPYABLE(Highlighter);
     AK_MAKE_NONMOVABLE(Highlighter);
@@ -40,7 +42,6 @@ public:
     virtual ~Highlighter() = default;
 
     virtual Language language() const = 0;
-    StringView language_string(Language) const;
     virtual Optional<StringView> comment_prefix() const = 0;
     virtual Optional<StringView> comment_suffix() const = 0;
     virtual void rehighlight(Palette const&) = 0;
