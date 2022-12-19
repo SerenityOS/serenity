@@ -868,8 +868,13 @@ ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringVie
         return EACCES;
 
     if (parent_metadata.is_sticky()) {
-        if (!credentials.is_superuser() && inode.metadata().uid != credentials.euid())
+        // [EACCES] The S_ISVTX flag is set on the directory containing the file referred to by the path argument
+        //          and the process does not satisfy the criteria specified in XBD Directory Protection.
+        if (!credentials.is_superuser()
+            && inode.metadata().uid != credentials.euid()
+            && parent_metadata.uid != credentials.euid()) {
             return EACCES;
+        }
     }
 
     size_t child_count = 0;
