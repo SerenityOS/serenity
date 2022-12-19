@@ -269,6 +269,9 @@ private:
     template<FloatingPoint T>
     T convert_checked(long double);
 
+    template<typename Func>
+    void capture_host_fpu_exceptions(Func f);
+
     ALWAYS_INLINE void fpu_set_unordered()
     {
         set_c0(1);

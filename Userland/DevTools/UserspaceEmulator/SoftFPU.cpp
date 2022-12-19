@@ -11,9 +11,11 @@
 #include "ValueWithShadow.h"
 
 #include <AK/BitCast.h>
+#include <AK/FloatingPoint.h>
 #include <AK/NumericLimits.h>
 #include <AK/UFixedBigInt.h>
 
+#include <fenv.h>
 #include <unistd.h>
 
 #if defined(AK_COMPILER_GCC)
@@ -35,6 +37,11 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, char const* messag
         UserspaceEmulator::Emulator::the().dump_backtrace();
     }
 }
+template<typename... Parameters>
+ALWAYS_INLINE void warn_undefined_behaviour(StringView format, Parameters const&... parameters)
+{
+    reportln("\033[31;1mWarning! Undefined behaviour: {}\033[0m\n"sv, AK::Formatted(format, parameters...));
+}
 
 namespace UserspaceEmulator { // NOLINT(readability-implicit-bool-conversion) 0/1 to follow spec closer
 
@@ -51,6 +58,33 @@ ALWAYS_INLINE void SoftFPU::warn_if_fpu_absolute(u8 index) const
         reportln("\033[31;1mWarning! Use of an FPU value ({} abs)  as an MMX register\033[0m\n"sv, index);
         m_emulator.dump_backtrace();
     }
+}
+
+template<typename Func>
+ALWAYS_INLINE void SoftFPU::capture_host_fpu_exceptions(Func f)
+{
+    fenv_t saved_exceptions;
+
+    feholdexcept(&saved_exceptions);
+    feclearexcept(FE_ALL_EXCEPT);
+
+    f();
+
+    int exceptions = fetestexcept(FE_ALL_EXCEPT);
+
+    if (exceptions & FE_DIVBYZERO)
+        fpu_set_exception(FPU_Exception::ZeroDivide);
+    if (exceptions & FE_INEXACT)
+        fpu_set_exception(FPU_Exception::Precision);
+    if (exceptions & FE_INVALID)
+        fpu_set_exception(FPU_Exception::InvalidOperation);
+    if (exceptions & FE_OVERFLOW)
+        fpu_set_exception(FPU_Exception::Overflow);
+    if (exceptions & FE_UNDERFLOW)
+        fpu_set_exception(FPU_Exception::Underflow);
+
+    feclearexcept(FE_ALL_EXCEPT);
+    feupdateenv(&saved_exceptions);
 }
 
 ALWAYS_INLINE long double SoftFPU::fpu_get(u8 index)
@@ -1025,19 +1059,72 @@ void SoftFPU::FPATAN(const X86::Instruction&)
     fpu_pop();
 }
 
+// Intel Software Developer's Manuals -- Vol. 2A 3-347
 void SoftFPU::F2XM1(const X86::Instruction&)
 {
-    // FIXME: Raise #IA #D #U #P
-    // FIXME: Set C1 on when result was rounded up, cleared otherwise
+    if (is_mmx(0)) {
+        fpu_set_exception(FPU_Exception::InvalidOperation);
+        return;
+    }
+
     auto val = fpu_get(0);
-    // Validate ST(0) is in range –1.0 to +1.0.
-    // If the source value is outside this range, the result is undefined.
-    // In practice, the result is the input value.
-    if (val >= -1.0 && val <= 1.0) {
-        fpu_set(0, exp2(val) - 1.0l);
-    } else {
+    switch (fpclassify(val)) {
+    case FP_ZERO:
         fpu_set(0, val);
-        reportln("\033[31;1mWarning! Source operand for F2XM1 is out of range! ({}, should be in range -1.0 to +1.0)\033[0m\n"sv, val);
+        break;
+    case FP_INFINITE:
+        fpu_set(0, val > 0 ? val : -1);
+        break;
+    case FP_SUBNORMAL:
+        fpu_set_exception(FPU_Exception::DenormalizedOperand);
+        break;
+    case FP_NAN:
+        if (AK::is_signaling_nan(val)) {
+            fpu_set_exception(FPU_Exception::InvalidOperation);
+        } else {
+            warn_undefined_behaviour("Source operand for F2XM1 is out of range! ({}, should be in range -1.0 to +1.0)"sv, val);
+            // Undefined behaviour, replicate real world behaviour.
+            fpu_set(0, val); // Preserves NAN payload
+        }
+        break;
+    case FP_NORMAL:
+        if (val < -1.0 || val > 1.0) {
+            // From the Intel Software Developer's Manual:
+            // > The value of the source operand must lie in the range –1.0 to +1.0.
+            // > If the source value is outside this range, the result is undefined.
+            // In practice, the result is the input value, and #P is raised.
+            warn_undefined_behaviour("Source operand for F2XM1 is out of range! ({}, should be in range -1.0 to +1.0)"sv, val);
+            // Undefined behaviour, replicate real world behaviour.
+            fpu_set(0, val);
+            fpu_set_exception(FPU_Exception::Precision);
+        } else if (val == -1.0 || val == 1.0) {
+            // The Intel Software Developer's Manual is ambiguous about these two exact values.
+            // These values are technically "in range -1.0 to +1.0", however, in practice,
+            // they are treated differently;
+            // exp2(1.0) - 1.0 and exp2(-1.0) - 1.0 are representable precisely (1.0 and -0.5, respectively).
+            // However, the real world behaviour shows that a precision exception is set anyway.
+            // Therefore, we replicate real world behaviour. We don't raise a warning.
+            fpu_set(0, val > 0 ? val : -0.5);
+            fpu_set_exception(FPU_Exception::Precision);
+        } else {
+            // FIXME: FPU exceptions generated in the following closure are not necessairly the same ones produced by F2XM1.
+            capture_host_fpu_exceptions([this, val]() {
+                // FIXME: Set C1 on when result was rounded up, cleared otherwise.
+                // NOTE: We probably need to implement F2XM1 manually for this, or use the F2XM1 from the host.
+                //       This is because exp2() has undefined rounding behaviour.
+                auto result = exp2(val) - 1.0l;
+                fpu_set(0, result);
+                if (!isnormal(result)) {
+                    // FIXME: Raise #U properly. I'm not sure if this code is currently even reachable.
+                    //        I don't think exp2 returns denormalized floats.
+                    // NOTE: We probably need to implement F2XM1 manually for this, or use the F2XM1 from the host.
+                    fpu_set_exception(FPU_Exception::Underflow);
+                }
+            });
+        }
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 void SoftFPU::FYL2X(const X86::Instruction&)
