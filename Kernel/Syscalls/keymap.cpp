@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
