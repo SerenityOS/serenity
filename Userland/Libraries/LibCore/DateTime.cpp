@@ -283,6 +283,7 @@ Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& st
     struct tm tm = {};
 
     auto parsing_failed = false;
+    auto tm_represents_utc_time = false;
 
     auto parse_number = [&] {
         if (string_pos >= string.length()) {
@@ -487,6 +488,7 @@ Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& st
             break;
         }
         case 'z': {
+            tm_represents_utc_time = true;
             if (string[string_pos] == 'Z') {
                 // UTC time
                 string_pos++;
@@ -536,6 +538,13 @@ Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& st
     }
     if (string_pos != string.length() || format_pos != format.length()) {
         return {};
+    }
+
+    // If an explicit timezone was present, the time in tm was shifted to UTC.
+    // Convert it to local time, since that is what `mktime` expects.
+    if (tm_represents_utc_time) {
+        auto utc_time = timegm(&tm);
+        localtime_r(&utc_time, &tm);
     }
 
     return DateTime::from_timestamp(mktime(&tm));
