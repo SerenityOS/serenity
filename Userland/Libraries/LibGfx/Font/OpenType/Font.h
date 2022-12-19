@@ -11,12 +11,12 @@
 #include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
-#include <LibGfx/Font/TrueType/Cmap.h>
-#include <LibGfx/Font/TrueType/Glyf.h>
-#include <LibGfx/Font/TrueType/Tables.h>
+#include <LibGfx/Font/OpenType/Cmap.h>
+#include <LibGfx/Font/OpenType/Glyf.h>
+#include <LibGfx/Font/OpenType/Tables.h>
 #include <LibGfx/Font/VectorFont.h>
 
-namespace TTF {
+namespace OpenType {
 
 class Font : public Gfx::VectorFont {
     AK_MAKE_NONCOPYABLE(Font);

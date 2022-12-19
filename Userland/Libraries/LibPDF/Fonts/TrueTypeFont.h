@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Font/OpenType/Font.h>
 #include <LibPDF/Fonts/PDFFont.h>
 
 namespace PDF {

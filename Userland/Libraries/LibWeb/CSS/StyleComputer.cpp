@@ -14,8 +14,8 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/ScaledFont.h>
-#include <LibGfx/Font/TrueType/Font.h>
 #include <LibGfx/Font/VectorFont.h>
 #include <LibGfx/Font/WOFF/Font.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
@@ -92,10 +92,10 @@ private:
         // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
         auto mime_type = resource()->mime_type();
         if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv)
-            return TRY(TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+            return TRY(OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
         if (mime_type == "font/woff"sv)
             return TRY(WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
-        auto ttf = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!ttf.is_error())
             return ttf.release_value();
         auto woff = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
@@ -1459,7 +1459,7 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
             continue;
 
         // NOTE: This is rather ad-hoc, we just look for the first valid
-        //       source URL that's either a WOFF or TTF file and try loading that.
+        //       source URL that's either a WOFF or OpenType file and try loading that.
         // FIXME: Find out exactly which resources we need to load and how.
         Optional<AK::URL> candidate_url;
         for (auto& source : font_face.sources()) {

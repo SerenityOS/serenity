@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Font/TrueType/Glyf.h>
+#include <LibGfx/Font/OpenType/Glyf.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/Point.h>
 
-namespace TTF {
+namespace OpenType {
 
 extern u16 be_u16(u8 const* ptr);
 extern u32 be_u32(u8 const* ptr);

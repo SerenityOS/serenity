@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/ScaledFont.h>
-#include <LibGfx/Font/TrueType/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/TrueTypeFont.h>
@@ -24,7 +24,7 @@ PDFErrorOr<PDFFont::CommonData> TrueTypeFont::parse_data(Document* document, Non
             return data;
 
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
-        auto ttf_font = TRY(TTF::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
+        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
         data.font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, font_size, font_size));
     }
 
