@@ -177,9 +177,9 @@ public:
     GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
 private:
-    enum class Sizes {
-        LongHorMetric = 4,
-        LeftSideBearing = 2
+    struct LongHorMetric {
+        BigEndian<u16> advance_width;
+        BigEndian<i16> lsb;
     };
 
     Hmtx(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)

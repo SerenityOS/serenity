@@ -153,7 +153,7 @@ u16 Maxp::num_glyphs() const
 
 Optional<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
 {
-    if (slice.size() < number_of_h_metrics * (u32)Sizes::LongHorMetric + (num_glyphs - number_of_h_metrics) * (u32)Sizes::LeftSideBearing) {
+    if (slice.size() < number_of_h_metrics * sizeof(LongHorMetric) + (num_glyphs - number_of_h_metrics) * sizeof(u16)) {
         return {};
     }
     return Hmtx(slice, num_glyphs, number_of_h_metrics);
@@ -335,21 +335,18 @@ DeprecatedString Name::string_for_id(NameId id) const
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
     VERIFY(glyph_id < m_num_glyphs);
+    auto const* long_hor_metrics = bit_cast<LongHorMetric const*>(m_slice.data());
     if (glyph_id < m_number_of_h_metrics) {
-        auto offset = glyph_id * (u32)Sizes::LongHorMetric;
-        u16 advance_width = be_u16(m_slice.offset_pointer(offset));
-        i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset + 2));
         return GlyphHorizontalMetrics {
-            .advance_width = advance_width,
-            .left_side_bearing = left_side_bearing,
+            .advance_width = static_cast<u16>(long_hor_metrics[glyph_id].advance_width),
+            .left_side_bearing = static_cast<i16>(long_hor_metrics[glyph_id].lsb),
         };
     }
-    auto offset = m_number_of_h_metrics * (u32)Sizes::LongHorMetric + (glyph_id - m_number_of_h_metrics) * (u32)Sizes::LeftSideBearing;
-    u16 advance_width = be_u16(m_slice.offset_pointer((m_number_of_h_metrics - 1) * (u32)Sizes::LongHorMetric));
-    i16 left_side_bearing = be_i16(m_slice.offset_pointer(offset));
+
+    auto const* left_side_bearings = bit_cast<BigEndian<u16> const*>(m_slice.offset_pointer(m_number_of_h_metrics * sizeof(LongHorMetric)));
     return GlyphHorizontalMetrics {
-        .advance_width = advance_width,
-        .left_side_bearing = left_side_bearing,
+        .advance_width = static_cast<u16>(long_hor_metrics[m_number_of_h_metrics - 1].advance_width),
+        .left_side_bearing = static_cast<i16>(left_side_bearings[glyph_id - m_number_of_h_metrics]),
     };
 }
 
