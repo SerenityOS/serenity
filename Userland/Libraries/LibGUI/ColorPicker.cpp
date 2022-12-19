@@ -283,8 +283,13 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     m_custom_color = horizontal_container.add<CustomColorWidget>(m_color);
     m_custom_color->set_preferred_size(299, 260);
     m_custom_color->on_pick = [this](Color color) {
-        if (m_color == color)
+        if (m_color == color) {
+            // NOTE: This call to update() is needed so that when changing the vertical color slider with the initial Color::White
+            //       selected value (which doesn't change with that slider as in all the slider's values the new color at that position
+            //       will still be Color::White) the spinbox colors are updated.
+            update();
             return;
+        }
 
         m_color = color;
         update_color_widgets();
