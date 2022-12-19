@@ -4,7 +4,7 @@ set -e
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-. "${script_path}/.shell_include.sh"
+. "${script_path}/shell_include.sh"
 
 if [ ! -d "limine" ]; then
     echo "limine not found, the script will now build it"
