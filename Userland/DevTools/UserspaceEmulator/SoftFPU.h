@@ -59,6 +59,8 @@ public:
     void fpu_set_absolute(u8 index, long double value);
     void fpu_set(u8 index, long double value);
 
+    bool is_mmx(u8 index) const;
+
     MMX mmx_get(u8 index) const;
     void mmx_set(u8 index, MMX value);
 

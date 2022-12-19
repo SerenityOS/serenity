@@ -40,14 +40,14 @@ namespace UserspaceEmulator { // NOLINT(readability-implicit-bool-conversion) 0/
 
 ALWAYS_INLINE void SoftFPU::warn_if_mmx_absolute(u8 index) const
 {
-    if (m_reg_is_mmx[index]) [[unlikely]] {
+    if (is_mmx(index)) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of an MMX register as an FPU value ({} abs)\033[0m\n"sv, index);
         m_emulator.dump_backtrace();
     }
 }
 ALWAYS_INLINE void SoftFPU::warn_if_fpu_absolute(u8 index) const
 {
-    if (!m_reg_is_mmx[index]) [[unlikely]] {
+    if (!is_mmx(index)) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of an FPU value ({} abs)  as an MMX register\033[0m\n"sv, index);
         m_emulator.dump_backtrace();
     }
@@ -75,6 +75,11 @@ ALWAYS_INLINE void SoftFPU::fpu_set(u8 index, long double value)
 {
     VERIFY(index < 8);
     fpu_set_absolute((m_fpu_stack_top + index) % 8, value);
+}
+bool SoftFPU::is_mmx(u8 index) const
+{
+    VERIFY(index < 8);
+    return m_reg_is_mmx[index];
 }
 MMX SoftFPU::mmx_get(u8 index) const
 {
@@ -926,7 +931,7 @@ void SoftFPU::FTST(const X86::Instruction&)
 }
 void SoftFPU::FXAM(const X86::Instruction&)
 {
-    if (m_reg_is_mmx[m_fpu_stack_top]) {
+    if (is_mmx(m_fpu_stack_top)) {
         // technically a subset of NaN/INF, with the Tag set to valid,
         // but we have our own helper for this
         set_c0(0);
