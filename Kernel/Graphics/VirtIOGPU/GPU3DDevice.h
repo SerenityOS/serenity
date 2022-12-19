@@ -139,7 +139,7 @@ private:
     HashMap<OpenFileDescription*, LockRefPtr<PerContextState>> m_context_state_lookup;
     // Memory management for backing buffers
     NonnullOwnPtr<Memory::Region> m_transfer_buffer_region;
-    constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;
+    constexpr static size_t NUM_TRANSFER_REGION_PAGES = 1024;
 };
 
 }
