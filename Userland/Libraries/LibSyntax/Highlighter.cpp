@@ -155,13 +155,14 @@ StringView language_to_string(Language language)
         return "INI"sv;
     case Language::JavaScript:
         return "JavaScript"sv;
+    case Language::PlainText:
+        return "Plain Text"sv;
     case Language::Shell:
         return "Shell"sv;
     case Language::SQL:
         return "SQL"sv;
-    default:
-        VERIFY_NOT_REACHED();
     }
+    VERIFY_NOT_REACHED();
 }
 
 }
