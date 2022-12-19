@@ -107,7 +107,7 @@ IndexToLocFormat Head::index_to_loc_format() const
 
 Optional<Hhea> Hhea::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < (size_t)Sizes::Table) {
+    if (slice.size() < sizeof(HorizontalHeaderTable)) {
         return {};
     }
     return Hhea(slice);
@@ -115,27 +115,27 @@ Optional<Hhea> Hhea::from_slice(ReadonlyBytes slice)
 
 i16 Hhea::ascender() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::Ascender));
+    return header().ascender;
 }
 
 i16 Hhea::descender() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::Descender));
+    return header().descender;
 }
 
 i16 Hhea::line_gap() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::LineGap));
+    return header().line_gap;
 }
 
 u16 Hhea::advance_width_max() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::AdvanceWidthMax));
+    return header().advance_width_max;
 }
 
 u16 Hhea::number_of_h_metrics() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::NumberOfHMetrics));
+    return header().number_of_h_metrics;
 }
 
 Optional<Maxp> Maxp::from_slice(ReadonlyBytes slice)
