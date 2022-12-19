@@ -11,6 +11,8 @@
 
 namespace OpenType {
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/cmap
+// cmap — Character to Glyph Index Mapping Table
 class Cmap {
 public:
     class Subtable {

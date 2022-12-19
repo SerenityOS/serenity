@@ -19,6 +19,8 @@ enum class IndexToLocFormat {
     Offset32,
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/head
+// head: Font Header Table
 class Head {
 public:
     static Optional<Head> from_slice(ReadonlyBytes);
@@ -54,6 +56,8 @@ private:
     ReadonlyBytes m_slice;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/hhea
+// hhea - Horizontal Header Table
 class Hhea {
 public:
     static Optional<Hhea> from_slice(ReadonlyBytes);
@@ -83,6 +87,8 @@ private:
     ReadonlyBytes m_slice;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/maxp
+// Maxp: Maximum Profile
 class Maxp {
 public:
     static Optional<Maxp> from_slice(ReadonlyBytes);
@@ -109,6 +115,8 @@ struct GlyphHorizontalMetrics {
     i16 left_side_bearing;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/hmtx
+// hmtx: Horizontal Metrics Table
 class Hmtx {
 public:
     static Optional<Hmtx> from_slice(ReadonlyBytes, u32 num_glyphs, u32 number_of_h_metrics);
@@ -132,6 +140,8 @@ private:
     u32 m_number_of_h_metrics { 0 };
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/os2
+// OS/2: OS/2 and Windows Metrics Table
 class OS2 {
 public:
     enum class Offsets {
@@ -158,6 +168,8 @@ private:
     ReadonlyBytes m_slice;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/name
+// name: Naming Table
 class Name {
 public:
     enum class Platform {
@@ -205,6 +217,8 @@ private:
     ReadonlyBytes m_slice;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/kern
+// kern - Kerning
 class Kern {
 public:
     static ErrorOr<Kern> from_slice(ReadonlyBytes);
