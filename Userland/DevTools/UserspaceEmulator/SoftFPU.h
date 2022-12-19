@@ -479,7 +479,10 @@ private:
     void FFREE(const X86::Instruction&);
     void FFREEP(const X86::Instruction&); // undocumented
 
-    // FIXME: Non N- versions?
+    // NOTE: You might have come across variants of these instructions
+    //       that don't have the N- prefix. These are not real instructions.
+    //       Rather, they are assembled as two instructions: an FWAIT instruction,
+    //       followed by its corresponding N- instruction.
     void FNINIT(const X86::Instruction&);
     void FNCLEX(const X86::Instruction&);
 
