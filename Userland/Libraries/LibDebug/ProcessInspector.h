@@ -9,7 +9,7 @@
 
 #include "LoadedLibrary.h"
 #include <AK/Types.h>
-#include <LibC/sys/arch/i386/regs.h>
+#include <LibC/sys/arch/regs.h>
 
 namespace Debug {
 

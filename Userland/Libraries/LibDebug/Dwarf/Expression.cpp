@@ -8,7 +8,7 @@
 
 #include <AK/Format.h>
 #include <AK/MemoryStream.h>
-#include <sys/arch/i386/regs.h>
+#include <sys/arch/regs.h>
 
 namespace Debug::Dwarf::Expression {
 

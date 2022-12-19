@@ -10,7 +10,7 @@
 #include <LibDebug/ProcessInspector.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
-#include <sys/arch/i386/regs.h>
+#include <sys/arch/regs.h>
 
 namespace Debug {
 

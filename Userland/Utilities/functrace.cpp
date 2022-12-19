@@ -9,7 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/SyscallString.h>
-#include <LibC/sys/arch/i386/regs.h>
+#include <LibC/sys/arch/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>

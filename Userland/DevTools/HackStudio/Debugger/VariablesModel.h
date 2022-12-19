@@ -10,7 +10,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TreeView.h>
-#include <sys/arch/i386/regs.h>
+#include <sys/arch/regs.h>
 
 namespace HackStudio {
 
