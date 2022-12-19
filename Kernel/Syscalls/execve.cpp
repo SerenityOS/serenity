@@ -540,7 +540,9 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
                 new_egid,
                 new_suid,
                 new_sgid,
-                old_credentials->extra_gids()));
+                old_credentials->extra_gids(),
+                old_credentials->sid(),
+                old_credentials->pgid()));
         }
     }
 
