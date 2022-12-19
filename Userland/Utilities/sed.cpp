@@ -90,6 +90,8 @@ static ErrorOr<SubstitutionCommand> parse_command(StringView command)
         } else if (flag == "g"sv) {
             // Allow multiple matches per line by un-setting the SingleMatch flag
             options &= ~PosixFlags::SingleMatch;
+        } else if (flag == "i"sv || flag == "I"sv) {
+            options |= PosixFlags::Insensitive;
         } else {
             warnln("sed: Unsupported flag: {}", flag);
         }
