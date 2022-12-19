@@ -835,6 +835,7 @@ ErrorOr<void> VirtualFileSystem::symlink(Credentials const& credentials, StringV
     return {};
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/rmdir.html
 ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
@@ -847,15 +848,22 @@ ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringVie
     if (last_component == "."sv)
         return EINVAL;
 
+    // [ENOTDIR] A component of path names an existing file that is neither a directory
+    //           nor a symbolic link to a directory.
     if (!inode.is_directory())
         return ENOTDIR;
 
+    // [EBUSY] The directory to be removed is currently in use by the system or some process
+    //         and the implementation considers this to be an error.
+    // NOTE: If there is no parent, that means we're trying to rmdir the root directory!
     if (!parent_custody)
         return EBUSY;
 
     auto& parent_inode = parent_custody->inode();
     auto parent_metadata = parent_inode.metadata();
 
+    // [EACCES] Search permission is denied on a component of the path prefix,
+    //          or write permission is denied on the parent directory of the directory to be removed.
     if (!parent_metadata.may_write(credentials))
         return EACCES;
 
@@ -870,9 +878,12 @@ ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringVie
         return {};
     }));
 
+    // [ENOTEMPTY] The path argument names a directory that is not an empty directory,
+    //             or there are hard links to the directory other than dot or a single entry in dot-dot.
     if (child_count != 2)
         return ENOTEMPTY;
 
+    // [EROFS] The directory entry to be removed resides on a read-only file system.
     if (custody->is_readonly())
         return EROFS;
 
