@@ -28,6 +28,11 @@ struct LongDateTime {
     BigEndian<u64> value;
 };
 
+struct Version16Dot16 {
+    BigEndian<u16> major;
+    BigEndian<u16> minor;
+};
+
 using FWord = BigEndian<i16>;
 using UFWord = BigEndian<u16>;
 
@@ -122,15 +127,34 @@ private:
 class Maxp {
 public:
     static Optional<Maxp> from_slice(ReadonlyBytes);
+
     u16 num_glyphs() const;
 
 private:
-    enum class Offsets {
-        NumGlyphs = 4
+    struct MaximumProfileVersion0_5 {
+        Version16Dot16 version;
+        BigEndian<u16> num_glyphs;
     };
-    enum class Sizes {
-        TableV0p5 = 6,
+
+    struct MaximumProfileVersion1_0 {
+        Version16Dot16 version;
+        BigEndian<u16> num_glyphs;
+        BigEndian<u16> max_points;
+        BigEndian<u16> max_contours;
+        BigEndian<u16> max_composite_points;
+        BigEndian<u16> max_composite_contours;
+        BigEndian<u16> max_zones;
+        BigEndian<u16> max_twilight_points;
+        BigEndian<u16> max_storage;
+        BigEndian<u16> max_function_defs;
+        BigEndian<u16> max_instruction_defs;
+        BigEndian<u16> max_stack_elements;
+        BigEndian<u16> max_size_of_instructions;
+        BigEndian<u16> max_component_elements;
+        BigEndian<u16> max_component_depths;
     };
+
+    MaximumProfileVersion0_5 const& header() const { return *bit_cast<MaximumProfileVersion0_5 const*>(m_slice.data()); }
 
     Maxp(ReadonlyBytes slice)
         : m_slice(slice)

@@ -140,7 +140,7 @@ u16 Hhea::number_of_h_metrics() const
 
 Optional<Maxp> Maxp::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < (size_t)Sizes::TableV0p5) {
+    if (slice.size() < sizeof(MaximumProfileVersion0_5)) {
         return {};
     }
     return Maxp(slice);
@@ -148,7 +148,7 @@ Optional<Maxp> Maxp::from_slice(ReadonlyBytes slice)
 
 u16 Maxp::num_glyphs() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::NumGlyphs));
+    return header().num_glyphs;
 }
 
 Optional<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
