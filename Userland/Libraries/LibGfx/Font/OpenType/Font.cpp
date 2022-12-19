@@ -297,14 +297,14 @@ Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_gly
 
 DeprecatedString Name::string_for_id(NameId id) const
 {
-    auto num_entries = be_u16(m_slice.offset_pointer(2));
-    auto string_offset = be_u16(m_slice.offset_pointer(4));
+    auto const count = header().count;
+    auto const storage_offset = header().storage_offset;
 
     Vector<int> valid_ids;
 
-    for (int i = 0; i < num_entries; ++i) {
-        auto this_id = be_u16(m_slice.offset_pointer(6 + i * 12 + 6));
-        if (this_id == (u16)id)
+    for (size_t i = 0; i < count; ++i) {
+        auto this_id = header().name_record[i].name_id;
+        if (this_id == to_underlying(id))
             valid_ids.append(i);
     }
 
@@ -313,23 +313,26 @@ DeprecatedString Name::string_for_id(NameId id) const
 
     auto it = valid_ids.find_if([this](auto const& i) {
         // check if font has naming table for en-US language id
-        auto platform = be_u16(m_slice.offset_pointer(6 + i * 12 + 0));
-        auto language_id = be_u16(m_slice.offset_pointer(6 + i * 12 + 4));
-        return (platform == (u16)Platform::Macintosh && language_id == (u16)MacintoshLanguage::English)
-            || (platform == (u16)Platform::Windows && language_id == (u16)WindowsLanguage::EnglishUnitedStates);
+        auto const& name_record = header().name_record[i];
+        auto const platform_id = name_record.platform_id;
+        auto const language_id = name_record.language_id;
+        return (platform_id == to_underlying(Platform::Macintosh) && language_id == to_underlying(MacintoshLanguage::English))
+            || (platform_id == to_underlying(Platform::Windows) && language_id == to_underlying(WindowsLanguage::EnglishUnitedStates));
     });
     auto i = it != valid_ids.end() ? *it : valid_ids.first();
 
-    auto platform = be_u16(m_slice.offset_pointer(6 + i * 12 + 0));
-    auto length = be_u16(m_slice.offset_pointer(6 + i * 12 + 8));
-    auto offset = be_u16(m_slice.offset_pointer(6 + i * 12 + 10));
+    auto const& name_record = header().name_record[i];
 
-    if (platform == (u16)Platform::Windows) {
+    auto const platform_id = name_record.platform_id;
+    auto const length = name_record.length;
+    auto const offset = name_record.string_offset;
+
+    if (platform_id == to_underlying(Platform::Windows)) {
         static auto& decoder = *TextCodec::decoder_for("utf-16be");
-        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(string_offset + offset), length });
+        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length });
     }
 
-    return DeprecatedString((char const*)m_slice.offset_pointer(string_offset + offset), length);
+    return DeprecatedString((char const*)m_slice.offset_pointer(storage_offset + offset), length);
 }
 
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
