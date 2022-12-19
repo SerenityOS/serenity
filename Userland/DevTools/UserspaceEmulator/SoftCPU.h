@@ -1346,6 +1346,8 @@ private:
     template<typename Op>
     void generic_RM32_CL(Op, const X86::Instruction&);
 
+    void check_pending_fpu_exceptions();
+
     void update_code_cache();
 
     void write_segment_register(X86::SegmentRegister, ValueWithShadow<u16>);

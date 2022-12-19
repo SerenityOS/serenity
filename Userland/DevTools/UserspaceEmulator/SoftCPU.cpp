@@ -130,6 +130,13 @@ void SoftCPU::dump() const
     fflush(stdout);
 }
 
+void SoftCPU::check_pending_fpu_exceptions()
+{
+    // FIXME: If FPU SW.ES (Status word bit "Exception Summary") is 1,
+    //        and CR0.NE ("Numeric error") is 1,
+    //        then raise #MF exception ("x87 Floating-Point Exception").
+}
+
 void SoftCPU::update_code_cache()
 {
     auto* region = m_emulator.mmu().find_region({ cs(), eip() });
@@ -2901,7 +2908,12 @@ void SoftCPU::UD1(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::UD2(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::VERR_RM16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::VERW_RM16(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::WAIT(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::WAIT(const X86::Instruction&)
+{
+    // FIXME: If CR0.TS ("Task switched") and CR0.MP ("Monitor co-processor") are 1,
+    //        raise #NM ("Device Not Available")
+    check_pending_fpu_exceptions();
+}
 void SoftCPU::WBINVD(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::XADD_RM16_reg16(const X86::Instruction& insn)
