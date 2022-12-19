@@ -20,7 +20,6 @@ NonnullLockRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(Vi
     auto device_or_error = DeviceManagement::try_create_device<VirtIODisplayConnector>(graphics_adapter, scanout_id);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
-    connector->initialize_console();
     return connector;
 }
 
@@ -33,9 +32,10 @@ VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_a
 {
 }
 
-void VirtIODisplayConnector::initialize_console()
+void VirtIODisplayConnector::initialize_console(Badge<VirtIOGraphicsAdapter>)
 {
     m_console = Kernel::Graphics::VirtIOGPU::Console::initialize(*this);
+    GraphicsManagement::the().set_console(*m_console);
 }
 
 void VirtIODisplayConnector::set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>)
@@ -58,6 +58,9 @@ ErrorOr<void> VirtIODisplayConnector::set_mode_setting(ModeSetting const& mode_s
     };
 
     TRY(m_graphics_adapter->mode_set_resolution({}, *this, mode_setting.horizontal_active, mode_setting.vertical_active));
+
+    if (m_console)
+        m_console->set_resolution(info.rect.width, info.rect.height, info.rect.width * sizeof(u32));
     DisplayConnector::ModeSetting mode_set {
         .horizontal_stride = info.rect.width * sizeof(u32),
         .pixel_clock_in_khz = 0, // Note: There's no pixel clock in paravirtualized hardware
