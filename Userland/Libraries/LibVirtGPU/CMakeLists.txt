@@ -1,4 +1,5 @@
 set(SOURCES
+    CommandBufferBuilder.cpp
     Device.cpp
     Image.cpp
     Shader.cpp
