@@ -3,7 +3,7 @@ set -e
 
 SCRIPT_DIR="$(dirname "${0}")"
 
-. "${SCRIPT_DIR}/.shell_include.sh"
+. "${SCRIPT_DIR}/shell_include.sh"
 
 USE_FUSE2FS=0
 

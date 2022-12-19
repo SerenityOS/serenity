@@ -4,7 +4,7 @@ set -e
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-. "${script_path}/.shell_include.sh"
+. "${script_path}/shell_include.sh"
 
 cleanup() {
     if [ -d mnt ]; then

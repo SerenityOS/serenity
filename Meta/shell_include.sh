@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+# shellcheck shell=bash
 # shellcheck disable=SC2034
 # SC2034: "Variable appears unused. Verify it or export it."
 #         Those are intentional here, as the file is meant to be included elsewhere.
