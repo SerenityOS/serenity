@@ -28,6 +28,9 @@ struct LongDateTime {
     BigEndian<u64> value;
 };
 
+using FWord = BigEndian<i16>;
+using UFWord = BigEndian<u16>;
+
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
 class Head {
@@ -86,16 +89,25 @@ public:
     u16 number_of_h_metrics() const;
 
 private:
-    enum class Offsets {
-        Ascender = 4,
-        Descender = 6,
-        LineGap = 8,
-        AdvanceWidthMax = 10,
-        NumberOfHMetrics = 34,
+    struct HorizontalHeaderTable {
+        BigEndian<u16> major_version;
+        BigEndian<u16> minor_version;
+        FWord ascender;
+        FWord descender;
+        FWord line_gap;
+        UFWord advance_width_max;
+        FWord min_left_side_bearing;
+        FWord min_right_side_bearing;
+        FWord x_max_extent;
+        BigEndian<i16> caret_slope_rise;
+        BigEndian<i16> caret_slope_run;
+        BigEndian<i16> caret_offset;
+        BigEndian<i16> reserved[4];
+        BigEndian<i16> metric_data_format;
+        BigEndian<u16> number_of_h_metrics;
     };
-    enum class Sizes {
-        Table = 36,
-    };
+
+    HorizontalHeaderTable const& header() const { return *bit_cast<HorizontalHeaderTable const*>(m_slice.data()); }
 
     Hhea(ReadonlyBytes slice)
         : m_slice(slice)
