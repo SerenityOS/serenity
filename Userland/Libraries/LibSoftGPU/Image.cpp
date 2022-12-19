@@ -14,9 +14,8 @@
 namespace SoftGPU {
 
 Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels)
-    : GPU::Image(ownership_token)
-    , m_pixel_format(pixel_format)
-    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(max_levels))
+    : GPU::Image(ownership_token, pixel_format, width, height, depth, max_levels)
+    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(number_of_levels()))
 {
     VERIFY(pixel_format == GPU::PixelFormat::Alpha
         || pixel_format == GPU::PixelFormat::Intensity
@@ -24,28 +23,14 @@ Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, 
         || pixel_format == GPU::PixelFormat::LuminanceAlpha
         || pixel_format == GPU::PixelFormat::RGB
         || pixel_format == GPU::PixelFormat::RGBA);
-    VERIFY(width > 0);
-    VERIFY(height > 0);
-    VERIFY(depth > 0);
-    VERIFY(max_levels > 0);
 
     m_width_is_power_of_two = is_power_of_two(width);
     m_height_is_power_of_two = is_power_of_two(height);
     m_depth_is_power_of_two = is_power_of_two(depth);
 
-    u32 level;
-    for (level = 0; level < max_levels; ++level) {
-        m_mipmap_buffers[level] = MUST(Typed3DBuffer<FloatVector4>::try_create(width, height, depth));
-
-        if (width <= 1 && height <= 1 && depth <= 1)
-            break;
-
-        width = max(width / 2, 1);
-        height = max(height / 2, 1);
-        depth = max(depth / 2, 1);
+    for (u32 level = 0; level < number_of_levels(); ++level) {
+        m_mipmap_buffers[level] = MUST(Typed3DBuffer<FloatVector4>::try_create(width_at_level(level), height_at_level(level), depth_at_level(level)));
     }
-
-    m_number_of_levels = level + 1;
 }
 
 GPU::ImageDataLayout Image::image_data_layout(u32 level, Vector3<i32> offset) const
@@ -86,7 +71,7 @@ void Image::write_texels(u32 level, Vector3<i32> const& output_offset, void cons
 
     PixelConverter converter { input_layout, output_layout };
     ErrorOr<void> conversion_result;
-    switch (m_pixel_format) {
+    switch (pixel_format()) {
     case GPU::PixelFormat::Luminance:
     case GPU::PixelFormat::RGB:
         // Both Luminance and RGB set the alpha to 1, regardless of the source texel
@@ -195,7 +180,7 @@ void Image::regenerate_mipmaps()
     };
 
     // For levels 1..number_of_levels-1, we generate downscaled versions of the level above
-    for (u32 level = 1; level < m_number_of_levels; ++level) {
+    for (u32 level = 1; level < number_of_levels(); ++level) {
         auto higher_level_bitmap = copy_image_into_bitmap(level - 1);
         auto current_level_bitmap = empty_bitmap_for_level(level);
 

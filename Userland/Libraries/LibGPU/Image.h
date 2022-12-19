@@ -8,24 +8,24 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <AK/Vector.h>
 #include <LibGPU/ImageDataLayout.h>
+#include <LibGPU/ImageFormat.h>
 #include <LibGfx/Vector3.h>
 
 namespace GPU {
 
 class Image : public RefCounted<Image> {
 public:
-    Image(void const* ownership_token)
-        : m_ownership_token { ownership_token }
-    {
-    }
-
+    Image(void const* ownership_token, PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels);
     virtual ~Image() { }
 
-    virtual u32 width_at_level(u32 level) const = 0;
-    virtual u32 height_at_level(u32 level) const = 0;
-    virtual u32 depth_at_level(u32 level) const = 0;
-    virtual u32 number_of_levels() const = 0;
+    u32 width_at_level(u32 level) const { return m_mipmap_sizes[level].x(); }
+    u32 height_at_level(u32 level) const { return m_mipmap_sizes[level].y(); }
+    u32 depth_at_level(u32 level) const { return m_mipmap_sizes[level].z(); }
+    u32 number_of_levels() const { return m_mipmap_sizes.size(); }
+
+    PixelFormat pixel_format() const { return m_pixel_format; }
 
     virtual void regenerate_mipmaps() = 0;
 
@@ -38,6 +38,8 @@ public:
 
 private:
     void const* const m_ownership_token { nullptr };
+    Vector<Vector3<u32>> m_mipmap_sizes;
+    PixelFormat m_pixel_format;
 };
 
 }

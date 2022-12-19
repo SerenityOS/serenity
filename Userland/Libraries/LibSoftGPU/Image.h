@@ -22,10 +22,6 @@ class Image final : public GPU::Image {
 public:
     Image(void const* ownership_token, GPU::PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels);
 
-    virtual u32 width_at_level(u32 level) const override { return m_mipmap_buffers[level]->width(); }
-    virtual u32 height_at_level(u32 level) const override { return m_mipmap_buffers[level]->height(); }
-    virtual u32 depth_at_level(u32 level) const override { return m_mipmap_buffers[level]->depth(); }
-    virtual u32 number_of_levels() const override { return m_number_of_levels; }
     bool width_is_power_of_two() const { return m_width_is_power_of_two; }
     bool height_is_power_of_two() const { return m_height_is_power_of_two; }
     bool depth_is_power_of_two() const { return m_depth_is_power_of_two; }
@@ -58,9 +54,6 @@ public:
     }
 
 private:
-    u32 m_number_of_levels { 0 };
-
-    GPU::PixelFormat m_pixel_format;
     FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>> m_mipmap_buffers;
 
     bool m_width_is_power_of_two { false };
