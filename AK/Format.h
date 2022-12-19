@@ -42,6 +42,9 @@ inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defi
 template<typename T>
 concept Formattable = HasFormatter<T>;
 
+template<typename T>
+concept HasFormatParser = requires(Formatter<T> x, TypeErasedFormatParams& params, FormatParser& parser) { x.parse(params, parser); };
+
 constexpr size_t max_format_arguments = 256;
 
 struct TypeErasedParameter {
@@ -262,6 +265,7 @@ private:
 };
 
 template<typename T>
+requires(HasFormatter<T> && HasFormatParser<T>)
 ErrorOr<void> __format_value(TypeErasedFormatParams& params, FormatBuilder& builder, FormatParser& parser, void const* value)
 {
     Formatter<T> formatter;
@@ -270,7 +274,17 @@ ErrorOr<void> __format_value(TypeErasedFormatParams& params, FormatBuilder& buil
     return formatter.format(builder, *static_cast<T const*>(value));
 }
 
+template<typename T>
+requires(HasFormatter<T> && !HasFormatParser<T>)
+ErrorOr<void> __format_value(TypeErasedFormatParams&, FormatBuilder& builder, FormatParser&, void const* value)
+{
+    Formatter<T> formatter;
+
+    return formatter.format(builder, *static_cast<T const*>(value));
+}
+
 template<typename... Parameters>
+requires(HasFormatter<Parameters> && ...)
 class VariadicFormatParams : public TypeErasedFormatParams {
 public:
     static_assert(sizeof...(Parameters) <= max_format_arguments);
