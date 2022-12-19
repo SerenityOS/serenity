@@ -269,13 +269,15 @@ private:
 
 inline u8* Bitmap::scanline_u8(int y)
 {
-    VERIFY(y >= 0 && y < physical_height());
+    VERIFY(y >= 0);
+    VERIFY(y < physical_height());
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
 inline u8 const* Bitmap::scanline_u8(int y) const
 {
-    VERIFY(y >= 0 && y < physical_height());
+    VERIFY(y >= 0);
+    VERIFY(y < physical_height());
     return reinterpret_cast<u8 const*>(m_data) + (y * m_pitch);
 }
 
@@ -292,21 +294,24 @@ inline ARGB32 const* Bitmap::scanline(int y) const
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::BGRx8888>(int x, int y) const
 {
-    VERIFY(x >= 0 && x < physical_width());
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 {
-    VERIFY(x >= 0 && x < physical_width());
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
     return Color::from_argb(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
-    VERIFY(x >= 0 && x < physical_width());
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
     return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
@@ -327,19 +332,22 @@ inline Color Bitmap::get_pixel(int x, int y) const
 template<>
 inline void Bitmap::set_pixel<StorageFormat::BGRx8888>(int x, int y, Color color)
 {
-    VERIFY(x >= 0 && x < physical_width());
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
     scanline(y)[x] = color.value();
 }
 template<>
 inline void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color)
 {
-    VERIFY(x >= 0 && x < physical_width());
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGBA8888>(int x, int y, Color color)
 {
-    VERIFY(x >= 0 && x < physical_width());
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
     // FIXME: There's a lot of inaccurately named functions in the Color class right now (RGBA vs BGRA),
     //        clear those up and then make this more convenient.
     auto rgba = (color.alpha() << 24) | (color.blue() << 16) | (color.green() << 8) | color.red();
