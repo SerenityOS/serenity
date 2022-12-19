@@ -212,6 +212,7 @@ void SnakeGame::keydown_event(GUI::KeyEvent& event)
         queue_velocity(1, 0);
         break;
     default:
+        event.ignore();
         break;
     }
 }
