@@ -221,20 +221,34 @@ function(invoke_generator name generator version_file header implementation)
     set(CURRENT_LIB_GENERATED ${CURRENT_LIB_GENERATED} PARENT_SCOPE)
 endfunction()
 
-function(download_file url path)
+function(download_file_multisource urls path)
     if (NOT EXISTS "${path}")
         get_filename_component(file "${path}" NAME)
-        message(STATUS "Downloading file ${file} from ${url}")
 
-        file(DOWNLOAD "${url}" "${path}" INACTIVITY_TIMEOUT 10 STATUS download_result)
-        list(GET download_result 0 status_code)
-        list(GET download_result 1 error_message)
+        foreach(url ${urls})
+            message(STATUS "Downloading file ${file} from ${url}")
+
+            file(DOWNLOAD "${url}" "${path}" INACTIVITY_TIMEOUT 10 STATUS download_result)
+            list(GET download_result 0 status_code)
+            list(GET download_result 1 error_message)
+
+            if (status_code EQUAL 0)
+                break()
+            endif()
+
+            file(REMOVE "${path}")
+            message(WARNING "Failed to download ${url}: ${error_message}")
+        endforeach()
 
         if (NOT status_code EQUAL 0)
-            file(REMOVE "${path}")
-            message(FATAL_ERROR "Failed to download ${url}: ${error_message}")
+            message(FATAL_ERROR "Failed to download ${path} from any source")
         endif()
     endif()
+endfunction()
+
+function(download_file url path)
+    # If the timestamp doesn't match exactly, the Web Archive should redirect to the closest archived file automatically.
+    download_file_multisource("${url};https://web.archive.org/web/99991231235959/${url}" "${path}")
 endfunction()
 
 function(extract_path dest_dir zip_path source_path dest_path)
