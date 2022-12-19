@@ -52,7 +52,7 @@ u32 tag_from_str(char const* str)
 
 Optional<Head> Head::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < (size_t)Sizes::Table) {
+    if (slice.size() < sizeof(FontHeaderTable)) {
         return {};
     }
     return Head(slice);
@@ -60,43 +60,42 @@ Optional<Head> Head::from_slice(ReadonlyBytes slice)
 
 u16 Head::units_per_em() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::UnitsPerEM));
+    return header().units_per_em;
 }
 
 i16 Head::xmin() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::XMin));
+    return header().x_min;
 }
 
 i16 Head::ymin() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::YMin));
+    return header().y_min;
 }
 
 i16 Head::xmax() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::XMax));
+    return header().x_max;
 }
 
 i16 Head::ymax() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::YMax));
+    return header().y_max;
 }
 
 u16 Head::style() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::Style));
+    return header().mac_style;
 }
 
 u16 Head::lowest_recommended_ppem() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::LowestRecPPEM));
+    return header().lowest_rec_ppem;
 }
 
 IndexToLocFormat Head::index_to_loc_format() const
 {
-    i16 raw = be_i16(m_slice.offset_pointer((u32)Offsets::IndexToLocFormat));
-    switch (raw) {
+    switch (header().index_to_loc_format) {
     case 0:
         return IndexToLocFormat::Offset16;
     case 1:
