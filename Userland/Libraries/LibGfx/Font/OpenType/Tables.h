@@ -35,6 +35,7 @@ struct Version16Dot16 {
 
 using FWord = BigEndian<i16>;
 using UFWord = BigEndian<u16>;
+using Tag = BigEndian<u32>;
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
@@ -198,15 +199,6 @@ private:
 // OS/2: OS/2 and Windows Metrics Table
 class OS2 {
 public:
-    enum class Offsets {
-        WeightClass = 4,
-        Selection = 62,
-        TypographicAscender = 68,
-        TypographicDescender = 70,
-        TypographicLineGap = 72,
-        End = 78,
-    };
-
     u16 weight_class() const;
     u16 selection() const;
     i16 typographic_ascender() const;
@@ -219,6 +211,41 @@ public:
     }
 
 private:
+    struct Version0 {
+        BigEndian<u16> version;
+        BigEndian<i16> avg_char_width;
+        BigEndian<u16> us_weight_class;
+        BigEndian<u16> us_width_class;
+        BigEndian<u16> fs_type;
+        BigEndian<i16> y_subscript_x_size;
+        BigEndian<i16> y_subscript_y_size;
+        BigEndian<i16> y_subscript_x_offset;
+        BigEndian<i16> y_subscript_y_offset;
+        BigEndian<i16> y_superscript_x_size;
+        BigEndian<i16> y_superscript_y_size;
+        BigEndian<i16> y_superscript_x_offset;
+        BigEndian<i16> y_superscript_y_offset;
+        BigEndian<i16> y_strikeout_size;
+        BigEndian<i16> y_strikeout_position;
+        BigEndian<i16> s_family_class;
+        u8 panose[10];
+        BigEndian<u32> ul_unicode_range1;
+        BigEndian<u32> ul_unicode_range2;
+        BigEndian<u32> ul_unicode_range3;
+        BigEndian<u32> ul_unicode_range4;
+        Tag ach_vend_id;
+        BigEndian<u16> fs_selection;
+        BigEndian<u16> fs_first_char_index;
+        BigEndian<u16> us_last_char_index;
+        BigEndian<i16> s_typo_ascender;
+        BigEndian<i16> s_typo_descender;
+        BigEndian<i16> s_typo_line_gap;
+        BigEndian<u16> us_win_ascent;
+        BigEndian<u16> us_win_descent;
+    };
+
+    Version0 const& header() const { return *bit_cast<Version0 const*>(m_slice.data()); }
+
     ReadonlyBytes m_slice;
 };
 

@@ -485,7 +485,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Could not load Glyf");
     auto glyf = Glyf(opt_glyf_slice.value());
 
-    OS2 os2(TRY(ByteBuffer::create_zeroed(static_cast<size_t>(OS2::Offsets::End))));
+    Optional<OS2> os2;
     if (opt_os2_slice.has_value())
         os2 = OS2(opt_os2_slice.value());
 
@@ -605,8 +605,8 @@ DeprecatedString Font::variant() const
 u16 Font::weight() const
 {
     constexpr u16 bold_bit { 1 };
-    if (m_os2.weight_class())
-        return m_os2.weight_class();
+    if (m_os2.has_value() && m_os2->weight_class())
+        return m_os2->weight_class();
     if (m_head.style() & bold_bit)
         return 700;
 
@@ -621,9 +621,9 @@ u8 Font::slope() const
     // https://docs.microsoft.com/en-us/typography/opentype/spec/head
     constexpr u16 italic_style_bit { 2 };
 
-    if (m_os2.selection() & oblique_selection_bit)
+    if (m_os2.has_value() && m_os2->selection() & oblique_selection_bit)
         return 2;
-    if (m_os2.selection() & italic_selection_bit)
+    if (m_os2.has_value() && m_os2->selection() & italic_selection_bit)
         return 1;
     if (m_head.style() & italic_style_bit)
         return 1;
@@ -640,27 +640,27 @@ bool Font::is_fixed_width() const
 
 u16 OS2::weight_class() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::WeightClass));
+    return header().us_weight_class;
 }
 
 u16 OS2::selection() const
 {
-    return be_u16(m_slice.offset_pointer((u32)Offsets::Selection));
+    return header().fs_selection;
 }
 
 i16 OS2::typographic_ascender() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::TypographicAscender));
+    return header().s_typo_ascender;
 }
 
 i16 OS2::typographic_descender() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::TypographicDescender));
+    return header().s_typo_descender;
 }
 
 i16 OS2::typographic_line_gap() const
 {
-    return be_i16(m_slice.offset_pointer((u32)Offsets::TypographicLineGap));
+    return header().s_typo_line_gap;
 }
 
 }
