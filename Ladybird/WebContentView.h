@@ -192,7 +192,7 @@ private:
     bool is_inspector_open() const;
     void inspect_dom_tree();
     void clear_inspected_dom_node();
-    void clear_inspector_callbacks();
+    void close_sub_widgets();
     ErrorOr<Ladybird::DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
