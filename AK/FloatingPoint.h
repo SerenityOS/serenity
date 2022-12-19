@@ -257,6 +257,21 @@ constexpr double convert_to_native_double(I input) { return float_to_float<Doubl
 template<typename I>
 constexpr float convert_to_native_float(I input) { return float_to_float<SingleFloatingPointBits>(input).as_float(); }
 
+template<typename T>
+constexpr bool is_signaling_nan(T input)
+{
+#if __has_builtin(__builtin_issignaling)
+    return __builtin_issignaling(input);
+#else
+    if (!isnan(input))
+        return false;
+
+    auto extract = FloatExtractor<T>(input);
+
+    return extract.exponent == FloatExtractor<T>::exponent_max && (extract.mantissa >> (FloatExtractor<T>::mantissa_bits - 1)) == 0;
+#endif
+}
+
 }
 
 #if USING_AK_GLOBALLY
@@ -270,4 +285,6 @@ using AK::convert_from_native_float;
 using AK::convert_to_native_double;
 using AK::convert_to_native_float;
 using AK::float_to_float;
+
+using AK::is_signaling_nan;
 #endif
