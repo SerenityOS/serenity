@@ -19,6 +19,15 @@ enum class IndexToLocFormat {
     Offset32,
 };
 
+struct Fixed {
+    BigEndian<u16> integer;
+    BigEndian<u16> fraction;
+};
+
+struct LongDateTime {
+    BigEndian<u64> value;
+};
+
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
 class Head {
@@ -34,19 +43,28 @@ public:
     IndexToLocFormat index_to_loc_format() const;
 
 private:
-    enum class Offsets {
-        UnitsPerEM = 18,
-        XMin = 36,
-        YMin = 38,
-        XMax = 40,
-        YMax = 42,
-        Style = 44,
-        LowestRecPPEM = 46,
-        IndexToLocFormat = 50,
+    struct FontHeaderTable {
+        BigEndian<u16> major_version;
+        BigEndian<u16> minor_version;
+        Fixed font_revision;
+        BigEndian<u32> checksum_adjustment;
+        BigEndian<u32> magic_number;
+        BigEndian<u16> flags;
+        BigEndian<u16> units_per_em;
+        LongDateTime created;
+        LongDateTime modified;
+        BigEndian<i16> x_min;
+        BigEndian<i16> y_min;
+        BigEndian<i16> x_max;
+        BigEndian<i16> y_max;
+        BigEndian<u16> mac_style;
+        BigEndian<u16> lowest_rec_ppem;
+        BigEndian<i16> font_direction_hint;
+        BigEndian<i16> index_to_loc_format;
+        BigEndian<i16> glyph_data_format;
     };
-    enum class Sizes {
-        Table = 54,
-    };
+
+    FontHeaderTable const& header() const { return *bit_cast<FontHeaderTable const*>(m_slice.data()); }
 
     Head(ReadonlyBytes slice)
         : m_slice(slice)
