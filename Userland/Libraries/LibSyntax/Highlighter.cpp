@@ -138,7 +138,7 @@ void Highlighter::register_nested_token_pairs(Vector<MatchingTokenPair> pairs)
         m_nested_token_pairs.set(pair);
 }
 
-StringView Highlighter::language_string(Language language) const
+StringView language_to_string(Language language)
 {
     switch (language) {
     case Language::Cpp:

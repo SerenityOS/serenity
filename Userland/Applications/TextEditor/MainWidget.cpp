@@ -872,7 +872,7 @@ void MainWidget::update_statusbar()
 
     if (m_editor && m_editor->syntax_highlighter()) {
         auto language = m_editor->syntax_highlighter()->language();
-        m_statusbar->set_text(1, m_editor->syntax_highlighter()->language_string(language));
+        m_statusbar->set_text(1, Syntax::language_to_string(language));
     }
     m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
 }
