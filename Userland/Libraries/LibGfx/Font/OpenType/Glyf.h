@@ -16,6 +16,8 @@
 
 namespace OpenType {
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/loca
+// loca: Index to Location
 class Loca {
 public:
     static Optional<Loca> from_slice(ReadonlyBytes, u32 num_glyphs, IndexToLocFormat);
@@ -34,6 +36,8 @@ private:
     IndexToLocFormat m_index_to_loc_format;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/glyf
+// glyf: Glyph Data
 class Glyf {
 public:
     class Glyph {
