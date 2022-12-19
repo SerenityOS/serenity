@@ -52,7 +52,7 @@ private:
 
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
-    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, OS2&& os2, Optional<Kern>&& kern)
+    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, Optional<OS2> os2, Optional<Kern>&& kern)
         : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
@@ -80,7 +80,7 @@ private:
     Loca m_loca;
     Glyf m_glyf;
     Cmap m_cmap;
-    OS2 m_os2;
+    Optional<OS2> m_os2;
     Optional<Kern> m_kern;
 };
 
