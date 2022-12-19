@@ -337,6 +337,25 @@ TEST_CASE(rmdir_dot)
     EXPECT_EQ(rc, 0);
 }
 
+TEST_CASE(rmdir_dot_dot)
+{
+    int rc = mkdir("/home/anon/rmdir-test-2", 0700);
+    EXPECT_EQ(rc, 0);
+
+    rc = mkdir("/home/anon/rmdir-test-2/foo", 0700);
+    EXPECT_EQ(rc, 0);
+
+    rc = rmdir("/home/anon/rmdir-test-2/foo/..");
+    EXPECT_NE(rc, 0);
+    EXPECT_EQ(errno, ENOTEMPTY);
+
+    rc = rmdir("/home/anon/rmdir-test-2/foo");
+    EXPECT_EQ(rc, 0);
+
+    rc = rmdir("/home/anon/rmdir-test-2");
+    EXPECT_EQ(rc, 0);
+}
+
 TEST_CASE(rmdir_while_inside_dir)
 {
     int rc = mkdir("/home/anon/testdir", 0700);

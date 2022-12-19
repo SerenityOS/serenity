@@ -847,8 +847,6 @@ ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringVie
     if (last_component == "."sv)
         return EINVAL;
 
-    // FIXME: We should return ENOTEMPTY if the last component of the path is ".."
-
     if (!inode.is_directory())
         return ENOTDIR;
 
