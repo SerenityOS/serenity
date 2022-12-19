@@ -12,6 +12,8 @@ namespace VirtGPU {
 
 class Device final : public GPU::Device {
 public:
+    static ErrorOr<NonnullOwnPtr<Device>> create(Gfx::IntSize min_size);
+
     virtual GPU::DeviceInfo info() const override;
 
     virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, Vector<GPU::Vertex>& vertices) override;
