@@ -715,6 +715,27 @@ struct Formatter<FormatString> : Formatter<StringView> {
     ErrorOr<void> vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params);
 };
 
+template<typename... Parameters>
+struct Formatted {
+    Formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+        : m_format(fmtstr.view())
+        , m_params(parameters...)
+    {
+    }
+
+    StringView m_format;
+    VariadicFormatParams<Parameters...> m_params;
+};
+
+template<typename... Parameters>
+struct Formatter<Formatted<Parameters...>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Formatted<Parameters...> const& formattable)
+    {
+        auto params = formattable.m_params;
+        return Formatter<FormatString>::vformat(builder, formattable.m_format, params);
+    }
+};
+
 template<>
 struct Formatter<Error> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
@@ -763,6 +784,7 @@ using AK::dbgln;
 using AK::CheckedFormatString;
 using AK::FormatIfSupported;
 using AK::FormatString;
+using AK::Formatted;
 
 #    define dbgln_if(flag, fmt, ...)       \
         do {                               \
