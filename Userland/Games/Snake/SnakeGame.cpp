@@ -57,6 +57,7 @@ SnakeGame::SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
     reset();
     m_high_score = Config::read_i32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
     m_high_score_text = DeprecatedString::formatted("Best: {}", m_high_score);
+    m_snake_base_color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, m_snake_base_color.value()));
 }
 
 void SnakeGame::pause()
@@ -83,6 +84,12 @@ void SnakeGame::reset()
     start();
     spawn_fruit();
     update();
+}
+
+void SnakeGame::set_snake_base_color(Color color)
+{
+    Config::write_u32("Snake"sv, "Snake"sv, "BaseColor"sv, color.value());
+    m_snake_base_color = color;
 }
 
 bool SnakeGame::is_available(Coordinate const& coord)
