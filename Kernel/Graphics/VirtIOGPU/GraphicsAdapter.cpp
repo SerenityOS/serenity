@@ -31,7 +31,7 @@ NonnullLockRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::
         "VirtGPU Scratch Space"sv,
         Memory::Region::Access::ReadWrite));
 
-    auto active_context_ids = Bitmap::must_create(VREND_MAX_CTX, false);
+    auto active_context_ids = MUST(Bitmap::create(VREND_MAX_CTX, false));
     auto adapter = adopt_lock_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(active_context_ids), move(scratch_space_region)));
     adapter->initialize();
     MUST(adapter->initialize_adapter());

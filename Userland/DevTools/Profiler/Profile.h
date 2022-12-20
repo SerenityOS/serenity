@@ -48,7 +48,7 @@ public:
     void will_track_seen_events(size_t profile_event_count)
     {
         if (m_seen_events.size() != profile_event_count)
-            m_seen_events = Bitmap::must_create(profile_event_count, false);
+            m_seen_events = Bitmap::create(profile_event_count, false).release_value_but_fixme_should_propagate_errors();
     }
     bool has_seen_event(size_t event_index) const { return m_seen_events.get(event_index); }
     void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
