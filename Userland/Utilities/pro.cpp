@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Thomas Keppler <serenity@tkeppler.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
+#include <LibHTTP/HttpResponse.h>
 #include <LibMain/Main.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
@@ -151,6 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView url_str;
     bool save_at_provided_name = false;
     bool should_follow_url = false;
+    bool verbose_output = false;
     char const* data = nullptr;
     StringView proxy_spec;
     DeprecatedString method = "GET";
@@ -180,6 +183,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         } });
     args_parser.add_option(proxy_spec, "Specify a proxy server to use for this request (proto://ip:port)", "proxy", 'p', "proxy");
+    args_parser.add_option(verbose_output, "(HTTP only) Log request and response metadata", "verbose", 'v');
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(arguments);
 
@@ -195,6 +199,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("'{}' is not a valid URL", url_str);
         return 1;
     }
+
+    bool const is_http_url = url.scheme().is_one_of("http"sv, "https"sv);
 
     Core::ProxyData proxy_data {};
     if (!proxy_spec.is_empty())
@@ -220,6 +226,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!request) {
             warnln("Failed to start request for '{}'", url_str);
             exit(1);
+        }
+
+        if (verbose_output && is_http_url) {
+            warnln("* Setting up request");
+            warnln("> Method={}, URL={}", method, url);
+            for (auto const& header : request_headers) {
+                warnln("> {}: {}", header.key, header.value);
+            }
         }
 
         request->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
@@ -251,6 +265,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Received headers! response code = {}", status_code.value_or(0));
             received_actual_headers = true; // And not trailers!
             should_save_stream_data = true;
+
+            if (verbose_output && is_http_url) {
+                warnln("* Received headers");
+                auto const value = status_code.value_or(0);
+                auto const reason_phrase = (value != 0)
+                    ? HTTP::HttpResponse::reason_phrase_for_code(value)
+                    : "UNKNOWN"sv;
+                warnln("< Code={}, Reason={}", value, reason_phrase);
+                for (auto const& header : response_headers) {
+                    warnln("< {}: {}", header.key, header.value);
+                }
+            }
 
             if (!following_url && save_at_provided_name) {
                 DeprecatedString output_name;
