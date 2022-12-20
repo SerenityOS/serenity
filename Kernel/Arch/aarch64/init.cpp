@@ -55,6 +55,9 @@ extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
         if (Aarch64::exception_class_has_set_far(esr_el1.EC))
             dbgln("Faulting Virtual Address: 0x{:x}", Aarch64::FAR_EL1::read().virtual_address);
 
+        if (Aarch64::exception_class_is_data_abort(esr_el1.EC))
+            dbgln("Data Fault Status Code: {}", Aarch64::data_fault_status_code_to_string(esr_el1.ISS));
+
         dump_backtrace_from_base_pointer(regs->x[29]);
     }
 
