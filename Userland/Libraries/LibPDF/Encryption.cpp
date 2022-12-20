@@ -187,9 +187,14 @@ bool StandardSecurityHandler::try_provide_user_password(StringView password_stri
     //    handlers of revision 3 or greater), the password supplied is the correct user
     //    password.
     auto u_bytes = m_u_entry.bytes();
+    bool has_user_password;
     if (m_revision >= 3)
-        return u_bytes.slice(0, 16) == password_buffer.bytes().slice(0, 16);
-    return u_bytes == password_buffer.bytes();
+        has_user_password = u_bytes.slice(0, 16) == password_buffer.bytes().slice(0, 16);
+    else
+        has_user_password = u_bytes == password_buffer.bytes();
+    if (!has_user_password)
+        m_encryption_key = {};
+    return has_user_password;
 }
 
 ByteBuffer StandardSecurityHandler::compute_encryption_key(ByteBuffer password_string)
