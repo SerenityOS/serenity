@@ -148,14 +148,13 @@ public:
     Glyph glyph(u32 offset) const;
 
 private:
-    enum class Offsets {
-        XMin = 2,
-        YMin = 4,
-        XMax = 6,
-        YMax = 8,
-    };
-    enum class Sizes {
-        GlyphHeader = 10,
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/glyf#glyph-headers
+    struct GlyphHeader {
+        BigEndian<i16> number_of_contours;
+        BigEndian<i16> x_min;
+        BigEndian<i16> y_min;
+        BigEndian<i16> x_max;
+        BigEndian<i16> y_max;
     };
 
     ReadonlyBytes m_slice;

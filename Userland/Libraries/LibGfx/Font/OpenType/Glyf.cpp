@@ -358,13 +358,14 @@ RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_de
 
 Glyf::Glyph Glyf::glyph(u32 offset) const
 {
-    VERIFY(m_slice.size() >= offset + (u32)Sizes::GlyphHeader);
-    i16 num_contours = be_i16(m_slice.offset_pointer(offset));
-    i16 xmin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMin));
-    i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMin));
-    i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMax));
-    i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMax));
-    auto slice = ReadonlyBytes(m_slice.offset_pointer(offset + (u32)Sizes::GlyphHeader), m_slice.size() - offset - (u32)Sizes::GlyphHeader);
+    VERIFY(m_slice.size() >= offset + sizeof(GlyphHeader));
+    auto const& glyph_header = *bit_cast<GlyphHeader const*>(m_slice.offset_pointer(offset));
+    i16 num_contours = glyph_header.number_of_contours;
+    i16 xmin = glyph_header.x_min;
+    i16 ymin = glyph_header.y_min;
+    i16 xmax = glyph_header.x_max;
+    i16 ymax = glyph_header.y_max;
+    auto slice = m_slice.slice(offset + sizeof(GlyphHeader));
     return Glyph(slice, xmin, ymin, xmax, ymax, num_contours);
 }
 
