@@ -23,14 +23,14 @@ ErrorOr<NonnullLockRefPtr<PrivateInodeVMObject>> PrivateInodeVMObject::try_creat
     auto size = max(inode.size(), (offset + range_size));
     VERIFY(size > 0);
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
-    auto dirty_pages = TRY(Bitmap::try_create(new_physical_pages.size(), false));
+    auto dirty_pages = TRY(Bitmap::create(new_physical_pages.size(), false));
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) PrivateInodeVMObject(inode, move(new_physical_pages), move(dirty_pages)));
 }
 
 ErrorOr<NonnullLockRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
 {
     auto new_physical_pages = TRY(this->try_clone_physical_pages());
-    auto dirty_pages = TRY(Bitmap::try_create(new_physical_pages.size(), false));
+    auto dirty_pages = TRY(Bitmap::create(new_physical_pages.size(), false));
     return adopt_nonnull_lock_ref_or_enomem<VMObject>(new (nothrow) PrivateInodeVMObject(*this, move(new_physical_pages), move(dirty_pages)));
 }
 

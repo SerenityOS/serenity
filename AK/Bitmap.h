@@ -22,7 +22,7 @@ class Bitmap : public BitmapView {
     AK_MAKE_NONCOPYABLE(Bitmap);
 
 public:
-    static ErrorOr<Bitmap> try_create(size_t size, bool default_value)
+    static ErrorOr<Bitmap> create(size_t size, bool default_value)
     {
         VERIFY(size != 0);
 
@@ -37,7 +37,7 @@ public:
 
     static Bitmap must_create(size_t size, bool default_value)
     {
-        return MUST(try_create(size, default_value));
+        return MUST(create(size, default_value));
     }
 
     Bitmap() = default;

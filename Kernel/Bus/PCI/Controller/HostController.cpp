@@ -14,7 +14,7 @@ namespace Kernel::PCI {
 
 HostController::HostController(PCI::Domain const& domain)
     : m_domain(domain)
-    , m_enumerated_buses(Bitmap::try_create(256, false).release_value_but_fixme_should_propagate_errors())
+    , m_enumerated_buses(Bitmap::create(256, false).release_value_but_fixme_should_propagate_errors())
 {
 }
 
