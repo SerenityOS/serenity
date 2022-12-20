@@ -17,7 +17,6 @@ class Game : public GUI::Frame {
     C_OBJECT(Game);
 
 public:
-    static ErrorOr<NonnullRefPtr<Game>> create();
     virtual ~Game() override = default;
 
     void start();
@@ -27,7 +26,7 @@ public:
     void set_snake_base_color(Color color);
 
 private:
-    explicit Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
+    Game();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;

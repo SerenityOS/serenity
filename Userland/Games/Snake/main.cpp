@@ -6,6 +6,7 @@
 
 #include "Game.h"
 #include <AK/URL.h>
+#include <Games/Snake/SnakeGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -46,35 +47,38 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Snake");
     window->resize(324, 344);
 
-    auto game = TRY(Snake::Game::create());
-    window->set_main_widget(game);
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    widget->load_from_gml(snake_gml);
+
+    auto& game = *widget->find_descendant_of_type_named<Snake::Game>("game");
+    game.set_focus(true);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
-        game->reset();
+        game.reset();
     })));
     static DeprecatedString const pause_text = "&Pause Game"sv;
     auto const pause_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv));
     static DeprecatedString const continue_text = "&Continue Game"sv;
     auto const continue_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv));
     TRY(game_menu->try_add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
-        if (game->has_timer()) {
-            game->pause();
+        if (game.has_timer()) {
+            game.pause();
             action.set_text(continue_text);
             action.set_icon(continue_icon);
         } else {
-            game->start();
+            game.start();
             action.set_text(pause_text);
             action.set_icon(pause_icon);
         }
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
-        game->pause();
+        game.pause();
         auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
         if (dialog->exec() == GUI::Dialog::ExecResult::OK)
-            game->set_snake_base_color(dialog->color());
-        game->start();
+            game.set_snake_base_color(dialog->color());
+        game.start();
     })));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
