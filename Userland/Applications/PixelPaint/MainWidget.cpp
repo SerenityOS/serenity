@@ -15,6 +15,7 @@
 #include "FilterParams.h"
 #include "LevelsDialog.h"
 #include "ResizeImageDialog.h"
+#include <AK/String.h>
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>
@@ -565,14 +566,22 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "Flip Image &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().flip(Gfx::Orientation::Vertical);
+            auto image_flip_or_error = editor->image().flip(Gfx::Orientation::Vertical);
+            if (image_flip_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to flip image: {}", image_flip_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Flip Image Vertically"sv);
         }));
     m_image_menu->add_action(GUI::Action::create(
         "Flip Image &Horizontally", g_icon_bag.edit_flip_horizontal, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().flip(Gfx::Orientation::Horizontal);
+            auto image_flip_or_error = editor->image().flip(Gfx::Orientation::Horizontal);
+            if (image_flip_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to flip image: {}", image_flip_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Flip Image Horizontally"sv);
         }));
     m_image_menu->add_separator();
@@ -581,7 +590,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().rotate(Gfx::RotationDirection::CounterClockwise);
+            auto image_rotate_or_error = editor->image().rotate(Gfx::RotationDirection::CounterClockwise);
+            if (image_rotate_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to rotate image: {}", image_rotate_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Rotate Image Counterclockwise"sv);
         }));
 
@@ -589,7 +602,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().rotate(Gfx::RotationDirection::Clockwise);
+            auto image_rotate_or_error = editor->image().rotate(Gfx::RotationDirection::Clockwise);
+            if (image_rotate_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to rotate image: {}", image_rotate_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Rotate Image Clockwise"sv);
         }));
     m_image_menu->add_separator();
@@ -599,7 +616,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                editor->image().resize(dialog->desired_size(), dialog->scaling_mode());
+                auto image_resize_or_error = editor->image().resize(dialog->desired_size(), dialog->scaling_mode());
+                if (image_resize_or_error.is_error()) {
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to resize image: {}", image_resize_or_error.error().string_literal())));
+                    return;
+                }
                 editor->did_complete_action("Resize Image"sv);
             }
         }));
@@ -611,7 +632,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (editor->image().selection().is_empty())
                 return;
             auto crop_rect = editor->image().rect().intersected(editor->image().selection().bounding_rect());
-            editor->image().crop(crop_rect);
+            auto image_crop_or_error = editor->image().crop(crop_rect);
+            if (image_crop_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to crop image: {}", image_crop_or_error.error().string_literal())));
+                return;
+            }
             editor->image().selection().clear();
             editor->did_complete_action("Crop Image to Selection"sv);
         }));
@@ -625,7 +650,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (!content_bounding_rect.has_value())
                 return;
 
-            editor->image().crop(content_bounding_rect.value());
+            auto image_crop_or_error = editor->image().crop(content_bounding_rect.value());
+            if (image_crop_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to crop image: {}", image_crop_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Crop Image to Content"sv);
         }));
 
@@ -833,7 +862,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            active_layer->flip(Gfx::Orientation::Vertical);
+            auto layer_flip_or_error = active_layer->flip(Gfx::Orientation::Vertical);
+            if (layer_flip_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to flip layer: {}", layer_flip_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Flip Layer Vertically"sv);
         }));
     m_layer_menu->add_action(GUI::Action::create(
@@ -843,7 +876,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            active_layer->flip(Gfx::Orientation::Horizontal);
+            auto layer_flip_or_error = active_layer->flip(Gfx::Orientation::Horizontal);
+            if (layer_flip_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to flip layer: {}", layer_flip_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Flip Layer Horizontally"sv);
         }));
     m_layer_menu->add_separator();
@@ -855,7 +892,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            active_layer->rotate(Gfx::RotationDirection::CounterClockwise);
+            auto layer_rotate_or_error = active_layer->rotate(Gfx::RotationDirection::CounterClockwise);
+            if (layer_rotate_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to rotate layer: {}", layer_rotate_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Rotate Layer Counterclockwise"sv);
         }));
 
@@ -866,7 +907,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            active_layer->rotate(Gfx::RotationDirection::Clockwise);
+            auto layer_rotate_or_error = active_layer->rotate(Gfx::RotationDirection::Clockwise);
+            if (layer_rotate_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to rotate layer: {}", layer_rotate_or_error.error().string_literal())));
+                return;
+            }
             editor->did_complete_action("Rotate Layer Clockwise"sv);
         }));
 
@@ -881,7 +926,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             auto intersection = editor->image().rect().intersected(editor->image().selection().bounding_rect());
             auto crop_rect = intersection.translated(-active_layer->location());
-            active_layer->crop(crop_rect);
+            auto layer_crop_or_error = active_layer->crop(crop_rect);
+            if (layer_crop_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to crop layer: {}", layer_crop_or_error.error().string_literal())));
+                return;
+            }
             active_layer->set_location(intersection.location());
             editor->image().selection().clear();
             editor->did_complete_action("Crop Layer to Selection"sv);
@@ -896,7 +945,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto content_bounding_rect = active_layer->nonempty_content_bounding_rect();
             if (!content_bounding_rect.has_value())
                 return;
-            active_layer->crop(content_bounding_rect.value());
+            auto layer_crop_or_error = active_layer->crop(content_bounding_rect.value());
+            if (layer_crop_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to crop layer: {}", layer_crop_or_error.error().string_literal())));
+                return;
+            }
             active_layer->set_location(content_bounding_rect->location());
             editor->did_complete_action("Crop Layer to Content"sv);
         }));

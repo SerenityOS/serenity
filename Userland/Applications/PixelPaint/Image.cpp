@@ -492,40 +492,106 @@ void ImageUndoCommand::redo()
     undo();
 }
 
-void Image::flip(Gfx::Orientation orientation)
+ErrorOr<void> Image::flip(Gfx::Orientation orientation)
 {
-    for (auto& layer : m_layers) {
-        layer.flip(orientation);
+    Vector<NonnullRefPtr<Layer>> flipped_layers;
+    TRY(flipped_layers.try_ensure_capacity(m_layers.size()));
+
+    VERIFY(m_layers.size() > 0);
+
+    size_t selected_layer_index = 0;
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        auto& layer = m_layers[i];
+        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+
+        if (layer.is_selected())
+            selected_layer_index = i;
+
+        TRY(new_layer->flip(orientation, Layer::NotifyClients::NO));
+
+        flipped_layers.append(new_layer);
     }
+
+    m_layers = move(flipped_layers);
+    for (auto& layer : m_layers)
+        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+
+    select_layer(&m_layers[selected_layer_index]);
 
     did_change();
+
+    return {};
 }
 
-void Image::rotate(Gfx::RotationDirection direction)
+ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
 {
-    for (auto& layer : m_layers) {
-        layer.rotate(direction);
+    Vector<NonnullRefPtr<Layer>> rotated_layers;
+    TRY(rotated_layers.try_ensure_capacity(m_layers.size()));
+
+    VERIFY(m_layers.size() > 0);
+
+    size_t selected_layer_index = 0;
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        auto& layer = m_layers[i];
+        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+
+        if (layer.is_selected())
+            selected_layer_index = i;
+
+        TRY(new_layer->rotate(direction, Layer::NotifyClients::NO));
+
+        rotated_layers.append(new_layer);
     }
+
+    m_layers = move(rotated_layers);
+    for (auto& layer : m_layers)
+        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+
+    select_layer(&m_layers[selected_layer_index]);
 
     m_size = { m_size.height(), m_size.width() };
     did_change_rect();
+
+    return {};
 }
 
-void Image::crop(Gfx::IntRect const& cropped_rect)
+ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
 {
-    for (auto& layer : m_layers) {
-        auto layer_location = layer.location();
-        auto layer_local_crop_rect = layer.relative_rect().intersected(cropped_rect).translated(-layer_location.x(), -layer_location.y());
-        layer.crop(layer_local_crop_rect);
+    Vector<NonnullRefPtr<Layer>> cropped_layers;
+    TRY(cropped_layers.try_ensure_capacity(m_layers.size()));
+
+    VERIFY(m_layers.size() > 0);
+
+    size_t selected_layer_index = 0;
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        auto& layer = m_layers[i];
+        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+
+        if (layer.is_selected())
+            selected_layer_index = i;
+
+        auto layer_location = new_layer->location();
+        auto layer_local_crop_rect = new_layer->relative_rect().intersected(cropped_rect).translated(-layer_location.x(), -layer_location.y());
+        TRY(new_layer->crop(layer_local_crop_rect, Layer::NotifyClients::NO));
 
         auto new_layer_x = max(0, layer_location.x() - cropped_rect.x());
         auto new_layer_y = max(0, layer_location.y() - cropped_rect.y());
 
-        layer.set_location({ new_layer_x, new_layer_y });
+        new_layer->set_location({ new_layer_x, new_layer_y });
+
+        cropped_layers.append(new_layer);
     }
+
+    m_layers = move(cropped_layers);
+    for (auto& layer : m_layers)
+        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+
+    select_layer(&m_layers[selected_layer_index]);
 
     m_size = { cropped_rect.width(), cropped_rect.height() };
     did_change_rect(cropped_rect);
+
+    return {};
 }
 
 Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
@@ -548,7 +614,7 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
     return bounding_rect;
 }
 
-void Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode)
+ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode)
 {
     float scale_x = 1.0f;
     float scale_y = 1.0f;
@@ -561,13 +627,35 @@ void Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode
         scale_y = new_size.height() / static_cast<float>(size().height());
     }
 
-    for (auto& layer : m_layers) {
-        Gfx::IntPoint new_location(scale_x * layer.location().x(), scale_y * layer.location().y());
-        layer.resize(new_size, new_location, scaling_mode);
+    Vector<NonnullRefPtr<Layer>> resized_layers;
+    TRY(resized_layers.try_ensure_capacity(m_layers.size()));
+
+    VERIFY(m_layers.size() > 0);
+
+    size_t selected_layer_index = 0;
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        auto& layer = m_layers[i];
+        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+
+        if (layer.is_selected())
+            selected_layer_index = i;
+
+        Gfx::IntPoint new_location(scale_x * new_layer->location().x(), scale_y * new_layer->location().y());
+        TRY(new_layer->resize(new_size, new_location, scaling_mode, Layer::NotifyClients::NO));
+
+        resized_layers.append(new_layer);
     }
+
+    m_layers = move(resized_layers);
+    for (auto& layer : m_layers)
+        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+
+    select_layer(&m_layers[selected_layer_index]);
 
     m_size = { new_size.width(), new_size.height() };
     did_change_rect();
+
+    return {};
 }
 
 Color Image::color_at(Gfx::IntPoint point) const

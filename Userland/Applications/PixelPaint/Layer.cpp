@@ -64,7 +64,7 @@ Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, DeprecatedString n
 {
 }
 
-void Layer::did_modify_bitmap(Gfx::IntRect const& rect)
+void Layer::did_modify_bitmap(Gfx::IntRect const& rect, NotifyClients notify_clients)
 {
     if (!m_scratch_edited_bitmap.is_null()) {
         for (int y = 0; y < rect.height(); ++y) {
@@ -81,7 +81,10 @@ void Layer::did_modify_bitmap(Gfx::IntRect const& rect)
         }
     }
 
-    m_image.layer_did_modify_bitmap({}, *this, rect);
+    // NOTE: If NotifyClients::NO is passed to this function the caller should handle notifying
+    //       the clients of any bitmap changes.
+    if (notify_clients == NotifyClients::YES)
+        m_image.layer_did_modify_bitmap({}, *this, rect);
     update_cached_bitmap();
 }
 
@@ -194,53 +197,60 @@ ErrorOr<void> Layer::try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<
     return {};
 }
 
-void Layer::flip(Gfx::Orientation orientation)
+ErrorOr<void> Layer::flip(Gfx::Orientation orientation, NotifyClients notify_clients)
 {
-    m_content_bitmap = *m_content_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
+    auto flipped_content_bitmap = TRY(m_content_bitmap->flipped(orientation));
     if (m_mask_bitmap)
-        m_mask_bitmap = *m_mask_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
+        m_mask_bitmap = *TRY(m_mask_bitmap->flipped(orientation));
 
-    did_modify_bitmap();
+    m_content_bitmap = move(flipped_content_bitmap);
+    did_modify_bitmap({}, notify_clients);
+
+    return {};
 }
 
-void Layer::rotate(Gfx::RotationDirection direction)
+ErrorOr<void> Layer::rotate(Gfx::RotationDirection direction, NotifyClients notify_clients)
 {
-    m_content_bitmap = *m_content_bitmap->rotated(direction).release_value_but_fixme_should_propagate_errors();
+    auto rotated_content_bitmap = TRY(m_content_bitmap->rotated(direction));
     if (m_mask_bitmap)
-        m_mask_bitmap = *m_mask_bitmap->rotated(direction).release_value_but_fixme_should_propagate_errors();
+        m_mask_bitmap = *TRY(m_mask_bitmap->rotated(direction));
 
-    did_modify_bitmap();
+    m_content_bitmap = move(rotated_content_bitmap);
+    did_modify_bitmap({}, notify_clients);
+
+    return {};
 }
 
-void Layer::crop(Gfx::IntRect const& rect)
+ErrorOr<void> Layer::crop(Gfx::IntRect const& rect, NotifyClients notify_clients)
 {
-    m_content_bitmap = *m_content_bitmap->cropped(rect).release_value_but_fixme_should_propagate_errors();
+    auto cropped_content_bitmap = TRY(m_content_bitmap->cropped(rect));
     if (m_mask_bitmap)
-        m_mask_bitmap = *m_mask_bitmap->cropped(rect).release_value_but_fixme_should_propagate_errors();
+        m_mask_bitmap = *TRY(m_mask_bitmap->cropped(rect));
 
-    did_modify_bitmap();
+    m_content_bitmap = move(cropped_content_bitmap);
+    did_modify_bitmap({}, notify_clients);
+
+    return {};
 }
 
-void Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode)
+ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
 {
     auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
     auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);
 
+    auto resized_content_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size));
     {
-        auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
-        Gfx::Painter painter(dst);
+        Gfx::Painter painter(resized_content_bitmap);
 
         if (scaling_mode == Gfx::Painter::ScalingMode::None) {
             painter.blit(src_rect.top_left(), *m_content_bitmap, src_rect, 1.0f);
         } else {
             painter.draw_scaled_bitmap(dst_rect, *m_content_bitmap, src_rect, 1.0f, scaling_mode);
         }
-
-        m_content_bitmap = move(dst);
     }
 
     if (m_mask_bitmap) {
-        auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
+        auto dst = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size));
         Gfx::Painter painter(dst);
 
         if (scaling_mode == Gfx::Painter::ScalingMode::None) {
@@ -252,18 +262,22 @@ void Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Paint
         m_mask_bitmap = move(dst);
     }
 
+    m_content_bitmap = move(resized_content_bitmap);
+
     set_location(new_location);
-    did_modify_bitmap();
+    did_modify_bitmap({}, notify_clients);
+
+    return {};
 }
 
-void Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode)
+ErrorOr<void> Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
 {
-    resize(new_rect.size(), new_rect.location(), scaling_mode);
+    return resize(new_rect.size(), new_rect.location(), scaling_mode, notify_clients);
 }
 
-void Layer::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode)
+ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
 {
-    resize(new_size, location(), scaling_mode);
+    return resize(new_size, location(), scaling_mode, notify_clients);
 }
 
 void Layer::update_cached_bitmap()

@@ -9,8 +9,10 @@
 #include "../Image.h"
 #include "../ImageEditor.h"
 #include "../Layer.h"
+#include <AK/String.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Filters/ContrastFilter.h>
@@ -101,8 +103,11 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
         return;
 
     if (m_scaling) {
-        m_editor->active_layer()->resize(m_new_layer_size, m_new_scaled_layer_location, Gfx::Painter::ScalingMode::BilinearBlend);
-        m_editor->layers_did_change();
+        auto resized_or_error = m_editor->active_layer()->resize(m_new_layer_size, m_new_scaled_layer_location, Gfx::Painter::ScalingMode::BilinearBlend);
+        if (resized_or_error.is_error())
+            GUI::MessageBox::show_error(m_editor->window(), MUST(String::formatted("Failed to resize layer: {}", resized_or_error.error().string_literal())));
+        else
+            m_editor->layers_did_change();
     }
 
     m_scaling = false;
