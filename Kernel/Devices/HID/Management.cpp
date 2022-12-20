@@ -152,13 +152,11 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     // Note: If we happen to not have i8042 just return "gracefully" for now.
     if (!has_i8042_controller)
         return {};
-    m_i8042_controller = i8042_controller;
-    TRY(m_i8042_controller->detect_devices());
-    if (m_i8042_controller->mouse())
-        m_hid_devices.append(m_i8042_controller->mouse().release_nonnull());
-
-    if (m_i8042_controller->keyboard())
-        m_hid_devices.append(m_i8042_controller->keyboard().release_nonnull());
+    if (auto result_or_error = i8042_controller->detect_devices(); result_or_error.is_error())
+        return {};
+    m_hid_controllers.with([&](auto& list) {
+        list.append(i8042_controller);
+    });
 #endif
     return {};
 }
