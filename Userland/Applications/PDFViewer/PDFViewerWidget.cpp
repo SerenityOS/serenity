@@ -19,6 +19,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -366,8 +367,15 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(Core::File& file)
     auto document = TRY(PDF::Document::create(m_buffer));
 
     if (auto sh = document->security_handler(); sh && !sh->has_user_password()) {
-        // FIXME: Prompt the user for a password
-        VERIFY_NOT_REACHED();
+        DeprecatedString password;
+        while (true) {
+            auto result = GUI::InputBox::show(window(), password, "Password"sv, "Password required"sv, {}, GUI::InputType::Password);
+            if (result == GUI::Dialog::ExecResult::OK
+                && document->security_handler()->try_provide_user_password(password))
+                break;
+            if (result == GUI::Dialog::ExecResult::Cancel)
+                return {};
+        }
     }
 
     TRY(document->initialize());
