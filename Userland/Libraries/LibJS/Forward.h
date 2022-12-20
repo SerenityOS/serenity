@@ -133,7 +133,8 @@
     __JS_ENUMERATE(unscopables, unscopables)                 \
     __JS_ENUMERATE(species, species)                         \
     __JS_ENUMERATE(toPrimitive, to_primitive)                \
-    __JS_ENUMERATE(toStringTag, to_string_tag)
+    __JS_ENUMERATE(toStringTag, to_string_tag)               \
+    __JS_ENUMERATE(dispose, dispose)
 
 #define JS_ENUMERATE_REGEXP_FLAGS                \
     __JS_ENUMERATE(hasIndices, has_indices, d)   \
