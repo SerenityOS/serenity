@@ -214,24 +214,26 @@ class ExpectationError extends Error {
             });
         }
 
-        toBeTrue() {
+        toBeTrue(customDetails = undefined) {
             this.__doMatcher(() => {
                 this.__expect(
                     this.target === true,
                     () =>
-                        `toBeTrue: expected target to be true, got _${valueToString(this.target)}_`
+                        `toBeTrue: expected target to be true, got _${valueToString(this.target)}_${
+                            customDetails ? ` (${customDetails})` : ""
+                        }`
                 );
             });
         }
 
-        toBeFalse() {
+        toBeFalse(customDetails = undefined) {
             this.__doMatcher(() => {
                 this.__expect(
                     this.target === false,
                     () =>
                         `toBeFalse: expected target to be false, got _${valueToString(
                             this.target
-                        )}_`
+                        )}_${customDetails ?? ""}`
                 );
             });
         }
