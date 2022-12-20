@@ -97,10 +97,10 @@ public:
 
     size_t index_of(Layer const&) const;
 
-    void flip(Gfx::Orientation orientation);
-    void rotate(Gfx::RotationDirection direction);
-    void crop(Gfx::IntRect const& rect);
-    void resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode);
+    ErrorOr<void> flip(Gfx::Orientation orientation);
+    ErrorOr<void> rotate(Gfx::RotationDirection direction);
+    ErrorOr<void> crop(Gfx::IntRect const& rect);
+    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 

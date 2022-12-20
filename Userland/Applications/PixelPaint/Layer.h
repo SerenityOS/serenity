@@ -56,18 +56,23 @@ public:
     DeprecatedString const& name() const { return m_name; }
     void set_name(DeprecatedString);
 
-    void flip(Gfx::Orientation orientation);
-    void rotate(Gfx::RotationDirection direction);
-    void crop(Gfx::IntRect const& rect);
-    void resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode);
-    void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
-    void resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode);
+    enum NotifyClients {
+        YES,
+        NO
+    };
+
+    ErrorOr<void> flip(Gfx::Orientation orientation, NotifyClients notify_clients = NotifyClients::YES);
+    ErrorOr<void> rotate(Gfx::RotationDirection direction, NotifyClients notify_clients = NotifyClients::YES);
+    ErrorOr<void> crop(Gfx::IntRect const& rect, NotifyClients notify_clients = NotifyClients::YES);
+    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::YES);
+    ErrorOr<void> resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::YES);
+    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::YES);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 
     ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
-    void did_modify_bitmap(Gfx::IntRect const& = {});
+    void did_modify_bitmap(Gfx::IntRect const& = {}, NotifyClients notify_clients = NotifyClients::YES);
 
     void set_selected(bool selected) { m_selected = selected; }
     bool is_selected() const { return m_selected; }
