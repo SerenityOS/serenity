@@ -25,6 +25,8 @@ public:
 
     void set_snake_base_color(Color color);
 
+    Function<bool(u32)> on_score_update;
+
 private:
     Game();
 
@@ -53,8 +55,6 @@ private:
     void queue_velocity(int v, int h);
     Velocity const& last_velocity() const;
     Gfx::IntRect cell_rect(Coordinate const&) const;
-    Gfx::IntRect score_rect() const;
-    Gfx::IntRect high_score_rect() const;
 
     int m_rows { 20 };
     int m_columns { 20 };
@@ -72,9 +72,6 @@ private:
 
     size_t m_length { 0 };
     unsigned m_score { 0 };
-    DeprecatedString m_score_text;
-    unsigned m_high_score { 0 };
-    DeprecatedString m_high_score_text;
     bool m_is_new_high_score { false };
 
     NonnullRefPtrVector<Gfx::Bitmap> m_food_bitmaps;

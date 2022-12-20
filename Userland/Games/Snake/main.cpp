@@ -18,6 +18,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -45,13 +46,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_double_buffering_enabled(false);
     window->set_title("Snake");
-    window->resize(324, 344);
+    window->resize(324, 345);
 
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
     widget->load_from_gml(snake_gml);
 
     auto& game = *widget->find_descendant_of_type_named<Snake::Game>("game");
     game.set_focus(true);
+
+    auto high_score = Config::read_u32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
+
+    auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
+    statusbar.set_text(0, "Score: 0"sv);
+    statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score));
+
+    game.on_score_update = [&](auto score) {
+        statusbar.set_text(0, DeprecatedString::formatted("Score: {}", score));
+        if (score <= high_score)
+            return false;
+
+        statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", score));
+        Config::write_u32("Snake"sv, "Snake"sv, "HighScore"sv, score);
+
+        high_score = score;
+        return true;
+    };
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 

@@ -74,8 +74,7 @@ Game::Game()
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
     reset();
-    m_high_score = Config::read_i32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
-    m_high_score_text = DeprecatedString::formatted("Best: {}", m_high_score);
+
     m_snake_base_color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, m_snake_base_color.value()));
 }
 
@@ -96,9 +95,12 @@ void Game::reset()
     m_tail.clear_with_capacity();
     m_length = 2;
     m_score = 0;
-    m_score_text = "Score: 0";
     m_is_new_high_score = false;
     m_velocity_queue.clear();
+
+    if (on_score_update)
+        on_score_update(m_score);
+
     pause();
     start();
     spawn_fruit();
@@ -135,18 +137,6 @@ void Game::spawn_fruit()
     }
     m_fruit = coord;
     m_fruit_type = get_random_uniform(m_food_bitmaps.size());
-}
-
-Gfx::IntRect Game::score_rect() const
-{
-    int score_width = font().width(m_score_text);
-    return { frame_inner_rect().width() - score_width - 2, frame_inner_rect().height() - font().glyph_height() - 2, score_width, font().glyph_height() };
-}
-
-Gfx::IntRect Game::high_score_rect() const
-{
-    int high_score_width = font().width(m_high_score_text);
-    return { frame_thickness() + 2, frame_inner_rect().height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
 }
 
 void Game::timer_event(Core::TimerEvent&)
@@ -191,15 +181,10 @@ void Game::timer_event(Core::TimerEvent&)
     if (m_head == m_fruit) {
         ++m_length;
         ++m_score;
-        m_score_text = DeprecatedString::formatted("Score: {}", m_score);
-        if (m_score > m_high_score) {
-            m_is_new_high_score = true;
-            m_high_score = m_score;
-            m_high_score_text = DeprecatedString::formatted("Best: {}", m_high_score);
-            update(high_score_rect());
-            Config::write_i32("Snake"sv, "Snake"sv, "HighScore"sv, m_high_score);
-        }
-        update(score_rect());
+
+        if (on_score_update)
+            m_is_new_high_score = on_score_update(m_score);
+
         dirty_cells.append(m_fruit);
         spawn_fruit();
         dirty_cells.append(m_fruit);
@@ -279,9 +264,6 @@ void Game::paint_event(GUI::PaintEvent& event)
     }
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type].rect());
-
-    painter.draw_text(high_score_rect(), m_high_score_text, Gfx::TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
-    painter.draw_text(score_rect(), m_score_text, Gfx::TextAlignment::TopLeft, Color::White);
 }
 
 void Game::game_over()
