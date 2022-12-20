@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2022, Thomas Keppler <serenity@tkeppler.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -116,21 +117,23 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     if (Configuration::the().credentials().has_value()) {
         bool has_authenticated = verify_credentials(request.headers());
         if (!has_authenticated) {
-            TRY(send_error_response(401, request, { "WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\"" }));
+            auto const basic_auth_header = TRY(String::from_utf8("WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\""sv));
+            Vector<String> headers {};
+            TRY(headers.try_append(basic_auth_header));
+            TRY(send_error_response(401, request, move(headers)));
             return false;
         }
     }
 
-    auto requested_path = LexicalPath::join("/"sv, resource_decoded).string();
+    auto requested_path = TRY(String::from_deprecated_string(LexicalPath::join("/"sv, resource_decoded).string()));
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
     path_builder.append(Configuration::the().document_root_path());
     path_builder.append(requested_path);
-    auto real_path = path_builder.to_deprecated_string();
+    auto real_path = TRY(path_builder.to_string());
 
-    if (Core::File::is_directory(real_path)) {
-
+    if (Core::File::is_directory(real_path.bytes_as_string_view())) {
         if (!resource_decoded.ends_with('/')) {
             StringBuilder red;
 
@@ -144,7 +147,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         StringBuilder index_html_path_builder;
         index_html_path_builder.append(real_path);
         index_html_path_builder.append("/index.html"sv);
-        auto index_html_path = index_html_path_builder.to_deprecated_string();
+        auto index_html_path = TRY(index_html_path_builder.to_string());
         if (!Core::File::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
@@ -152,7 +155,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         real_path = index_html_path;
     }
 
-    auto file = Core::File::construct(real_path);
+    auto file = Core::File::construct(real_path.bytes_as_string_view());
     if (!file->open(Core::OpenMode::ReadOnly)) {
         TRY(send_error_response(404, request));
         return false;
@@ -165,7 +168,11 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
     Core::InputFileStream stream { file };
 
-    TRY(send_response(stream, request, { .type = Core::guess_mime_type_based_on_filename(real_path), .length = TRY(Core::File::size(real_path)) }));
+    auto const info = ContentInfo {
+        .type = TRY(String::from_deprecated_string(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
+        .length = TRY(Core::File::size(real_path.bytes_as_string_view()))
+    };
+    TRY(send_response(stream, request, move(info)));
     return true;
 }
 
@@ -255,7 +262,7 @@ static DeprecatedString file_image_data()
     return cache;
 }
 
-ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested_path, DeprecatedString const& real_path, HTTP::HttpRequest const& request)
+ErrorOr<void> Client::handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
 
@@ -278,7 +285,7 @@ ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested
     builder.append("<hr>\n"sv);
     builder.append("<code><table>\n"sv);
 
-    Core::DirIterator dt(real_path);
+    Core::DirIterator dt(real_path.bytes_as_string_view());
     Vector<DeprecatedString> names;
     while (dt.has_next())
         names.append(dt.next_path());
@@ -331,10 +338,10 @@ ErrorOr<void> Client::handle_directory_listing(DeprecatedString const& requested
 
     auto response = builder.to_deprecated_string();
     InputMemoryStream stream { response.bytes() };
-    return send_response(stream, request, { .type = "text/html", .length = response.length() });
+    return send_response(stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
 }
 
-ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<DeprecatedString> const& headers)
+ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)
 {
     auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
 
