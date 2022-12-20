@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2022, Thomas Keppler <serenity@tkeppler.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -20,15 +22,15 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    DeprecatedString default_listen_address = "0.0.0.0";
-    u16 default_port = 8000;
-    DeprecatedString default_document_root_path = "/www";
+    static auto const default_listen_address = TRY(String::from_utf8("0.0.0.0"sv));
+    static auto const default_port = 8000;
+    static auto const default_document_root_path = TRY(String::from_utf8("/www"sv));
 
-    DeprecatedString listen_address = default_listen_address;
+    DeprecatedString listen_address = default_listen_address.to_deprecated_string();
     int port = default_port;
     DeprecatedString username;
     DeprecatedString password;
-    DeprecatedString document_root_path = default_document_root_path;
+    DeprecatedString document_root_path = default_document_root_path.to_deprecated_string();
 
     Core::ArgsParser args_parser;
     args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address");
