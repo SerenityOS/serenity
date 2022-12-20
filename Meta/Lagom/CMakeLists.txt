@@ -443,13 +443,6 @@ if (BUILD_LAGOM)
         # Lagom Services
         add_serenity_subdirectory(Userland/Services)
 
-        # Lagom Examples
-        add_executable(TestApp TestApp.cpp)
-        target_link_libraries(TestApp LibCore)
-
-        add_executable(TestJson TestJson.cpp)
-        target_link_libraries(TestJson LibCore)
-
         # Lagom Utilities
         if (NOT EMSCRIPTEN)
             add_executable(adjtime ../../Userland/Utilities/adjtime.cpp)
