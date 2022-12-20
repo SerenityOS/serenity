@@ -706,6 +706,107 @@ static inline bool exception_class_has_set_far(u8 exception_class)
     }
 }
 
+static inline bool exception_class_is_data_abort(u8 exception_class)
+{
+    return exception_class == 0x24 || exception_class == 0x25;
+}
+
+// D17.2.37 ESR_EL1, Exception Syndrome Register (EL1)
+// ISS encoding for an exception from a Data Abort
+// DFSC, bits [5:0]
+static inline StringView data_fault_status_code_to_string(u32 instruction_specific_syndrome)
+{
+    u8 data_fault_status_code = instruction_specific_syndrome & 0x3f;
+    switch (data_fault_status_code) {
+    case 0b000000:
+        return "Address size fault, level 0 of translation or translation table base register"sv;
+    case 0b000001:
+        return "Address size fault, level 1"sv;
+    case 0b000010:
+        return "Address size fault, level 2"sv;
+    case 0b000011:
+        return "Address size fault, level 3"sv;
+    case 0b000100:
+        return "Translation fault, level 0"sv;
+    case 0b000101:
+        return "Translation fault, level 1"sv;
+    case 0b000110:
+        return "Translation fault, level 2"sv;
+    case 0b000111:
+        return "Translation fault, level 3"sv;
+    case 0b001001:
+        return "Access flag fault, level 1"sv;
+    case 0b001010:
+        return "Access flag fault, level 2"sv;
+    case 0b001011:
+        return "Access flag fault, level 3"sv;
+    case 0b001000:
+        return "Access flag fault, level 0"sv;
+    case 0b001100:
+        return "Permission fault, level 0"sv;
+    case 0b001101:
+        return "Permission fault, level 1"sv;
+    case 0b001110:
+        return "Permission fault, level 2"sv;
+    case 0b001111:
+        return "Permission fault, level 3"sv;
+    case 0b010000:
+        return "Synchronous External abort, not on translation table walk or hardware update of translation table"sv;
+    case 0b010001:
+        return "Synchronous Tag Check Fault"sv;
+    case 0b010011:
+        return "Synchronous External abort on translation table walk or hardware update of translation table, level -1"sv;
+    case 0b010100:
+        return "Synchronous External abort on translation table walk or hardware update of translation table, level 0"sv;
+    case 0b010101:
+        return "Synchronous External abort on translation table walk or hardware update of translation table, level 1"sv;
+    case 0b010110:
+        return "Synchronous External abort on translation table walk or hardware update of translation table, level 2"sv;
+    case 0b010111:
+        return "Synchronous External abort on translation table walk or hardware update of translation table, level 3"sv;
+    case 0b011000:
+        return "Synchronous parity or ECC error on memory access, not on translation table walk"sv;
+    case 0b011011:
+        return "Synchronous parity or ECC error on memory access on translation table walk or hardware update of translation table, level -1"sv;
+    case 0b011100:
+        return "Synchronous parity or ECC error on memory access on translation table walk or hardware update of translation table, level 0"sv;
+    case 0b011101:
+        return "Synchronous parity or ECC error on memory access on translation table walk or hardware update of translation table, level 1"sv;
+    case 0b011110:
+        return "Synchronous parity or ECC error on memory access on translation table walk or hardware update of translation table, level 2"sv;
+    case 0b011111:
+        return "Synchronous parity or ECC error on memory access on translation table walk or hardware update of translation table, level 3"sv;
+    case 0b100001:
+        return "Alignment fault"sv;
+    case 0b100011:
+        return "Granule Protection Fault on translation table walk or hardware update of translation table, level -1"sv;
+    case 0b100100:
+        return "Granule Protection Fault on translation table walk or hardware update of translation table, level 0"sv;
+    case 0b100101:
+        return "Granule Protection Fault on translation table walk or hardware update of translation table, level 1"sv;
+    case 0b100110:
+        return "Granule Protection Fault on translation table walk or hardware update of translation table, level 2"sv;
+    case 0b100111:
+        return "Granule Protection Fault on translation table walk or hardware update of translation table, level 3"sv;
+    case 0b101000:
+        return "Granule Protection Fault, not on translation table walk or hardware update of translation table"sv;
+    case 0b101001:
+        return "Address size fault, level -1"sv;
+    case 0b101011:
+        return "Translation fault, level -1"sv;
+    case 0b110000:
+        return "TLB conflict abort"sv;
+    case 0b110001:
+        return "Unsupported atomic hardware update fault"sv;
+    case 0b110100:
+        return "IMPLEMENTATION DEFINED fault (Lockdown)"sv;
+    case 0b110101:
+        return "IMPLEMENTATION DEFINED fault (Unsupported Exclusive or Atomic access)"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 // https://developer.arm.com/documentation/ddi0601/2020-12/AArch64-Registers/DAIF--Interrupt-Mask-Bits?lang=en
 // DAIF, Interrupt Mask Bits
 struct DAIF {
