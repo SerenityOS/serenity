@@ -134,6 +134,7 @@
     A(UCR)                        \
     A(UseBlackPTComp)             \
     A(UserUnit)                   \
+    A(V)                          \
     A(W)                          \
     A(WhitePoint)                 \
     A(Width)                      \
