@@ -67,11 +67,14 @@ enum I8042Response : u8 {
 };
 
 class I8042Controller;
+class PS2KeyboardDevice;
+class PS2MouseDevice;
 class I8042Device {
 public:
     virtual ~I8042Device() = default;
 
     virtual void irq_handle_byte_read(u8 byte) = 0;
+    virtual void enable_interrupts() = 0;
 
 protected:
     explicit I8042Device(I8042Controller const& ps2_controller)
@@ -156,8 +159,8 @@ private:
     bool m_first_port_available { false };
     bool m_second_port_available { false };
     bool m_is_dual_channel { false };
-    LockRefPtr<MouseDevice> m_mouse_device;
-    LockRefPtr<KeyboardDevice> m_keyboard_device;
+    LockRefPtr<PS2MouseDevice> m_mouse_device;
+    LockRefPtr<PS2KeyboardDevice> m_keyboard_device;
 };
 
 }
