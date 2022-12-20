@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 namespace Kernel::Aarch64 {
@@ -486,6 +487,89 @@ struct ESR_EL1 {
     }
 };
 static_assert(sizeof(ESR_EL1) == 8);
+
+// D17.2.37 ESR_EL1, Exception Syndrome Register (EL1)
+static inline StringView exception_class_to_string(u8 exception_class)
+{
+    switch (exception_class) {
+    case 0b000000:
+        return "Unknown reason"sv;
+    case 0b000001:
+        return "Trapped WF* instruction execution"sv;
+    case 0b000011:
+        return "Trapped MCR or MRC access with (coproc==0b1111) that is not reported using EC 0b000000"sv;
+    case 0b000100:
+        return "Trapped MCRR or MRRC access with (coproc==0b1111) that is not reported using EC 0b000000"sv;
+    case 0b000101:
+        return "Trapped MCR or MRC access with (coproc==0b1110)"sv;
+    case 0b000110:
+        return "Trapped LDC or STC access"sv;
+    case 0b000111:
+        return "Access to SME, SVE, Advanced SIMD or floating-point functionality trapped by CPACR_EL1.FPEN, CPTR_EL2.FPEN, CPTR_EL2.TFP, or CPTR_EL3.TFP control"sv;
+    case 0b001010:
+        return "Trapped execution of an LD64B or ST64B* instruction"sv;
+    case 0b001100:
+        return "Trapped MRRC access with (coproc==0b1110)"sv;
+    case 0b001101:
+        return "Branch Target Exception"sv;
+    case 0b001110:
+        return "Illegal Execution state"sv;
+    case 0b010001:
+        return "SVC instruction execution in AArch32 state"sv;
+    case 0b010101:
+        return "SVC instruction execution in AArch64 state"sv;
+    case 0b011000:
+        return "Trapped MSR, MRS or System instruction execution in AArch64 state, that is not reported using EC 0b000000, 0b000001, or 0b000111"sv;
+    case 0b011001:
+        return "Access to SVE functionality trapped as a result of CPACR_EL1.ZEN, CPTR_EL2.ZEN, CPTR_EL2.TZ, or CPTR_EL3.EZ, that is not reported using EC 0b000000"sv;
+    case 0b011011:
+        return "Exception from an access to a TSTART instruction at EL0 when SCTLR_EL1.TME0 == 0, EL0 when SCTLR_EL2.TME0 == 0, at EL1 when SCTLR_EL1.TME == 0, at EL2 when SCTLR_EL2.TME == 0 or at EL3 when SCTLR_EL3.TME == 0"sv;
+    case 0b011100:
+        return "Exception from a Pointer Authentication instruction authentication failure"sv;
+    case 0b011101:
+        return "Access to SME functionality trapped as a result of CPACR_EL1.SMEN, CPTR_EL2.SMEN, CPTR_EL2.TSM, CPTR_EL3.ESM, or an attempted execution of an instruction that is illegal because of the value of PSTATE.SM or PSTATE.ZA, that is not reported using EC 0b000000"sv;
+    case 0b011110:
+        return "Exception from a Granule Protection Check"sv;
+    case 0b100000:
+        return "Instruction Abort from a lower Exception level"sv;
+    case 0b100001:
+        return "Instruction Abort taken without a change in Exception level"sv;
+    case 0b100010:
+        return "PC alignment fault exception"sv;
+    case 0b100100:
+        return "Data Abort exception from a lower Exception level"sv;
+    case 0b100101:
+        return "Data Abort exception taken without a change in Exception level"sv;
+    case 0b100110:
+        return "SP alignment fault exception"sv;
+    case 0b100111:
+        return "Memory Operation Exception"sv;
+    case 0b101000:
+        return "Trapped floating-point exception taken from AArch32 state"sv;
+    case 0b101100:
+        return "Trapped floating-point exception taken from AArch64 state"sv;
+    case 0b101111:
+        return "SError interrupt"sv;
+    case 0b110000:
+        return "Breakpoint exception from a lower Exception level"sv;
+    case 0b110001:
+        return "Breakpoint exception taken without a change in Exception level"sv;
+    case 0b110010:
+        return "Software Step exception from a lower Exception level"sv;
+    case 0b110011:
+        return "Software Step exception taken without a change in Exception level"sv;
+    case 0b110100:
+        return "Watchpoint exception from a lower Exception level"sv;
+    case 0b110101:
+        return "Watchpoint exception taken without a change in Exception level"sv;
+    case 0b111000:
+        return "BKPT instruction execution in AArch32 state"sv;
+    case 0b111100:
+        return "BRK instruction execution in AArch64 state"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 // https://developer.arm.com/documentation/ddi0601/2020-12/AArch64-Registers/DAIF--Interrupt-Mask-Bits?lang=en
 // DAIF, Interrupt Mask Bits
