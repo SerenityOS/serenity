@@ -37,6 +37,10 @@ void Listener::config_i32_did_change(DeprecatedString const&, DeprecatedString c
 {
 }
 
+void Listener::config_u32_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, u32)
+{
+}
+
 void Listener::config_bool_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, bool)
 {
 }

@@ -50,6 +50,11 @@ i32 Client::read_i32(StringView domain, StringView group, StringView key, i32 fa
     return read_i32_value(domain, group, key).value_or(fallback);
 }
 
+u32 Client::read_u32(StringView domain, StringView group, StringView key, u32 fallback)
+{
+    return read_u32_value(domain, group, key).value_or(fallback);
+}
+
 bool Client::read_bool(StringView domain, StringView group, StringView key, bool fallback)
 {
     return read_bool_value(domain, group, key).value_or(fallback);
@@ -63,6 +68,11 @@ void Client::write_string(StringView domain, StringView group, StringView key, S
 void Client::write_i32(StringView domain, StringView group, StringView key, i32 value)
 {
     write_i32_value(domain, group, key, value);
+}
+
+void Client::write_u32(StringView domain, StringView group, StringView key, u32 value)
+{
+    write_u32_value(domain, group, key, value);
 }
 
 void Client::write_bool(StringView domain, StringView group, StringView key, bool value)
@@ -96,6 +106,13 @@ void Client::notify_changed_i32_value(DeprecatedString const& domain, Deprecated
 {
     Listener::for_each([&](auto& listener) {
         listener.config_i32_did_change(domain, group, key, value);
+    });
+}
+
+void Client::notify_changed_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_u32_did_change(domain, group, key, value);
     });
 }
 

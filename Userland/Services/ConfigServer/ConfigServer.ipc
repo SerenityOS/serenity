@@ -9,10 +9,12 @@ endpoint ConfigServer
 
     read_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<DeprecatedString> value)
     read_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<i32> value)
+    read_u32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<u32> value)
     read_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<bool> value)
 
     write_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, DeprecatedString value) => ()
     write_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, i32 value) => ()
+    write_u32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, u32 value) => ()
     write_bool_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key, bool value)  => ()
     remove_key_entry(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => ()
     remove_group_entry(DeprecatedString domain, DeprecatedString group) => ()
