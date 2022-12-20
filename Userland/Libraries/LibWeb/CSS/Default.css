@@ -616,9 +616,114 @@ legend[align=right i] {
     justify-self: right;
 }
 
+/* 15.3.8 Embedded content
+ * https://html.spec.whatwg.org/multipage/rendering.html#tables-2
+ */
+
+table {
+    display: table;
+}
+
+caption {
+    display: table-caption;
+}
+
+colgroup, colgroup[hidden] {
+    display: table-column-group;
+}
+
+col, col[hidden] {
+    display: table-column;
+}
+
+thead, thead[hidden] {
+    display: table-header-group;
+}
+
+tbody, tbody[hidden] {
+    display: table-row-group;
+}
+
+tfoot, tfoot[hidden] {
+    display: table-footer-group;
+}
+
+tr, tr[hidden] {
+    display: table-row;
+}
+
+td, th {
+    display: table-cell;
+}
+
+colgroup[hidden], col[hidden], thead[hidden], tbody[hidden],
+tfoot[hidden], tr[hidden] {
+    visibility: collapse;
+}
+
+table {
+    box-sizing: border-box;
+    border-spacing: 2px;
+    border-collapse: separate;
+    text-indent: initial;
+}
+
+td, th {
+    padding: 1px;
+}
+
+th {
+    font-weight: bold;
+}
+
+caption {
+    text-align: center;
+}
+
+thead, tbody, tfoot, table > tr {
+    vertical-align: middle;
+}
+
+tr, td, th {
+    vertical-align: inherit;
+}
+
+thead, tbody, tfoot, tr {
+    border-color: inherit;
+}
+
+table[rules=none i], table[rules=groups i], table[rules=rows i],
+table[rules=cols i], table[rules=all i], table[frame=void i],
+table[frame=above i], table[frame=below i], table[frame=hsides i],
+table[frame=lhs i], table[frame=rhs i], table[frame=vsides i],
+table[frame=box i], table[frame=border i],
+table[rules=none i] > tr > td, table[rules=none i] > tr > th,
+table[rules=groups i] > tr > td, table[rules=groups i] > tr > th,
+table[rules=rows i] > tr > td, table[rules=rows i] > tr > th,
+table[rules=cols i] > tr > td, table[rules=cols i] > tr > th,
+table[rules=all i] > tr > td, table[rules=all i] > tr > th,
+table[rules=none i] > thead > tr > td, table[rules=none i] > thead > tr > th,
+table[rules=groups i] > thead > tr > td, table[rules=groups i] > thead > tr > th,
+table[rules=rows i] > thead > tr > td, table[rules=rows i] > thead > tr > th,
+table[rules=cols i] > thead > tr > td, table[rules=cols i] > thead > tr > th,
+table[rules=all i] > thead > tr > td, table[rules=all i] > thead > tr > th,
+table[rules=none i] > tbody > tr > td, table[rules=none i] > tbody > tr > th,
+table[rules=groups i] > tbody > tr > td, table[rules=groups i] > tbody > tr > th,
+table[rules=rows i] > tbody > tr > td, table[rules=rows i] > tbody > tr > th,
+table[rules=cols i] > tbody > tr > td, table[rules=cols i] > tbody > tr > th,
+table[rules=all i] > tbody > tr > td, table[rules=all i] > tbody > tr > th,
+table[rules=none i] > tfoot > tr > td, table[rules=none i] > tfoot > tr > th,
+table[rules=groups i] > tfoot > tr > td, table[rules=groups i] > tfoot > tr > th,
+table[rules=rows i] > tfoot > tr > td, table[rules=rows i] > tfoot > tr > th,
+table[rules=cols i] > tfoot > tr > td, table[rules=cols i] > tfoot > tr > th,
+table[rules=all i] > tfoot > tr > td, table[rules=all i] > tfoot > tr > th {
+    border-color: black;
+}
+
 /* 15.4.1 Embedded content
  * https://html.spec.whatwg.org/multipage/rendering.html#embedded-content-rendering-rules
  */
+
 iframe {
     border: 2px inset;
 }
