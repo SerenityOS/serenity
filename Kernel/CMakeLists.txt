@@ -671,6 +671,10 @@ endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     add_compile_options(-fno-threadsafe-statics)
+
+    # Unaligned memory access will cause a trap, so to make sure the compiler doesn't generate
+    # those unaligned accesses, this flag is added.
+    add_compile_options(-mstrict-align -Wno-cast-align)
 endif()
 
 add_compile_definitions(KERNEL)
