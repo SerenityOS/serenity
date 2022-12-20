@@ -488,6 +488,22 @@ struct ESR_EL1 {
 };
 static_assert(sizeof(ESR_EL1) == 8);
 
+// D17.2.40 FAR_EL1, Fault Address Register (EL1)
+struct FAR_EL1 {
+    u64 virtual_address;
+
+    static inline FAR_EL1 read()
+    {
+        FAR_EL1 far_el1;
+
+        asm("mrs %[value], far_el1"
+            : [value] "=r"(far_el1));
+
+        return far_el1;
+    }
+};
+static_assert(sizeof(FAR_EL1) == 8);
+
 // D17.2.37 ESR_EL1, Exception Syndrome Register (EL1)
 static inline StringView exception_class_to_string(u8 exception_class)
 {
@@ -568,6 +584,27 @@ static inline StringView exception_class_to_string(u8 exception_class)
         return "BRK instruction execution in AArch64 state"sv;
     default:
         VERIFY_NOT_REACHED();
+    }
+}
+
+// D17.2.40 FAR_EL1, Fault Address Register (EL1)
+static inline bool exception_class_has_set_far(u8 exception_class)
+{
+    // Faulting Virtual Address for synchronous exceptions taken to EL1. Exceptions that set the
+    // FAR_EL1 are Instruction Aborts (EC 0x20 or 0x21), Data Aborts (EC 0x24 or 0x25), PC alignment
+    // faults (EC 0x22), and Watchpoints (EC 0x34 or 0x35). ESR_EL1.EC holds the EC value for the
+    // exception.
+    switch (exception_class) {
+    case 0x20:
+    case 0x21:
+    case 0x22:
+    case 0x24:
+    case 0x25:
+    case 0x34:
+    case 0x35:
+        return true;
+    default:
+        return false;
     }
 }
 
