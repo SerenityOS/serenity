@@ -150,15 +150,6 @@ DeprecatedString ConfigFile::read_entry(DeprecatedString const& group, Deprecate
     return jt->value;
 }
 
-int ConfigFile::read_num_entry(DeprecatedString const& group, DeprecatedString const& key, int default_value) const
-{
-    if (!has_key(group, key)) {
-        return default_value;
-    }
-
-    return read_entry(group, key).to_int().value_or(default_value);
-}
-
 bool ConfigFile::read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value) const
 {
     auto value = read_entry(group, key, default_value ? "true" : "false");
@@ -169,11 +160,6 @@ void ConfigFile::write_entry(DeprecatedString const& group, DeprecatedString con
 {
     m_groups.ensure(group).ensure(key) = value;
     m_dirty = true;
-}
-
-void ConfigFile::write_num_entry(DeprecatedString const& group, DeprecatedString const& key, int value)
-{
-    write_entry(group, key, DeprecatedString::number(value));
 }
 
 void ConfigFile::write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value)

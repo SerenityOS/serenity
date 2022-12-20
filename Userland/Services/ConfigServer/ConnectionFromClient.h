@@ -31,9 +31,11 @@ private:
     virtual Messages::ConfigServer::ListConfigKeysResponse list_config_keys([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group) override;
     virtual Messages::ConfigServer::ReadStringValueResponse read_string_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key) override;
     virtual Messages::ConfigServer::ReadI32ValueResponse read_i32_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key) override;
+    virtual Messages::ConfigServer::ReadU32ValueResponse read_u32_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key) override;
     virtual Messages::ConfigServer::ReadBoolValueResponse read_bool_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key) override;
     virtual void write_string_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key, [[maybe_unused]] DeprecatedString const& value) override;
     virtual void write_i32_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key, [[maybe_unused]] i32 value) override;
+    virtual void write_u32_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key, [[maybe_unused]] u32 value) override;
     virtual void write_bool_value([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key, [[maybe_unused]] bool value) override;
     virtual void remove_key_entry([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group, [[maybe_unused]] DeprecatedString const& key) override;
     virtual void remove_group_entry([[maybe_unused]] DeprecatedString const& domain, [[maybe_unused]] DeprecatedString const& group) override;

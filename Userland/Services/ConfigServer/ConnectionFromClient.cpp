@@ -173,6 +173,17 @@ Messages::ConfigServer::ReadI32ValueResponse ConnectionFromClient::read_i32_valu
     return Optional<i32> { config.read_num_entry(group, key) };
 }
 
+Messages::ConfigServer::ReadU32ValueResponse ConnectionFromClient::read_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+{
+    if (!validate_access(domain, group, key))
+        return nullptr;
+
+    auto& config = ensure_domain_config(domain);
+    if (!config.has_key(group, key))
+        return Optional<u32> {};
+    return Optional<u32> { config.read_num_entry<u32>(group, key) };
+}
+
 Messages::ConfigServer::ReadBoolValueResponse ConnectionFromClient::read_bool_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
 {
     if (!validate_access(domain, group, key))
@@ -227,6 +238,25 @@ void ConnectionFromClient::write_i32_value(DeprecatedString const& domain, Depre
 
     for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
         connection.async_notify_changed_i32_value(domain, group, key, value);
+    });
+}
+
+void ConnectionFromClient::write_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value)
+{
+    if (!validate_access(domain, group, key))
+        return;
+
+    auto& config = ensure_domain_config(domain);
+
+    if (config.has_key(group, key) && config.read_num_entry<u32>(group, key) == value)
+        return;
+
+    config.write_num_entry(group, key, value);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
+
+    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
+        connection.async_notify_changed_u32_value(domain, group, key, value);
     });
 }
 

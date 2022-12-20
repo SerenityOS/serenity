@@ -42,12 +42,28 @@ public:
     size_t num_groups() const { return m_groups.size(); }
 
     DeprecatedString read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value = DeprecatedString()) const;
-    int read_num_entry(DeprecatedString const& group, DeprecatedString const& key, int default_value = 0) const;
     bool read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value = false) const;
 
+    template<Integral T = int>
+    T read_num_entry(DeprecatedString const& group, DeprecatedString const& key, T default_value = 0) const
+    {
+        if (!has_key(group, key))
+            return default_value;
+
+        if constexpr (IsSigned<T>)
+            return read_entry(group, key).to_int<T>().value_or(default_value);
+        else
+            return read_entry(group, key).to_uint<T>().value_or(default_value);
+    }
+
     void write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value);
-    void write_num_entry(DeprecatedString const& group, DeprecatedString const& key, int value);
     void write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value);
+
+    template<Integral T = int>
+    void write_num_entry(DeprecatedString const& group, DeprecatedString const& key, T value)
+    {
+        write_entry(group, key, DeprecatedString::number(value));
+    }
 
     void dump() const;
 

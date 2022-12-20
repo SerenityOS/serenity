@@ -29,10 +29,12 @@ public:
 
     DeprecatedString read_string(StringView domain, StringView group, StringView key, StringView fallback);
     i32 read_i32(StringView domain, StringView group, StringView key, i32 fallback);
+    u32 read_u32(StringView domain, StringView group, StringView key, u32 fallback);
     bool read_bool(StringView domain, StringView group, StringView key, bool fallback);
 
     void write_string(StringView domain, StringView group, StringView key, StringView value);
     void write_i32(StringView domain, StringView group, StringView key, i32 value);
+    void write_u32(StringView domain, StringView group, StringView key, u32 value);
     void write_bool(StringView domain, StringView group, StringView key, bool value);
     void remove_key(StringView domain, StringView group, StringView key);
     void remove_group(StringView domain, StringView group);
@@ -48,6 +50,7 @@ private:
 
     void notify_changed_string_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
     void notify_changed_i32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value) override;
+    void notify_changed_u32_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value) override;
     void notify_changed_bool_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
     void notify_removed_key(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key) override;
     void notify_removed_group(DeprecatedString const& domain, DeprecatedString const& group) override;
@@ -74,6 +77,11 @@ inline i32 read_i32(StringView domain, StringView group, StringView key, i32 fal
     return Client::the().read_i32(domain, group, key, fallback);
 }
 
+inline u32 read_u32(StringView domain, StringView group, StringView key, u32 fallback = 0)
+{
+    return Client::the().read_u32(domain, group, key, fallback);
+}
+
 inline bool read_bool(StringView domain, StringView group, StringView key, bool fallback = false)
 {
     return Client::the().read_bool(domain, group, key, fallback);
@@ -87,6 +95,11 @@ inline void write_string(StringView domain, StringView group, StringView key, St
 inline void write_i32(StringView domain, StringView group, StringView key, i32 value)
 {
     Client::the().write_i32(domain, group, key, value);
+}
+
+inline void write_u32(StringView domain, StringView group, StringView key, u32 value)
+{
+    Client::the().write_u32(domain, group, key, value);
 }
 
 inline void write_bool(StringView domain, StringView group, StringView key, bool value)
