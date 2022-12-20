@@ -1242,6 +1242,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         bool justification_is_centered = false;
 
         switch (flex_container().computed_values().justify_content()) {
+        case CSS::JustifyContent::Start:
         case CSS::JustifyContent::FlexStart:
             if (is_direction_reverse()) {
                 flex_region_render_cursor = FlexRegionRenderCursor::Right;
@@ -1250,6 +1251,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 initial_offset = 0;
             }
             break;
+        case CSS::JustifyContent::End:
         case CSS::JustifyContent::FlexEnd:
             if (is_direction_reverse()) {
                 initial_offset = 0;
@@ -2013,6 +2015,20 @@ Gfx::FloatPoint FlexFormattingContext::calculate_static_position(Box const& box)
     bool pack_from_end = true;
     float main_offset = 0;
     switch (flex_container().computed_values().justify_content()) {
+    case CSS::JustifyContent::Start:
+        if (is_direction_reverse()) {
+            main_offset = specified_main_size(flex_container());
+        } else {
+            main_offset = 0;
+        }
+        break;
+    case CSS::JustifyContent::End:
+        if (is_direction_reverse()) {
+            main_offset = 0;
+        } else {
+            main_offset = specified_main_size(flex_container());
+        }
+        break;
     case CSS::JustifyContent::FlexStart:
         if (is_direction_reverse()) {
             pack_from_end = false;

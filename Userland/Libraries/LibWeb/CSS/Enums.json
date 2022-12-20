@@ -138,6 +138,8 @@
         "optimizequality=smooth"
     ],
     "justify-content": [
+        "start",
+        "end",
         "flex-start",
         "flex-end",
         "center",
