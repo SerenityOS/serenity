@@ -219,6 +219,8 @@ public:
                     color_stop_step(stop_list[i], stop_list[i + 1], relative_loc));
             }
             m_gradient_line_colors[loc] = gradient_color;
+            if (gradient_color.alpha() < 255)
+                m_requires_blending = true;
         }
     }
 
@@ -245,18 +247,19 @@ public:
 
     void paint_into_rect(Gfx::Painter& painter, DevicePixelRect rect, auto location_transform)
     {
-        for (DevicePixels y = 0; y < rect.height(); y++) {
-            for (DevicePixels x = 0; x < rect.width(); x++) {
-                auto gradient_color = sample_color(location_transform(x, y));
-                painter.set_pixel((rect.x() + x).value(), (rect.y() + y).value(), gradient_color, gradient_color.alpha() < 255);
-            }
-        }
+        painter.fill_pixels(
+            rect.to_type<int>(), [&](auto point) {
+                return sample_color(location_transform(point.x(), point.y()));
+            },
+            m_requires_blending);
     }
 
 private:
     bool m_repeating;
     int m_start_offset;
     Vector<Gfx::Color, 1024> m_gradient_line_colors;
+
+    bool m_requires_blending = false;
 };
 
 void paint_linear_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, LinearGradientData const& data)
