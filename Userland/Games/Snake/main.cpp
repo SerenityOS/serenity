@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SnakeGame.h"
+#include "Game.h"
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Snake");
     window->resize(324, 344);
 
-    auto game = TRY(SnakeGame::create());
+    auto game = TRY(Snake::Game::create());
     window->set_main_widget(game);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));

@@ -11,12 +11,14 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Frame.h>
 
-class SnakeGame : public GUI::Frame {
-    C_OBJECT(SnakeGame);
+namespace Snake {
+
+class Game : public GUI::Frame {
+    C_OBJECT(Game);
 
 public:
-    static ErrorOr<NonnullRefPtr<SnakeGame>> create();
-    virtual ~SnakeGame() override = default;
+    static ErrorOr<NonnullRefPtr<Game>> create();
+    virtual ~Game() override = default;
 
     void start();
     void pause();
@@ -25,7 +27,7 @@ public:
     void set_snake_base_color(Color color);
 
 private:
-    explicit SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
+    explicit Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
@@ -80,3 +82,5 @@ private:
 
     Gfx::Color m_snake_base_color { Color::Yellow };
 };
+
+}
