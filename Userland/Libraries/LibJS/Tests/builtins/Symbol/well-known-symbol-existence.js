@@ -12,4 +12,5 @@ test("basic functionality", () => {
     expect(Symbol).toHaveProperty("species");
     expect(Symbol).toHaveProperty("toPrimitive");
     expect(Symbol).toHaveProperty("toStringTag");
+    expect(Symbol).toHaveProperty("dispose");
 });
