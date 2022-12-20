@@ -85,6 +85,7 @@
     M(ModuleNotFound, "Cannot find/open module: '{}'")                                                                                  \
     M(ModuleNotFoundNoReferencingScript, "Cannot resolve module {} without any active script or module")                                \
     M(NegativeExponent, "Exponent must be positive")                                                                                    \
+    M(NoDisposeMethod, "{} does not have dispose method")                                                                               \
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \
     M(NotAFunction, "{} is not a function")                                                                                             \

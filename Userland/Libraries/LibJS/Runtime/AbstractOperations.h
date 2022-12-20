@@ -42,6 +42,17 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(VM&, FunctionObject co
 Object* create_unmapped_arguments_object(VM&, Span<Value> arguments);
 Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionParameter> const&, Span<Value> arguments, Environment&);
 
+struct DisposableResource {
+    Value resource_value;
+    NonnullGCPtr<FunctionObject> dispose_method;
+};
+ThrowCompletionOr<void> add_disposable_resource(VM&, Vector<DisposableResource>& disposable, Value, Environment::InitializeBindingHint, FunctionObject* = nullptr);
+ThrowCompletionOr<DisposableResource> create_disposable_resource(VM&, Value, Environment::InitializeBindingHint, FunctionObject* method = nullptr);
+ThrowCompletionOr<GCPtr<FunctionObject>> get_dispose_method(VM&, Value, Environment::InitializeBindingHint);
+Completion dispose(VM& vm, Value, NonnullGCPtr<FunctionObject> method);
+Completion dispose_resources(VM& vm, Vector<DisposableResource> const& disposable, Completion completion);
+Completion dispose_resources(VM& vm, GCPtr<DeclarativeEnvironment> disposable, Completion completion);
+
 enum class CanonicalIndexMode {
     DetectNumericRoundtrip,
     IgnoreNumericRoundtrip,

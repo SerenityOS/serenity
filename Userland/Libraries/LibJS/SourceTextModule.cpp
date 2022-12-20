@@ -687,13 +687,20 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
         auto result = m_ecmascript_code->execute(vm.interpreter());
 
-        // d. Suspend moduleContext and remove it from the execution context stack.
+        // d. Let env be moduleContext's LexicalEnvironment.
+        auto* env = module_context.lexical_environment;
+        VERIFY(is<DeclarativeEnvironment>(*env));
+
+        // e. Set result to DisposeResources(env, result).
+        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
+
+        // f. Suspend moduleContext and remove it from the execution context stack.
         vm.pop_execution_context();
 
-        // e. Resume the context that is now on the top of the execution context stack as the running execution context.
+        // g. Resume the context that is now on the top of the execution context stack as the running execution context.
         // FIXME: We don't have resume yet.
 
-        // f. If result is an abrupt completion, then
+        // h. If result is an abrupt completion, then
         if (result.is_error()) {
             // i. Return ? result.
             return result;

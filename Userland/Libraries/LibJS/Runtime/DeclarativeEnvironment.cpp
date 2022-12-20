@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -42,6 +43,11 @@ void DeclarativeEnvironment::visit_edges(Visitor& visitor)
     Base::visit_edges(visitor);
     for (auto& binding : m_bindings)
         visitor.visit(binding.value);
+
+    for (auto& disposable : m_disposable_resource_stack) {
+        visitor.visit(disposable.resource_value);
+        visitor.visit(disposable.dispose_method);
+    }
 }
 
 // 9.1.1.1.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n
@@ -97,7 +103,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(VM&, De
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
 // 4.1.1.1.1 InitializeBinding ( N, V, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-declarative-environment-records
-ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM&, DeprecatedFlyString const& name, Value value, Environment::InitializeBindingHint)
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM& vm, DeprecatedFlyString const& name, Value value, Environment::InitializeBindingHint hint)
 {
     auto binding_and_index = find_binding_and_index(name);
     VERIFY(binding_and_index.has_value());
@@ -106,7 +112,9 @@ ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM&, Deprecat
     // 1. Assert: envRec must have an uninitialized binding for N.
     VERIFY(binding.initialized == false);
 
-    // FIXME: 2. If hint is not normal, perform ? AddDisposableResource(envRec, V, hint).
+    // 2. If hint is not normal, perform ? AddDisposableResource(envRec, V, hint).
+    if (hint != Environment::InitializeBindingHint::Normal)
+        TRY(add_disposable_resource(vm, m_disposable_resource_stack, value, hint));
 
     // 3. Set the bound value for N in envRec to V.
     binding.value = value;

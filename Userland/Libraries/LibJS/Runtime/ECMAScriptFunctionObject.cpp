@@ -736,7 +736,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability](auto& vm) -> ThrowCompletionOr<Value> {
+    auto execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability, &async_context](auto& vm) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
         auto result = async_body->execute(vm.interpreter());
 
@@ -745,17 +745,24 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
         // c. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
         vm.pop_execution_context();
 
-        // d. If result.[[Type]] is normal, then
+        // d. Let env be asyncContext's LexicalEnvironment.
+        auto* env = async_context.lexical_environment;
+        VERIFY(is<DeclarativeEnvironment>(env));
+
+        // e. Set result to DisposeResources(env, result).
+        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
+
+        // f. If result.[[Type]] is normal, then
         if (result.type() == Completion::Type::Normal) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
             MUST(call(vm, *promise_capability.resolve(), js_undefined(), js_undefined()));
         }
-        // e. Else if result.[[Type]] is return, then
+        // g. Else if result.[[Type]] is return, then
         else if (result.type() == Completion::Type::Return) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
             MUST(call(vm, *promise_capability.resolve(), js_undefined(), *result.value()));
         }
-        // f. Else,
+        // h. Else,
         else {
             // i. Assert: result.[[Type]] is throw.
             VERIFY(result.type() == Completion::Type::Throw);
@@ -763,7 +770,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
             MUST(call(vm, *promise_capability.reject(), js_undefined(), *result.value()));
         }
-        // g. Return unused.
+        // i. Return unused.
         // NOTE: We don't support returning an empty/optional/unused value here.
         return js_undefined();
     });
@@ -882,8 +889,15 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
             TRY(function_declaration_instantiation(ast_interpreter));
 
-            // 2. Return the result of evaluating FunctionStatementList.
-            return m_ecmascript_code->execute(*ast_interpreter);
+            // 2. Let result be result of evaluating FunctionStatementList.
+            auto result = m_ecmascript_code->execute(*ast_interpreter);
+
+            // 3. Let env be the running execution context's LexicalEnvironment.
+            auto* env = vm.running_execution_context().lexical_environment;
+            VERIFY(is<DeclarativeEnvironment>(env));
+
+            // 4. Return ? DisposeResources(env, result).
+            return dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
         }
         // AsyncFunctionBody : FunctionBody
         else if (m_kind == FunctionKind::Async) {
