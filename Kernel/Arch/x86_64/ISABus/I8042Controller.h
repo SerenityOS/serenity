@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/AtomicRefCounted.h>
+#include <Kernel/Devices/HID/Controller.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -84,7 +85,7 @@ protected:
 class PS2KeyboardDevice;
 class PS2MouseDevice;
 class HIDManagement;
-class I8042Controller final : public AtomicRefCounted<I8042Controller> {
+class I8042Controller final : public HIDController {
     friend class PS2KeyboardDevice;
     friend class PS2MouseDevice;
 
@@ -132,9 +133,6 @@ public:
     ErrorOr<void> prepare_for_input(HIDDevice::Type);
 
     bool irq_process_input_buffer(HIDDevice::Type);
-
-    LockRefPtr<MouseDevice> mouse() const;
-    LockRefPtr<KeyboardDevice> keyboard() const;
 
     // Note: This function exists only for the initialization process of the controller
     bool check_existence_via_probing(Badge<HIDManagement>);

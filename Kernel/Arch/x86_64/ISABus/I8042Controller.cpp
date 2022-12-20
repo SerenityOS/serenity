@@ -19,15 +19,6 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<I8042Controller> I8042Controller::initialize(
     return adopt_lock_ref(*new I8042Controller());
 }
 
-LockRefPtr<MouseDevice> I8042Controller::mouse() const
-{
-    return m_mouse_device;
-}
-LockRefPtr<KeyboardDevice> I8042Controller::keyboard() const
-{
-    return m_keyboard_device;
-}
-
 UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
 }

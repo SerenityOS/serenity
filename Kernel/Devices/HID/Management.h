@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
+#include <Kernel/Devices/HID/Controller.h>
 #include <Kernel/Devices/HID/Device.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
@@ -61,11 +62,9 @@ private:
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
-#if ARCH(X86_64)
-    LockRefPtr<I8042Controller> m_i8042_controller;
-#endif
-    Vector<NonnullLockRefPtr<HIDDevice>> m_hid_devices;
-    Spinlock<LockRank::None> m_client_lock {};
+
+    SpinlockProtected<IntrusiveList<&HIDController::m_list_node>, LockRank::None> m_hid_controllers;
+    Spinlock<LockRank::None> m_client_lock;
 };
 
 class KeyboardClient {
