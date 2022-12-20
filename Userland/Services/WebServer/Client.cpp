@@ -125,7 +125,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
-    path_builder.append(Configuration::the().root_path());
+    path_builder.append(Configuration::the().document_root_path());
     path_builder.append(requested_path);
     auto real_path = path_builder.to_deprecated_string();
 
