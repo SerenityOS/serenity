@@ -20,7 +20,6 @@ public:
     };
 
     virtual Type instrument_type() const = 0;
-    virtual void enable_interrupts() = 0;
 
 protected:
     HIDDevice(MajorNumber major, MinorNumber minor)
