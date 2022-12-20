@@ -35,11 +35,6 @@ public:
         return bitmap;
     }
 
-    static Bitmap must_create(size_t size, bool default_value)
-    {
-        return MUST(create(size, default_value));
-    }
-
     Bitmap() = default;
 
     Bitmap(u8* data, size_t size, bool is_owning = false)

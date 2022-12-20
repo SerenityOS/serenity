@@ -13,7 +13,7 @@ namespace JS::Bytecode::Passes {
 
 static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t number_of_registers)
 {
-    auto array_ranges = Bitmap::must_create(number_of_registers, false);
+    auto array_ranges = Bitmap::create(number_of_registers, false).release_value_but_fixme_should_propagate_errors();
 
     for (auto it = InstructionStreamIterator(block.instruction_stream()); !it.at_end(); ++it) {
         if ((*it).type() == Instruction::Type::NewArray) {

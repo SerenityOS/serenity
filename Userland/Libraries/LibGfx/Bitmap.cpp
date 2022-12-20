@@ -655,7 +655,7 @@ void Bitmap::flood_visit_from_point(Gfx::IntPoint start_point, int threshold,
 
     points_to_visit.enqueue(start_point);
     pixel_reached(start_point);
-    auto flood_mask = AK::Bitmap::must_create(width() * height(), false);
+    auto flood_mask = AK::Bitmap::create(width() * height(), false).release_value_but_fixme_should_propagate_errors();
 
     flood_mask.set(width() * start_point.y() + start_point.x(), true);
 
