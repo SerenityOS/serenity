@@ -83,19 +83,30 @@ constexpr int days_since_epoch(int year, int month, int day)
 
 constexpr i64 seconds_since_epoch_to_year(i64 seconds)
 {
-    constexpr double seconds_per_year = 60.0 * 60.0 * 24.0 * 365.2425;
+    constexpr double seconds_normal_year = 60.0 * 60.0 * 24.0 * 365;
+    constexpr double seconds_leap_year = 60.0 * 60.0 * 24.0 * 366;
+    i64 year;
 
-    // NOTE: We are not using floor() from <math.h> to avoid LibC / DynamicLoader dependency issues.
-    auto round_down = [](double value) -> i64 {
-        auto as_i64 = static_cast<i64>(value);
-
-        if ((value == as_i64) || (as_i64 >= 0))
-            return as_i64;
-        return as_i64 - 1;
-    };
-
-    auto years_since_epoch = static_cast<double>(seconds) / seconds_per_year;
-    return 1970 + round_down(years_since_epoch);
+    if (seconds < 0) {
+        for (year = 1969; seconds < 0; year--) {
+            if (is_leap_year(year))
+                seconds += seconds_leap_year;
+            else
+                seconds += seconds_normal_year;
+            if (seconds >= 0)
+                break;
+        }
+    } else {
+        for (year = 1970; seconds > 0; year++) {
+            if (is_leap_year(year))
+                seconds -= seconds_leap_year;
+            else
+                seconds -= seconds_normal_year;
+            if (seconds < 0)
+                break;
+        }
+    }
+    return year;
 }
 
 /*

@@ -274,3 +274,19 @@ TEST_CASE(is_negative)
     EXPECT_EQ(result.to_nanoseconds(), 5);
     EXPECT(!result.is_negative());
 }
+
+TEST_CASE(recover_year)
+{
+    auto test_recover_year = [](auto year) {
+        auto timestamp_beginning = Time::from_timestamp(year, 1, 1, 0, 0, 0, 0);
+        auto timestamp_end = Time::from_timestamp(year, 12, 31, 0, 0, 0, 0);
+        EXPECT_EQ(seconds_since_epoch_to_year(timestamp_beginning.to_seconds()), year);
+        EXPECT_EQ(seconds_since_epoch_to_year(timestamp_end.to_seconds()), year);
+    };
+
+    test_recover_year(1950);
+    test_recover_year(1970);
+    test_recover_year(1971);
+    test_recover_year(2016);
+    test_recover_year(2020);
+}
