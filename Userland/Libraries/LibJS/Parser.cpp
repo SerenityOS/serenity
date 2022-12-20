@@ -253,6 +253,11 @@ public:
         return m_contains_await_expression;
     }
 
+    bool can_have_using_declaration() const
+    {
+        return m_scope_level != ScopeLevel::ScriptTopLevel;
+    }
+
 private:
     void throw_identifier_declared(DeprecatedFlyString const& name, NonnullRefPtr<Declaration> const& declaration)
     {
@@ -597,6 +602,14 @@ NonnullRefPtr<Declaration> Parser::parse_declaration()
     case TokenType::Let:
     case TokenType::Const:
         return parse_variable_declaration();
+    case TokenType::Identifier:
+        if (m_state.current_token.original_value() == "using"sv) {
+            if (!m_state.current_scope_pusher->can_have_using_declaration())
+                syntax_error("'using' not allowed outside of block, for loop or function");
+
+            return parse_using_declaration();
+        }
+        [[fallthrough]];
     default:
         expected("declaration");
         consume();
@@ -2457,7 +2470,7 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 void Parser::parse_statement_list(ScopeNode& output_node, AllowLabelledFunction allow_labelled_functions)
 {
     while (!done()) {
-        if (match_declaration()) {
+        if (match_declaration(AllowUsingDeclaration::Yes)) {
             auto declaration = parse_declaration();
             VERIFY(m_state.current_scope_pusher);
             m_state.current_scope_pusher->add_declaration(declaration);
@@ -2949,7 +2962,37 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
     return pattern;
 }
 
-NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_loop_variable_declaration)
+RefPtr<Identifier> Parser::parse_lexical_binding()
+{
+    auto binding_start = push_start();
+
+    if (match_identifier()) {
+        auto name = consume_identifier().DeprecatedFlyString_value();
+        return create_ast_node<Identifier>(
+            { m_source_code, binding_start.position(), position() },
+            name);
+    }
+    if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
+        if (m_state.strict_mode)
+            syntax_error("Identifier must not be a reserved word in strict mode ('yield')");
+
+        return create_ast_node<Identifier>(
+            { m_source_code, binding_start.position(), position() },
+            consume().DeprecatedFlyString_value());
+    }
+    if (!m_state.await_expression_is_valid && match(TokenType::Async)) {
+        if (m_program_type == Program::Type::Module)
+            syntax_error("Identifier must not be a reserved word in modules ('async')");
+
+        return create_ast_node<Identifier>(
+            { m_source_code, binding_start.position(), position() },
+            consume().DeprecatedFlyString_value());
+    }
+
+    return {};
+}
+
+NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(IsForLoopVariableDeclaration is_for_loop_variable_declaration)
 {
     auto rule_start = push_start();
     DeclarationKind declaration_kind;
@@ -2972,38 +3015,21 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
     NonnullRefPtrVector<VariableDeclarator> declarations;
     for (;;) {
         Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> target {};
-        if (match_identifier()) {
-            auto identifier_start = push_start();
-            auto name = consume_identifier().DeprecatedFlyString_value();
-            target = create_ast_node<Identifier>(
-                { m_source_code, rule_start.position(), position() },
-                name);
-            check_identifier_name_for_assignment_validity(name);
-            if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const) && name == "let"sv)
-                syntax_error("Lexical binding may not be called 'let'");
-        } else if (auto pattern = parse_binding_pattern(declaration_kind != DeclarationKind::Var ? AllowDuplicates::No : AllowDuplicates::Yes, AllowMemberExpressions::No)) {
-            target = pattern.release_nonnull();
-
+        if (auto pattern = parse_binding_pattern(declaration_kind != DeclarationKind::Var ? AllowDuplicates::No : AllowDuplicates::Yes, AllowMemberExpressions::No)) {
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const)) {
-                target.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name([this](auto& name) {
+                pattern->for_each_bound_name([this](auto& name) {
                     if (name == "let"sv)
                         syntax_error("Lexical binding may not be called 'let'");
                 });
             }
-        } else if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
-            if (m_state.strict_mode)
-                syntax_error("Identifier must not be a reserved word in strict mode ('yield')");
 
-            target = create_ast_node<Identifier>(
-                { m_source_code, rule_start.position(), position() },
-                consume().DeprecatedFlyString_value());
-        } else if (!m_state.await_expression_is_valid && match(TokenType::Async)) {
-            if (m_program_type == Program::Type::Module)
-                syntax_error("Identifier must not be a reserved word in modules ('async')");
+            target = pattern.release_nonnull();
+        } else if (auto lexical_binding = parse_lexical_binding()) {
+            check_identifier_name_for_assignment_validity(lexical_binding->string());
+            if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const) && lexical_binding->string() == "let"sv)
+                syntax_error("Lexical binding may not be called 'let'");
 
-            target = create_ast_node<Identifier>(
-                { m_source_code, rule_start.position(), position() },
-                consume().DeprecatedFlyString_value());
+            target = lexical_binding.release_nonnull();
         }
 
         if (target.has<Empty>()) {
@@ -3020,13 +3046,13 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             consume();
             // In a for loop 'in' can be ambiguous so we do not allow it
             // 14.7.4 The for Statement, https://tc39.es/ecma262/#prod-ForStatement and 14.7.5 The for-in, for-of, and for-await-of Statements, https://tc39.es/ecma262/#prod-ForInOfStatement
-            if (for_loop_variable_declaration)
+            if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::Yes)
                 init = parse_expression(2, Associativity::Right, { TokenType::In });
             else
                 init = parse_expression(2);
-        } else if (!for_loop_variable_declaration && declaration_kind == DeclarationKind::Const) {
+        } else if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::No && declaration_kind == DeclarationKind::Const) {
             syntax_error("Missing initializer in 'const' variable declaration");
-        } else if (!for_loop_variable_declaration && target.has<NonnullRefPtr<BindingPattern>>()) {
+        } else if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::No && target.has<NonnullRefPtr<BindingPattern>>()) {
             syntax_error("Missing initializer in destructuring assignment");
         }
 
@@ -3041,13 +3067,62 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         }
         break;
     }
-    if (!for_loop_variable_declaration)
+    if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::No)
         consume_or_insert_semicolon();
 
     declarations.shrink_to_fit();
 
     auto declaration = create_ast_node<VariableDeclaration>({ m_source_code, rule_start.position(), position() }, declaration_kind, move(declarations));
     return declaration;
+}
+
+NonnullRefPtr<UsingDeclaration> Parser::parse_using_declaration(IsForLoopVariableDeclaration is_for_loop_variable_declaration)
+{
+    //  using [no LineTerminator here] BindingList[?In, ?Yield, ?Await, +Using] ;
+    auto rule_start = push_start();
+    VERIFY(m_state.current_token.original_value() == "using"sv);
+    consume(TokenType::Identifier);
+    VERIFY(!m_state.current_token.trivia_contains_line_terminator());
+    NonnullRefPtrVector<VariableDeclarator> declarations;
+
+    for (;;) {
+        auto lexical_binding = parse_lexical_binding();
+        if (!lexical_binding) {
+            expected("lexical binding");
+            break;
+        }
+
+        check_identifier_name_for_assignment_validity(lexical_binding->string());
+        if (lexical_binding->string() == "let"sv)
+            syntax_error("Lexical binding may not be called 'let'");
+
+        RefPtr<Expression> initializer;
+        if (match(TokenType::Equals)) {
+            consume();
+
+            if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::Yes)
+                initializer = parse_expression(2, Associativity::Right, { TokenType::In });
+            else
+                initializer = parse_expression(2);
+        } else if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::No) {
+            consume(TokenType::Equals);
+        }
+
+        declarations.append(create_ast_node<VariableDeclarator>(
+            { m_source_code, rule_start.position(), position() },
+            lexical_binding.release_nonnull(),
+            move(initializer)));
+
+        if (match(TokenType::Comma)) {
+            consume();
+            continue;
+        }
+        break;
+    }
+    if (is_for_loop_variable_declaration == IsForLoopVariableDeclaration::No)
+        consume_or_insert_semicolon();
+
+    return create_ast_node<UsingDeclaration>({ m_source_code, rule_start.position(), position() }, move(declarations));
 }
 
 NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
@@ -3499,7 +3574,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
     RefPtr<ASTNode> init;
     if (!match(TokenType::Semicolon)) {
         if (match_variable_declaration()) {
-            auto declaration = parse_variable_declaration(true);
+            auto declaration = parse_variable_declaration(IsForLoopVariableDeclaration::Yes);
             if (declaration->declaration_kind() == DeclarationKind::Var) {
                 m_state.current_scope_pusher->add_declaration(declaration);
             } else {
@@ -3763,7 +3838,7 @@ bool Parser::match_export_or_import() const
         || type == TokenType::Import;
 }
 
-bool Parser::match_declaration() const
+bool Parser::match_declaration(AllowUsingDeclaration allow_using) const
 {
     auto type = m_state.current_token.type();
 
@@ -3775,6 +3850,9 @@ bool Parser::match_declaration() const
         auto lookahead_token = next_token();
         return lookahead_token.type() == TokenType::Function && !lookahead_token.trivia_contains_line_terminator();
     }
+
+    if (allow_using == AllowUsingDeclaration::Yes && type == TokenType::Identifier && m_state.current_token.original_value() == "using"sv)
+        return try_match_using_declaration();
 
     return type == TokenType::Function
         || type == TokenType::Class
@@ -3808,6 +3886,18 @@ bool Parser::try_match_let_declaration() const
         return true;
 
     return false;
+}
+
+bool Parser::try_match_using_declaration() const
+{
+    VERIFY(m_state.current_token.type() == TokenType::Identifier);
+    VERIFY(m_state.current_token.original_value() == "using"sv);
+
+    auto token_after = next_token();
+    if (token_after.trivia_contains_line_terminator())
+        return false;
+
+    return token_after.is_identifier_name();
 }
 
 bool Parser::match_variable_declaration() const

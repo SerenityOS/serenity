@@ -235,21 +235,25 @@ Completion BlockStatement::execute(Interpreter& interpreter) const
     auto& vm = interpreter.vm();
 
     Environment* old_environment { nullptr };
-    ArmedScopeGuard restore_environment = [&] {
-        vm.running_execution_context().lexical_environment = old_environment;
-    };
 
     // Optimization: We only need a new lexical environment if there are any lexical declarations. :^)
-    if (has_lexical_declarations()) {
-        old_environment = vm.running_execution_context().lexical_environment;
-        auto block_environment = new_declarative_environment(*old_environment);
-        block_declaration_instantiation(interpreter, block_environment);
-        vm.running_execution_context().lexical_environment = block_environment;
-    } else {
-        restore_environment.disarm();
-    }
+    if (!has_lexical_declarations())
+        return evaluate_statements(interpreter);
 
-    return evaluate_statements(interpreter);
+    old_environment = vm.running_execution_context().lexical_environment;
+    auto block_environment = new_declarative_environment(*old_environment);
+    block_declaration_instantiation(interpreter, block_environment);
+    vm.running_execution_context().lexical_environment = block_environment;
+
+    // 5. Let blockValue be the result of evaluating StatementList.
+    auto block_value = evaluate_statements(interpreter);
+
+    // 6. Set blockValue to DisposeResources(blockEnv, blockValue).
+    block_value = dispose_resources(vm, block_environment, block_value);
+
+    vm.running_execution_context().lexical_environment = old_environment;
+
+    return block_value;
 }
 
 Completion Program::execute(Interpreter& interpreter) const
@@ -3015,6 +3019,48 @@ void VariableDeclaration::dump(int indent) const
         declarator.dump(indent + 1);
 }
 
+// 6.2.1.2 Runtime Semantics: Evaluation, https://tc39.es/proposal-explicit-resource-management/#sec-let-and-const-declarations-runtime-semantics-evaluation
+Completion UsingDeclaration::execute(Interpreter& interpreter) const
+{
+    // 1. Let next be BindingEvaluation of BindingList with parameter sync-dispose.
+    InterpreterNodeScope node_scope { interpreter, *this };
+    auto& vm = interpreter.vm();
+
+    for (auto& declarator : m_declarations) {
+        VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
+        VERIFY(declarator.init());
+
+        auto& id = declarator.target().get<NonnullRefPtr<Identifier>>();
+
+        // 2. ReturnIfAbrupt(next).
+        auto reference = TRY(id->to_reference(interpreter));
+        auto initializer_result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*declarator.init(), id->string()));
+        VERIFY(!initializer_result.is_empty());
+        TRY(reference.initialize_referenced_binding(vm, initializer_result, Environment::InitializeBindingHint::SyncDispose));
+    }
+
+    // 3. Return empty.
+    return normal_completion({});
+}
+
+ThrowCompletionOr<void> UsingDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
+{
+    for (auto const& entry : m_declarations) {
+        VERIFY(entry.target().has<NonnullRefPtr<Identifier>>());
+        TRY(callback(entry.target().get<NonnullRefPtr<Identifier>>()->string()));
+    }
+
+    return {};
+}
+
+void UsingDeclaration::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    for (auto& declarator : m_declarations)
+        declarator.dump(indent + 1);
+}
+
 void VariableDeclarator::dump(int indent) const
 {
     ASTNode::dump(indent);
@@ -4154,11 +4200,13 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter) const
     // 2. Let switchValue be ? GetValue(exprRef).
     auto switch_value = TRY(m_discriminant->execute(interpreter)).release_value();
 
-    // 3. Let oldEnv be the running execution context's LexicalEnvironment.
-    auto* old_environment = interpreter.lexical_environment();
+    Completion result;
 
     // Optimization: Avoid creating a lexical environment if there are no lexical declarations.
     if (has_lexical_declarations()) {
+        // 3. Let oldEnv be the running execution context's LexicalEnvironment.
+        auto* old_environment = interpreter.lexical_environment();
+
         // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
         auto block_environment = new_declarative_environment(*old_environment);
 
@@ -4167,15 +4215,23 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter) const
 
         // 6. Set the running execution context's LexicalEnvironment to blockEnv.
         vm.running_execution_context().lexical_environment = block_environment;
+
+        // 7. Let R be Completion(CaseBlockEvaluation of CaseBlock with argument switchValue).
+        result = case_block_evaluation(switch_value);
+
+        // 8. Let env be blockEnv's LexicalEnvironment.
+        // FIXME: blockEnv doesn't have a lexical env it is one?? Probably a spec issue
+
+        // 9. Set R to DisposeResources(env, R).
+        result = dispose_resources(vm, block_environment, result);
+
+        // 10. Set the running execution context's LexicalEnvironment to oldEnv.
+        vm.running_execution_context().lexical_environment = old_environment;
+    } else {
+        result = case_block_evaluation(switch_value);
     }
 
-    // 7. Let R be Completion(CaseBlockEvaluation of CaseBlock with argument switchValue).
-    auto result = case_block_evaluation(switch_value);
-
-    // 8. Set the running execution context's LexicalEnvironment to oldEnv.
-    vm.running_execution_context().lexical_environment = old_environment;
-
-    // 9. Return R.
+    // 11. Return R.
     return result;
 }
 

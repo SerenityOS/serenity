@@ -1719,6 +1719,27 @@ private:
     NonnullRefPtrVector<VariableDeclarator> m_declarations;
 };
 
+class UsingDeclaration final : public Declaration {
+public:
+    UsingDeclaration(SourceRange source_range, NonnullRefPtrVector<VariableDeclarator> declarations)
+        : Declaration(move(source_range))
+        , m_declarations(move(declarations))
+    {
+    }
+
+    virtual Completion execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+    virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
+
+    virtual bool is_constant_declaration() const override { return true; };
+
+    virtual bool is_lexical_declaration() const override { return true; }
+
+private:
+    NonnullRefPtrVector<VariableDeclarator> m_declarations;
+};
+
 class ObjectProperty final : public ASTNode {
 public:
     enum class Type : u8 {

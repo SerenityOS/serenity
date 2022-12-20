@@ -88,7 +88,15 @@ public:
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<FunctionBody> parse_function_body(Vector<FunctionParameter> const& parameters, FunctionKind function_kind, bool& contains_direct_call_to_eval);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
-    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
+
+    enum class IsForLoopVariableDeclaration {
+        No,
+        Yes
+    };
+
+    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(IsForLoopVariableDeclaration is_for_loop_variable_declaration = IsForLoopVariableDeclaration::No);
+    RefPtr<Identifier> parse_lexical_binding();
+    NonnullRefPtr<UsingDeclaration> parse_using_declaration(IsForLoopVariableDeclaration is_for_loop_variable_declaration = IsForLoopVariableDeclaration::No);
     NonnullRefPtr<Statement> parse_for_statement();
 
     enum class IsForAwaitLoop {
@@ -208,8 +216,15 @@ private:
     bool match_statement() const;
     bool match_export_or_import() const;
     bool match_assert_clause() const;
-    bool match_declaration() const;
+
+    enum class AllowUsingDeclaration {
+        No,
+        Yes
+    };
+
+    bool match_declaration(AllowUsingDeclaration allow_using = AllowUsingDeclaration::No) const;
     bool try_match_let_declaration() const;
+    bool try_match_using_declaration() const;
     bool match_variable_declaration() const;
     bool match_identifier() const;
     bool match_identifier_name() const;

@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/HashMap.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>
@@ -63,6 +64,9 @@ private:
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, Binding&, Value, bool strict);
 
+    friend Completion dispose_resources(VM&, GCPtr<DeclarativeEnvironment>, Completion);
+    Vector<DisposableResource> const& disposable_resource_stack() const { return m_disposable_resource_stack; }
+
 protected:
     DeclarativeEnvironment();
     explicit DeclarativeEnvironment(Environment* parent_environment);
@@ -116,6 +120,7 @@ private:
     virtual bool is_declarative_environment() const override { return true; }
 
     Vector<Binding> m_bindings;
+    Vector<DisposableResource> m_disposable_resource_stack;
 };
 
 template<>
