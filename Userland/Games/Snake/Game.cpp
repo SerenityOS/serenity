@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SnakeGame.h"
+#include "Game.h"
 #include <AK/Random.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/MessageBox.h>
@@ -15,7 +15,9 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 
-ErrorOr<NonnullRefPtr<SnakeGame>> SnakeGame::create()
+namespace Snake {
+
+ErrorOr<NonnullRefPtr<Game>> Game::create()
 {
     NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps;
     food_bitmaps.append(*TRY(Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F41F.png"sv)));
@@ -47,10 +49,10 @@ ErrorOr<NonnullRefPtr<SnakeGame>> SnakeGame::create()
     food_bitmaps.append(*TRY(Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F413.png"sv)));
     food_bitmaps.append(*TRY(Gfx::Bitmap::try_load_from_file("/res/emoji/U+1FAB0.png"sv)));
     food_bitmaps.append(*TRY(Gfx::Bitmap::try_load_from_file("/res/emoji/U+1FAB1.png"sv)));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SnakeGame(move(food_bitmaps)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps)));
 }
 
-SnakeGame::SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
+Game::Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
     : m_food_bitmaps(move(food_bitmaps))
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
@@ -60,18 +62,18 @@ SnakeGame::SnakeGame(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
     m_snake_base_color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, m_snake_base_color.value()));
 }
 
-void SnakeGame::pause()
+void Game::pause()
 {
     stop_timer();
 }
 
-void SnakeGame::start()
+void Game::start()
 {
     static constexpr int timer_ms = 100;
     start_timer(timer_ms);
 }
 
-void SnakeGame::reset()
+void Game::reset()
 {
     m_head = { m_rows / 2, m_columns / 2 };
     m_tail.clear_with_capacity();
@@ -86,13 +88,13 @@ void SnakeGame::reset()
     update();
 }
 
-void SnakeGame::set_snake_base_color(Color color)
+void Game::set_snake_base_color(Color color)
 {
     Config::write_u32("Snake"sv, "Snake"sv, "BaseColor"sv, color.value());
     m_snake_base_color = color;
 }
 
-bool SnakeGame::is_available(Coordinate const& coord)
+bool Game::is_available(Coordinate const& coord)
 {
     for (size_t i = 0; i < m_tail.size(); ++i) {
         if (m_tail[i] == coord)
@@ -105,7 +107,7 @@ bool SnakeGame::is_available(Coordinate const& coord)
     return true;
 }
 
-void SnakeGame::spawn_fruit()
+void Game::spawn_fruit()
 {
     Coordinate coord;
     for (;;) {
@@ -118,19 +120,19 @@ void SnakeGame::spawn_fruit()
     m_fruit_type = get_random_uniform(m_food_bitmaps.size());
 }
 
-Gfx::IntRect SnakeGame::score_rect() const
+Gfx::IntRect Game::score_rect() const
 {
     int score_width = font().width(m_score_text);
     return { frame_inner_rect().width() - score_width - 2, frame_inner_rect().height() - font().glyph_height() - 2, score_width, font().glyph_height() };
 }
 
-Gfx::IntRect SnakeGame::high_score_rect() const
+Gfx::IntRect Game::high_score_rect() const
 {
     int high_score_width = font().width(m_high_score_text);
     return { frame_thickness() + 2, frame_inner_rect().height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
 }
 
-void SnakeGame::timer_event(Core::TimerEvent&)
+void Game::timer_event(Core::TimerEvent&)
 {
     Vector<Coordinate> dirty_cells;
 
@@ -191,7 +193,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
     }
 }
 
-void SnakeGame::keydown_event(GUI::KeyEvent& event)
+void Game::keydown_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
     case KeyCode::Key_A:
@@ -224,7 +226,7 @@ void SnakeGame::keydown_event(GUI::KeyEvent& event)
     }
 }
 
-Gfx::IntRect SnakeGame::cell_rect(Coordinate const& coord) const
+Gfx::IntRect Game::cell_rect(Coordinate const& coord) const
 {
     auto game_rect = frame_inner_rect();
     auto cell_size = Gfx::IntSize(game_rect.width() / m_columns, game_rect.height() / m_rows);
@@ -236,7 +238,7 @@ Gfx::IntRect SnakeGame::cell_rect(Coordinate const& coord) const
     };
 }
 
-void SnakeGame::paint_event(GUI::PaintEvent& event)
+void Game::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
@@ -265,7 +267,7 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
     painter.draw_text(score_rect(), m_score_text, Gfx::TextAlignment::TopLeft, Color::White);
 }
 
-void SnakeGame::game_over()
+void Game::game_over()
 {
     stop_timer();
 
@@ -282,17 +284,19 @@ void SnakeGame::game_over()
     reset();
 }
 
-void SnakeGame::queue_velocity(int v, int h)
+void Game::queue_velocity(int v, int h)
 {
     if (last_velocity().vertical == v && last_velocity().horizontal == h)
         return;
     m_velocity_queue.enqueue({ v, h });
 }
 
-SnakeGame::Velocity const& SnakeGame::last_velocity() const
+Game::Velocity const& Game::last_velocity() const
 {
     if (!m_velocity_queue.is_empty())
         return m_velocity_queue.last();
 
     return m_last_velocity;
+}
+
 }
