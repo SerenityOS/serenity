@@ -52,7 +52,12 @@ static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
 
 static ErrorOr<void> launch_server(DeprecatedString const& socket_path, DeprecatedString const& pid_path, StringView server_path)
 {
-    auto server_fd = TRY(create_database_socket(socket_path));
+    auto server_fd_or_error = create_database_socket(socket_path);
+    if (server_fd_or_error.is_error()) {
+        warnln("Failed to create a database socket at {}: {}", socket_path, server_fd_or_error.error());
+        return server_fd_or_error.release_error();
+    }
+    auto server_fd = server_fd_or_error.value();
     auto server_pid = TRY(Core::System::fork());
 
     if (server_pid == 0) {
