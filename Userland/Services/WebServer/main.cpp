@@ -55,7 +55,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto real_document_root_path = Core::File::real_path_for(document_root_path);
-
     if (!Core::File::exists(real_document_root_path)) {
         warnln("Root path does not exist: '{}'", document_root_path);
         return 1;
@@ -63,10 +62,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio accept rpath inet unix"));
 
-    WebServer::Configuration configuration(real_document_root_path);
-
+    Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> credentials;
     if (!username.is_empty() && !password.is_empty())
-        configuration.set_credentials(HTTP::HttpRequest::BasicAuthenticationCredentials { username, password });
+        credentials = HTTP::HttpRequest::BasicAuthenticationCredentials { username, password };
+
+    WebServer::Configuration configuration(real_document_root_path, credentials);
 
     Core::EventLoop loop;
 
