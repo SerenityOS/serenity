@@ -63,7 +63,21 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
     auto o = TRY(encryption_dict->get_string(document, CommonNames::O))->string();
     auto u = TRY(encryption_dict->get_string(document, CommonNames::U))->string();
     auto p = encryption_dict->get_value(CommonNames::P).get<int>();
-    auto length = encryption_dict->get_value(CommonNames::Length).get<int>() / 8;
+
+    // V, number: [...] 1 "Algorithm 1 Encryption of data using the RC4 or AES algorithms" in 7.6.2,
+    // "General Encryption Algorithm," with an encryption key length of 40 bits, see below [...]
+    // Lenght, integer: (Optional; PDF 1.4; only if V is 2 or 3) The length of the encryption key, in bits.
+    // The value shall be a multiple of 8, in the range 40 to 128. Default value: 40.
+    int length_in_bits;
+    auto v = encryption_dict->get_value(CommonNames::V).get<int>();
+    if (encryption_dict->contains(CommonNames::Length))
+        length_in_bits = encryption_dict->get_value(CommonNames::Length).get<int>();
+    else if (v == 1)
+        length_in_bits = 40;
+    else
+        return Error(Error::Type::Parse, "Can't determine length of encryption key");
+    auto length = length_in_bits / 8;
+
     bool encrypt_metadata = true;
     if (encryption_dict->contains(CommonNames::EncryptMetadata))
         encryption_dict->get_value(CommonNames::EncryptMetadata).get<bool>();
