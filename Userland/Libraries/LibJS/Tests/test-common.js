@@ -145,15 +145,24 @@ class ExpectationError extends Error {
 
                 if (Array.isArray(property)) {
                     for (let key of property) {
-                        this.__expect(object !== undefined && object !== null);
+                        this.__expect(
+                            object !== undefined && object !== null,
+                            "got undefined or null as array key"
+                        );
                         object = object[key];
                     }
                 } else {
                     object = object[property];
                 }
 
-                this.__expect(object !== undefined);
-                if (value !== undefined) this.__expect(deepEquals(object, value));
+                this.__expect(object !== undefined, "should not be undefined");
+                if (value !== undefined)
+                    this.__expect(
+                        deepEquals(object, value),
+                        `value does not equal property ${valueToString(object)} vs ${valueToString(
+                            value
+                        )}`
+                    );
             });
         }
 
@@ -168,13 +177,19 @@ class ExpectationError extends Error {
 
         toBeInstanceOf(class_) {
             this.__doMatcher(() => {
-                this.__expect(this.target instanceof class_);
+                this.__expect(
+                    this.target instanceof class_,
+                    `Expected ${valueToString(this.target)} to be instance of ${class_.name}`
+                );
             });
         }
 
         toBeNull() {
             this.__doMatcher(() => {
-                this.__expect(this.target === null);
+                this.__expect(
+                    this.target === null,
+                    `Expected target to be null got ${valueToString(this.target)}`
+                );
             });
         }
 
