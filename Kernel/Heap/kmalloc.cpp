@@ -431,7 +431,7 @@ static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMem
     }
 
     // Alignment must be a power of two.
-    VERIFY(popcount(alignment) == 1);
+    VERIFY(is_power_of_two(alignment));
 
     SpinlockLocker lock(s_lock);
     ++g_kmalloc_call_count;
