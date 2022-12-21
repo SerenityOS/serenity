@@ -52,10 +52,10 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
 
     Selection selection {};
     if (json->has_u32("pseudo-element"sv)) {
-        selection.dom_node_id = json->get_deprecated("parent-id"sv).to_i32();
-        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get_deprecated("pseudo-element"sv).to_u32());
+        selection.dom_node_id = json->get_i32("parent-id"sv).value_or(0);
+        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get_u32("pseudo-element"sv).value_or(0));
     } else {
-        selection.dom_node_id = json->get_deprecated("id"sv).to_i32();
+        selection.dom_node_id = json->get_i32("id"sv).value_or(0);
     }
 
     if (selection == m_selection)
@@ -181,21 +181,21 @@ void InspectorWidget::update_node_box_model(StringView node_box_sizing_json)
     auto json_value = json_or_error.release_value();
     auto const& json_object = json_value.as_object();
 
-    m_node_box_sizing.margin.top = json_object.get_deprecated("margin_top"sv).to_float();
-    m_node_box_sizing.margin.right = json_object.get_deprecated("margin_right"sv).to_float();
-    m_node_box_sizing.margin.bottom = json_object.get_deprecated("margin_bottom"sv).to_float();
-    m_node_box_sizing.margin.left = json_object.get_deprecated("margin_left"sv).to_float();
-    m_node_box_sizing.padding.top = json_object.get_deprecated("padding_top"sv).to_float();
-    m_node_box_sizing.padding.right = json_object.get_deprecated("padding_right"sv).to_float();
-    m_node_box_sizing.padding.bottom = json_object.get_deprecated("padding_bottom"sv).to_float();
-    m_node_box_sizing.padding.left = json_object.get_deprecated("padding_left"sv).to_float();
-    m_node_box_sizing.border.top = json_object.get_deprecated("border_top"sv).to_float();
-    m_node_box_sizing.border.right = json_object.get_deprecated("border_right"sv).to_float();
-    m_node_box_sizing.border.bottom = json_object.get_deprecated("border_bottom"sv).to_float();
-    m_node_box_sizing.border.left = json_object.get_deprecated("border_left"sv).to_float();
+    m_node_box_sizing.margin.top = json_object.get_float("margin_top"sv).value_or(0);
+    m_node_box_sizing.margin.right = json_object.get_float("margin_right"sv).value_or(0);
+    m_node_box_sizing.margin.bottom = json_object.get_float("margin_bottom"sv).value_or(0);
+    m_node_box_sizing.margin.left = json_object.get_float("margin_left"sv).value_or(0);
+    m_node_box_sizing.padding.top = json_object.get_float("padding_top"sv).value_or(0);
+    m_node_box_sizing.padding.right = json_object.get_float("padding_right"sv).value_or(0);
+    m_node_box_sizing.padding.bottom = json_object.get_float("padding_bottom"sv).value_or(0);
+    m_node_box_sizing.padding.left = json_object.get_float("padding_left"sv).value_or(0);
+    m_node_box_sizing.border.top = json_object.get_float("border_top"sv).value_or(0);
+    m_node_box_sizing.border.right = json_object.get_float("border_right"sv).value_or(0);
+    m_node_box_sizing.border.bottom = json_object.get_float("border_bottom"sv).value_or(0);
+    m_node_box_sizing.border.left = json_object.get_float("border_left"sv).value_or(0);
 
-    m_element_size_view->set_node_content_width(json_object.get_deprecated("content_width"sv).to_float());
-    m_element_size_view->set_node_content_height(json_object.get_deprecated("content_height"sv).to_float());
+    m_element_size_view->set_node_content_width(json_object.get_float("content_width"sv).value_or(0));
+    m_element_size_view->set_node_content_height(json_object.get_float("content_height"sv).value_or(0));
     m_element_size_view->set_box_model(m_node_box_sizing);
 }
 
