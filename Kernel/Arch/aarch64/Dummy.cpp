@@ -25,7 +25,7 @@ bool Process::has_tracee_thread(ProcessID)
     TODO_AARCH64();
 }
 
-ErrorOr<void> Process::exec(NonnullOwnPtr<KString>, NonnullOwnPtrVector<KString>, NonnullOwnPtrVector<KString>, Thread*&, u32&, int)
+ErrorOr<void> Process::exec(NonnullOwnPtr<KString>, NonnullOwnPtrVector<KString>, NonnullOwnPtrVector<KString>, Thread*&, bool&, int)
 {
     TODO_AARCH64();
 }
