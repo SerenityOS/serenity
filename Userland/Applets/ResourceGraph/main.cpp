@@ -167,8 +167,8 @@ private:
             return false;
 
         auto const& obj = json.value().as_object();
-        total = obj.get_deprecated("total_time"sv).to_u64();
-        idle = obj.get_deprecated("idle_time"sv).to_u64();
+        total = obj.get_u64("total_time"sv).value_or(0);
+        idle = obj.get_u64("idle_time"sv).value_or(0);
         return true;
     }
 
@@ -179,11 +179,11 @@ private:
             return false;
 
         auto const& obj = json.value().as_object();
-        unsigned kmalloc_allocated = obj.get_deprecated("kmalloc_allocated"sv).to_u32();
-        unsigned kmalloc_available = obj.get_deprecated("kmalloc_available"sv).to_u32();
-        auto physical_allocated = obj.get_deprecated("physical_allocated"sv).to_u64();
-        auto physical_committed = obj.get_deprecated("physical_committed"sv).to_u64();
-        auto physical_uncommitted = obj.get_deprecated("physical_uncommitted"sv).to_u64();
+        unsigned kmalloc_allocated = obj.get_u32("kmalloc_allocated"sv).value_or(0);
+        unsigned kmalloc_available = obj.get_u32("kmalloc_available"sv).value_or(0);
+        auto physical_allocated = obj.get_u64("physical_allocated"sv).value_or(0);
+        auto physical_committed = obj.get_u64("physical_committed"sv).value_or(0);
+        auto physical_uncommitted = obj.get_u64("physical_uncommitted"sv).value_or(0);
         unsigned kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
         unsigned kmalloc_pages_total = (kmalloc_bytes_total + PAGE_SIZE - 1) / PAGE_SIZE;
         u64 total_userphysical_and_swappable_pages = kmalloc_pages_total + physical_allocated + physical_committed + physical_uncommitted;
@@ -203,13 +203,13 @@ private:
         auto const& array = json.value().as_array();
         for (auto const& adapter_value : array.values()) {
             auto const& adapter_obj = adapter_value.as_object();
-            if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.get_deprecated("link_up"sv).as_bool())
+            if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.get_bool("link_up"sv).value())
                 continue;
 
-            tx += adapter_obj.get_deprecated("bytes_in"sv).to_u64();
-            rx += adapter_obj.get_deprecated("bytes_out"sv).to_u64();
+            tx += adapter_obj.get_u64("bytes_in"sv).value_or(0);
+            rx += adapter_obj.get_u64("bytes_out"sv).value_or(0);
             // Link speed data is given in megabits, but we want all return values to be in bytes.
-            link_speed += adapter_obj.get_deprecated("link_speed"sv).to_u64() * 8'000'000;
+            link_speed += adapter_obj.get_u64("link_speed"sv).value_or(0) * 8'000'000;
         }
         link_speed /= 8;
         return tx != 0;
