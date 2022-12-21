@@ -19,7 +19,7 @@ JsonValue JsonPath::resolve(JsonValue const& top_root) const
     for (auto const& element : *this) {
         switch (element.kind()) {
         case JsonPathElement::Kind::Key:
-            root = JsonValue { root.as_object().get_deprecated(element.key()) };
+            root = JsonValue { root.as_object().get(element.key()).value() };
             break;
         case JsonPathElement::Kind::Index:
             root = JsonValue { root.as_array().at(element.index()) };
