@@ -1237,15 +1237,15 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             if (!value.is_object())
                 return;
             auto& json_object = value.as_object();
-            auto orientation_value = json_object.get_deprecated("orientation"sv);
-            if (!orientation_value.is_string())
+            auto orientation_value = json_object.get_deprecated_string("orientation"sv);
+            if (!orientation_value.has_value())
                 return;
 
-            auto offset_value = json_object.get_deprecated("offset"sv);
-            if (!offset_value.is_number())
+            auto offset_value = json_object.get("offset"sv);
+            if (!offset_value.has_value() || !offset_value->is_number())
                 return;
 
-            auto orientation_string = orientation_value.as_string();
+            auto orientation_string = orientation_value.value();
             PixelPaint::Guide::Orientation orientation;
             if (orientation_string == "horizontal"sv)
                 orientation = PixelPaint::Guide::Orientation::Horizontal;
@@ -1254,7 +1254,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             else
                 return;
 
-            image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value.to_number<float>()));
+            image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value->to_number<float>()));
         });
     }
 
