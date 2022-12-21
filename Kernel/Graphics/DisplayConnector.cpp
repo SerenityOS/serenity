@@ -55,43 +55,73 @@ void DisplayConnector::will_be_destroyed()
 {
     GraphicsManagement::the().detach_display_connector({}, *this);
 
-    VERIFY(m_symlink_sysfs_component);
-    before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+    // NOTE: We check if m_symlink_sysfs_component is not null, because if we failed
+    // at some point in DisplayConnector::after_inserting(), then that method will tear down
+    // the object internal members safely, so we don't want to do it again here.
+    if (m_symlink_sysfs_component) {
+        before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+        m_symlink_sysfs_component.clear();
+    }
 
-    m_symlink_sysfs_component.clear();
-    SysFSDisplayConnectorsDirectory::the().unplug({}, *m_sysfs_device_directory);
+    // NOTE: We check if m_sysfs_device_directory is not null, because if we failed
+    // at some point in DisplayConnector::after_inserting(), then that method will tear down
+    // the object internal members safely, so we don't want to do it again here.
+    if (m_sysfs_device_directory) {
+        SysFSDisplayConnectorsDirectory::the().unplug({}, *m_sysfs_device_directory);
+        m_sysfs_device_directory.clear();
+    }
+
     before_will_be_destroyed_remove_from_device_management();
 }
 
-void DisplayConnector::after_inserting()
+ErrorOr<void> DisplayConnector::after_inserting()
 {
     after_inserting_add_to_device_management();
+    ArmedScopeGuard clean_from_device_management([&] {
+        before_will_be_destroyed_remove_from_device_management();
+    });
+
     auto sysfs_display_connector_device_directory = DisplayConnectorSysFSDirectory::create(SysFSDisplayConnectorsDirectory::the(), *this);
     m_sysfs_device_directory = sysfs_display_connector_device_directory;
     SysFSDisplayConnectorsDirectory::the().plug({}, *sysfs_display_connector_device_directory);
+    ArmedScopeGuard clean_from_sysfs_display_connector_device_directory([&] {
+        SysFSDisplayConnectorsDirectory::the().unplug({}, *m_sysfs_device_directory);
+        m_sysfs_device_directory.clear();
+    });
+
     VERIFY(!m_symlink_sysfs_component);
-    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSCharacterDevicesDirectory::the(), *this, *m_sysfs_device_directory));
+    auto sys_fs_component = TRY(SysFSSymbolicLinkDeviceComponent::try_create(SysFSCharacterDevicesDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
+    ArmedScopeGuard clean_symlink_to_device_identifier_directory([&] {
+        VERIFY(m_symlink_sysfs_component);
+        before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+        m_symlink_sysfs_component.clear();
+    });
 
-    auto rounded_size = MUST(Memory::page_round_up(m_framebuffer_resource_size));
+    auto rounded_size = TRY(Memory::page_round_up(m_framebuffer_resource_size));
 
     if (!m_framebuffer_at_arbitrary_physical_range) {
         VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
-        m_shared_framebuffer_vmobject = MUST(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
-        m_framebuffer_region = MUST(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+        m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
+        m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
     } else {
-        m_shared_framebuffer_vmobject = MUST(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
-        m_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+        m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
+        m_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
     }
 
     m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
-    m_fake_writes_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    m_fake_writes_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
+
+    clean_from_device_management.disarm();
+    clean_from_sysfs_display_connector_device_directory.disarm();
+    clean_symlink_to_device_identifier_directory.disarm();
 
     GraphicsManagement::the().attach_new_display_connector({}, *this);
     if (m_enable_write_combine_optimization) {
         [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
     }
+    return {};
 }
 
 bool DisplayConnector::console_mode() const

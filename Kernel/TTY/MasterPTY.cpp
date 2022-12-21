@@ -22,8 +22,8 @@ ErrorOr<NonnullLockRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
     auto master_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
     auto slave_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index)));
     master_pty->m_slave = slave_pty;
-    master_pty->after_inserting();
-    slave_pty->after_inserting();
+    TRY(master_pty->after_inserting());
+    TRY(slave_pty->after_inserting());
     return master_pty;
 }
 

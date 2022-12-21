@@ -146,7 +146,7 @@ private:
     DisplayConnector(DisplayConnector&&) = delete;
 
     virtual void will_be_destroyed() override;
-    virtual void after_inserting() override;
+    virtual ErrorOr<void> after_inserting() override;
 
     ErrorOr<bool> ioctl_requires_ownership(unsigned request) const;
 
