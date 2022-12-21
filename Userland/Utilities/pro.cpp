@@ -5,10 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/FileStream.h>
 #include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
+#include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -159,6 +161,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString method = "GET";
     StringView method_override;
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> request_headers;
+    String credentials;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
@@ -180,6 +183,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!split.has_value())
                 return false;
             request_headers.set(header.substring_view(0, split.value()), header.substring_view(split.value() + 1));
+            return true;
+        } });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "(HTTP only) Provide basic authentication credentials",
+        .long_name = "auth",
+        .short_name = 'u',
+        .value_name = "username:password",
+        .accept_value = [&](auto* s) {
+            StringView input { s, strlen(s) };
+            if (!input.contains(':'))
+                return false;
+
+            // NOTE: Input is explicitly not trimmed, but instad taken in raw;
+            //       Space prepended usernames and appended passwords might be legal in the user's context.
+            auto maybe_credentials = String::from_utf8(input);
+            if (maybe_credentials.is_error())
+                return false;
+
+            credentials = maybe_credentials.release_value();
             return true;
         } });
     args_parser.add_option(proxy_spec, "Specify a proxy server to use for this request (proto://ip:port)", "proxy", 'p', "proxy");
@@ -221,6 +244,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
     auto output_stream = ConditionalOutputFileStream { [&] { return should_save_stream_data; }, stdout };
+
+    // https://httpwg.org/specs/rfc9110.html#authentication
+    if (!credentials.is_empty() && is_http_url) {
+        // 11.2. Authentication Parameters
+        // The authentication scheme is followed by additional information necessary for achieving authentication via
+        // that scheme as (...) or a single sequence of characters capable of holding base64-encoded information.
+        // FIXME: Prevent overriding manually provided Authorization header
+        auto const encoded_credentials = TRY(encode_base64(credentials.bytes()));
+        auto const authorization = TRY(String::formatted("Basic {}", encoded_credentials));
+        request_headers.set("Authorization", authorization.to_deprecated_string());
+    }
 
     Function<void()> setup_request = [&] {
         if (!request) {
