@@ -19,19 +19,20 @@ constexpr int DRAWTARGET_WIDTH = 500;
 constexpr int DRAWTARGET_HEIGHT = 500;
 
 
-static u32 encode_command(u32 length, u32 mid, Protocol::VirGLCommand command)
+static u32 encode_command(u16 length, Protocol::ObjectType object_type, Protocol::VirGLCommand command)
 {
-    u32 command_value = to_underlying(command);
-    return (length << 16) | ((mid & 0xff) << 8) | (command_value & 0xff);
+    u8 command_value = to_underlying(command);
+    u8 object_type_value = to_underlying(object_type);
+    return (length << 16) | (object_type_value << 8) | command_value;
 };
 
 class CommandBuilder {
 public:
-    CommandBuilder(Vector<u32>& buffer, Protocol::VirGLCommand command, u32 mid)
+    CommandBuilder(Vector<u32>& buffer, Protocol::VirGLCommand command, Protocol::ObjectType object_type)
         : m_buffer(buffer)
         , m_start_offset(buffer.size())
         , m_command(command)
-        , m_command_mid(mid)
+        , m_object_type(object_type)
     {
         m_buffer.append(0);
     }
@@ -75,7 +76,8 @@ public:
         if (!m_finalized) {
             m_finalized = true;
             size_t num_elems = m_buffer.size() - m_start_offset - 1;
-            m_buffer[m_start_offset] = encode_command(num_elems, m_command_mid, m_command);
+            VERIFY(num_elems <= NumericLimits<u16>::max());
+            m_buffer[m_start_offset] = encode_command(static_cast<u16>(num_elems), m_object_type, m_command);
         }
     }
 
@@ -89,20 +91,20 @@ private:
     Vector<u32>& m_buffer;
     size_t m_start_offset;
     Protocol::VirGLCommand m_command;
-    u32 m_command_mid;
+    Protocol::ObjectType m_object_type;
     bool m_finalized { false };
 };
 
 void CommandBufferBuilder::append_set_tweaks(u32 id, u32 value)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_TWEAKS, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_TWEAKS, Protocol::ObjectType::NONE);
     builder.appendu32(id);
     builder.appendu32(value);
 }
 
 void CommandBufferBuilder::append_transfer3d(Protocol::ResourceID resource, size_t width, size_t height, size_t depth, size_t direction)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::TRANSFER3D, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::TRANSFER3D, Protocol::ObjectType::NONE);
     builder.appendu32(resource.value()); // res_handle
     builder.appendu32(0);                // level
     // FIXME: It is not clear what this magic 242 value does.
@@ -123,12 +125,12 @@ void CommandBufferBuilder::append_transfer3d(Protocol::ResourceID resource, size
 
 void CommandBufferBuilder::append_end_transfers_3d()
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::END_TRANSFERS, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::END_TRANSFERS, Protocol::ObjectType::NONE);
 }
 
 void CommandBufferBuilder::append_draw_vbo(u32 count)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::DRAW_VBO, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::DRAW_VBO, Protocol::ObjectType::NONE);
     builder.appendu32(0);                                                      // start
     builder.appendu32(count);                                                  // count
     builder.appendu32(to_underlying(Protocol::PipePrimitiveTypes::TRIANGLES)); // mode
@@ -145,7 +147,7 @@ void CommandBufferBuilder::append_draw_vbo(u32 count)
 
 void CommandBufferBuilder::append_gl_clear(float r, float g, float b)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CLEAR, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CLEAR, Protocol::ObjectType::NONE);
     Protocol::ClearType clear_flags {};
     clear_flags.flags.depth = 1;
     clear_flags.flags.color0 = 1;
@@ -160,7 +162,7 @@ void CommandBufferBuilder::append_gl_clear(float r, float g, float b)
 
 void CommandBufferBuilder::append_set_vertex_buffers(u32 stride, u32 offset, Protocol::ResourceID resource)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_VERTEX_BUFFERS, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_VERTEX_BUFFERS, Protocol::ObjectType::NONE);
     builder.appendu32(stride);
     builder.appendu32(offset);
     builder.appendu32(resource.value());
@@ -168,7 +170,7 @@ void CommandBufferBuilder::append_set_vertex_buffers(u32 stride, u32 offset, Pro
 
 void CommandBufferBuilder::append_create_blend(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::BLEND));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::BLEND);
     builder.appendu32(handle.value());
     builder.appendu32(4); // Enable dither flag, and nothing else
     builder.appendu32(0);
@@ -180,13 +182,13 @@ void CommandBufferBuilder::append_create_blend(Protocol::ObjectHandle handle)
 
 void CommandBufferBuilder::append_bind_blend(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, to_underlying(Protocol::ObjectType::BLEND));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, Protocol::ObjectType::BLEND);
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
 }
 
 void CommandBufferBuilder::append_create_vertex_elements(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::VERTEX_ELEMENTS));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::VERTEX_ELEMENTS);
     builder.appendu32(handle.value());
     builder.appendu32(12); // src_offset_0
     builder.appendu32(0);  // instance_divisor_0
@@ -200,13 +202,13 @@ void CommandBufferBuilder::append_create_vertex_elements(Protocol::ObjectHandle 
 
 void CommandBufferBuilder::append_bind_vertex_elements(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, to_underlying(Protocol::ObjectType::VERTEX_ELEMENTS));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, Protocol::ObjectType::VERTEX_ELEMENTS);
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
 }
 
 void CommandBufferBuilder::append_create_surface(Protocol::ResourceID drawtarget_resource, Protocol::ObjectHandle drawtarget_handle, Protocol::TextureFormat format)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::SURFACE));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::SURFACE);
     builder.appendu32(drawtarget_handle.value());
     builder.appendu32(drawtarget_resource.value());
     builder.appendu32(to_underlying(format));
@@ -216,7 +218,7 @@ void CommandBufferBuilder::append_create_surface(Protocol::ResourceID drawtarget
 
 void CommandBufferBuilder::append_set_framebuffer_state(Protocol::ObjectHandle drawtarget, Protocol::ObjectHandle depthbuffer)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_FRAMEBUFFER_STATE, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_FRAMEBUFFER_STATE, Protocol::ObjectType::NONE);
     builder.appendu32(1);                   // nr_cbufs
     builder.appendu32(depthbuffer.value()); // zsurf_handle
     builder.appendu32(drawtarget.value());  // surf_handle
@@ -224,7 +226,7 @@ void CommandBufferBuilder::append_set_framebuffer_state(Protocol::ObjectHandle d
 
 void CommandBufferBuilder::append_gl_viewport()
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_VIEWPORT_STATE, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_VIEWPORT_STATE, Protocol::ObjectType::NONE);
     builder.appendu32(0);
     builder.appendf32(DRAWTARGET_WIDTH / 2);    // scale_x
     builder.appendf32((DRAWTARGET_HEIGHT / 2)); // scale_y (flipped, due to VirGL being different from our coordinate space)
@@ -236,14 +238,14 @@ void CommandBufferBuilder::append_gl_viewport()
 
 void CommandBufferBuilder::append_set_framebuffer_state_no_attach()
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_FRAMEBUFFER_STATE_NO_ATTACH, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_FRAMEBUFFER_STATE_NO_ATTACH, Protocol::ObjectType::NONE);
     builder.appendu32((DRAWTARGET_HEIGHT << 16) | DRAWTARGET_WIDTH); // (height << 16) | width
     builder.appendu32(0);                                            // (samples << 16) | layers
 }
 
 void CommandBufferBuilder::append_set_constant_buffer(Vector<float> const& constant_buffer)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_CONSTANT_BUFFER, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_CONSTANT_BUFFER, Protocol::ObjectType::NONE);
     builder.appendu32(to_underlying(Gallium::ShaderType::SHADER_VERTEX));
     builder.appendu32(0); // index (currently unused according to virglrenderer source code)
     for (auto v : constant_buffer) {
@@ -254,7 +256,7 @@ void CommandBufferBuilder::append_set_constant_buffer(Vector<float> const& const
 void CommandBufferBuilder::append_create_shader(Protocol::ObjectHandle handle, Gallium::ShaderType shader_type, StringView shader_data)
 {
     size_t shader_len = shader_data.length() + 1; // Need to remember to copy null terminator as well if needed
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::SHADER));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::SHADER);
     builder.appendu32(handle.value()); // VIRGL_OBJ_CREATE_HANDLE
     builder.appendu32(to_underlying(shader_type));
     builder.appendu32(0); // VIRGL_OBJ_SHADER_OFFSET
@@ -265,14 +267,14 @@ void CommandBufferBuilder::append_create_shader(Protocol::ObjectHandle handle, G
 
 void CommandBufferBuilder::append_bind_shader(Protocol::ObjectHandle handle, Gallium::ShaderType shader_type)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_SHADER, 0);
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_SHADER, Protocol::ObjectType::NONE);
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
     builder.appendu32(to_underlying(shader_type));
 }
 
 void CommandBufferBuilder::append_create_rasterizer(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::RASTERIZER));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::RASTERIZER);
     builder.appendu32(handle.value()); // Handle
     builder.appendu32(0x00000002);     // S0 (bitfield of state bits)
     builder.appendf32(1.0);            // Point size
@@ -286,13 +288,13 @@ void CommandBufferBuilder::append_create_rasterizer(Protocol::ObjectHandle handl
 
 void CommandBufferBuilder::append_bind_rasterizer(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, to_underlying(Protocol::ObjectType::RASTERIZER));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, Protocol::ObjectType::RASTERIZER);
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
 }
 
 void CommandBufferBuilder::append_create_dsa(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::DSA));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::DSA);
     builder.appendu32(handle.value()); // Handle
     builder.appendu32(0x00000007);     // S0 (bitset: (v >> 0) & 1 = depth.enabled, (v >> 1) & 1 = depth.writemask,  (v >> 2) & 7 = depth.func)
     builder.appendu32(0x00000000);     // S1 (bitset for 1st stencil buffer)
@@ -302,7 +304,7 @@ void CommandBufferBuilder::append_create_dsa(Protocol::ObjectHandle handle)
 
 void CommandBufferBuilder::append_bind_dsa(Protocol::ObjectHandle handle)
 {
-    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, to_underlying(Protocol::ObjectType::DSA));
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, Protocol::ObjectType::DSA);
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
 }
 
