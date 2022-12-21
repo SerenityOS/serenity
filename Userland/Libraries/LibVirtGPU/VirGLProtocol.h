@@ -64,7 +64,7 @@ enum class TextureFormat : u32 {
 
 };
 
-enum class VirGLCommand : u32 {
+enum class VirGLCommand : u8 {
     NOP = 0,
     CREATE_OBJECT = 1,
     BIND_OBJECT,
@@ -137,7 +137,7 @@ union ClearType {
     u32 value;
 };
 
-enum class ObjectType : u32 {
+enum class ObjectType : u8 {
     NONE,
     BLEND,
     RASTERIZER,
