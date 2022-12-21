@@ -255,6 +255,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto const encoded_credentials = TRY(encode_base64(credentials.bytes()));
         auto const authorization = TRY(String::formatted("Basic {}", encoded_credentials));
         request_headers.set("Authorization", authorization.to_deprecated_string());
+    } else {
+        if (is_http_url && has_credentials && has_manual_authorization_header)
+            warnln("* Skipping encoding provided authorization, manual header present.");
+        if (!is_http_url && has_credentials)
+            warnln("* Skipping adding Authorization header, request was not for the HTTP protocol.");
     }
 
     Function<void()> setup_request = [&] {
