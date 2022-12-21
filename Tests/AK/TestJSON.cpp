@@ -371,3 +371,62 @@ TEST_CASE(fallible_json_array_for_each)
     EXPECT(result4.is_error());
     EXPECT((IsSame<decltype(result4.release_error()), CustomError>));
 }
+
+TEST_CASE(json_value_as_integer)
+{
+    // is_integer() should validate based on the value, not the underlying type.
+    JsonValue value_int { static_cast<int>(42) };
+    JsonValue value_unsigned { static_cast<unsigned>(42) };
+    JsonValue value_long { static_cast<long>(42) };
+    JsonValue value_long_unsigned { static_cast<long unsigned>(42) };
+    JsonValue value_long_long { static_cast<long long>(42) };
+    JsonValue value_long_long_unsigned { static_cast<long long unsigned>(42) };
+
+    auto check_is_valid_for_all_types = [](JsonValue& value) {
+        EXPECT(value.is_integer<u8>());
+        EXPECT_EQ(value.as_integer<u8>(), static_cast<u8>(42));
+        EXPECT(value.is_integer<u16>());
+        EXPECT_EQ(value.as_integer<u16>(), static_cast<u16>(42));
+        EXPECT(value.is_integer<u32>());
+        EXPECT_EQ(value.as_integer<u32>(), static_cast<u32>(42));
+        EXPECT(value.is_integer<u64>());
+        EXPECT_EQ(value.as_integer<u64>(), static_cast<u64>(42));
+        EXPECT(value.is_integer<i8>());
+        EXPECT_EQ(value.as_integer<i8>(), static_cast<i8>(42));
+        EXPECT(value.is_integer<i16>());
+        EXPECT_EQ(value.as_integer<i16>(), static_cast<i16>(42));
+        EXPECT(value.is_integer<i32>());
+        EXPECT_EQ(value.as_integer<i32>(), static_cast<i32>(42));
+        EXPECT(value.is_integer<i64>());
+        EXPECT_EQ(value.as_integer<i64>(), static_cast<i64>(42));
+    };
+
+    check_is_valid_for_all_types(value_int);
+    check_is_valid_for_all_types(value_unsigned);
+    check_is_valid_for_all_types(value_long);
+    check_is_valid_for_all_types(value_long_unsigned);
+    check_is_valid_for_all_types(value_long_long);
+    check_is_valid_for_all_types(value_long_long_unsigned);
+
+    // Negative values should only fit in signed types.
+    JsonValue negative_value { -42 };
+    EXPECT(!negative_value.is_integer<u8>());
+    EXPECT(!negative_value.is_integer<u16>());
+    EXPECT(!negative_value.is_integer<u32>());
+    EXPECT(!negative_value.is_integer<u64>());
+    EXPECT(negative_value.is_integer<i8>());
+    EXPECT(negative_value.is_integer<i16>());
+    EXPECT(negative_value.is_integer<i32>());
+    EXPECT(negative_value.is_integer<i64>());
+
+    // 64-bit only
+    JsonValue very_large_value { INT64_MAX };
+    EXPECT(!very_large_value.is_integer<u8>());
+    EXPECT(!very_large_value.is_integer<u16>());
+    EXPECT(!very_large_value.is_integer<u32>());
+    EXPECT(very_large_value.is_integer<u64>());
+    EXPECT(!very_large_value.is_integer<i8>());
+    EXPECT(!very_large_value.is_integer<i16>());
+    EXPECT(!very_large_value.is_integer<i32>());
+    EXPECT(very_large_value.is_integer<i64>());
+}
