@@ -141,7 +141,7 @@ void CommandBufferBuilder::append_draw_vbo(Protocol::PipePrimitiveTypes primitiv
     builder.appendu32(0);                             // cso
 }
 
-void CommandBufferBuilder::append_clear(float r, float g, float b)
+void CommandBufferBuilder::append_clear(float r, float g, float b, float a)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CLEAR, Protocol::ObjectType::NONE);
     Protocol::ClearType clear_flags {};
@@ -151,9 +151,23 @@ void CommandBufferBuilder::append_clear(float r, float g, float b)
     builder.appendf32(r);
     builder.appendf32(g);
     builder.appendf32(b);
-    builder.appendf32(1.0f); // Alpha
-    builder.appendf64(1.0);  // Depth
-    builder.appendu32(0);    // Stencil
+    builder.appendf32(a);
+    builder.appendf64(1.0);
+    builder.appendu32(0);
+}
+
+void CommandBufferBuilder::append_clear(double depth)
+{
+    CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CLEAR, Protocol::ObjectType::NONE);
+    Protocol::ClearType clear_flags {};
+    clear_flags.flags.depth = 1;
+    builder.appendu32(clear_flags.value);
+    builder.appendf32(0);
+    builder.appendf32(0);
+    builder.appendf32(0);
+    builder.appendf32(0);
+    builder.appendf64(depth);
+    builder.appendu32(0);
 }
 
 void CommandBufferBuilder::append_set_vertex_buffers(u32 stride, u32 offset, Protocol::ResourceID resource)
