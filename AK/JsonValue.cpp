@@ -103,7 +103,7 @@ bool JsonValue::equals(JsonValue const& other) const
     if (is_object() && other.is_object() && as_object().size() == other.as_object().size()) {
         bool result = true;
         as_object().for_each_member([&](auto& key, auto& value) {
-            result &= value.equals(other.as_object().get(key));
+            result &= value.equals(other.as_object().get_deprecated(key));
         });
         return result;
     }

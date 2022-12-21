@@ -19,7 +19,7 @@ static DeprecatedString to_css_length(float design_value, Presentation const& pr
 
 ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json)
 {
-    auto const& maybe_type = slide_object_json.get("type"sv);
+    auto const& maybe_type = slide_object_json.get_deprecated("type"sv);
     if (!maybe_type.is_string())
         return Error::from_string_view("Slide object must have a type"sv);
 

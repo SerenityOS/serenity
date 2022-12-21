@@ -449,7 +449,7 @@ void DebugSession::update_loaded_libs()
 
     vm_entries.for_each([&](auto& entry) {
         // TODO: check that region is executable
-        auto vm_name = entry.as_object().get("name"sv).as_string();
+        auto vm_name = entry.as_object().get_deprecated("name"sv).as_string();
 
         auto object_path = get_path_to_object(vm_name);
         if (!object_path.has_value())
@@ -459,7 +459,7 @@ void DebugSession::update_loaded_libs()
         if (Core::File::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 
-        FlatPtr base_address = entry.as_object().get("address"sv).to_addr();
+        FlatPtr base_address = entry.as_object().get_deprecated("address"sv).to_addr();
         if (auto it = m_loaded_libraries.find(lib_name); it != m_loaded_libraries.end()) {
             // We expect the VM regions to be sorted by address.
             VERIFY(base_address >= it->value->base_address);

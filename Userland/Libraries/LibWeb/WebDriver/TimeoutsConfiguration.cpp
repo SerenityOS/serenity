@@ -48,7 +48,7 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
     // 3. If value has a property with the key "script":
     if (value.as_object().has("script"sv)) {
         // 1. Let script duration be the value of property "script".
-        auto const& script_duration = value.as_object().get("script"sv);
+        auto const& script_duration = value.as_object().get_deprecated("script"sv);
 
         // 2. If script duration is a number and less than 0 or greater than maximum safe integer, or it is not null, return error with error code invalid argument.
         if (script_duration.is_number() && (script_duration.to_i64() < 0 || script_duration.to_i64() > max_safe_integer))
@@ -63,7 +63,7 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
     // 4. If value has a property with the key "pageLoad":
     if (value.as_object().has("pageLoad"sv)) {
         // 1. Let page load duration be the value of property "pageLoad".
-        auto const& page_load_duration = value.as_object().get("pageLoad"sv);
+        auto const& page_load_duration = value.as_object().get_deprecated("pageLoad"sv);
 
         // 2. If page load duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
         if (!page_load_duration.is_number() || page_load_duration.to_i64() < 0 || page_load_duration.to_i64() > max_safe_integer)
@@ -76,7 +76,7 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
     // 5. If value has a property with the key "implicit":
     if (value.as_object().has("implicit"sv)) {
         // 1. Let implicit duration be the value of property "implicit".
-        auto const& implicit_duration = value.as_object().get("implicit"sv);
+        auto const& implicit_duration = value.as_object().get_deprecated("implicit"sv);
 
         // 2. If implicit duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
         if (!implicit_duration.is_number() || implicit_duration.to_i64() < 0 || implicit_duration.to_i64() > max_safe_integer)

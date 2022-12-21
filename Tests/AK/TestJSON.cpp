@@ -40,15 +40,15 @@ TEST_CASE(load_form)
 
     EXPECT(form_json.is_object());
 
-    auto name = form_json.as_object().get("name"sv).to_deprecated_string();
+    auto name = form_json.as_object().get_deprecated("name"sv).to_deprecated_string();
 
     EXPECT_EQ(name, "Form1");
 
-    auto widgets = form_json.as_object().get("widgets"sv).as_array();
+    auto widgets = form_json.as_object().get_deprecated("widgets"sv).as_array();
 
     widgets.for_each([&](JsonValue const& widget_value) {
         auto& widget_object = widget_value.as_object();
-        auto widget_class = widget_object.get("class"sv).as_string();
+        auto widget_class = widget_object.get_deprecated("class"sv).as_string();
         widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] const JsonValue& property_value) {
         });
     });

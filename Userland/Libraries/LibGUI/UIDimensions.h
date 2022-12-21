@@ -306,9 +306,9 @@ inline auto clamp<GUI::UIDimension>(GUI::UIDimension const& input, GUI::UIDimens
             if (!value.is_object())                                            \
                 return false;                                                  \
             auto result_width = GUI::UIDimension::construct_from_json_value(   \
-                value.as_object().get("width"sv));                             \
+                value.as_object().get_deprecated("width"sv));                  \
             auto result_height = GUI::UIDimension::construct_from_json_value(  \
-                value.as_object().get("height"sv));                            \
+                value.as_object().get_deprecated("height"sv));                 \
             if (result_width.has_value() && result_height.has_value()) {       \
                 GUI::UISize size(result_width.value(), result_height.value()); \
                 setter(size);                                                  \

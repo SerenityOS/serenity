@@ -35,7 +35,7 @@ NonnullOwnPtr<ProjectConfig> ProjectConfig::create_empty()
 
 Optional<DeprecatedString> ProjectConfig::read_key(DeprecatedString key_name) const
 {
-    auto const& value = m_config.get(key_name);
+    auto const& value = m_config.get_deprecated(key_name);
     if (!value.is_string())
         return {};
 

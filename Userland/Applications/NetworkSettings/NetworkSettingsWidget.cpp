@@ -78,7 +78,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
     size_t index = 0;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto adapter_name = if_object.get("name"sv).to_deprecated_string();
+        auto adapter_name = if_object.get_deprecated("name"sv).to_deprecated_string();
         if (adapter_name == "loop")
             return;
 

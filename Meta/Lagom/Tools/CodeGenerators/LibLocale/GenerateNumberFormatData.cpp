@@ -245,15 +245,15 @@ static ErrorOr<void> parse_number_system_digits(DeprecatedString core_supplement
     number_systems_path = number_systems_path.append("numberingSystems.json"sv);
 
     auto number_systems = TRY(read_json_file(number_systems_path.string()));
-    auto const& supplemental_object = number_systems.as_object().get("supplemental"sv);
-    auto const& number_systems_object = supplemental_object.as_object().get("numberingSystems"sv);
+    auto const& supplemental_object = number_systems.as_object().get_deprecated("supplemental"sv);
+    auto const& number_systems_object = supplemental_object.as_object().get_deprecated("numberingSystems"sv);
 
     number_systems_object.as_object().for_each_member([&](auto const& number_system, auto const& digits_object) {
-        auto type = digits_object.as_object().get("_type"sv).as_string();
+        auto type = digits_object.as_object().get_deprecated("_type"sv).as_string();
         if (type != "numeric"sv)
             return;
 
-        auto digits = digits_object.as_object().get("_digits"sv).as_string();
+        auto digits = digits_object.as_object().get_deprecated("_digits"sv).as_string();
 
         Utf8View utf8_digits { digits };
         VERIFY(utf8_digits.length() == 10);
@@ -415,10 +415,10 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
     numbers_path = numbers_path.append("numbers.json"sv);
 
     auto numbers = TRY(read_json_file(numbers_path.string()));
-    auto const& main_object = numbers.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
-    auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
-    auto const& minimum_grouping_digits = locale_numbers_object.as_object().get("minimumGroupingDigits"sv);
+    auto const& main_object = numbers.as_object().get_deprecated("main"sv);
+    auto const& locale_object = main_object.as_object().get_deprecated(numbers_path.parent().basename());
+    auto const& locale_numbers_object = locale_object.as_object().get_deprecated("numbers"sv);
+    auto const& minimum_grouping_digits = locale_numbers_object.as_object().get_deprecated("minimumGroupingDigits"sv);
 
     Vector<Optional<NumberSystem>> number_systems;
     number_systems.resize(cldr.number_systems.size());
@@ -523,8 +523,8 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             // The range separator does not appear in the symbols list, we have to extract it from
             // the range pattern.
             auto misc_patterns_key = DeprecatedString::formatted("{}{}", misc_patterns_prefix, system);
-            auto misc_patterns = locale_numbers_object.as_object().get(misc_patterns_key);
-            auto range_separator = misc_patterns.as_object().get("range"sv).as_string();
+            auto misc_patterns = locale_numbers_object.as_object().get_deprecated(misc_patterns_key);
+            auto range_separator = misc_patterns.as_object().get_deprecated("range"sv).as_string();
 
             auto begin_index = range_separator.find("{0}"sv).value() + "{0}"sv.length();
             auto end_index = range_separator.find("{1}"sv).value();
@@ -541,41 +541,41 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             auto system = key.substring(decimal_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
-            auto format_object = value.as_object().get("standard"sv);
+            auto format_object = value.as_object().get_deprecated("standard"sv);
             parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.decimal_format, &number_system);
 
-            auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
+            auto const& long_format = value.as_object().get_deprecated("long"sv).as_object().get_deprecated("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
 
-            auto const& short_format = value.as_object().get("short"sv).as_object().get("decimalFormat"sv);
+            auto const& short_format = value.as_object().get_deprecated("short"sv).as_object().get_deprecated("decimalFormat"sv);
             number_system.decimal_short_formats = parse_number_format(short_format.as_object());
         } else if (key.starts_with(currency_formats_prefix)) {
             auto system = key.substring(currency_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
-            auto format_object = value.as_object().get("standard"sv);
+            auto format_object = value.as_object().get_deprecated("standard"sv);
             parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.currency_format);
 
-            format_object = value.as_object().get("accounting"sv);
+            format_object = value.as_object().get_deprecated("accounting"sv);
             parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.accounting_format);
 
             number_system.currency_unit_formats = parse_number_format(value.as_object());
 
             if (value.as_object().has("short"sv)) {
-                auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
+                auto const& short_format = value.as_object().get_deprecated("short"sv).as_object().get_deprecated("standard"sv);
                 number_system.currency_short_formats = parse_number_format(short_format.as_object());
             }
         } else if (key.starts_with(percent_formats_prefix)) {
             auto system = key.substring(percent_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
-            auto format_object = value.as_object().get("standard"sv);
+            auto format_object = value.as_object().get_deprecated("standard"sv);
             parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.percent_format);
         } else if (key.starts_with(scientific_formats_prefix)) {
             auto system = key.substring(scientific_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
-            auto format_object = value.as_object().get("standard"sv);
+            auto format_object = value.as_object().get_deprecated("standard"sv);
             parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.scientific_format);
         }
     });
@@ -600,12 +600,12 @@ static ErrorOr<void> parse_units(DeprecatedString locale_units_path, CLDR& cldr,
     units_path = units_path.append("units.json"sv);
 
     auto locale_units = TRY(read_json_file(units_path.string()));
-    auto const& main_object = locale_units.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(units_path.parent().basename());
-    auto const& locale_units_object = locale_object.as_object().get("units"sv);
-    auto const& long_object = locale_units_object.as_object().get("long"sv);
-    auto const& short_object = locale_units_object.as_object().get("short"sv);
-    auto const& narrow_object = locale_units_object.as_object().get("narrow"sv);
+    auto const& main_object = locale_units.as_object().get_deprecated("main"sv);
+    auto const& locale_object = main_object.as_object().get_deprecated(units_path.parent().basename());
+    auto const& locale_units_object = locale_object.as_object().get_deprecated("units"sv);
+    auto const& long_object = locale_units_object.as_object().get_deprecated("long"sv);
+    auto const& short_object = locale_units_object.as_object().get_deprecated("short"sv);
+    auto const& narrow_object = locale_units_object.as_object().get_deprecated("narrow"sv);
 
     HashMap<DeprecatedString, Unit> units;
 

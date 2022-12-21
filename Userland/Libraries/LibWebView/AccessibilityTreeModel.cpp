@@ -83,13 +83,13 @@ int AccessibilityTreeModel::column_count(const GUI::ModelIndex&) const
 GUI::Variant AccessibilityTreeModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto type = node.get("type"sv).as_string_or("unknown"sv);
+    auto type = node.get_deprecated("type"sv).as_string_or("unknown"sv);
 
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
-            return node.get("text"sv).as_string();
+            return node.get_deprecated("text"sv).as_string();
 
-        auto node_role = node.get("role"sv).as_string();
+        auto node_role = node.get_deprecated("role"sv).as_string();
         if (type != "element")
             return node_role;
 

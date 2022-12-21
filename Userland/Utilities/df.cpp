@@ -62,15 +62,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto const& json = json_result.as_array();
     json.for_each([&](auto& value) {
         auto& fs_object = value.as_object();
-        auto fs = fs_object.get("class_name"sv).to_deprecated_string();
-        auto total_block_count = fs_object.get("total_block_count"sv).to_u64();
-        auto free_block_count = fs_object.get("free_block_count"sv).to_u64();
+        auto fs = fs_object.get_deprecated("class_name"sv).to_deprecated_string();
+        auto total_block_count = fs_object.get_deprecated("total_block_count"sv).to_u64();
+        auto free_block_count = fs_object.get_deprecated("free_block_count"sv).to_u64();
         auto used_block_count = total_block_count - free_block_count;
-        auto total_inode_count = fs_object.get("total_inode_count"sv).to_u64();
-        auto free_inode_count = fs_object.get("free_inode_count"sv).to_u64();
+        auto total_inode_count = fs_object.get_deprecated("total_inode_count"sv).to_u64();
+        auto free_inode_count = fs_object.get_deprecated("free_inode_count"sv).to_u64();
         auto used_inode_count = total_inode_count - free_inode_count;
-        auto block_size = fs_object.get("block_size"sv).to_u64();
-        auto mount_point = fs_object.get("mount_point"sv).to_deprecated_string();
+        auto block_size = fs_object.get_deprecated("block_size"sv).to_u64();
+        auto mount_point = fs_object.get_deprecated("mount_point"sv).to_deprecated_string();
 
         auto used_percentage = 100;
         if (total_block_count != 0)

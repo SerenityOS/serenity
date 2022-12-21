@@ -138,7 +138,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
         VERIFY(feature.has("type"sv));
-        auto feature_type = feature.get("type"sv);
+        auto feature_type = feature.get_deprecated("type"sv);
         VERIFY(feature_type.is_string());
         member_generator.set("is_range", feature_type.as_string() == "range" ? "true" : "false");
         member_generator.append(R"~~~(
@@ -173,7 +173,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
                 }
                 have_output_value_type_switch = true;
             };
-            auto& values = feature.get("values"sv);
+            auto& values = feature.get_deprecated("values"sv);
             VERIFY(values.is_array());
             auto& values_array = values.as_array();
             for (auto& type : values_array.values()) {
@@ -251,7 +251,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
                 }
                 have_output_identifier_switch = true;
             };
-            auto& values = feature.get("values"sv);
+            auto& values = feature.get_deprecated("values"sv);
             VERIFY(values.is_array());
             auto& values_array = values.as_array();
             for (auto& identifier : values_array.values()) {

@@ -281,34 +281,34 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
         event.serial = next_serial;
         next_serial.increment();
-        event.timestamp = perf_event.get("timestamp"sv).to_number<u64>();
-        event.lost_samples = perf_event.get("lost_samples"sv).to_number<u32>();
-        event.pid = perf_event.get("pid"sv).to_i32();
-        event.tid = perf_event.get("tid"sv).to_i32();
+        event.timestamp = perf_event.get_deprecated("timestamp"sv).to_number<u64>();
+        event.lost_samples = perf_event.get_deprecated("lost_samples"sv).to_number<u32>();
+        event.pid = perf_event.get_deprecated("pid"sv).to_i32();
+        event.tid = perf_event.get_deprecated("tid"sv).to_i32();
 
-        auto type_string = perf_event.get("type"sv).to_deprecated_string();
+        auto type_string = perf_event.get_deprecated("type"sv).to_deprecated_string();
 
         if (type_string == "sample"sv) {
             event.data = Event::SampleData {};
         } else if (type_string == "malloc"sv) {
             event.data = Event::MallocData {
-                .ptr = perf_event.get("ptr"sv).to_number<FlatPtr>(),
-                .size = perf_event.get("size"sv).to_number<size_t>(),
+                .ptr = perf_event.get_deprecated("ptr"sv).to_number<FlatPtr>(),
+                .size = perf_event.get_deprecated("size"sv).to_number<size_t>(),
             };
         } else if (type_string == "free"sv) {
             event.data = Event::FreeData {
-                .ptr = perf_event.get("ptr"sv).to_number<FlatPtr>(),
+                .ptr = perf_event.get_deprecated("ptr"sv).to_number<FlatPtr>(),
             };
         } else if (type_string == "signpost"sv) {
-            auto string_id = perf_event.get("arg1"sv).to_number<FlatPtr>();
+            auto string_id = perf_event.get_deprecated("arg1"sv).to_number<FlatPtr>();
             event.data = Event::SignpostData {
                 .string = profile_strings.get(string_id).value_or(DeprecatedString::formatted("Signpost #{}", string_id)),
-                .arg = perf_event.get("arg2"sv).to_number<FlatPtr>(),
+                .arg = perf_event.get_deprecated("arg2"sv).to_number<FlatPtr>(),
             };
         } else if (type_string == "mmap"sv) {
-            auto ptr = perf_event.get("ptr"sv).to_number<FlatPtr>();
-            auto size = perf_event.get("size"sv).to_number<size_t>();
-            auto name = perf_event.get("name"sv).to_deprecated_string();
+            auto ptr = perf_event.get_deprecated("ptr"sv).to_number<FlatPtr>();
+            auto size = perf_event.get_deprecated("size"sv).to_number<size_t>();
+            auto name = perf_event.get_deprecated("name"sv).to_deprecated_string();
 
             event.data = Event::MmapData {
                 .ptr = ptr,
@@ -322,13 +322,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             continue;
         } else if (type_string == "munmap"sv) {
             event.data = Event::MunmapData {
-                .ptr = perf_event.get("ptr"sv).to_number<FlatPtr>(),
-                .size = perf_event.get("size"sv).to_number<size_t>(),
+                .ptr = perf_event.get_deprecated("ptr"sv).to_number<FlatPtr>(),
+                .size = perf_event.get_deprecated("size"sv).to_number<size_t>(),
             };
             continue;
         } else if (type_string == "process_create"sv) {
-            auto parent_pid = perf_event.get("parent_pid"sv).to_number<pid_t>();
-            auto executable = perf_event.get("executable"sv).to_deprecated_string();
+            auto parent_pid = perf_event.get_deprecated("parent_pid"sv).to_number<pid_t>();
+            auto executable = perf_event.get_deprecated("executable"sv).to_deprecated_string();
             event.data = Event::ProcessCreateData {
                 .parent_pid = parent_pid,
                 .executable = executable,
@@ -346,7 +346,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             all_processes.append(move(sampled_process));
             continue;
         } else if (type_string == "process_exec"sv) {
-            auto executable = perf_event.get("executable"sv).to_deprecated_string();
+            auto executable = perf_event.get_deprecated("executable"sv).to_deprecated_string();
             event.data = Event::ProcessExecData {
                 .executable = executable,
             };
@@ -374,7 +374,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             current_processes.remove(event.pid);
             continue;
         } else if (type_string == "thread_create"sv) {
-            auto parent_tid = perf_event.get("parent_tid"sv).to_number<pid_t>();
+            auto parent_tid = perf_event.get_deprecated("parent_tid"sv).to_number<pid_t>();
             event.data = Event::ThreadCreateData {
                 .parent_tid = parent_tid,
             };
@@ -388,13 +388,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 it->value->handle_thread_exit(event.tid, event.serial);
             continue;
         } else if (type_string == "read"sv) {
-            auto const string_index = perf_event.get("filename_index"sv).to_number<FlatPtr>();
+            auto const string_index = perf_event.get_deprecated("filename_index"sv).to_number<FlatPtr>();
             event.data = Event::ReadData {
-                .fd = perf_event.get("fd"sv).to_number<int>(),
-                .size = perf_event.get("size"sv).to_number<size_t>(),
+                .fd = perf_event.get_deprecated("fd"sv).to_number<int>(),
+                .size = perf_event.get_deprecated("size"sv).to_number<size_t>(),
                 .path = profile_strings.get(string_index).value(),
-                .start_timestamp = perf_event.get("start_timestamp"sv).to_number<size_t>(),
-                .success = perf_event.get("success"sv).to_bool()
+                .start_timestamp = perf_event.get_deprecated("start_timestamp"sv).to_number<size_t>(),
+                .success = perf_event.get_deprecated("success"sv).to_bool()
             };
         } else {
             dbgln("Unknown event type '{}'", type_string);

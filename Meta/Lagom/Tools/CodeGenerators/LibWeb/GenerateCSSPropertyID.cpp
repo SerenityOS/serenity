@@ -230,7 +230,7 @@ bool is_inherited_property(PropertyID property_id)
 
         bool inherited = false;
         if (value.as_object().has("inherited"sv)) {
-            auto& inherited_value = value.as_object().get("inherited"sv);
+            auto& inherited_value = value.as_object().get_deprecated("inherited"sv);
             VERIFY(inherited_value.is_bool());
             inherited = inherited_value.as_bool();
         }
@@ -261,7 +261,7 @@ bool property_affects_layout(PropertyID property_id)
 
         bool affects_layout = true;
         if (value.as_object().has("affects-layout"sv))
-            affects_layout = value.as_object().get("affects-layout"sv).to_bool();
+            affects_layout = value.as_object().get_deprecated("affects-layout"sv).to_bool();
 
         if (affects_layout) {
             auto member_generator = generator.fork();
@@ -289,7 +289,7 @@ bool property_affects_stacking_context(PropertyID property_id)
 
         bool affects_stacking_context = false;
         if (value.as_object().has("affects-stacking-context"sv))
-            affects_stacking_context = value.as_object().get("affects-stacking-context"sv).to_bool();
+            affects_stacking_context = value.as_object().get_deprecated("affects-stacking-context"sv).to_bool();
 
         if (affects_stacking_context) {
             auto member_generator = generator.fork();
@@ -326,7 +326,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
             dbgln("No initial value specified for property '{}'", name);
             VERIFY_NOT_REACHED();
         }
-        auto& initial_value = object.get("initial"sv);
+        auto& initial_value = object.get_deprecated("initial"sv);
         VERIFY(initial_value.is_string());
         auto initial_value_string = initial_value.as_string();
 
@@ -370,7 +370,7 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         if (value.as_object().has("quirks"sv)) {
-            auto& quirks_value = value.as_object().get("quirks"sv);
+            auto& quirks_value = value.as_object().get_deprecated("quirks"sv);
             VERIFY(quirks_value.is_array());
             auto& quirks = quirks_value.as_array();
 
@@ -461,7 +461,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
             };
 
             if (has_valid_types) {
-                auto valid_types_value = object.get("valid-types"sv);
+                auto valid_types_value = object.get_deprecated("valid-types"sv);
                 VERIFY(valid_types_value.is_array());
                 auto valid_types = valid_types_value.as_array();
                 if (!valid_types.is_empty()) {
@@ -536,7 +536,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
             }
 
             if (has_valid_identifiers) {
-                auto valid_identifiers_value = object.get("valid-identifiers"sv);
+                auto valid_identifiers_value = object.get_deprecated("valid-identifiers"sv);
                 VERIFY(valid_identifiers_value.is_array());
                 auto valid_identifiers = valid_identifiers_value.as_array();
                 if (!valid_identifiers.is_empty()) {
@@ -581,7 +581,7 @@ size_t property_maximum_value_count(PropertyID property_id)
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         if (value.as_object().has("max-values"sv)) {
-            auto max_values = value.as_object().get("max-values"sv);
+            auto max_values = value.as_object().get_deprecated("max-values"sv);
             VERIFY(max_values.is_number() && !max_values.is_double());
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));

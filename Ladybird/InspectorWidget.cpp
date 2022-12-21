@@ -102,10 +102,10 @@ void InspectorWidget::set_selection(GUI::ModelIndex index)
 
     Selection selection {};
     if (json->has_u32("pseudo-element"sv)) {
-        selection.dom_node_id = json->get("parent-id"sv).to_i32();
-        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get("pseudo-element"sv).to_u32());
+        selection.dom_node_id = json->get_deprecated("parent-id"sv).to_i32();
+        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get_deprecated("pseudo-element"sv).to_u32());
     } else {
-        selection.dom_node_id = json->get("id"sv).to_i32();
+        selection.dom_node_id = json->get_deprecated("id"sv).to_i32();
     }
 
     if (selection == m_selection)

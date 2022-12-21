@@ -169,36 +169,36 @@ Variants read_variants_settings(JsonObject const& variants_obj)
 
     if (variants_obj.has("argument_counts"sv)) {
         variants.argument_counts.clear_with_capacity();
-        variants_obj.get("argument_counts"sv).as_array().for_each([&](auto const& argument_count_value) {
+        variants_obj.get_deprecated("argument_counts"sv).as_array().for_each([&](auto const& argument_count_value) {
             variants.argument_counts.append(argument_count_value.to_u32());
         });
     }
     if (variants_obj.has("argument_defaults"sv)) {
         variants.argument_defaults.clear_with_capacity();
-        variants_obj.get("argument_defaults"sv).as_array().for_each([&](auto const& argument_default_value) {
+        variants_obj.get_deprecated("argument_defaults"sv).as_array().for_each([&](auto const& argument_default_value) {
             variants.argument_defaults.append(argument_default_value.as_string());
         });
     }
     if (variants_obj.has("convert_range"sv)) {
-        variants.convert_range = variants_obj.get("convert_range"sv).to_bool();
+        variants.convert_range = variants_obj.get_deprecated("convert_range"sv).to_bool();
     }
     if (variants_obj.has("api_suffixes"sv)) {
         variants.api_suffixes.clear_with_capacity();
-        variants_obj.get("api_suffixes"sv).as_array().for_each([&](auto const& suffix_value) {
+        variants_obj.get_deprecated("api_suffixes"sv).as_array().for_each([&](auto const& suffix_value) {
             variants.api_suffixes.append(suffix_value.as_string());
         });
     }
     if (variants_obj.has("pointer_argument"sv)) {
-        variants.pointer_argument = variants_obj.get("pointer_argument"sv).as_string();
+        variants.pointer_argument = variants_obj.get_deprecated("pointer_argument"sv).as_string();
     }
     if (variants_obj.has("types"sv)) {
         variants.types.clear_with_capacity();
-        variants_obj.get("types"sv).as_object().for_each_member([&](auto const& key, auto const& type_value) {
+        variants_obj.get_deprecated("types"sv).as_object().for_each_member([&](auto const& key, auto const& type_value) {
             auto const& type = type_value.as_object();
             variants.types.append(VariantType {
                 .encoded_type = key,
-                .implementation = type.has("implementation"sv) ? type.get("implementation"sv).as_string() : Optional<DeprecatedString> {},
-                .unimplemented = type.get("unimplemented"sv).to_bool(false),
+                .implementation = type.has("implementation"sv) ? type.get_deprecated("implementation"sv).as_string() : Optional<DeprecatedString> {},
+                .unimplemented = type.get_deprecated("unimplemented"sv).to_bool(false),
             });
         });
     }
@@ -280,16 +280,16 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
     // Parse base argument definitions first; these may later be modified by variants
     Vector<ArgumentDefinition> argument_definitions;
     JsonArray const& arguments = function_definition.has("arguments"sv)
-        ? function_definition.get("arguments"sv).as_array()
+        ? function_definition.get_deprecated("arguments"sv).as_array()
         : JsonArray {};
     arguments.for_each([&argument_definitions](auto const& argument_value) {
         VERIFY(argument_value.is_object());
         auto const& argument = argument_value.as_object();
 
-        auto type = argument.has("type"sv) ? argument.get("type"sv).as_string() : Optional<DeprecatedString> {};
-        auto argument_names = get_name_list(argument.get("name"sv));
-        auto expression = argument.get("expression"sv).as_string_or("@argument_name@");
-        auto cast_to = argument.has("cast_to"sv) ? argument.get("cast_to"sv).as_string() : Optional<DeprecatedString> {};
+        auto type = argument.has("type"sv) ? argument.get_deprecated("type"sv).as_string() : Optional<DeprecatedString> {};
+        auto argument_names = get_name_list(argument.get_deprecated("name"sv));
+        auto expression = argument.get_deprecated("expression"sv).as_string_or("@argument_name@");
+        auto cast_to = argument.has("cast_to"sv) ? argument.get_deprecated("cast_to"sv).as_string() : Optional<DeprecatedString> {};
 
         // Add an empty dummy name when all we have is an expression
         if (argument_names.is_empty() && !expression.is_empty())
@@ -306,9 +306,9 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
     // Create functions for each name and/or variant
     Vector<FunctionDefinition> functions;
 
-    auto return_type = function_definition.get("return_type"sv).as_string_or("void"sv);
-    auto function_implementation = function_definition.get("implementation"sv).as_string_or(function_name.to_snakecase());
-    auto function_unimplemented = function_definition.get("unimplemented"sv).to_bool(false);
+    auto return_type = function_definition.get_deprecated("return_type"sv).as_string_or("void"sv);
+    auto function_implementation = function_definition.get_deprecated("implementation"sv).as_string_or(function_name.to_snakecase());
+    auto function_unimplemented = function_definition.get_deprecated("unimplemented"sv).to_bool(false);
 
     if (!function_definition.has("variants"sv)) {
         functions.append({
@@ -323,7 +323,7 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
     }
 
     // Read variants settings for this function
-    auto variants_obj = function_definition.get("variants"sv).as_object();
+    auto variants_obj = function_definition.get_deprecated("variants"sv).as_object();
     auto variants = read_variants_settings(variants_obj);
 
     for (auto argument_count : variants.argument_counts) {

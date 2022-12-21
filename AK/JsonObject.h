@@ -52,7 +52,7 @@ public:
     [[nodiscard]] size_t size() const { return m_members.size(); }
     [[nodiscard]] bool is_empty() const { return m_members.is_empty(); }
 
-    [[nodiscard]] JsonValue const& get(StringView key) const
+    [[nodiscard]] JsonValue const& get_deprecated(StringView key) const
     {
         auto const* value = get_ptr(key);
         static JsonValue* s_null_value { nullptr };

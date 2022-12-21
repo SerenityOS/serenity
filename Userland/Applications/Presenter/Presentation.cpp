@@ -91,12 +91,12 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     if (!global_object.has_number("version"sv))
         return Error::from_string_view("Presentation file is missing a version specification"sv);
 
-    auto const version = global_object.get("version"sv).to_int(-1);
+    auto const version = global_object.get_deprecated("version"sv).to_int(-1);
     if (version != PRESENTATION_FORMAT_VERSION)
         return Error::from_string_view("Presentation file has incompatible version"sv);
 
-    auto const& maybe_metadata = global_object.get("metadata"sv);
-    auto const& maybe_slides = global_object.get("slides"sv);
+    auto const& maybe_metadata = global_object.get_deprecated("metadata"sv);
+    auto const& maybe_slides = global_object.get_deprecated("slides"sv);
 
     if (maybe_metadata.is_null() || !maybe_metadata.is_object() || maybe_slides.is_null() || !maybe_slides.is_array())
         return Error::from_string_view("Metadata or slides in incorrect format"sv);
@@ -133,8 +133,8 @@ HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObj
 
 ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& metadata_object)
 {
-    auto const& maybe_width = metadata_object.get("width"sv);
-    auto const& maybe_aspect = metadata_object.get("aspect"sv);
+    auto const& maybe_width = metadata_object.get_deprecated("width"sv);
+    auto const& maybe_aspect = metadata_object.get_deprecated("aspect"sv);
 
     if (maybe_width.is_null() || !maybe_width.is_number() || maybe_aspect.is_null() || !maybe_aspect.is_string())
         return Error::from_string_view("Width or aspect in incorrect format"sv);

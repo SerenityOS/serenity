@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Vector<DeprecatedString> interfaces_with_dhcp_enabled;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto ifname = if_object.get("name"sv).to_deprecated_string();
+        auto ifname = if_object.get_deprecated("name"sv).to_deprecated_string();
 
         if (ifname == "loop"sv)
             return;

@@ -28,10 +28,10 @@ RemoteProcess::RemoteProcess(pid_t pid)
 
 void RemoteProcess::handle_identify_response(JsonObject const& response)
 {
-    int pid = response.get("pid"sv).to_int();
+    int pid = response.get_deprecated("pid"sv).to_int();
     VERIFY(pid == m_pid);
 
-    m_process_name = response.get("process_name"sv).as_string_or({});
+    m_process_name = response.get_deprecated("process_name"sv).as_string_or({});
 
     if (on_update)
         on_update();
@@ -40,7 +40,7 @@ void RemoteProcess::handle_identify_response(JsonObject const& response)
 void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
 {
     // FIXME: It would be good if we didn't have to make a local copy of the array value here!
-    auto objects = response.get("objects"sv);
+    auto objects = response.get_deprecated("objects"sv);
     auto& object_array = objects.as_array();
 
     NonnullOwnPtrVector<RemoteObject> remote_objects;
@@ -50,10 +50,10 @@ void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
         VERIFY(value.is_object());
         auto& object = value.as_object();
         auto remote_object = make<RemoteObject>();
-        remote_object->address = object.get("address"sv).to_number<FlatPtr>();
-        remote_object->parent_address = object.get("parent"sv).to_number<FlatPtr>();
-        remote_object->name = object.get("name"sv).to_deprecated_string();
-        remote_object->class_name = object.get("class_name"sv).to_deprecated_string();
+        remote_object->address = object.get_deprecated("address"sv).to_number<FlatPtr>();
+        remote_object->parent_address = object.get_deprecated("parent"sv).to_number<FlatPtr>();
+        remote_object->name = object.get_deprecated("name"sv).to_deprecated_string();
+        remote_object->class_name = object.get_deprecated("class_name"sv).to_deprecated_string();
         remote_object->json = object;
         objects_by_address.set(remote_object->address, remote_object);
         remote_objects.append(move(remote_object));
