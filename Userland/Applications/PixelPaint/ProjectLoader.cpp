@@ -34,8 +34,8 @@ ErrorOr<void> ProjectLoader::try_load_from_file(NonnullOwnPtr<Core::Stream::File
     auto& json = json_or_error.value().as_object();
     auto image = TRY(Image::try_create_from_pixel_paint_json(json));
 
-    if (json.has("guides"sv))
-        m_json_metadata = json.get_deprecated("guides"sv).as_array();
+    if (json.has_array("guides"sv))
+        m_json_metadata = json.get_array("guides"sv).value();
 
     m_image = image;
     return {};
