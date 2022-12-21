@@ -37,8 +37,8 @@ GUI::ModelIndex DOMTreeModel::index(int row, int column, const GUI::ModelIndex& 
     }
 
     auto const& parent_node = *static_cast<JsonObject const*>(parent.internal_data());
-    auto const* children = get_children(parent_node);
-    if (!children)
+    auto children = get_children(parent_node);
+    if (!children.has_value())
         return create_index(row, column, &m_dom_tree);
 
     auto const& child_node = children->at(row).as_object();
@@ -67,8 +67,8 @@ GUI::ModelIndex DOMTreeModel::parent_index(const GUI::ModelIndex& index) const
     auto const* grandparent_node = get_parent(*parent_node);
     VERIFY(grandparent_node);
 
-    auto const* grandparent_children = get_children(*grandparent_node);
-    if (!grandparent_children)
+    auto grandparent_children = get_children(*grandparent_node);
+    if (!grandparent_children.has_value())
         return {};
 
     for (size_t grandparent_child_index = 0; grandparent_child_index < grandparent_children->size(); ++grandparent_child_index) {
@@ -86,8 +86,8 @@ int DOMTreeModel::row_count(const GUI::ModelIndex& index) const
         return 1;
 
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto const* children = get_children(node);
-    return children ? children->size() : 0;
+    auto children = get_children(node);
+    return children.has_value() ? children->size() : 0;
 }
 
 int DOMTreeModel::column_count(const GUI::ModelIndex&) const
@@ -119,8 +119,8 @@ static DeprecatedString with_whitespace_collapsed(StringView string)
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto node_name = node.get_deprecated("name"sv).as_string();
-    auto type = node.get_deprecated("type"sv).as_string_or("unknown"sv);
+    auto node_name = node.get_deprecated_string("name"sv).value_or({});
+    auto type = node.get_deprecated_string("type"sv).value_or("unknown");
 
     // FIXME: This FIXME can go away when we fix the one below.
 #ifdef AK_OS_SERENITY
@@ -131,7 +131,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return m_tree_view->palette().syntax_comment();
         if (type == "pseudo-element"sv)
             return m_tree_view->palette().syntax_type();
-        if (!node.get_deprecated("visible"sv).to_bool(true))
+        if (!node.get_bool("visible"sv).value_or(true))
             return m_tree_view->palette().syntax_comment();
         return {};
     }
@@ -151,9 +151,9 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
-            return with_whitespace_collapsed(node.get_deprecated("text"sv).as_string());
+            return with_whitespace_collapsed(node.get_deprecated_string("text"sv).value());
         if (type == "comment"sv)
-            return DeprecatedString::formatted("<!--{}-->", node.get_deprecated("data"sv).as_string());
+            return DeprecatedString::formatted("<!--{}-->", node.get_deprecated_string("data"sv).value());
         if (type != "element")
             return node_name;
 
@@ -161,7 +161,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         builder.append('<');
         builder.append(node_name.to_lowercase());
         if (node.has("attributes"sv)) {
-            auto attributes = node.get_deprecated("attributes"sv).as_object();
+            auto attributes = node.get_object("attributes"sv).value();
             attributes.for_each_member([&builder](auto& name, JsonValue const& value) {
                 builder.append(' ');
                 builder.append(name);
@@ -180,10 +180,10 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
     m_dom_node_to_parent_map.set(node, parent);
-    m_node_id_to_dom_node_map.set(node->get_deprecated("id"sv).to_i32(), node);
+    m_node_id_to_dom_node_map.set(node->get_i32("id"sv).value_or(0), node);
 
-    auto const* children = get_children(*node);
-    if (!children)
+    auto children = get_children(*node);
+    if (!children.has_value())
         return;
 
     children->for_each([&](auto const& child) {
@@ -204,11 +204,8 @@ GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id, Optional<Web::CSS::Sel
                 if (!child.has("pseudo-element"sv))
                     continue;
 
-                auto child_pseudo_element = child.get_deprecated("pseudo-element"sv);
-                if (!child_pseudo_element.is_i32())
-                    continue;
-
-                if (child_pseudo_element.as_i32() == to_underlying(pseudo_element.value()))
+                auto child_pseudo_element = child.get_i32("pseudo-element"sv);
+                if (child_pseudo_element == to_underlying(pseudo_element.value()))
                     return create_index(i, 0, &child);
             }
         } else {

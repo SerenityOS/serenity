@@ -49,11 +49,9 @@ private:
         return *parent_node;
     }
 
-    ALWAYS_INLINE static JsonArray const* get_children(JsonObject const& o)
+    ALWAYS_INLINE static Optional<JsonArray const&> const get_children(JsonObject const& o)
     {
-        if (auto const* maybe_children = o.get_ptr("children"sv); maybe_children)
-            return &maybe_children->as_array();
-        return nullptr;
+        return o.get_array("children"sv);
     }
 
     void map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* child);

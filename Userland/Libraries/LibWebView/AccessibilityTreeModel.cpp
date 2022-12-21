@@ -24,8 +24,8 @@ GUI::ModelIndex AccessibilityTreeModel::index(int row, int column, GUI::ModelInd
     }
 
     auto const& parent_node = *static_cast<JsonObject const*>(parent.internal_data());
-    auto const* children = get_children(parent_node);
-    if (!children)
+    auto children = get_children(parent_node);
+    if (!children.has_value())
         return create_index(row, column, &m_accessibility_tree);
 
     auto const& child_node = children->at(row).as_object();
@@ -52,8 +52,8 @@ GUI::ModelIndex AccessibilityTreeModel::parent_index(GUI::ModelIndex const& inde
     auto const* grandparent_node = get_parent(*parent_node);
     VERIFY(grandparent_node);
 
-    auto const* grandparent_children = get_children(*grandparent_node);
-    if (!grandparent_children)
+    auto grandparent_children = get_children(*grandparent_node);
+    if (!grandparent_children.has_value())
         return {};
 
     for (size_t grandparent_child_index = 0; grandparent_child_index < grandparent_children->size(); ++grandparent_child_index) {
@@ -71,8 +71,8 @@ int AccessibilityTreeModel::row_count(GUI::ModelIndex const& index) const
         return 1;
 
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto const* children = get_children(node);
-    return children ? children->size() : 0;
+    auto children = get_children(node);
+    return children.has_value() ? children->size() : 0;
 }
 
 int AccessibilityTreeModel::column_count(const GUI::ModelIndex&) const
@@ -83,13 +83,13 @@ int AccessibilityTreeModel::column_count(const GUI::ModelIndex&) const
 GUI::Variant AccessibilityTreeModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto type = node.get_deprecated("type"sv).as_string_or("unknown"sv);
+    auto type = node.get_deprecated_string("type"sv).value_or("unknown"sv);
 
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
-            return node.get_deprecated("text"sv).as_string();
+            return node.get_deprecated_string("text"sv).value();
 
-        auto node_role = node.get_deprecated("role"sv).as_string();
+        auto node_role = node.get_deprecated_string("role"sv).value();
         if (type != "element")
             return node_role;
 
@@ -104,8 +104,8 @@ void AccessibilityTreeModel::map_accessibility_nodes_to_parent(JsonObject const*
 {
     m_accessibility_node_to_parent_map.set(node, parent);
 
-    auto const* children = get_children(*node);
-    if (!children)
+    auto children = get_children(*node);
+    if (!children.has_value())
         return;
 
     children->for_each([&](auto const& child) {
