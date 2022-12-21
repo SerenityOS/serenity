@@ -89,7 +89,7 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
             break;
         }
         scaling_origin.translate_by(delta);
-        if (m_keep_ascept_ratio) {
+        if (m_keep_aspect_ratio) {
             auto aspect_ratio = m_layer_being_moved->size().aspect_ratio();
             scaling_origin = opposite_corner.end_point_for_aspect_ratio(scaling_origin, aspect_ratio);
         }
@@ -133,7 +133,7 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
 bool MoveTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift)
-        m_keep_ascept_ratio = true;
+        m_keep_aspect_ratio = true;
 
     if (m_scaling)
         return true;
@@ -172,7 +172,7 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
 void MoveTool::on_keyup(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift)
-        m_keep_ascept_ratio = false;
+        m_keep_aspect_ratio = false;
 }
 
 void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)

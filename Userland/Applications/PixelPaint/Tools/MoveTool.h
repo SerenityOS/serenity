@@ -42,7 +42,7 @@ private:
     Gfx::IntRect m_new_layer_rect;
     bool m_scaling { false };
     Optional<ResizeAnchorLocation const> m_resize_anchor_location {};
-    bool m_keep_ascept_ratio { false };
+    bool m_keep_aspect_ratio { false };
 
     RefPtr<Gfx::Bitmap> m_cached_preview_bitmap { nullptr };
 };
