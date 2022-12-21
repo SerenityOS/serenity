@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,9 +10,10 @@
 
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibVirtGPU/VirGLProtocol.h>
 #include <sys/ioctl_numbers.h>
 
-#include "VirGLProtocol.h"
+namespace VirtGPU {
 
 class CommandBufferBuilder {
 public:
@@ -41,3 +43,5 @@ public:
 private:
     Vector<u32> m_buffer;
 };
+
+}

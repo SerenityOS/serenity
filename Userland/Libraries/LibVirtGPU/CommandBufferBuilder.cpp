@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,11 +10,14 @@
 #include <Kernel/API/VirGL.h>
 #include <sys/ioctl_numbers.h>
 
-#include "CommandBufferBuilder.h"
-#include "VirGLProtocol.h"
+#include <LibVirtGPU/CommandBufferBuilder.h>
+#include <LibVirtGPU/VirGLProtocol.h>
+
+namespace VirtGPU {
 
 constexpr int DRAWTARGET_WIDTH = 500;
 constexpr int DRAWTARGET_HEIGHT = 500;
+
 
 static u32 encode_command(u32 length, u32 mid, Protocol::VirGLCommand command)
 {
@@ -300,4 +304,6 @@ void CommandBufferBuilder::append_bind_dsa(ObjectHandle handle)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::BIND_OBJECT, to_underlying(Protocol::ObjectType::DSA));
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
+}
+
 }

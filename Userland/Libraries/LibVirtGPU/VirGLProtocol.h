@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, Stephan Unverwerth <s.unverwerth@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,8 @@
 #pragma once
 
 #include <AK/DistinctNumeric.h>
+
+namespace VirtGPU {
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ObjectHandle);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
@@ -206,5 +209,7 @@ enum class ShaderType : u32 {
     SHADER_COMPUTE,
     SHADER_TYPES
 };
+
+}
 
 }
