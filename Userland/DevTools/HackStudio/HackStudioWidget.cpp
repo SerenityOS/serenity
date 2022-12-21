@@ -1738,7 +1738,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_project_configuration_a
                 return {};
 
             if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
-                formatted_error_string_holder = DeprecatedString::formatted("Cannot create directory the '{}' directory because there is already a file with that name", parent_directory);
+                formatted_error_string_holder = DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory);
                 return Error::from_string_view(formatted_error_string_holder);
             }
 
