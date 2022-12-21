@@ -222,9 +222,9 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
-    auto const* property = payload.as_object().get_ptr(key);
+    auto property = payload.as_object().get(key);
 
-    if (!property)
+    if (!property.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("No property called '{}' present", key));
 
     if constexpr (IsSame<PropertyType, DeprecatedString>) {
@@ -335,7 +335,7 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // 2. Let url be the result of getting the property url from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv))
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string `url`"sv);
-    URL url(payload.as_object().get_ptr("url"sv)->as_string());
+    URL url(payload.as_object().get_deprecated_string("url"sv).value());
 
     // FIXME: 3. If url is not an absolute URL or is not an absolute URL with fragment or not a local scheme, return error with error code invalid argument.
 
@@ -548,13 +548,13 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
 
     auto const& properties = payload.as_object();
 
-    auto resolve_property = [](auto name, auto const* property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
-        if (!property)
+    auto resolve_property = [](auto name, auto const& property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
+        if (property.is_null())
             return Optional<i32> {};
-        if (!property->is_number())
+        if (!property.is_number())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Number", name));
 
-        auto number = property->template to_number<i64>();
+        auto number = property.template to_number<i64>();
 
         if (number < min)
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
@@ -565,16 +565,16 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
     };
 
     // 1. Let width be the result of getting a property named width from the parameters argument, else let it be null.
-    auto const* width_property = properties.get_ptr("width"sv);
+    auto width_property = properties.get("width"sv).value_or(JsonValue());
 
     // 2. Let height be the result of getting a property named height from the parameters argument, else let it be null.
-    auto const* height_property = properties.get_ptr("height"sv);
+    auto height_property = properties.get("height"sv).value_or(JsonValue());
 
     // 3. Let x be the result of getting a property named x from the parameters argument, else let it be null.
-    auto const* x_property = properties.get_ptr("x"sv);
+    auto x_property = properties.get("x"sv).value_or(JsonValue());
 
     // 4. Let y be the result of getting a property named y from the parameters argument, else let it be null.
-    auto const* y_property = properties.get_ptr("y"sv);
+    auto y_property = properties.get("y"sv).value_or(JsonValue());
 
     // 5. If width or height is neither null nor a Number from 0 to 2^31 − 1, return error with error code invalid argument.
     auto width = TRY(resolve_property("width"sv, width_property, 0, NumericLimits<i32>::max()));
