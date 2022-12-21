@@ -20,6 +20,8 @@ configure() {
     "${configopts[@]}" \
     -DCURL_USE_OPENSSL=ON \
     -DCURL_ZSTD=ON \
+    -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    -DCURL_CA_PATH=none \
     -DCURL_DISABLE_NTLM=ON \
     -DCURL_DISABLE_SOCKETPAIR=ON \
     -DCURL_DISABLE_TESTS=ON \
