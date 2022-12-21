@@ -72,7 +72,7 @@ jobs:
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/CLDR
-          key: UnicodeData-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
 
       - name: Create build directory Ubuntu
         run: |
