@@ -18,13 +18,13 @@ Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString ti
 ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json)
 {
     // FIXME: Use the text with the "title" role for a title, if there is no title given.
-    auto title = slide_json.get_deprecated("title"sv).as_string_or("Untitled slide");
+    auto title = slide_json.get_deprecated_string("title"sv).value_or("Untitled slide");
 
-    auto const& maybe_slide_objects = slide_json.get_deprecated("objects"sv);
-    if (!maybe_slide_objects.is_array())
+    auto maybe_slide_objects = slide_json.get_array("objects"sv);
+    if (!maybe_slide_objects.has_value())
         return Error::from_string_view("Slide objects must be an array"sv);
 
-    auto const& json_slide_objects = maybe_slide_objects.as_array();
+    auto const& json_slide_objects = maybe_slide_objects.value();
     NonnullRefPtrVector<SlideObject> slide_objects;
     for (auto const& maybe_slide_object_json : json_slide_objects.values()) {
         if (!maybe_slide_object_json.is_object())
