@@ -11,6 +11,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibGfx/Size.h>
+#include <LibVirtGPU/Commands.h>
 #include <LibVirtGPU/VirGLProtocol.h>
 #include <sys/ioctl_numbers.h>
 
@@ -29,7 +30,7 @@ public:
     void append_bind_blend(Protocol::ObjectHandle handle);
     void append_create_surface(Protocol::ResourceID drawtarget_resource, Protocol::ObjectHandle drawtarget_handle, Protocol::TextureFormat format);
     void append_set_framebuffer_state(Protocol::ObjectHandle drawtarget, Protocol::ObjectHandle depthbuffer = 0);
-    void append_create_vertex_elements(Protocol::ObjectHandle handle);
+    void append_create_vertex_elements(Protocol::ObjectHandle handle, Vector<CreateVertexElementsCommand::ElementBinding> const&);
     void append_bind_vertex_elements(Protocol::ObjectHandle handle);
     void append_viewport(Gfx::IntSize);
     void append_set_framebuffer_state_no_attach(Gfx::IntSize);
