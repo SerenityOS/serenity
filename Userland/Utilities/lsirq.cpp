@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto file_contents = TRY(proc_interrupts->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
 
-    auto cpu_count = json.as_array().at(0).as_object().get("per_cpu_call_counts"sv).as_array().size();
+    auto cpu_count = json.as_array().at(0).as_object().get_deprecated("per_cpu_call_counts"sv).as_array().size();
 
     out("      "sv);
     for (size_t i = 0; i < cpu_count; ++i) {
@@ -34,10 +34,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     json.as_array().for_each([cpu_count](JsonValue const& value) {
         auto& handler = value.as_object();
-        auto purpose = handler.get("purpose"sv).to_deprecated_string();
-        auto interrupt = handler.get("interrupt_line"sv).to_deprecated_string();
-        auto controller = handler.get("controller"sv).to_deprecated_string();
-        auto call_counts = handler.get("per_cpu_call_counts"sv).as_array();
+        auto purpose = handler.get_deprecated("purpose"sv).to_deprecated_string();
+        auto interrupt = handler.get_deprecated("interrupt_line"sv).to_deprecated_string();
+        auto controller = handler.get_deprecated("controller"sv).to_deprecated_string();
+        auto call_counts = handler.get_deprecated("per_cpu_call_counts"sv).as_array();
 
         out("{:>4}: ", interrupt);
 

@@ -332,36 +332,36 @@ requires IsBaseOf<Object, T>
         },                                                     \
         {});
 
-#define REGISTER_RECT_PROPERTY(property_name, getter, setter)                \
-    register_property(                                                       \
-        property_name,                                                       \
-        [this] {                                                             \
-            auto rect = this->getter();                                      \
-            JsonObject rect_object;                                          \
-            rect_object.set("x"sv, rect.x());                                \
-            rect_object.set("y"sv, rect.y());                                \
-            rect_object.set("width"sv, rect.width());                        \
-            rect_object.set("height"sv, rect.height());                      \
-            return rect_object;                                              \
-        },                                                                   \
-        [this](auto& value) {                                                \
-            Gfx::IntRect rect;                                               \
-            if (value.is_object()) {                                         \
-                rect.set_x(value.as_object().get("x"sv).to_i32());           \
-                rect.set_y(value.as_object().get("y"sv).to_i32());           \
-                rect.set_width(value.as_object().get("width"sv).to_i32());   \
-                rect.set_height(value.as_object().get("height"sv).to_i32()); \
-            } else if (value.is_array() && value.as_array().size() == 4) {   \
-                rect.set_x(value.as_array()[0].to_i32());                    \
-                rect.set_y(value.as_array()[1].to_i32());                    \
-                rect.set_width(value.as_array()[2].to_i32());                \
-                rect.set_height(value.as_array()[3].to_i32());               \
-            } else {                                                         \
-                return false;                                                \
-            }                                                                \
-            setter(rect);                                                    \
-                                                                             \
-            return true;                                                     \
+#define REGISTER_RECT_PROPERTY(property_name, getter, setter)                           \
+    register_property(                                                                  \
+        property_name,                                                                  \
+        [this] {                                                                        \
+            auto rect = this->getter();                                                 \
+            JsonObject rect_object;                                                     \
+            rect_object.set("x"sv, rect.x());                                           \
+            rect_object.set("y"sv, rect.y());                                           \
+            rect_object.set("width"sv, rect.width());                                   \
+            rect_object.set("height"sv, rect.height());                                 \
+            return rect_object;                                                         \
+        },                                                                              \
+        [this](auto& value) {                                                           \
+            Gfx::IntRect rect;                                                          \
+            if (value.is_object()) {                                                    \
+                rect.set_x(value.as_object().get_deprecated("x"sv).to_i32());           \
+                rect.set_y(value.as_object().get_deprecated("y"sv).to_i32());           \
+                rect.set_width(value.as_object().get_deprecated("width"sv).to_i32());   \
+                rect.set_height(value.as_object().get_deprecated("height"sv).to_i32()); \
+            } else if (value.is_array() && value.as_array().size() == 4) {              \
+                rect.set_x(value.as_array()[0].to_i32());                               \
+                rect.set_y(value.as_array()[1].to_i32());                               \
+                rect.set_width(value.as_array()[2].to_i32());                           \
+                rect.set_height(value.as_array()[3].to_i32());                          \
+            } else {                                                                    \
+                return false;                                                           \
+            }                                                                           \
+            setter(rect);                                                               \
+                                                                                        \
+            return true;                                                                \
         });
 
 #define REGISTER_SIZE_PROPERTY(property_name, getter, setter) \

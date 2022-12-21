@@ -160,7 +160,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"sv));
-    m_initial_active_keymap = keymap_object.get("keymap"sv).to_deprecated_string();
+    m_initial_active_keymap = keymap_object.get_deprecated("keymap"sv).to_deprecated_string();
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());

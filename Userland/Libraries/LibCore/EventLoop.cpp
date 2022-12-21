@@ -227,7 +227,7 @@ public:
 
     void handle_request(JsonObject const& request)
     {
-        auto type = request.get("type"sv).as_string_or({});
+        auto type = request.get_deprecated("type"sv).as_string_or({});
 
         if (type.is_null()) {
             dbgln("RPC client sent request without type field");
@@ -265,7 +265,7 @@ public:
         }
 
         if (type == "SetInspectedObject") {
-            auto address = request.get("address"sv).to_number<FlatPtr>();
+            auto address = request.get_deprecated("address"sv).to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
                     if (auto inspected_object = m_inspected_object.strong_ref())
@@ -279,10 +279,10 @@ public:
         }
 
         if (type == "SetProperty") {
-            auto address = request.get("address"sv).to_number<FlatPtr>();
+            auto address = request.get_deprecated("address"sv).to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
-                    bool success = object.set_property(request.get("name"sv).to_deprecated_string(), request.get("value"sv));
+                    bool success = object.set_property(request.get_deprecated("name"sv).to_deprecated_string(), request.get_deprecated("value"sv));
                     JsonObject response;
                     response.set("type", "SetProperty");
                     response.set("success", success);

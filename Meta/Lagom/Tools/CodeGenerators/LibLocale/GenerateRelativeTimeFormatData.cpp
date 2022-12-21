@@ -83,10 +83,10 @@ static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR&
     date_fields_path = date_fields_path.append("dateFields.json"sv);
 
     auto date_fields = TRY(read_json_file(date_fields_path.string()));
-    auto const& main_object = date_fields.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(date_fields_path.parent().basename());
-    auto const& dates_object = locale_object.as_object().get("dates"sv);
-    auto const& fields_object = dates_object.as_object().get("fields"sv);
+    auto const& main_object = date_fields.as_object().get_deprecated("main"sv);
+    auto const& locale_object = main_object.as_object().get_deprecated(date_fields_path.parent().basename());
+    auto const& dates_object = locale_object.as_object().get_deprecated("dates"sv);
+    auto const& fields_object = dates_object.as_object().get_deprecated("fields"sv);
 
     auto is_sanctioned_unit = [](auto unit) {
         // This is a copy of the time units sanctioned for use within ECMA-402.

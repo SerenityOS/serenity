@@ -82,37 +82,37 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::B
 
 ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject const& json)
 {
-    auto image = TRY(try_create_with_size({ json.get("width"sv).to_i32(), json.get("height"sv).to_i32() }));
+    auto image = TRY(try_create_with_size({ json.get_deprecated("width"sv).to_i32(), json.get_deprecated("height"sv).to_i32() }));
 
-    auto layers_value = json.get("layers"sv);
-    for (auto const& layer_value : layers_value.as_array().values()) {
+    auto layers_value = json.get_deprecated("layers"sv);
+    for (auto& layer_value : layers_value.as_array().values()) {
         auto const& layer_object = layer_value.as_object();
-        auto name = layer_object.get("name"sv).as_string();
+        auto name = layer_object.get_deprecated("name"sv).as_string();
 
-        auto bitmap_base64_encoded = layer_object.get("bitmap"sv).as_string();
+        auto bitmap_base64_encoded = layer_object.get_deprecated("bitmap"sv).as_string();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
         auto bitmap = TRY(try_decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
-        if (auto const& mask_object = layer_object.get("mask"sv); !mask_object.is_null()) {
+        if (auto const& mask_object = layer_object.get_deprecated("mask"sv); !mask_object.is_null()) {
             auto mask_base64_encoded = mask_object.as_string();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(try_decode_bitmap(mask_data));
             TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));
         }
 
-        auto width = layer_object.get("width"sv).to_i32();
-        auto height = layer_object.get("height"sv).to_i32();
+        auto width = layer_object.get_deprecated("width"sv).to_i32();
+        auto height = layer_object.get_deprecated("height"sv).to_i32();
 
         if (width != layer->size().width() || height != layer->size().height())
             return Error::from_string_literal("Decoded layer bitmap has wrong size");
 
         image->add_layer(*layer);
 
-        layer->set_location({ layer_object.get("locationx"sv).to_i32(), layer_object.get("locationy"sv).to_i32() });
-        layer->set_opacity_percent(layer_object.get("opacity_percent"sv).to_i32());
-        layer->set_visible(layer_object.get("visible"sv).as_bool());
-        layer->set_selected(layer_object.get("selected"sv).as_bool());
+        layer->set_location({ layer_object.get_deprecated("locationx"sv).to_i32(), layer_object.get_deprecated("locationy"sv).to_i32() });
+        layer->set_opacity_percent(layer_object.get_deprecated("opacity_percent"sv).to_i32());
+        layer->set_visible(layer_object.get_deprecated("visible"sv).as_bool());
+        layer->set_selected(layer_object.get_deprecated("selected"sv).as_bool());
     }
 
     return image;

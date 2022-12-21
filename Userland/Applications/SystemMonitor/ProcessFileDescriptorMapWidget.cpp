@@ -27,19 +27,19 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
     pid_fds_fields.empend("offset", "Offset", Gfx::TextAlignment::CenterRight);
     pid_fds_fields.empend("absolute_path", "Path", Gfx::TextAlignment::CenterLeft);
     pid_fds_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get("seekable"sv).to_bool() ? "Seekable" : "Sequential";
+        return object.get_deprecated("seekable"sv).to_bool() ? "Seekable" : "Sequential";
     });
     pid_fds_fields.empend("Blocking", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get("blocking"sv).to_bool() ? "Blocking" : "Nonblocking";
+        return object.get_deprecated("blocking"sv).to_bool() ? "Blocking" : "Nonblocking";
     });
     pid_fds_fields.empend("On exec", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get("cloexec"sv).to_bool() ? "Close" : "Keep";
+        return object.get_deprecated("cloexec"sv).to_bool() ? "Close" : "Keep";
     });
     pid_fds_fields.empend("Can read", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get("can_read"sv).to_bool() ? "Yes" : "No";
+        return object.get_deprecated("can_read"sv).to_bool() ? "Yes" : "No";
     });
     pid_fds_fields.empend("Can write", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get("can_write"sv).to_bool() ? "Yes" : "No";
+        return object.get_deprecated("can_write"sv).to_bool() ? "Yes" : "No";
     });
 
     m_model = GUI::JsonArrayModel::create({}, move(pid_fds_fields));

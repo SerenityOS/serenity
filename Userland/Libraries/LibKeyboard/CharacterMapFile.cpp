@@ -63,7 +63,7 @@ Vector<u32> CharacterMapFile::read_map(JsonObject const& json, DeprecatedString 
     Vector<u32> buffer;
     buffer.resize(CHAR_MAP_SIZE);
 
-    auto map_arr = json.get(name).as_array();
+    auto map_arr = json.get_deprecated(name).as_array();
     for (size_t i = 0; i < map_arr.size(); i++) {
         auto key_value = map_arr.at(i).as_string();
         if (key_value.length() == 0) {

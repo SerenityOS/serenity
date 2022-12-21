@@ -1237,11 +1237,11 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             if (!value.is_object())
                 return;
             auto& json_object = value.as_object();
-            auto orientation_value = json_object.get("orientation"sv);
+            auto orientation_value = json_object.get_deprecated("orientation"sv);
             if (!orientation_value.is_string())
                 return;
 
-            auto offset_value = json_object.get("offset"sv);
+            auto offset_value = json_object.get_deprecated("offset"sv);
             if (!offset_value.is_number())
                 return;
 

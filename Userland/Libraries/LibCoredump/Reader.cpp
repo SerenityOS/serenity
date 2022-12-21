@@ -196,14 +196,14 @@ Optional<MemoryRegionInfo> Reader::region_containing(FlatPtr address) const
 int Reader::process_pid() const
 {
     auto process_info = this->process_info();
-    auto pid = process_info.get("pid"sv);
+    auto pid = process_info.get_deprecated("pid"sv);
     return pid.to_number<int>();
 }
 
 u8 Reader::process_termination_signal() const
 {
     auto process_info = this->process_info();
-    auto termination_signal = process_info.get("termination_signal"sv);
+    auto termination_signal = process_info.get_deprecated("termination_signal"sv);
     auto signal_number = termination_signal.to_number<u8>();
     if (signal_number <= SIGINVAL || signal_number >= NSIG)
         return SIGINVAL;
@@ -213,14 +213,14 @@ u8 Reader::process_termination_signal() const
 DeprecatedString Reader::process_executable_path() const
 {
     auto process_info = this->process_info();
-    auto executable_path = process_info.get("executable_path"sv);
+    auto executable_path = process_info.get_deprecated("executable_path"sv);
     return executable_path.as_string_or({});
 }
 
 Vector<DeprecatedString> Reader::process_arguments() const
 {
     auto process_info = this->process_info();
-    auto arguments = process_info.get("arguments"sv);
+    auto arguments = process_info.get_deprecated("arguments"sv);
     if (!arguments.is_array())
         return {};
     Vector<DeprecatedString> vector;
@@ -234,7 +234,7 @@ Vector<DeprecatedString> Reader::process_arguments() const
 Vector<DeprecatedString> Reader::process_environment() const
 {
     auto process_info = this->process_info();
-    auto environment = process_info.get("environment"sv);
+    auto environment = process_info.get_deprecated("environment"sv);
     if (!environment.is_array())
         return {};
     Vector<DeprecatedString> vector;

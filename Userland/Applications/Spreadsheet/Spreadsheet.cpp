@@ -375,9 +375,9 @@ Vector<CellChange> Sheet::copy_cells(Vector<Position> from, Vector<Position> to,
 RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
 {
     auto sheet = adopt_ref(*new Sheet(workbook));
-    auto rows = object.get("rows"sv).to_u32(default_row_count);
-    auto columns = object.get("columns"sv);
-    auto name = object.get("name"sv).as_string_or("Sheet");
+    auto rows = object.get_deprecated("rows"sv).to_u32(default_row_count);
+    auto columns = object.get_deprecated("columns"sv);
+    auto name = object.get_deprecated("name"sv).as_string_or("Sheet");
     if (object.has("cells"sv) && !object.has_object("cells"sv))
         return {};
 
@@ -403,51 +403,51 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     auto& parse_function = json.as_object().get_without_side_effects("parse").as_function();
 
     auto read_format = [](auto& format, auto const& obj) {
-        if (auto value = obj.get("foreground_color"sv); value.is_string())
+        if (auto value = obj.get_deprecated("foreground_color"sv); value.is_string())
             format.foreground_color = Color::from_string(value.as_string());
-        if (auto value = obj.get("background_color"sv); value.is_string())
+        if (auto value = obj.get_deprecated("background_color"sv); value.is_string())
             format.background_color = Color::from_string(value.as_string());
     };
 
     if (object.has_object("cells"sv)) {
-        object.get("cells"sv).as_object().for_each_member([&](auto& name, JsonValue const& value) {
+        object.get_deprecated("cells"sv).as_object().for_each_member([&](auto& name, JsonValue const& value) {
             auto position_option = sheet->parse_cell_name(name);
             if (!position_option.has_value())
                 return IterationDecision::Continue;
 
             auto position = position_option.value();
             auto& obj = value.as_object();
-            auto kind = obj.get("kind"sv).as_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
+            auto kind = obj.get_deprecated("kind"sv).as_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
 
             OwnPtr<Cell> cell;
             switch (kind) {
             case Cell::LiteralString:
-                cell = make<Cell>(obj.get("value"sv).to_deprecated_string(), position, *sheet);
+                cell = make<Cell>(obj.get_deprecated("value"sv).to_deprecated_string(), position, *sheet);
                 break;
             case Cell::Formula: {
                 auto& vm = sheet->interpreter().vm();
-                auto value_or_error = JS::call(vm, parse_function, json, JS::PrimitiveString::create(vm, obj.get("value"sv).as_string()));
+                auto value_or_error = JS::call(vm, parse_function, json, JS::PrimitiveString::create(vm, obj.get_deprecated("value"sv).as_string()));
                 if (value_or_error.is_error()) {
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();
                 }
-                cell = make<Cell>(obj.get("source"sv).to_deprecated_string(), value_or_error.release_value(), position, *sheet);
+                cell = make<Cell>(obj.get_deprecated("source"sv).to_deprecated_string(), value_or_error.release_value(), position, *sheet);
                 break;
             }
             }
 
-            auto type_name = obj.has("type"sv) ? obj.get("type"sv).to_deprecated_string() : "Numeric";
+            auto type_name = obj.has("type"sv) ? obj.get_deprecated("type"sv).to_deprecated_string() : "Numeric";
             cell->set_type(type_name);
 
-            auto type_meta = obj.get("type_metadata"sv);
+            auto type_meta = obj.get_deprecated("type_metadata"sv);
             if (type_meta.is_object()) {
                 auto& meta_obj = type_meta.as_object();
                 auto meta = cell->type_metadata();
-                if (auto value = meta_obj.get("length"sv); value.is_number())
+                if (auto value = meta_obj.get_deprecated("length"sv); value.is_number())
                     meta.length = value.to_i32();
-                if (auto value = meta_obj.get("format"sv); value.is_string())
+                if (auto value = meta_obj.get_deprecated("format"sv); value.is_string())
                     meta.format = value.as_string();
-                if (auto value = meta_obj.get("alignment"sv); value.is_string()) {
+                if (auto value = meta_obj.get_deprecated("alignment"sv); value.is_string()) {
                     auto alignment = Gfx::text_alignment_from_string(value.as_string());
                     if (alignment.has_value())
                         meta.alignment = alignment.value();
@@ -457,7 +457,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 cell->set_type_metadata(move(meta));
             }
 
-            auto conditional_formats = obj.get("conditional_formats"sv);
+            auto conditional_formats = obj.get_deprecated("conditional_formats"sv);
             auto cformats = cell->conditional_formats();
             if (conditional_formats.is_array()) {
                 conditional_formats.as_array().for_each([&](const auto& fmt_val) {
@@ -465,7 +465,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                         return IterationDecision::Continue;
 
                     auto& fmt_obj = fmt_val.as_object();
-                    auto fmt_cond = fmt_obj.get("condition"sv).to_deprecated_string();
+                    auto fmt_cond = fmt_obj.get_deprecated("condition"sv).to_deprecated_string();
                     if (fmt_cond.is_empty())
                         return IterationDecision::Continue;
 
@@ -479,7 +479,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 cell->set_conditional_formats(move(cformats));
             }
 
-            auto evaluated_format = obj.get("evaluated_formats"sv);
+            auto evaluated_format = obj.get_deprecated("evaluated_formats"sv);
             if (evaluated_format.is_object()) {
                 auto& evaluated_format_obj = evaluated_format.as_object();
                 auto& evaluated_fmts = cell->evaluated_formats();
@@ -718,13 +718,13 @@ DeprecatedString Sheet::generate_inline_documentation_for(StringView function, s
         gather_documentation();
 
     auto& docs = m_cached_documentation.value();
-    auto entry = docs.get(function);
+    auto entry = docs.get_deprecated(function);
     if (entry.is_null() || !entry.is_object())
         return DeprecatedString::formatted("{}(...???{})", function, argument_index);
 
     auto& entry_object = entry.as_object();
-    size_t argc = entry_object.get("argc"sv).to_int(0);
-    auto argnames_value = entry_object.get("argnames"sv);
+    size_t argc = entry_object.get_deprecated("argc"sv).to_int(0);
+    auto argnames_value = entry_object.get_deprecated("argnames"sv);
     if (!argnames_value.is_array())
         return DeprecatedString::formatted("{}(...{}???{})", function, argc, argument_index);
     auto& argnames = argnames_value.as_array();

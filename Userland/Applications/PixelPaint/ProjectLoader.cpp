@@ -35,7 +35,7 @@ ErrorOr<void> ProjectLoader::try_load_from_file(NonnullOwnPtr<Core::Stream::File
     auto image = TRY(Image::try_create_from_pixel_paint_json(json));
 
     if (json.has("guides"sv))
-        m_json_metadata = json.get("guides"sv).as_array();
+        m_json_metadata = json.get_deprecated("guides"sv).as_array();
 
     m_image = image;
     return {};

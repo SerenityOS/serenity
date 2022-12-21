@@ -193,13 +193,13 @@ ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
     json.value().as_array().for_each([&ifnames_to_immediately_discover, &ifnames_to_attempt_later](auto& value) {
         auto if_object = value.as_object();
 
-        if (if_object.get("class_name"sv).to_deprecated_string() == "LoopbackAdapter")
+        if (if_object.get_deprecated("class_name"sv).to_deprecated_string() == "LoopbackAdapter")
             return;
 
-        auto name = if_object.get("name"sv).to_deprecated_string();
-        auto mac = if_object.get("mac_address"sv).to_deprecated_string();
-        auto is_up = if_object.get("link_up"sv).to_bool();
-        auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get("ipv4_address"sv).to_deprecated_string());
+        auto name = if_object.get_deprecated("name"sv).to_deprecated_string();
+        auto mac = if_object.get_deprecated("mac_address"sv).to_deprecated_string();
+        auto is_up = if_object.get_deprecated("link_up"sv).to_bool();
+        auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get_deprecated("ipv4_address"sv).to_deprecated_string());
         auto ipv4_addr = ipv4_addr_maybe.has_value() ? ipv4_addr_maybe.value() : IPv4Address { 0, 0, 0, 0 };
         if (is_up) {
             dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);

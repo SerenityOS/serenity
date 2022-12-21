@@ -85,7 +85,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
         VERIFY(url.scheme() == "spreadsheet");
         if (url.host() == "example") {
             auto entry = LexicalPath::basename(url.path());
-            auto doc_option = m_docs.get(entry);
+            auto doc_option = m_docs.get_deprecated(entry);
             if (!doc_option.is_object()) {
                 GUI::MessageBox::show_error(this, DeprecatedString::formatted("No documentation entry found for '{}'", url.path()));
                 return;
@@ -104,7 +104,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
                 GUI::MessageBox::show_error(this, DeprecatedString::formatted("Example '{}' not found for '{}'", name, url.path()));
                 return;
             }
-            auto& value = example_data.get(name);
+            auto& value = example_data.get_deprecated(name);
 
             auto window = GUI::Window::construct(this);
             window->resize(size());
@@ -141,14 +141,14 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 DeprecatedString HelpWindow::render(StringView key)
 {
     VERIFY(m_docs.has_object(key));
-    auto& doc = m_docs.get(key).as_object();
+    auto& doc = m_docs.get_deprecated(key).as_object();
 
-    auto name = doc.get("name"sv).to_deprecated_string();
-    auto argc = doc.get("argc"sv).to_u32(0);
+    auto name = doc.get_deprecated("name"sv).to_deprecated_string();
+    auto argc = doc.get_deprecated("argc"sv).to_u32(0);
     VERIFY(doc.has_array("argnames"sv));
-    auto& argnames = doc.get("argnames"sv).as_array();
+    auto& argnames = doc.get_deprecated("argnames"sv).as_array();
 
-    auto docstring = doc.get("doc"sv).to_deprecated_string();
+    auto docstring = doc.get_deprecated("doc"sv).to_deprecated_string();
 
     StringBuilder markdown_builder;
 
@@ -181,7 +181,7 @@ DeprecatedString HelpWindow::render(StringView key)
     markdown_builder.append("\n\n"sv);
 
     if (doc.has("examples"sv)) {
-        auto& examples = doc.get("examples"sv);
+        auto& examples = doc.get_deprecated("examples"sv);
         VERIFY(examples.is_object());
         markdown_builder.append("# EXAMPLES\n"sv);
         examples.as_object().for_each_member([&](auto& text, auto& description_value) {

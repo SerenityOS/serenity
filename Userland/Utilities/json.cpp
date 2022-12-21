@@ -139,7 +139,7 @@ JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t ke
 
     JsonValue result {};
     if (value.is_object()) {
-        result = value.as_object().get(key);
+        result = value.as_object().get_deprecated(key);
     } else if (value.is_array()) {
         auto key_as_index = key.to_int();
         if (key_as_index.has_value())

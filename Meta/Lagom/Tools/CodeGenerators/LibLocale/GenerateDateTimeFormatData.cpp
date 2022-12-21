@@ -572,8 +572,8 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
     time_data_path = time_data_path.append("timeData.json"sv);
 
     auto time_data = TRY(read_json_file(time_data_path.string()));
-    auto const& supplemental_object = time_data.as_object().get("supplemental"sv);
-    auto const& time_data_object = supplemental_object.as_object().get("timeData"sv);
+    auto const& supplemental_object = time_data.as_object().get_deprecated("supplemental"sv);
+    auto const& time_data_object = supplemental_object.as_object().get_deprecated("timeData"sv);
 
     auto parse_hour_cycle = [](StringView hour_cycle) -> Optional<Locale::HourCycle> {
         if (hour_cycle == "h"sv)
@@ -588,7 +588,7 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
     };
 
     time_data_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto allowed_hour_cycles_string = value.as_object().get("_allowed"sv).as_string();
+        auto allowed_hour_cycles_string = value.as_object().get_deprecated("_allowed"sv).as_string();
         auto allowed_hour_cycles = allowed_hour_cycles_string.split_view(' ');
 
         Vector<Locale::HourCycle> hour_cycles;
@@ -616,8 +616,8 @@ static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
     week_data_path = week_data_path.append("weekData.json"sv);
 
     auto week_data = TRY(read_json_file(week_data_path.string()));
-    auto const& supplemental_object = week_data.as_object().get("supplemental"sv);
-    auto const& week_data_object = supplemental_object.as_object().get("weekData"sv);
+    auto const& supplemental_object = week_data.as_object().get_deprecated("supplemental"sv);
+    auto const& week_data_object = supplemental_object.as_object().get_deprecated("weekData"sv);
 
     auto parse_weekday = [](StringView day) -> Locale::Weekday {
         if (day == "sun"sv)
@@ -647,10 +647,10 @@ static ErrorOr<void> parse_week_data(DeprecatedString core_path, CLDR& cldr)
             weekday_regions.append(region);
     };
 
-    auto const& minimum_days_object = week_data_object.as_object().get("minDays"sv);
-    auto const& first_day_object = week_data_object.as_object().get("firstDay"sv);
-    auto const& weekend_start_object = week_data_object.as_object().get("weekendStart"sv);
-    auto const& weekend_end_object = week_data_object.as_object().get("weekendEnd"sv);
+    auto const& minimum_days_object = week_data_object.as_object().get_deprecated("minDays"sv);
+    auto const& first_day_object = week_data_object.as_object().get_deprecated("firstDay"sv);
+    auto const& weekend_start_object = week_data_object.as_object().get_deprecated("weekendStart"sv);
+    auto const& weekend_end_object = week_data_object.as_object().get_deprecated("weekendEnd"sv);
 
     minimum_days_object.as_object().for_each_member([&](auto const& region, auto const& value) {
         auto minimum_days = value.as_string().template to_uint<u8>();
@@ -681,14 +681,14 @@ static ErrorOr<void> parse_meta_zones(DeprecatedString core_path, CLDR& cldr)
     meta_zone_path = meta_zone_path.append("metaZones.json"sv);
 
     auto meta_zone = TRY(read_json_file(meta_zone_path.string()));
-    auto const& supplemental_object = meta_zone.as_object().get("supplemental"sv);
-    auto const& meta_zone_object = supplemental_object.as_object().get("metaZones"sv);
-    auto const& meta_zone_array = meta_zone_object.as_object().get("metazones"sv);
+    auto const& supplemental_object = meta_zone.as_object().get_deprecated("supplemental"sv);
+    auto const& meta_zone_object = supplemental_object.as_object().get_deprecated("metaZones"sv);
+    auto const& meta_zone_array = meta_zone_object.as_object().get_deprecated("metazones"sv);
 
     meta_zone_array.as_array().for_each([&](JsonValue const& value) {
-        auto const& mapping = value.as_object().get("mapZone"sv);
-        auto const& meta_zone = mapping.as_object().get("_other"sv);
-        auto const& golden_zone = mapping.as_object().get("_type"sv);
+        auto const& mapping = value.as_object().get_deprecated("mapZone"sv);
+        auto const& meta_zone = mapping.as_object().get_deprecated("_other"sv);
+        auto const& golden_zone = mapping.as_object().get_deprecated("_type"sv);
 
         if (auto time_zone = TimeZone::time_zone_from_string(golden_zone.as_string()); time_zone.has_value()) {
             auto& golden_zones = cldr.meta_zones.ensure(meta_zone.as_string());
@@ -1263,9 +1263,9 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
     };
 
     auto parse_era_symbols = [&](auto const& symbols_object) {
-        auto const& narrow_symbols = symbols_object.get("eraNarrow"sv).as_object();
-        auto const& short_symbols = symbols_object.get("eraAbbr"sv).as_object();
-        auto const& long_symbols = symbols_object.get("eraNames"sv).as_object();
+        auto const& narrow_symbols = symbols_object.get_deprecated("eraNarrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get_deprecated("eraAbbr"sv).as_object();
+        auto const& long_symbols = symbols_object.get_deprecated("eraNames"sv).as_object();
         auto symbol_lists = create_symbol_lists(2);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
@@ -1287,9 +1287,9 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
     };
 
     auto parse_month_symbols = [&](auto const& symbols_object) {
-        auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
-        auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
-        auto const& long_symbols = symbols_object.get("wide"sv).as_object();
+        auto const& narrow_symbols = symbols_object.get_deprecated("narrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get_deprecated("abbreviated"sv).as_object();
+        auto const& long_symbols = symbols_object.get_deprecated("wide"sv).as_object();
         auto symbol_lists = create_symbol_lists(12);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
@@ -1311,9 +1311,9 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
     };
 
     auto parse_weekday_symbols = [&](auto const& symbols_object) {
-        auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
-        auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
-        auto const& long_symbols = symbols_object.get("wide"sv).as_object();
+        auto const& narrow_symbols = symbols_object.get_deprecated("narrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get_deprecated("abbreviated"sv).as_object();
+        auto const& long_symbols = symbols_object.get_deprecated("wide"sv).as_object();
         auto symbol_lists = create_symbol_lists(7);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
@@ -1347,9 +1347,9 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
     };
 
     auto parse_day_period_symbols = [&](auto const& symbols_object) {
-        auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
-        auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
-        auto const& long_symbols = symbols_object.get("wide"sv).as_object();
+        auto const& narrow_symbols = symbols_object.get_deprecated("narrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get_deprecated("abbreviated"sv).as_object();
+        auto const& long_symbols = symbols_object.get_deprecated("wide"sv).as_object();
         auto symbol_lists = create_symbol_lists(11);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
@@ -1370,10 +1370,10 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         store_symbol_lists(Locale::CalendarSymbol::DayPeriod, move(symbol_lists));
     };
 
-    parse_era_symbols(calendar_object.get("eras"sv).as_object());
-    parse_month_symbols(calendar_object.get("months"sv).as_object().get("format"sv).as_object());
-    parse_weekday_symbols(calendar_object.get("days"sv).as_object().get("format"sv).as_object());
-    parse_day_period_symbols(calendar_object.get("dayPeriods"sv).as_object().get("format"sv).as_object());
+    parse_era_symbols(calendar_object.get_deprecated("eras"sv).as_object());
+    parse_month_symbols(calendar_object.get_deprecated("months"sv).as_object().get_deprecated("format"sv).as_object());
+    parse_weekday_symbols(calendar_object.get_deprecated("days"sv).as_object().get_deprecated("format"sv).as_object());
+    parse_day_period_symbols(calendar_object.get_deprecated("dayPeriods"sv).as_object().get_deprecated("format"sv).as_object());
 
     calendar.symbols = cldr.unique_calendar_symbols_lists.ensure(move(symbols_list));
 }
@@ -1385,15 +1385,15 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
         return {};
 
     auto calendars = TRY(read_json_file(calendars_path.string()));
-    auto const& main_object = calendars.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(calendars_path.parent().basename());
-    auto const& dates_object = locale_object.as_object().get("dates"sv);
-    auto const& calendars_object = dates_object.as_object().get("calendars"sv);
+    auto const& main_object = calendars.as_object().get_deprecated("main"sv);
+    auto const& locale_object = main_object.as_object().get_deprecated(calendars_path.parent().basename());
+    auto const& dates_object = locale_object.as_object().get_deprecated("dates"sv);
+    auto const& calendars_object = dates_object.as_object().get_deprecated("calendars"sv);
 
     auto parse_patterns = [&](auto const& patterns_object, auto const& skeletons_object, Vector<CalendarPattern>* patterns) {
         auto parse_pattern = [&](auto name) {
-            auto format = patterns_object.get(name);
-            auto skeleton = skeletons_object.get(name);
+            auto format = patterns_object.get_deprecated(name);
+            auto skeleton = skeletons_object.get_deprecated(name);
 
             auto format_index = parse_date_time_pattern(format.as_string(), skeleton.as_string_or(DeprecatedString::empty()), cldr).value();
 
@@ -1427,19 +1427,19 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
         Vector<CalendarPattern> date_formats;
         Vector<CalendarPattern> time_formats;
 
-        auto const& date_formats_object = value.as_object().get("dateFormats"sv);
-        auto const& date_skeletons_object = value.as_object().get("dateSkeletons"sv);
+        auto const& date_formats_object = value.as_object().get_deprecated("dateFormats"sv);
+        auto const& date_skeletons_object = value.as_object().get_deprecated("dateSkeletons"sv);
         calendar.date_formats = parse_patterns(date_formats_object.as_object(), date_skeletons_object.as_object(), &date_formats);
 
-        auto const& time_formats_object = value.as_object().get("timeFormats"sv);
-        auto const& time_skeletons_object = value.as_object().get("timeSkeletons"sv);
+        auto const& time_formats_object = value.as_object().get_deprecated("timeFormats"sv);
+        auto const& time_skeletons_object = value.as_object().get_deprecated("timeSkeletons"sv);
         calendar.time_formats = parse_patterns(time_formats_object.as_object(), time_skeletons_object.as_object(), &time_formats);
 
-        auto const& standard_date_time_formats_object = value.as_object().get("dateTimeFormats-atTime"sv).as_object().get("standard"sv);
+        auto const& standard_date_time_formats_object = value.as_object().get_deprecated("dateTimeFormats-atTime"sv).as_object().get_deprecated("standard"sv);
         calendar.date_time_formats = parse_patterns(standard_date_time_formats_object.as_object(), JsonObject {}, nullptr);
 
-        auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
-        auto const& available_formats_object = date_time_formats_object.as_object().get("availableFormats"sv);
+        auto const& date_time_formats_object = value.as_object().get_deprecated("dateTimeFormats"sv);
+        auto const& available_formats_object = date_time_formats_object.as_object().get_deprecated("availableFormats"sv);
         available_formats_object.as_object().for_each_member([&](auto const& skeleton, JsonValue const& pattern) {
             auto pattern_index = parse_date_time_pattern(pattern.as_string(), skeleton, cldr);
             if (!pattern_index.has_value())
@@ -1455,7 +1455,7 @@ static ErrorOr<void> parse_calendars(DeprecatedString locale_calendars_path, CLD
                 available_formats.append(*pattern_index);
         });
 
-        auto const& interval_formats_object = date_time_formats_object.as_object().get("intervalFormats"sv);
+        auto const& interval_formats_object = date_time_formats_object.as_object().get_deprecated("intervalFormats"sv);
         parse_interval_patterns(calendar, interval_formats_object.as_object(), cldr);
 
         generate_default_patterns(available_formats, cldr);
@@ -1475,24 +1475,24 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
     time_zone_names_path = time_zone_names_path.append("timeZoneNames.json"sv);
 
     auto time_zone_names = TRY(read_json_file(time_zone_names_path.string()));
-    auto const& main_object = time_zone_names.as_object().get("main"sv);
-    auto const& locale_object = main_object.as_object().get(time_zone_names_path.parent().basename());
-    auto const& dates_object = locale_object.as_object().get("dates"sv);
-    auto const& time_zone_names_object = dates_object.as_object().get("timeZoneNames"sv);
-    auto const& meta_zone_object = time_zone_names_object.as_object().get("metazone"sv);
-    auto const& hour_format_string = time_zone_names_object.as_object().get("hourFormat"sv);
-    auto const& gmt_format_string = time_zone_names_object.as_object().get("gmtFormat"sv);
-    auto const& gmt_zero_format_string = time_zone_names_object.as_object().get("gmtZeroFormat"sv);
+    auto const& main_object = time_zone_names.as_object().get_deprecated("main"sv);
+    auto const& locale_object = main_object.as_object().get_deprecated(time_zone_names_path.parent().basename());
+    auto const& dates_object = locale_object.as_object().get_deprecated("dates"sv);
+    auto const& time_zone_names_object = dates_object.as_object().get_deprecated("timeZoneNames"sv);
+    auto const& meta_zone_object = time_zone_names_object.as_object().get_deprecated("metazone"sv);
+    auto const& hour_format_string = time_zone_names_object.as_object().get_deprecated("hourFormat"sv);
+    auto const& gmt_format_string = time_zone_names_object.as_object().get_deprecated("gmtFormat"sv);
+    auto const& gmt_zero_format_string = time_zone_names_object.as_object().get_deprecated("gmtZeroFormat"sv);
 
     if (meta_zone_object.is_null())
         return {};
 
     auto parse_name = [&](StringView type, JsonObject const& meta_zone_object, StringView key) -> Optional<size_t> {
-        auto const& names = meta_zone_object.get(type);
+        auto const& names = meta_zone_object.get_deprecated(type);
         if (!names.is_object())
             return {};
 
-        auto const& name = names.as_object().get(key);
+        auto const& name = names.as_object().get_deprecated(key);
         if (name.is_string())
             return cldr.unique_strings.ensure(name.as_string());
 
@@ -1567,9 +1567,9 @@ static ErrorOr<void> parse_time_zone_names(DeprecatedString locale_time_zone_nam
     });
 
     // The long and short names for UTC are not under the "timeZoneNames/metazone" object, but are under "timeZoneNames/zone/Etc".
-    auto const& zone_object = time_zone_names_object.as_object().get("zone"sv);
-    auto const& etc_object = zone_object.as_object().get("Etc"sv);
-    auto const& utc_object = etc_object.as_object().get("UTC"sv);
+    auto const& zone_object = time_zone_names_object.as_object().get_deprecated("zone"sv);
+    auto const& etc_object = zone_object.as_object().get_deprecated("Etc"sv);
+    auto const& utc_object = etc_object.as_object().get_deprecated("UTC"sv);
     parse_time_zone("UTC"sv, utc_object.as_object());
 
     locale.time_zones = cldr.unique_time_zone_lists.ensure(move(time_zones));
@@ -1586,8 +1586,8 @@ static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
     day_periods_path = day_periods_path.append("dayPeriods.json"sv);
 
     auto locale_day_periods = TRY(read_json_file(day_periods_path.string()));
-    auto const& supplemental_object = locale_day_periods.as_object().get("supplemental"sv);
-    auto const& day_periods_object = supplemental_object.as_object().get("dayPeriodRuleSet"sv);
+    auto const& supplemental_object = locale_day_periods.as_object().get_deprecated("supplemental"sv);
+    auto const& day_periods_object = supplemental_object.as_object().get_deprecated("dayPeriodRuleSet"sv);
 
     auto parse_hour = [](auto const& time) {
         auto hour_end_index = time.find(':').value();
@@ -1608,8 +1608,8 @@ static ErrorOr<void> parse_day_periods(DeprecatedString core_path, CLDR& cldr)
         if (!day_period.has_value())
             return {};
 
-        auto begin = parse_hour(ranges.get("_from"sv).as_string());
-        auto end = parse_hour(ranges.get("_before"sv).as_string());
+        auto begin = parse_hour(ranges.get_deprecated("_from"sv).as_string());
+        auto end = parse_hour(ranges.get_deprecated("_before"sv).as_string());
 
         return DayPeriod { *day_period, begin, end };
     };

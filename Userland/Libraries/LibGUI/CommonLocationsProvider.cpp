@@ -56,8 +56,8 @@ ErrorOr<void> CommonLocationsProvider::load_from_json(StringView json_path)
         if (!entry_value.is_object())
             continue;
         auto entry = entry_value.as_object();
-        auto name = entry.get("name"sv).to_deprecated_string();
-        auto path = entry.get("path"sv).to_deprecated_string();
+        auto name = entry.get_deprecated("name"sv).to_deprecated_string();
+        auto path = entry.get_deprecated("path"sv).to_deprecated_string();
         TRY(s_common_locations.try_append({ name, path }));
     }
 

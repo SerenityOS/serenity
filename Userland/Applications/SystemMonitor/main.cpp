@@ -130,18 +130,18 @@ public:
                 [](const JsonObject& object) {
                     StringBuilder size_builder;
                     size_builder.append(' ');
-                    size_builder.append(human_readable_size(object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64()));
+                    size_builder.append(human_readable_size(object.get_deprecated("total_block_count"sv).to_u64() * object.get_deprecated("block_size"sv).to_u64()));
                     size_builder.append(' ');
                     return size_builder.to_deprecated_string();
                 },
                 [](const JsonObject& object) {
-                    return object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
+                    return object.get_deprecated("total_block_count"sv).to_u64() * object.get_deprecated("block_size"sv).to_u64();
                 },
                 [](const JsonObject& object) {
-                    auto total_blocks = object.get("total_block_count"sv).to_u64();
+                    auto total_blocks = object.get_deprecated("total_block_count"sv).to_u64();
                     if (total_blocks == 0)
                         return 0;
-                    auto free_blocks = object.get("free_block_count"sv).to_u64();
+                    auto free_blocks = object.get_deprecated("free_block_count"sv).to_u64();
                     auto used_blocks = total_blocks - free_blocks;
                     int percentage = (static_cast<double>(used_blocks) / static_cast<double>(total_blocks) * 100.0);
                     return percentage;
@@ -149,31 +149,31 @@ public:
             df_fields.empend(
                 "Used", Gfx::TextAlignment::CenterRight,
                 [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count"sv).to_u64();
-            auto free_blocks = object.get("free_block_count"sv).to_u64();
+            auto total_blocks = object.get_deprecated("total_block_count"sv).to_u64();
+            auto free_blocks = object.get_deprecated("free_block_count"sv).to_u64();
             auto used_blocks = total_blocks - free_blocks;
-            return human_readable_size(used_blocks * object.get("block_size"sv).to_u64()); },
+            return human_readable_size(used_blocks * object.get_deprecated("block_size"sv).to_u64()); },
                 [](const JsonObject& object) {
-                    auto total_blocks = object.get("total_block_count"sv).to_u64();
-                    auto free_blocks = object.get("free_block_count"sv).to_u64();
+                    auto total_blocks = object.get_deprecated("total_block_count"sv).to_u64();
+                    auto free_blocks = object.get_deprecated("free_block_count"sv).to_u64();
                     auto used_blocks = total_blocks - free_blocks;
-                    return used_blocks * object.get("block_size"sv).to_u64();
+                    return used_blocks * object.get_deprecated("block_size"sv).to_u64();
                 });
             df_fields.empend(
                 "Available", Gfx::TextAlignment::CenterRight,
                 [](const JsonObject& object) {
-                    return human_readable_size(object.get("free_block_count"sv).to_u64() * object.get("block_size"sv).to_u64());
+                    return human_readable_size(object.get_deprecated("free_block_count"sv).to_u64() * object.get_deprecated("block_size"sv).to_u64());
                 },
                 [](const JsonObject& object) {
-                    return object.get("free_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
+                    return object.get_deprecated("free_block_count"sv).to_u64() * object.get_deprecated("block_size"sv).to_u64();
                 });
             df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-                bool readonly = object.get("readonly"sv).to_bool();
-                int mount_flags = object.get("mount_flags"sv).to_int();
+                bool readonly = object.get_deprecated("readonly"sv).to_bool();
+                int mount_flags = object.get_deprecated("mount_flags"sv).to_int();
                 return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
             });
             df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-                int mount_flags = object.get("mount_flags"sv).to_int();
+                int mount_flags = object.get_deprecated("mount_flags"sv).to_int();
                 StringBuilder builder;
                 bool first = true;
                 auto check = [&](int flag, StringView name) {

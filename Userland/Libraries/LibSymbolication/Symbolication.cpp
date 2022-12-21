@@ -181,9 +181,9 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
         for (auto& region_value : json.value().as_array().values()) {
             auto& region = region_value.as_object();
-            auto name = region.get("name"sv).to_deprecated_string();
-            auto address = region.get("address"sv).to_addr();
-            auto size = region.get("size"sv).to_addr();
+            auto name = region.get_deprecated("name"sv).to_deprecated_string();
+            auto address = region.get_deprecated("address"sv).to_addr();
+            auto size = region.get_deprecated("size"sv).to_addr();
 
             DeprecatedString path;
             if (name == "/usr/lib/Loader.so") {

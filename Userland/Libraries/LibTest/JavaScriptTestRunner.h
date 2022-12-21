@@ -422,7 +422,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
             VERIFY(test_value.is_object());
             VERIFY(test_value.as_object().has("result"sv));
 
-            auto result = test_value.as_object().get("result"sv);
+            auto result = test_value.as_object().get_deprecated("result"sv);
             VERIFY(result.is_string());
             auto result_string = result.as_string();
             if (result_string == "pass") {
@@ -433,7 +433,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 m_counts.tests_failed++;
                 suite.most_severe_test_result = Test::Result::Fail;
                 VERIFY(test_value.as_object().has("details"sv));
-                auto details = test_value.as_object().get("details"sv);
+                auto details = test_value.as_object().get_deprecated("details"sv);
                 VERIFY(result.is_string());
                 test.details = details.as_string();
             } else {
@@ -443,7 +443,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 m_counts.tests_skipped++;
             }
 
-            test.duration_us = test_value.as_object().get("duration"sv).to_u64(0);
+            test.duration_us = test_value.as_object().get_deprecated("duration"sv).to_u64(0);
 
             suite.tests.append(test);
         });
