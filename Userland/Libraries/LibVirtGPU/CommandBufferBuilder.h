@@ -22,7 +22,8 @@ public:
     void append_transfer3d(Protocol::ResourceID resource, size_t width, size_t height = 1, size_t depth = 1, size_t direction = VIRGL_DATA_DIR_GUEST_TO_HOST);
     void append_end_transfers_3d();
     void append_draw_vbo(Protocol::PipePrimitiveTypes, u32 count);
-    void append_clear(float r, float g, float b);
+    void append_clear(float r, float g, float b, float a);
+    void append_clear(double depth);
     void append_set_vertex_buffers(u32 stride, u32 offset, Protocol::ResourceID resource);
     void append_create_blend(Protocol::ObjectHandle handle);
     void append_bind_blend(Protocol::ObjectHandle handle);
