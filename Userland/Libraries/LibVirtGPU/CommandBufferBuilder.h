@@ -31,7 +31,7 @@ public:
     void append_create_vertex_elements(Protocol::ObjectHandle handle);
     void append_bind_vertex_elements(Protocol::ObjectHandle handle);
     void append_viewport(Gfx::IntSize);
-    void append_set_framebuffer_state_no_attach();
+    void append_set_framebuffer_state_no_attach(Gfx::IntSize);
     void append_set_constant_buffer(Vector<float> const& constant_buffer);
     void append_create_shader(Protocol::ObjectHandle handle, Gallium::ShaderType shader_type, StringView shader_data);
     void append_bind_shader(Protocol::ObjectHandle handle, Gallium::ShaderType shader_type);

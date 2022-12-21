@@ -15,10 +15,6 @@
 
 namespace VirtGPU {
 
-constexpr int DRAWTARGET_WIDTH = 500;
-constexpr int DRAWTARGET_HEIGHT = 500;
-
-
 static u32 encode_command(u16 length, Protocol::ObjectType object_type, Protocol::VirGLCommand command)
 {
     u8 command_value = to_underlying(command);
@@ -236,11 +232,18 @@ void CommandBufferBuilder::append_viewport(Gfx::IntSize size)
     builder.appendf32(0.5f);              // translate_z
 }
 
-void CommandBufferBuilder::append_set_framebuffer_state_no_attach()
+void CommandBufferBuilder::append_set_framebuffer_state_no_attach(Gfx::IntSize size)
 {
+    VERIFY(size.width() <= NumericLimits<u16>::max());
+    VERIFY(size.height() <= NumericLimits<u16>::max());
+
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_FRAMEBUFFER_STATE_NO_ATTACH, Protocol::ObjectType::NONE);
-    builder.appendu32((DRAWTARGET_HEIGHT << 16) | DRAWTARGET_WIDTH); // (height << 16) | width
-    builder.appendu32(0);                                            // (samples << 16) | layers
+
+    u16 samples = 0;
+    u16 layers = 0;
+
+    builder.appendu32((size.height() << 16) | size.width());
+    builder.appendu32((samples << 16) | layers);
 }
 
 void CommandBufferBuilder::append_set_constant_buffer(Vector<float> const& constant_buffer)
