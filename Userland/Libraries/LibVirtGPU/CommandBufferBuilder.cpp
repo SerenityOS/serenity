@@ -11,6 +11,7 @@
 #include <sys/ioctl_numbers.h>
 
 #include <LibVirtGPU/CommandBufferBuilder.h>
+#include <LibVirtGPU/Commands.h>
 #include <LibVirtGPU/VirGLProtocol.h>
 
 namespace VirtGPU {
@@ -145,7 +146,6 @@ void CommandBufferBuilder::append_clear(float r, float g, float b, float a)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CLEAR, Protocol::ObjectType::NONE);
     Protocol::ClearType clear_flags {};
-    clear_flags.flags.depth = 1;
     clear_flags.flags.color0 = 1;
     builder.appendu32(clear_flags.value);
     builder.appendf32(r);
@@ -181,10 +181,18 @@ void CommandBufferBuilder::append_set_vertex_buffers(u32 stride, u32 offset, Pro
 void CommandBufferBuilder::append_create_blend(Protocol::ObjectHandle handle)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::BLEND);
+
+    CreateBlendCommand::S0Flags s0 {};
+    CreateBlendCommand::S1Flags s1 {};
+    CreateBlendCommand::S2Flags s2 {};
+
+    s0.dither = 1;
+    s2.colormask = 0xf;
+
     builder.appendu32(handle.value());
-    builder.appendu32(4); // Enable dither flag, and nothing else
-    builder.appendu32(0);
-    builder.appendu32(0x78000000); // Enable all bits of color mask for color buffer 0, and nothing else
+    builder.appendu32(s0.u32_value);
+    builder.appendu32(s1.u32_value);
+    builder.appendu32(s2.u32_value);
     for (size_t i = 1; i < 8; ++i) {
         builder.appendu32(0); // Explicitly disable all flags for other color buffers
     }
@@ -196,18 +204,16 @@ void CommandBufferBuilder::append_bind_blend(Protocol::ObjectHandle handle)
     builder.appendu32(handle.value()); // VIRGL_OBJ_BIND_HANDLE
 }
 
-void CommandBufferBuilder::append_create_vertex_elements(Protocol::ObjectHandle handle)
+void CommandBufferBuilder::append_create_vertex_elements(Protocol::ObjectHandle handle, Vector<CreateVertexElementsCommand::ElementBinding> const& bindings)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::VERTEX_ELEMENTS);
     builder.appendu32(handle.value());
-    builder.appendu32(12); // src_offset_0
-    builder.appendu32(0);  // instance_divisor_0
-    builder.appendu32(0);  // vertex_buffer_index_0
-    builder.appendu32(30); // src_format_0 (PIPE_FORMAT_R32G32B32_FLOAT = 30)
-    builder.appendu32(0);  // src_offset_1
-    builder.appendu32(0);  // instance_divisor_1
-    builder.appendu32(0);  // vertex_buffer_index_1
-    builder.appendu32(30); // src_format_1 (PIPE_FORMAT_R32G32B32_FLOAT = 30)
+    for (auto& binding : bindings) {
+        builder.appendu32(binding.offset);
+        builder.appendu32(binding.divisor);
+        builder.appendu32(binding.vertex_buffer_index);
+        builder.appendu32(to_underlying(binding.format));
+    }
 }
 
 void CommandBufferBuilder::append_bind_vertex_elements(Protocol::ObjectHandle handle)
@@ -294,11 +300,17 @@ void CommandBufferBuilder::append_bind_shader(Protocol::ObjectHandle handle, Gal
 void CommandBufferBuilder::append_create_rasterizer(Protocol::ObjectHandle handle)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::RASTERIZER);
+
+    CreateRasterizerCommand::S0Flags s0 {};
+    CreateRasterizerCommand::S3Flags s3 {};
+
+    s0.depth_clip = 1;
+
     builder.appendu32(handle.value()); // Handle
-    builder.appendu32(0x00000002);     // S0 (bitfield of state bits)
+    builder.appendu32(s0.u32_value);   // S0 (bitfield of state bits)
     builder.appendf32(1.0);            // Point size
     builder.appendu32(0);              // Sprite coord enable
-    builder.appendu32(0x00000000);     // S3 (bitfield of state bits)
+    builder.appendu32(s3.u32_value);   // S3 (bitfield of state bits)
     builder.appendf32(0.1);            // Line width
     builder.appendf32(0.0);            // Offset units
     builder.appendf32(0.0);            // offset scale
@@ -314,11 +326,19 @@ void CommandBufferBuilder::append_bind_rasterizer(Protocol::ObjectHandle handle)
 void CommandBufferBuilder::append_create_dsa(Protocol::ObjectHandle handle)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::DSA);
-    builder.appendu32(handle.value()); // Handle
-    builder.appendu32(0x00000007);     // S0 (bitset: (v >> 0) & 1 = depth.enabled, (v >> 1) & 1 = depth.writemask,  (v >> 2) & 7 = depth.func)
-    builder.appendu32(0x00000000);     // S1 (bitset for 1st stencil buffer)
-    builder.appendu32(0x00000000);     // S2 (bitset for 2nd stencil buffer)
-    builder.appendf32(1.0);            // Alpha Ref
+
+    CreateDSACommand::S0Flags s0 {};
+    CreateDSACommand::S1Flags s1[2] {};
+
+    s0.depth_enabled = 1;
+    s0.depth_writemask = 1;
+    s0.depth_func = 1;
+
+    builder.appendu32(handle.value());  // Handle
+    builder.appendu32(s0.u32_value);    // S0 (bitset for depth buffer)
+    builder.appendu32(s1[0].u32_value); // S1 (bitset for 1st stencil buffer)
+    builder.appendu32(s1[1].u32_value); // S2 (bitset for 2nd stencil buffer)
+    builder.appendf32(1.0);             // Alpha Ref
 }
 
 void CommandBufferBuilder::append_bind_dsa(Protocol::ObjectHandle handle)
