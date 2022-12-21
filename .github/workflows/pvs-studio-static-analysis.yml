@@ -64,8 +64,28 @@ jobs:
 
       - name: Create build directory
         run: |
+          mkdir -p ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/TZDB
           mkdir -p ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/UCD
           mkdir -p ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/CLDR
+
+      - name: TimeZoneData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
+      - name: UnicodeData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/UCD
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+      - name: UnicodeLocale Cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/CLDR
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
 
       - name: Create build environment
         working-directory: ${{ github.workspace }}
@@ -98,7 +118,7 @@ jobs:
         working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
         run: pvs-studio-analyzer analyze -o project.plog --compiler ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-pc-serenity-g++ --compiler ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-pc-serenity-gcc -j2
 
-      # Suppress Rules: 
+      # Suppress Rules:
       # - v530: The return value of function 'release_value' is required to be utilized.
       #    Our TRY(..) macro seems to breaks this rule and trigger weird behavior in PVS Studio.
       #
@@ -108,7 +128,7 @@ jobs:
       # - v1061: Extending the 'std' namespace may result in undefined behavior.
       #    We have no choice, some features of C++ require us to.
       #
-      # - False Positives: 
+      # - False Positives:
       #    v591:  Non-void function should return a value.
       #    v603:  Object was created but is not being used.
       #    v1047: Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
@@ -125,11 +145,11 @@ jobs:
 
       - name: Convert PVS Log to SARIF
         run: plog-converter -a 'GA:1,2;64:1;OP:1,2,3' -o project.sarif -t sarif ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog
-        
+
       - uses: actions/upload-artifact@v2
         with:
           path: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog
-          
+
       - uses: actions/upload-artifact@v2
         with:
           path: ${{ github.workspace }}/project.sarif

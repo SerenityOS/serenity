@@ -97,8 +97,28 @@ jobs:
 
       - name: Create build directory
         run: |
+          mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/TZDB
           mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/UCD
           mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/CLDR
+
+      - name: TimeZoneData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
+      - name: UnicodeData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/UCD
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+      - name: UnicodeLocale Cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/CLDR
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
 
       - name: Create build environment
         working-directory: ${{ github.workspace }}
