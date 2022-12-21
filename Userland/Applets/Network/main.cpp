@@ -127,10 +127,10 @@ private:
         int connected_adapters = 0;
         json.value().as_array().for_each([&adapter_info, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
-            auto ip_address = if_object.get_deprecated("ipv4_address"sv).as_string_or("no IP");
-            auto ifname = if_object.get_deprecated("name"sv).to_deprecated_string();
-            auto link_up = if_object.get_deprecated("link_up"sv).as_bool();
-            auto link_speed = if_object.get_deprecated("link_speed"sv).to_i32();
+            auto ip_address = if_object.get_deprecated_string("ipv4_address"sv).value_or("no IP");
+            auto ifname = if_object.get_deprecated_string("name"sv).value();
+            auto link_up = if_object.get_bool("link_up"sv).value();
+            auto link_speed = if_object.get_i32("link_speed"sv).value();
 
             if (ifname == "loop")
                 return;
