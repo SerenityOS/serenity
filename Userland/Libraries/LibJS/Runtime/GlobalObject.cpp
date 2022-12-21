@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DataViewConstructor.h>
 #include <LibJS/Runtime/DateConstructor.h>
+#include <LibJS/Runtime/DisposableStackConstructor.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/FinalizationRegistryConstructor.h>
 #include <LibJS/Runtime/FinalizationRegistryPrototype.h>
@@ -135,6 +136,7 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.Boolean, attr, [](auto& realm) -> Value { return realm.intrinsics().boolean_constructor(); });
     global.define_intrinsic_accessor(vm.names.DataView, attr, [](auto& realm) -> Value { return realm.intrinsics().data_view_constructor(); });
     global.define_intrinsic_accessor(vm.names.Date, attr, [](auto& realm) -> Value { return realm.intrinsics().date_constructor(); });
+    global.define_intrinsic_accessor(vm.names.DisposableStack, attr, [](auto& realm) -> Value { return realm.intrinsics().disposable_stack_constructor(); });
     global.define_intrinsic_accessor(vm.names.Error, attr, [](auto& realm) -> Value { return realm.intrinsics().error_constructor(); });
     global.define_intrinsic_accessor(vm.names.EvalError, attr, [](auto& realm) -> Value { return realm.intrinsics().eval_error_constructor(); });
     global.define_intrinsic_accessor(vm.names.FinalizationRegistry, attr, [](auto& realm) -> Value { return realm.intrinsics().finalization_registry_constructor(); });

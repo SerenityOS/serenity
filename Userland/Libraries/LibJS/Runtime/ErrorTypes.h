@@ -32,6 +32,7 @@
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
     M(DetachKeyMismatch, "Provided detach key {} does not match the ArrayBuffer's detach key {}")                                       \
+    M(DisposableStackAlreadyDisposed, "DisposableStack already disposed values")                                                        \
     M(DivisionByZero, "Division by zero")                                                                                               \
     M(DynamicImportNotAllowed, "Dynamic Imports are not allowed")                                                                       \
     M(FinalizationRegistrySameTargetAndValue, "Target and held value must not be the same")                                             \
