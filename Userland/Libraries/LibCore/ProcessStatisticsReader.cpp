@@ -23,56 +23,56 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(Core::Stream::S
 
     auto file_contents = TRY(proc_all_file.read_until_eof());
     auto json_obj = TRY(JsonValue::from_string(file_contents)).as_object();
-    json_obj.get_deprecated("processes"sv).as_array().for_each([&](auto& value) {
+    json_obj.get_array("processes"sv)->for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         Core::ProcessStatistics process;
 
         // kernel data first
-        process.pid = process_object.get_deprecated("pid"sv).to_u32();
-        process.pgid = process_object.get_deprecated("pgid"sv).to_u32();
-        process.pgp = process_object.get_deprecated("pgp"sv).to_u32();
-        process.sid = process_object.get_deprecated("sid"sv).to_u32();
-        process.uid = process_object.get_deprecated("uid"sv).to_u32();
-        process.gid = process_object.get_deprecated("gid"sv).to_u32();
-        process.ppid = process_object.get_deprecated("ppid"sv).to_u32();
-        process.nfds = process_object.get_deprecated("nfds"sv).to_u32();
-        process.kernel = process_object.get_deprecated("kernel"sv).to_bool();
-        process.name = process_object.get_deprecated("name"sv).to_deprecated_string();
-        process.executable = process_object.get_deprecated("executable"sv).to_deprecated_string();
-        process.tty = process_object.get_deprecated("tty"sv).to_deprecated_string();
-        process.pledge = process_object.get_deprecated("pledge"sv).to_deprecated_string();
-        process.veil = process_object.get_deprecated("veil"sv).to_deprecated_string();
-        process.amount_virtual = process_object.get_deprecated("amount_virtual"sv).to_u32();
-        process.amount_resident = process_object.get_deprecated("amount_resident"sv).to_u32();
-        process.amount_shared = process_object.get_deprecated("amount_shared"sv).to_u32();
-        process.amount_dirty_private = process_object.get_deprecated("amount_dirty_private"sv).to_u32();
-        process.amount_clean_inode = process_object.get_deprecated("amount_clean_inode"sv).to_u32();
-        process.amount_purgeable_volatile = process_object.get_deprecated("amount_purgeable_volatile"sv).to_u32();
-        process.amount_purgeable_nonvolatile = process_object.get_deprecated("amount_purgeable_nonvolatile"sv).to_u32();
+        process.pid = process_object.get_u32("pid"sv).value_or(0);
+        process.pgid = process_object.get_u32("pgid"sv).value_or(0);
+        process.pgp = process_object.get_u32("pgp"sv).value_or(0);
+        process.sid = process_object.get_u32("sid"sv).value_or(0);
+        process.uid = process_object.get_u32("uid"sv).value_or(0);
+        process.gid = process_object.get_u32("gid"sv).value_or(0);
+        process.ppid = process_object.get_u32("ppid"sv).value_or(0);
+        process.nfds = process_object.get_u32("nfds"sv).value_or(0);
+        process.kernel = process_object.get_bool("kernel"sv).value_or(false);
+        process.name = process_object.get_deprecated_string("name"sv).value_or("");
+        process.executable = process_object.get_deprecated_string("executable"sv).value_or("");
+        process.tty = process_object.get_deprecated_string("tty"sv).value_or("");
+        process.pledge = process_object.get_deprecated_string("pledge"sv).value_or("");
+        process.veil = process_object.get_deprecated_string("veil"sv).value_or("");
+        process.amount_virtual = process_object.get_u32("amount_virtual"sv).value_or(0);
+        process.amount_resident = process_object.get_u32("amount_resident"sv).value_or(0);
+        process.amount_shared = process_object.get_u32("amount_shared"sv).value_or(0);
+        process.amount_dirty_private = process_object.get_u32("amount_dirty_private"sv).value_or(0);
+        process.amount_clean_inode = process_object.get_u32("amount_clean_inode"sv).value_or(0);
+        process.amount_purgeable_volatile = process_object.get_u32("amount_purgeable_volatile"sv).value_or(0);
+        process.amount_purgeable_nonvolatile = process_object.get_u32("amount_purgeable_nonvolatile"sv).value_or(0);
 
-        auto& thread_array = process_object.get_ptr("threads"sv)->as_array();
+        auto& thread_array = process_object.get_array("threads"sv).value();
         process.threads.ensure_capacity(thread_array.size());
         thread_array.for_each([&](auto& value) {
             auto& thread_object = value.as_object();
             Core::ThreadStatistics thread;
-            thread.tid = thread_object.get_deprecated("tid"sv).to_u32();
-            thread.times_scheduled = thread_object.get_deprecated("times_scheduled"sv).to_u32();
-            thread.name = thread_object.get_deprecated("name"sv).to_deprecated_string();
-            thread.state = thread_object.get_deprecated("state"sv).to_deprecated_string();
-            thread.time_user = thread_object.get_deprecated("time_user"sv).to_u64();
-            thread.time_kernel = thread_object.get_deprecated("time_kernel"sv).to_u64();
-            thread.cpu = thread_object.get_deprecated("cpu"sv).to_u32();
-            thread.priority = thread_object.get_deprecated("priority"sv).to_u32();
-            thread.syscall_count = thread_object.get_deprecated("syscall_count"sv).to_u32();
-            thread.inode_faults = thread_object.get_deprecated("inode_faults"sv).to_u32();
-            thread.zero_faults = thread_object.get_deprecated("zero_faults"sv).to_u32();
-            thread.cow_faults = thread_object.get_deprecated("cow_faults"sv).to_u32();
-            thread.unix_socket_read_bytes = thread_object.get_deprecated("unix_socket_read_bytes"sv).to_u32();
-            thread.unix_socket_write_bytes = thread_object.get_deprecated("unix_socket_write_bytes"sv).to_u32();
-            thread.ipv4_socket_read_bytes = thread_object.get_deprecated("ipv4_socket_read_bytes"sv).to_u32();
-            thread.ipv4_socket_write_bytes = thread_object.get_deprecated("ipv4_socket_write_bytes"sv).to_u32();
-            thread.file_read_bytes = thread_object.get_deprecated("file_read_bytes"sv).to_u32();
-            thread.file_write_bytes = thread_object.get_deprecated("file_write_bytes"sv).to_u32();
+            thread.tid = thread_object.get_u32("tid"sv).value_or(0);
+            thread.times_scheduled = thread_object.get_u32("times_scheduled"sv).value_or(0);
+            thread.name = thread_object.get_deprecated_string("name"sv).value_or("");
+            thread.state = thread_object.get_deprecated_string("state"sv).value_or("");
+            thread.time_user = thread_object.get_u64("time_user"sv).value_or(0);
+            thread.time_kernel = thread_object.get_u64("time_kernel"sv).value_or(0);
+            thread.cpu = thread_object.get_u32("cpu"sv).value_or(0);
+            thread.priority = thread_object.get_u32("priority"sv).value_or(0);
+            thread.syscall_count = thread_object.get_u32("syscall_count"sv).value_or(0);
+            thread.inode_faults = thread_object.get_u32("inode_faults"sv).value_or(0);
+            thread.zero_faults = thread_object.get_u32("zero_faults"sv).value_or(0);
+            thread.cow_faults = thread_object.get_u32("cow_faults"sv).value_or(0);
+            thread.unix_socket_read_bytes = thread_object.get_u32("unix_socket_read_bytes"sv).value_or(0);
+            thread.unix_socket_write_bytes = thread_object.get_u32("unix_socket_write_bytes"sv).value_or(0);
+            thread.ipv4_socket_read_bytes = thread_object.get_u32("ipv4_socket_read_bytes"sv).value_or(0);
+            thread.ipv4_socket_write_bytes = thread_object.get_u32("ipv4_socket_write_bytes"sv).value_or(0);
+            thread.file_read_bytes = thread_object.get_u32("file_read_bytes"sv).value_or(0);
+            thread.file_write_bytes = thread_object.get_u32("file_write_bytes"sv).value_or(0);
             process.threads.append(move(thread));
         });
 
@@ -83,8 +83,8 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(Core::Stream::S
         all_processes_statistics.processes.append(move(process));
     });
 
-    all_processes_statistics.total_time_scheduled = json_obj.get_deprecated("total_time"sv).to_u64();
-    all_processes_statistics.total_time_scheduled_kernel = json_obj.get_deprecated("total_time_kernel"sv).to_u64();
+    all_processes_statistics.total_time_scheduled = json_obj.get_u64("total_time"sv).value_or(0);
+    all_processes_statistics.total_time_scheduled_kernel = json_obj.get_u64("total_time_kernel"sv).value_or(0);
     return all_processes_statistics;
 }
 

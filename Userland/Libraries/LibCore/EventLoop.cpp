@@ -227,16 +227,16 @@ public:
 
     void handle_request(JsonObject const& request)
     {
-        auto type = request.get_deprecated("type"sv).as_string_or({});
+        auto type = request.get_deprecated_string("type"sv);
 
-        if (type.is_null()) {
+        if (!type.has_value()) {
             dbgln("RPC client sent request without type field");
             return;
         }
 
         if (type == "Identify") {
             JsonObject response;
-            response.set("type", type);
+            response.set("type", type.value());
             response.set("pid", getpid());
 #ifdef AK_OS_SERENITY
             char buffer[1024];
@@ -252,7 +252,7 @@ public:
 
         if (type == "GetAllObjects") {
             JsonObject response;
-            response.set("type", type);
+            response.set("type", type.value());
             JsonArray objects;
             for (auto& object : Object::all_objects()) {
                 JsonObject json_object;
@@ -265,7 +265,7 @@ public:
         }
 
         if (type == "SetInspectedObject") {
-            auto address = request.get_deprecated("address"sv).to_number<FlatPtr>();
+            auto address = request.get_addr("address"sv);
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
                     if (auto inspected_object = m_inspected_object.strong_ref())
@@ -279,10 +279,10 @@ public:
         }
 
         if (type == "SetProperty") {
-            auto address = request.get_deprecated("address"sv).to_number<FlatPtr>();
+            auto address = request.get_addr("address"sv);
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
-                    bool success = object.set_property(request.get_deprecated("name"sv).to_deprecated_string(), request.get_deprecated("value"sv));
+                    bool success = object.set_property(request.get_deprecated_string("name"sv).value(), request.get("value"sv).value());
                     JsonObject response;
                     response.set("type", "SetProperty");
                     response.set("success", success);
