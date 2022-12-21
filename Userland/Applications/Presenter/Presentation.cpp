@@ -91,23 +91,23 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     if (!global_object.has_number("version"sv))
         return Error::from_string_view("Presentation file is missing a version specification"sv);
 
-    auto const version = global_object.get_deprecated("version"sv).to_int(-1);
+    auto const version = global_object.get_integer<int>("version"sv).value_or(-1);
     if (version != PRESENTATION_FORMAT_VERSION)
         return Error::from_string_view("Presentation file has incompatible version"sv);
 
-    auto const& maybe_metadata = global_object.get_deprecated("metadata"sv);
-    auto const& maybe_slides = global_object.get_deprecated("slides"sv);
+    auto maybe_metadata = global_object.get_object("metadata"sv);
+    auto maybe_slides = global_object.get_array("slides"sv);
 
-    if (maybe_metadata.is_null() || !maybe_metadata.is_object() || maybe_slides.is_null() || !maybe_slides.is_array())
+    if (!maybe_metadata.has_value() || !maybe_slides.has_value())
         return Error::from_string_view("Metadata or slides in incorrect format"sv);
 
-    auto const& raw_metadata = maybe_metadata.as_object();
+    auto const& raw_metadata = maybe_metadata.value();
     auto metadata = parse_metadata(raw_metadata);
     auto size = TRY(parse_presentation_size(raw_metadata));
 
     auto presentation = Presentation::construct(size, metadata);
 
-    auto const& slides = maybe_slides.as_array();
+    auto const& slides = maybe_slides.value();
     for (auto const& maybe_slide : slides.values()) {
         if (!maybe_slide.is_object())
             return Error::from_string_view("Slides must be objects"sv);
@@ -133,15 +133,15 @@ HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObj
 
 ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& metadata_object)
 {
-    auto const& maybe_width = metadata_object.get_deprecated("width"sv);
-    auto const& maybe_aspect = metadata_object.get_deprecated("aspect"sv);
+    auto const& maybe_width = metadata_object.get("width"sv);
+    auto const& maybe_aspect = metadata_object.get_deprecated_string("aspect"sv);
 
-    if (maybe_width.is_null() || !maybe_width.is_number() || maybe_aspect.is_null() || !maybe_aspect.is_string())
+    if (!maybe_width.has_value() || !maybe_width->is_number() || !maybe_aspect.has_value())
         return Error::from_string_view("Width or aspect in incorrect format"sv);
 
     // We intentionally discard floating-point data here. If you need more resolution, just use a larger width.
-    auto const width = maybe_width.to_int();
-    auto const aspect_parts = maybe_aspect.as_string().split_view(':');
+    auto const width = maybe_width->to_int();
+    auto const aspect_parts = maybe_aspect->split_view(':');
     if (aspect_parts.size() != 2)
         return Error::from_string_view("Aspect specification must have the exact format `width:height`"sv);
     auto aspect_width = aspect_parts[0].to_int<int>();
