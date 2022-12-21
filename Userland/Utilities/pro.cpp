@@ -173,7 +173,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .help_string = "Add a header entry to the request",
         .long_name = "header",
         .short_name = 'H',
-        .value_name = "header-value",
+        .value_name = "key:value",
         .accept_value = [&](auto* s) {
             StringView header { s, strlen(s) };
             auto split = header.find(':');
