@@ -212,6 +212,10 @@ enum class ShaderType : u32 {
     SHADER_TYPES
 };
 
+enum class PipeFormat : u32 {
+    R32G32B32_FLOAT = 30
+};
+
 }
 
 }
