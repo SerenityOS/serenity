@@ -54,7 +54,7 @@ public:
         VERIFY(!m_finalized);
         m_buffer.append(0);
         m_buffer.append(0);
-        auto* depth = (u64*)(&m_buffer[m_buffer.size() - 2]);
+        auto* depth = reinterpret_cast<u64*>(&m_buffer[m_buffer.size() - 2]);
         *depth = bit_cast<u64>(value);
     }
 
@@ -65,7 +65,7 @@ public:
         auto length = string.length() + 1;
         auto num_required_words = (length + sizeof(u32) - 1) / sizeof(u32);
         m_buffer.resize(m_buffer.size() + num_required_words);
-        char* dest = (char*)&m_buffer[m_buffer.size() - num_required_words];
+        char* dest = reinterpret_cast<char*>(&m_buffer[m_buffer.size() - num_required_words]);
         memcpy(dest, string.characters_without_null_termination(), string.length());
         // Pad end with null bytes
         memset(&dest[string.length()], 0, 4 * num_required_words - string.length());
