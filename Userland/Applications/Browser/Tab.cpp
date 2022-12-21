@@ -580,9 +580,11 @@ void Tab::update_bookmark_button(DeprecatedString const& url)
 
 void Tab::did_become_active()
 {
-    BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, auto open_in_new_tab) {
-        if (open_in_new_tab == BookmarksBarWidget::OpenInNewTab::Yes)
+    BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, auto open) {
+        if (open == BookmarksBarWidget::Open::InNewTab)
             on_tab_open_request(url);
+        else if (open == BookmarksBarWidget::Open::InNewWindow)
+            on_window_open_request(url);
         else
             load(url);
     };

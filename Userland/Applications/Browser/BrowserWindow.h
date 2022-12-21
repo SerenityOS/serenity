@@ -29,6 +29,7 @@ public:
     GUI::TabWidget& tab_widget();
     Tab& active_tab();
     void create_new_tab(URL, bool activate);
+    void create_new_window(URL);
 
     GUI::Action& go_back_action() { return *m_go_back_action; }
     GUI::Action& go_forward_action() { return *m_go_forward_action; }
