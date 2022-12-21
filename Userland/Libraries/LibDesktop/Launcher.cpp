@@ -18,10 +18,10 @@ auto Launcher::Details::from_details_str(DeprecatedString const& details_str) ->
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
     auto const& obj = json.as_object();
-    details->executable = obj.get_deprecated("executable"sv).to_deprecated_string();
-    details->name = obj.get_deprecated("name"sv).to_deprecated_string();
-    if (auto type_value = obj.get_ptr("type"sv)) {
-        auto type_str = type_value->to_deprecated_string();
+    details->executable = obj.get_deprecated_string("executable"sv).value_or({});
+    details->name = obj.get_deprecated_string("name"sv).value_or({});
+    if (auto type_value = obj.get_deprecated_string("type"sv); type_value.has_value()) {
+        auto const& type_str = type_value.value();
         if (type_str == "app")
             details->launcher_type = LauncherType::Application;
         else if (type_str == "userpreferred")
