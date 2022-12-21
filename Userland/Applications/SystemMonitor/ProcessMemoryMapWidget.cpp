@@ -57,35 +57,35 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     pid_vm_fields.empend(
         "Address", Gfx::TextAlignment::CenterLeft,
-        [](auto& object) { return DeprecatedString::formatted("{:p}", object.get_deprecated("address"sv).to_u64()); },
-        [](auto& object) { return object.get_deprecated("address"sv).to_u64(); });
+        [](auto& object) { return DeprecatedString::formatted("{:p}", object.get_u64("address"sv).value_or(0)); },
+        [](auto& object) { return object.get_u64("address"sv).value_or(0); });
     pid_vm_fields.empend("size", "Size", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_resident", "Resident", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_dirty", "Dirty", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
-        if (object.get_deprecated("readable"sv).to_bool())
+        if (object.get_bool("readable"sv).value_or(false))
             builder.append('R');
-        if (object.get_deprecated("writable"sv).to_bool())
+        if (object.get_bool("writable"sv).value_or(false))
             builder.append('W');
-        if (object.get_deprecated("executable"sv).to_bool())
+        if (object.get_bool("executable"sv).value_or(false))
             builder.append('X');
-        if (object.get_deprecated("shared"sv).to_bool())
+        if (object.get_bool("shared"sv).value_or(false))
             builder.append('S');
-        if (object.get_deprecated("syscall"sv).to_bool())
+        if (object.get_bool("syscall"sv).value_or(false))
             builder.append('C');
-        if (object.get_deprecated("stack"sv).to_bool())
+        if (object.get_bool("stack"sv).value_or(false))
             builder.append('T');
         return builder.to_deprecated_string();
     });
     pid_vm_fields.empend("VMObject type", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        auto type = object.get_deprecated("vmobject"sv).to_deprecated_string();
+        auto type = object.get_deprecated_string("vmobject"sv).value_or({});
         if (type.ends_with("VMObject"sv))
             type = type.substring(0, type.length() - 8);
         return type;
     });
     pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        if (object.get_deprecated("volatile"sv).to_bool())
+        if (object.get_bool("volatile"sv).value_or(false))
             return "Volatile";
         return "Non-volatile";
     });
@@ -98,7 +98,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             return GUI::Variant(0);
         },
         [](JsonObject const& object) {
-            auto pagemap = object.get_deprecated("pagemap"sv).as_string_or({});
+            auto pagemap = object.get_deprecated_string("pagemap"sv).value_or({});
             return pagemap;
         });
     pid_vm_fields.empend("cow_pages", "# CoW", Gfx::TextAlignment::CenterRight);
