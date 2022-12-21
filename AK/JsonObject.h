@@ -44,6 +44,10 @@ public:
     [[nodiscard]] bool has_null(StringView key) const;
     [[nodiscard]] bool has_bool(StringView key) const;
     [[nodiscard]] bool has_string(StringView key) const;
+    [[nodiscard]] bool has_i8(StringView key) const;
+    [[nodiscard]] bool has_u8(StringView key) const;
+    [[nodiscard]] bool has_i16(StringView key) const;
+    [[nodiscard]] bool has_u16(StringView key) const;
     [[nodiscard]] bool has_i32(StringView key) const;
     [[nodiscard]] bool has_u32(StringView key) const;
     [[nodiscard]] bool has_i64(StringView key) const;
@@ -53,6 +57,40 @@ public:
     [[nodiscard]] bool has_object(StringView key) const;
 #ifndef KERNEL
     [[nodiscard]] bool has_double(StringView key) const;
+#endif
+
+    Optional<JsonValue const&> get(StringView key) const;
+
+    template<Integral T>
+    Optional<T> get_integer(StringView key) const
+    {
+        auto maybe_value = get(key);
+        if (maybe_value.has_value() && maybe_value->is_integer<T>())
+            return maybe_value->as_integer<T>();
+        return {};
+    }
+
+    Optional<i8> get_i8(StringView key) const;
+    Optional<u8> get_u8(StringView key) const;
+    Optional<i16> get_i16(StringView key) const;
+    Optional<u16> get_u16(StringView key) const;
+    Optional<i32> get_i32(StringView key) const;
+    Optional<u32> get_u32(StringView key) const;
+    Optional<i64> get_i64(StringView key) const;
+    Optional<u64> get_u64(StringView key) const;
+    Optional<FlatPtr> get_addr(StringView key) const;
+    Optional<bool> get_bool(StringView key) const;
+
+#if !defined(KERNEL)
+    Optional<DeprecatedString> get_deprecated_string(StringView key) const;
+#endif
+
+    Optional<JsonObject const&> get_object(StringView key) const;
+    Optional<JsonArray const&> get_array(StringView key) const;
+
+#if !defined(KERNEL)
+    Optional<double> get_double(StringView key) const;
+    Optional<float> get_float(StringView key) const;
 #endif
 
     void set(DeprecatedString const& key, JsonValue value);
