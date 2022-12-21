@@ -138,9 +138,9 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
         VERIFY(feature.has("type"sv));
-        auto feature_type = feature.get_deprecated("type"sv);
-        VERIFY(feature_type.is_string());
-        member_generator.set("is_range", feature_type.as_string() == "range" ? "true" : "false");
+        auto feature_type = feature.get_deprecated_string("type"sv);
+        VERIFY(feature_type.has_value());
+        member_generator.set("is_range", feature_type.value() == "range" ? "true" : "false");
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
         return @is_range@;)~~~");
@@ -173,9 +173,9 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
                 }
                 have_output_value_type_switch = true;
             };
-            auto& values = feature.get_deprecated("values"sv);
-            VERIFY(values.is_array());
-            auto& values_array = values.as_array();
+            auto values = feature.get_array("values"sv);
+            VERIFY(values.has_value());
+            auto& values_array = values.value();
             for (auto& type : values_array.values()) {
                 VERIFY(type.is_string());
                 auto type_name = type.as_string();
@@ -251,9 +251,9 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
                 }
                 have_output_identifier_switch = true;
             };
-            auto& values = feature.get_deprecated("values"sv);
-            VERIFY(values.is_array());
-            auto& values_array = values.as_array();
+            auto values = feature.get_array("values"sv);
+            VERIFY(values.has_value());
+            auto& values_array = values.value();
             for (auto& identifier : values_array.values()) {
                 VERIFY(identifier.is_string());
                 auto identifier_name = identifier.as_string();

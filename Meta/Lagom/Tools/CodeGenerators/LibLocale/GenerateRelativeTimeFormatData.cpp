@@ -83,10 +83,10 @@ static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR&
     date_fields_path = date_fields_path.append("dateFields.json"sv);
 
     auto date_fields = TRY(read_json_file(date_fields_path.string()));
-    auto const& main_object = date_fields.as_object().get_deprecated("main"sv);
-    auto const& locale_object = main_object.as_object().get_deprecated(date_fields_path.parent().basename());
-    auto const& dates_object = locale_object.as_object().get_deprecated("dates"sv);
-    auto const& fields_object = dates_object.as_object().get_deprecated("fields"sv);
+    auto const& main_object = date_fields.as_object().get_object("main"sv).value();
+    auto const& locale_object = main_object.get_object(date_fields_path.parent().basename()).value();
+    auto const& dates_object = locale_object.get_object("dates"sv).value();
+    auto const& fields_object = dates_object.get_object("fields"sv).value();
 
     auto is_sanctioned_unit = [](auto unit) {
         // This is a copy of the time units sanctioned for use within ECMA-402.
@@ -105,7 +105,7 @@ static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR&
         locale.time_units.append(cldr.unique_formats.ensure(move(format)));
     };
 
-    fields_object.as_object().for_each_member([&](auto const& unit_and_style, auto const& patterns) {
+    fields_object.for_each_member([&](auto const& unit_and_style, auto const& patterns) {
         auto segments = unit_and_style.split_view('-');
         auto unit = segments[0];
         auto style = (segments.size() > 1) ? segments[1] : "long"sv;
