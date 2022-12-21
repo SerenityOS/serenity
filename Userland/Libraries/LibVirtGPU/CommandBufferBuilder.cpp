@@ -145,7 +145,7 @@ void CommandBufferBuilder::append_draw_vbo(u32 count)
     builder.appendu32(0);                                                      // cso
 }
 
-void CommandBufferBuilder::append_gl_clear(float r, float g, float b)
+void CommandBufferBuilder::append_clear(float r, float g, float b)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CLEAR, Protocol::ObjectType::NONE);
     Protocol::ClearType clear_flags {};
@@ -224,7 +224,7 @@ void CommandBufferBuilder::append_set_framebuffer_state(Protocol::ObjectHandle d
     builder.appendu32(drawtarget.value());  // surf_handle
 }
 
-void CommandBufferBuilder::append_gl_viewport()
+void CommandBufferBuilder::append_viewport()
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_VIEWPORT_STATE, Protocol::ObjectType::NONE);
     builder.appendu32(0);
