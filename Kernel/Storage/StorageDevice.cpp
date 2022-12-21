@@ -36,23 +36,27 @@ StorageDevice::StorageDevice(Badge<RamdiskDevice>, LUNAddress logical_unit_numbe
 {
 }
 
-void StorageDevice::after_inserting()
+ErrorOr<void> StorageDevice::after_inserting()
 {
     after_inserting_add_to_device_management();
     auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);
     m_sysfs_device_directory = sysfs_storage_device_directory;
     SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
     VERIFY(!m_symlink_sysfs_component);
-    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
+    auto sys_fs_component = TRY(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
+    return {};
 }
 
 void StorageDevice::will_be_destroyed()
 {
-    VERIFY(m_symlink_sysfs_component);
-    before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
-    m_symlink_sysfs_component.clear();
+    // NOTE: We check if m_symlink_sysfs_component is not null, because if we failed
+    // in StorageDevice::after_inserting(), then that method will not set m_symlink_sysfs_component.
+    if (m_symlink_sysfs_component) {
+        before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+        m_symlink_sysfs_component.clear();
+    }
     SysFSStorageDirectory::the().unplug({}, *m_sysfs_device_directory);
     before_will_be_destroyed_remove_from_device_management();
 }

@@ -32,13 +32,14 @@ void Device::after_inserting_add_to_device_management()
     DeviceManagement::the().after_inserting_device({}, *this);
 }
 
-void Device::after_inserting()
+ErrorOr<void> Device::after_inserting()
 {
     after_inserting_add_to_device_management();
     VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);
     m_sysfs_component = sys_fs_component;
     after_inserting_add_to_device_identifier_directory();
+    return {};
 }
 
 void Device::will_be_destroyed()
