@@ -246,11 +246,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto output_stream = ConditionalOutputFileStream { [&] { return should_save_stream_data; }, stdout };
 
     // https://httpwg.org/specs/rfc9110.html#authentication
-    if (!credentials.is_empty() && is_http_url) {
+    auto const has_credentials = !credentials.is_empty();
+    auto const has_manual_authorization_header = request_headers.contains("Authorization");
+    if (is_http_url && has_credentials && !has_manual_authorization_header) {
         // 11.2. Authentication Parameters
         // The authentication scheme is followed by additional information necessary for achieving authentication via
         // that scheme as (...) or a single sequence of characters capable of holding base64-encoded information.
-        // FIXME: Prevent overriding manually provided Authorization header
         auto const encoded_credentials = TRY(encode_base64(credentials.bytes()));
         auto const authorization = TRY(String::formatted("Basic {}", encoded_credentials));
         request_headers.set("Authorization", authorization.to_deprecated_string());
