@@ -65,6 +65,7 @@ namespace JS {
     P(acos)                                  \
     P(acosh)                                 \
     P(add)                                   \
+    P(adopt)                                 \
     P(all)                                   \
     P(allSettled)                            \
     P(anchor)                                \
@@ -143,6 +144,7 @@ namespace JS {
     P(debug)                                 \
     P(decodeURI)                             \
     P(decodeURIComponent)                    \
+    P(defer)                                 \
     P(defineProperties)                      \
     P(defineProperty)                        \
     P(deleteProperty)                        \
@@ -151,6 +153,7 @@ namespace JS {
     P(difference)                            \
     P(direction)                             \
     P(disambiguation)                        \
+    P(disposed)                              \
     P(done)                                  \
     P(dotAll)                                \
     P(encodeURI)                             \
@@ -365,6 +368,7 @@ namespace JS {
     P(months)                                \
     P(monthsDisplay)                         \
     P(monthsInYear)                          \
+    P(move)                                  \
     P(multiline)                             \
     P(name)                                  \
     P(nanosecond)                            \
@@ -555,6 +559,7 @@ namespace JS {
     P(unshift)                               \
     P(until)                                 \
     P(usage)                                 \
+    P(use)                                   \
     P(useGrouping)                           \
     P(value)                                 \
     P(valueOf)                               \

@@ -75,6 +75,9 @@ set(SOURCES
     Runtime/DateConstructor.cpp
     Runtime/DatePrototype.cpp
     Runtime/DeclarativeEnvironment.cpp
+    Runtime/DisposableStack.cpp
+    Runtime/DisposableStackConstructor.cpp
+    Runtime/DisposableStackPrototype.cpp
     Runtime/ECMAScriptFunctionObject.cpp
     Runtime/Environment.cpp
     Runtime/Error.cpp

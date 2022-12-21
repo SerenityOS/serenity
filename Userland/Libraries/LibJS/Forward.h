@@ -27,6 +27,7 @@
     __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)                                                         \
     __JS_ENUMERATE(DataView, data_view, DataViewPrototype, DataViewConstructor, void)                                                          \
     __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                                                                           \
+    __JS_ENUMERATE(DisposableStack, disposable_stack, DisposableStackPrototype, DisposableStackConstructor, void)                              \
     __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                                                                       \
     __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void)          \
     __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                                     \

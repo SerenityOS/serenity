@@ -28,6 +28,8 @@
 #include <LibJS/Runtime/DataViewPrototype.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/DatePrototype.h>
+#include <LibJS/Runtime/DisposableStackConstructor.h>
+#include <LibJS/Runtime/DisposableStackPrototype.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/FinalizationRegistryConstructor.h>
