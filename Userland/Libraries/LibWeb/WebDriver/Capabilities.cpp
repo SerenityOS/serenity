@@ -52,7 +52,7 @@ static Response deserialize_as_ladybird_options(JsonValue value)
 
     auto const& object = value.as_object();
 
-    if (auto const* headless = object.get_ptr("headless"sv); headless && !headless->is_bool())
+    if (auto headless = object.get_bool("headless"sv); headless.has_value())
         return Error::from_code(ErrorCode::InvalidArgument, "Extension capability serenity:ladybird/headless must be a boolean"sv);
 
     return value;
@@ -188,10 +188,10 @@ static ErrorOr<JsonObject, Error> merge_capabilities(JsonObject const& primary, 
         // b. Let value be the result of getting a property named name from secondary.
 
         // c. Let primary value be the result of getting the property name from primary.
-        auto const* primary_value = primary.get_ptr(name);
+        auto primary_value = primary.get(name);
 
         // d. If primary value is not undefined, return an error with error code invalid argument.
-        if (primary_value != nullptr)
+        if (primary_value.has_value())
             return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Unable to merge capability {}", name));
 
         // e. Set a property on result with name name and value value.
@@ -267,20 +267,20 @@ static JsonValue match_capabilities(JsonObject const& capabilities)
         // -> "browserName"
         if (name == "browserName"sv) {
             // If value is not a string equal to the "browserName" entry in matched capabilities, return success with data null.
-            if (value.as_string() != matched_capabilities.get_deprecated(name).as_string())
+            if (value.as_string() != matched_capabilities.get_deprecated_string(name).value())
                 return AK::Error::from_string_view("browserName"sv);
         }
         // -> "browserVersion"
         else if (name == "browserVersion"sv) {
             // Compare value to the "browserVersion" entry in matched capabilities using an implementation-defined comparison algorithm. The comparison is to accept a value that places constraints on the version using the "<", "<=", ">", and ">=" operators.
             // If the two values do not match, return success with data null.
-            if (!matches_browser_version(value.as_string(), matched_capabilities.get_deprecated(name).as_string()))
+            if (!matches_browser_version(value.as_string(), matched_capabilities.get_deprecated_string(name).value()))
                 return AK::Error::from_string_view("browserVersion"sv);
         }
         // -> "platformName"
         else if (name == "platformName"sv) {
             // If value is not a string equal to the "platformName" entry in matched capabilities, return success with data null.
-            if (!matches_platform_name(value.as_string(), matched_capabilities.get_deprecated(name).as_string()))
+            if (!matches_platform_name(value.as_string(), matched_capabilities.get_deprecated_string(name).value()))
                 return AK::Error::from_string_view("platformName"sv);
         }
         // -> "acceptInsecureCerts"
@@ -321,17 +321,17 @@ Response process_capabilities(JsonValue const& parameters)
 
     // 1. Let capabilities request be the result of getting the property "capabilities" from parameters.
     //     a. If capabilities request is not a JSON Object, return error with error code invalid argument.
-    auto const* capabilities_request_ptr = parameters.as_object().get_ptr("capabilities"sv);
-    if (!capabilities_request_ptr || !capabilities_request_ptr->is_object())
+    auto maybe_capabilities_request = parameters.as_object().get_object("capabilities"sv);
+    if (!maybe_capabilities_request.has_value())
         return Error::from_code(ErrorCode::InvalidArgument, "Capabilities is not an object"sv);
 
-    auto const& capabilities_request = capabilities_request_ptr->as_object();
+    auto const& capabilities_request = maybe_capabilities_request.value();
 
     // 2. Let required capabilities be the result of getting the property "alwaysMatch" from capabilities request.
     //     a. If required capabilities is undefined, set the value to an empty JSON Object.
     JsonObject required_capabilities;
 
-    if (auto const* capability = capabilities_request.get_ptr("alwaysMatch"sv)) {
+    if (auto capability = capabilities_request.get("alwaysMatch"sv); capability.has_value()) {
         // b. Let required capabilities be the result of trying to validate capabilities with argument required capabilities.
         required_capabilities = TRY(validate_capabilities(*capability));
     }
@@ -339,7 +339,7 @@ Response process_capabilities(JsonValue const& parameters)
     // 3. Let all first match capabilities be the result of getting the property "firstMatch" from capabilities request.
     JsonArray all_first_match_capabilities;
 
-    if (auto const* capabilities = capabilities_request.get_ptr("firstMatch"sv)) {
+    if (auto capabilities = capabilities_request.get("firstMatch"sv); capabilities.has_value()) {
         // b. If all first match capabilities is not a JSON List with one or more entries, return error with error code invalid argument.
         if (!capabilities->is_array() || capabilities->as_array().is_empty())
             return Error::from_code(ErrorCode::InvalidArgument, "Capability firstMatch must be an array with at least one entry"sv);
@@ -394,13 +394,13 @@ Response process_capabilities(JsonValue const& parameters)
 
 LadybirdOptions::LadybirdOptions(JsonObject const& capabilities)
 {
-    auto const* options = capabilities.get_ptr("serenity:ladybird"sv);
-    if (!options || !options->is_object())
+    auto options = capabilities.get_object("serenity:ladybird"sv);
+    if (!options.has_value())
         return;
 
-    auto const* headless = options->as_object().get_ptr("headless"sv);
-    if (headless && headless->is_bool())
-        this->headless = headless->as_bool();
+    auto headless = options->get_bool("headless"sv);
+    if (headless.has_value())
+        this->headless = headless.value();
 }
 
 }
