@@ -125,7 +125,7 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
     auto default_action = GUI::Action::create(
         "&Open", g_icon_bag.go_to, [this](auto&) {
             if (on_bookmark_click)
-                on_bookmark_click(m_context_menu_url, OpenInNewTab::No);
+                on_bookmark_click(m_context_menu_url, Open::InSameTab);
         },
         this);
     m_context_menu_default_action = default_action;
@@ -133,7 +133,14 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
     m_context_menu->add_action(GUI::Action::create(
         "Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
             if (on_bookmark_click)
-                on_bookmark_click(m_context_menu_url, OpenInNewTab::Yes);
+                on_bookmark_click(m_context_menu_url, Open::InNewTab);
+        },
+        this));
+    m_context_menu->add_action(GUI::Action::create(
+        "Open in New Window", g_icon_bag.new_window, [this](auto&) {
+            if (on_bookmark_click) {
+                on_bookmark_click(m_context_menu_url, Open::InNewWindow);
+            }
         },
         this));
     m_context_menu->add_separator();
@@ -205,12 +212,12 @@ void BookmarksBarWidget::model_did_update(unsigned)
 
         button.on_click = [title, url, this](auto) {
             if (on_bookmark_click)
-                on_bookmark_click(url, OpenInNewTab::No);
+                on_bookmark_click(url, Open::InSameTab);
         };
 
         button.on_middle_mouse_click = [title, url, this](auto) {
             if (on_bookmark_click)
-                on_bookmark_click(url, OpenInNewTab::Yes);
+                on_bookmark_click(url, Open::InNewTab);
         };
 
         button.on_context_menu_request = [this, url](auto& context_menu_event) {

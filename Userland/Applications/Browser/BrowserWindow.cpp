@@ -109,7 +109,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     };
 
     m_window_actions.on_create_new_window = [this] {
-        GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv);
+        create_new_window(g_home_url);
     };
 
     m_window_actions.on_next_tab = [this] {
@@ -583,6 +583,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         });
     };
 
+    new_tab.on_window_open_request = [this](auto& url) {
+        create_new_window(url);
+    };
+
     new_tab.on_get_all_cookies = [this](auto& url) {
         return m_cookie_jar.get_all_cookies(url);
     };
@@ -629,6 +633,11 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     if (activate)
         m_tab_widget->set_active_widget(&new_tab);
+}
+
+void BrowserWindow::create_new_window(URL url)
+{
+    GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv, Array { url.to_deprecated_string() });
 }
 
 void BrowserWindow::content_filters_changed()

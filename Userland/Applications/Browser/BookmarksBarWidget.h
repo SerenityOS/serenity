@@ -26,12 +26,13 @@ public:
     GUI::Model* model() { return m_model.ptr(); }
     const GUI::Model* model() const { return m_model.ptr(); }
 
-    enum class OpenInNewTab {
-        Yes,
-        No
+    enum class Open {
+        InNewTab,
+        InSameTab,
+        InNewWindow
     };
 
-    Function<void(DeprecatedString const& url, OpenInNewTab)> on_bookmark_click;
+    Function<void(DeprecatedString const& url, Open)> on_bookmark_click;
     Function<void(DeprecatedString const&, DeprecatedString const&)> on_bookmark_hover;
 
     bool contains_bookmark(DeprecatedString const& url);
