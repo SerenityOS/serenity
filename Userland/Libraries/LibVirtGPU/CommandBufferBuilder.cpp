@@ -273,6 +273,8 @@ void CommandBufferBuilder::append_set_constant_buffer(Vector<float> const& const
 void CommandBufferBuilder::append_create_shader(Protocol::ObjectHandle handle, Gallium::ShaderType shader_type, StringView shader_data)
 {
     size_t shader_len = shader_data.length() + 1; // Need to remember to copy null terminator as well if needed
+    VERIFY(shader_len <= NumericLimits<u32>::max());
+
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, Protocol::ObjectType::SHADER);
     builder.appendu32(handle.value()); // VIRGL_OBJ_CREATE_HANDLE
     builder.appendu32(to_underlying(shader_type));
