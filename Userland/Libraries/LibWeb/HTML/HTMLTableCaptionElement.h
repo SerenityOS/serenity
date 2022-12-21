@@ -16,6 +16,8 @@ class HTMLTableCaptionElement final : public HTMLElement {
 public:
     virtual ~HTMLTableCaptionElement() override;
 
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+
 private:
     HTMLTableCaptionElement(DOM::Document&, DOM::QualifiedName);
 };

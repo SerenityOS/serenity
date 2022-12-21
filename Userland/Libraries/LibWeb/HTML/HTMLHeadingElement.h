@@ -16,6 +16,8 @@ class HTMLHeadingElement final : public HTMLElement {
 public:
     virtual ~HTMLHeadingElement() override;
 
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+
 private:
     HTMLHeadingElement(DOM::Document&, DOM::QualifiedName);
 };

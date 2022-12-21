@@ -16,6 +16,8 @@ class HTMLParagraphElement final : public HTMLElement {
 public:
     virtual ~HTMLParagraphElement() override;
 
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+
 private:
     HTMLParagraphElement(DOM::Document&, DOM::QualifiedName);
 };
