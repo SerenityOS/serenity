@@ -11,27 +11,29 @@
 
 namespace VirtGPU {
 
+namespace Protocol {
+
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ObjectHandle);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
 
-#define VIRGL_BIND_DEPTH_STENCIL (1 << 0)
-#define VIRGL_BIND_RENDER_TARGET (1 << 1)
-#define VIRGL_BIND_SAMPLER_VIEW (1 << 3)
-#define VIRGL_BIND_VERTEX_BUFFER (1 << 4)
-#define VIRGL_BIND_INDEX_BUFFER (1 << 5)
-#define VIRGL_BIND_CONSTANT_BUFFER (1 << 6)
-#define VIRGL_BIND_DISPLAY_TARGET (1 << 7)
-#define VIRGL_BIND_COMMAND_ARGS (1 << 8)
-#define VIRGL_BIND_STREAM_OUTPUT (1 << 11)
-#define VIRGL_BIND_SHADER_BUFFER (1 << 14)
-#define VIRGL_BIND_QUERY_BUFFER (1 << 15)
-#define VIRGL_BIND_CURSOR (1 << 16)
-#define VIRGL_BIND_CUSTOM (1 << 17)
-#define VIRGL_BIND_SCANOUT (1 << 18)
-#define VIRGL_BIND_STAGING (1 << 19)
-#define VIRGL_BIND_SHARED (1 << 20)
-
-namespace Protocol {
+enum class BindTarget : u32 {
+    VIRGL_BIND_DEPTH_STENCIL = (1 << 0),
+    VIRGL_BIND_RENDER_TARGET = (1 << 1),
+    VIRGL_BIND_SAMPLER_VIEW = (1 << 3),
+    VIRGL_BIND_VERTEX_BUFFER = (1 << 4),
+    VIRGL_BIND_INDEX_BUFFER = (1 << 5),
+    VIRGL_BIND_CONSTANT_BUFFER = (1 << 6),
+    VIRGL_BIND_DISPLAY_TARGET = (1 << 7),
+    VIRGL_BIND_COMMAND_ARGS = (1 << 8),
+    VIRGL_BIND_STREAM_OUTPUT = (1 << 11),
+    VIRGL_BIND_SHADER_BUFFER = (1 << 14),
+    VIRGL_BIND_QUERY_BUFFER = (1 << 15),
+    VIRGL_BIND_CURSOR = (1 << 16),
+    VIRGL_BIND_CUSTOM = (1 << 17),
+    VIRGL_BIND_SCANOUT = (1 << 18),
+    VIRGL_BIND_STAGING = (1 << 19),
+    VIRGL_BIND_SHARED = (1 << 20),
+};
 
 enum class TextureFormat : u32 {
     // RGBA Formats
