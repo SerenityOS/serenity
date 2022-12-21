@@ -224,16 +224,16 @@ void CommandBufferBuilder::append_set_framebuffer_state(Protocol::ObjectHandle d
     builder.appendu32(drawtarget.value());  // surf_handle
 }
 
-void CommandBufferBuilder::append_viewport()
+void CommandBufferBuilder::append_viewport(Gfx::IntSize size)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::SET_VIEWPORT_STATE, Protocol::ObjectType::NONE);
     builder.appendu32(0);
-    builder.appendf32(DRAWTARGET_WIDTH / 2);    // scale_x
-    builder.appendf32((DRAWTARGET_HEIGHT / 2)); // scale_y (flipped, due to VirGL being different from our coordinate space)
-    builder.appendf32(0.5f);                    // scale_z
-    builder.appendf32(DRAWTARGET_WIDTH / 2);    // translate_x
-    builder.appendf32(DRAWTARGET_HEIGHT / 2);   // translate_y
-    builder.appendf32(0.5f);                    // translate_z
+    builder.appendf32(size.width() / 2);  // scale_x
+    builder.appendf32(size.height() / 2); // scale_y (flipped, due to VirGL being different from our coordinate space)
+    builder.appendf32(0.5f);              // scale_z
+    builder.appendf32(size.width() / 2);  // translate_x
+    builder.appendf32(size.height() / 2); // translate_y
+    builder.appendf32(0.5f);              // translate_z
 }
 
 void CommandBufferBuilder::append_set_framebuffer_state_no_attach()
