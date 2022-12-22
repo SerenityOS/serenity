@@ -56,12 +56,17 @@ public:
 
     void idle_begin() const
     {
-        TODO_AARCH64();
+        // FIXME: Implement this when SMP for aarch64 is supported.
     }
 
     void idle_end() const
     {
-        TODO_AARCH64();
+        // FIXME: Implement this when SMP for aarch64 is supported.
+    }
+
+    void wait_for_interrupt() const
+    {
+        asm("wfi");
     }
 
     ALWAYS_INLINE static void pause()

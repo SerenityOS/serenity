@@ -479,8 +479,7 @@ void Scheduler::idle_loop(void*)
 
     for (;;) {
         proc.idle_begin();
-        asm("hlt");
-
+        proc.wait_for_interrupt();
         proc.idle_end();
         VERIFY_INTERRUPTS_ENABLED();
         yield();
