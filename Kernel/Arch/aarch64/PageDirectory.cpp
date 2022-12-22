@@ -12,7 +12,7 @@ namespace Kernel::Memory {
 
 void PageDirectory::register_page_directory(PageDirectory*)
 {
-    TODO_AARCH64();
+    dbgln("FIXME: PageDirectory: Actually implement registering a page directory!");
 }
 
 void PageDirectory::deregister_page_directory(PageDirectory*)
@@ -28,7 +28,7 @@ LockRefPtr<PageDirectory> PageDirectory::find_current()
 
 void activate_kernel_page_directory(PageDirectory const&)
 {
-    // FIXME: Implement this
+    dbgln("FIXME: PageDirectory: Actually implement activating a kernel page directory!");
 }
 
 void activate_page_directory(PageDirectory const&, Thread*)
