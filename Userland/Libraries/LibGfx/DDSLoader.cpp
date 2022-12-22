@@ -7,8 +7,10 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
+#include <AK/Error.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
+#include <AK/Try.h>
 #include <AK/Vector.h>
 #include <LibGfx/DDSLoader.h>
 #include <fcntl.h>
@@ -694,7 +696,7 @@ static size_t get_minimum_bytes_for_mipmap(DXGIFormat format, u64 width, u64 hei
     }
 }
 
-static bool decode_dds(DDSLoadingContext& context)
+static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 {
     InputMemoryStream stream({ context.data, context.data_size });
 
@@ -702,7 +704,7 @@ static bool decode_dds(DDSLoadingContext& context)
     if (stream.remaining() < 128) {
         dbgln_if(DDS_DEBUG, "File is too short for DDS");
         context.state = DDSLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("File is too short for DDS");
     }
 
     u32 magic;
@@ -711,7 +713,7 @@ static bool decode_dds(DDSLoadingContext& context)
     if (magic != create_four_cc('D', 'D', 'S', ' ')) {
         dbgln_if(DDS_DEBUG, "Missing magic number");
         context.state = DDSLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("Missing magic number");
     }
 
     stream >> context.header.size;
@@ -740,12 +742,12 @@ static bool decode_dds(DDSLoadingContext& context)
     if (context.header.size != 124) {
         dbgln_if(DDS_DEBUG, "Header size is malformed");
         context.state = DDSLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("Header size is malformed");
     }
     if (context.header.pixel_format.size != 32) {
         dbgln_if(DDS_DEBUG, "Pixel format size is malformed");
         context.state = DDSLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("Pixel format size is malformed");
     }
 
     if ((context.header.pixel_format.flags & PixelFormatFlags::DDPF_FOURCC) == PixelFormatFlags::DDPF_FOURCC) {
@@ -753,7 +755,7 @@ static bool decode_dds(DDSLoadingContext& context)
             if (stream.bytes().size() < 148) {
                 dbgln_if(DDS_DEBUG, "DX10 header is too short");
                 context.state = DDSLoadingContext::State::Error;
-                return false;
+                return Error::from_string_literal("DX10 header is too short");
             }
 
             u32 format {};
@@ -776,7 +778,7 @@ static bool decode_dds(DDSLoadingContext& context)
     if (!supported_formats.contains_slow(format)) {
         dbgln_if(DDS_DEBUG, "Format of type {} is not supported at the moment", static_cast<u32>(format));
         context.state = DDSLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("Format type is not supported at the moment");
     }
 
     // We support parsing mipmaps, but we only care about the largest one :^) (At least for now)
@@ -788,14 +790,14 @@ static bool decode_dds(DDSLoadingContext& context)
         dbgln_if(DDS_DEBUG, "There are {} bytes remaining, we need {} for mipmap level {} of the image", stream.remaining(), needed_bytes, mipmap_level);
         VERIFY(stream.remaining() >= needed_bytes);
 
-        context.bitmap = Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
+        context.bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }));
 
         decode_bitmap(stream, context, format, width, height);
     }
 
     context.state = DDSLoadingContext::State::BitmapDecoded;
 
-    return true;
+    return {};
 }
 
 void DDSLoadingContext::dump_debug()
@@ -1000,9 +1002,7 @@ ErrorOr<ImageFrameDescriptor> DDSImageDecoderPlugin::frame(size_t index)
         return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < DDSLoadingContext::State::BitmapDecoded) {
-        bool success = decode_dds(*m_context);
-        if (!success)
-            return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed");
+        TRY(decode_dds(*m_context));
     }
 
     VERIFY(m_context->bitmap);
