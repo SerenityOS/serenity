@@ -5,9 +5,11 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
+#include <AK/Try.h>
 #include <AK/Vector.h>
 #include <LibGfx/JPGLoader.h>
 
@@ -200,17 +202,17 @@ static void generate_huffman_codes(HuffmanTableSpec& table)
     }
 }
 
-static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
+static ErrorOr<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
 {
     if (count > (8 * sizeof(size_t))) {
         dbgln_if(JPG_DEBUG, "Can't read {} bits at once!", count);
-        return {};
+        return Error::from_string_literal("Reading too much huffman bits at once");
     }
     size_t value = 0;
     while (count--) {
         if (hstream.byte_offset >= hstream.stream.size()) {
             dbgln_if(JPG_DEBUG, "Huffman stream exhausted. This could be an error!");
-            return {};
+            return Error::from_string_literal("Huffman stream exhausted.");
         }
         u8 current_byte = hstream.stream[hstream.byte_offset];
         u8 current_bit = 1u & (u32)(current_byte >> (7 - hstream.bit_offset)); // MSB first.
@@ -224,15 +226,13 @@ static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t co
     return value;
 }
 
-static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec const& table)
+static ErrorOr<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec const& table)
 {
     unsigned code = 0;
     size_t code_cursor = 0;
     for (int i = 0; i < 16; i++) { // Codes can't be longer than 16 bits.
-        auto result = read_huffman_bits(hstream);
-        if (!result.has_value())
-            return {};
-        code = (code << 1) | (i32)result.release_value();
+        auto result = TRY(read_huffman_bits(hstream));
+        code = (code << 1) | (i32)result;
         for (int j = 0; j < table.code_counts[i]; j++) {
             if (code == table.codes[code_cursor])
                 return table.symbols[code_cursor];
@@ -241,7 +241,7 @@ static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpe
     }
 
     dbgln_if(JPG_DEBUG, "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
-    return {};
+    return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
 }
 
 static inline i32* get_component(Macroblock& block, unsigned component)
@@ -271,15 +271,15 @@ static inline i32* get_component(Macroblock& block, unsigned component)
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
-static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
+static ErrorOr<void> build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (unsigned component_i = 0; component_i < context.component_count; component_i++) {
         auto& component = context.components[component_i];
 
         if (component.dc_destination_id >= context.dc_tables.size())
-            return false;
+            return Error::from_string_literal("DC destination ID is greater than number of DC tables");
         if (component.ac_destination_id >= context.ac_tables.size())
-            return false;
+            return Error::from_string_literal("AC destination ID is greater than number of AC tables");
 
         for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
             for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
@@ -289,23 +289,15 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
                 auto& dc_table = context.dc_tables.find(component.dc_destination_id)->value;
                 auto& ac_table = context.ac_tables.find(component.ac_destination_id)->value;
 
-                auto symbol_or_error = get_next_symbol(context.huffman_stream, dc_table);
-                if (!symbol_or_error.has_value())
-                    return false;
-
                 // For DC coefficients, symbol encodes the length of the coefficient.
-                auto dc_length = symbol_or_error.release_value();
+                auto dc_length = TRY(get_next_symbol(context.huffman_stream, dc_table));
                 if (dc_length > 11) {
                     dbgln_if(JPG_DEBUG, "DC coefficient too long: {}!", dc_length);
-                    return false;
+                    return Error::from_string_literal("DC coefficient too long");
                 }
 
-                auto coeff_or_error = read_huffman_bits(context.huffman_stream, dc_length);
-                if (!coeff_or_error.has_value())
-                    return false;
-
                 // DC coefficients are encoded as the difference between previous and current DC values.
-                i32 dc_diff = coeff_or_error.release_value();
+                i32 dc_diff = TRY(read_huffman_bits(context.huffman_stream, dc_length));
 
                 // If MSB in diff is 0, the difference is -ve. Otherwise +ve.
                 if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
@@ -317,14 +309,10 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
 
                 // Compute the AC coefficients.
                 for (int j = 1; j < 64;) {
-                    symbol_or_error = get_next_symbol(context.huffman_stream, ac_table);
-                    if (!symbol_or_error.has_value())
-                        return false;
-
                     // AC symbols encode 2 pieces of information, the high 4 bits represent
                     // number of zeroes to be stuffed before reading the coefficient. Low 4
                     // bits represent the magnitude of the coefficient.
-                    auto ac_symbol = symbol_or_error.release_value();
+                    auto ac_symbol = TRY(get_next_symbol(context.huffman_stream, ac_table));
                     if (ac_symbol == 0)
                         break;
 
@@ -334,20 +322,17 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
 
                     if (j >= 64) {
                         dbgln_if(JPG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
-                        return false;
+                        return Error::from_string_literal("Run-length exceeded boundaries");
                     }
 
                     u8 coeff_length = ac_symbol & 0x0F;
                     if (coeff_length > 10) {
                         dbgln_if(JPG_DEBUG, "AC coefficient too long: {}!", coeff_length);
-                        return false;
+                        return Error::from_string_literal("AC coefficient too long");
                     }
 
                     if (coeff_length != 0) {
-                        coeff_or_error = read_huffman_bits(context.huffman_stream, coeff_length);
-                        if (!coeff_or_error.has_value())
-                            return false;
-                        i32 ac_coefficient = coeff_or_error.release_value();
+                        i32 ac_coefficient = TRY(read_huffman_bits(context.huffman_stream, coeff_length));
                         if (ac_coefficient < (1 << (coeff_length - 1)))
                             ac_coefficient -= (1 << coeff_length) - 1;
 
@@ -358,10 +343,10 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
         }
     }
 
-    return true;
+    return {};
 }
 
-static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& context)
+static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& context)
 {
     Vector<Macroblock> macroblocks;
     macroblocks.resize(context.mblock_meta.padded_total);
@@ -404,13 +389,13 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
                 }
             }
 
-            if (!build_macroblocks(context, macroblocks, hcursor, vcursor)) {
+            if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
                 if constexpr (JPG_DEBUG) {
                     dbgln("Failed to build Macroblock {}", i);
                     dbgln("Huffman stream byte offset {}", context.huffman_stream.byte_offset);
                     dbgln("Huffman stream bit offset {}", context.huffman_stream.bit_offset);
                 }
-                return {};
+                return result.release_error();
             }
         }
     }
@@ -418,11 +403,13 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
     return macroblocks;
 }
 
-static inline bool bounds_okay(const size_t cursor, const size_t delta, const size_t bound)
+static inline ErrorOr<void> ensure_bounds_okay(const size_t cursor, const size_t delta, const size_t bound)
 {
     if (Checked<size_t>::addition_would_overflow(delta, cursor))
-        return false;
-    return (delta + cursor) < bound;
+        return Error::from_string_literal("Bounds are not ok: addition would overflow");
+    if (delta + cursor >= bound)
+        return Error::from_string_literal("Bounds are not ok");
+    return {};
 }
 
 static inline bool is_valid_marker(const Marker marker)
@@ -486,76 +473,68 @@ static inline Marker read_marker_at_cursor(InputMemoryStream& stream)
     return is_valid_marker(marker) ? marker : JPG_INVALID;
 }
 
-static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::FrameDecoded) {
         dbgln_if(JPG_DEBUG, "{}: SOS found before reading a SOF!", stream.offset());
-        return false;
+        return Error::from_string_literal("SOS found before reading a SOF");
     }
 
     u16 bytes_to_read = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     bytes_to_read -= 2;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
-        return false;
+    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
     u8 component_count = 0;
     stream >> component_count;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     if (component_count != context.component_count) {
         dbgln_if(JPG_DEBUG, "{}: Unsupported number of components: {}!", stream.offset(), component_count);
-        return false;
+        return Error::from_string_literal("Unsupported number of components");
     }
 
     for (int i = 0; i < component_count; i++) {
         u8 component_id = 0;
         stream >> component_id;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         auto& component = context.components[i];
         if (component.id != component_id) {
             dbgln("JPEG decode failed (component.id != component_id)");
-            return false;
+            return Error::from_string_literal("JPEG decode failed (component.id != component_id)");
         }
 
         u8 table_ids = 0;
         stream >> table_ids;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         component.dc_destination_id = table_ids >> 4;
         component.ac_destination_id = table_ids & 0x0F;
 
         if (context.dc_tables.size() != context.ac_tables.size()) {
             dbgln_if(JPG_DEBUG, "{}: DC & AC table count mismatch!", stream.offset());
-            return false;
+            return Error::from_string_literal("DC & AC table count mismatch");
         }
 
         if (!context.dc_tables.contains(component.dc_destination_id)) {
             dbgln_if(JPG_DEBUG, "DC table (id: {}) does not exist!", component.dc_destination_id);
-            return false;
+            return Error::from_string_literal("DC table does not exist");
         }
 
         if (!context.ac_tables.contains(component.ac_destination_id)) {
             dbgln_if(JPG_DEBUG, "AC table (id: {}) does not exist!", component.ac_destination_id);
-            return false;
+            return Error::from_string_literal("AC table does not exist");
         }
     }
 
     u8 spectral_selection_start = 0;
     stream >> spectral_selection_start;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     u8 spectral_selection_end = 0;
     stream >> spectral_selection_end;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     u8 successive_approximation = 0;
     stream >> successive_approximation;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
         dbgln_if(JPG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
@@ -563,50 +542,45 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
             spectral_selection_start,
             spectral_selection_end,
             successive_approximation);
-        return false;
+        return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
-    return true;
+    return {};
 }
 
-static bool read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     u16 bytes_to_read = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     bytes_to_read -= 2;
     if (bytes_to_read != 2) {
         dbgln_if(JPG_DEBUG, "{}: Malformed reset marker found!", stream.offset());
-        return false;
+        return Error::from_string_literal("Malformed reset marker found");
     }
     context.dc_reset_interval = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
-    return true;
+    TRY(stream.try_handle_any_error());
+    return {};
 }
 
-static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
-        return false;
+    TRY(stream.try_handle_any_error());
+    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
         HuffmanTableSpec table;
         u8 table_info = 0;
         stream >> table_info;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
             dbgln_if(JPG_DEBUG, "{}: Unrecognized huffman table: {}!", stream.offset(), table_type);
-            return false;
+            return Error::from_string_literal("Unrecognized huffman table");
         }
         if (table_destination_id > 1) {
             dbgln_if(JPG_DEBUG, "{}: Invalid huffman table destination id: {}!", stream.offset(), table_destination_id);
-            return false;
+            return Error::from_string_literal("Invalid huffman table destination id");
         }
 
         table.type = table_type;
@@ -617,8 +591,7 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
         for (int i = 0; i < 16; i++) {
             u8 count = 0;
             stream >> count;
-            if (stream.handle_any_error())
-                return false;
+            TRY(stream.try_handle_any_error());
             total_codes += count;
             table.code_counts[i] = count;
         }
@@ -629,13 +602,11 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
         for (u32 i = 0; i < total_codes; i++) {
             u8 symbol = 0;
             stream >> symbol;
-            if (stream.handle_any_error())
-                return false;
+            TRY(stream.try_handle_any_error());
             table.symbols.append(symbol);
         }
 
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
         huffman_table.set(table.destination_id, table);
@@ -646,9 +617,9 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
 
     if (bytes_to_read != 0) {
         dbgln_if(JPG_DEBUG, "{}: Extra bytes detected in huffman header!", stream.offset());
-        return false;
+        return Error::from_string_literal("Extra bytes detected in huffman header");
     }
-    return true;
+    return {};
 }
 
 static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPGLoadingContext& context)
@@ -680,66 +651,58 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
-static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     if (context.state == JPGLoadingContext::FrameDecoded) {
         dbgln_if(JPG_DEBUG, "{}: SOF repeated!", stream.offset());
-        return false;
+        return Error::from_string_literal("SOF repeated");
     }
 
     i32 bytes_to_read = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     bytes_to_read -= 2;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
-        return false;
+    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
 
     stream >> context.frame.precision;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     if (context.frame.precision != 8) {
         dbgln_if(JPG_DEBUG, "{}: SOF precision != 8!", stream.offset());
-        return false;
+        return Error::from_string_literal("SOF precision != 8");
     }
 
     context.frame.height = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     context.frame.width = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     if (!context.frame.width || !context.frame.height) {
         dbgln_if(JPG_DEBUG, "{}: ERROR! Image height: {}, Image width: {}!", stream.offset(), context.frame.height, context.frame.width);
-        return false;
+        return Error::from_string_literal("Image frame height of width null");
     }
 
     if (context.frame.width > maximum_width_for_decoded_images || context.frame.height > maximum_height_for_decoded_images) {
         dbgln("This JPEG is too large for comfort: {}x{}", context.frame.width, context.frame.height);
-        return false;
+        return Error::from_string_literal("JPEG too large for comfort");
     }
 
     set_macroblock_metadata(context);
 
     stream >> context.component_count;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     if (context.component_count != 1 && context.component_count != 3) {
         dbgln_if(JPG_DEBUG, "{}: Unsupported number of components in SOF: {}!", stream.offset(), context.component_count);
-        return false;
+        return Error::from_string_literal("Unsupported number of components in SOF");
     }
 
     for (u8 i = 0; i < context.component_count; i++) {
         ComponentSpec component;
 
         stream >> component.id;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         u8 subsample_factors = 0;
         stream >> subsample_factors;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
 
@@ -757,7 +720,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
                     stream.offset(),
                     component.hsample_factor,
                     component.vsample_factor);
-                return false;
+                return Error::from_string_literal("Unsupported luma subsampling factors");
             }
         } else {
             if (component.hsample_factor != 1 || component.vsample_factor != 1) {
@@ -765,82 +728,75 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
                     stream.offset(),
                     component.hsample_factor,
                     component.vsample_factor);
-                return false;
+                return Error::from_string_literal("Unsupported chroma subsampling factors");
             }
         }
 
         stream >> component.qtable_id;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
         if (component.qtable_id > 1) {
             dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", stream.offset(), component.qtable_id);
-            return false;
+            return Error::from_string_literal("Unsupported quantization table id");
         }
 
         context.components.append(move(component));
     }
 
-    return true;
+    return {};
 }
 
-static bool read_quantization_table(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     bytes_to_read -= 2;
-    if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
-        return false;
+    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
     while (bytes_to_read > 0) {
         u8 info_byte = 0;
         stream >> info_byte;
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
         u8 element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
             dbgln_if(JPG_DEBUG, "{}: Unsupported unit hint in quantization table: {}!", stream.offset(), element_unit_hint);
-            return false;
+            return Error::from_string_literal("Unsupported unit hint in quantization table");
         }
         u8 table_id = info_byte & 0x0F;
         if (table_id > 1) {
             dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", stream.offset(), table_id);
-            return false;
+            return Error::from_string_literal("Unsupported quantization table id");
         }
         u32* table = table_id == 0 ? context.luma_table : context.chroma_table;
         for (int i = 0; i < 64; i++) {
             if (element_unit_hint == 0) {
                 u8 tmp = 0;
                 stream >> tmp;
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
                 table[zigzag_map[i]] = tmp;
             } else {
                 table[zigzag_map[i]] = read_be_word(stream);
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
             }
         }
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
     }
     if (bytes_to_read != 0) {
         dbgln_if(JPG_DEBUG, "{}: Invalid length for one or more quantization tables!", stream.offset());
-        return false;
+        return Error::from_string_literal("Invalid length for one or more quantization tables");
     }
 
-    return true;
+    return {};
 }
 
-static bool skip_marker_with_length(InputMemoryStream& stream)
+static ErrorOr<void> skip_marker_with_length(InputMemoryStream& stream)
 {
     u16 bytes_to_skip = read_be_word(stream);
     bytes_to_skip -= 2;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     stream.discard_or_error(bytes_to_skip);
-    return !stream.handle_any_error();
+    TRY(stream.try_handle_any_error());
+    return {};
 }
 
 static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
@@ -1064,14 +1020,9 @@ static void ycbcr_to_rgb(JPGLoadingContext const& context, Vector<Macroblock>& m
     }
 }
 
-static bool compose_bitmap(JPGLoadingContext& context, Vector<Macroblock> const& macroblocks)
+static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macroblock> const& macroblocks)
 {
-    auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height });
-    if (bitmap_or_error.is_error())
-        return false;
-    context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-    if (bitmap_or_error.is_error())
-        return false;
+    context.bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
 
     for (u32 y = context.frame.height - 1; y < context.frame.height; y--) {
         const u32 block_row = y / 8;
@@ -1086,22 +1037,20 @@ static bool compose_bitmap(JPGLoadingContext& context, Vector<Macroblock> const&
         }
     }
 
-    return true;
+    return {};
 }
 
-static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     auto marker = read_marker_at_cursor(stream);
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
     if (marker != JPG_SOI) {
         dbgln_if(JPG_DEBUG, "{}: SOI not found: {:x}!", stream.offset(), marker);
-        return false;
+        return Error::from_string_literal("SOI not found");
     }
     for (;;) {
         marker = read_marker_at_cursor(stream);
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         // Set frame type if the marker marks a new frame.
         if (marker >= 0xFFC0 && marker <= 0xFFCF) {
@@ -1124,30 +1073,26 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
         case JPG_SOI:
         case JPG_EOI:
             dbgln_if(JPG_DEBUG, "{}: Unexpected marker {:x}!", stream.offset(), marker);
-            return false;
+            return Error::from_string_literal("Unexpected marker");
         case JPG_SOF0:
-            if (!read_start_of_frame(stream, context))
-                return false;
+            TRY(read_start_of_frame(stream, context));
             context.state = JPGLoadingContext::FrameDecoded;
             break;
         case JPG_DQT:
-            if (!read_quantization_table(stream, context))
-                return false;
+            TRY(read_quantization_table(stream, context));
             break;
         case JPG_RST:
-            if (!read_reset_marker(stream, context))
-                return false;
+            TRY(read_reset_marker(stream, context));
             break;
         case JPG_DHT:
-            if (!read_huffman_table(stream, context))
-                return false;
+            TRY(read_huffman_table(stream, context));
             break;
         case JPG_SOS:
             return read_start_of_scan(stream, context);
         default:
-            if (!skip_marker_with_length(stream)) {
+            if (auto result = skip_marker_with_length(stream); result.is_error()) {
                 dbgln_if(JPG_DEBUG, "{}: Error skipping marker: {:x}!", stream.offset(), marker);
-                return false;
+                return result.release_error();
             }
             break;
         }
@@ -1156,20 +1101,19 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
     VERIFY_NOT_REACHED();
 }
 
-static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     u8 last_byte;
     u8 current_byte = 0;
     stream >> current_byte;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     for (;;) {
         last_byte = current_byte;
         stream >> current_byte;
         if (stream.handle_any_error()) {
             dbgln_if(JPG_DEBUG, "{}: EOI not found!", stream.offset());
-            return false;
+            return Error::from_string_literal("EOI not found");
         }
 
         if (last_byte == 0xFF) {
@@ -1177,23 +1121,21 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
                 continue;
             if (current_byte == 0x00) {
                 stream >> current_byte;
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
                 context.huffman_stream.stream.append(last_byte);
                 continue;
             }
             Marker marker = 0xFF00 | current_byte;
             if (marker == JPG_EOI)
-                return true;
+                return {};
             if (marker >= JPG_RST0 && marker <= JPG_RST7) {
                 context.huffman_stream.stream.append(marker);
                 stream >> current_byte;
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
                 continue;
             }
             dbgln_if(JPG_DEBUG, "{}: Invalid marker: {:x}!", stream.offset(), marker);
-            return false;
+            return Error::from_string_literal("Invalid marker");
         } else {
             context.huffman_stream.stream.append(last_byte);
         }
@@ -1202,28 +1144,18 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
     VERIFY_NOT_REACHED();
 }
 
-static bool decode_jpg(JPGLoadingContext& context)
+static ErrorOr<void> decode_jpg(JPGLoadingContext& context)
 {
     InputMemoryStream stream { { context.data, context.data_size } };
 
-    if (!parse_header(stream, context))
-        return false;
-    if (!scan_huffman_stream(stream, context))
-        return false;
-
-    auto result = decode_huffman_stream(context);
-    if (!result.has_value()) {
-        dbgln_if(JPG_DEBUG, "{}: Failed to decode Macroblocks!", stream.offset());
-        return false;
-    }
-
-    auto macroblocks = result.release_value();
+    TRY(parse_header(stream, context));
+    TRY(scan_huffman_stream(stream, context));
+    auto macroblocks = TRY(decode_huffman_stream(context));
     dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
     ycbcr_to_rgb(context, macroblocks);
-    if (!compose_bitmap(context, macroblocks))
-        return false;
-    return true;
+    TRY(compose_bitmap(context, macroblocks));
+    return {};
 }
 
 JPGImageDecoderPlugin::JPGImageDecoderPlugin(u8 const* data, size_t size)
@@ -1291,9 +1223,9 @@ ErrorOr<ImageFrameDescriptor> JPGImageDecoderPlugin::frame(size_t index)
         return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
-        if (!decode_jpg(*m_context)) {
+        if (auto result = decode_jpg(*m_context); result.is_error()) {
             m_context->state = JPGLoadingContext::State::Error;
-            return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed");
+            return result.release_error();
         }
         m_context->state = JPGLoadingContext::State::BitmapDecoded;
     }
