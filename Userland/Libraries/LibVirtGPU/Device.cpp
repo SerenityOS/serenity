@@ -182,9 +182,87 @@ GPU::DeviceInfo Device::info() const
     };
 }
 
-void Device::draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const&, FloatMatrix4x4 const&, Vector<GPU::Vertex>&)
+void Device::encode_constant_buffer(Gfx::FloatMatrix4x4 const& matrix, Vector<float>& buffer)
 {
-    dbgln("VirtGPU::Device::draw_primitives(): unimplemented");
+    buffer.clear_with_capacity();
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            buffer.append(matrix.elements()[i][j]);
+        }
+    }
+}
+
+void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 const& modelview_matrix, FloatMatrix4x4 const& projection_matrix, Vector<GPU::Vertex>& vertices)
+{
+    // Transform incoming vertices to our own format.
+    m_vertices.clear_with_capacity();
+    for (auto& vertex : vertices) {
+        m_vertices.append({
+            vertex.tex_coords[0].x(),
+            vertex.tex_coords[0].y(),
+            vertex.tex_coords[0].z(),
+            vertex.position.x(),
+            vertex.position.y(),
+            vertex.position.z(),
+        });
+    }
+
+    // Compute combined transform matrix
+    // Flip the y axis. This is done because OpenGLs coordinate space has a Y-axis of
+    // Opposite direction to that of LibGfx
+    auto combined_matrix = (Gfx::scale_matrix(FloatVector3 { 1, -1, 1 }) * projection_matrix * modelview_matrix).transpose();
+    encode_constant_buffer(combined_matrix, m_constant_buffer_data);
+
+    // Create command buffer
+    CommandBufferBuilder builder;
+
+    // Set the constant buffer to the combined transformation matrix
+    builder.append_set_constant_buffer(m_constant_buffer_data);
+
+    // Transfer data from vertices array to kernel virgl transfer region
+    VirGLTransferDescriptor descriptor {
+        .data = m_vertices.data(),
+        .offset_in_region = 0,
+        .num_bytes = sizeof(VertexData) * m_vertices.size(),
+        .direction = VIRGL_DATA_DIR_GUEST_TO_HOST,
+    };
+    MUST(Core::System::ioctl(m_gpu_file->fd(), VIRGL_IOCTL_TRANSFER_DATA, &descriptor));
+
+    // Transfer data from kernel virgl transfer region to host resource
+    builder.append_transfer3d(m_vbo_resource_id, sizeof(VertexData) * m_vertices.size(), 1, 1, VIRGL_DATA_DIR_GUEST_TO_HOST);
+    builder.append_end_transfers_3d();
+
+    // Set the constant buffer to the identity matrix
+    builder.append_set_constant_buffer(m_constant_buffer_data);
+
+    constexpr auto map_primitive_type = [](GPU::PrimitiveType type) constexpr {
+        switch (type) {
+        case GPU::PrimitiveType::Lines:
+            return Protocol::PipePrimitiveTypes::LINES;
+        case GPU::PrimitiveType::LineLoop:
+            return Protocol::PipePrimitiveTypes::LINE_LOOP;
+        case GPU::PrimitiveType::LineStrip:
+            return Protocol::PipePrimitiveTypes::LINE_STRIP;
+        case GPU::PrimitiveType::Points:
+            return Protocol::PipePrimitiveTypes::POINTS;
+        case GPU::PrimitiveType::TriangleFan:
+            return Protocol::PipePrimitiveTypes::TRIANGLE_FAN;
+        case GPU::PrimitiveType::Triangles:
+            return Protocol::PipePrimitiveTypes::TRIANGLES;
+        case GPU::PrimitiveType::TriangleStrip:
+            return Protocol::PipePrimitiveTypes::TRIANGLE_STRIP;
+        case GPU::PrimitiveType::Quads:
+            return Protocol::PipePrimitiveTypes::QUADS;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    // Draw the vbo
+    builder.append_draw_vbo(map_primitive_type(primitive_type), m_vertices.size());
+
+    // Upload the buffer
+    MUST(upload_command_buffer(builder.build()));
 }
 
 void Device::resize(Gfx::IntSize)
@@ -192,14 +270,18 @@ void Device::resize(Gfx::IntSize)
     dbgln("VirtGPU::Device::resize(): unimplemented");
 }
 
-void Device::clear_color(FloatVector4 const&)
+void Device::clear_color(FloatVector4 const& color)
 {
-    dbgln("VirtGPU::Device::clear_color(): unimplemented");
+    CommandBufferBuilder builder;
+    builder.append_clear(color.x(), color.y(), color.z(), color.w());
+    MUST(upload_command_buffer(builder.build()));
 }
 
-void Device::clear_depth(GPU::DepthType)
+void Device::clear_depth(GPU::DepthType depth)
 {
-    dbgln("VirtGPU::Device::clear_depth(): unimplemented");
+    CommandBufferBuilder builder;
+    builder.append_clear(depth);
+    MUST(upload_command_buffer(builder.build()));
 }
 
 void Device::clear_stencil(GPU::StencilType)
@@ -207,9 +289,22 @@ void Device::clear_stencil(GPU::StencilType)
     dbgln("VirtGPU::Device::clear_stencil(): unimplemented");
 }
 
-void Device::blit_from_color_buffer(Gfx::Bitmap&)
+void Device::blit_from_color_buffer(Gfx::Bitmap& front_buffer)
 {
-    dbgln("VirtGPU::Device::blit_from_color_buffer(): unimplemented");
+    // Transfer data back from hypervisor to kernel transfer region
+    CommandBufferBuilder builder;
+    builder.append_transfer3d(m_drawtarget, front_buffer.size().width(), front_buffer.size().height(), 1, VIRGL_DATA_DIR_HOST_TO_GUEST);
+    builder.append_end_transfers_3d();
+    MUST(upload_command_buffer(builder.build()));
+
+    // Copy from kernel transfer region to userspace
+    VirGLTransferDescriptor descriptor {
+        .data = front_buffer.scanline_u8(0),
+        .offset_in_region = 0,
+        .num_bytes = front_buffer.size().width() * front_buffer.size().height() * sizeof(u32),
+        .direction = VIRGL_DATA_DIR_HOST_TO_GUEST,
+    };
+    MUST(Core::System::ioctl(m_gpu_file->fd(), VIRGL_IOCTL_TRANSFER_DATA, &descriptor));
 }
 
 void Device::blit_from_color_buffer(NonnullRefPtr<GPU::Image>, u32, Vector2<u32>, Vector2<i32>, Vector3<i32>)
