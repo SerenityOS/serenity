@@ -185,7 +185,6 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
         };
     }
 
-    widget->m_project_builder = make<ProjectBuilder>(*widget->m_terminal_wrapper, *widget->m_project);
     widget->project().model().set_should_show_dotfiles(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
 
     return widget;
@@ -252,6 +251,7 @@ void HackStudioWidget::open_project(DeprecatedString const& root_path)
     }
     m_project = Project::open_with_root_path(root_path);
     VERIFY(m_project);
+    m_project_builder = make<ProjectBuilder>(*m_terminal_wrapper, *m_project);
     if (m_project_tree_view) {
         m_project_tree_view->set_model(m_project->model());
         m_project_tree_view->update();
