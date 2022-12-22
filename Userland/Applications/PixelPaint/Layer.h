@@ -56,23 +56,23 @@ public:
     DeprecatedString const& name() const { return m_name; }
     void set_name(DeprecatedString);
 
-    enum NotifyClients {
-        YES,
-        NO
+    enum class NotifyClients {
+        Yes,
+        No
     };
 
-    ErrorOr<void> flip(Gfx::Orientation orientation, NotifyClients notify_clients = NotifyClients::YES);
-    ErrorOr<void> rotate(Gfx::RotationDirection direction, NotifyClients notify_clients = NotifyClients::YES);
-    ErrorOr<void> crop(Gfx::IntRect const& rect, NotifyClients notify_clients = NotifyClients::YES);
-    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::YES);
-    ErrorOr<void> resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::YES);
-    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::YES);
+    ErrorOr<void> flip(Gfx::Orientation orientation, NotifyClients notify_clients = NotifyClients::Yes);
+    ErrorOr<void> rotate(Gfx::RotationDirection direction, NotifyClients notify_clients = NotifyClients::Yes);
+    ErrorOr<void> crop(Gfx::IntRect const& rect, NotifyClients notify_clients = NotifyClients::Yes);
+    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
+    ErrorOr<void> resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
+    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 
     ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
-    void did_modify_bitmap(Gfx::IntRect const& = {}, NotifyClients notify_clients = NotifyClients::YES);
+    void did_modify_bitmap(Gfx::IntRect const& = {}, NotifyClients notify_clients = NotifyClients::Yes);
 
     void set_selected(bool selected) { m_selected = selected; }
     bool is_selected() const { return m_selected; }

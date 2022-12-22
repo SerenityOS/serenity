@@ -11,9 +11,6 @@
 #include "Selection.h"
 #include <AK/Base64.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
-#include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
@@ -45,7 +42,7 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
     float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(dest_rect);
-    for (auto& layer : m_layers) {
+    for (auto const& layer : m_layers) {
         if (!layer.is_visible())
             continue;
         auto target = dest_rect.translated(layer.location().x() * scale, layer.location().y() * scale);
@@ -75,7 +72,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
     return decoded_bitmap.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const& bitmap)
 {
     auto image = TRY(try_create_with_size({ bitmap->width(), bitmap->height() }));
     auto layer = TRY(Layer::try_create_with_bitmap(*image, *bitmap, "Background"));
@@ -88,8 +85,8 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
     auto image = TRY(try_create_with_size({ json.get("width"sv).to_i32(), json.get("height"sv).to_i32() }));
 
     auto layers_value = json.get("layers"sv);
-    for (auto& layer_value : layers_value.as_array().values()) {
-        auto& layer_object = layer_value.as_object();
+    for (auto const& layer_value : layers_value.as_array().values()) {
+        auto const& layer_object = layer_value.as_object();
         auto name = layer_object.get("name"sv).as_string();
 
         auto bitmap_base64_encoded = layer_object.get("bitmap"sv).as_string();
@@ -97,7 +94,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
         auto bitmap = TRY(try_decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
-        if (auto mask_object = layer_object.get("mask"sv); !mask_object.is_null()) {
+        if (auto const& mask_object = layer_object.get("mask"sv); !mask_object.is_null()) {
             auto mask_base64_encoded = mask_object.as_string();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(try_decode_bitmap(mask_data));
@@ -174,7 +171,7 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
@@ -188,7 +185,7 @@ ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_ch
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
@@ -507,14 +504,14 @@ ErrorOr<void> Image::flip(Gfx::Orientation orientation)
         if (layer.is_selected())
             selected_layer_index = i;
 
-        TRY(new_layer->flip(orientation, Layer::NotifyClients::NO));
+        TRY(new_layer->flip(orientation, Layer::NotifyClients::No));
 
-        flipped_layers.append(new_layer);
+        flipped_layers.unchecked_append(new_layer);
     }
 
     m_layers = move(flipped_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+        layer.did_modify_bitmap({}, Layer::NotifyClients::No);
 
     select_layer(&m_layers[selected_layer_index]);
 
@@ -538,14 +535,14 @@ ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
         if (layer.is_selected())
             selected_layer_index = i;
 
-        TRY(new_layer->rotate(direction, Layer::NotifyClients::NO));
+        TRY(new_layer->rotate(direction, Layer::NotifyClients::No));
 
-        rotated_layers.append(new_layer);
+        rotated_layers.unchecked_append(new_layer);
     }
 
     m_layers = move(rotated_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+        layer.did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
     select_layer(&m_layers[selected_layer_index]);
 
@@ -572,19 +569,19 @@ ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
 
         auto layer_location = new_layer->location();
         auto layer_local_crop_rect = new_layer->relative_rect().intersected(cropped_rect).translated(-layer_location.x(), -layer_location.y());
-        TRY(new_layer->crop(layer_local_crop_rect, Layer::NotifyClients::NO));
+        TRY(new_layer->crop(layer_local_crop_rect, Layer::NotifyClients::No));
 
         auto new_layer_x = max(0, layer_location.x() - cropped_rect.x());
         auto new_layer_y = max(0, layer_location.y() - cropped_rect.y());
 
         new_layer->set_location({ new_layer_x, new_layer_y });
 
-        cropped_layers.append(new_layer);
+        cropped_layers.unchecked_append(new_layer);
     }
 
     m_layers = move(cropped_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+        layer.did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
     select_layer(&m_layers[selected_layer_index]);
 
@@ -600,7 +597,7 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
         return {};
 
     Optional<Gfx::IntRect> bounding_rect;
-    for (auto& layer : m_layers) {
+    for (auto const& layer : m_layers) {
         auto layer_content_rect_in_layer_coordinates = layer.nonempty_content_bounding_rect();
         if (!layer_content_rect_in_layer_coordinates.has_value())
             continue;
@@ -641,14 +638,14 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
             selected_layer_index = i;
 
         Gfx::IntPoint new_location(scale_x * new_layer->location().x(), scale_y * new_layer->location().y());
-        TRY(new_layer->resize(new_size, new_location, scaling_mode, Layer::NotifyClients::NO));
+        TRY(new_layer->resize(new_size, new_location, scaling_mode, Layer::NotifyClients::No));
 
-        resized_layers.append(new_layer);
+        resized_layers.unchecked_append(new_layer);
     }
 
     m_layers = move(resized_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::YES);
+        layer.did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
     select_layer(&m_layers[selected_layer_index]);
 
@@ -661,7 +658,7 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
 Color Image::color_at(Gfx::IntPoint point) const
 {
     Color color;
-    for (auto& layer : m_layers) {
+    for (auto const& layer : m_layers) {
         if (!layer.is_visible() || !layer.rect().contains(point))
             continue;
 

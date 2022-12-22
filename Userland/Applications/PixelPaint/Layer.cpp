@@ -83,7 +83,7 @@ void Layer::did_modify_bitmap(Gfx::IntRect const& rect, NotifyClients notify_cli
 
     // NOTE: If NotifyClients::NO is passed to this function the caller should handle notifying
     //       the clients of any bitmap changes.
-    if (notify_clients == NotifyClients::YES)
+    if (notify_clients == NotifyClients::Yes)
         m_image.layer_did_modify_bitmap({}, *this, rect);
     update_cached_bitmap();
 }
