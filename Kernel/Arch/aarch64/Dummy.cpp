@@ -12,10 +12,6 @@
 #include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
 
-// Process
-char const* asm_signal_trampoline = nullptr;
-char const* asm_signal_trampoline_end = nullptr;
-
 namespace Kernel {
 
 ProcessID g_init_pid { 0 };
