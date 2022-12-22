@@ -35,10 +35,6 @@ public:
     [[nodiscard]] size_t size() const;
     [[nodiscard]] bool is_empty() const;
 
-    [[nodiscard]] JsonValue const& get_deprecated(StringView key) const;
-
-    [[nodiscard]] JsonValue const* get_ptr(StringView key) const;
-
     [[nodiscard]] bool has(StringView key) const;
 
     [[nodiscard]] bool has_null(StringView key) const;
