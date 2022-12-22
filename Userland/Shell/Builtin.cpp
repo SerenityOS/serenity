@@ -39,6 +39,106 @@ int Shell::builtin_dump(int argc, char const** argv)
     return 0;
 }
 
+enum FollowSymlinks {
+    Yes,
+    No
+};
+
+static Vector<DeprecatedString> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No)
+{
+    // Edge cases in which there are guaranteed no solutions
+    if (filename.is_empty() || filename.contains('/'))
+        return {};
+
+    char const* path_str = getenv("PATH");
+    auto path = DEFAULT_PATH_SV;
+    if (path_str != nullptr) // maybe && *path_str
+        path = { path_str, strlen(path_str) };
+
+    Vector<DeprecatedString> executables;
+    auto directories = path.split_view(':');
+    for (auto directory : directories) {
+        auto file = DeprecatedString::formatted("{}/{}", directory, filename);
+
+        if (follow_symlinks == FollowSymlinks::Yes) {
+            auto path_or_error = Core::File::read_link(file);
+            if (!path_or_error.is_error())
+                file = path_or_error.release_value();
+        }
+        if (access(file.characters(), X_OK) == 0)
+            executables.append(move(file));
+    }
+
+    return executables;
+}
+
+int Shell::builtin_where(int argc, char const** argv)
+{
+    Vector<StringView> arguments;
+    bool do_only_path_search { false };
+    bool do_follow_symlinks { false };
+    bool do_print_only_type { false };
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(arguments, "List of shell builtins, aliases or executables", "arguments");
+    parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p');
+    parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's');
+    parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    auto const lookup_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
+        if (do_only_path_search)
+            return {};
+        return m_aliases.get(alias);
+    };
+
+    auto const lookup_builtin = [do_only_path_search](StringView builtin) -> Optional<DeprecatedString> {
+        if (do_only_path_search)
+            return {};
+        for (auto const& _builtin : builtin_names) {
+            if (_builtin == builtin) {
+                return builtin;
+            }
+        }
+        return {};
+    };
+
+    bool at_least_one_succeded { false };
+    for (auto const& argument : arguments) {
+        auto const alias = lookup_alias(argument);
+        if (alias.has_value()) {
+            if (do_print_only_type)
+                outln("{}: alias", argument);
+            else
+                outln("{}: aliased to {}", argument, alias.value());
+            at_least_one_succeded = true;
+        }
+
+        auto const builtin = lookup_builtin(argument);
+        if (builtin.has_value()) {
+            if (do_print_only_type)
+                outln("{}: builtin", builtin.value());
+            else
+                outln("{}: shell built-in command", builtin.value());
+            at_least_one_succeded = true;
+        }
+
+        auto const executables = find_matching_executables_in_path(argument, do_follow_symlinks ? FollowSymlinks::Yes : FollowSymlinks::No);
+        for (auto const& path : executables) {
+            if (do_print_only_type)
+                outln("{}: command", argument);
+            else
+                outln(path);
+            at_least_one_succeded = true;
+        }
+        if (!at_least_one_succeded)
+            warnln("{} not found", argument);
+    }
+    return at_least_one_succeded ? 0 : 1;
+}
+
 int Shell::builtin_alias(int argc, char const** argv)
 {
     Vector<DeprecatedString> arguments;

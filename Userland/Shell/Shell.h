@@ -25,6 +25,7 @@
 
 #define ENUMERATE_SHELL_BUILTINS()     \
     __ENUMERATE_SHELL_BUILTIN(alias)   \
+    __ENUMERATE_SHELL_BUILTIN(where)   \
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
