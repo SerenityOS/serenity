@@ -28,9 +28,7 @@ List of options:
    during the boot sequence. Leaving only the AHCI and Ram Disk controllers.
 
 * **`disable_physical_storage`** - If present on the command line, neither AHCI, or IDE controllers will be initialized on boot.
-  
-* **`disable_ps2_controller`** - If present on the command line, the I8042 keyboard controller will not be initialized on boot.
-  
+    
 * **`disable_uhci_controller`** - If present on the command line, the UHCI controller will not be initialized on boot.
 
 * **`disable_virtio`** - If present on the command line, virtio devices will not be detected, and initialized on boot.
@@ -60,6 +58,12 @@ has set up before booting the Kernel, don't initialize any driver.
 
 * **`init_args`** - This parameter expects a set of arguments to pass to the **`init`** program.
   The value should be a set of strings separated by `,` characters.
+
+* **`i8042_presence_mode`** - This parameter expects one of the following values:
+  **`aggressive-test`** - The i8042 initialization sequence should only try an aggressive presence test.
+  **`auto`** - The i8042 initialization sequence should try to check if ACPI says i8042 exists, and if not an aggressive presence test should take place to determine presence. 
+  **`none`** - Assume there's no i8042 controller in the system. 
+  **`force`** - Assume there's i8042 controller in the system.
 
 * **`panic`** - This parameter expects **`halt`** or **`shutdown`**. This is particularly useful in CI contexts.
 

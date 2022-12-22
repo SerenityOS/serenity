@@ -139,6 +139,20 @@ UNMAP_AFTER_INIT bool CommandLine::is_early_boot_console_disabled() const
     PANIC("Unknown early_boot_console setting: {}", value);
 }
 
+UNMAP_AFTER_INIT I8042PresenceMode CommandLine::i8042_presence_mode() const
+{
+    auto value = lookup("i8042_presence_mode"sv).value_or("auto"sv);
+    if (value == "auto"sv)
+        return I8042PresenceMode::Automatic;
+    if (value == "none"sv)
+        return I8042PresenceMode::None;
+    if (value == "force"sv)
+        return I8042PresenceMode::Force;
+    if (value == "aggressive-test"sv)
+        return I8042PresenceMode::AggressiveTest;
+    PANIC("Unknown i8042_presence_mode setting: {}", value);
+}
+
 UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
 {
     return lookup("vmmouse"sv).value_or("on"sv) == "on"sv;
@@ -218,11 +232,6 @@ UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
 UNMAP_AFTER_INIT bool CommandLine::is_physical_networking_disabled() const
 {
     return contains("disable_physical_networking"sv);
-}
-
-UNMAP_AFTER_INIT bool CommandLine::disable_ps2_controller() const
-{
-    return contains("disable_ps2_controller"sv);
 }
 
 UNMAP_AFTER_INIT bool CommandLine::disable_physical_storage() const

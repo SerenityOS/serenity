@@ -175,7 +175,6 @@ Don't forget to replace `X.Y.Z.W` with your HTTP server IP address.
 
 For troubleshooting purposes, you can add the following command line arguments if you suspect our implementation fails to work with your hardware:
 - `disable_physical_storage`
-- `disable_ps2_controller`
 - `disable_uhci_controller`
 
 Because iPXE (unlike GRUB) doesn't support VESA VBE modesetting when booting a multiboot kernel,

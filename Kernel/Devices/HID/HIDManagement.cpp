@@ -120,24 +120,39 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     // emulation of the PS/2 controller if it was set by the BIOS.
     // If ACPI indicates we have an i8042 controller and the USB controller was
     // set to emulate PS/2, we should not initialize the PS/2 controller.
-    if (kernel_command_line().disable_ps2_controller())
-        return {};
 #if ARCH(X86_64)
-    m_i8042_controller = I8042Controller::initialize();
-
-    // Note: If ACPI is disabled or doesn't indicate that we have an i8042, we
-    // still perform a manual existence check via probing, which is relevant on
-    // QEMU, for example. This probing check is known to not work on bare metal
-    // in all cases, so if we can get a 'yes' from ACPI, we skip it.
     auto has_i8042_controller = false;
-    if (ACPI::Parser::the() && ACPI::Parser::the()->have_8042())
+    auto i8042_controller = I8042Controller::initialize();
+    switch (kernel_command_line().i8042_presence_mode()) {
+    case I8042PresenceMode::Automatic: {
+        // Note: If ACPI is disabled or doesn't indicate that we have an i8042, we
+        // still perform a manual existence check via probing, which is relevant on
+        // QEMU, for example. This probing check is known to not work on bare metal
+        // in all cases, so if we can get a 'yes' from ACPI, we skip it.
+        if (ACPI::Parser::the() && ACPI::Parser::the()->have_8042())
+            has_i8042_controller = true;
+        else if (i8042_controller->check_existence_via_probing({}))
+            has_i8042_controller = true;
+        break;
+    }
+    case I8042PresenceMode::Force: {
         has_i8042_controller = true;
-    else if (m_i8042_controller->check_existence_via_probing({}))
-        has_i8042_controller = true;
+        break;
+    }
+    case I8042PresenceMode::None: {
+        break;
+    }
+    case I8042PresenceMode::AggressiveTest: {
+        if (i8042_controller->check_existence_via_probing({}))
+            has_i8042_controller = true;
+        break;
+    }
+    }
 
     // Note: If we happen to not have i8042 just return "gracefully" for now.
     if (!has_i8042_controller)
         return {};
+    m_i8042_controller = i8042_controller;
     TRY(m_i8042_controller->detect_devices());
     if (m_i8042_controller->mouse())
         m_hid_devices.append(m_i8042_controller->mouse().release_nonnull());
