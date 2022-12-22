@@ -74,7 +74,8 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& left_frame = splitter.add<GUI::Frame>();
     left_frame.set_layout<GUI::VerticalBoxLayout>();
-    left_frame.set_fixed_width(100);
+    // FIXME: Get rid of the magic number, dynamically calculate initial size based on left frame contents
+    left_frame.set_preferred_width(100);
     m_listview = left_frame.add<GUI::ListView>();
     m_listview->set_activates_on_selection(true);
     m_listview->set_model(HelpListModel::create());
