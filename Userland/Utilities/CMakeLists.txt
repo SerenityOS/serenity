@@ -46,7 +46,10 @@ foreach(CMD_SRC ${CMD_SOURCES})
     install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION bin OPTIONAL)
 
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
-        install(CODE "file(RENAME ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME}-bin ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME})")
+        install(CODE
+            "if (EXISTS ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME}-bin)
+                file(RENAME ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME}-bin ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME})
+            endif()")
     endif()
 endforeach()
 
