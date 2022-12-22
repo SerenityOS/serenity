@@ -148,6 +148,8 @@ private:
     virtual void will_be_destroyed() override;
     virtual ErrorOr<void> after_inserting() override;
 
+    ErrorOr<void> allocate_framebuffer_resources(size_t rounded_size);
+
     ErrorOr<bool> ioctl_requires_ownership(unsigned request) const;
 
     OwnPtr<Memory::Region> m_framebuffer_region;
@@ -159,7 +161,7 @@ private:
 
 protected:
     Optional<PhysicalAddress> const m_framebuffer_address;
-    size_t const m_framebuffer_resource_size;
+    size_t m_framebuffer_resource_size;
 
 private:
     LockRefPtr<Memory::SharedFramebufferVMObject> m_shared_framebuffer_vmobject;
