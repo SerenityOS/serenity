@@ -23,7 +23,6 @@ static u32 encode_command(u32 length, u32 mid, Protocol::VirGLCommand command)
 
 class CommandBuilder {
 public:
-    CommandBuilder() = delete;
     CommandBuilder(Vector<u32>& buffer, Protocol::VirGLCommand command, u32 mid)
         : m_buffer(buffer)
         , m_start_offset(buffer.size())
