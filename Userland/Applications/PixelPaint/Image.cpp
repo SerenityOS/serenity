@@ -237,17 +237,22 @@ ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 
 ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 {
+    Vector<NonnullRefPtr<Layer>> new_layers;
+    TRY(new_layers.try_ensure_capacity(snapshot.m_layers.size()));
+    for (auto const& snapshot_layer : snapshot.m_layers) {
+        new_layers.append(TRY(Layer::try_create_snapshot(*this, snapshot_layer)));
+    }
+
     m_layers.clear();
     select_layer(nullptr);
 
     bool layer_selected = false;
-    for (auto const& snapshot_layer : snapshot.m_layers) {
-        auto layer = TRY(Layer::try_create_snapshot(*this, snapshot_layer));
-        if (layer->is_selected()) {
-            select_layer(layer.ptr());
+    for (auto const& new_layer : new_layers) {
+        if (new_layer->is_selected()) {
+            select_layer(new_layer.ptr());
             layer_selected = true;
         }
-        add_layer(*layer);
+        add_layer(*new_layer);
     }
 
     if (!layer_selected)
