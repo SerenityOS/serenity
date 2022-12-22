@@ -232,6 +232,73 @@ void MimeType::set_parameter(DeprecatedString const& name, DeprecatedString cons
     m_parameters.set(name, value);
 }
 
+// https://mimesniff.spec.whatwg.org/#image-mime-type
+bool MimeType::is_image() const
+{
+    return m_type == "image"sv;
+}
+
+// https://mimesniff.spec.whatwg.org/#audio-or-video-mime-type
+bool MimeType::is_audio_or_video() const
+{
+    return m_type == "audio"sv
+        || m_type == "video"sv
+        || essence() == "application/ogg"sv;
+}
+
+// https://mimesniff.spec.whatwg.org/#font-mime-type
+bool MimeType::is_font() const
+{
+    return m_type == "font"
+        || essence().is_one_of(
+            "application/font-cff"sv,
+            "application/font-off"sv,
+            "application/font-sfnt"sv,
+            "application/font-ttf"sv,
+            "application/font-woff"sv,
+            "application/vnd.ms-fontobject"sv,
+            "application/vnd.ms-opentype"sv);
+}
+
+// https://mimesniff.spec.whatwg.org/#zip-based-mime-type
+bool MimeType::is_zip_based() const
+{
+    return m_subtype.ends_with("+zip"sv)
+        || essence() == "application/zip"sv;
+}
+
+// https://mimesniff.spec.whatwg.org/#archive-mime-type
+bool MimeType::is_archive() const
+{
+    return essence().is_one_of(
+        "application/x-rar-compressed",
+        "application/zip",
+        "application/x-gzip");
+}
+
+// https://mimesniff.spec.whatwg.org/#xml-mime-type
+bool MimeType::is_xml() const
+{
+    return m_subtype.ends_with("+xml"sv)
+        || essence().is_one_of(
+            "text/xml"sv,
+            "application/xml"sv);
+}
+
+// https://mimesniff.spec.whatwg.org/#html-mime-type
+bool MimeType::is_html() const
+{
+    return essence() == "text/html"sv;
+}
+
+// https://mimesniff.spec.whatwg.org/#scriptable-mime-type
+bool MimeType::is_scriptable() const
+{
+    return is_xml()
+        || is_html()
+        || essence() == "application/pdf"sv;
+}
+
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type
 bool MimeType::is_javascript() const
 {
@@ -252,6 +319,15 @@ bool MimeType::is_javascript() const
         "text/livescript"sv,
         "text/x-ecmascript"sv,
         "text/x-javascript"sv);
+}
+
+// https://mimesniff.spec.whatwg.org/#json-mime-type
+bool MimeType::is_json() const
+{
+    return m_subtype.ends_with("+json"sv)
+        || essence().is_one_of(
+            "application/json"sv,
+            "text/json"sv);
 }
 
 }

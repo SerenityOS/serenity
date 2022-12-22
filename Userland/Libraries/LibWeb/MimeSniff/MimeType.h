@@ -26,7 +26,16 @@ public:
     DeprecatedString const& subtype() const { return m_subtype; }
     OrderedHashMap<DeprecatedString, DeprecatedString> const& parameters() const { return m_parameters; }
 
+    bool is_image() const;
+    bool is_audio_or_video() const;
+    bool is_font() const;
+    bool is_zip_based() const;
+    bool is_archive() const;
+    bool is_xml() const;
+    bool is_html() const;
+    bool is_scriptable() const;
     bool is_javascript() const;
+    bool is_json() const;
 
     void set_parameter(DeprecatedString const& name, DeprecatedString const& value);
 
