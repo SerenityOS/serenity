@@ -124,21 +124,21 @@ void CommandBufferBuilder::append_end_transfers_3d()
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::END_TRANSFERS, Protocol::ObjectType::NONE);
 }
 
-void CommandBufferBuilder::append_draw_vbo(u32 count)
+void CommandBufferBuilder::append_draw_vbo(Protocol::PipePrimitiveTypes primitive_type, u32 count)
 {
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::DRAW_VBO, Protocol::ObjectType::NONE);
-    builder.appendu32(0);                                                      // start
-    builder.appendu32(count);                                                  // count
-    builder.appendu32(to_underlying(Protocol::PipePrimitiveTypes::TRIANGLES)); // mode
-    builder.appendu32(0);                                                      // indexed
-    builder.appendu32(1);                                                      // instance_count
-    builder.appendu32(0);                                                      // index_bias
-    builder.appendu32(0);                                                      // start_instance
-    builder.appendu32(0);                                                      // primitive_restart
-    builder.appendu32(0);                                                      // restart_index
-    builder.appendu32(0);                                                      // min_index
-    builder.appendu32(0xffffffff);                                             // max_index
-    builder.appendu32(0);                                                      // cso
+    builder.appendu32(0);                             // start
+    builder.appendu32(count);                         // count
+    builder.appendu32(to_underlying(primitive_type)); // mode
+    builder.appendu32(0);                             // indexed
+    builder.appendu32(1);                             // instance_count
+    builder.appendu32(0);                             // index_bias
+    builder.appendu32(0);                             // start_instance
+    builder.appendu32(0);                             // primitive_restart
+    builder.appendu32(0);                             // restart_index
+    builder.appendu32(0);                             // min_index
+    builder.appendu32(0xffffffff);                    // max_index
+    builder.appendu32(0);                             // cso
 }
 
 void CommandBufferBuilder::append_clear(float r, float g, float b)
