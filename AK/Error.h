@@ -68,14 +68,14 @@ private:
     }
 
     Error(StringView syscall_name, int rc)
-        : m_code(-rc)
-        , m_string_literal(syscall_name)
+        : m_string_literal(syscall_name)
+        , m_code(-rc)
         , m_syscall(true)
     {
     }
 
-    int m_code { 0 };
     StringView m_string_literal;
+    int m_code { 0 };
     bool m_syscall { false };
 };
 
