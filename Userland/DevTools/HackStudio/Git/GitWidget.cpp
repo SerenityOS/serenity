@@ -22,8 +22,7 @@
 
 namespace HackStudio {
 
-GitWidget::GitWidget(DeprecatedString const& repo_root)
-    : m_repo_root(repo_root)
+GitWidget::GitWidget()
 {
     set_layout<GUI::HorizontalBoxLayout>();
 
