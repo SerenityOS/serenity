@@ -176,6 +176,11 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
             configuration |= I8042ConfigurationFlag::FirstPS2PortClock;
             m_keyboard_device = nullptr;
             SpinlockLocker lock(m_lock);
+            // NOTE: Before setting the actual scan code set, stop packet streaming entirely.
+            TRY(send_command(HIDDevice::Type::Keyboard, I8042Command::DisablePacketStreaming));
+            TRY(do_wait_then_write(I8042Port::Buffer, I8042Command::SetScanCodeSet));
+            TRY(do_wait_then_write(I8042Port::Buffer, 0x2));
+
             TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
             TRY(do_wait_then_write(I8042Port::Buffer, configuration));
         } else {
