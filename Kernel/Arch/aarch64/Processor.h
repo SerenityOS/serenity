@@ -279,6 +279,7 @@ private:
     FlatPtr m_in_irq { 0 };
     bool m_in_scheduler { false };
     bool m_invoke_scheduler_async { false };
+    bool m_scheduler_initialized { false };
 };
 
 }

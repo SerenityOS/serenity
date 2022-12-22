@@ -11,6 +11,7 @@
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -171,7 +172,14 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
 
 void Processor::check_invoke_scheduler()
 {
-    TODO_AARCH64();
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(!m_in_irq);
+    VERIFY(!m_in_critical);
+    VERIFY(&Processor::current() == this);
+    if (m_invoke_scheduler_async && m_scheduler_initialized) {
+        m_invoke_scheduler_async = false;
+        Scheduler::invoke_async();
+    }
 }
 
 }
