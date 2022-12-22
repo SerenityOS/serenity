@@ -42,6 +42,8 @@ class Processor {
     void* m_processor_specific_data[static_cast<size_t>(ProcessorSpecificDataID::__Count)];
 
 public:
+    Processor() = default;
+
     void initialize(u32 cpu);
 
     template<typename T>
@@ -166,8 +168,7 @@ public:
 
     ALWAYS_INLINE static bool current_in_scheduler()
     {
-        auto current_processor = current();
-        return current_processor.m_in_scheduler;
+        return current().m_in_scheduler;
     }
 
     ALWAYS_INLINE static void set_current_in_scheduler(bool value)
@@ -178,14 +179,14 @@ public:
     // FIXME: Share the critical functions with x86/Processor.h
     ALWAYS_INLINE static void enter_critical()
     {
-        auto current_processor = current();
-        current_processor.m_in_critical = current_processor.in_critical() + 1;
+        auto& current_processor = current();
+        current_processor.m_in_critical = current_processor.m_in_critical + 1;
     }
 
     ALWAYS_INLINE static void leave_critical()
     {
-        auto current_processor = current();
-        current_processor.m_in_critical = current_processor.in_critical() - 1;
+        auto& current_processor = current();
+        current_processor.m_in_critical = current_processor.m_in_critical - 1;
     }
 
     static u32 clear_critical();
@@ -269,6 +270,8 @@ public:
     void exit_trap(TrapFrame& trap);
 
 private:
+    Processor(Processor const&) = delete;
+
     Thread* m_current_thread;
     Thread* m_idle_thread;
     u32 m_in_critical { 0 };
