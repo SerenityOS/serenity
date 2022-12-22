@@ -228,7 +228,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             auto statbuf = TRY(Core::System::lstat(path));
-            auto canonicalized_path = LexicalPath::canonicalized_path(path);
+            auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
             TRY(tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all()));
             if (verbose)
                 outln("{}", canonicalized_path);
@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto add_link = [&](DeprecatedString path) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
 
-            auto canonicalized_path = LexicalPath::canonicalized_path(path);
+            auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
             TRY(tar_stream.add_link(canonicalized_path, statbuf.st_mode, TRY(Core::System::readlink(path))));
             if (verbose)
                 outln("{}", canonicalized_path);
@@ -250,7 +250,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
 
-            auto canonicalized_path = LexicalPath::canonicalized_path(path);
+            auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
             TRY(tar_stream.add_directory(canonicalized_path, statbuf.st_mode));
             if (verbose)
                 outln("{}", canonicalized_path);

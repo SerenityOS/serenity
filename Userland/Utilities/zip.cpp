@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
         auto file_buffer = TRY(file->read_until_eof());
         Archive::ZipMember member {};
-        member.name = canonicalized_path;
+        member.name = TRY(String::from_deprecated_string(canonicalized_path));
 
         auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
         if (deflate_buffer.has_value() && deflate_buffer.value().size() < file_buffer.size()) {
@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
         auto canonicalized_path = DeprecatedString::formatted("{}/", LexicalPath::canonicalized_path(path));
         Archive::ZipMember member {};
-        member.name = canonicalized_path;
+        member.name = TRY(String::from_deprecated_string(canonicalized_path));
         member.compressed_data = {};
         member.compression_method = Archive::ZipCompressionMethod::Store;
         member.uncompressed_size = 0;
