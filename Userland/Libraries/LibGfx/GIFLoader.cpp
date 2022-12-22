@@ -7,10 +7,12 @@
 
 #include <AK/Array.h>
 #include <AK/Debug.h>
+#include <AK/Error.h>
 #include <AK/IntegralMath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/Try.h>
 #include <LibGfx/GIFLoader.h>
 #include <string.h>
 
@@ -261,31 +263,22 @@ static void clear_rect(Bitmap& bitmap, IntRect const& rect, Color color)
     }
 }
 
-static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
+static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.images.size()) {
-        return false;
+        return Error::from_string_literal("frame_index size too high");
     }
 
     if (context.state >= GIFLoadingContext::State::FrameComplete && frame_index == context.current_frame) {
-        return true;
+        return {};
     }
 
     size_t start_frame = context.current_frame + 1;
     if (context.state < GIFLoadingContext::State::FrameComplete) {
         start_frame = 0;
-        {
-            auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
-            if (bitmap_or_error.is_error())
-                return false;
-            context.frame_buffer = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-        }
-        {
-            auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
-            if (bitmap_or_error.is_error())
-                return false;
-            context.prev_frame_buffer = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-        }
+        context.frame_buffer = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height }));
+        context.prev_frame_buffer = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height }));
+
     } else if (frame_index < context.current_frame) {
         start_frame = 0;
     }
@@ -319,7 +312,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         }
 
         if (image.lzw_min_code_size > 8)
-            return false;
+            return Error::from_string_literal("LZW minimum code size is greater than 8");
 
         LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
 
@@ -336,7 +329,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
                 dbgln_if(GIF_DEBUG, "Unexpectedly reached end of gif frame data");
-                return false;
+                return Error::from_string_literal("Unexpectedly reached end of gif frame data");
             }
 
             if (code.value() == clear_code) {
@@ -382,7 +375,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         context.state = GIFLoadingContext::State::FrameComplete;
     }
 
-    return true;
+    return {};
 }
 
 static bool load_gif_frame_descriptors(GIFLoadingContext& context)
@@ -705,12 +698,18 @@ ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
         }
     }
 
-    if (m_context->error_state == GIFLoadingContext::ErrorState::NoError && !decode_frame(*m_context, index)) {
-        if (m_context->state < GIFLoadingContext::State::FrameComplete || !decode_frame(*m_context, 0)) {
-            m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame;
-            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed");
+    if (m_context->error_state == GIFLoadingContext::ErrorState::NoError) {
+        if (auto result = decode_frame(*m_context, index); result.is_error()) {
+            if (m_context->state < GIFLoadingContext::State::FrameComplete) {
+                m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame;
+                return result.release_error();
+            }
+            if (auto result = decode_frame(*m_context, 0); result.is_error()) {
+                m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame;
+                return result.release_error();
+            }
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
         }
-        m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
     }
 
     ImageFrameDescriptor frame {};
