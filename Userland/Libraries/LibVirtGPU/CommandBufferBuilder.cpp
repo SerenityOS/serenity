@@ -31,16 +31,19 @@ public:
     {
         m_buffer.append(0);
     }
+
     void appendu32(u32 value)
     {
         VERIFY(!m_finalized);
         m_buffer.append(value);
     }
+
     void appendf32(float value)
     {
         VERIFY(!m_finalized);
         m_buffer.append(bit_cast<u32>(value));
     }
+
     void appendf64(double value)
     {
         VERIFY(!m_finalized);
@@ -49,6 +52,7 @@ public:
         auto* depth = (u64*)(&m_buffer[m_buffer.size() - 2]);
         *depth = bit_cast<u64>(value);
     }
+
     void append_string_null_padded(StringView string)
     {
         VERIFY(!m_finalized);
@@ -61,6 +65,7 @@ public:
         // Pad end with null bytes
         memset(&dest[string.length()], 0, 4 * num_required_words - string.length());
     }
+
     void finalize()
     {
         if (!m_finalized) {
@@ -69,6 +74,7 @@ public:
             m_buffer[m_start_offset] = encode_command(num_elems, m_command_mid, m_command);
         }
     }
+
     ~CommandBuilder()
     {
         if (!m_finalized)
