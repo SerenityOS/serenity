@@ -34,6 +34,7 @@ enum I8042Command : u8 {
     GetDeviceID = 0xF2,
     SetSampleRate = 0xF3,
     EnablePacketStreaming = 0xF4,
+    DisablePacketStreaming = 0xF5,
     SetDefaults = 0xF6,
     Reset = 0xFF,
 };
