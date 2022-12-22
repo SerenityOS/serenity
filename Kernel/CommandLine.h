@@ -24,6 +24,13 @@ enum class HPETMode {
     NonPeriodic
 };
 
+enum class I8042PresenceMode {
+    Automatic,
+    AggressiveTest,
+    Force,
+    None,
+};
+
 enum class AcpiFeatureLevel {
     Enabled,
     Limited,
@@ -77,13 +84,13 @@ public:
     [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_pc_speaker_enabled() const;
     [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;
+    [[nodiscard]] I8042PresenceMode i8042_presence_mode() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;
     [[nodiscard]] PanicMode panic_mode(Validate should_validate = Validate::No) const;
     [[nodiscard]] HPETMode hpet_mode() const;
     [[nodiscard]] bool disable_physical_storage() const;
-    [[nodiscard]] bool disable_ps2_controller() const;
     [[nodiscard]] bool disable_uhci_controller() const;
     [[nodiscard]] bool disable_usb() const;
     [[nodiscard]] bool disable_virtio() const;
@@ -93,6 +100,7 @@ public:
     [[nodiscard]] NonnullOwnPtrVector<KString> userspace_init_args() const;
     [[nodiscard]] StringView root_device() const;
     [[nodiscard]] bool is_nvme_polling_enabled() const;
+    [[nodiscard]] bool is_i8042_force_scan_code_2() const;
     [[nodiscard]] size_t switch_to_tty() const;
 
 private:
