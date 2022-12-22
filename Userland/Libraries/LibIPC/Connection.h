@@ -139,14 +139,23 @@ protected:
                 break;
             index += sizeof(message_size);
             auto remaining_bytes = ReadonlyBytes { bytes.data() + index, message_size };
-            if (auto message = LocalEndpoint::decode_message(remaining_bytes, fd_passing_socket())) {
-                m_unprocessed_messages.append(message.release_nonnull());
-            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, fd_passing_socket())) {
-                m_unprocessed_messages.append(message.release_nonnull());
-            } else {
-                dbgln("Failed to parse a message");
-                break;
+
+            auto local_message = LocalEndpoint::decode_message(remaining_bytes, fd_passing_socket());
+            if (!local_message.is_error()) {
+                m_unprocessed_messages.append(local_message.release_value());
+                continue;
             }
+
+            auto peer_message = PeerEndpoint::decode_message(remaining_bytes, fd_passing_socket());
+            if (!peer_message.is_error()) {
+                m_unprocessed_messages.append(peer_message.release_value());
+                continue;
+            }
+
+            dbgln("Failed to parse a message");
+            dbgln("Local endpoint error: {}", local_message.error());
+            dbgln("Peer endpoint error: {}", peer_message.error());
+            break;
         }
     }
 };
