@@ -43,31 +43,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<JsonValue> sorted_regions = json.as_array().values();
     quick_sort(sorted_regions, [](auto& a, auto& b) {
-        return a.as_object().get_deprecated("address"sv).to_addr() < b.as_object().get_deprecated("address"sv).to_addr();
+        return a.as_object().get_addr("address"sv).value_or(0) < b.as_object().get_addr("address"sv).value_or(0);
     });
 
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
-        auto address = map.get_deprecated("address"sv).to_addr();
-        auto size = map.get_deprecated("size"sv).to_deprecated_string();
+        auto address = map.get_addr("address"sv).value_or(0);
+        auto size = map.get("size"sv).value_or({}).to_deprecated_string();
 
         auto access = DeprecatedString::formatted("{}{}{}{}{}",
-            (map.get_deprecated("readable"sv).to_bool() ? "r" : "-"),
-            (map.get_deprecated("writable"sv).to_bool() ? "w" : "-"),
-            (map.get_deprecated("executable"sv).to_bool() ? "x" : "-"),
-            (map.get_deprecated("shared"sv).to_bool() ? "s" : "-"),
-            (map.get_deprecated("syscall"sv).to_bool() ? "c" : "-"));
+            (map.get_bool("readable"sv).value_or(false) ? "r" : "-"),
+            (map.get_bool("writable"sv).value_or(false) ? "w" : "-"),
+            (map.get_bool("executable"sv).value_or(false) ? "x" : "-"),
+            (map.get_bool("shared"sv).value_or(false) ? "s" : "-"),
+            (map.get_bool("syscall"sv).value_or(false) ? "c" : "-"));
 
         out("{:p}  ", address);
         out("{:>10} ", size);
         if (extended) {
-            auto resident = map.get_deprecated("amount_resident"sv).to_deprecated_string();
-            auto dirty = map.get_deprecated("amount_dirty"sv).to_deprecated_string();
-            auto vmobject = map.get_deprecated("vmobject"sv).to_deprecated_string();
+            auto resident = map.get("amount_resident"sv).value_or({}).to_deprecated_string();
+            auto dirty = map.get("amount_dirty"sv).value_or({}).to_deprecated_string();
+            auto vmobject = map.get_deprecated_string("vmobject"sv).value_or({});
             if (vmobject.ends_with("VMObject"sv))
                 vmobject = vmobject.substring(0, vmobject.length() - 8);
-            auto purgeable = map.get_deprecated("purgeable"sv).to_deprecated_string();
-            auto cow_pages = map.get_deprecated("cow_pages"sv).to_deprecated_string();
+            auto purgeable = map.get("purgeable"sv).value_or({}).to_deprecated_string();
+            auto cow_pages = map.get("cow_pages"sv).value_or({}).to_deprecated_string();
             out("{:>10} ", resident);
             out("{:>10} ", dirty);
             out("{:6} ", access);
@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             out("{:6} ", access);
         }
-        auto name = map.get_deprecated("name"sv).to_deprecated_string();
+        auto name = map.get_deprecated_string("name"sv).value_or({});
         out("{:20}", name);
         outln();
     }
