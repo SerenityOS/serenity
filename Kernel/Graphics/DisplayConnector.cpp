@@ -74,6 +74,23 @@ void DisplayConnector::will_be_destroyed()
     before_will_be_destroyed_remove_from_device_management();
 }
 
+ErrorOr<void> DisplayConnector::allocate_framebuffer_resources(size_t rounded_size)
+{
+    VERIFY((rounded_size % PAGE_SIZE) == 0);
+    if (!m_framebuffer_at_arbitrary_physical_range) {
+        VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
+        m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
+        m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    } else {
+        m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
+        m_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    }
+
+    m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
+    m_fake_writes_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    return {};
+}
+
 ErrorOr<void> DisplayConnector::after_inserting()
 {
     after_inserting_add_to_device_management();
@@ -99,19 +116,17 @@ ErrorOr<void> DisplayConnector::after_inserting()
         m_symlink_sysfs_component.clear();
     });
 
-    auto rounded_size = TRY(Memory::page_round_up(m_framebuffer_resource_size));
-
-    if (!m_framebuffer_at_arbitrary_physical_range) {
-        VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
-        m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
-        m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    if (auto result_or_error = Memory::page_round_up(m_framebuffer_resource_size); result_or_error.is_error()) {
+        // NOTE: The amount of framebuffer resource being specified is erroneous, then default to 16 MiB.
+        TRY(allocate_framebuffer_resources(16 * MiB));
+        m_framebuffer_resource_size = 16 * MiB;
     } else {
-        m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
-        m_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+        if (auto allocation_result = allocate_framebuffer_resources(result_or_error.release_value()); allocation_result.is_error()) {
+            // NOTE: The amount of framebuffer resource being specified is too big, use 16 MiB just to get going.
+            TRY(allocate_framebuffer_resources(16 * MiB));
+            m_framebuffer_resource_size = 16 * MiB;
+        }
     }
-
-    m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
-    m_fake_writes_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
 
     clean_from_device_management.disarm();
     clean_from_sysfs_display_connector_device_directory.disarm();
