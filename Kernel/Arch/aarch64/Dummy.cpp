@@ -50,22 +50,6 @@ bool g_pci_access_is_disabled_from_commandline { false };
 
 }
 
-// kprintf.cpp
-void dbgputstr(StringView)
-{
-    TODO_AARCH64();
-}
-
-void dbgputstr(char const*, size_t)
-{
-    TODO_AARCH64();
-}
-
-void dbgputchar(char)
-{
-    TODO_AARCH64();
-}
-
 // x86 init
 
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
