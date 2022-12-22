@@ -48,7 +48,7 @@ class Image : public RefCounted<Image> {
 public:
     static ErrorOr<NonnullRefPtr<Image>> try_create_with_size(Gfx::IntSize);
     static ErrorOr<NonnullRefPtr<Image>> try_create_from_pixel_paint_json(JsonObject const&);
-    static ErrorOr<NonnullRefPtr<Image>> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
+    static ErrorOr<NonnullRefPtr<Image>> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
 
     static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_decode_bitmap(ReadonlyBytes);
 
@@ -73,8 +73,8 @@ public:
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
 
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
-    ErrorOr<void> export_bmp_to_file(Core::File&, bool preserve_alpha_channel);
-    ErrorOr<void> export_png_to_file(Core::File&, bool preserve_alpha_channel);
+    ErrorOr<void> export_bmp_to_file(Core::File&, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_png_to_file(Core::File&, bool preserve_alpha_channel) const;
     ErrorOr<void> export_qoi_to_file(Core::File&) const;
 
     void move_layer_to_front(Layer&);
