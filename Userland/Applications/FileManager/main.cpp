@@ -13,6 +13,7 @@
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <AK/Try.h>
 #include <AK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibConfig/Client.h>
@@ -379,7 +380,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto create_archive_action
         = GUI::Action::create(
             "Create &Archive",
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-archive.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-archive.png"sv)),
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
@@ -404,7 +405,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto set_wallpaper_action
         = GUI::Action::create(
             "Set as Desktop &Wallpaper",
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv)),
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
@@ -441,7 +442,7 @@ ErrorOr<int> run_in_desktop_mode()
 
     auto desktop_view_context_menu = TRY(GUI::Menu::try_create("Directory View"));
 
-    auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](auto&) {
         auto paths = directory_view->selected_file_paths();
         if (paths.is_empty()) {
             Desktop::Launcher::open(URL::create_with_file_scheme(directory_view->path()));
@@ -454,7 +455,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
     });
 
-    auto open_terminal_action = GUI::Action::create("Open in &Terminal", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_terminal_action = GUI::Action::create("Open in &Terminal", {}, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
         auto paths = directory_view->selected_file_paths();
         if (paths.is_empty()) {
             spawn_terminal(directory_view->path());
@@ -468,7 +469,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
     });
 
-    auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+    auto display_properties_action = GUI::Action::create("&Display Settings", {}, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv)), [&](GUI::Action const&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/bin/DisplaySettings"));
     });
 
@@ -671,7 +672,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto directory_view_context_menu = TRY(GUI::Menu::try_create("Directory View"));
     auto tree_view_directory_context_menu = TRY(GUI::Menu::try_create("Tree View Directory"));
 
-    auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+    auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"sv)), [&](GUI::Action const&) {
         directory_view->open_parent_directory();
     });
 
@@ -799,7 +800,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         = GUI::Action::create(
             "Open in New &Window",
             {},
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv)),
             [&](GUI::Action const& action) {
                 Vector<DeprecatedString> paths;
                 if (action.activator() == tree_view_directory_context_menu)
@@ -818,7 +819,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         = GUI::Action::create(
             "Open in &Terminal",
             {},
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"sv)),
             [&](GUI::Action const& action) {
                 Vector<DeprecatedString> paths;
                 if (action.activator() == tree_view_directory_context_menu)
@@ -838,7 +839,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         = GUI::Action::create(
             "Create Desktop &Shortcut",
             {},
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-symlink.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-symlink.png"sv)),
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty()) {
@@ -851,7 +852,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto create_archive_action
         = GUI::Action::create(
             "Create &Archive",
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-archive.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-archive.png"sv)),
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
@@ -878,7 +879,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto set_wallpaper_action
         = GUI::Action::create(
             "Set as Desktop &Wallpaper",
-            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+            TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv)),
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
@@ -972,12 +973,12 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     });
     focus_dependent_delete_action->set_enabled(false);
 
-    auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+    auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {
         directory_view->mkdir_action().activate();
         refresh_tree_view();
     });
 
-    auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+    auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv)), [&](GUI::Action const&) {
         directory_view->touch_action().activate();
         refresh_tree_view();
     });
@@ -1032,7 +1033,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(show_dotfiles_action));
 
-    auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         toolbar_container.set_visible(true);
         location_toolbar.set_visible(true);
         breadcrumb_toolbar.set_visible(false);
@@ -1182,7 +1183,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
             || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };
 
-    auto directory_open_action = GUI::Action::create("Open", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto directory_open_action = GUI::Action::create("Open", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv)), [&](auto&) {
         directory_view->open(directory_view->selected_file_paths().first());
     });
 
