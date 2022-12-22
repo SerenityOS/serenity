@@ -595,7 +595,7 @@ public:
         if (stream.handle_any_error()) {)~~~");
     if constexpr (GENERATE_DEBUG) {
         generator.appendln(R"~~~(
-                dbgln(\"Failed to read message endpoint magic\"))~~~");
+            dbgln("Failed to read message endpoint magic");)~~~");
     }
     generator.appendln(R"~~~(
             return {};
@@ -604,7 +604,7 @@ public:
         if (message_endpoint_magic != @endpoint.magic@) {)~~~");
     if constexpr (GENERATE_DEBUG) {
         generator.appendln(R"~~~(
-                dbgln(\"@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)\"))~~~");
+            dbgln("@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)");)~~~");
     }
     generator.appendln(R"~~~(
             return {};
@@ -615,7 +615,7 @@ public:
         if (stream.handle_any_error()) {)~~~");
     if constexpr (GENERATE_DEBUG) {
         generator.appendln(R"~~~(
-                dbgln(\"Failed to read message ID\"))~~~");
+            dbgln("Failed to read message ID");)~~~");
     }
     generator.appendln(R"~~~(
             return {};
@@ -646,7 +646,7 @@ public:
         default:)~~~");
     if constexpr (GENERATE_DEBUG) {
         generator.appendln(R"~~~(
-                dbgln(\"Failed to decode @endpoint.name@.({})\", message_id))~~~");
+            dbgln("Failed to decode @endpoint.name@.({})", message_id);)~~~");
     }
     generator.appendln(R"~~~(
             return {};
@@ -655,7 +655,7 @@ public:
         if (stream.handle_any_error()) {)~~~");
     if constexpr (GENERATE_DEBUG) {
         generator.appendln(R"~~~(
-                dbgln(\"Failed to read the message\");)~~~");
+            dbgln("Failed to read the message");)~~~");
     }
     generator.appendln(R"~~~(
             return {};
