@@ -39,6 +39,43 @@ int Shell::builtin_dump(int argc, char const** argv)
     return 0;
 }
 
+int Shell::builtin_where(int argc, char const** argv)
+{
+    bool at_least_one_succeded = false;
+    for (ssize_t i = 1; i < argc; i++) {
+        auto current_command = DeprecatedString(argv[i]);
+        auto alias = m_aliases.get(current_command);
+        if (alias.has_value()) {
+            outln("{}: aliased to {}", current_command, alias.value());
+            at_least_one_succeded = true;
+            continue;
+        }
+
+        bool found_builtin = false;
+        for (auto const& builtin : builtin_names) {
+            if (builtin == current_command) {
+                outln("{}: shell built-in command", current_command);
+                found_builtin = true;
+                break;
+            }
+        }
+        if (found_builtin) {
+            at_least_one_succeded = true;
+            continue;
+        }
+
+        auto path = Core::File::resolve_executable_from_environment(current_command);
+        if (path.has_value()) {
+            at_least_one_succeded = true;
+            outln(path.value());
+            continue;
+        }
+        if (!at_least_one_succeded)
+            warnln("{} not found", current_command);
+    }
+    return (at_least_one_succeded || (argc <= 1)) ? 0 : 1;
+}
+
 int Shell::builtin_alias(int argc, char const** argv)
 {
     Vector<DeprecatedString> arguments;
