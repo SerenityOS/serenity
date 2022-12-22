@@ -6,12 +6,17 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullRefPtr.h>
+#include <LibCore/File.h>
 #include <LibGPU/Device.h>
 
 namespace VirtGPU {
 
 class Device final : public GPU::Device {
 public:
+    Device(NonnullRefPtr<Core::File>);
+
     static ErrorOr<NonnullOwnPtr<Device>> create(Gfx::IntSize min_size);
 
     virtual GPU::DeviceInfo info() const override;
@@ -48,6 +53,9 @@ public:
     virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) override;
 
     virtual void bind_fragment_shader(RefPtr<GPU::Shader>) override;
+
+private:
+    NonnullRefPtr<Core::File> m_gpu_file;
 };
 
 }

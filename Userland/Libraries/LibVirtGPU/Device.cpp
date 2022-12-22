@@ -11,9 +11,16 @@
 
 namespace VirtGPU {
 
+Device::Device(NonnullRefPtr<Core::File> gpu_file)
+    : m_gpu_file { gpu_file }
+{
+}
+
 ErrorOr<NonnullOwnPtr<Device>> Device::create(Gfx::IntSize)
 {
-    return make<Device>();
+    auto file = TRY(Core::File::open("/dev/gpu/render0", Core::OpenMode::ReadWrite));
+    auto device = make<Device>(file);
+    return device;
 }
 
 GPU::DeviceInfo Device::info() const
