@@ -119,7 +119,12 @@ public:
     bool is_user_allowed() const { TODO_AARCH64(); }
     void set_user_allowed(bool) { }
 
-    bool is_writable() const { TODO_AARCH64(); }
+    bool is_writable() const
+    {
+        dbgln("FIXME: PageTableEntry: Actually check if the entry is writable!");
+        return true;
+    }
+
     void set_writable(bool) { }
 
     bool is_write_through() const { TODO_AARCH64(); }
