@@ -87,8 +87,8 @@ class HexDocumentUndoCommand : public GUI::Command {
 public:
     HexDocumentUndoCommand(WeakPtr<HexDocument> document, size_t position);
 
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     virtual DeprecatedString action_text() const override { return "Update cell"; }
 
     virtual bool merge_with(GUI::Command const& other) override;

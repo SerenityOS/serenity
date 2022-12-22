@@ -15,6 +15,7 @@
 #include "Tools/Tool.h"
 #include <AK/IntegralMath.h>
 #include <AK/LexicalPath.h>
+#include <AK/String.h>
 #include <LibConfig/Client.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Command.h>
@@ -86,10 +87,24 @@ bool ImageEditor::undo()
      * This works because UndoStack::undo first decrements the stack pointer and then restores the snapshot,
      * while UndoStack::redo first restores the snapshot and then increments the stack pointer.
      */
-    m_undo_stack.undo();
-    m_undo_stack.undo();
-    m_undo_stack.redo();
+    auto first_undo_or_error = m_undo_stack.undo();
+    if (first_undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", first_undo_or_error.error())));
+        return false;
+    }
+    auto second_undo_or_error = m_undo_stack.undo();
+    if (second_undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", second_undo_or_error.error())));
+        return false;
+    }
+    auto redo_undo_or_error = m_undo_stack.redo();
+    if (redo_undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", redo_undo_or_error.error())));
+        return false;
+    }
+
     layers_did_change();
+
     return true;
 }
 
@@ -98,8 +113,14 @@ bool ImageEditor::redo()
     if (!m_undo_stack.can_redo())
         return false;
 
-    m_undo_stack.redo();
+    auto redo_undo_or_error = m_undo_stack.redo();
+    if (redo_undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", redo_undo_or_error.error())));
+        return false;
+    }
+
     layers_did_change();
+
     return true;
 }
 

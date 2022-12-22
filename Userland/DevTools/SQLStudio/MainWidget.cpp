@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -129,7 +130,11 @@ MainWidget::MainWidget()
         auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
         if (!editor)
             return;
-        editor->document().undo();
+        auto document_undo_or_error = editor->document().undo();
+        if (document_undo_or_error.is_error()) {
+            GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", document_undo_or_error.error())));
+            return;
+        }
         update_editor_actions(editor);
     });
 
@@ -139,7 +144,11 @@ MainWidget::MainWidget()
         auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
         if (!editor)
             return;
-        editor->document().redo();
+        auto document_redo_or_error = editor->document().redo();
+        if (document_redo_or_error.is_error()) {
+            GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", document_redo_or_error.error())));
+            return;
+        }
         update_editor_actions(editor);
     });
 

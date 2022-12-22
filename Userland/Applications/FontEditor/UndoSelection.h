@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/GlyphMapWidget.h>
 #include <LibGUI/UndoStack.h>
@@ -79,22 +80,28 @@ public:
         , m_undo_selection(selection)
     {
     }
-    virtual void undo() override
+    virtual ErrorOr<void> undo() override
     {
         if (!m_redo_state) {
-            if (auto maybe_state = m_undo_state->save_state(); !maybe_state.is_error())
-                m_redo_state = move(maybe_state.value());
-            else
-                warnln("Saving redo state failed: {}", maybe_state.error());
+            auto save_state_or_error = m_undo_state->save_state();
+            if (save_state_or_error.is_error())
+                return Error::from_string_view(MUST(String::formatted("Saving redo state failed: {}", save_state_or_error.error())));
+
+            m_redo_state = move(save_state_or_error.value());
         }
+
         m_undo_selection.restore_state(*m_undo_state);
+
+        return {};
     }
-    virtual void redo() override
+    virtual ErrorOr<void> redo() override
     {
-        if (m_redo_state)
-            m_undo_selection.restore_state(*m_redo_state);
-        else
-            warnln("Restoring state failed");
+        if (!m_redo_state)
+            return Error::from_string_literal("Restoring state failed");
+
+        m_undo_selection.restore_state(*m_redo_state);
+
+        return {};
     }
 
 private:

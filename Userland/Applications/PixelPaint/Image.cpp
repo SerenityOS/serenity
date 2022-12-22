@@ -481,15 +481,14 @@ ImageUndoCommand::ImageUndoCommand(Image& image, DeprecatedString action_text)
 {
 }
 
-void ImageUndoCommand::undo()
+ErrorOr<void> ImageUndoCommand::undo()
 {
-    // FIXME: Handle errors.
-    (void)m_image.restore_snapshot(*m_snapshot);
+    return m_image.restore_snapshot(*m_snapshot);
 }
 
-void ImageUndoCommand::redo()
+ErrorOr<void> ImageUndoCommand::redo()
 {
-    undo();
+    return undo();
 }
 
 void Image::flip(Gfx::Orientation orientation)

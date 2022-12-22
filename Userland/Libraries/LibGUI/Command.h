@@ -15,8 +15,8 @@ class Command {
 public:
     virtual ~Command() = default;
 
-    virtual void undo() { }
-    virtual void redo() { }
+    virtual ErrorOr<void> undo() { return {}; };
+    virtual ErrorOr<void> redo() { return {}; };
 
     virtual DeprecatedString action_text() const { return {}; }
     virtual bool merge_with(Command const&) { return false; }

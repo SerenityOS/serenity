@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/UndoStack.h>
 
@@ -22,28 +23,40 @@ bool UndoStack::can_redo() const
     return m_stack_index != m_stack.size();
 }
 
-void UndoStack::undo()
+ErrorOr<void> UndoStack::undo()
 {
     if (!can_undo())
-        return;
+        return {};
 
-    auto& command = m_stack[--m_stack_index];
-    command.undo();
+    auto& command = m_stack[m_stack_index - 1];
+    auto undo_or_error = command.undo();
+    if (undo_or_error.is_error())
+        return Error::from_string_view(MUST(String::formatted("Failed to undo: {}", undo_or_error.error())));
+
+    --m_stack_index;
 
     if (on_state_change)
         on_state_change();
+
+    return {};
 }
 
-void UndoStack::redo()
+ErrorOr<void> UndoStack::redo()
 {
     if (!can_redo())
-        return;
+        return {};
 
-    auto& command = m_stack[m_stack_index++];
-    command.redo();
+    auto& command = m_stack[m_stack_index];
+    auto redo_or_error = command.redo();
+    if (redo_or_error.is_error())
+        return Error::from_string_view(MUST(String::formatted("Failed to redo: {}", redo_or_error.error())));
+
+    ++m_stack_index;
 
     if (on_state_change)
         on_state_change();
+
+    return {};
 }
 
 ErrorOr<void> UndoStack::try_push(NonnullOwnPtr<Command> command)

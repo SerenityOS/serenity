@@ -51,8 +51,8 @@ public:
     CellsUndoCommand(Cell&, DeprecatedString const&);
     CellsUndoCommand(Vector<CellChange>);
 
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
 
 private:
     Vector<CellChange> m_cell_changes;

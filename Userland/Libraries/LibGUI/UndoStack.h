@@ -25,8 +25,8 @@ public:
     bool can_undo() const;
     bool can_redo() const;
 
-    void undo();
-    void redo();
+    ErrorOr<void> undo();
+    ErrorOr<void> redo();
 
     void set_current_unmodified();
     bool is_current_modified() const;

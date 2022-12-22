@@ -438,14 +438,18 @@ MoveLineUpOrDownCommand::MoveLineUpOrDownCommand(TextDocument& document, KeyEven
 {
 }
 
-void MoveLineUpOrDownCommand::redo()
+ErrorOr<void> MoveLineUpOrDownCommand::redo()
 {
     move_lines(m_direction);
+
+    return {};
 }
 
-void MoveLineUpOrDownCommand::undo()
+ErrorOr<void> MoveLineUpOrDownCommand::undo()
 {
     move_lines(!m_direction);
+
+    return {};
 }
 
 bool MoveLineUpOrDownCommand::merge_with(GUI::Command const&)

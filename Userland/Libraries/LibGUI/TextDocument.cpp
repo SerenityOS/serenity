@@ -745,20 +745,28 @@ TextPosition TextDocument::first_word_before(TextPosition const& position, bool 
     return target;
 }
 
-void TextDocument::undo()
+ErrorOr<void> TextDocument::undo()
 {
     if (!can_undo())
-        return;
-    m_undo_stack.undo();
+        return {};
+
+    TRY(m_undo_stack.undo());
+
     notify_did_change();
+
+    return {};
 }
 
-void TextDocument::redo()
+ErrorOr<void> TextDocument::redo()
 {
     if (!can_redo())
-        return;
-    m_undo_stack.redo();
+        return {};
+
+    TRY(m_undo_stack.redo());
+
     notify_did_change();
+
+    return {};
 }
 
 void TextDocument::add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand> undo_command)
@@ -857,19 +865,23 @@ void InsertTextCommand::perform_formatting(TextDocument::Client const& client)
     m_text = builder.build();
 }
 
-void InsertTextCommand::redo()
+ErrorOr<void> InsertTextCommand::redo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
     // NOTE: We don't know where the range ends until after doing redo().
     //       This is okay since we always do redo() after adding this to the undo stack.
     m_range.set_end(new_cursor);
     m_document.set_all_cursors(new_cursor);
+
+    return {};
 }
 
-void InsertTextCommand::undo()
+ErrorOr<void> InsertTextCommand::undo()
 {
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
 RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString const& text, TextRange const& range)
@@ -907,16 +919,20 @@ bool RemoveTextCommand::merge_with(GUI::Command const& other)
     return true;
 }
 
-void RemoveTextCommand::redo()
+ErrorOr<void> RemoveTextCommand::redo()
 {
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
-void RemoveTextCommand::undo()
+ErrorOr<void> RemoveTextCommand::undo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
     m_document.set_all_cursors(new_cursor);
+
+    return {};
 }
 
 InsertLineCommand::InsertLineCommand(TextDocument& document, TextPosition cursor, DeprecatedString&& text, InsertPosition pos)
@@ -927,18 +943,22 @@ InsertLineCommand::InsertLineCommand(TextDocument& document, TextPosition cursor
 {
 }
 
-void InsertLineCommand::redo()
+ErrorOr<void> InsertLineCommand::redo()
 {
     size_t line_number = compute_line_number();
     m_document.insert_line(line_number, make<TextDocumentLine>(m_document, m_text));
     m_document.set_all_cursors(TextPosition { line_number, m_document.line(line_number).length() });
+
+    return {};
 }
 
-void InsertLineCommand::undo()
+ErrorOr<void> InsertLineCommand::undo()
 {
     size_t line_number = compute_line_number();
     m_document.remove_line(line_number);
     m_document.set_all_cursors(m_cursor);
+
+    return {};
 }
 
 size_t InsertLineCommand::compute_line_number() const
@@ -976,22 +996,26 @@ ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, Deprec
 {
 }
 
-void ReplaceAllTextCommand::redo()
+ErrorOr<void> ReplaceAllTextCommand::redo()
 {
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
     auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
     m_range.set_end(new_cursor);
     m_document.set_all_cursors(new_cursor);
+
+    return {};
 }
 
-void ReplaceAllTextCommand::undo()
+ErrorOr<void> ReplaceAllTextCommand::undo()
 {
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
     m_range.set_end(new_cursor);
     m_document.set_all_cursors(new_cursor);
+
+    return {};
 }
 
 bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
@@ -1011,7 +1035,7 @@ IndentSelection::IndentSelection(TextDocument& document, size_t tab_width, TextR
 {
 }
 
-void IndentSelection::redo()
+ErrorOr<void> IndentSelection::redo()
 {
     auto const tab = DeprecatedString::repeated(' ', m_tab_width);
 
@@ -1020,15 +1044,19 @@ void IndentSelection::redo()
     }
 
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
-void IndentSelection::undo()
+ErrorOr<void> IndentSelection::undo()
 {
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         m_document.remove({ { i, 0 }, { i, m_tab_width } });
     }
 
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
 UnindentSelection::UnindentSelection(TextDocument& document, size_t tab_width, TextRange const& range)
@@ -1038,7 +1066,7 @@ UnindentSelection::UnindentSelection(TextDocument& document, size_t tab_width, T
 {
 }
 
-void UnindentSelection::redo()
+ErrorOr<void> UnindentSelection::redo()
 {
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         if (m_document.line(i).leading_spaces() >= m_tab_width)
@@ -1048,9 +1076,11 @@ void UnindentSelection::redo()
     }
 
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
-void UnindentSelection::undo()
+ErrorOr<void> UnindentSelection::undo()
 {
     auto const tab = DeprecatedString::repeated(' ', m_tab_width);
 
@@ -1058,6 +1088,8 @@ void UnindentSelection::undo()
         m_document.insert_at({ i, 0 }, tab, m_client);
 
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
 CommentSelection::CommentSelection(TextDocument& document, StringView prefix, StringView suffix, TextRange const& range)
@@ -1068,7 +1100,7 @@ CommentSelection::CommentSelection(TextDocument& document, StringView prefix, St
 {
 }
 
-void CommentSelection::undo()
+ErrorOr<void> CommentSelection::undo()
 {
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         if (m_document.line(i).is_empty())
@@ -1081,9 +1113,11 @@ void CommentSelection::undo()
             m_document.line(i).last_non_whitespace_column().value_or(line.length()) - prefix_start - m_prefix.length() - m_suffix.length());
     }
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
-void CommentSelection::redo()
+ErrorOr<void> CommentSelection::redo()
 {
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         if (m_document.line(i).is_empty())
@@ -1094,6 +1128,8 @@ void CommentSelection::redo()
         }
     }
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
 UncommentSelection::UncommentSelection(TextDocument& document, StringView prefix, StringView suffix, TextRange const& range)
@@ -1104,7 +1140,7 @@ UncommentSelection::UncommentSelection(TextDocument& document, StringView prefix
 {
 }
 
-void UncommentSelection::undo()
+ErrorOr<void> UncommentSelection::undo()
 {
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         if (m_document.line(i).is_empty())
@@ -1115,9 +1151,11 @@ void UncommentSelection::undo()
         }
     }
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
-void UncommentSelection::redo()
+ErrorOr<void> UncommentSelection::redo()
 {
     for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
         if (m_document.line(i).is_empty())
@@ -1130,6 +1168,8 @@ void UncommentSelection::redo()
             m_document.line(i).last_non_whitespace_column().value_or(line.length()) - prefix_start - m_prefix.length() - m_suffix.length());
     }
     m_document.set_all_cursors(m_range.start());
+
+    return {};
 }
 
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)

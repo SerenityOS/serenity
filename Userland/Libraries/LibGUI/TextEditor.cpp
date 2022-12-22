@@ -9,6 +9,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/File.h>
@@ -21,6 +22,7 @@
 #include <LibGUI/IncrementalSearchBanner.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Scrollbar.h>
@@ -2299,13 +2301,21 @@ void TextEditor::set_cursor_line_highlighting(bool highlighted)
 void TextEditor::undo()
 {
     clear_selection();
-    document().undo();
+    auto document_undo_or_error = document().undo();
+    if (document_undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", document_undo_or_error.error())));
+        return;
+    }
 }
 
 void TextEditor::redo()
 {
     clear_selection();
-    document().redo();
+    auto document_redo_or_error = document().redo();
+    if (document_redo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", document_redo_or_error.error())));
+        return;
+    }
 }
 
 void TextEditor::set_text_is_secret(bool text_is_secret)

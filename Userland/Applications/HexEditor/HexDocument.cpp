@@ -181,16 +181,20 @@ HexDocumentUndoCommand::HexDocumentUndoCommand(WeakPtr<HexDocument> document, si
 {
 }
 
-void HexDocumentUndoCommand::undo()
+ErrorOr<void> HexDocumentUndoCommand::undo()
 {
     for (size_t i = 0; i < m_old.size(); i++)
         m_document->set(m_position + i, m_old[i]);
+
+    return {};
 }
 
-void HexDocumentUndoCommand::redo()
+ErrorOr<void> HexDocumentUndoCommand::redo()
 {
     for (size_t i = 0; i < m_new.size(); i++)
         m_document->set(m_position + i, m_new[i]);
+
+    return {};
 }
 
 bool HexDocumentUndoCommand::merge_with(GUI::Command const& other)

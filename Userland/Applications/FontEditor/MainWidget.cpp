@@ -9,6 +9,7 @@
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/Array.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
@@ -816,7 +817,11 @@ void MainWidget::undo()
 {
     if (!m_undo_stack->can_undo())
         return;
-    m_undo_stack->undo();
+    auto undo_or_error = m_undo_stack->undo();
+    if (undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", undo_or_error.error())));
+        return;
+    }
 
     auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
@@ -846,7 +851,11 @@ void MainWidget::redo()
 {
     if (!m_undo_stack->can_redo())
         return;
-    m_undo_stack->redo();
+    auto redo_or_error = m_undo_stack->redo();
+    if (redo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", redo_or_error.error())));
+        return;
+    }
 
     auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);

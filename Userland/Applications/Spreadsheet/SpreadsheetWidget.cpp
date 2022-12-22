@@ -8,6 +8,7 @@
 #include "CellSyntaxHighlighter.h"
 #include "HelpWindow.h"
 #include "LibFileSystemAccessClient/Client.h"
+#include <AK/String.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -465,7 +466,12 @@ void SpreadsheetWidget::undo()
     if (!m_undo_stack.can_undo())
         return;
 
-    m_undo_stack.undo();
+    auto undo_or_error = m_undo_stack.undo();
+    if (undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", undo_or_error.error())));
+        return;
+    }
+
     update();
 }
 
@@ -474,7 +480,12 @@ void SpreadsheetWidget::redo()
     if (!m_undo_stack.can_redo())
         return;
 
-    m_undo_stack.redo();
+    auto redo_or_error = m_undo_stack.redo();
+    if (redo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", redo_or_error.error())));
+        return;
+    }
+
     update();
 }
 

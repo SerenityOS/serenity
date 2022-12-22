@@ -13,6 +13,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
@@ -880,7 +881,12 @@ bool HexEditor::undo()
     if (!m_undo_stack.can_undo())
         return false;
 
-    m_undo_stack.undo();
+    auto undo_or_error = m_undo_stack.undo();
+    if (undo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while undoing: {}", undo_or_error.error())));
+        return false;
+    }
+
     reset_cursor_blink_state();
     update();
     update_status();
@@ -893,7 +899,12 @@ bool HexEditor::redo()
     if (!m_undo_stack.can_redo())
         return false;
 
-    m_undo_stack.redo();
+    auto redo_or_error = m_undo_stack.redo();
+    if (redo_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Error while redoing: {}", redo_or_error.error())));
+        return false;
+    }
+
     reset_cursor_blink_state();
     update();
     update_status();

@@ -118,8 +118,8 @@ public:
 
     bool can_undo() const { return m_undo_stack.can_undo(); }
     bool can_redo() const { return m_undo_stack.can_redo(); }
-    void undo();
-    void redo();
+    ErrorOr<void> undo();
+    ErrorOr<void> redo();
 
     UndoStack const& undo_stack() const { return m_undo_stack; }
 
@@ -199,11 +199,13 @@ public:
     virtual ~TextDocumentUndoCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) { }
 
-    void execute_from(TextDocument::Client const& client)
+    ErrorOr<void> execute_from(TextDocument::Client const& client)
     {
         m_client = &client;
-        redo();
+        TRY(redo());
         m_client = nullptr;
+
+        return {};
     }
 
 protected:
@@ -219,8 +221,8 @@ public:
     InsertTextCommand(TextDocument&, DeprecatedString const&, TextPosition const&);
     virtual ~InsertTextCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) override;
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     virtual bool merge_with(GUI::Command const&) override;
     virtual DeprecatedString action_text() const override;
     DeprecatedString const& text() const { return m_text; }
@@ -235,8 +237,8 @@ class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
     RemoveTextCommand(TextDocument&, DeprecatedString const&, TextRange const&);
     virtual ~RemoveTextCommand() = default;
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     TextRange const& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
     virtual DeprecatedString action_text() const override;
@@ -255,8 +257,8 @@ public:
 
     InsertLineCommand(TextDocument&, TextPosition, DeprecatedString&&, InsertPosition);
     virtual ~InsertLineCommand() = default;
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     virtual DeprecatedString action_text() const override;
 
 private:
@@ -272,8 +274,8 @@ class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 public:
     ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text);
     virtual ~ReplaceAllTextCommand() = default;
-    void redo() override;
-    void undo() override;
+    ErrorOr<void> redo() override;
+    ErrorOr<void> undo() override;
     bool merge_with(GUI::Command const&) override;
     DeprecatedString action_text() const override;
     DeprecatedString const& text() const { return m_text; }
@@ -288,8 +290,8 @@ private:
 class IndentSelection : public TextDocumentUndoCommand {
 public:
     IndentSelection(TextDocument&, size_t tab_width, TextRange const&);
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     TextRange const& range() const { return m_range; }
 
 private:
@@ -300,8 +302,8 @@ private:
 class UnindentSelection : public TextDocumentUndoCommand {
 public:
     UnindentSelection(TextDocument&, size_t tab_width, TextRange const&);
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     TextRange const& range() const { return m_range; }
 
 private:
@@ -312,8 +314,8 @@ private:
 class CommentSelection : public TextDocumentUndoCommand {
 public:
     CommentSelection(TextDocument&, StringView, StringView, TextRange const&);
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     TextRange const& range() const { return m_range; }
 
 private:
@@ -325,8 +327,8 @@ private:
 class UncommentSelection : public TextDocumentUndoCommand {
 public:
     UncommentSelection(TextDocument&, StringView, StringView, TextRange const&);
-    virtual void undo() override;
-    virtual void redo() override;
+    virtual ErrorOr<void> undo() override;
+    virtual ErrorOr<void> redo() override;
     TextRange const& range() const { return m_range; }
 
 private:

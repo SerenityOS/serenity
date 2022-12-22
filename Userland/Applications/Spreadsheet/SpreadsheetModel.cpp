@@ -207,18 +207,22 @@ CellsUndoCommand::CellsUndoCommand(Cell& cell, DeprecatedString const& previous_
     m_cell_changes.append(CellChange(cell, previous_data));
 }
 
-void CellsUndoCommand::undo()
+ErrorOr<void> CellsUndoCommand::undo()
 {
     for (size_t i = 0; i < m_cell_changes.size(); ++i) {
         m_cell_changes[i].cell().set_data(m_cell_changes[i].previous_data());
     }
+
+    return {};
 }
 
-void CellsUndoCommand::redo()
+ErrorOr<void> CellsUndoCommand::redo()
 {
     for (size_t i = 0; i < m_cell_changes.size(); ++i) {
         m_cell_changes[i].cell().set_data(m_cell_changes[i].new_data());
     }
+
+    return {};
 }
 
 }

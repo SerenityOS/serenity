@@ -362,7 +362,7 @@ private:
         auto command = make<T>(*m_document, forward<Args>(args)...);
         command->perform_formatting(*this);
         will_execute(*command);
-        command->execute_from(*this);
+        command->execute_from(*this).release_value_but_fixme_should_propagate_errors();
         m_document->add_to_undo_stack(move(command));
     }
 
