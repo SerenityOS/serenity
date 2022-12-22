@@ -20,16 +20,16 @@
 static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 {
     if (zip_member.is_directory) {
-        if (mkdir(zip_member.name.characters(), 0755) < 0) {
-            perror("mkdir");
+        if (auto maybe_error = Core::System::mkdir(zip_member.name, 0755); maybe_error.is_error()) {
+            warnln("Failed to create directory '{}': {}", zip_member.name, maybe_error.error());
             return false;
         }
         if (!quiet)
             outln(" extracting: {}", zip_member.name);
         return true;
     }
-    MUST(Core::Directory::create(LexicalPath(zip_member.name).parent(), Core::Directory::CreateDirectories::Yes));
-    auto new_file = Core::File::construct(zip_member.name);
+    MUST(Core::Directory::create(LexicalPath(zip_member.name.to_deprecated_string()).parent(), Core::Directory::CreateDirectories::Yes));
+    auto new_file = Core::File::construct(zip_member.name.to_deprecated_string());
     if (!new_file->open(Core::OpenMode::WriteOnly)) {
         warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
         return false;
@@ -123,14 +123,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::chdir(output_directory_path));
     }
 
-    auto success = zip_file->for_each_member([&](auto zip_member) {
+    auto success = TRY(zip_file->for_each_member([&](auto zip_member) {
         bool keep_file = false;
 
         if (!file_filters.is_empty()) {
             for (auto& filter : file_filters) {
                 // Convert underscore wildcards (usual unzip convention) to question marks (as used by StringUtils)
                 auto string_filter = filter.replace("_"sv, "?"sv, ReplaceMode::All);
-                if (zip_member.name.matches(string_filter, CaseSensitivity::CaseSensitive)) {
+                if (zip_member.name.bytes_as_string_view().matches(string_filter, CaseSensitivity::CaseSensitive)) {
                     keep_file = true;
                     break;
                 }
@@ -145,7 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         return IterationDecision::Continue;
-    });
+    }));
 
     return success ? 0 : 1;
 }
