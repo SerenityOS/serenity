@@ -14,6 +14,7 @@
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
@@ -28,6 +29,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Scheduler.h>
 
 extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame);
 extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
@@ -92,6 +94,36 @@ ALWAYS_INLINE static Processor& bootstrap_processor()
 
 Atomic<Graphics::Console*> g_boot_console;
 
+static void init_stage2(void*);
+void init_stage2(void*)
+{
+    Process::register_new(Process::current());
+
+    // This thread is created to show that kernel scheduling is working!
+    LockRefPtr<Thread> more_work_thread;
+    (void)Process::create_kernel_process(more_work_thread, MUST(KString::try_create("More Work Thread"sv)), [] {
+        dmesgln("Enter loop (more work):");
+        for (int i = 0; i < 500; i++) {
+            if (i % 20 == 0)
+                dmesgln("    Hello from more_work: {}", i);
+
+            Aarch64::Asm::wait_cycles(1000000);
+        }
+        dmesgln("Finished the work!");
+    });
+
+    auto firmware_version = query_firmware_version();
+    dmesgln("Firmware version: {}", firmware_version);
+
+    dmesgln("Enter loop");
+    for (int i = 0;; i++) {
+        if (i % 20 == 0)
+            dmesgln("Hello from init_stage2: {}", i);
+
+        Aarch64::Asm::wait_cycles(1000000);
+    }
+}
+
 extern "C" [[noreturn]] void init()
 {
     g_in_early_boot = true;
@@ -154,27 +186,27 @@ extern "C" [[noreturn]] void init()
     InterruptManagement::initialize();
     Processor::enable_interrupts();
 
+    // Note: We have to disable interrupts otherwise Scheduler::timer_tick might be called before the scheduler is started.
+    Processor::disable_interrupts();
     TimeManagement::initialize(0);
 
     ProcFSComponentRegistry::initialize();
     JailManagement::the();
 
-    auto firmware_version = query_firmware_version();
-    dmesgln("Firmware version: {}", firmware_version);
+    Process::initialize();
+    Scheduler::initialize();
 
-    dmesgln("Enter loop");
-
-    // This will not disable interrupts, so the timer will still fire and show that
-    // interrupts are working!
-    for (u32 i = 0;; i++) {
-        asm volatile("wfi");
-
-        // NOTE: This shows that dmesgln now outputs the time since boot!
-        if (i % 250 == 0)
-            dmesgln("Timer fired!");
+    {
+        LockRefPtr<Thread> init_stage2_thread;
+        (void)Process::create_kernel_process(init_stage2_thread, KString::must_create("init_stage2"sv), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No);
+        // We need to make sure we drop the reference for init_stage2_thread
+        // before calling into Scheduler::start, otherwise we will have a
+        // dangling Thread that never gets cleaned up
     }
 
-    TODO_AARCH64();
+    Scheduler::start();
+
+    VERIFY_NOT_REACHED();
 }
 
 class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
