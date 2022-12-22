@@ -8,8 +8,11 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Vector.h>
+#include <Kernel/API/VirGL.h>
 #include <LibCore/File.h>
 #include <LibGPU/Device.h>
+#include <LibVirtGPU/VirGLProtocol.h>
 
 namespace VirtGPU {
 
@@ -18,6 +21,9 @@ public:
     Device(NonnullRefPtr<Core::File>);
 
     static ErrorOr<NonnullOwnPtr<Device>> create(Gfx::IntSize min_size);
+
+    // FIXME: Once the kernel driver supports destroying contexts we need to add this functionality here
+    ErrorOr<void> initialize_context(Gfx::IntSize min_size);
 
     virtual GPU::DeviceInfo info() const override;
 
@@ -55,7 +61,33 @@ public:
     virtual void bind_fragment_shader(RefPtr<GPU::Shader>) override;
 
 private:
+    Protocol::ObjectHandle allocate_handle();
+    ErrorOr<Protocol::ResourceID> create_virgl_resource(VirGL3DResourceSpec&);
+    ErrorOr<void> upload_command_buffer(Vector<u32> const&);
+
     NonnullRefPtr<Core::File> m_gpu_file;
+
+    Protocol::ResourceID m_vbo_resource_id { 0 };
+    Protocol::ResourceID m_drawtarget { 0 };
+    Protocol::ResourceID m_depthbuffer_surface { 0 };
+    Protocol::ObjectHandle m_blend_handle { 0 };
+    Protocol::ObjectHandle m_drawtarget_surface_handle { 0 };
+    Protocol::ObjectHandle m_depthbuffer_surface_handle { 0 };
+    Protocol::ObjectHandle m_ve_handle { 0 };
+    Protocol::ObjectHandle m_frag_shader_handle { 0 };
+    Protocol::ObjectHandle m_vert_shader_handle { 0 };
+    Protocol::ObjectHandle m_rasterizer_handle { 0 };
+    Protocol::ObjectHandle m_dsa_handle { 0 };
+    u32 m_last_allocated_handle { 0 };
+
+    struct VertexData {
+        float r;
+        float g;
+        float b;
+        float x;
+        float y;
+        float z;
+    };
 };
 
 }
