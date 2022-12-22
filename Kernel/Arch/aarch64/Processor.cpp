@@ -11,6 +11,7 @@
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -60,7 +61,13 @@ void Processor::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, si
 
 u32 Processor::clear_critical()
 {
-    TODO_AARCH64();
+    InterruptDisabler disabler;
+    auto prev_critical = in_critical();
+    auto& proc = current();
+    proc.m_in_critical = 0;
+    if (proc.m_in_irq == 0)
+        proc.check_invoke_scheduler();
+    return prev_critical;
 }
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)

@@ -192,8 +192,7 @@ public:
 
     ALWAYS_INLINE static void restore_critical(u32 prev_critical)
     {
-        (void)prev_critical;
-        TODO_AARCH64();
+        current().m_in_critical = prev_critical;
     }
 
     ALWAYS_INLINE static u32 in_critical()
