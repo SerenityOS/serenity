@@ -94,7 +94,7 @@ public:
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        return false;
+        return g_current_processor != nullptr;
     }
 
     static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
