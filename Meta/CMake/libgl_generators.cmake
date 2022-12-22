@@ -10,5 +10,5 @@ function (generate_libgl_implementation)
         arguments -j "${LIBGL_INPUT_FOLDER}/GLAPI.json"
     )
 
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/GL/glapi.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibGL/GL/")
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/GL/glapi.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibGL/GL/" OPTIONAL)
 endfunction()
