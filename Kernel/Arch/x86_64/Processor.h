@@ -150,6 +150,11 @@ public:
         s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
     }
 
+    void wait_for_interrupt() const
+    {
+        asm("hlt");
+    }
+
     static Processor& by_id(u32);
 
     static u32 count()
