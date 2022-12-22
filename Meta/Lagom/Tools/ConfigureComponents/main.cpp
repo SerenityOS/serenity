@@ -348,8 +348,8 @@ int main()
         cmake_arguments.append(DeprecatedString::formatted("-DBUILD_{}={}", component.name.to_uppercase(), component.is_selected ? "ON" : "OFF"));
 
     warnln("\e[34mThe following command will be run:\e[0m");
-    outln("{} \\", DeprecatedString::join(' ', cmake_arguments));
-    outln("  && ninja clean\n  && rm -rf Root");
+    outln("ninja clean \\\n  && rm -rf Root \\");
+    outln("  && {}", DeprecatedString::join(' ', cmake_arguments));
     warn("\e[34mDo you want to run the command?\e[0m [Y/n] ");
     auto character = getchar();
     if (character == 'n' || character == 'N') {
@@ -357,13 +357,13 @@ int main()
         return 0;
     }
 
-    // Step 6: Run CMake, 'ninja clean' and 'rm -rf Root'
+    // Step 6: Run 'ninja clean', 'rm -rf Root' and CMake
     auto command = DeprecatedString::join(' ', cmake_arguments);
-    if (!run_system_command(command, "CMake"sv))
-        return 1;
     if (!run_system_command("ninja clean"sv, "Ninja"sv))
         return 1;
     if (!run_system_command("rm -rf Root"sv, "rm"sv))
+        return 1;
+    if (!run_system_command(command, "CMake"sv))
         return 1;
     return 0;
 }
