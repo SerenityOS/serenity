@@ -8,8 +8,11 @@
 #include <AK/Vector.h>
 
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
+#include <Kernel/Thread.h>
+#include <Kernel/Time/TimeManagement.h>
 
 extern "C" uintptr_t vector_table_el1;
 
@@ -90,6 +93,72 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     (void)thread;
     (void)leave_crit;
     TODO_AARCH64();
+}
+
+void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
+{
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
+    // FIXME: Figure out if we need prev_irq_level, see duplicated code in Kernel/Arch/x86/common/Processor.cpp
+    if (raise_irq)
+        m_in_irq++;
+    auto* current_thread = Processor::current_thread();
+    if (current_thread) {
+        auto& current_trap = current_thread->current_trap();
+        trap.next_trap = current_trap;
+        current_trap = &trap;
+        // FIXME: Determine PreviousMode from TrapFrame when userspace programs can run on aarch64
+        auto new_previous_mode = Thread::PreviousMode::KernelMode;
+        if (current_thread->set_previous_mode(new_previous_mode)) {
+            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == Thread::PreviousMode::KernelMode, false);
+        }
+    } else {
+        trap.next_trap = nullptr;
+    }
+}
+
+void Processor::exit_trap(TrapFrame& trap)
+{
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
+
+    // Temporarily enter a critical section. This is to prevent critical
+    // sections entered and left within e.g. smp_process_pending_messages
+    // to trigger a context switch while we're executing this function
+    // See the comment at the end of the function why we don't use
+    // ScopedCritical here.
+    m_in_critical = m_in_critical + 1;
+
+    // FIXME: Figure out if we need prev_irq_level, see duplicated code in Kernel/Arch/x86/common/Processor.cpp
+    m_in_irq = 0;
+
+    auto* current_thread = Processor::current_thread();
+    if (current_thread) {
+        auto& current_trap = current_thread->current_trap();
+        current_trap = trap.next_trap;
+        Thread::PreviousMode new_previous_mode;
+        if (current_trap) {
+            VERIFY(current_trap->regs);
+            // FIXME: Determine PreviousMode from TrapFrame when userspace programs can run on aarch64
+            new_previous_mode = Thread::PreviousMode::KernelMode;
+        } else {
+            // If we don't have a higher level trap then we're back in user mode.
+            // Which means that the previous mode prior to being back in user mode was kernel mode
+            new_previous_mode = Thread::PreviousMode::KernelMode;
+        }
+
+        if (current_thread->set_previous_mode(new_previous_mode))
+            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), true, false);
+    }
+
+    VERIFY_INTERRUPTS_DISABLED();
+
+    // Leave the critical section without actually enabling interrupts.
+    // We don't want context switches to happen until we're explicitly
+    // triggering a switch in check_invoke_scheduler.
+    m_in_critical = m_in_critical - 1;
+    if (!m_in_irq && !m_in_critical)
+        check_invoke_scheduler();
 }
 
 ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)

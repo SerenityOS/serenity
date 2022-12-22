@@ -5,20 +5,21 @@
  */
 
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/InterruptManagement.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 
-struct TrapFrame;
-
 namespace Kernel {
 
 static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
 
-extern "C" void handle_interrupt(TrapFrame const* const);
-extern "C" void handle_interrupt(TrapFrame const* const)
+extern "C" void handle_interrupt(TrapFrame&);
+extern "C" void handle_interrupt(TrapFrame& trap_frame)
 {
+    Processor::current().enter_trap(trap_frame, true);
+
     for (auto& interrupt_controller : InterruptManagement::the().controllers()) {
         auto pending_interrupts = interrupt_controller->pending_interrupts();
 
@@ -31,20 +32,18 @@ extern "C" void handle_interrupt(TrapFrame const* const)
                 continue;
             }
 
-            // TODO: Consider not passing the RegisterState into the handle_interrupt()
-            //       function, since no IRQHandler seems to be using the registers.
-            RegisterState regs {};
-
             auto* handler = s_interrupt_handlers[irq];
             VERIFY(handler);
             handler->increment_call_count();
-            handler->handle_interrupt(regs);
+            handler->handle_interrupt(*trap_frame.regs);
             handler->eoi();
 
             irq += 1;
             pending_interrupts >>= 1;
         }
     }
+
+    Processor::current().exit_trap(trap_frame);
 }
 
 // FIXME: Share the code below with Arch/x86_64/Interrupts.cpp

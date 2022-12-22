@@ -24,6 +24,7 @@ class PageDirectory;
 
 class Thread;
 class Processor;
+class TrapFrame;
 
 // FIXME This needs to go behind some sort of platform abstraction
 //       it is used between Thread and Processor.
@@ -259,6 +260,9 @@ public:
     [[noreturn]] static void assume_context(Thread& thread, FlatPtr flags);
     FlatPtr init_context(Thread& thread, bool leave_crit);
     static ErrorOr<Vector<FlatPtr, 32>> capture_stack_trace(Thread& thread, size_t max_frames = 0);
+
+    void enter_trap(TrapFrame& trap, bool raise_irq);
+    void exit_trap(TrapFrame& trap);
 
 private:
     Thread* m_current_thread;
