@@ -88,8 +88,6 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->set_layout<GUI::VerticalBoxLayout>();
     widget->layout()->set_spacing(2);
 
-    widget->open_project(path_to_project);
-
     auto& toolbar_container = widget->add<GUI::ToolbarContainer>();
 
     auto& outer_splitter = widget->add<GUI::HorizontalSplitter>();
@@ -98,13 +96,16 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     left_hand_splitter.layout()->set_spacing(6);
     left_hand_splitter.set_preferred_width(150);
-    widget->create_project_tab(left_hand_splitter);
     widget->m_project_tree_view_context_menu = widget->create_project_tree_view_context_menu();
-
-    widget->create_open_files_view(left_hand_splitter);
 
     widget->m_right_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     widget->m_right_hand_stack = widget->m_right_hand_splitter->add<GUI::StackWidget>();
+
+    TRY(widget->create_action_tab(*widget->m_right_hand_splitter));
+
+    widget->open_project(path_to_project);
+    widget->create_project_tab(left_hand_splitter);
+    widget->create_open_files_view(left_hand_splitter);
 
     // Put a placeholder widget front & center since we don't have a file open yet.
     widget->m_right_hand_stack->add<GUI::Widget>();
@@ -125,8 +126,6 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->m_save_action = widget->create_save_action();
     widget->m_save_as_action = widget->create_save_as_action();
     widget->m_new_project_action = widget->create_new_project_action();
-
-    TRY(widget->create_action_tab(*widget->m_right_hand_splitter));
 
     widget->m_add_editor_tab_widget_action = widget->create_add_editor_tab_widget_action();
     widget->m_add_editor_action = widget->create_add_editor_action();
@@ -257,7 +256,7 @@ void HackStudioWidget::open_project(DeprecatedString const& root_path)
         m_project_tree_view->set_model(m_project->model());
         m_project_tree_view->update();
     }
-    if (m_git_widget && m_git_widget->initialized()) {
+    if (m_git_widget->initialized()) {
         m_git_widget->change_repo(root_path);
         m_git_widget->refresh();
     }
@@ -1327,7 +1326,7 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
     };
 
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
-    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", m_project->root_path());
+    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git");
     m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);

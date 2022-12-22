@@ -27,7 +27,7 @@ public:
     void change_repo(DeprecatedString const& repo_root);
 
 private:
-    explicit GitWidget(DeprecatedString const& repo_root);
+    explicit GitWidget();
 
     bool initialize();
     bool initialize_if_needed();
