@@ -260,7 +260,7 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
     } else {
         if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
             builder.append("/."sv);
-        for (auto& segment : m_paths) {
+        for (auto const& segment : m_paths) {
             builder.append('/');
             builder.append(percent_encode(segment, PercentEncodeSet::Path));
         }
