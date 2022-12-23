@@ -112,6 +112,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
+    virtual void reset_algorithm() override;
+
     virtual void form_associated_element_was_inserted() override;
 
     // ^HTMLElement
