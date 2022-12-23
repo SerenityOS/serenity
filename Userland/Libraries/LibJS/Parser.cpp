@@ -3573,7 +3573,38 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 
     RefPtr<ASTNode> init;
     if (!match(TokenType::Semicolon)) {
-        if (match_variable_declaration()) {
+
+        auto match_for_using_declaration = [&] {
+            if (!match(TokenType::Identifier) || m_state.current_token.original_value() != "using"sv)
+                return false;
+
+            auto lookahead = next_token();
+            if (lookahead.trivia_contains_line_terminator())
+                return false;
+
+            if (lookahead.original_value() == "of"sv)
+                return false;
+
+            return token_is_identifier(lookahead);
+        };
+
+        if (match_for_using_declaration()) {
+            auto declaration = parse_using_declaration(IsForLoopVariableDeclaration::Yes);
+
+            if (match_of(m_state.current_token)) {
+                if (declaration->declarations().size() != 1)
+                    syntax_error("Must have exactly one declaration in for using of");
+                else if (declaration->declarations().first().init())
+                    syntax_error("Using declaration cannot have initializer");
+
+                return parse_for_in_of_statement(move(declaration), is_await_loop);
+            }
+
+            if (match(TokenType::In))
+                syntax_error("Using declaration not allowed in for-in loop");
+
+            init = move(declaration);
+        } else if (match_variable_declaration()) {
             auto declaration = parse_variable_declaration(IsForLoopVariableDeclaration::Yes);
             if (declaration->declaration_kind() == DeclarationKind::Var) {
                 m_state.current_scope_pusher->add_declaration(declaration);
@@ -3586,15 +3617,22 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
                 });
             }
 
-            init = move(declaration);
-            if (match_for_in_of())
-                return parse_for_in_of_statement(*init, is_await_loop);
-            if (static_cast<VariableDeclaration&>(*init).declaration_kind() == DeclarationKind::Const) {
-                for (auto& variable : static_cast<VariableDeclaration&>(*init).declarations()) {
+            if (match_for_in_of()) {
+                if (declaration->declarations().size() > 1)
+                    syntax_error("Multiple declarations not allowed in for..in/of");
+                else if (declaration->declarations().size() < 1)
+                    syntax_error("Need exactly one variable declaration in for..in/of");
+
+                return parse_for_in_of_statement(move(declaration), is_await_loop);
+            }
+            if (declaration->declaration_kind() == DeclarationKind::Const) {
+                for (auto const& variable : declaration->declarations()) {
                     if (!variable.init())
                         syntax_error("Missing initializer in 'const' variable declaration");
                 }
             }
+
+            init = move(declaration);
         } else if (match_expression()) {
             auto lookahead_token = next_token();
             bool starts_with_async_of = match(TokenType::Async) && match_of(lookahead_token);
@@ -3641,11 +3679,8 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
 
     if (is<VariableDeclaration>(*lhs)) {
         auto& declaration = static_cast<VariableDeclaration&>(*lhs);
-        if (declaration.declarations().size() > 1) {
-            syntax_error("Multiple declarations not allowed in for..in/of");
-        } else if (declaration.declarations().size() < 1) {
-            syntax_error("Need exactly one variable declaration in for..in/of");
-        } else {
+        // Syntax errors for wrong amounts of declaration should have already been hit.
+        if (!declaration.declarations().is_empty()) {
             // AnnexB extension B.3.5 Initializers in ForIn Statement Heads, https://tc39.es/ecma262/#sec-initializers-in-forin-statement-heads
             auto& variable = declaration.declarations().first();
             if (variable.init()) {
@@ -3655,7 +3690,7 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
                     has_annexB_for_in_init_extension = true;
             }
         }
-    } else if (!lhs->is_identifier() && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
+    } else if (!lhs->is_identifier() && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs) && !is<UsingDeclaration>(*lhs)) {
         bool valid = false;
         if (is<ObjectExpression>(*lhs) || is<ArrayExpression>(*lhs)) {
             auto synthesized_binding_pattern = synthesize_binding_pattern(static_cast<Expression const&>(*lhs));
@@ -3915,21 +3950,26 @@ bool Parser::match_variable_declaration() const
 
 bool Parser::match_identifier() const
 {
-    if (m_state.current_token.type() == TokenType::EscapedKeyword) {
-        if (m_state.current_token.value() == "let"sv)
+    return token_is_identifier(m_state.current_token);
+}
+
+bool Parser::token_is_identifier(Token const& token) const
+{
+    if (token.type() == TokenType::EscapedKeyword) {
+        if (token.value() == "let"sv)
             return !m_state.strict_mode;
-        if (m_state.current_token.value() == "yield"sv)
+        if (token.value() == "yield"sv)
             return !m_state.strict_mode && !m_state.in_generator_function_context;
-        if (m_state.current_token.value() == "await"sv)
+        if (token.value() == "await"sv)
             return m_program_type != Program::Type::Module && !m_state.await_expression_is_valid && !m_state.in_class_static_init_block;
         return true;
     }
 
-    return m_state.current_token.type() == TokenType::Identifier
-        || m_state.current_token.type() == TokenType::Async
-        || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
-        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.await_expression_is_valid && !m_state.in_class_static_init_block)
-        || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
+    return token.type() == TokenType::Identifier
+        || token.type() == TokenType::Async
+        || (token.type() == TokenType::Let && !m_state.strict_mode)
+        || (token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.await_expression_is_valid && !m_state.in_class_static_init_block)
+        || (token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
 }
 
 bool Parser::match_identifier_name() const

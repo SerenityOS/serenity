@@ -227,6 +227,7 @@ private:
     bool try_match_using_declaration() const;
     bool match_variable_declaration() const;
     bool match_identifier() const;
+    bool token_is_identifier(Token const&) const;
     bool match_identifier_name() const;
     bool match_property_key() const;
     bool is_private_identifier_valid() const;

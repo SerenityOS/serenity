@@ -922,6 +922,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
 
 private:
+    Completion for_body_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&, size_t per_iteration_bindings_size) const;
+
     RefPtr<ASTNode> m_init;
     RefPtr<Expression> m_test;
     RefPtr<Expression> m_update;
@@ -1735,6 +1737,8 @@ public:
     virtual bool is_constant_declaration() const override { return true; };
 
     virtual bool is_lexical_declaration() const override { return true; }
+
+    NonnullRefPtrVector<VariableDeclarator> const& declarations() const { return m_declarations; }
 
 private:
     NonnullRefPtrVector<VariableDeclarator> m_declarations;
