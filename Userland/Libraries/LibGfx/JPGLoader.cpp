@@ -447,18 +447,20 @@ static inline bool is_valid_marker(const Marker marker)
     return false;
 }
 
-static inline u16 read_be_word(InputMemoryStream& stream)
+static inline ErrorOr<u16> read_be_word(InputMemoryStream& stream)
 {
     BigEndian<u16> tmp;
     stream >> tmp;
+    TRY(stream.try_handle_any_error());
     return tmp;
 }
 
 static inline Marker read_marker_at_cursor(InputMemoryStream& stream)
 {
-    u16 marker = read_be_word(stream);
-    if (stream.handle_any_error())
+    auto result = read_be_word(stream);
+    if (result.is_error())
         return JPG_INVALID;
+    u16 marker = result.release_value();
     if (is_valid_marker(marker))
         return marker;
     if (marker != 0xFFFF)
@@ -480,9 +482,7 @@ static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingCon
         return Error::from_string_literal("SOS found before reading a SOF");
     }
 
-    u16 bytes_to_read = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
-    bytes_to_read -= 2;
+    u16 bytes_to_read = TRY(read_be_word(stream)) - 2;
     TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
     u8 component_count = 0;
     stream >> component_count;
@@ -549,22 +549,18 @@ static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingCon
 
 static ErrorOr<void> read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& context)
 {
-    u16 bytes_to_read = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
-    bytes_to_read -= 2;
+    u16 bytes_to_read = TRY(read_be_word(stream)) - 2;
     if (bytes_to_read != 2) {
         dbgln_if(JPG_DEBUG, "{}: Malformed reset marker found!", stream.offset());
         return Error::from_string_literal("Malformed reset marker found");
     }
-    context.dc_reset_interval = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
+    context.dc_reset_interval = TRY(read_be_word(stream));
     return {};
 }
 
 static ErrorOr<void> read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
-    i32 bytes_to_read = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
+    i32 bytes_to_read = TRY(read_be_word(stream));
     TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
@@ -658,8 +654,7 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
         return Error::from_string_literal("SOF repeated");
     }
 
-    i32 bytes_to_read = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
+    i32 bytes_to_read = TRY(read_be_word(stream));
 
     bytes_to_read -= 2;
     TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
@@ -671,10 +666,8 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
         return Error::from_string_literal("SOF precision != 8");
     }
 
-    context.frame.height = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
-    context.frame.width = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
+    context.frame.height = TRY(read_be_word(stream));
+    context.frame.width = TRY(read_be_word(stream));
     if (!context.frame.width || !context.frame.height) {
         dbgln_if(JPG_DEBUG, "{}: ERROR! Image height: {}, Image width: {}!", stream.offset(), context.frame.height, context.frame.width);
         return Error::from_string_literal("Image frame height of width null");
@@ -747,9 +740,7 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
 
 static ErrorOr<void> read_quantization_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
-    i32 bytes_to_read = read_be_word(stream);
-    TRY(stream.try_handle_any_error());
-    bytes_to_read -= 2;
+    i32 bytes_to_read = TRY(read_be_word(stream)) - 2;
     TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
     while (bytes_to_read > 0) {
         u8 info_byte = 0;
@@ -773,8 +764,7 @@ static ErrorOr<void> read_quantization_table(InputMemoryStream& stream, JPGLoadi
                 TRY(stream.try_handle_any_error());
                 table[zigzag_map[i]] = tmp;
             } else {
-                table[zigzag_map[i]] = read_be_word(stream);
-                TRY(stream.try_handle_any_error());
+                table[zigzag_map[i]] = TRY(read_be_word(stream));
             }
         }
         TRY(stream.try_handle_any_error());
@@ -791,9 +781,7 @@ static ErrorOr<void> read_quantization_table(InputMemoryStream& stream, JPGLoadi
 
 static ErrorOr<void> skip_marker_with_length(InputMemoryStream& stream)
 {
-    u16 bytes_to_skip = read_be_word(stream);
-    bytes_to_skip -= 2;
-    TRY(stream.try_handle_any_error());
+    u16 bytes_to_skip = TRY(read_be_word(stream)) - 2;
     stream.discard_or_error(bytes_to_skip);
     TRY(stream.try_handle_any_error());
     return {};
