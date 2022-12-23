@@ -71,6 +71,7 @@ private:
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
+    RefPtr<GUI::Action> m_open_folder_action;
     RefPtr<GUI::Action> m_find_replace_action;
     RefPtr<GUI::Action> m_vim_emulation_setting_action;
 
