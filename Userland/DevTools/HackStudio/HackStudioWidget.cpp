@@ -685,12 +685,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
-                        DeprecatedString::formatted("Removing directory {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
+                        DeprecatedString::formatted("Removing directory {} from the project failed: {}", file, error),
                         "Removal failed"sv,
                         GUI::MessageBox::Type::Error);
                 } else {
                     GUI::MessageBox::show(window(),
-                        DeprecatedString::formatted("Removing file {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
+                        DeprecatedString::formatted("Removing file {} from the project failed: {}", file, error),
                         "Removal failed"sv,
                         GUI::MessageBox::Type::Error);
                 }

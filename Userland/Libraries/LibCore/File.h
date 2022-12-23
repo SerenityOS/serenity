@@ -93,15 +93,7 @@ public:
     static ErrorOr<DeprecatedString> read_link(DeprecatedString const& link_path);
     static ErrorOr<void> link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path);
 
-    struct RemoveError : public Error {
-        RemoveError(DeprecatedString f, int error_code)
-            : Error(error_code)
-            , file(move(f))
-        {
-        }
-        DeprecatedString file;
-    };
-    static ErrorOr<void, RemoveError> remove(DeprecatedString const& path, RecursionMode, bool force);
+    static ErrorOr<void> remove(DeprecatedString const& path, RecursionMode, bool force);
 
     virtual bool open(OpenMode) override;
 
