@@ -736,6 +736,28 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
     return value;
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:concept-form-reset-control
+void HTMLInputElement::reset_algorithm()
+{
+    // The reset algorithm for input elements is to set the dirty value flag and dirty checkedness flag back to false,
+    m_dirty_value = false;
+    m_dirty_checkedness = false;
+
+    // set the value of the element to the value of the value content attribute, if there is one, or the empty string otherwise,
+    m_value = has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : DeprecatedString::empty();
+
+    // set the checkedness of the element to true if the element has a checked content attribute and false if it does not,
+    m_checked = has_attribute(AttributeNames::checked);
+
+    // empty the list of selected files,
+    m_selected_files = FileAPI::FileList::create(realm(), {});
+
+    // and then invoke the value sanitization algorithm, if the type attribute's current state defines one.
+    m_value = value_sanitization_algorithm(m_value);
+    if (m_text_node)
+        m_text_node->set_data(m_value);
+}
+
 void HTMLInputElement::form_associated_element_was_inserted()
 {
     create_shadow_tree_if_needed();
