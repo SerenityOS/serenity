@@ -19,7 +19,7 @@ public:
     virtual ~Block() = default;
 
     virtual DeprecatedString render_to_html(bool tight = false) const = 0;
-    virtual DeprecatedString render_for_terminal(size_t view_width = 0) const = 0;
+    virtual Vector<DeprecatedString> render_lines_for_terminal(size_t view_width = 0) const = 0;
     virtual RecursionDecision walk(Visitor&) const = 0;
 };
 

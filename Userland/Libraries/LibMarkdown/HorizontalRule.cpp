@@ -17,13 +17,13 @@ DeprecatedString HorizontalRule::render_to_html(bool) const
     return "<hr />\n";
 }
 
-DeprecatedString HorizontalRule::render_for_terminal(size_t view_width) const
+Vector<DeprecatedString> HorizontalRule::render_lines_for_terminal(size_t view_width) const
 {
     StringBuilder builder(view_width + 1);
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
     builder.append("\n\n"sv);
-    return builder.to_deprecated_string();
+    return Vector<DeprecatedString> { builder.to_deprecated_string() };
 }
 
 RecursionDecision HorizontalRule::walk(Visitor& visitor) const

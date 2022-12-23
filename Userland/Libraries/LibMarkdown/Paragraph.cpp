@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Forward.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Paragraph.h>
 #include <LibMarkdown/Visitor.h>
@@ -27,13 +28,9 @@ DeprecatedString Paragraph::render_to_html(bool tight) const
     return builder.build();
 }
 
-DeprecatedString Paragraph::render_for_terminal(size_t) const
+Vector<DeprecatedString> Paragraph::render_lines_for_terminal(size_t) const
 {
-    StringBuilder builder;
-    builder.append("  "sv);
-    builder.append(m_text.render_for_terminal());
-    builder.append("\n\n"sv);
-    return builder.build();
+    return Vector<DeprecatedString> { DeprecatedString::formatted("  {}", m_text.render_for_terminal()), "" };
 }
 
 RecursionDecision Paragraph::walk(Visitor& visitor) const

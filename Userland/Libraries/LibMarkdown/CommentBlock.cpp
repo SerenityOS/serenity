@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Forward.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/CommentBlock.h>
 #include <LibMarkdown/Visitor.h>
@@ -22,9 +23,9 @@ DeprecatedString CommentBlock::render_to_html(bool) const
     return builder.build();
 }
 
-DeprecatedString CommentBlock::render_for_terminal(size_t) const
+Vector<DeprecatedString> CommentBlock::render_lines_for_terminal(size_t) const
 {
-    return "";
+    return Vector<DeprecatedString> {};
 }
 
 RecursionDecision CommentBlock::walk(Visitor& visitor) const

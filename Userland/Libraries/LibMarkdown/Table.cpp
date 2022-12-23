@@ -6,15 +6,17 @@
 
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibMarkdown/Table.h>
 #include <LibMarkdown/Visitor.h>
 
 namespace Markdown {
 
-DeprecatedString Table::render_for_terminal(size_t view_width) const
+Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) const
 {
     auto unit_width_length = view_width == 0 ? 4 : ((float)(view_width - m_columns.size()) / (float)m_total_width);
     StringBuilder builder;
+    Vector<DeprecatedString> lines;
 
     auto write_aligned = [&](auto const& text, auto width, auto alignment) {
         size_t original_length = text.terminal_length();
@@ -42,10 +44,13 @@ DeprecatedString Table::render_for_terminal(size_t view_width) const
         write_aligned(col.header, width, col.alignment);
     }
 
-    builder.append('\n');
+    lines.append(builder.build());
+    builder.clear();
+
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
-    builder.append('\n');
+    lines.append(builder.build());
+    builder.clear();
 
     for (size_t i = 0; i < m_row_count; ++i) {
         bool first = true;
@@ -60,12 +65,13 @@ DeprecatedString Table::render_for_terminal(size_t view_width) const
             size_t width = col.relative_width * unit_width_length;
             write_aligned(cell, width, col.alignment);
         }
-        builder.append('\n');
+        lines.append(builder.build());
+        builder.clear();
     }
 
-    builder.append('\n');
+    lines.append("");
 
-    return builder.to_deprecated_string();
+    return lines;
 }
 
 DeprecatedString Table::render_to_html(bool) const

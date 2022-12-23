@@ -15,7 +15,7 @@ DeprecatedString Heading::render_to_html(bool) const
     return DeprecatedString::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
 }
 
-DeprecatedString Heading::render_for_terminal(size_t) const
+Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
 {
     StringBuilder builder;
 
@@ -24,15 +24,15 @@ DeprecatedString Heading::render_for_terminal(size_t) const
     case 1:
     case 2:
         builder.append(m_text.render_for_terminal().to_uppercase());
-        builder.append("\033[0m\n"sv);
+        builder.append("\033[0m"sv);
         break;
     default:
         builder.append(m_text.render_for_terminal());
-        builder.append("\033[0m\n"sv);
+        builder.append("\033[0m"sv);
         break;
     }
 
-    return builder.build();
+    return Vector<DeprecatedString> { builder.build() };
 }
 
 RecursionDecision Heading::walk(Visitor& visitor) const
