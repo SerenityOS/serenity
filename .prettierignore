@@ -6,3 +6,4 @@ Userland/Libraries/LibJS/Tests/modules/failing.mjs
 # FIXME: Remove once prettier is updated to support using declarations.
 Userland/Libraries/LibJS/Tests/modules/top-level-dispose.mjs
 Userland/Libraries/LibJS/Tests/using-declaration.js
+Userland/Libraries/LibJS/Tests/using-for-loops.js

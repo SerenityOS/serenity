@@ -764,39 +764,66 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<Deprec
 
     // Note we don't always set a new environment but to use RAII we must do this here.
     auto* old_environment = interpreter.lexical_environment();
-    ScopeGuard restore_old_environment = [&] {
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
-    };
 
     size_t per_iteration_bindings_size = 0;
+    GCPtr<DeclarativeEnvironment> loop_env;
 
     if (m_init) {
-        if (is<VariableDeclaration>(*m_init) && static_cast<VariableDeclaration const&>(*m_init).declaration_kind() != DeclarationKind::Var) {
-            auto loop_environment = new_declarative_environment(*old_environment);
-            auto& declaration = static_cast<VariableDeclaration const&>(*m_init);
-            declaration.for_each_bound_name([&](auto const& name) {
-                if (declaration.declaration_kind() == DeclarationKind::Const) {
-                    MUST(loop_environment->create_immutable_binding(vm, name, true));
+        Declaration const* declaration = nullptr;
+
+        if (is<VariableDeclaration>(*m_init) && static_cast<VariableDeclaration const&>(*m_init).declaration_kind() != DeclarationKind::Var)
+            declaration = static_cast<VariableDeclaration const*>(m_init.ptr());
+        else if (is<UsingDeclaration>(*m_init))
+            declaration = static_cast<UsingDeclaration const*>(m_init.ptr());
+
+        if (declaration) {
+            loop_env = new_declarative_environment(*old_environment);
+            auto is_const = declaration->is_constant_declaration();
+            declaration->for_each_bound_name([&](auto const& name) {
+                if (is_const) {
+                    MUST(loop_env->create_immutable_binding(vm, name, true));
                 } else {
-                    MUST(loop_environment->create_mutable_binding(vm, name, false));
+                    MUST(loop_env->create_mutable_binding(vm, name, false));
                     ++per_iteration_bindings_size;
                 }
             });
 
-            interpreter.vm().running_execution_context().lexical_environment = loop_environment;
+            interpreter.vm().running_execution_context().lexical_environment = loop_env;
         }
 
         (void)TRY(m_init->execute(interpreter));
     }
 
+    // 10. Let bodyResult be Completion(ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet)).
+    auto body_result = for_body_evaluation(interpreter, label_set, per_iteration_bindings_size);
+
+    // 11. Set bodyResult to DisposeResources(loopEnv, bodyResult).
+    if (loop_env)
+        body_result = dispose_resources(vm, loop_env.ptr(), body_result);
+
+    // 12. Set the running execution context's LexicalEnvironment to oldEnv.
+    interpreter.vm().running_execution_context().lexical_environment = old_environment;
+
+    // 13. Return ? bodyResult.
+    return body_result;
+}
+
+// 14.7.4.3 ForBodyEvaluation ( test, increment, stmt, perIterationBindings, labelSet ), https://tc39.es/ecma262/#sec-forbodyevaluation
+// 6.3.1.2 ForBodyEvaluation ( test, increment, stmt, perIterationBindings, labelSet ), https://tc39.es/proposal-explicit-resource-management/#sec-forbodyevaluation
+Completion ForStatement::for_body_evaluation(JS::Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set, size_t per_iteration_bindings_size) const
+{
+    auto& vm = interpreter.vm();
+
     // 14.7.4.4 CreatePerIterationEnvironment ( perIterationBindings ), https://tc39.es/ecma262/#sec-createperiterationenvironment
     // NOTE: Our implementation of this AO is heavily dependent on DeclarativeEnvironment using a Vector with constant indices.
     //       For performance, we can take advantage of the fact that the declarations of the initialization statement are created
     //       in the same order each time CreatePerIterationEnvironment is invoked.
-    auto create_per_iteration_environment = [&]() {
+    auto create_per_iteration_environment = [&]() -> GCPtr<DeclarativeEnvironment> {
         // 1. If perIterationBindings has any elements, then
-        if (per_iteration_bindings_size == 0)
-            return;
+        if (per_iteration_bindings_size == 0) {
+            // 2. Return unused.
+            return nullptr;
+        }
 
         // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
         auto* last_iteration_env = verify_cast<DeclarativeEnvironment>(interpreter.lexical_environment());
@@ -820,49 +847,66 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<Deprec
         // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
         interpreter.vm().running_execution_context().lexical_environment = this_iteration_env;
 
-        // 2. Return unused.
+        // g. Return thisIterationEnv.
+        return this_iteration_env;
     };
-
-    // 14.7.4.3 ForBodyEvaluation ( test, increment, stmt, perIterationBindings, labelSet ), https://tc39.es/ecma262/#sec-forbodyevaluation
 
     // 1. Let V be undefined.
     auto last_value = js_undefined();
 
-    // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-    create_per_iteration_environment();
+    // 2. Let thisIterationEnv be ? CreatePerIterationEnvironment(perIterationBindings).
+    auto this_iteration_env = create_per_iteration_environment();
 
     // 3. Repeat,
     while (true) {
         // a. If test is not [empty], then
         if (m_test) {
             // i. Let testRef be the result of evaluating test.
-            // ii. Let testValue be ? GetValue(testRef).
-            auto test_value = TRY(m_test->execute(interpreter)).release_value();
+            // ii. Let testValue be Completion(GetValue(testRef)).
+            auto test_value = m_test->execute(interpreter);
 
-            // iii. If ToBoolean(testValue) is false, return V.
-            if (!test_value.to_boolean())
-                return last_value;
+            // iii. If testValue is an abrupt completion, then
+            if (test_value.is_abrupt()) {
+                // 1. Return ? DisposeResources(thisIterationEnv, testValue).
+                return TRY(dispose_resources(vm, this_iteration_env, test_value));
+            }
+            // iv. Else,
+            // 1. Set testValue to testValue.[[Value]].
+            VERIFY(test_value.value().has_value());
+
+            // iii. If ToBoolean(testValue) is false, return ? DisposeResources(thisIterationEnv, Completion(V)).
+            if (!test_value.release_value().value().to_boolean())
+                return TRY(dispose_resources(vm, this_iteration_env, test_value));
         }
 
         // b. Let result be the result of evaluating stmt.
         auto result = m_body->execute(interpreter);
 
-        // c. If LoopContinues(result, labelSet) is false, return ? UpdateEmpty(result, V).
+        // c. Perform ? DisposeResources(thisIterationEnv, result).
+        TRY(dispose_resources(vm, this_iteration_env, result));
+
+        // d. If LoopContinues(result, labelSet) is false, return ? UpdateEmpty(result, V).
         if (!loop_continues(result, label_set))
             return result.update_empty(last_value);
 
-        // d. If result.[[Value]] is not empty, set V to result.[[Value]].
+        // e. If result.[[Value]] is not empty, set V to result.[[Value]].
         if (result.value().has_value())
             last_value = *result.value();
 
-        // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-        create_per_iteration_environment();
+        // f. Set thisIterationEnv to ? CreatePerIterationEnvironment(perIterationBindings).
+        this_iteration_env = create_per_iteration_environment();
 
-        // f. If increment is not [empty], then
+        // g. If increment is not [empty], then
         if (m_update) {
             // i. Let incRef be the result of evaluating increment.
-            // ii. Perform ? GetValue(incRef).
-            (void)TRY(m_update->execute(interpreter));
+            // ii. Let incrResult be Completion(GetValue(incrRef)).
+            auto inc_ref = m_update->execute(interpreter);
+
+            // ii. If incrResult is an abrupt completion, then
+            if (inc_ref.is_abrupt()) {
+                // 1. Return ? DisposeResources(thisIterationEnv, incrResult).
+                return TRY(dispose_resources(vm, this_iteration_env, inc_ref));
+            }
         }
     }
 
@@ -914,6 +958,10 @@ struct ForInOfHeadState {
                     auto& declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
                     VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
                     lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter));
+                } else if (is<UsingDeclaration>(*expression_lhs)) {
+                    auto& declaration = static_cast<UsingDeclaration const&>(*expression_lhs);
+                    VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
+                    lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter));
                 } else {
                     VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs) || is<CallExpression>(*expression_lhs));
                     auto& expression = static_cast<Expression const&>(*expression_lhs);
@@ -923,14 +971,18 @@ struct ForInOfHeadState {
         }
         // h. Else,
         else {
-            VERIFY(expression_lhs && is<VariableDeclaration>(*expression_lhs));
+            VERIFY(expression_lhs && (is<VariableDeclaration>(*expression_lhs) || is<UsingDeclaration>(*expression_lhs)));
             iteration_environment = new_declarative_environment(*interpreter.lexical_environment());
 
-            auto& for_declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
+            auto& for_declaration = static_cast<Declaration const&>(*expression_lhs);
+            DeprecatedFlyString first_name;
 
             // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
             // 1. For each element name of the BoundNames of ForBinding, do
             for_declaration.for_each_bound_name([&](auto const& name) {
+                if (first_name.is_empty())
+                    first_name = name;
+
                 // a. If IsConstantDeclaration of LetOrConst is true, then
                 if (for_declaration.is_constant_declaration()) {
                     // i. Perform ! environment.CreateImmutableBinding(name, true).
@@ -945,18 +997,28 @@ struct ForInOfHeadState {
             interpreter.vm().running_execution_context().lexical_environment = iteration_environment;
 
             if (!destructuring) {
-                VERIFY(for_declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
-                lhs_reference = MUST(interpreter.vm().resolve_binding(for_declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->string()));
+                VERIFY(!first_name.is_empty());
+                lhs_reference = MUST(interpreter.vm().resolve_binding(first_name));
             }
         }
 
         // i. If destructuring is false, then
         if (!destructuring) {
             VERIFY(lhs_reference.has_value());
-            if (lhs_kind == LexicalBinding)
-                return lhs_reference->initialize_referenced_binding(vm, next_value);
-            else
+            if (lhs_kind == LexicalBinding) {
+                // 2. If IsUsingDeclaration of lhs is true, then
+                if (is<UsingDeclaration>(expression_lhs)) {
+                    // a. Let status be Completion(InitializeReferencedBinding(lhsRef, nextValue, sync-dispose)).
+                    return lhs_reference->initialize_referenced_binding(vm, next_value, Environment::InitializeBindingHint::SyncDispose);
+                }
+                // 3. Else,
+                else {
+                    // a. Let status be Completion(InitializeReferencedBinding(lhsRef, nextValue, normal)).
+                    return lhs_reference->initialize_referenced_binding(vm, next_value, Environment::InitializeBindingHint::Normal);
+                }
+            } else {
                 return lhs_reference->put_value(vm, next_value);
+            }
         }
 
         // j. Else,
@@ -984,7 +1046,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
     auto& vm = interpreter.vm();
 
     ForInOfHeadState state(lhs);
-    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<VariableDeclaration>(*(*ast_ptr))) {
+    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<Declaration>(ast_ptr->ptr())) {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
         //  ForInOfStatement : for ( var ForBinding in Expression ) Statement
         //  ForInOfStatement : for ( ForDeclaration in Expression ) Statement
@@ -994,24 +1056,34 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
         // 14.7.5.6 ForIn/OfHeadEvaluation ( uninitializedBoundNames, expr, iterationKind ), https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
         Environment* new_environment = nullptr;
 
-        auto& variable_declaration = static_cast<VariableDeclaration const&>(*(*ast_ptr));
-        VERIFY(variable_declaration.declarations().size() == 1);
-        state.destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern>>();
-        if (variable_declaration.declaration_kind() == DeclarationKind::Var) {
-            state.lhs_kind = ForInOfHeadState::VarBinding;
-            auto& variable = variable_declaration.declarations().first();
-            // B.3.5 Initializers in ForIn Statement Heads, https://tc39.es/ecma262/#sec-initializers-in-forin-statement-heads
-            if (variable.init()) {
-                VERIFY(variable.target().has<NonnullRefPtr<Identifier>>());
-                auto& binding_id = variable.target().get<NonnullRefPtr<Identifier>>()->string();
-                auto reference = TRY(interpreter.vm().resolve_binding(binding_id));
-                auto result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*variable.init(), binding_id));
-                TRY(reference.put_value(vm, result));
+        if (is<VariableDeclaration>(ast_ptr->ptr())) {
+            auto& variable_declaration = static_cast<VariableDeclaration const&>(*(*ast_ptr));
+            VERIFY(variable_declaration.declarations().size() == 1);
+            state.destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern>>();
+            if (variable_declaration.declaration_kind() == DeclarationKind::Var) {
+                state.lhs_kind = ForInOfHeadState::VarBinding;
+                auto& variable = variable_declaration.declarations().first();
+                // B.3.5 Initializers in ForIn Statement Heads, https://tc39.es/ecma262/#sec-initializers-in-forin-statement-heads
+                if (variable.init()) {
+                    VERIFY(variable.target().has<NonnullRefPtr<Identifier>>());
+                    auto& binding_id = variable.target().get<NonnullRefPtr<Identifier>>()->string();
+                    auto reference = TRY(interpreter.vm().resolve_binding(binding_id));
+                    auto result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*variable.init(), binding_id));
+                    TRY(reference.put_value(vm, result));
+                }
+            } else {
+                state.lhs_kind = ForInOfHeadState::LexicalBinding;
+                new_environment = new_declarative_environment(*interpreter.lexical_environment());
+                variable_declaration.for_each_bound_name([&](auto const& name) {
+                    MUST(new_environment->create_mutable_binding(vm, name, false));
+                });
             }
         } else {
+            VERIFY(is<UsingDeclaration>(ast_ptr->ptr()));
+            auto& declaration = static_cast<UsingDeclaration const&>(*(*ast_ptr));
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
             new_environment = new_declarative_environment(*interpreter.lexical_environment());
-            variable_declaration.for_each_bound_name([&](auto const& name) {
+            declaration.for_each_bound_name([&](auto const& name) {
                 MUST(new_environment->create_mutable_binding(vm, name, false));
             });
         }
@@ -1096,16 +1168,24 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<Depr
         // l. Let result be the result of evaluating stmt.
         auto result = m_body->execute(interpreter);
 
-        // m. Set the running execution context's LexicalEnvironment to oldEnv.
+        // NOTE: Because of optimizations we only create a new lexical environment if there are bindings
+        //       so we should only dispose if that is the case.
+        if (vm.running_execution_context().lexical_environment != old_environment) {
+            VERIFY(is<DeclarativeEnvironment>(vm.running_execution_context().lexical_environment));
+            // m. Set result to DisposeResources(iterationEnv, result).
+            result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(vm.running_execution_context().lexical_environment), result);
+        }
+
+        // n. Set the running execution context's LexicalEnvironment to oldEnv.
         vm.running_execution_context().lexical_environment = old_environment;
 
-        // n. If LoopContinues(result, labelSet) is false, then
+        // o. If LoopContinues(result, labelSet) is false, then
         if (!loop_continues(result, label_set)) {
             // 1. Return UpdateEmpty(result, V).
             return result.update_empty(last_value);
         }
 
-        // o. If result.[[Value]] is not empty, set V to result.[[Value]].
+        // p. If result.[[Value]] is not empty, set V to result.[[Value]].
         if (result.value().has_value())
             last_value = *result.value();
 
@@ -1153,6 +1233,11 @@ Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<Depr
 
         // l. Let result be the result of evaluating stmt.
         auto result = m_body->execute(interpreter);
+
+        if (vm.running_execution_context().lexical_environment != old_environment) {
+            VERIFY(is<DeclarativeEnvironment>(vm.running_execution_context().lexical_environment));
+            result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(vm.running_execution_context().lexical_environment), result);
+        }
 
         // m. Set the running execution context's LexicalEnvironment to oldEnv.
         vm.running_execution_context().lexical_environment = old_environment;
