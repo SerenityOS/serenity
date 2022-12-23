@@ -6,6 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
@@ -136,9 +137,47 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
         page->load(request);
 }
 
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#resetting-a-form
+void HTMLFormElement::reset_form()
+{
+    // 1. Let reset be the result of firing an event named reset at form, with the bubbles and cancelable attributes initialized to true.
+    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset);
+    reset_event->set_bubbles(true);
+    reset_event->set_cancelable(true);
+
+    bool reset = dispatch_event(*reset_event);
+
+    // 2. If reset is true, then invoke the reset algorithm of each resettable element whose form owner is form.
+    if (reset) {
+        for (auto element : m_associated_elements) {
+            VERIFY(is<FormAssociatedElement>(*element));
+            auto& form_associated_element = dynamic_cast<FormAssociatedElement&>(*element);
+            if (form_associated_element.is_resettable())
+                form_associated_element.reset_algorithm();
+        }
+    }
+}
+
 void HTMLFormElement::submit()
 {
     submit_form(this, true);
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-reset
+void HTMLFormElement::reset()
+{
+    // 1. If the form element is marked as locked for reset, then return.
+    if (m_locked_for_reset)
+        return;
+
+    // 2. Mark the form element as locked for reset.
+    m_locked_for_reset = true;
+
+    // 3. Reset the form element.
+    reset_form();
+
+    // 4. Unmark the form element as locked for reset.
+    m_locked_for_reset = false;
 }
 
 void HTMLFormElement::add_associated_element(Badge<FormAssociatedElement>, HTMLElement& element)

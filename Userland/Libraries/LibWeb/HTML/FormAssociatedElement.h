@@ -65,6 +65,9 @@ public:
 
     virtual HTMLElement& form_associated_element_to_html_element() = 0;
 
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-reset-control
+    virtual void reset_algorithm() {};
+
 protected:
     FormAssociatedElement() = default;
     virtual ~FormAssociatedElement() = default;
