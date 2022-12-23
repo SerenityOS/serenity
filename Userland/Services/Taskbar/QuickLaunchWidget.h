@@ -90,9 +90,10 @@ public:
     virtual void drop_event(GUI::DropEvent&) override;
 
 private:
-    explicit QuickLaunchWidget(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries);
-    void add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>&&);
+    explicit QuickLaunchWidget();
+    ErrorOr<void> add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>&&);
     ErrorOr<void> create_context_menu();
+    ErrorOr<void> add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries);
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
