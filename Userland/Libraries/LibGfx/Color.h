@@ -577,6 +577,6 @@ template<>
 bool encode(Encoder&, Gfx::Color const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Gfx::Color&);
+ErrorOr<Gfx::Color> decode(Decoder&);
 
 }

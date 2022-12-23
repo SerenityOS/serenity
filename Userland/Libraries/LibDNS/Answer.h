@@ -98,6 +98,6 @@ template<>
 bool encode(Encoder&, DNS::Answer const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, DNS::Answer&);
+ErrorOr<DNS::Answer> decode(Decoder&);
 
 }

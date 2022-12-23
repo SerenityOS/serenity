@@ -5,7 +5,6 @@
  */
 
 #include <AK/JsonValue.h>
-#include <AK/MemoryStream.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
@@ -17,201 +16,110 @@
 
 namespace IPC {
 
-ErrorOr<void> Decoder::decode(bool& value)
+template<>
+ErrorOr<DeprecatedString> decode(Decoder& decoder)
 {
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
+    auto length = TRY(decoder.decode<i32>());
+    if (length < 0)
+        return DeprecatedString {};
+    if (length == 0)
+        return DeprecatedString::empty();
 
-ErrorOr<void> Decoder::decode(u8& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(u16& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(unsigned& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(unsigned long& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(unsigned long long& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(i8& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(i16& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(i32& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(i64& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(float& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(double& value)
-{
-    m_stream >> value;
-    return m_stream.try_handle_any_error();
-}
-
-ErrorOr<void> Decoder::decode(DeprecatedString& value)
-{
-    i32 length;
-    TRY(decode(length));
-
-    if (length < 0) {
-        value = {};
-        return {};
-    }
-    if (length == 0) {
-        value = DeprecatedString::empty();
-        return {};
-    }
     char* text_buffer = nullptr;
     auto text_impl = StringImpl::create_uninitialized(static_cast<size_t>(length), text_buffer);
-    m_stream >> Bytes { text_buffer, static_cast<size_t>(length) };
-    value = *text_impl;
-    return m_stream.try_handle_any_error();
+
+    Bytes bytes { text_buffer, static_cast<size_t>(length) };
+    TRY(decoder.decode_into(bytes));
+
+    return DeprecatedString { *text_impl };
 }
 
-ErrorOr<void> Decoder::decode(ByteBuffer& value)
+template<>
+ErrorOr<ByteBuffer> decode(Decoder& decoder)
 {
-    i32 length;
-    TRY(decode(length));
+    auto length = TRY(decoder.decode<i32>());
+    if (length <= 0)
+        return ByteBuffer {};
 
-    if (length < 0) {
-        value = {};
-        return {};
-    }
-    if (length == 0) {
-        value = {};
-        return {};
-    }
+    auto buffer = TRY(ByteBuffer::create_uninitialized(length));
+    auto bytes = buffer.bytes();
 
-    value = TRY(ByteBuffer::create_uninitialized(length));
-
-    m_stream >> value.bytes();
-    return m_stream.try_handle_any_error();
+    TRY(decoder.decode_into(bytes));
+    return buffer;
 }
 
-ErrorOr<void> Decoder::decode(JsonValue& value)
+template<>
+ErrorOr<JsonValue> decode(Decoder& decoder)
 {
-    DeprecatedString string;
-    TRY(decode(string));
-    value = TRY(JsonValue::from_string(string));
-    return {};
+    auto json = TRY(decoder.decode<DeprecatedString>());
+    return JsonValue::from_string(json);
 }
 
-ErrorOr<void> Decoder::decode(URL& value)
+template<>
+ErrorOr<URL> decode(Decoder& decoder)
 {
-    DeprecatedString string;
-    TRY(decode(string));
-    value = URL(string);
-    return {};
+    auto url = TRY(decoder.decode<DeprecatedString>());
+    return URL { url };
 }
 
-ErrorOr<void> Decoder::decode(Dictionary& dictionary)
+template<>
+ErrorOr<Dictionary> decode(Decoder& decoder)
 {
-    u64 size;
-    TRY(decode(size));
-    if (size >= (size_t)NumericLimits<i32>::max())
+    auto size = TRY(decoder.decode<u64>());
+    if (size >= NumericLimits<i32>::max())
         VERIFY_NOT_REACHED();
 
+    Dictionary dictionary {};
+
     for (size_t i = 0; i < size; ++i) {
-        DeprecatedString key;
-        TRY(decode(key));
-        DeprecatedString value;
-        TRY(decode(value));
+        auto key = TRY(decoder.decode<DeprecatedString>());
+        auto value = TRY(decoder.decode<DeprecatedString>());
         dictionary.add(move(key), move(value));
     }
 
-    return {};
-}
-
-ErrorOr<void> Decoder::decode([[maybe_unused]] File& file)
-{
-    int fd = TRY(m_socket.receive_fd(O_CLOEXEC));
-    file = File(fd, File::ConstructWithReceivedFileDescriptor);
-    return {};
+    return dictionary;
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
+ErrorOr<File> decode(Decoder& decoder)
 {
-    bool valid;
-    TRY(decoder.decode(valid));
-    if (!valid) {
-        buffer = {};
-        return {};
-    }
-    u32 size;
-    TRY(decoder.decode(size));
-    IPC::File anon_file;
-    TRY(decoder.decode(anon_file));
-
-    buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size));
-    return {};
+    int fd = TRY(decoder.socket().receive_fd(O_CLOEXEC));
+    return File { fd, File::ConstructWithReceivedFileDescriptor };
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Core::DateTime& datetime)
+ErrorOr<Empty> decode(Decoder&)
 {
-    i64 timestamp;
-    TRY(decoder.decode(timestamp));
-    datetime = Core::DateTime::from_timestamp(static_cast<time_t>(timestamp));
-    return {};
+    return Empty {};
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Core::ProxyData& data)
+ErrorOr<Core::AnonymousBuffer> decode(Decoder& decoder)
 {
-    UnderlyingType<decltype(data.type)> type;
-    TRY(decoder.decode(type));
-    data.type = static_cast<Core::ProxyData::Type>(type);
-    TRY(decoder.decode(data.host_ipv4));
-    TRY(decoder.decode(data.port));
-    return {};
+    if (auto valid = TRY(decoder.decode<bool>()); !valid)
+        return Core::AnonymousBuffer {};
+
+    auto size = TRY(decoder.decode<u32>());
+    auto anon_file = TRY(decoder.decode<IPC::File>());
+
+    return Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size);
 }
 
-// No-op.
-ErrorOr<void> Decoder::decode(AK::Empty&)
+template<>
+ErrorOr<Core::DateTime> decode(Decoder& decoder)
 {
-    return {};
+    auto timestamp = TRY(decoder.decode<i64>());
+    return Core::DateTime::from_timestamp(static_cast<time_t>(timestamp));
+}
+
+template<>
+ErrorOr<Core::ProxyData> decode(Decoder& decoder)
+{
+    auto type = TRY(decoder.decode<Core::ProxyData::Type>());
+    auto host_ipv4 = TRY(decoder.decode<u32>());
+    auto port = TRY(decoder.decode<int>());
+
+    return Core::ProxyData { type, host_ipv4, port };
 }
 
 }

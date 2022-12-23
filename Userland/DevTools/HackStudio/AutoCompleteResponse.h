@@ -27,14 +27,15 @@ inline bool encode(Encoder& encoder, CodeComprehension::AutocompleteResultEntry 
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::AutocompleteResultEntry& response)
+inline ErrorOr<CodeComprehension::AutocompleteResultEntry> decode(Decoder& decoder)
 {
-    TRY(decoder.decode(response.completion));
-    TRY(decoder.decode(response.partial_input_length));
-    TRY(decoder.decode(response.language));
-    TRY(decoder.decode(response.display_text));
-    TRY(decoder.decode(response.hide_autocomplete_after_applying));
-    return {};
+    auto completion = TRY(decoder.decode<DeprecatedString>());
+    auto partial_input_length = TRY(decoder.decode<size_t>());
+    auto language = TRY(decoder.decode<CodeComprehension::Language>());
+    auto display_text = TRY(decoder.decode<DeprecatedString>());
+    auto hide_autocomplete_after_applying = TRY(decoder.decode<CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying>());
+
+    return CodeComprehension::AutocompleteResultEntry { move(completion), partial_input_length, language, move(display_text), hide_autocomplete_after_applying };
 }
 
 template<>
@@ -47,12 +48,13 @@ inline bool encode(Encoder& encoder, CodeComprehension::ProjectLocation const& l
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::ProjectLocation& location)
+inline ErrorOr<CodeComprehension::ProjectLocation> decode(Decoder& decoder)
 {
-    TRY(decoder.decode(location.file));
-    TRY(decoder.decode(location.line));
-    TRY(decoder.decode(location.column));
-    return {};
+    auto file = TRY(decoder.decode<DeprecatedString>());
+    auto line = TRY(decoder.decode<size_t>());
+    auto column = TRY(decoder.decode<size_t>());
+
+    return CodeComprehension::ProjectLocation { move(file), line, column };
 }
 
 template<>
@@ -67,13 +69,14 @@ inline bool encode(Encoder& encoder, CodeComprehension::Declaration const& decla
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::Declaration& declaration)
+inline ErrorOr<CodeComprehension::Declaration> decode(Decoder& decoder)
 {
-    TRY(decoder.decode(declaration.name));
-    TRY(decoder.decode(declaration.position));
-    TRY(decoder.decode(declaration.type));
-    TRY(decoder.decode(declaration.scope));
-    return {};
+    auto name = TRY(decoder.decode<DeprecatedString>());
+    auto position = TRY(decoder.decode<CodeComprehension::ProjectLocation>());
+    auto type = TRY(decoder.decode<CodeComprehension::DeclarationType>());
+    auto scope = TRY(decoder.decode<DeprecatedString>());
+
+    return CodeComprehension::Declaration { move(name), position, type, move(scope) };
 }
 
 template<>
@@ -87,13 +90,14 @@ inline bool encode(Encoder& encoder, CodeComprehension::TodoEntry const& entry)
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::TodoEntry& entry)
+inline ErrorOr<CodeComprehension::TodoEntry> decode(Decoder& decoder)
 {
-    TRY(decoder.decode(entry.content));
-    TRY(decoder.decode(entry.filename));
-    TRY(decoder.decode(entry.line));
-    TRY(decoder.decode(entry.column));
-    return {};
+    auto content = TRY(decoder.decode<DeprecatedString>());
+    auto filename = TRY(decoder.decode<DeprecatedString>());
+    auto line = TRY(decoder.decode<size_t>());
+    auto column = TRY(decoder.decode<size_t>());
+
+    return CodeComprehension::TodoEntry { move(content), move(filename), line, column };
 }
 
 template<>
@@ -109,18 +113,15 @@ inline bool encode(Encoder& encoder, CodeComprehension::TokenInfo const& locatio
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::TokenInfo& entry)
+inline ErrorOr<CodeComprehension::TokenInfo> decode(Decoder& decoder)
 {
-    u32 semantic_type { 0 };
-    static_assert(sizeof(semantic_type) == sizeof(entry.type));
+    auto type = TRY(decoder.decode<CodeComprehension::TokenInfo::SemanticType>());
+    auto start_line = TRY(decoder.decode<size_t>());
+    auto start_column = TRY(decoder.decode<size_t>());
+    auto end_line = TRY(decoder.decode<size_t>());
+    auto end_column = TRY(decoder.decode<size_t>());
 
-    TRY(decoder.decode(semantic_type));
-    entry.type = static_cast<CodeComprehension::TokenInfo::SemanticType>(semantic_type);
-    TRY(decoder.decode(entry.start_line));
-    TRY(decoder.decode(entry.start_column));
-    TRY(decoder.decode(entry.end_line));
-    TRY(decoder.decode(entry.end_column));
-    return {};
+    return CodeComprehension::TokenInfo { type, start_line, start_column, end_line, end_column };
 }
 
 }

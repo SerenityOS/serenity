@@ -32,7 +32,7 @@ bool encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bitmap)
     encoder << IPC::File(bitmap.anonymous_buffer().fd());
     encoder << bitmap.size();
     encoder << static_cast<u32>(bitmap.scale());
-    encoder << (u32)bitmap.format();
+    encoder << static_cast<u32>(bitmap.format());
     if (bitmap.is_indexed()) {
         auto palette = bitmap.palette_to_vector();
         encoder << palette;
@@ -41,33 +41,28 @@ bool encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bitmap)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
+ErrorOr<Gfx::ShareableBitmap> decode(Decoder& decoder)
 {
-    bool valid = false;
-    TRY(decoder.decode(valid));
-    if (!valid) {
-        shareable_bitmap = {};
-        return {};
-    }
-    IPC::File anon_file;
-    TRY(decoder.decode(anon_file));
-    Gfx::IntSize size;
-    TRY(decoder.decode(size));
-    u32 scale;
-    TRY(decoder.decode(scale));
-    u32 raw_bitmap_format;
-    TRY(decoder.decode(raw_bitmap_format));
+    if (auto valid = TRY(decoder.decode<bool>()); !valid)
+        return Gfx::ShareableBitmap {};
+
+    auto anon_file = TRY(decoder.decode<IPC::File>());
+    auto size = TRY(decoder.decode<Gfx::IntSize>());
+    auto scale = TRY(decoder.decode<u32>());
+    auto raw_bitmap_format = TRY(decoder.decode<u32>());
     if (!Gfx::is_valid_bitmap_format(raw_bitmap_format))
         return Error::from_string_literal("IPC: Invalid Gfx::ShareableBitmap format");
-    auto bitmap_format = (Gfx::BitmapFormat)raw_bitmap_format;
+
+    auto bitmap_format = static_cast<Gfx::BitmapFormat>(raw_bitmap_format);
+
     Vector<Gfx::ARGB32> palette;
-    if (Gfx::Bitmap::is_indexed(bitmap_format)) {
-        TRY(decoder.decode(palette));
-    }
+    if (Gfx::Bitmap::is_indexed(bitmap_format))
+        palette = TRY(decoder.decode<decltype(palette)>());
+
     auto buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width() * scale, bitmap_format), size.height() * scale)));
     auto bitmap = TRY(Gfx::Bitmap::try_create_with_anonymous_buffer(bitmap_format, move(buffer), size, scale, palette));
-    shareable_bitmap = Gfx::ShareableBitmap { move(bitmap), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
-    return {};
+
+    return Gfx::ShareableBitmap { move(bitmap), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
 }
 
 }

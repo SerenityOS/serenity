@@ -108,21 +108,16 @@ bool encode(Encoder& encoder, DNS::Answer const& answer)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, DNS::Answer& answer)
+ErrorOr<DNS::Answer> decode(Decoder& decoder)
 {
-    DeprecatedString name;
-    TRY(decoder.decode(name));
-    u16 record_type, class_code;
-    TRY(decoder.decode(record_type));
-    TRY(decoder.decode(class_code));
-    u32 ttl;
-    TRY(decoder.decode(ttl));
-    DeprecatedString record_data;
-    TRY(decoder.decode(record_data));
-    bool cache_flush;
-    TRY(decoder.decode(cache_flush));
-    answer = { { name }, (DNS::RecordType)record_type, (DNS::RecordClass)class_code, ttl, record_data, cache_flush };
-    return {};
+    auto name = TRY(decoder.decode<DeprecatedString>());
+    auto record_type = TRY(decoder.decode<DNS::RecordType>());
+    auto class_code = TRY(decoder.decode<DNS::RecordClass>());
+    auto ttl = TRY(decoder.decode<u32>());
+    auto record_data = TRY(decoder.decode<DeprecatedString>());
+    auto cache_flush = TRY(decoder.decode<bool>());
+
+    return DNS::Answer { name, record_type, class_code, ttl, record_data, cache_flush };
 }
 
 }

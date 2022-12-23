@@ -1036,6 +1036,6 @@ template<>
 bool encode(Encoder&, Gfx::IntRect const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Gfx::IntRect&);
+ErrorOr<Gfx::IntRect> decode(Decoder&);
 
 }

@@ -19,6 +19,6 @@ template<typename T>
 bool encode(Encoder&, T const&);
 
 template<typename T>
-ErrorOr<void> decode(Decoder&, T&);
+ErrorOr<T> decode(Decoder&);
 
 }

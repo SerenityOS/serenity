@@ -38,14 +38,11 @@ bool encode(Encoder& encoder, Gfx::IntRect const& rect)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Gfx::IntRect& rect)
+ErrorOr<Gfx::IntRect> decode(Decoder& decoder)
 {
-    Gfx::IntPoint point;
-    Gfx::IntSize size;
-    TRY(decoder.decode(point));
-    TRY(decoder.decode(size));
-    rect = { point, size };
-    return {};
+    auto point = TRY(decoder.decode<Gfx::IntPoint>());
+    auto size = TRY(decoder.decode<Gfx::IntSize>());
+    return Gfx::IntRect { point, size };
 }
 
 }

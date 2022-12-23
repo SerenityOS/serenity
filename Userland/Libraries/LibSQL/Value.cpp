@@ -847,82 +847,58 @@ bool IPC::encode(Encoder& encoder, SQL::Value const& value)
     return true;
 }
 
-template<typename T>
-static ErrorOr<void> decode_scalar(IPC::Decoder& decoder, SQL::Value& value)
-{
-    T decoded {};
-    TRY(decoder.decode(decoded));
-    value = move(decoded);
-    return {};
-}
-
 template<>
-ErrorOr<void> IPC::decode(Decoder& decoder, SQL::Value& value)
+ErrorOr<SQL::Value> IPC::decode(Decoder& decoder)
 {
-    u8 type_flags { 0 };
-    TRY(decoder.decode(type_flags));
+    auto type_flags = TRY(decoder.decode<u8>());
 
     auto type_data = static_cast<SQL::TypeData>(type_flags & 0xf0);
     auto type = static_cast<SQL::SQLType>(type_flags & 0x0f);
 
-    if (type_data == SQL::TypeData::Null) {
-        value = SQL::Value(type);
-        return {};
-    }
+    if (type_data == SQL::TypeData::Null)
+        return SQL::Value { type };
 
     switch (type) {
     case SQL::SQLType::Null:
-        break;
+        return SQL::Value {};
     case SQL::SQLType::Text:
-        TRY(decode_scalar<DeprecatedString>(decoder, value));
-        break;
+        return SQL::Value { TRY(decoder.decode<DeprecatedString>()) };
     case SQL::SQLType::Integer:
         switch (type_data) {
         case SQL::TypeData::Int8:
-            TRY(decode_scalar<i8>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<i8>()) };
         case SQL::TypeData::Int16:
-            TRY(decode_scalar<i16>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<i16>()) };
         case SQL::TypeData::Int32:
-            TRY(decode_scalar<i32>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<i32>()) };
         case SQL::TypeData::Int64:
-            TRY(decode_scalar<i64>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<i64>()) };
         case SQL::TypeData::Uint8:
-            TRY(decode_scalar<u8>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<u8>()) };
         case SQL::TypeData::Uint16:
-            TRY(decode_scalar<u16>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<u16>()) };
         case SQL::TypeData::Uint32:
-            TRY(decode_scalar<u32>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<u32>()) };
         case SQL::TypeData::Uint64:
-            TRY(decode_scalar<u64>(decoder, value));
-            break;
+            return SQL::Value { TRY(decoder.decode<u64>()) };
         default:
-            VERIFY_NOT_REACHED();
             break;
         }
         break;
     case SQL::SQLType::Float:
-        TRY(decode_scalar<double>(decoder, value));
-        break;
+        return SQL::Value { TRY(decoder.decode<double>()) };
     case SQL::SQLType::Boolean:
-        TRY(decode_scalar<bool>(decoder, value));
-        break;
+        return SQL::Value { TRY(decoder.decode<bool>()) };
     case SQL::SQLType::Tuple: {
-        Vector<SQL::Value> tuple;
-        TRY(decoder.decode(tuple));
+        auto tuple = TRY(decoder.decode<Vector<SQL::Value>>());
+        auto value = SQL::Value::create_tuple(move(tuple));
 
-        if (auto result = value.assign_tuple(move(tuple)); result.is_error())
-            return Error::from_errno(to_underlying(result.error().error()));
+        if (value.is_error())
+            return Error::from_errno(to_underlying(value.error().error()));
 
-        break;
+        return value.release_value();
     }
     }
 
-    return {};
+    VERIFY_NOT_REACHED();
 }

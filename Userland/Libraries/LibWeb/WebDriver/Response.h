@@ -50,6 +50,6 @@ template<>
 bool encode(Encoder&, Web::WebDriver::Response const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Web::WebDriver::Response&);
+ErrorOr<Web::WebDriver::Response> decode(Decoder&);
 
 }

@@ -374,12 +374,10 @@ bool IPC::encode(Encoder& encoder, Color const& color)
 }
 
 template<>
-ErrorOr<void> IPC::decode(Decoder& decoder, Color& color)
+ErrorOr<Gfx::Color> IPC::decode(Decoder& decoder)
 {
-    u32 rgba;
-    TRY(decoder.decode(rgba));
-    color = Color::from_argb(rgba);
-    return {};
+    auto rgba = TRY(decoder.decode<u32>());
+    return Gfx::Color::from_argb(rgba);
 }
 
 ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color value)

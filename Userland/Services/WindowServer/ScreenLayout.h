@@ -77,12 +77,12 @@ template<>
 bool encode(Encoder&, WindowServer::ScreenLayout::Screen const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout::Screen&);
+ErrorOr<WindowServer::ScreenLayout::Screen> decode(Decoder&);
 
 template<>
 bool encode(Encoder&, WindowServer::ScreenLayout const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout&);
+ErrorOr<WindowServer::ScreenLayout> decode(Decoder&);
 
 }

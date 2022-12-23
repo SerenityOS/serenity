@@ -59,14 +59,11 @@ bool encode(Encoder& encoder, Gfx::IntPoint const& point)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Gfx::IntPoint& point)
+ErrorOr<Gfx::IntPoint> decode(Decoder& decoder)
 {
-    int x = 0;
-    int y = 0;
-    TRY(decoder.decode(x));
-    TRY(decoder.decode(y));
-    point = { x, y };
-    return {};
+    auto x = TRY(decoder.decode<int>());
+    auto y = TRY(decoder.decode<int>());
+    return Gfx::IntPoint { x, y };
 }
 
 }

@@ -369,8 +369,7 @@ public:)~~~");
             parameter_generator.set("parameter.initial_value", "{}");
 
         parameter_generator.appendln(R"~~~(
-        @parameter.type@ @parameter.name@ = @parameter.initial_value@;
-        TRY(decoder.decode(@parameter.name@));)~~~");
+        auto @parameter.name@ = TRY((decoder.decode<@parameter.type@>()));)~~~");
 
         if (parameter.attributes.contains_slow("UTF8")) {
             parameter_generator.appendln(R"~~~(

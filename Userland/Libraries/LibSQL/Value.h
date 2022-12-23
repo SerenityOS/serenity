@@ -194,6 +194,6 @@ template<>
 bool encode(Encoder&, SQL::Value const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, SQL::Value&);
+ErrorOr<SQL::Value> decode(Decoder&);
 
 }

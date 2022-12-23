@@ -58,19 +58,20 @@ bool IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
 }
 
 template<>
-ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::Cookie& cookie)
+ErrorOr<Web::Cookie::Cookie> IPC::decode(Decoder& decoder)
 {
-    TRY(decoder.decode(cookie.name));
-    TRY(decoder.decode(cookie.value));
-    TRY(decoder.decode(cookie.domain));
-    TRY(decoder.decode(cookie.path));
-    TRY(decoder.decode(cookie.creation_time));
-    TRY(decoder.decode(cookie.expiry_time));
-    TRY(decoder.decode(cookie.host_only));
-    TRY(decoder.decode(cookie.http_only));
-    TRY(decoder.decode(cookie.last_access_time));
-    TRY(decoder.decode(cookie.persistent));
-    TRY(decoder.decode(cookie.secure));
-    TRY(decoder.decode(cookie.same_site));
-    return {};
+    auto name = TRY(decoder.decode<DeprecatedString>());
+    auto value = TRY(decoder.decode<DeprecatedString>());
+    auto domain = TRY(decoder.decode<DeprecatedString>());
+    auto path = TRY(decoder.decode<DeprecatedString>());
+    auto creation_time = TRY(decoder.decode<Core::DateTime>());
+    auto expiry_time = TRY(decoder.decode<Core::DateTime>());
+    auto host_only = TRY(decoder.decode<bool>());
+    auto http_only = TRY(decoder.decode<bool>());
+    auto last_access_time = TRY(decoder.decode<Core::DateTime>());
+    auto persistent = TRY(decoder.decode<bool>());
+    auto secure = TRY(decoder.decode<bool>());
+    auto same_site = TRY(decoder.decode<Web::Cookie::SameSite>());
+
+    return Web::Cookie::Cookie { move(name), move(value), same_site, move(creation_time), move(last_access_time), move(expiry_time), move(domain), move(path), secure, http_only, host_only, persistent };
 }

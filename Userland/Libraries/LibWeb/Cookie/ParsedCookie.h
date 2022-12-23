@@ -36,6 +36,6 @@ template<>
 bool encode(Encoder&, Web::Cookie::ParsedCookie const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Web::Cookie::ParsedCookie&);
+ErrorOr<Web::Cookie::ParsedCookie> decode(Decoder&);
 
 }
