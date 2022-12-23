@@ -24,4 +24,10 @@ i32 HTMLTextAreaElement::default_tab_index_value() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-textarea-element:concept-form-reset-control
+void HTMLTextAreaElement::reset_algorithm()
+{
+    // FIXME: The reset algorithm for textarea elements is to set the dirty value flag back to false, and set the raw value of element to its child text content.
+}
+
 }
