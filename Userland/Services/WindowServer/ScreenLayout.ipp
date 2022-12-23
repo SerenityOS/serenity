@@ -76,7 +76,7 @@ bool ScreenLayout::is_valid(DeprecatedString* error_msg) const
             *error_msg = "Screen layout has not been normalized";
         return false;
     }
-    Vector<const Screen*, 16> reachable_screens { &screens[main_screen_index] };
+    Vector<Screen const*, 16> reachable_screens { &screens[main_screen_index] };
     bool did_reach_another_screen;
     do {
         did_reach_another_screen = false;
@@ -225,7 +225,7 @@ bool ScreenLayout::normalize()
     return did_change;
 }
 
-bool ScreenLayout::load_config(const Core::ConfigFile& config_file, DeprecatedString* error_msg)
+bool ScreenLayout::load_config(Core::ConfigFile const& config_file, DeprecatedString* error_msg)
 {
     screens.clear_with_capacity();
     main_screen_index = config_file.read_num_entry("Screens", "MainScreen", 0);
@@ -290,7 +290,7 @@ bool ScreenLayout::save_config(Core::ConfigFile& config_file, bool sync) const
     return true;
 }
 
-bool ScreenLayout::operator!=(const ScreenLayout& other) const
+bool ScreenLayout::operator!=(ScreenLayout const& other) const
 {
     if (this == &other)
         return false;
@@ -400,20 +400,15 @@ bool encode(Encoder& encoder, WindowServer::ScreenLayout::Screen const& screen)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& screen)
+ErrorOr<WindowServer::ScreenLayout::Screen> decode(Decoder& decoder)
 {
-    WindowServer::ScreenLayout::Screen::Mode mode;
-    TRY(decoder.decode(mode));
-    Optional<DeprecatedString> device;
-    TRY(decoder.decode(device));
-    Gfx::IntPoint location;
-    TRY(decoder.decode(location));
-    Gfx::IntSize resolution;
-    TRY(decoder.decode(resolution));
-    int scale_factor = 0;
-    TRY(decoder.decode(scale_factor));
-    screen = { mode, device, location, resolution, scale_factor };
-    return {};
+    auto mode = TRY(decoder.decode<WindowServer::ScreenLayout::Screen::Mode>());
+    auto device = TRY(decoder.decode<Optional<DeprecatedString>>());
+    auto location = TRY(decoder.decode<Gfx::IntPoint>());
+    auto resolution = TRY(decoder.decode<Gfx::IntSize>());
+    auto scale_factor = TRY(decoder.decode<int>());
+
+    return WindowServer::ScreenLayout::Screen { mode, device, location, resolution, scale_factor };
 }
 
 template<>
@@ -424,14 +419,12 @@ bool encode(Encoder& encoder, WindowServer::ScreenLayout const& screen_layout)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout& screen_layout)
+ErrorOr<WindowServer::ScreenLayout> decode(Decoder& decoder)
 {
-    Vector<WindowServer::ScreenLayout::Screen> screens;
-    TRY(decoder.decode(screens));
-    unsigned main_screen_index = 0;
-    TRY(decoder.decode(main_screen_index));
-    screen_layout = { move(screens), main_screen_index };
-    return {};
+    auto screens = TRY(decoder.decode<Vector<WindowServer::ScreenLayout::Screen>>());
+    auto main_screen_index = TRY(decoder.decode<unsigned>());
+
+    return WindowServer::ScreenLayout { move(screens), main_screen_index };
 }
 
 }

@@ -78,6 +78,6 @@ template<>
 bool encode(Encoder&, Core::AnonymousBuffer const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Core::AnonymousBuffer&);
+ErrorOr<Core::AnonymousBuffer> decode(Decoder&);
 
 }

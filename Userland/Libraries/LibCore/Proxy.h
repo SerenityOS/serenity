@@ -57,6 +57,6 @@ template<>
 bool encode(Encoder&, Core::ProxyData const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Core::ProxyData&);
+ErrorOr<Core::ProxyData> decode(Decoder&);
 
 }

@@ -295,7 +295,7 @@ template<>
 bool encode(Encoder&, Gfx::IntPoint const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Gfx::IntPoint&);
+ErrorOr<Gfx::IntPoint> decode(Decoder&);
 
 }
 

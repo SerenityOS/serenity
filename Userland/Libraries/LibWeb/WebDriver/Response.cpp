@@ -48,31 +48,23 @@ bool IPC::encode(Encoder& encoder, Web::WebDriver::Response const& response)
 }
 
 template<>
-ErrorOr<void> IPC::decode(Decoder& decoder, Web::WebDriver::Response& response)
+ErrorOr<Web::WebDriver::Response> IPC::decode(Decoder& decoder)
 {
-    ResponseType type {};
-    TRY(decoder.decode(type));
+    auto type = TRY(decoder.decode<ResponseType>());
 
     switch (type) {
-    case ResponseType::Success: {
-        JsonValue value;
-        TRY(decoder.decode(value));
-
-        response = move(value);
-        break;
-    }
+    case ResponseType::Success:
+        return TRY(decoder.decode<JsonValue>());
 
     case ResponseType::Error: {
-        Web::WebDriver::Error error {};
-        TRY(decoder.decode(error.http_status));
-        TRY(decoder.decode(error.error));
-        TRY(decoder.decode(error.message));
-        TRY(decoder.decode(error.data));
+        auto http_status = TRY(decoder.decode<unsigned>());
+        auto error = TRY(decoder.decode<DeprecatedString>());
+        auto message = TRY(decoder.decode<DeprecatedString>());
+        auto data = TRY(decoder.decode<Optional<JsonValue>>());
 
-        response = move(error);
-        break;
+        return Web::WebDriver::Error { http_status, move(error), move(message), move(data) };
     }
     }
 
-    return {};
+    VERIFY_NOT_REACHED();
 }

@@ -58,6 +58,6 @@ template<>
 bool encode(Encoder&, Core::DateTime const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Core::DateTime&);
+ErrorOr<Core::DateTime> decode(Decoder&);
 
 }

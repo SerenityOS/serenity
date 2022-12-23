@@ -218,6 +218,6 @@ template<>
 bool encode(Encoder&, Gfx::IntSize const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Gfx::IntSize&);
+ErrorOr<Gfx::IntSize> decode(Decoder&);
 
 }

@@ -35,14 +35,11 @@ bool encode(Encoder& encoder, Gfx::IntSize const& size)
 }
 
 template<>
-ErrorOr<void> decode(Decoder& decoder, Gfx::IntSize& size)
+ErrorOr<Gfx::IntSize> decode(Decoder& decoder)
 {
-    int width = 0;
-    int height = 0;
-    TRY(decoder.decode(width));
-    TRY(decoder.decode(height));
-    size = { width, height };
-    return {};
+    auto width = TRY(decoder.decode<int>());
+    auto height = TRY(decoder.decode<int>());
+    return Gfx::IntSize { width, height };
 }
 
 }

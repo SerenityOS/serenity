@@ -50,6 +50,6 @@ template<>
 bool encode(Encoder&, Web::Cookie::Cookie const&);
 
 template<>
-ErrorOr<void> decode(Decoder&, Web::Cookie::Cookie&);
+ErrorOr<Web::Cookie::Cookie> decode(Decoder&);
 
 }
