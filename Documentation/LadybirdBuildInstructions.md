@@ -42,33 +42,38 @@ sudo apt install qt6-wayland
 
 ## Build steps
 
-Basic workflow, using serenity source dir cloned from github:
+Basic workflow, if you only want to build Ladybird
 
 ```
-cmake -GNinja -B Build
-cmake --build Build
-ninja -C Build run
-```
-
-Advanced workflow, using pre-existing serenity checkout.
-
-If you previously didn't set SERENITY_SOURCE_DIR, probably want to blast the Build directory before doing this:
-
-```
-cmake -GNinja -B Build -DSERENITY_SOURCE_DIR=/path/to/serenity
-ninja -C Build run
+cmake -GNinja -S Ladybird -B Build/ladybird
+cmake --build Build/ladybird
+ninja -C Build/ladybird run
 ```
 
 To automatically run in gdb:
 ```
-ninja -C Build debug
+ninja -C Build/ladybird debug
 ```
 
 To run without ninja rule:
 ```
-# or your existing serenity checkout /path/to/serenity
-export SERENITY_SOURCE_DIR=${PWD}/Build/serenity
-./Build/ladybird # or, in macOS: open ./Build/ladybird.app
+export SERENITY_SOURCE_DIR=$(realpath ../)
+./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
+```
+
+However, if you already have a serenity build, you might want to enable ladybird as part of your pre-existing build directories:
+
+```
+# From /path/to/serenity
+./Meta/serenity.sh run lagom ladybird
+./Meta/serenity.sh debug lagom ladybird
+```
+
+Doing so will re-build Lagom LibWeb and ladybird whenever you change any related serenity library source code. To disable this after
+enabling it, simply disable LibWeb and ladybird on the Lagom binary directory:
+
+```
+cmake -S Meta/Lagom -B Build/lagom -DENABLE_LAGOM_LADYBIRD=OFF -DENABLE_LAGOM_LIBWEB=OFF
 ```
 
 ## Experimental Android Build Steps
@@ -88,18 +93,10 @@ The build configuration was tested with the following packages from the Android 
 * Android System Images for API 33 aka ``"system-images;android-33;google-apis;x86_64"``
 * Android NDK 24.0.8215888 for the llvm-14 based toolchain
 
-In order to build ladybird for cross compilation, a separate serenity checkout is recommended.
-
-e.g.
-```
-cd ~/Repos
-git clone https://github.com/SerenityOS/serenity
-```
-
 First create a LagomTools build:
 
 ```
-cmake -GNinja -S /path/to/serenity -B BuildTools -Dpackage=LagomTools -DCMAKE_INSTALL_PREFIX=tool-install
+cmake -GNinja -S /path/to/serenity/Meta/Lagom -B BuildTools -Dpackage=LagomTools -DCMAKE_INSTALL_PREFIX=tool-install
 ninja -C BuildTools install
 ```
 
