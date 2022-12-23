@@ -8,6 +8,7 @@
 
 #include "ClockWidget.h"
 #include "WindowList.h"
+#include <AK/NonnullRefPtr.h>
 #include <LibConfig/Listener.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Widget.h>
@@ -21,6 +22,7 @@ class TaskbarWindow final : public GUI::Window
     C_OBJECT(TaskbarWindow);
 
 public:
+    static ErrorOr<NonnullRefPtr<TaskbarWindow>> create();
     virtual ~TaskbarWindow() override = default;
 
     static int taskbar_height() { return 27; }
@@ -39,6 +41,9 @@ private:
     void add_window_button(::Window&, WindowIdentifier const&);
     void remove_window_button(::Window&, bool);
     void update_window_button(::Window&, bool);
+
+    ErrorOr<void> populate_taskbar();
+    ErrorOr<void> load_assistant();
 
     virtual void event(Core::Event&) override;
     virtual void wm_event(GUI::WMEvent&) override;
