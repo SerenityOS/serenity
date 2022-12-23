@@ -236,7 +236,7 @@ Time Time::operator-(Time const& other) const
     VERIFY(m_nanoseconds < 1'000'000'000);
     VERIFY(other.m_nanoseconds < 1'000'000'000);
 
-    if (other.m_nanoseconds)
+    if (other.m_nanoseconds != 0)
         return *this + Time((i64) ~(u64)other.m_seconds, 1'000'000'000 - other.m_nanoseconds);
 
     if (other.m_seconds != (i64)-0x8000'0000'0000'0000)
