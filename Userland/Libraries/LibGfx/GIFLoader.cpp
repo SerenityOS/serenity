@@ -88,7 +88,7 @@ enum class GIFFormat {
     GIF89a,
 };
 
-static Optional<GIFFormat> decode_gif_header(InputMemoryStream& stream)
+static ErrorOr<GIFFormat> decode_gif_header(InputMemoryStream& stream)
 {
     static auto valid_header_87 = "GIF87a"sv;
     static auto valid_header_89 = "GIF89a"sv;
@@ -96,15 +96,14 @@ static Optional<GIFFormat> decode_gif_header(InputMemoryStream& stream)
     Array<u8, 6> header;
     stream >> header;
 
-    if (stream.handle_any_error())
-        return {};
+    TRY(stream.try_handle_any_error());
 
     if (header.span() == valid_header_87.bytes())
         return GIFFormat::GIF87a;
     if (header.span() == valid_header_89.bytes())
         return GIFFormat::GIF89a;
 
-    return {};
+    return Error::from_string_literal("GIF header unknown");
 }
 
 class LZWDecoder {
@@ -144,11 +143,11 @@ public:
         m_output.clear();
     }
 
-    Optional<u16> next_code()
+    ErrorOr<u16> next_code()
     {
         size_t current_byte_index = m_current_bit_index / 8;
         if (current_byte_index >= m_lzw_bytes.size()) {
-            return {};
+            return Error::from_string_literal("LZWDecoder tries to read ouf of bounds");
         }
 
         // Extract the code bits using a 32-bit mask to cover the possibility that if
@@ -175,13 +174,13 @@ public:
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
-            return {};
+            return Error::from_string_literal("Corrupted LZW stream, invalid code");
         } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
             dbgln_if(GIF_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
-            return {};
+            return Error::from_string_literal("Corrupted LZW stream, valid new code but output buffer is empty");
         }
 
         m_current_bit_index += m_code_size;
@@ -326,10 +325,10 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
         int row = 0;
         int interlace_pass = 0;
         while (true) {
-            Optional<u16> code = decoder.next_code();
-            if (!code.has_value()) {
+            ErrorOr<u16> code = decoder.next_code();
+            if (code.is_error()) {
                 dbgln_if(GIF_DEBUG, "Unexpectedly reached end of gif frame data");
-                return Error::from_string_literal("Unexpectedly reached end of gif frame data");
+                return code.release_error();
             }
 
             if (code.value() == clear_code) {
@@ -378,17 +377,14 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
     return {};
 }
 
-static bool load_gif_frame_descriptors(GIFLoadingContext& context)
+static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
 {
     if (context.data_size < 32)
-        return false;
+        return Error::from_string_literal("Size too short for GIF frame descriptors");
 
     InputMemoryStream stream { { context.data, context.data_size } };
 
-    Optional<GIFFormat> format = decode_gif_header(stream);
-    if (!format.has_value()) {
-        return false;
-    }
+    TRY(decode_gif_header(stream));
 
     LittleEndian<u16> value;
 
@@ -398,28 +394,24 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     stream >> value;
     context.logical_screen.height = value;
 
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     if (context.logical_screen.width > maximum_width_for_decoded_images || context.logical_screen.height > maximum_height_for_decoded_images) {
         dbgln("This GIF is too large for comfort: {}x{}", context.logical_screen.width, context.logical_screen.height);
-        return false;
+        return Error::from_string_literal("This GIF is too large for comfort");
     }
 
     u8 gcm_info = 0;
     stream >> gcm_info;
 
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     stream >> context.background_color_index;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     u8 pixel_aspect_ratio = 0;
     stream >> pixel_aspect_ratio;
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     u8 bits_per_pixel = (gcm_info & 7) + 1;
     int color_map_entry_count = 1;
@@ -434,22 +426,19 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         context.logical_screen.color_map[i] = { r, g, b };
     }
 
-    if (stream.handle_any_error())
-        return false;
+    TRY(stream.try_handle_any_error());
 
     NonnullOwnPtr<GIFImageDescriptor> current_image = make<GIFImageDescriptor>();
     for (;;) {
         u8 sentinel = 0;
         stream >> sentinel;
 
-        if (stream.handle_any_error())
-            return false;
+        TRY(stream.try_handle_any_error());
 
         if (sentinel == '!') {
             u8 extension_type = 0;
             stream >> extension_type;
-            if (stream.handle_any_error())
-                return false;
+            TRY(stream.try_handle_any_error());
 
             u8 sub_block_length = 0;
 
@@ -457,8 +446,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             for (;;) {
                 stream >> sub_block_length;
 
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
 
                 if (sub_block_length == 0)
                     break;
@@ -469,8 +457,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                     sub_block.append(dummy);
                 }
 
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
             }
 
             if (extension_type == 0xF9) {
@@ -533,8 +520,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             image.height = tmp;
 
             stream >> packed_fields;
-            if (stream.handle_any_error())
-                return false;
+            TRY(stream.try_handle_any_error());
 
             image.use_global_color_map = !(packed_fields & 0x80);
             image.interlaced = (packed_fields & 0x40) != 0;
@@ -552,16 +538,14 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             }
 
             stream >> image.lzw_min_code_size;
-            if (stream.handle_any_error())
-                return false;
+            TRY(stream.try_handle_any_error());
 
             u8 lzw_encoded_bytes_expected = 0;
 
             for (;;) {
                 stream >> lzw_encoded_bytes_expected;
 
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
 
                 if (lzw_encoded_bytes_expected == 0)
                     break;
@@ -569,8 +553,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 Array<u8, 256> buffer;
                 stream >> buffer.span().trim(lzw_encoded_bytes_expected);
 
-                if (stream.handle_any_error())
-                    return false;
+                TRY(stream.try_handle_any_error());
 
                 for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
                     image.lzw_encoded_bytes.append(buffer[i]);
@@ -585,11 +568,11 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             break;
         }
 
-        return false;
+        return Error::from_string_literal("Unexpected sentinel");
     }
 
     context.state = GIFLoadingContext::State::FrameDescriptorsLoaded;
-    return true;
+    return {};
 }
 
 GIFImageDecoderPlugin::GIFImageDecoderPlugin(u8 const* data, size_t size)
@@ -608,7 +591,7 @@ IntSize GIFImageDecoderPlugin::size()
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
-        if (!load_gif_frame_descriptors(*m_context)) {
+        if (load_gif_frame_descriptors(*m_context).is_error()) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return {};
         }
@@ -634,7 +617,7 @@ bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 bool GIFImageDecoderPlugin::sniff()
 {
     InputMemoryStream stream { { m_context->data, m_context->data_size } };
-    return decode_gif_header(stream).has_value();
+    return !decode_gif_header(stream).is_error();
 }
 
 bool GIFImageDecoderPlugin::is_animated()
@@ -644,7 +627,7 @@ bool GIFImageDecoderPlugin::is_animated()
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
-        if (!load_gif_frame_descriptors(*m_context)) {
+        if (load_gif_frame_descriptors(*m_context).is_error()) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return false;
         }
@@ -660,7 +643,7 @@ size_t GIFImageDecoderPlugin::loop_count()
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
-        if (!load_gif_frame_descriptors(*m_context)) {
+        if (load_gif_frame_descriptors(*m_context).is_error()) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return 0;
         }
@@ -676,7 +659,7 @@ size_t GIFImageDecoderPlugin::frame_count()
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
-        if (!load_gif_frame_descriptors(*m_context)) {
+        if (load_gif_frame_descriptors(*m_context).is_error()) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return 1;
         }
@@ -692,9 +675,9 @@ ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
-        if (!load_gif_frame_descriptors(*m_context)) {
+        if (auto result = load_gif_frame_descriptors(*m_context); result.is_error()) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
-            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed");
+            return result.release_error();
         }
     }
 
