@@ -65,7 +65,7 @@ Time Time::from_timeval(const struct timeval& tv)
 i64 Time::to_truncated_seconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    if (m_seconds < 0 && m_nanoseconds) {
+    if (m_seconds < 0 && m_nanoseconds != 0) {
         // Since m_seconds is negative, adding 1 can't possibly overflow
         return m_seconds + 1;
     }
