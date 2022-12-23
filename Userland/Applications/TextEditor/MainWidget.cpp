@@ -312,9 +312,21 @@ MainWidget::MainWidget()
         }
     });
 
+    auto file_manager_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_open_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
+        auto lexical_path = LexicalPath(m_path);
+        Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
+    });
+    m_open_folder_action->set_enabled(!m_path.is_empty());
+    m_open_folder_action->set_status_tip("Open the current file location in File Manager");
+
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
     m_toolbar->add_action(*m_save_action);
+
+    m_toolbar->add_separator();
+
+    m_toolbar->add_action(*m_open_folder_action);
 
     m_toolbar->add_separator();
 
@@ -359,6 +371,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
     file_menu.add_action(*m_save_as_action);
+    file_menu.add_separator();
+    file_menu.add_action(*m_open_folder_action);
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
@@ -717,6 +731,7 @@ void MainWidget::set_path(StringView path)
             set_preview_mode(PreviewMode::None);
     }
 
+    m_open_folder_action->set_enabled(!path.is_empty());
     update_title();
 }
 
