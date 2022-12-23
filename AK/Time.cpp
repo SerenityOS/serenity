@@ -113,7 +113,7 @@ i64 Time::to_truncated_microseconds() const
 i64 Time::to_seconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    if (m_seconds >= 0 && m_nanoseconds) {
+    if (m_seconds >= 0 && m_nanoseconds != 0) {
         Checked<i64> seconds(m_seconds);
         seconds++;
         return seconds.has_overflow() ? 0x7fff'ffff'ffff'ffffLL : seconds.value();
