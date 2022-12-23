@@ -130,6 +130,9 @@ is_valid_target() {
     fi
     if [ "$TARGET" = "lagom" ]; then
         CMAKE_ARGS+=("-DBUILD_LAGOM=ON")
+        if [ "${CMD_ARGS[0]}" = "ladybird" ]; then
+            CMAKE_ARGS+=("-DENABLE_LAGOM_LADYBIRD=ON")
+        fi
         return 0
     fi
     return 1
@@ -261,7 +264,11 @@ build_target() {
     if [ "$TARGET" = "lagom" ]; then
         # Ensure that all lagom binaries get built, in case user first
         # invoked superbuild for serenity target that doesn't set -DBUILD_LAGOM=ON
-        cmake -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$BUILD_DIR" -DBUILD_LAGOM=ON
+        local EXTRA_CMAKE_ARGS=""
+        if [ "${CMD_ARGS[0]}" = "ladybird" ]; then
+            EXTRA_CMAKE_ARGS="-DENABLE_LAGOM_LADYBIRD=ON"
+        fi
+        cmake -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$BUILD_DIR" -DBUILD_LAGOM=ON ${EXTRA_CMAKE_ARGS}
     fi
 
     # Get either the environment MAKEJOBS or all processors via CMake
@@ -371,6 +378,11 @@ run_gdb() {
                     die "Lagom executable can't be specified more than once"
                 fi
                 LAGOM_EXECUTABLE="$arg"
+                if [ "$LAGOM_EXECUTABLE" = "ladybird" ]; then
+                    LAGOM_EXECUTABLE="Ladybird/ladybird"
+                    # FIXME: Make ladybird less cwd-dependent while in the build directory
+                    cd "$BUILD_DIR/Ladybird"
+                fi
             else
                 if [ "$KERNEL_CMD_LINE" != "" ]; then
                     die "Kernel command line can't be specified more than once"
@@ -422,7 +434,11 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
         run)
             if [ "$TARGET" = "lagom" ]; then
                 build_target "${CMD_ARGS[0]}"
-                "$BUILD_DIR/${CMD_ARGS[0]}" "${CMD_ARGS[@]:1}"
+                if [ "${CMD_ARGS[0]}" = "ladybird" ]; then
+                    ninja -C "$BUILD_DIR" run-ladybird
+                else
+                    "$BUILD_DIR/${CMD_ARGS[0]}" "${CMD_ARGS[@]:1}"
+                fi
             else
                 build_target
                 build_target install
