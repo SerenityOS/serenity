@@ -260,3 +260,16 @@ TEST_CASE(default_empty)
     EXPECT(my_variant.has<Empty>());
     EXPECT(!my_variant.has<int>());
 }
+
+TEST_CASE(type_list_specialization)
+{
+    EXPECT_EQ((TypeList<Variant<Empty>>::size), 1u);
+    EXPECT_EQ((TypeList<Variant<Empty, int>>::size), 2u);
+    EXPECT_EQ((TypeList<Variant<Empty, int, String>>::size), 3u);
+
+    using MyVariant = Variant<Empty, int, String>;
+    using MyList = TypeList<MyVariant>;
+    EXPECT((IsSame<typename MyList::template Type<0>, Empty>));
+    EXPECT((IsSame<typename MyList::template Type<1>, int>));
+    EXPECT((IsSame<typename MyList::template Type<2>, String>));
+}

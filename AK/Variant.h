@@ -226,7 +226,7 @@ template<NotLvalueReference... Ts>
 struct Variant
     : public Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...> {
 public:
-    using IndexType = Conditional<sizeof...(Ts) < 255, u8, size_t>; // Note: size+1 reserved for internal value checks
+    using IndexType = Conditional<(sizeof...(Ts) < 255), u8, size_t>; // Note: size+1 reserved for internal value checks
 private:
     static constexpr IndexType invalid_index = sizeof...(Ts);
 
@@ -517,6 +517,9 @@ private:
     alignas(data_alignment) u8 m_data[data_size];
     IndexType m_index;
 };
+
+template<typename... Ts>
+struct TypeList<Variant<Ts...>> : TypeList<Ts...> { };
 
 }
 
