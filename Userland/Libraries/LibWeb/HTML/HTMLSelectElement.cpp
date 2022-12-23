@@ -90,6 +90,20 @@ Vector<JS::Handle<HTMLOptionElement>> HTMLSelectElement::list_of_options() const
     return list;
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element:concept-form-reset-control
+void HTMLSelectElement::reset_algorithm()
+{
+    // The reset algorithm for select elements is to go through all the option elements in the element's list of options,
+    for (auto const& option_element : list_of_options()) {
+        // set their selectedness to true if the option element has a selected attribute, and false otherwise,
+        option_element->m_selected = option_element->has_attribute(AttributeNames::selected);
+        // set their dirtiness to false,
+        option_element->m_dirty = false;
+        // and then have the option elements ask for a reset.
+        option_element->ask_for_a_reset();
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-selectedindex
 int HTMLSelectElement::selected_index() const
 {
