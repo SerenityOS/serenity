@@ -76,7 +76,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
     if (checksum.digest() != zip_member.crc32) {
         warnln("Failed decompressing file {}: CRC32 mismatch", zip_member.name);
-        MUST(new_file->remove(zip_member.name, Core::File::RecursionMode::Disallowed, true));
+        MUST(Core::File::remove(zip_member.name, Core::File::RecursionMode::Disallowed));
         return false;
     }
 

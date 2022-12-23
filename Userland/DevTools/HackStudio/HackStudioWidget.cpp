@@ -681,7 +681,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             }
 
             bool is_directory = S_ISDIR(st.st_mode);
-            if (auto result = Core::File::remove(file, Core::File::RecursionMode::Allowed, false); result.is_error()) {
+            if (auto result = Core::File::remove(file, Core::File::RecursionMode::Allowed); result.is_error()) {
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
