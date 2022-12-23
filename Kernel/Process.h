@@ -118,6 +118,7 @@ class Process final
         // FIXME: This should be a NonnullRefPtr
         RefPtr<Credentials> credentials;
         bool dumpable { false };
+        bool executable_is_setid { false };
         Atomic<bool> has_promises { false };
         Atomic<u32> promises { 0 };
         Atomic<bool> has_execpromises { false };

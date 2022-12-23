@@ -45,6 +45,17 @@ ErrorOr<FlatPtr> Process::sys$jail_attach(Userspace<Syscall::SC_jail_attach_para
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::jail));
 
+    // NOTE: Because the user might run a binary that is using this syscall and
+    // that binary was marked as SUID, then the user might be unaware of the
+    // fact that while no new setuid binaries might be executed, he is already
+    // running within such binary so for the sake of completeness and preventing
+    // naive sense of being secure, we should block that.
+    TRY(with_protected_data([&](auto& protected_data) -> ErrorOr<void> {
+        if (protected_data.executable_is_setid)
+            return EPERM;
+        return {};
+    }));
+
     auto params = TRY(copy_typed_from_user(user_params));
     return m_attached_jail.with([&](auto& my_jail) -> ErrorOr<FlatPtr> {
         // Note: If we are already in a jail, don't let the process escape it even if

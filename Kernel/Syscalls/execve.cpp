@@ -472,6 +472,15 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
+    auto main_program_metadata = main_program_description->metadata();
+    // NOTE: Don't allow running SUID binaries at all if we are in a jail.
+    TRY(Process::current().jail().with([&](auto& my_jail) -> ErrorOr<void> {
+        if (my_jail && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid())) {
+            return Error::from_errno(EPERM);
+        }
+        return {};
+    }));
+
     // Although we *could* handle a pseudo_path here, trying to execute something that doesn't have
     // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
     auto path = TRY(main_program_description->original_absolute_path());
@@ -507,8 +516,6 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     bool executable_is_setid = false;
 
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
-        auto main_program_metadata = main_program_description->metadata();
-
         auto new_euid = old_credentials->euid();
         auto new_egid = old_credentials->egid();
         auto new_suid = old_credentials->suid();
@@ -551,6 +558,7 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     with_mutable_protected_data([&](auto& protected_data) {
         protected_data.credentials = move(new_credentials);
         protected_data.dumpable = !executable_is_setid;
+        protected_data.executable_is_setid = executable_is_setid;
     });
 
     // We make sure to enter the new address space before destroying the old one.
