@@ -38,8 +38,8 @@ HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName
             break;
         case TypeAttributeState::Reset:
             // Reset Button
-            // FIXME: Reset element's form owner.
-            TODO();
+            // Reset element's form owner.
+            form()->reset_form();
             break;
         case TypeAttributeState::Button:
             // Button
