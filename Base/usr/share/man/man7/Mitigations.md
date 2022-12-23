@@ -105,6 +105,7 @@ Special restrictions on filesystem also apply:
 - Write access is forbidden to kernel variables (which are located in `/sys/kernel/variables`).
 - Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
     other TTY/PTY devices (not including Kernel virtual consoles).
+- Executing SUID binaries is forbidden.
 
 It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/5e062414c11df31ed595c363990005eef00fa263),
 for kernel support, and the following commits added basic userspace utilities:
