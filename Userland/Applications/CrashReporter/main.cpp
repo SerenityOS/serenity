@@ -133,7 +133,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     };
 }
 
-static void unlink_coredump(StringView const& coredump_path)
+static void unlink_coredump(StringView coredump_path)
 {
     if (Core::File::remove(coredump_path, Core::File::RecursionMode::Disallowed).is_error())
         dbgln("Failed deleting coredump file");
