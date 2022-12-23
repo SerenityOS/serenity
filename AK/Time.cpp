@@ -201,7 +201,7 @@ Time Time::operator+(Time const& other) const
     // Example in 8-bit: (-127) + (-2) + (+1) = (-128), which fits in an i8.
     // Example in 8-bit, the other way around: (-2) + (127) + (+1) = 126.
     // So we do something more sophisticated:
-    if (extra_secs) {
+    if (extra_secs != 0) {
         VERIFY(extra_secs == 1);
         if (this_secs != 0x7fff'ffff'ffff'ffff) {
             this_secs += 1;
