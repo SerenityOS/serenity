@@ -10,6 +10,8 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
+#include <AK/Error.h>
+#include <AK/String.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -52,6 +54,13 @@ private:
     }
 };
 
+ErrorOr<NonnullRefPtr<TaskbarWindow>> TaskbarWindow::create()
+{
+    auto window = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) TaskbarWindow()));
+    TRY(window->populate_taskbar());
+    return window;
+}
+
 TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GUI::WindowType::Taskbar);
@@ -62,23 +71,28 @@ TaskbarWindow::TaskbarWindow()
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 2, 3, 0, 3 });
+}
 
-    // FIXME: Propagate this error up as well
-    m_quick_launch = MUST(Taskbar::QuickLaunchWidget::create());
-    main_widget.add_child(*m_quick_launch);
+ErrorOr<void> TaskbarWindow::populate_taskbar()
+{
+    if (!main_widget())
+        return Error::from_string_literal("TaskbarWindow::populate_taskbar: main_widget is not set");
 
-    m_task_button_container = main_widget.add<GUI::Widget>();
+    m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());
+    main_widget()->add_child(*m_quick_launch);
+
+    m_task_button_container = main_widget()->add<GUI::Widget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
     m_task_button_container->layout()->set_spacing(3);
 
-    m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv));
 
-    m_applet_area_container = main_widget.add<GUI::Frame>();
+    m_applet_area_container = main_widget()->add<GUI::Frame>();
     m_applet_area_container->set_frame_thickness(1);
     m_applet_area_container->set_frame_shape(Gfx::FrameShape::Box);
     m_applet_area_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
 
-    m_clock_widget = main_widget.add<Taskbar::ClockWidget>();
+    m_clock_widget = main_widget()->add<Taskbar::ClockWidget>();
 
     m_show_desktop_button = GUI::Button::construct();
     m_show_desktop_button->set_tooltip("Show Desktop");
@@ -86,10 +100,17 @@ TaskbarWindow::TaskbarWindow()
     m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_show_desktop_button->set_fixed_size(24, 24);
     m_show_desktop_button->on_click = TaskbarWindow::show_desktop_button_clicked;
-    main_widget.add_child(*m_show_desktop_button);
+    main_widget()->add_child(*m_show_desktop_button);
 
-    auto af_path = DeprecatedString::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
+    return {};
+}
+
+ErrorOr<void> TaskbarWindow::load_assistant()
+{
+    auto af_path = TRY(String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af"));
     m_assistant_app_file = Desktop::AppFile::open(af_path);
+
+    return {};
 }
 
 void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)

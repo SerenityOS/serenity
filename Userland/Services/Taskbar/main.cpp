@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
-    auto window = TRY(TaskbarWindow::try_create());
+    auto window = TRY(TaskbarWindow::create());
 
     auto menu = TRY(build_system_menu(*window));
     menu->realize_menu_if_needed();
