@@ -28,7 +28,7 @@ install(TARGETS WebContent
     DESTINATION bundle
 )
 
-include("${Lagom_SOURCE_DIR}/get_linked_lagom_libraries.cmake")
+include("${SERENITY_SOURCE_DIR}/Meta/Lagom/get_linked_lagom_libraries.cmake")
 get_linked_lagom_libraries(ladybird ladybird_lagom_libraries)
 get_linked_lagom_libraries(WebContent webcontent_lagom_libraries)
 list(APPEND all_required_lagom_libraries ${ladybird_lagom_libraries} ${webcontent_lagom_libraries})

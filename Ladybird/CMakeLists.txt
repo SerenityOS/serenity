@@ -45,16 +45,27 @@ if (ENABLE_UNDEFINED_SANITIZER)
 endif()
 
 # Lagom
-include(FetchContent)
-include(cmake/FetchLagom.cmake)
+# FIXME: PROJECT_IS_TOP_LEVEL with CMake 3.21+
+set(LADYBIRD_IS_TOP_LEVEL FALSE)
+set(LADYBIRD_CUSTOM_TARGET_SUFFIX "-ladybird")
+if ("${CMAKE_BINARY_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+    set(LADYBIRD_IS_TOP_LEVEL TRUE)
+    set(LADYBIRD_CUSTOM_TARGET_SUFFIX "")
+endif()
 
-get_filename_component(
-    SERENITY_SOURCE_DIR "${Lagom_SOURCE_DIR}/../.."
-    ABSOLUTE
-)
+if (LADYBIRD_IS_TOP_LEVEL)
+    get_filename_component(
+        SERENITY_SOURCE_DIR "${ladybird_SOURCE_DIR}/.."
+        ABSOLUTE
+    )
+    list(APPEND CMAKE_MODULE_PATH "${SERENITY_SOURCE_DIR}/Meta/CMake")
+    include(cmake/EnableLagom.cmake)
+    include(lagom_compile_options NO_POLICY_SCOPE)
+else()
+    # FIXME: Use SERENITY_SOURCE_DIR in Lagom/CMakeLists.txt
+    set(SERENITY_SOURCE_DIR "${SERENITY_PROJECT_ROOT}")
+endif()
 
-# Lagom warnings
-include(${Lagom_SOURCE_DIR}/../CMake/lagom_compile_options.cmake)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 
@@ -102,12 +113,12 @@ if (ANDROID)
     include(cmake/AndroidExtras.cmake)
 endif()
 
-add_custom_target(run
+add_custom_target(run${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" "$<TARGET_FILE:ladybird>"
     USES_TERMINAL
 )
 
-add_custom_target(debug
+add_custom_target(debug${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" gdb -ex "set follow-fork-mode child" "$<TARGET_FILE:ladybird>"
     USES_TERMINAL
 )
