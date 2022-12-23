@@ -35,6 +35,21 @@ During the presentation, the following keybindings are always available, though 
 -   F5: Return to first slide and enter full-screen mode.
 -   Typing a number followed by Enter will go to the first frame of that slide.
 
+### Presentation Appearance
+
+The presentation's appearance is mostly determined by the presentation itself, but it can also be customized in Presenter's settings. For the footer, you can use the following placeholders both in Presenter settings and in presentation files themselves:
+
+-   {presentation_title}: Possibly empty title of presentation
+-   {slide_title}: Possibly empty title of slide
+-   {author}: Possibly empty slide author
+-   {slides_total}: Total number of slides in the presentation
+-   {frames_total}: Total number of frames in the presentation (across all slides)
+-   {date}: Possibly empty modification date of the presentation
+-   {slide_number}: Slide number
+-   {slide_frame_number}: Number of frame within slide
+-   {slide_frames_total}: Total number of frames within the current slide
+-   {frame_number}: Counts all frames on all slides
+
 ## See Also
 
 -   [presenter(5)](help://man/5/presenter) for the file format
