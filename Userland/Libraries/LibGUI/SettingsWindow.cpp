@@ -57,13 +57,13 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
     window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>("OK"));
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();
-        GUI::Application::the()->quit();
+        window->close();
     };
 
     window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>("Cancel"));
     window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->cancel_settings();
-        GUI::Application::the()->quit();
+        window->close();
     };
 
     window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"));
