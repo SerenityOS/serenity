@@ -63,7 +63,8 @@ TaskbarWindow::TaskbarWindow()
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 2, 3, 0, 3 });
 
-    m_quick_launch = Taskbar::QuickLaunchWidget::construct();
+    // FIXME: Propagate this error up as well
+    m_quick_launch = MUST(Taskbar::QuickLaunchWidget::create());
     main_widget.add_child(*m_quick_launch);
 
     m_task_button_container = main_widget.add<GUI::Widget>();
