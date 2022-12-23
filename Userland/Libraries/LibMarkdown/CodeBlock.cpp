@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Forward.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibMarkdown/CodeBlock.h>
@@ -53,22 +54,23 @@ DeprecatedString CodeBlock::render_to_html(bool) const
     return builder.build();
 }
 
-DeprecatedString CodeBlock::render_for_terminal(size_t) const
+Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
 {
-    StringBuilder builder;
+    Vector<DeprecatedString> lines;
 
-    for (auto const& line : m_code.split('\n')) {
-        // Do not indent too much if we are in the synopsis
-        if (!(m_current_section && m_current_section->render_for_terminal().contains("SYNOPSIS"sv)))
-            builder.append("  "sv);
-
-        builder.append("  "sv);
-        builder.append(line);
-        builder.append("\n"sv);
+    // Do not indent too much if we are in the synopsis
+    auto indentation = "    "sv;
+    if (m_current_section != nullptr) {
+        auto current_section_name = m_current_section->render_lines_for_terminal()[0];
+        if (current_section_name.contains("SYNOPSIS"sv))
+            indentation = "  "sv;
     }
-    builder.append("\n"sv);
 
-    return builder.build();
+    for (auto const& line : m_code.split('\n'))
+        lines.append(DeprecatedString::formatted("{}{}", indentation, line));
+    lines.append("");
+
+    return lines;
 }
 
 RecursionDecision CodeBlock::walk(Visitor& visitor) const

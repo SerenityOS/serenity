@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Forward.h>
 #include <LibMarkdown/BlockQuote.h>
 #include <LibMarkdown/CodeBlock.h>
 #include <LibMarkdown/ContainerBlock.h>
@@ -39,16 +40,16 @@ DeprecatedString ContainerBlock::render_to_html(bool tight) const
     return builder.build();
 }
 
-DeprecatedString ContainerBlock::render_for_terminal(size_t view_width) const
+Vector<DeprecatedString> ContainerBlock::render_lines_for_terminal(size_t view_width) const
 {
-    StringBuilder builder;
+    Vector<DeprecatedString> lines;
 
     for (auto& block : m_blocks) {
-        auto s = block.render_for_terminal(view_width);
-        builder.append(s);
+        for (auto& line : block.render_lines_for_terminal(view_width))
+            lines.append(move(line));
     }
 
-    return builder.build();
+    return lines;
 }
 
 RecursionDecision ContainerBlock::walk(Visitor& visitor) const

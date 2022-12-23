@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibMarkdown/BlockQuote.h>
 #include <LibMarkdown/Visitor.h>
 
@@ -19,10 +20,10 @@ DeprecatedString BlockQuote::render_to_html(bool) const
     return builder.build();
 }
 
-DeprecatedString BlockQuote::render_for_terminal(size_t view_width) const
+Vector<DeprecatedString> BlockQuote::render_lines_for_terminal(size_t view_width) const
 {
-    // FIXME: Rewrite the whole terminal renderer to make blockquote rendering possible
-    return m_contents->render_for_terminal(view_width);
+    // FIXME: Indent lines inside the blockquote
+    return m_contents->render_lines_for_terminal(view_width);
 }
 
 RecursionDecision BlockQuote::walk(Visitor& visitor) const
