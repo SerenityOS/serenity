@@ -22,8 +22,12 @@ DeprecatedString BlockQuote::render_to_html(bool) const
 
 Vector<DeprecatedString> BlockQuote::render_lines_for_terminal(size_t view_width) const
 {
-    // FIXME: Indent lines inside the blockquote
-    return m_contents->render_lines_for_terminal(view_width);
+    Vector<DeprecatedString> lines;
+    size_t child_width = view_width < 4 ? 0 : view_width - 4;
+    for (auto& line : m_contents->render_lines_for_terminal(child_width))
+        lines.append(DeprecatedString::formatted("    {}", line));
+
+    return lines;
 }
 
 RecursionDecision BlockQuote::walk(Visitor& visitor) const
