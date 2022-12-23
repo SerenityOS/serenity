@@ -513,13 +513,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         if (text_node.document().inspected_node() == &text_node.dom_node())
             context.painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Magenta);
 
-        // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = text_node.text_for_rendering();
-        auto text_transform = text_node.computed_values().text_transform();
-        if (text_transform == CSS::TextTransform::Uppercase)
-            text = Unicode::to_unicode_uppercase_full(text_node.text_for_rendering());
-        if (text_transform == CSS::TextTransform::Lowercase)
-            text = Unicode::to_unicode_lowercase_full(text_node.text_for_rendering());
 
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
