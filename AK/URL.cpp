@@ -32,7 +32,7 @@ DeprecatedString URL::path() const
     if (cannot_be_a_base_url())
         return paths()[0];
     StringBuilder builder;
-    for (auto& path : m_paths) {
+    for (auto const& path : m_paths) {
         builder.append('/');
         builder.append(path);
     }
