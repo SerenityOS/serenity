@@ -19,7 +19,7 @@ steps:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-13 main'
         sudo apt-get update
-        sudo apt-get install ccache gcc-12 g++-12 clang-13 libstdc++-12-dev ninja-build unzip
+        sudo apt-get install ccache gcc-12 g++-12 clang-13 libstdc++-12-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libgl1-mesa-dev
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 100
@@ -34,7 +34,7 @@ steps:
   - ${{ if eq(parameters.os, 'macOS') }}:
     # macOS ships an ancient Bash 3.x by default
     - script: |
-        brew install bash ninja wabt ccache unzip
+        brew install bash ninja wabt ccache unzip qt llvm@15
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Android') }}:

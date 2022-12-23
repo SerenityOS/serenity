@@ -23,6 +23,18 @@ jobs:
       ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
         value: gcc
 
+    - name: host-cc
+      ${{ if eq(parameters.os, 'macOS') }}:
+        value: $(brew --prefix llvm@15)/bin/clang
+      ${{ if not(eq(parameters.os, 'macOS')) }}:
+        value: gcc-12
+
+    - name: host-cxx
+      ${{ if eq(parameters.os, 'macOS') }}:
+        value: $(brew --prefix llvm@15)/bin/clang++
+      ${{ if not(eq(parameters.os, 'macOS')) }}:
+        value: g++-12
+
     - name: ndk_version # only relevant for Android
       value: '24.0.8215888'
 
@@ -55,13 +67,14 @@ jobs:
           cmake -GNinja -B tools-build \
             -DBUILD_LAGOM=OFF \
             -DENABLE_LAGOM_CCACHE=ON \
-            -DCMAKE_C_COMPILER=gcc-12 \
-            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_C_COMPILER=$(host-cc) \
+            -DCMAKE_CXX_COMPILER=$(host-cxx) \
             -DCMAKE_INSTALL_PREFIX=tool-install \
             -Dpackage=LagomTools
           ninja -C tools-build install
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
+            -DENABLE_LAGOM_LADYBIRD=ON \
             -DENABLE_LAGOM_CCACHE=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DANDROID_ABI=arm64-v8a \
@@ -100,12 +113,13 @@ jobs:
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
             -DENABLE_LAGOM_CCACHE=ON \
+            -DENABLE_LAGOM_LADYBIRD=ON \
             -DINCLUDE_WASM_SPEC_TESTS=ON \
             -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
-            -DCMAKE_C_COMPILER=gcc-12 \
-            -DCMAKE_CXX_COMPILER=g++-12
+            -DCMAKE_C_COMPILER=$(host-cc) \
+            -DCMAKE_CXX_COMPILER=$(host-cxx)
         displayName: 'Create Build Environment'
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
         env:
@@ -114,6 +128,7 @@ jobs:
 
     - script: |
         cmake --build .
+        cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
       displayName: 'Build'
       workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
       env:
