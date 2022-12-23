@@ -93,7 +93,7 @@ public:
     static ErrorOr<DeprecatedString> read_link(DeprecatedString const& link_path);
     static ErrorOr<void> link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path);
 
-    static ErrorOr<void> remove(DeprecatedString const& path, RecursionMode);
+    static ErrorOr<void> remove(StringView path, RecursionMode);
 
     virtual bool open(OpenMode) override;
 

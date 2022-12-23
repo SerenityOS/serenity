@@ -549,11 +549,9 @@ ErrorOr<void> File::link_file(DeprecatedString const& dst_path, DeprecatedString
     return {};
 }
 
-ErrorOr<void> File::remove(DeprecatedString const& path, RecursionMode mode)
+ErrorOr<void> File::remove(StringView path, RecursionMode mode)
 {
-    struct stat path_stat;
-    if (lstat(path.characters(), &path_stat) < 0)
-        return Error::from_errno(errno);
+    auto path_stat = TRY(Core::System::lstat(path));
 
     if (S_ISDIR(path_stat.st_mode) && mode == RecursionMode::Allowed) {
         auto di = DirIterator(path, DirIterator::SkipParentAndBaseDir);
@@ -561,16 +559,12 @@ ErrorOr<void> File::remove(DeprecatedString const& path, RecursionMode mode)
             return Error::from_errno(di.error());
 
         while (di.has_next()) {
-            auto result = remove(di.next_full_path(), RecursionMode::Allowed);
-            if (result.is_error())
-                return result.error();
+            TRY(remove(di.next_full_path(), RecursionMode::Allowed));
         }
 
-        if (rmdir(path.characters()) < 0)
-            return Error::from_errno(errno);
+        TRY(Core::System::rmdir(path));
     } else {
-        if (unlink(path.characters()) < 0)
-            return Error::from_errno(errno);
+        TRY(Core::System::unlink(path));
     }
 
     return {};
