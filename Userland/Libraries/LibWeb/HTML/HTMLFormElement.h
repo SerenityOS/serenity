@@ -22,8 +22,13 @@ public:
 
     void submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding = false);
 
+    void reset_form();
+
     // NOTE: This is for the JS bindings. Use submit_form instead.
     void submit();
+
+    // NOTE: This is for the JS bindings. Use submit_form instead.
+    void reset();
 
     void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
     void remove_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
@@ -37,6 +42,9 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     bool m_firing_submission_events { false };
+
+    // https://html.spec.whatwg.org/multipage/forms.html#locked-for-reset
+    bool m_locked_for_reset { false };
 
     Vector<JS::GCPtr<HTMLElement>> m_associated_elements;
 
