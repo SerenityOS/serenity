@@ -47,11 +47,125 @@ FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
 
 FrameLoader::~FrameLoader() = default;
 
-static bool build_markdown_document(DOM::Document& document, ByteBuffer const& data)
+static ErrorOr<void> build_html_document(DOM::Document& document, ByteBuffer const& data)
+{
+    document.set_document_type(DOM::Document::Type::HTML);
+    document.set_content_type("text/html");
+
+    auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
+    parser->run(document.url());
+    return {};
+}
+
+static ErrorOr<void> build_xml_document(DOM::Document& document, ByteBuffer const& data)
+{
+    document.set_document_type(DOM::Document::Type::XML);
+
+    XML::Parser parser(data, { .resolve_external_resource = resolve_xml_resource });
+    XMLDocumentBuilder builder { document };
+    auto result = parser.parse_with_listener(builder);
+
+    if (result.is_error())
+        return Error::from_string_view(result.error().error);
+    if (builder.has_error())
+        return Error::from_string_literal("Error while building XML document");
+    return {};
+}
+
+static ErrorOr<void> build_text_document(DOM::Document& document, ByteBuffer const& data)
+{
+    document.set_document_type(DOM::Document::Type::HTML);
+    document.set_quirks_mode(DOM::QuirksMode::No);
+
+    auto html_element = document.create_element("html").release_value();
+    MUST(document.append_child(html_element));
+
+    auto head_element = document.create_element("head").release_value();
+    MUST(html_element->append_child(head_element));
+    auto title_element = document.create_element("title").release_value();
+    MUST(head_element->append_child(title_element));
+
+    auto title_text = document.create_text_node(document.url().basename());
+    MUST(title_element->append_child(title_text));
+
+    auto body_element = document.create_element("body").release_value();
+    MUST(html_element->append_child(body_element));
+
+    auto pre_element = document.create_element("pre").release_value();
+    MUST(body_element->append_child(pre_element));
+    MUST(pre_element->append_child(document.create_text_node(DeprecatedString::copy(data))));
+
+    return {};
+}
+
+static ErrorOr<AK::DeprecatedString> get_title_for_metdia_document(DOM::Document const& document, ByteBuffer const& data)
+{
+    auto const& type = document.content_type();
+    auto const& basename = document.url().basename();
+
+    if (type.starts_with("image/"sv)) {
+        auto image = Platform::ImageCodecPlugin::the().decode_image(data);
+        if (!image.has_value() || image->frames.is_empty())
+            return Error::from_string_literal("Failed to decode image");
+
+        auto const& frame = image->frames[0];
+        auto const& bitmap = frame.bitmap;
+        if (!bitmap)
+            return Error::from_string_literal("Failed to decode image");
+
+        return DeprecatedString::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height());
+    }
+
+    return document.url().basename();
+}
+
+static AK::StringView const get_media_element_tag(AK::DeprecatedString const& type)
+{
+    if (type.starts_with("image/"sv))
+        return "img"sv;
+    if (type.starts_with("video/"sv))
+        return "video"sv;
+    if (type.starts_with("audio/"sv))
+        return "audio"sv;
+
+    // FIXME: Handle other media types.
+    return "img"sv;
+}
+
+static ErrorOr<void> build_media_document(DOM::Document& document, ByteBuffer const& data)
+{
+    document.set_document_type(DOM::Document::Type::HTML);
+    document.set_quirks_mode(DOM::QuirksMode::No);
+
+    auto title = TRY(get_title_for_metdia_document(document, data));
+
+    auto html_element = document.create_element("html").release_value();
+    MUST(document.append_child(html_element));
+
+    auto head_element = document.create_element("head").release_value();
+    MUST(html_element->append_child(head_element));
+    auto title_element = document.create_element("title").release_value();
+    MUST(head_element->append_child(title_element));
+
+    auto basename = LexicalPath::basename(document.url().path());
+    auto title_text = document.create_text_node(title);
+    MUST(title_element->append_child(*title_text));
+
+    auto body_element = document.create_element("body").release_value();
+    MUST(html_element->append_child(body_element));
+
+    auto media_element = document.create_element(get_media_element_tag(document.content_type())).release_value();
+    MUST(media_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
+    MUST(body_element->append_child(media_element));
+
+    return {};
+}
+
+static ErrorOr<void> build_markdown_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto markdown_document = Markdown::Document::parse(data);
     if (!markdown_document)
-        return false;
+        return Error::from_string_literal("Failed to parse Markdown document");
 
     auto extra_head_contents = R"~~~(
 <style>
@@ -98,65 +212,11 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 
     auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8");
     parser->run(document.url());
-    return true;
+
+    return {};
 }
 
-static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
-{
-    auto html_element = document.create_element("html").release_value();
-    MUST(document.append_child(html_element));
-
-    auto head_element = document.create_element("head").release_value();
-    MUST(html_element->append_child(head_element));
-    auto title_element = document.create_element("title").release_value();
-    MUST(head_element->append_child(title_element));
-
-    auto title_text = document.create_text_node(document.url().basename());
-    MUST(title_element->append_child(title_text));
-
-    auto body_element = document.create_element("body").release_value();
-    MUST(html_element->append_child(body_element));
-
-    auto pre_element = document.create_element("pre").release_value();
-    MUST(body_element->append_child(pre_element));
-
-    MUST(pre_element->append_child(document.create_text_node(DeprecatedString::copy(data))));
-    return true;
-}
-
-static bool build_image_document(DOM::Document& document, ByteBuffer const& data)
-{
-    auto image = Platform::ImageCodecPlugin::the().decode_image(data);
-    if (!image.has_value() || image->frames.is_empty())
-        return false;
-    auto const& frame = image->frames[0];
-    auto const& bitmap = frame.bitmap;
-    if (!bitmap)
-        return false;
-
-    auto html_element = document.create_element("html").release_value();
-    MUST(document.append_child(html_element));
-
-    auto head_element = document.create_element("head").release_value();
-    MUST(html_element->append_child(head_element));
-    auto title_element = document.create_element("title").release_value();
-    MUST(head_element->append_child(title_element));
-
-    auto basename = LexicalPath::basename(document.url().path());
-    auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, DeprecatedString::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height()));
-    MUST(title_element->append_child(*title_text));
-
-    auto body_element = document.create_element("body").release_value();
-    MUST(html_element->append_child(body_element));
-
-    auto image_element = document.create_element("img").release_value();
-    MUST(image_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
-    MUST(body_element->append_child(image_element));
-
-    return true;
-}
-
-static bool build_gemini_document(DOM::Document& document, ByteBuffer const& data)
+static ErrorOr<void> build_gemini_document(DOM::Document& document, ByteBuffer const& data)
 {
     StringView gemini_data { data };
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
@@ -167,38 +227,43 @@ static bool build_gemini_document(DOM::Document& document, ByteBuffer const& dat
 
     auto parser = HTML::HTMLParser::create(document, html_data, "utf-8");
     parser->run(document.url());
-    return true;
+
+    return {};
 }
 
-static bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
+ErrorOr<void> FrameLoader::load_document(DOM::Document& document, ByteBuffer const& data)
 {
+    auto mime_type = MimeSniff::MimeType::from_string(document.content_type());
+    if (!mime_type.has_value())
+        return Error::from_string_literal("Failed to parse MIME type");
 
-    XML::Parser parser(data, { .resolve_external_resource = resolve_xml_resource });
-    XMLDocumentBuilder builder { document };
-    auto result = parser.parse_with_listener(builder);
-    return !result.is_error() && !builder.has_error();
-}
+    auto const& type = mime_type->essence();
 
-bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data)
-{
-    auto& mime_type = document.content_type();
-    if (mime_type == "text/html" || mime_type == "image/svg+xml") {
-        auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
-        parser->run(document.url());
-        return true;
+    if (mime_type->is_html() || type == "image/svg+xml") {
+        return build_html_document(document, data);
     }
-    if (mime_type.ends_with("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
+    if (mime_type->is_xml())
         return build_xml_document(document, data);
-    if (mime_type.starts_with("image/"sv))
-        return build_image_document(document, data);
-    if (mime_type == "text/plain" || mime_type == "application/json")
+    if (mime_type->is_javascript() || mime_type->is_json() || type.is_one_of("text/css"sv, "text/plain"sv, "text/vtt"sv))
         return build_text_document(document, data);
-    if (mime_type == "text/markdown")
+    if (type == "multipart/x-mixed-replace") {
+        // FIXME: Implement multipart/x-mixed-replace support.
+    }
+    if (mime_type->is_image() || mime_type->is_audio_or_video())
+        return build_media_document(document, data);
+    if (type == "application/pdf" || type == "text/pdf") {
+        // FIXME: Implement PDF support.
+    }
+
+    if (type == "text/markdown")
         return build_markdown_document(document, data);
-    if (mime_type == "text/gemini")
+    if (type == "text/gemini")
         return build_gemini_document(document, data);
 
-    return false;
+    // FIXME: If the MIME type is not supported, we should either download it or pass it on to an external program
+
+    return Error::from_string_view("Unsupported document type!"sv);
 }
 
 bool FrameLoader::load(LoadRequest& request, Type type)
@@ -437,7 +502,7 @@ void FrameLoader::resource_did_load()
     };
     auto document = DOM::Document::create_and_initialize(
         DOM::Document::Type::HTML,
-        "text/html",
+        resource()->mime_type(),
         move(navigation_params));
 
     document->set_url(url);
@@ -448,8 +513,9 @@ void FrameLoader::resource_did_load()
     if (auto* page = browsing_context().page())
         page->client().page_did_create_main_document();
 
-    if (!parse_document(*document, resource()->encoded_data())) {
-        load_error_page(url, "Failed to parse content.");
+    auto error = load_document(document, resource()->encoded_data());
+    if (error.is_error()) {
+        load_error_page(url, error.error().string_literal());
         return;
     }
 
