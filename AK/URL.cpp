@@ -338,7 +338,8 @@ DeprecatedString URL::serialize_origin() const
         if (!url.is_valid())
             return "null";
         return url.serialize_origin();
-    } else if (!m_scheme.is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) { // file: "Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin."
+    }
+    if (!m_scheme.is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) { // file: "Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin."
         return "null";
     }
 
