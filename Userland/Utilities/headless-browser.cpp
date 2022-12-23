@@ -687,7 +687,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             dbgln("Saving to {}", output_file_path);
 
             if (Core::File::exists(output_file_path))
-                MUST(Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed, true));
+                MUST(Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed));
 
             auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
 

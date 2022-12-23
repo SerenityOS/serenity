@@ -364,7 +364,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         while (try_again) {
             try_again = false;
 
-            auto deletion_result = Core::File::remove(selected_node_path, Core::File::RecursionMode::Allowed, true);
+            auto deletion_result = Core::File::remove(selected_node_path, Core::File::RecursionMode::Allowed);
             if (deletion_result.is_error()) {
                 auto retry_message_result = GUI::MessageBox::show(window,
                     DeprecatedString::formatted("Failed to delete \"{}\": {}. Retry?",

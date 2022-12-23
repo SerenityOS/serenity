@@ -549,14 +549,11 @@ ErrorOr<void> File::link_file(DeprecatedString const& dst_path, DeprecatedString
     return {};
 }
 
-ErrorOr<void> File::remove(DeprecatedString const& path, RecursionMode mode, bool force)
+ErrorOr<void> File::remove(DeprecatedString const& path, RecursionMode mode)
 {
     struct stat path_stat;
-    if (lstat(path.characters(), &path_stat) < 0) {
-        if (!force)
-            return Error::from_errno(errno);
-        return {};
-    }
+    if (lstat(path.characters(), &path_stat) < 0)
+        return Error::from_errno(errno);
 
     if (S_ISDIR(path_stat.st_mode) && mode == RecursionMode::Allowed) {
         auto di = DirIterator(path, DirIterator::SkipParentAndBaseDir);
@@ -564,15 +561,15 @@ ErrorOr<void> File::remove(DeprecatedString const& path, RecursionMode mode, boo
             return Error::from_errno(di.error());
 
         while (di.has_next()) {
-            auto result = remove(di.next_full_path(), RecursionMode::Allowed, true);
+            auto result = remove(di.next_full_path(), RecursionMode::Allowed);
             if (result.is_error())
                 return result.error();
         }
 
-        if (rmdir(path.characters()) < 0 && !force)
+        if (rmdir(path.characters()) < 0)
             return Error::from_errno(errno);
     } else {
-        if (unlink(path.characters()) < 0 && !force)
+        if (unlink(path.characters()) < 0)
             return Error::from_errno(errno);
     }
 

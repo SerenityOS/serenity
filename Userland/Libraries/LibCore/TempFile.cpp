@@ -49,7 +49,7 @@ TempFile::~TempFile()
     if (m_type == Type::Directory)
         recursion_allowed = File::RecursionMode::Allowed;
 
-    auto rc = File::remove(m_path.characters(), recursion_allowed, false);
+    auto rc = File::remove(m_path.characters(), recursion_allowed);
     if (rc.is_error()) {
         warnln("File::remove failed: {}", rc.error().string_literal());
     }

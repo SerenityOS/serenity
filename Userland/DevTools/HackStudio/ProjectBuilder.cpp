@@ -133,7 +133,7 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
 
     auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
     if (Core::File::exists(cmake_file_path))
-        MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed, false));
+        MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed));
 
     auto cmake_file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Write));
     TRY(cmake_file->write_entire_buffer(generate_cmake_file_content().bytes()));
