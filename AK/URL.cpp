@@ -439,9 +439,7 @@ DeprecatedString URL::percent_decode(StringView input)
     StringBuilder builder;
     Utf8View utf8_view(input);
     for (auto it = utf8_view.begin(); !it.done(); ++it) {
-        if (*it != '%') {
-            builder.append_code_point(*it);
-        } else if (!is_ascii_hex_digit(it.peek(1).value_or(0)) || !is_ascii_hex_digit(it.peek(2).value_or(0))) {
+        if (*it != '%' || (!is_ascii_hex_digit(it.peek(1).value_or(0)) || !is_ascii_hex_digit(it.peek(2).value_or(0)))) {
             builder.append_code_point(*it);
         } else {
             ++it;
