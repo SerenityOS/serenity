@@ -17,4 +17,12 @@ HTMLOutputElement::HTMLOutputElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLOutputElement::~HTMLOutputElement() = default;
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-output-element:concept-form-reset-control
+void HTMLOutputElement::reset_algorithm()
+{
+    // 1. FIXME: String replace all with this element's default value within this element.
+
+    // 2. FIXME: Set this element's default value override to null.
+}
+
 }

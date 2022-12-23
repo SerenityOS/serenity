@@ -41,6 +41,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
+    virtual void reset_algorithm() override;
+
 private:
     HTMLOutputElement(DOM::Document&, DOM::QualifiedName);
 };
