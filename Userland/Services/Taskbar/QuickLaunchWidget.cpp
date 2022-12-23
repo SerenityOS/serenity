@@ -96,23 +96,19 @@ ErrorOr<NonnullRefPtr<QuickLaunchWidget>> QuickLaunchWidget::create()
         entries.append(entry.release_nonnull());
     }
 
-    auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) QuickLaunchWidget(move(entries))));
+    auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) QuickLaunchWidget()));
     TRY(widget->create_context_menu());
+    TRY(widget->add_quick_launch_buttons(move(entries)));
     return widget;
 }
 
-QuickLaunchWidget::QuickLaunchWidget(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries)
+QuickLaunchWidget::QuickLaunchWidget()
 {
     set_shrink_to_fit(true);
     set_layout<GUI::HorizontalBoxLayout>();
     layout()->set_spacing(0);
     set_frame_thickness(0);
     set_fixed_height(24);
-
-    for (auto& entry : entries) {
-        auto name = entry->name();
-        add_or_adjust_button(name, move(entry));
-    }
 }
 
 ErrorOr<void> QuickLaunchWidget::create_context_menu()
@@ -127,6 +123,16 @@ ErrorOr<void> QuickLaunchWidget::create_context_menu()
         }
     });
     m_context_menu->add_action(*m_context_menu_default_action);
+
+    return {};
+}
+
+ErrorOr<void> QuickLaunchWidget::add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries)
+{
+    for (auto& entry : entries) {
+        auto name = entry->name();
+        TRY(add_or_adjust_button(name, move(entry)));
+    }
 
     return {};
 }
@@ -161,13 +167,12 @@ static DeprecatedString sanitize_entry_name(DeprecatedString const& name)
     return name.replace(" "sv, ""sv, ReplaceMode::All).replace("="sv, ""sv, ReplaceMode::All);
 }
 
-void QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)
+ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)
 {
     auto file_name_to_watch = entry->file_name_to_watch();
     if (!file_name_to_watch.is_null()) {
         if (!m_watcher) {
-            // FIXME: Propagate errors
-            m_watcher = MUST(Core::FileWatcher::create());
+            m_watcher = TRY(Core::FileWatcher::create());
             m_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
                 auto name = sanitize_entry_name(event.event_path);
                 dbgln("Removing QuickLaunch entry {}", name);
@@ -176,8 +181,7 @@ void QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name
                     remove_child(*button);
             };
         }
-        // FIXME: Propagate errors
-        MUST(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
+        TRY(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
     }
 
     auto button = find_child_of_type_named<GUI::Button>(button_name);
@@ -201,6 +205,8 @@ void QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name
         m_context_menu_app_name = button_name;
         m_context_menu->popup(context_menu_event.screen_position(), m_context_menu_default_action);
     };
+
+    return {};
 }
 
 void QuickLaunchWidget::config_key_was_removed(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
@@ -218,7 +224,9 @@ void QuickLaunchWidget::config_string_did_change(DeprecatedString const& domain,
         auto entry = QuickLaunchEntry::create_from_config_value(value);
         if (!entry)
             return;
-        add_or_adjust_button(key, entry.release_nonnull());
+        auto result = add_or_adjust_button(key, entry.release_nonnull());
+        if (result.is_error())
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to change quick launch entry: {}", result.release_error()));
     }
 }
 
@@ -239,7 +247,9 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             auto entry = QuickLaunchEntry::create_from_path(url.path());
             if (entry) {
                 auto item_name = sanitize_entry_name(entry->name());
-                add_or_adjust_button(item_name, entry.release_nonnull());
+                auto result = add_or_adjust_button(item_name, entry.release_nonnull());
+                if (result.is_error())
+                    GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to add quick launch entry: {}", result.release_error()));
                 Config::write_string("Taskbar"sv, quick_launch, item_name, url.path());
             }
         }
