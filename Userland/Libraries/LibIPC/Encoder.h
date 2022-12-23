@@ -89,12 +89,9 @@ public:
         return *this;
     }
 
-    // Note: We require any encodeable variant to have Empty as its first variant, as only possibly-empty variants can be default constructed.
-    //       The default constructability is required by generated IPC message marshalling code.
     template<typename... VariantTypes>
-    Encoder& operator<<(AK::Variant<AK::Empty, VariantTypes...> const& variant)
+    Encoder& operator<<(AK::Variant<VariantTypes...> const& variant)
     {
-        // Note: This might be either u8 or size_t depending on the size of the variant; both are encodeable.
         *this << variant.index();
         variant.visit([this](auto const& underlying_value) { *this << underlying_value; });
         return *this;
