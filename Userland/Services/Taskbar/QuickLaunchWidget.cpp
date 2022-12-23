@@ -6,6 +6,7 @@
 
 #include "QuickLaunchWidget.h"
 #include <AK/LexicalPath.h>
+#include <AK/OwnPtr.h>
 #include <Kernel/API/InodeWatcherFlags.h>
 #include <LibConfig/Client.h>
 #include <LibCore/FileWatcher.h>
@@ -82,7 +83,25 @@ DeprecatedString QuickLaunchEntryFile::name() const
     return m_path;
 }
 
-QuickLaunchWidget::QuickLaunchWidget()
+ErrorOr<NonnullRefPtr<QuickLaunchWidget>> QuickLaunchWidget::create()
+{
+    Vector<NonnullOwnPtr<QuickLaunchEntry>> entries;
+    auto keys = Config::list_keys("Taskbar"sv, quick_launch);
+    for (auto& name : keys) {
+        auto value = Config::read_string("Taskbar"sv, quick_launch, name);
+        auto entry = QuickLaunchEntry::create_from_config_value(value);
+        if (!entry)
+            continue;
+
+        entries.append(entry.release_nonnull());
+    }
+
+    auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) QuickLaunchWidget(move(entries))));
+    TRY(widget->create_context_menu());
+    return widget;
+}
+
+QuickLaunchWidget::QuickLaunchWidget(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries)
 {
     set_shrink_to_fit(true);
     set_layout<GUI::HorizontalBoxLayout>();
@@ -90,8 +109,17 @@ QuickLaunchWidget::QuickLaunchWidget()
     set_frame_thickness(0);
     set_fixed_height(24);
 
+    for (auto& entry : entries) {
+        auto name = entry->name();
+        add_or_adjust_button(name, move(entry));
+    }
+}
+
+ErrorOr<void> QuickLaunchWidget::create_context_menu()
+{
+    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"sv));
     m_context_menu = GUI::Menu::construct();
-    m_context_menu_default_action = GUI::Action::create("&Remove", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
         Config::remove_key("Taskbar"sv, quick_launch, m_context_menu_app_name);
         auto button = find_child_of_type_named<GUI::Button>(m_context_menu_app_name);
         if (button) {
@@ -100,14 +128,7 @@ QuickLaunchWidget::QuickLaunchWidget()
     });
     m_context_menu->add_action(*m_context_menu_default_action);
 
-    auto keys = Config::list_keys("Taskbar"sv, quick_launch);
-    for (auto& name : keys) {
-        auto value = Config::read_string("Taskbar"sv, quick_launch, name);
-        auto entry = QuickLaunchEntry::create_from_config_value(value);
-        if (!entry)
-            continue;
-        add_or_adjust_button(name, entry.release_nonnull());
-    }
+    return {};
 }
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView value)
