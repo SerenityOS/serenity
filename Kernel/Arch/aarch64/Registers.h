@@ -762,4 +762,19 @@ struct alignas(u64) NZCV {
 };
 static_assert(sizeof(NZCV) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/PMCCNTR-EL0--Performance-Monitors-Cycle-Count-Register
+// PMCCNTR_EL0, Performance Monitors Cycle Count Register
+struct alignas(u64) PMCCNTR_EL0 {
+    u64 CCNT : 64;
+
+    static inline PMCCNTR_EL0 read()
+    {
+        PMCCNTR_EL0 pmccntr_el0;
+        asm volatile("mrs %[value], pmccntr_el0"
+                     : [value] "=r"(pmccntr_el0));
+        return pmccntr_el0;
+    }
+};
+static_assert(sizeof(PMCCNTR_EL0) == 8);
+
 }
