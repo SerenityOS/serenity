@@ -133,7 +133,7 @@ private:
     Vector<JS::Promise*> m_outstanding_rejected_promises_weak_set;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#about-to-be-notified-rejected-promises-list
-    Vector<JS::NonnullGCPtr<JS::Promise>> m_about_to_be_notified_rejected_promises_list;
+    Vector<JS::Handle<JS::Promise>> m_about_to_be_notified_rejected_promises_list;
 };
 
 EnvironmentSettingsObject& incumbent_settings_object();

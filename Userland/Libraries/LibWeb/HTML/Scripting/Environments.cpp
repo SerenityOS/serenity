@@ -37,8 +37,6 @@ void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(target_browsing_context);
-    for (auto& promise : m_about_to_be_notified_rejected_promises_list)
-        visitor.visit(promise);
 }
 
 JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()
@@ -203,7 +201,7 @@ bool EnvironmentSettingsObject::remove_from_outstanding_rejected_promises_weak_s
 
 void EnvironmentSettingsObject::push_onto_about_to_be_notified_rejected_promises_list(JS::NonnullGCPtr<JS::Promise> promise)
 {
-    m_about_to_be_notified_rejected_promises_list.append(move(promise));
+    m_about_to_be_notified_rejected_promises_list.append(JS::make_handle(promise));
 }
 
 bool EnvironmentSettingsObject::remove_from_about_to_be_notified_rejected_promises_list(JS::NonnullGCPtr<JS::Promise> promise)
