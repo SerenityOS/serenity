@@ -1842,7 +1842,14 @@ void Painter::set_pixel(IntPoint p, Color color, bool blend)
     // scaling and call set_pixel() -- do not scale the pixel.
     if (!clip_rect().contains(point / scale()))
         return;
-    auto& dst = m_target->scanline(point.y())[point.x()];
+    set_physical_pixel(point, color, blend);
+}
+
+void Painter::set_physical_pixel(IntPoint physical_point, Color color, bool blend)
+{
+    // This function should only be called after translation, clipping, etc has been handled elsewhere
+    // if not use set_pixel().
+    auto& dst = m_target->scanline(physical_point.y())[physical_point.x()];
     if (!blend || color.alpha() == 255)
         dst = color.value();
     else if (color.alpha())
