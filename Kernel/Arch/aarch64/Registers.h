@@ -46,6 +46,31 @@ struct alignas(u64) ID_AA64ISAR0_EL1 {
 };
 static_assert(sizeof(ID_AA64ISAR0_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-12/AArch64-Registers/MPIDR-EL1--Multiprocessor-Affinity-Register?lang=en
+// MPIDR_EL1, Multiprocessor Affinity Register
+struct alignas(u64) MPIDR_EL1 {
+    int Aff0 : 8;
+    int Aff1 : 8;
+    int Aff2 : 8;
+    int MT : 1;
+    int : 5;
+    int U : 1;
+    int : 1;
+    int Aff3 : 8;
+    int : 24;
+
+    static inline MPIDR_EL1 read()
+    {
+        MPIDR_EL1 affinity_register;
+
+        asm("mrs %[value], MPIDR_EL1"
+            : [value] "=r"(affinity_register));
+
+        return affinity_register;
+    }
+};
+static_assert(sizeof(MPIDR_EL1) == 8);
+
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
 // Memory Model Feature Register 0
 struct alignas(u64) ID_AA64MMFR0_EL1 {
