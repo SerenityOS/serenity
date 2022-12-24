@@ -8,7 +8,7 @@
 
 #include <AK/CircularQueue.h>
 #include <AK/FixedArray.h>
-#include <LibCore/InputBitStream.h>
+#include <LibCore/BitStream.h>
 #include <LibCore/Stream.h>
 
 namespace Compress {

@@ -10,7 +10,7 @@
 #include "MP3Types.h"
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
-#include <LibCore/InputBitStream.h>
+#include <LibCore/BitStream.h>
 #include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibDSP/MDCT.h>

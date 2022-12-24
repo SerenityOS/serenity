@@ -10,7 +10,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCompress/Deflate.h>
-#include <LibCore/InputBitStream.h>
+#include <LibCore/BitStream.h>
 #include <LibCore/MemoryStream.h>
 #include <cstring>
 
