@@ -533,6 +533,15 @@ Web::WebDriver::Response Client::is_element_enabled(Web::WebDriver::Parameters p
     return session->web_content_connection().is_element_enabled(parameters[1]);
 }
 
+// 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
+// POST /session/{session id}/element/{element id}/click
+Web::WebDriver::Response Client::click(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/click");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().click(parameters[1]);
+}
+
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
 // GET /session/{session id}/source
 Web::WebDriver::Response Client::get_source(Web::WebDriver::Parameters parameters, JsonValue)
