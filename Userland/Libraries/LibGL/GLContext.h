@@ -107,12 +107,6 @@ public:
     NonnullRefPtr<Gfx::Bitmap> frontbuffer() const { return m_frontbuffer; };
     void present();
 
-    // Used by WebGL to preserve the clear values when implicitly clearing the front buffer.
-    // FIXME: Add ContextParameters for these and expose them through methods such as gl_get_floatv instead of having a public API like this.
-    FloatVector4 current_clear_color() const { return m_clear_color; }
-    GLdouble current_clear_depth() const { return m_clear_depth; }
-    GLint current_clear_stencil() const { return m_clear_stencil; }
-
     void gl_begin(GLenum mode);
     void gl_clear(GLbitfield mask);
     void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
