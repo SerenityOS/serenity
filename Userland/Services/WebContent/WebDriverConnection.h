@@ -75,6 +75,7 @@ private:
     virtual Messages::WebDriverClient::GetElementTagNameResponse get_element_tag_name(DeprecatedString const& element_id) override;
     virtual Messages::WebDriverClient::GetElementRectResponse get_element_rect(DeprecatedString const& element_id) override;
     virtual Messages::WebDriverClient::IsElementEnabledResponse is_element_enabled(DeprecatedString const& element_id) override;
+    virtual Messages::WebDriverClient::ClickResponse click(DeprecatedString const& element_id) override;
     virtual Messages::WebDriverClient::GetSourceResponse get_source() override;
     virtual Messages::WebDriverClient::ExecuteScriptResponse execute_script(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::ExecuteAsyncScriptResponse execute_async_script(JsonValue const& payload) override;
