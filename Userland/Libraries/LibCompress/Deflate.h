@@ -13,7 +13,7 @@
 #include <AK/Endian.h>
 #include <AK/Vector.h>
 #include <LibCompress/DeflateTables.h>
-#include <LibCore/InputBitStream.h>
+#include <LibCore/BitStream.h>
 #include <LibCore/Stream.h>
 
 namespace Compress {

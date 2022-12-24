@@ -11,7 +11,7 @@
 #include <AK/Error.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
-#include <LibCore/InputBitStream.h>
+#include <LibCore/BitStream.h>
 #include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 
