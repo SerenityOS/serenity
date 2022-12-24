@@ -162,6 +162,27 @@ public:
 
     int scale() const { return state().scale; }
 
+    template<typename TGetPixelCallback>
+    void fill_pixels(Gfx::IntRect const& region, TGetPixelCallback callback, bool blend = false)
+    {
+        // Note: This function paints physical pixels and therefore does not make sense when
+        // called on a scaled painter. Scaling the region painted may break the caller (this
+        // would be the case for gradients in LibWeb), and if you scale the pixels (to squares)
+        // then this is no longer filling pixels.
+        VERIFY(scale() == 1);
+        auto paint_region = region.translated(translation());
+        auto clipped_region = paint_region.intersected(clip_rect());
+        if (clipped_region.is_empty())
+            return;
+        auto start_offset = clipped_region.location() - paint_region.location();
+        for (int y = 0; y < clipped_region.height(); y++) {
+            for (int x = 0; x < clipped_region.width(); x++) {
+                auto pixel = callback(IntPoint(x, y).translated(start_offset));
+                set_physical_pixel(clipped_region.location().translated(x, y), pixel, blend);
+            }
+        }
+    }
+
 protected:
     IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
     IntPoint to_physical(IntPoint p) const { return p.translated(translation()) * scale(); }
@@ -170,6 +191,7 @@ protected:
     void fill_rect_with_draw_op(IntRect const&, Color);
     void blit_with_opacity(IntPoint, Gfx::Bitmap const&, IntRect const& src_rect, float opacity, bool apply_alpha = true);
     void draw_physical_pixel(IntPoint, Color, int thickness = 1);
+    void set_physical_pixel(IntPoint, Color color, bool blend);
 
     struct State {
         Font const* font;
