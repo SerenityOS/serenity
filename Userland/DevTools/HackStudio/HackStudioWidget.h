@@ -16,6 +16,7 @@
 #include "GMLPreviewWidget.h"
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
+#include "LibGUI/Button.h"
 #include "Locator.h"
 #include "Project.h"
 #include "ProjectBuilder.h"
@@ -163,6 +164,7 @@ private:
 
     void update_gml_preview();
     void update_tree_view();
+    void update_toolbar_actions();
     void on_cursor_change();
     void file_renamed(DeprecatedString const& old_name, DeprecatedString const& new_name);
 
@@ -256,6 +258,10 @@ private:
     RefPtr<GUI::Action> m_no_wrapping_action;
     RefPtr<GUI::Action> m_wrap_anywhere_action;
     RefPtr<GUI::Action> m_wrap_at_words_action;
+
+    RefPtr<GUI::Button> m_cut_button;
+    RefPtr<GUI::Button> m_paste_button;
+    RefPtr<GUI::Button> m_copy_button;
 
     Mode m_mode { Mode::Code };
     OwnPtr<Coredump::Inspector> m_coredump_inspector;
