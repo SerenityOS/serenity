@@ -773,6 +773,14 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
         return parsed_value.release_nonnull();
 
+    if (expanded_values.is_empty()) {
+        auto const* parent_element = element.parent_or_shadow_host_element();
+        if (!parent_element || !parent_element->computed_css_values())
+            return property_initial_value(property_id);
+        if (auto property_or_null = parent_element->computed_css_values()->maybe_null_property(property_id))
+            return property_or_null.release_nonnull();
+        return property_initial_value(property_id);
+    }
     return {};
 }
 
