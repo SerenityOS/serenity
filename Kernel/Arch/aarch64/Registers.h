@@ -102,6 +102,24 @@ struct alignas(u64) ID_AA64MMFR0_EL1 {
 };
 static_assert(sizeof(ID_AA64MMFR0_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTFRQ-EL0--Counter-timer-Frequency-register
+// CNTFRQ_EL0, Counter-timer Frequency register
+struct alignas(u64) CNTFRQ_EL0 {
+    int : 32;
+    int ClockFrequency : 32;
+
+    static inline CNTFRQ_EL0 read()
+    {
+        CNTFRQ_EL0 frequency;
+
+        asm("mrs %[value], CNTFRQ_EL0"
+            : [value] "=r"(frequency));
+
+        return frequency;
+    }
+};
+static_assert(sizeof(CNTFRQ_EL0) == 8);
+
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
 // Translation Control Register
 struct alignas(u64) TCR_EL1 {
