@@ -211,14 +211,14 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
             double_value = TRY(argument.to_double(vm));
         switch (param.kind()) {
         case Wasm::ValueType::Kind::I32:
-            arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
+            arguments.append(Wasm::Value(param, static_cast<i64>(double_value)));
             break;
         case Wasm::ValueType::Kind::I64:
             if (argument.is_bigint()) {
                 auto value = TRY(argument.to_bigint_int64(vm));
-                arguments.append(Wasm::Value(param, bit_cast<u64>(value)));
+                arguments.append(Wasm::Value(param, value));
             } else {
-                arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
+                arguments.append(Wasm::Value(param, static_cast<i64>(double_value)));
             }
             break;
         case Wasm::ValueType::Kind::F32:
