@@ -431,11 +431,16 @@ struct SaturatingTruncate {
         // FIXME: This assumes that all values in ResultT are representable in 'double'.
         //        that assumption is not correct, which makes this function yield incorrect values
         //        for 'edge' values of type i64.
-        constexpr auto convert = [](auto truncated_value) {
+        constexpr auto convert = []<typename ConvertT>(ConvertT truncated_value) {
             if (truncated_value < NumericLimits<ResultT>::min())
                 return NumericLimits<ResultT>::min();
-            if (static_cast<double>(truncated_value) > static_cast<double>(NumericLimits<ResultT>::max()))
-                return NumericLimits<ResultT>::max();
+            if constexpr (IsSame<ConvertT, float>) {
+                if (truncated_value >= static_cast<ConvertT>(NumericLimits<ResultT>::max()))
+                    return NumericLimits<ResultT>::max();
+            } else {
+                if (static_cast<double>(truncated_value) >= static_cast<double>(NumericLimits<ResultT>::max()))
+                    return NumericLimits<ResultT>::max();
+            }
             return static_cast<ResultT>(truncated_value);
         };
 
