@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, James Mintram <me@jamesrm.com>
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
+ * Copyright (c) 2022, Konrad <konrad@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -12,6 +13,38 @@
 #include <AK/Types.h>
 
 namespace Kernel::Aarch64 {
+
+// https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/ID-AA64ISAR0-EL1--AArch64-Instruction-Set-Attribute-Register-0?lang=en
+// ID_AA64ISAR0_EL1, AArch64 Instruction Set Attribute Register 0
+struct alignas(u64) ID_AA64ISAR0_EL1 {
+    int : 4;
+    int AES : 4;
+    int SHA1 : 4;
+    int SHA2 : 4;
+    int CRC32 : 4;
+    int Atomic : 4;
+    int TME : 4;
+    int RDM : 4;
+    int SHA3 : 4;
+    int SM3 : 4;
+    int SM4 : 4;
+    int DP : 4;
+    int FHM : 4;
+    int TS : 4;
+    int TLB : 4;
+    int RNDR : 4;
+
+    static inline ID_AA64ISAR0_EL1 read()
+    {
+        ID_AA64ISAR0_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64ISAR0_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64ISAR0_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
 // Memory Model Feature Register 0
