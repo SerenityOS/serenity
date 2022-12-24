@@ -1183,7 +1183,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_text(DeprecatedString const& 
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#scroll-an-element-into-view
-static void scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollBehavior behavior, Bindings::ScrollLogicalPosition block, Bindings::ScrollLogicalPosition inline_)
+static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollBehavior behavior, Bindings::ScrollLogicalPosition block, Bindings::ScrollLogicalPosition inline_)
 {
     // FIXME: The below is ad-hoc, since we don't yet have scrollable elements.
     //        Return here and implement this according to spec once all overflow is made scrollable.
@@ -1193,16 +1193,16 @@ static void scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollB
     (void)inline_;
 
     if (!element.document().browsing_context())
-        return;
+        Error::from_string_view("Element has no browsing context."sv);
 
     auto* page = element.document().browsing_context()->page();
     if (!page)
-        return;
+        return Error::from_string_view("Element has no page."sv);
 
     // If this element doesn't have a layout node, we can't scroll it into view.
     element.document().update_layout();
     if (!element.layout_node())
-        return;
+        return Error::from_string_view("Element has no layout node."sv);
 
     // Find the nearest layout node that is a box (since we need a box to get a usable rect)
     auto* layout_node = element.layout_node();
@@ -1210,13 +1210,15 @@ static void scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollB
         layout_node = layout_node->parent();
 
     if (!layout_node)
-        return;
+        return Error::from_string_view("Element has no parent layout node that is a box."sv);
 
     page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect());
+
+    return {};
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
-void Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> arg)
+ErrorOr<void> Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> arg)
 {
     // 1. Let behavior be "auto".
     auto behavior = Bindings::ScrollBehavior::Auto;
@@ -1246,10 +1248,12 @@ void Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> ar
     // 6. If the element does not have any associated box, or is not available to user-agent features, then return.
     document().update_layout();
     if (!layout_node())
-        return;
+        return Error::from_string_view("Element has no associated box"sv);
 
     // 7. Scroll the element into view with behavior, block, and inline.
-    scroll_an_element_into_view(*this, behavior, block, inline_);
+    TRY(scroll_an_element_into_view(*this, behavior, block, inline_));
+
+    return {};
 
     // FIXME: 8. Optionally perform some other action that brings the element to the user’s attention.
 }
