@@ -61,3 +61,51 @@ TEST_CASE(0003_gl_bind_buffer_names_must_be_allocated)
     glBindBuffer(GL_ARRAY_BUFFER, 123);
     EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_INVALID_VALUE));
 }
+
+TEST_CASE(0004_gl_color_clear_value)
+{
+    auto context = create_testing_context();
+
+    Array<GLdouble, 4> clear_color;
+    glGetDoublev(GL_COLOR_CLEAR_VALUE, clear_color.data());
+    EXPECT_EQ(clear_color[0], 0.);
+    EXPECT_EQ(clear_color[1], 0.);
+    EXPECT_EQ(clear_color[2], 0.);
+    EXPECT_EQ(clear_color[3], 0.);
+
+    glClearColor(.1f, .2f, .3f, .4f);
+
+    glGetDoublev(GL_COLOR_CLEAR_VALUE, clear_color.data());
+    EXPECT_APPROXIMATE(clear_color[0], .1);
+    EXPECT_APPROXIMATE(clear_color[1], .2);
+    EXPECT_APPROXIMATE(clear_color[2], .3);
+    EXPECT_APPROXIMATE(clear_color[3], .4);
+}
+
+TEST_CASE(0005_gl_depth_clear_value)
+{
+    auto context = create_testing_context();
+
+    GLdouble clear_depth;
+    glGetDoublev(GL_DEPTH_CLEAR_VALUE, &clear_depth);
+    EXPECT_EQ(clear_depth, 1.);
+
+    glClearDepth(.1f);
+
+    glGetDoublev(GL_DEPTH_CLEAR_VALUE, &clear_depth);
+    EXPECT_APPROXIMATE(clear_depth, .1);
+}
+
+TEST_CASE(0006_gl_stencil_clear_value)
+{
+    auto context = create_testing_context();
+
+    GLint clear_stencil;
+    glGetIntegerv(GL_STENCIL_CLEAR_VALUE, &clear_stencil);
+    EXPECT_EQ(clear_stencil, 0);
+
+    glClearStencil(255);
+
+    glGetIntegerv(GL_STENCIL_CLEAR_VALUE, &clear_stencil);
+    EXPECT_EQ(clear_stencil, 255);
+}

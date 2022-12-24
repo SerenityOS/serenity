@@ -30,6 +30,18 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(u8) * 8 } };
     case GL_CLIENT_ACTIVE_TEXTURE:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(GL_TEXTURE0 + m_client_active_texture) } };
+    case GL_COLOR_CLEAR_VALUE:
+        return ContextParameter {
+            .type = GL_DOUBLE,
+            .count = 4,
+            .value = {
+                .double_list = {
+                    static_cast<GLdouble>(m_clear_color.x()),
+                    static_cast<GLdouble>(m_clear_color.y()),
+                    static_cast<GLdouble>(m_clear_color.z()),
+                    static_cast<GLdouble>(m_clear_color.w()),
+                } }
+        };
     case GL_COLOR_MATERIAL:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_color_material_enabled } };
     case GL_COLOR_MATERIAL_FACE:
@@ -52,6 +64,8 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_cull_faces } };
     case GL_DEPTH_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_DEPTH_CLEAR_VALUE:
+        return ContextParameter { .type = GL_DOUBLE, .value = { .double_value = static_cast<GLdouble>(m_clear_depth) } };
     case GL_DEPTH_TEST:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_depth_test_enabled } };
     case GL_DITHER:
