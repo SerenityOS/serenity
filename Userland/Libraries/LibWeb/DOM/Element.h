@@ -175,7 +175,7 @@ public:
     WebIDL::ExceptionOr<void> insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data);
 
     // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
-    void scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> = {});
+    ErrorOr<void> scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> = {});
 
 protected:
     Element(Document&, DOM::QualifiedName);

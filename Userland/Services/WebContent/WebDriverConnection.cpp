@@ -199,7 +199,7 @@ static ErrorOr<Web::DOM::ShadowRoot*, Web::WebDriver::Error> get_known_shadow_ro
 }
 
 // https://w3c.github.io/webdriver/#dfn-scrolls-into-view
-static void scroll_element_into_view(Web::DOM::Element& element)
+static ErrorOr<void> scroll_element_into_view(Web::DOM::Element& element)
 {
     // 1. Let options be the following ScrollIntoViewOptions:
     Web::DOM::ScrollIntoViewOptions options {};
@@ -211,7 +211,9 @@ static void scroll_element_into_view(Web::DOM::Element& element)
     options.inline_ = Web::Bindings::ScrollLogicalPosition::Nearest;
 
     // 2. Run Function.[[Call]](scrollIntoView, options) with element as the this value.
-    element.scroll_into_view(options);
+    TRY(element.scroll_into_view(options));
+
+    return {};
 }
 
 template<typename PropertyType = DeprecatedString>
@@ -1543,7 +1545,7 @@ Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::ta
     auto* element = TRY(get_known_connected_element(element_id));
 
     // 4. Scroll into view the element.
-    scroll_element_into_view(*element);
+    (void)scroll_element_into_view(*element);
 
     // 5. When the user agent is next to run the animation frame callbacks:
     //     a. Let element rect be element’s rectangle.

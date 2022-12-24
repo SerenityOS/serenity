@@ -1475,7 +1475,7 @@ void Document::set_focused_element(Element* element)
 
     // Scroll the viewport if necessary to make the newly focused element visible.
     if (m_focused_element)
-        m_focused_element->scroll_into_view();
+        (void)m_focused_element->scroll_into_view();
 }
 
 void Document::set_active_element(Element* element)
