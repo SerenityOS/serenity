@@ -311,6 +311,28 @@ struct alignas(u64) SCTLR_EL1 {
 };
 static_assert(sizeof(SCTLR_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
+// MIDR_EL1, Main ID Register
+struct alignas(u64) MIDR_EL1 {
+    int Revision : 4;
+    int PartNum : 12;
+    int Architecture : 4;
+    int Variant : 4;
+    int Implementer : 8;
+    int : 32;
+
+    static inline MIDR_EL1 read()
+    {
+        MIDR_EL1 affinity_register;
+
+        asm("mrs %[value], MIDR_EL1"
+            : [value] "=r"(affinity_register));
+
+        return affinity_register;
+    }
+};
+static_assert(sizeof(MIDR_EL1) == 8);
+
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
 // Hypervisor Configuration Register
 struct alignas(u64) HCR_EL2 {
