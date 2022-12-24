@@ -741,4 +741,25 @@ struct DAIF {
     }
 };
 static_assert(sizeof(DAIF) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/NZCV--Condition-Flags
+// NZCV, Condition Flags
+struct alignas(u64) NZCV {
+    u64 : 28;
+    u64 V : 1;
+    u64 C : 1;
+    u64 Z : 1;
+    u64 N : 1;
+    u64 : 32;
+
+    static inline NZCV read()
+    {
+        NZCV nzcv;
+        asm volatile("mrs %[value], nzcv"
+                     : [value] "=r"(nzcv));
+        return nzcv;
+    }
+};
+static_assert(sizeof(NZCV) == 8);
+
 }
