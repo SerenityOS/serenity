@@ -62,7 +62,7 @@ private:
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
-    virtual void on_automatic_scrolling_timer_fired() override;
+    virtual void automatic_scrolling_timer_did_fire() override;
 
     struct ItemData {
         Gfx::IntRect text_rect;

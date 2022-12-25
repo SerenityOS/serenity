@@ -351,7 +351,7 @@ void AbstractView::mouseup_event(MouseEvent& event)
     if (!model())
         return;
 
-    set_automatic_scrolling_timer(false);
+    set_automatic_scrolling_timer_active(false);
 
     if (m_might_drag) {
         // We were unsure about unselecting items other than the current one
@@ -796,7 +796,7 @@ void AbstractView::drag_move_event(DragEvent& event)
 
     if (acceptable) {
         m_automatic_scroll_delta = automatic_scroll_delta_from_position(event.position());
-        set_automatic_scrolling_timer(!m_automatic_scroll_delta.is_null());
+        set_automatic_scrolling_timer_active(!m_automatic_scroll_delta.is_null());
     }
 
     if (m_drop_candidate_index != new_drop_candidate_index) {
@@ -814,10 +814,10 @@ void AbstractView::drag_leave_event(Event&)
         update();
     }
 
-    set_automatic_scrolling_timer(false);
+    set_automatic_scrolling_timer_active(false);
 }
 
-void AbstractView::on_automatic_scrolling_timer_fired()
+void AbstractView::automatic_scrolling_timer_did_fire()
 {
     if (m_automatic_scroll_delta.is_null())
         return;

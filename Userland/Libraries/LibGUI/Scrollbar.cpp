@@ -53,7 +53,7 @@ Scrollbar::Scrollbar(Orientation orientation)
 
     m_automatic_scrolling_timer->set_interval(100);
     m_automatic_scrolling_timer->on_timeout = [this] {
-        on_automatic_scrolling_timer_fired();
+        automatic_scrolling_timer_did_fire();
     };
 }
 
@@ -225,7 +225,7 @@ void Scrollbar::paint_event(PaintEvent& event)
         Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::ThickCap, false, hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber);
 }
 
-void Scrollbar::on_automatic_scrolling_timer_fired()
+void Scrollbar::automatic_scrolling_timer_did_fire()
 {
     if (m_pressed_component == Component::DecrementButton && component_at_position(m_last_mouse_position) == Component::DecrementButton) {
         decrease_slider_by_steps(1);
@@ -265,14 +265,14 @@ void Scrollbar::mousedown_event(MouseEvent& event)
     if (m_pressed_component == Component::DecrementButton) {
         if (is_min())
             return;
-        set_automatic_scrolling_active(true, Component::DecrementButton);
+        set_automatic_scrolling_timer_active(true, Component::DecrementButton);
         update();
         return;
     }
     if (m_pressed_component == Component::IncrementButton) {
         if (is_max())
             return;
-        set_automatic_scrolling_active(true, Component::IncrementButton);
+        set_automatic_scrolling_timer_active(true, Component::IncrementButton);
         update();
         return;
     }
@@ -291,7 +291,7 @@ void Scrollbar::mousedown_event(MouseEvent& event)
     VERIFY(!event.shift());
 
     VERIFY(m_pressed_component == Component::Gutter);
-    set_automatic_scrolling_active(true, Component::Gutter);
+    set_automatic_scrolling_timer_active(true, Component::Gutter);
     update();
 }
 
@@ -299,7 +299,7 @@ void Scrollbar::mouseup_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Primary)
         return;
-    set_automatic_scrolling_active(false, Component::None);
+    set_automatic_scrolling_timer_active(false, Component::None);
     update();
 }
 
@@ -311,7 +311,7 @@ void Scrollbar::mousewheel_event(MouseEvent& event)
     Widget::mousewheel_event(event);
 }
 
-void Scrollbar::set_automatic_scrolling_active(bool active, Component pressed_component)
+void Scrollbar::set_automatic_scrolling_timer_active(bool active, Component pressed_component)
 {
     m_pressed_component = pressed_component;
     if (m_pressed_component == Component::Gutter)
@@ -320,7 +320,7 @@ void Scrollbar::set_automatic_scrolling_active(bool active, Component pressed_co
         m_automatic_scrolling_timer->set_interval(100);
 
     if (active) {
-        on_automatic_scrolling_timer_fired();
+        automatic_scrolling_timer_did_fire();
         m_automatic_scrolling_timer->start();
     } else {
         m_automatic_scrolling_timer->stop();
@@ -402,7 +402,7 @@ void Scrollbar::change_event(Event& event)
 {
     if (event.type() == Event::Type::EnabledChange) {
         if (!is_enabled())
-            set_automatic_scrolling_active(false, Component::None);
+            set_automatic_scrolling_timer_active(false, Component::None);
     }
     return Widget::change_event(event);
 }
