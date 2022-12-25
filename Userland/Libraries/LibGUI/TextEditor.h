@@ -300,6 +300,9 @@ private:
     // ^Clipboard::ClipboardClient
     virtual void clipboard_content_did_change(DeprecatedString const& mime_type) override;
 
+    // ^GUI::AbstractScrollableWidget
+    virtual void automatic_scrolling_timer_did_fire() override;
+
     void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
@@ -353,8 +356,6 @@ private:
 
     size_t visual_line_containing(size_t line_index, size_t column) const;
     void recompute_visual_lines(size_t line_index);
-
-    void automatic_selection_scroll_timer_fired();
 
     template<class T, class... Args>
     inline void execute(Args&&... args)
@@ -430,8 +431,6 @@ private:
     OwnPtr<AutocompleteBox> m_autocomplete_box;
     bool m_should_keep_autocomplete_box { false };
     size_t m_automatic_autocomplete_delay_ms { 800 };
-
-    RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
     RefPtr<Core::Timer> m_autocomplete_timer;
 
     OwnPtr<EditingEngine> m_editing_engine;

@@ -69,10 +69,6 @@ TextEditor::TextEditor(Type type)
     }
     vertical_scrollbar().set_step(line_height());
     m_cursor = { 0, 0 };
-    m_automatic_selection_scroll_timer = add<Core::Timer>(100, [this] {
-        automatic_selection_scroll_timer_fired();
-    });
-    m_automatic_selection_scroll_timer->stop();
     create_actions();
     set_editing_engine(make<RegularEditingEngine>());
 }
@@ -309,8 +305,9 @@ void TextEditor::mouseup_event(MouseEvent& event)
 void TextEditor::mousemove_event(MouseEvent& event)
 {
     m_last_mousemove_position = event.position();
-    if (m_in_drag_select && (rect().contains(event.position()) || !m_automatic_selection_scroll_timer->is_active())) {
-        set_cursor(text_position_at(event.position()));
+    if (m_in_drag_select) {
+        auto constrained = event.position().constrained(widget_inner_rect());
+        set_cursor(text_position_at(constrained));
         m_selection.set_end(m_cursor);
         did_update_selection();
         update();
@@ -332,10 +329,10 @@ void TextEditor::select_current_line()
     did_update_selection();
 }
 
-void TextEditor::automatic_selection_scroll_timer_fired()
+void TextEditor::automatic_scrolling_timer_did_fire()
 {
     if (!m_in_drag_select) {
-        m_automatic_selection_scroll_timer->stop();
+        set_automatic_scrolling_timer_active(false);
         return;
     }
     set_cursor(text_position_at(m_last_mousemove_position));
@@ -1736,13 +1733,13 @@ void TextEditor::hide_autocomplete()
 
 void TextEditor::enter_event(Core::Event&)
 {
-    m_automatic_selection_scroll_timer->stop();
+    set_automatic_scrolling_timer_active(false);
 }
 
 void TextEditor::leave_event(Core::Event&)
 {
     if (m_in_drag_select)
-        m_automatic_selection_scroll_timer->start();
+        set_automatic_scrolling_timer_active(true);
 }
 
 void TextEditor::did_change(AllowCallback allow_callback)

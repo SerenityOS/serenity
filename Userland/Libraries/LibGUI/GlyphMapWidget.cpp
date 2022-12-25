@@ -54,19 +54,6 @@ GlyphMapWidget::GlyphMapWidget()
     horizontal_scrollbar().set_visible(false);
     did_change_font();
     set_active_glyph('A');
-
-    m_automatic_selection_scroll_timer = add<Core::Timer>(20, [this] {
-        if (!m_in_drag_select) {
-            m_automatic_selection_scroll_timer->stop();
-            return;
-        }
-        auto glyph = glyph_at_position_clamped(m_last_mousemove_position);
-        m_selection.extend_to(glyph);
-        set_active_glyph(glyph, ShouldResetSelection::No);
-        scroll_to_glyph(glyph);
-        update();
-    });
-    m_automatic_selection_scroll_timer->stop();
 }
 
 void GlyphMapWidget::resize_event(ResizeEvent& event)
@@ -233,7 +220,6 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
         if (event.shift())
             m_selection.extend_to(glyph);
         m_in_drag_select = true;
-        m_automatic_selection_scroll_timer->start();
         set_active_glyph(glyph, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
     }
 }
@@ -257,6 +243,27 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
 {
     m_last_mousemove_position = event.position();
+    if (m_in_drag_select) {
+        auto constrained = event.position().constrained(widget_inner_rect());
+        auto glyph = glyph_at_position_clamped(constrained);
+        m_selection.extend_to(glyph);
+        set_active_glyph(glyph, ShouldResetSelection::No);
+        scroll_to_glyph(glyph);
+        update();
+    }
+}
+
+void GlyphMapWidget::automatic_scrolling_timer_did_fire()
+{
+    if (!m_in_drag_select) {
+        set_automatic_scrolling_timer_active(false);
+        return;
+    }
+    auto glyph = glyph_at_position_clamped(m_last_mousemove_position);
+    m_selection.extend_to(glyph);
+    set_active_glyph(glyph, ShouldResetSelection::No);
+    scroll_to_glyph(glyph);
+    update();
 }
 
 void GlyphMapWidget::doubleclick_event(MouseEvent& event)
@@ -567,6 +574,17 @@ ErrorOr<void> GlyphMapWidget::set_font(Gfx::Font const& font)
     m_modified_glyphs.clear();
     AbstractScrollableWidget::set_font(font);
     return {};
+}
+
+void GlyphMapWidget::enter_event(Core::Event&)
+{
+    set_automatic_scrolling_timer_active(false);
+}
+
+void GlyphMapWidget::leave_event(Core::Event&)
+{
+    if (m_in_drag_select)
+        set_automatic_scrolling_timer_active(true);
 }
 
 Optional<UISize> GlyphMapWidget::calculated_min_size() const
