@@ -291,7 +291,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                 global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
                 break;
             case (MULTIBOOT_MEMORY_RESERVED):
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
                 // Workaround for https://gitlab.com/qemu-project/qemu/-/commit/8504f129450b909c88e199ca44facd35d38ba4de
                 // That commit added a reserved 12GiB entry for the benefit of virtual firmware.
                 // We can safely ignore this block as it isn't actually reserved on any real hardware.
