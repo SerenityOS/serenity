@@ -39,7 +39,7 @@ DIR_OF_THIS_SCRIPT = os.path.abspath(os.path.dirname(__file__))
 SOURCE_EXTENSIONS = ['.cpp', '.c']
 
 gcc_path = None
-for serenity_arch in ['x86_64', 'i686', 'aarch64']:
+for serenity_arch in ['x86_64', 'aarch64']:
     candidate_gcc_path = os.path.join(
         DIR_OF_THIS_SCRIPT, 'Toolchain',
         'Local', serenity_arch, 'bin', f'{serenity_arch}-pc-serenity-gcc'
