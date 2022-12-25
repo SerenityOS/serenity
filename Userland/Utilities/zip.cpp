@@ -11,6 +11,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
@@ -53,15 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Archive::ZipOutputStream zip_stream { file_stream };
 
-    auto add_file = [&](DeprecatedString path) {
-        auto file = Core::File::construct(path);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", path, file->error_string());
-            return;
-        }
-
+    auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
         auto canonicalized_path = LexicalPath::canonicalized_path(path);
-        auto file_buffer = file->read_all();
+        auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file_buffer = TRY(file->read_until_eof());
         Archive::ZipMember member {};
         member.name = canonicalized_path;
 
@@ -81,6 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         member.crc32 = checksum.digest();
         member.is_directory = false;
         zip_stream.add_member(member);
+        return {};
     };
 
     auto add_directory = [&](DeprecatedString path, auto handle_directory) -> void {
@@ -103,10 +100,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto child_path = it.next_full_path();
             if (Core::File::is_link(child_path))
                 return;
-            if (!Core::File::is_directory(child_path))
-                add_file(child_path);
-            else
+            if (!Core::File::is_directory(child_path)) {
+                auto result = add_file(child_path);
+                if (result.is_error())
+                    warnln("Couldn't add file '{}': {}", child_path, result.error());
+            } else {
                 handle_directory(child_path, handle_directory);
+            }
         }
     };
 
@@ -114,7 +114,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (Core::File::is_directory(source_path)) {
             add_directory(source_path, add_directory);
         } else {
-            add_file(source_path);
+            auto result = add_file(source_path);
+            if (result.is_error())
+                warnln("Couldn't add file '{}': {}", source_path, result.error());
         }
     }
 
