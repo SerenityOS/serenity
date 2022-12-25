@@ -1765,10 +1765,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
         auto resolved_row_start = box.computed_values().row_gap().is_auto() ? positioned_box.row : positioned_box.row * 2;
         auto resolved_row_end = ((positioned_box.row + row_span_without_overflows) * 2) - 1;
+
+        // FIXME: The above algorithms should ensure that this clamp is not required.
+        resolved_row_start = clamp(resolved_row_start, 0, m_grid_rows.size());
+        resolved_row_end = clamp(resolved_row_end, resolved_row_start, m_grid_rows.size());
+
         auto resolved_row_span = box.computed_values().row_gap().is_auto() ? row_span_without_overflows : resolved_row_end - resolved_row_start;
 
         auto resolved_column_start = box.computed_values().column_gap().is_auto() ? positioned_box.column : positioned_box.column * 2;
         auto resolved_column_end = ((positioned_box.column + positioned_box.column_span) * 2) - 1;
+
+        // FIXME: The above algorithms should ensure that this clamp is not required.
+        resolved_column_start = clamp(resolved_column_start, 0, m_grid_columns.size());
+        resolved_column_end = clamp(resolved_column_end, resolved_row_start, m_grid_columns.size());
+
         auto resolved_column_span = box.computed_values().column_gap().is_auto() ? positioned_box.column_span : resolved_column_end - resolved_column_start;
 
         layout_box(
