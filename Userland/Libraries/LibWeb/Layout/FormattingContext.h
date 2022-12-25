@@ -71,8 +71,6 @@ public:
     static float containing_block_width_for(Box const&, LayoutState const&);
     static float containing_block_height_for(Box const&, LayoutState const&);
 
-    float compute_box_y_position_with_respect_to_siblings(Box const&) const;
-
     [[nodiscard]] float calculate_stretch_fit_width(Box const&, AvailableSize const&) const;
     [[nodiscard]] float calculate_stretch_fit_height(Box const&, AvailableSize const&) const;
 
