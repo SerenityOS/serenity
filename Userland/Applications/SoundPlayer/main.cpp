@@ -26,13 +26,13 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread unix proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread proc"));
 
     auto app_icon = GUI::Icon::default_icon("app-sound-player"sv);
 
