@@ -55,7 +55,8 @@ void ConnectionToServer::die()
             m_enqueuer_loop->quit(0);
         }
     }
-    (void)m_background_audio_enqueuer->join();
+    if (m_background_audio_enqueuer->is_started())
+        (void)m_background_audio_enqueuer->join();
 }
 
 ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
