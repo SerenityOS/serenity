@@ -249,7 +249,6 @@ public:
     {
         return with_protected_data([](auto& protected_data) { return protected_data.dumpable; });
     }
-    void set_dumpable(bool);
 
     mode_t umask() const
     {
