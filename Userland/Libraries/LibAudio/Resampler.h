@@ -62,7 +62,8 @@ public:
     template<ArrayLike<SampleType> Samples, size_t vector_inline_capacity = 0>
     ErrorOr<void> try_resample_into_end(Vector<SampleType, vector_inline_capacity>& destination, Samples&& to_resample)
     {
-        TRY(destination.try_ensure_capacity(destination.size() + to_resample.size() * ceil_div(m_source, m_target)));
+        float ratio = (m_source > m_target) ? static_cast<float>(m_source) / m_target : static_cast<float>(m_target) / m_source;
+        TRY(destination.try_ensure_capacity(destination.size() + to_resample.size() * ratio));
         for (auto sample : to_resample) {
             process_sample(sample, sample);
 
