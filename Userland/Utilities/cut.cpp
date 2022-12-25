@@ -9,6 +9,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,6 +150,10 @@ static void process_line_fields(char* line, size_t length, Vector<Range> const& 
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     DeprecatedString byte_list = "";
     DeprecatedString fields_list = "";
     DeprecatedString delimiter = "\t";

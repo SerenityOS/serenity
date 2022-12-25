@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     TRY(Core::System::pledge("stdio rpath exec id tty"));
-    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, no_new_privs_mode, 0));
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, no_new_privs_mode, 0, 0));
     TRY(Core::System::exec_command(command, preserve_env));
     return 0;
 }

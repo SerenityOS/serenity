@@ -19,6 +19,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool write_to_stdout { false };
     bool decompress { false };
 
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     Core::ArgsParser args_parser;
     args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
     args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');

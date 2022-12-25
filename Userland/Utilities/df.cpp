@@ -9,6 +9,7 @@
 #include <AK/NumberFormat.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -25,6 +26,10 @@ struct FileSystem {
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     bool flag_human_readable = false;
     bool flag_inode_info = false;
 

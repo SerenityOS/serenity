@@ -30,6 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool keep_input_files { false };
     bool write_to_stdout { false };
 
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     Core::ArgsParser args_parser;
     args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
     args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');

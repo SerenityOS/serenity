@@ -53,6 +53,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option)
 {
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     bool summarize = false;
     StringView pattern;
     StringView exclude_from;

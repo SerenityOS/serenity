@@ -54,6 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view_width = 80;
 
     TRY(Core::System::pledge("stdio rpath exec proc"));
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
     TRY(Core::System::unveil("/usr/share/man", "r"));
     TRY(Core::System::unveil("/bin", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));

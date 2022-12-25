@@ -44,6 +44,9 @@ static ErrorOr<Result> benchmark(DeprecatedString const& filename, int file_size
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     using namespace AK::TimeLiterals;
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
 
     DeprecatedString directory = ".";
     i64 time_per_benchmark_sec = 10;

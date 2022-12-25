@@ -707,6 +707,10 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     int take_screenshot_after = 1;
     StringView url;
     StringView resources_folder;

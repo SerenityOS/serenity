@@ -5,11 +5,16 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <string.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     bool list = false;
     bool search = false;
     StringView keyword;

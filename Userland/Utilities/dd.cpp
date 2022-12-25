@@ -7,6 +7,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -126,6 +127,10 @@ static int handle_status_arguments(Status& status, StringView argument)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // FIXME: Remove this once we correctly define a proper set of pledge promises
+    // (and if "exec" promise is not one of them).
+    TRY(Core::System::prctl(PR_SET_NO_NEW_PRIVS, NO_NEW_PRIVS_MODE_ENFORCED, 0, 0));
+
     int input_fd = 0;
     int input_flags = O_RDONLY;
     int output_fd = 1;
