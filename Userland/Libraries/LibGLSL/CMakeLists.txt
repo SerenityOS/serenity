@@ -1,6 +1,8 @@
 set(SOURCES
     Compiler.cpp
+    Lexer.cpp
     Linker.cpp
+    Token.cpp
 )
 
 serenity_lib(LibGLSL glsl)
