@@ -169,7 +169,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_return_value.is_empty()) {
         return_value = m_return_value;
         m_return_value = {};
-    } else if (!m_saved_return_value.is_null()) {
+    } else if (!m_saved_return_value.is_null() && m_saved_exception.is_null()) {
         return_value = m_saved_return_value.value();
         m_saved_return_value = {};
     }
@@ -192,6 +192,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_saved_exception.is_null()) {
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
+        m_saved_return_value = {};
         if (auto* register_window = frame.get_pointer<NonnullOwnPtr<RegisterWindow>>())
             return { throw_completion(thrown_value), move(*register_window) };
         return { throw_completion(thrown_value), nullptr };

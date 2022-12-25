@@ -836,6 +836,8 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
     auto object = Object::create(interpreter.realm(), nullptr);
     object->define_direct_property("result", yielded_value, JS::default_attributes);
     if (m_continuation_label.has_value())
+        // FIXME: If we get a pointer, which is not accurately representable as a double
+        //        will cause this to explode
         object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))), JS::default_attributes);
     else
         object->define_direct_property("continuation", Value(0), JS::default_attributes);
