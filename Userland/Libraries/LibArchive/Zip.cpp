@@ -9,11 +9,6 @@
 
 namespace Archive {
 
-OutputStream& operator<<(OutputStream& stream, ZipCompressionMethod method)
-{
-    return stream << to_underlying(method);
-}
-
 bool Zip::find_end_of_central_directory_offset(ReadonlyBytes buffer, size_t& offset)
 {
     for (size_t backwards_offset = 0; backwards_offset <= UINT16_MAX; backwards_offset++) // the file may have a trailing comment of an arbitrary 16 bit length
@@ -108,8 +103,8 @@ bool Zip::for_each_member(Function<IterationDecision(ZipMember const&)> callback
     return true;
 }
 
-ZipOutputStream::ZipOutputStream(OutputStream& stream)
-    : m_stream(stream)
+ZipOutputStream::ZipOutputStream(NonnullOwnPtr<Core::Stream::Stream> stream)
+    : m_stream(move(stream))
 {
 }
 
@@ -119,12 +114,12 @@ static u16 minimum_version_needed(ZipCompressionMethod method)
     return method == ZipCompressionMethod::Deflate ? 20 : 10;
 }
 
-void ZipOutputStream::add_member(ZipMember const& member)
+ErrorOr<void> ZipOutputStream::add_member(ZipMember const& member)
 {
     VERIFY(!m_finished);
     VERIFY(member.name.length() <= UINT16_MAX);
     VERIFY(member.compressed_data.size() <= UINT32_MAX);
-    m_members.append(member);
+    TRY(m_members.try_append(member));
 
     LocalFileHeader local_file_header {
         .minimum_version = minimum_version_needed(member.compression_method),
@@ -141,10 +136,10 @@ void ZipOutputStream::add_member(ZipMember const& member)
         .extra_data = nullptr,
         .compressed_data = member.compressed_data.data(),
     };
-    local_file_header.write(m_stream);
+    return local_file_header.write(*m_stream);
 }
 
-void ZipOutputStream::finish()
+ErrorOr<void> ZipOutputStream::finish()
 {
     VERIFY(!m_finished);
     m_finished = true;
@@ -175,7 +170,7 @@ void ZipOutputStream::finish()
             .comment = nullptr,
         };
         file_header_offset += sizeof(LocalFileHeader::signature) + (sizeof(LocalFileHeader) - (sizeof(u8*) * 3)) + member.name.length() + member.compressed_data.size();
-        central_directory_record.write(m_stream);
+        TRY(central_directory_record.write(*m_stream));
         central_directory_size += central_directory_record.size();
     }
 
@@ -189,7 +184,7 @@ void ZipOutputStream::finish()
         .comment_length = 0,
         .comment = nullptr,
     };
-    end_of_central_directory.write(m_stream);
+    return end_of_central_directory.write(*m_stream);
 }
 
 }
