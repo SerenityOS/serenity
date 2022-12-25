@@ -214,6 +214,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
+
+    resolve_vertical_box_model_metrics(box, m_state);
 }
 
 void BlockFormattingContext::compute_width_for_floating_box(Box const& box, AvailableSpace const& available_space)
@@ -291,6 +293,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
     box_state.border_right = computed_values.border_right().width;
     box_state.padding_left = padding_left.to_px(box);
     box_state.padding_right = padding_right.to_px(box);
+
+    resolve_vertical_box_model_metrics(box, m_state);
 }
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box, AvailableSpace const& available_space)
@@ -300,8 +304,6 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
 
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
-    resolve_vertical_box_model_metrics(box, m_state);
-
     auto const& computed_values = box.computed_values();
     auto containing_block_height = CSS::Length::make_px(available_space.height.to_px());
 
@@ -347,7 +349,16 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         block_container_state.set_content_height(context.automatic_content_height());
 }
 
-void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& bottom_of_lowest_margin_box, AvailableSpace const& available_space)
+static bool margins_collapse_through(Box const& box, LayoutState& state)
+{
+    // FIXME: A box's own margins collapse if the 'min-height' property is zero, and it has neither top or bottom borders
+    // nor top or bottom padding, and it has a 'height' of either 0 or 'auto', and it does not contain a line box, and
+    // all of its in-flow children's margins (if any) collapse.
+    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+    return state.get(box).border_box_height() == 0;
+}
+
+void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& bottom_of_lowest_margin_box, AvailableSpace const& available_space, float& current_y)
 {
     auto& box_state = m_state.get_mutable(box);
 
@@ -361,34 +372,49 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         return;
 
     if (box.is_floating()) {
-        layout_floating_box(box, block_container, layout_mode, available_space);
+        layout_floating_box(box, block_container, layout_mode, available_space, m_margin_state.current_collapsed_margin() + current_y);
         bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
         return;
     }
 
     compute_width(box, available_space, layout_mode);
 
-    place_block_level_element_in_normal_flow_vertically(box);
-    place_block_level_element_in_normal_flow_horizontally(box, available_space);
-
     if (box_state.has_definite_height()) {
         compute_height(box, available_space);
     }
+
+    m_margin_state.add_margin(box_state.margin_top);
+    auto margin_top = m_margin_state.current_collapsed_margin();
+
+    place_block_level_element_in_normal_flow_vertically(box, current_y + box_state.border_box_top() + margin_top);
+    place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
     OwnPtr<FormattingContext> independent_formatting_context;
     if (!box.is_replaced_box() && box.has_children()) {
         independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
         if (independent_formatting_context) {
+            // Margins of elements that establish new formatting contexts do not collapse with their in-flow children
+            m_margin_state.reset();
+
             independent_formatting_context->run(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
         } else {
-            if (box.children_are_inline())
+            if (box.children_are_inline()) {
                 layout_inline_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
-            else
+            } else {
+                m_margin_state.reset();
                 layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
+            }
         }
     }
 
     compute_height(box, available_space);
+
+    if (!margins_collapse_through(box, m_state)) {
+        m_margin_state.reset();
+        current_y = box_state.offset.y() + box_state.content_height() + box_state.border_box_bottom();
+    }
+
+    m_margin_state.add_margin(box_state.margin_bottom);
 
     compute_inset(box);
 
@@ -407,11 +433,15 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     VERIFY(!block_container.children_are_inline());
 
     float bottom_of_lowest_margin_box = 0;
+    float current_y = 0;
 
     block_container.for_each_child_of_type<Box>([&](Box& box) {
-        layout_block_level_box(box, block_container, layout_mode, bottom_of_lowest_margin_box, available_space);
+        layout_block_level_box(box, block_container, layout_mode, bottom_of_lowest_margin_box, available_space, current_y);
         return IterationDecision::Continue;
     });
+
+    // FIXME: margin-bottom of last in-flow child can be collapsed with margin-bottom of parent
+    m_margin_state.reset();
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
@@ -436,14 +466,37 @@ void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, 
     box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block).to_px(box);
 }
 
-void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box)
+float BlockFormattingContext::BlockMarginState::current_collapsed_margin() const
+{
+    float smallest_margin = 0;
+    float largest_margin = 0;
+    size_t negative_margin_count = 0;
+    for (auto margin : current_collapsible_margins) {
+        if (margin < 0)
+            ++negative_margin_count;
+        largest_margin = max(largest_margin, margin);
+        smallest_margin = min(smallest_margin, margin);
+    }
+
+    float collapsed_margin = 0;
+    if (negative_margin_count == current_collapsible_margins.size()) {
+        // When all margins are negative, the size of the collapsed margin is the smallest (most negative) margin.
+        collapsed_margin = smallest_margin;
+    } else if (negative_margin_count > 0) {
+        // When negative margins are involved, the size of the collapsed margin is the sum of the largest positive margin and the smallest (most negative) negative margin.
+        collapsed_margin = largest_margin + smallest_margin;
+    } else {
+        // Otherwise, collapse all the adjacent margins by using only the largest one.
+        collapsed_margin = largest_margin;
+    }
+
+    return collapsed_margin;
+}
+
+void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box, float y)
 {
     auto& box_state = m_state.get_mutable(child_box);
     auto const& computed_values = child_box.computed_values();
-
-    resolve_vertical_box_model_metrics(child_box, m_state);
-
-    auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box);
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.current_boxes.is_empty()) {
@@ -546,7 +599,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     }
 }
 
-void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer const&, LayoutMode layout_mode, AvailableSpace const& available_space, LineBuilder* line_builder)
+void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer const&, LayoutMode layout_mode, AvailableSpace const& available_space, float y, LineBuilder* line_builder)
 {
     VERIFY(box.is_floating());
 
@@ -563,7 +616,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         auto y = line_builder->y_for_float_to_be_inserted_here(box);
         box_state.set_content_y(y + box_state.margin_box_top());
     } else {
-        place_block_level_element_in_normal_flow_vertically(box);
+        place_block_level_element_in_normal_flow_vertically(box, y + box_state.margin_box_top());
         place_block_level_element_in_normal_flow_horizontally(box, available_space);
     }
 

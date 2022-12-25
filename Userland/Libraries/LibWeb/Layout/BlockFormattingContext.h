@@ -44,9 +44,9 @@ public:
 
     virtual float greatest_child_width(Box const&) override;
 
-    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, LineBuilder* = nullptr);
+    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, float y, LineBuilder* = nullptr);
 
-    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& bottom_of_lowest_margin_box, AvailableSpace const&);
+    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& bottom_of_lowest_margin_box, AvailableSpace const&, float& current_y);
 
     virtual bool can_determine_size_of_child() const override { return true; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
@@ -66,7 +66,7 @@ private:
 
     static void resolve_vertical_box_model_metrics(Box const& box, LayoutState&);
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, AvailableSpace const&);
-    void place_block_level_element_in_normal_flow_vertically(Box const&);
+    void place_block_level_element_in_normal_flow_vertically(Box const&, float y);
 
     void layout_list_item_marker(ListItemBox const&);
 
@@ -110,6 +110,24 @@ private:
             current_width = 0;
         }
     };
+
+    struct BlockMarginState {
+        Vector<float> current_collapsible_margins;
+
+        void add_margin(float margin)
+        {
+            current_collapsible_margins.append(margin);
+        }
+
+        float current_collapsed_margin() const;
+
+        void reset()
+        {
+            current_collapsible_margins.clear();
+        }
+    };
+
+    BlockMarginState m_margin_state;
 
     FloatSideData m_left_floats;
     FloatSideData m_right_floats;

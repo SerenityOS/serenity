@@ -263,7 +263,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
         case InlineLevelIterator::Item::Type::FloatingElement:
             if (is<Box>(*item.node))
-                parent().layout_floating_box(static_cast<Layout::Box const&>(*item.node), containing_block(), layout_mode, *m_available_space, &line_builder);
+                parent().layout_floating_box(static_cast<Layout::Box const&>(*item.node), containing_block(), layout_mode, *m_available_space, 0, &line_builder);
             break;
 
         case InlineLevelIterator::Item::Type::Text: {

@@ -927,7 +927,7 @@ Gfx::FloatPoint FormattingContext::calculate_static_position(Box const& box) con
     } else {
         x = m_state.get(box).margin_box_left();
         // We're among block siblings, Y can be calculated easily.
-        y = compute_box_y_position_with_respect_to_siblings(box);
+        y = m_state.get(box).margin_box_top();
     }
     auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block(), m_state);
     return offset_to_static_parent.location().translated(x, y);
@@ -1362,71 +1362,6 @@ float FormattingContext::containing_block_height_for(Box const& box, LayoutState
         return containing_block_state.content_height();
     }
     VERIFY_NOT_REACHED();
-}
-
-static Box const* previous_block_level_sibling(Box const& box)
-{
-    for (auto* sibling = box.previous_sibling_of_type<Box>(); sibling; sibling = sibling->previous_sibling_of_type<Box>()) {
-        if (sibling->display().is_block_outside())
-            return sibling;
-    }
-    return nullptr;
-}
-
-float FormattingContext::compute_box_y_position_with_respect_to_siblings(Box const& box) const
-{
-    auto const& box_state = m_state.get(box);
-    float y = box_state.border_box_top();
-
-    Vector<float> collapsible_margins;
-
-    auto* relevant_sibling = previous_block_level_sibling(box);
-    while (relevant_sibling != nullptr) {
-        if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
-            auto const& relevant_sibling_state = m_state.get(*relevant_sibling);
-            collapsible_margins.append(relevant_sibling_state.margin_bottom);
-            // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
-            if (relevant_sibling_state.border_box_height() > 0)
-                break;
-            collapsible_margins.append(relevant_sibling_state.margin_top);
-        }
-        relevant_sibling = previous_block_level_sibling(*relevant_sibling);
-    }
-
-    if (relevant_sibling) {
-        // Collapse top margin with the collapsed margin(s) of preceding siblings.
-        collapsible_margins.append(box_state.margin_top);
-
-        float smallest_margin = 0;
-        float largest_margin = 0;
-        size_t negative_margin_count = 0;
-        for (auto margin : collapsible_margins) {
-            if (margin < 0)
-                ++negative_margin_count;
-            largest_margin = max(largest_margin, margin);
-            smallest_margin = min(smallest_margin, margin);
-        }
-
-        float collapsed_margin = 0;
-        if (negative_margin_count == collapsible_margins.size()) {
-            // When all margins are negative, the size of the collapsed margin is the smallest (most negative) margin.
-            collapsed_margin = smallest_margin;
-        } else if (negative_margin_count > 0) {
-            // When negative margins are involved, the size of the collapsed margin is the sum of the largest positive margin and the smallest (most negative) negative margin.
-            collapsed_margin = largest_margin + smallest_margin;
-        } else {
-            // Otherwise, collapse all the adjacent margins by using only the largest one.
-            collapsed_margin = largest_margin;
-        }
-
-        auto const& relevant_sibling_state = m_state.get(*relevant_sibling);
-        return y + relevant_sibling_state.offset.y()
-            + relevant_sibling_state.content_height()
-            + relevant_sibling_state.border_box_bottom()
-            + collapsed_margin;
-    } else {
-        return y + box_state.margin_top;
-    }
 }
 
 // https://drafts.csswg.org/css-sizing-3/#stretch-fit-size
