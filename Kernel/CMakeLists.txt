@@ -366,9 +366,16 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
 
+        Arch/x86_64/I8042Reboot.cpp
         Arch/x86_64/Interrupts/APIC.cpp
         Arch/x86_64/Interrupts/IOAPIC.cpp
         Arch/x86_64/Interrupts/PIC.cpp
+        Arch/x86_64/Time/APICTimer.cpp
+        Arch/x86_64/Time/HPET.cpp
+        Arch/x86_64/Time/HPETComparator.cpp
+        Arch/x86_64/Time/PIT.cpp
+        Arch/x86_64/Time/RTC.cpp
+        Arch/x86_64/PCSpeaker.cpp
 
         Arch/x86_64/ISABus/HID/PS2KeyboardDevice.cpp
         Arch/x86_64/ISABus/HID/PS2MouseDevice.cpp
@@ -381,6 +388,11 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/PCI/Initializer.cpp
 
         Arch/x86_64/VGA/IOArbiter.cpp
+
+        Arch/x86_64/RTC.cpp
+        Arch/x86_64/ScopedCritical.cpp
+        Arch/x86_64/Shutdown.cpp
+        Arch/x86_64/SmapDisabler.cpp
 
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
