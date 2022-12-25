@@ -35,6 +35,25 @@
 #    include <shadow.h>
 #endif
 
+// NOTE: We simply declare all defines as zero, to ensure that in case of
+// including this on an Linux host by accident, it will be loud-and-clear that
+// such mistake has happened. We do this because we basically don't have any
+// requirement to keep any sort of compatibility with the Linux prctl syscall,
+// so even if we mark it as unusable in the LibCore wrappers, we want to ensure
+// nobody will use this in a useful manner outside the SerenityOS platform, as
+// our prctl syscall interface is already different in terms of ABI.
+#if defined(AK_OS_SERENITY)
+#    include <sys/prctl_numbers.h>
+#else
+#    define PR_SET_DUMPABLE 0
+#    define PR_GET_DUMPABLE 0
+#    define PR_SET_NO_NEW_PRIVS 0
+#    define PR_GET_NO_NEW_PRIVS 0
+#    define NO_NEW_PRIVS_MODE_DISABLED 0
+#    define NO_NEW_PRIVS_MODE_ENFORCED 0
+#    define NO_NEW_PRIVS_MODE_ENFORCED_QUIETLY 0
+#endif
+
 namespace Core::System {
 
 #ifdef AK_OS_SERENITY
@@ -145,6 +164,14 @@ struct WaitPidResult {
 ErrorOr<WaitPidResult> waitpid(pid_t waitee, int options = 0);
 ErrorOr<void> setuid(uid_t);
 ErrorOr<void> seteuid(uid_t);
+#if defined(AK_OS_SERENITY)
+ErrorOr<FlatPtr> prctl(int, int, int, int);
+#else
+inline ErrorOr<FlatPtr> prctl(int, int, int, int)
+{
+    return 0;
+}
+#endif
 ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
 ErrorOr<void> setpgid(pid_t pid, pid_t pgid);

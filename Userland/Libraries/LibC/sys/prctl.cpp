@@ -19,6 +19,7 @@ int prctl(int option, ...)
 
     uintptr_t arg1 = va_arg(args, uintptr_t);
     uintptr_t arg2 = va_arg(args, uintptr_t);
+    [[maybe_unused]] uintptr_t arg3 = va_arg(args, uintptr_t);
 
     va_end(args);
 

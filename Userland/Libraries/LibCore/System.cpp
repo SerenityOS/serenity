@@ -29,6 +29,7 @@
 #    include <LibCore/Account.h>
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
+#    include <sys/prctl.h>
 #    include <sys/ptrace.h>
 #endif
 
@@ -829,6 +830,16 @@ ErrorOr<void> setuid(uid_t uid)
         return Error::from_syscall("setuid"sv, -errno);
     return {};
 }
+
+#if defined(AK_OS_SERENITY)
+ErrorOr<FlatPtr> prctl(int option, int arg1, int arg2, int arg3)
+{
+    int rc = ::prctl(option, arg1, arg2, arg3);
+    if (rc < 0)
+        return Error::from_syscall("prctl"sv, -errno);
+    return rc;
+}
+#endif
 
 ErrorOr<void> seteuid(uid_t uid)
 {
