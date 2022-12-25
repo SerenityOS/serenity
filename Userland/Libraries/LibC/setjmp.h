@@ -19,14 +19,7 @@ __BEGIN_DECLS
 //
 
 struct __jmp_buf {
-#ifdef __i386__
-    uint32_t ebx;
-    uint32_t esi;
-    uint32_t edi;
-    uint32_t ebp;
-    uint32_t esp;
-    uint32_t eip;
-#elif defined(__x86_64__)
+#if defined(__x86_64__)
     uint64_t rbx;
     uint64_t r12;
     uint64_t r13;
@@ -52,9 +45,7 @@ typedef struct __jmp_buf sigjmp_buf[1];
  * Since setjmp.h may be included by ports written in C, we need to guard this.
  */
 #ifdef __cplusplus
-#    ifdef __i386__
-static_assert(sizeof(struct __jmp_buf) == 32, "struct __jmp_buf unsynchronized with i386/setjmp.S");
-#    elif defined(__x86_64__)
+#    if defined(__x86_64__)
 static_assert(sizeof(struct __jmp_buf) == 72, "struct __jmp_buf unsynchronized with x86_64/setjmp.S");
 #    elif defined(__aarch64__)
 static_assert(sizeof(struct __jmp_buf) == 184, "struct __jmp_buf unsynchronized with aarch64/setjmp.S");

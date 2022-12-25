@@ -13,18 +13,6 @@ extern "C" {
 #endif
 
 struct __attribute__((packed)) __mcontext {
-#ifdef __i386__
-    uint32_t eax;
-    uint32_t ecx;
-    uint32_t edx;
-    uint32_t ebx;
-    uint32_t esp;
-    uint32_t ebp;
-    uint32_t esi;
-    uint32_t edi;
-    uint32_t eip;
-    uint32_t eflags;
-#else
     uint64_t rax;
     uint64_t rcx;
     uint64_t rdx;
@@ -43,7 +31,6 @@ struct __attribute__((packed)) __mcontext {
     uint64_t r14;
     uint64_t r15;
     uint64_t rflags;
-#endif
     uint32_t cs;
     uint32_t ss;
     uint32_t ds;
