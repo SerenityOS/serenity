@@ -82,6 +82,8 @@ public:
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text(DeprecatedString text) { m_text = move(text); }
     StringView text() const { return m_text; }
+    void set_font_style(DeprecatedString font_style) { m_font_style = move(font_style); }
+    StringView font_style() const { return m_font_style; }
 
 protected:
     DeprecatedString m_text;
@@ -90,6 +92,7 @@ protected:
     int m_font_size { 18 };
     unsigned m_font_weight { Gfx::FontWeight::Regular };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
+    DeprecatedString m_font_style;
 };
 
 // How to scale an image object.
