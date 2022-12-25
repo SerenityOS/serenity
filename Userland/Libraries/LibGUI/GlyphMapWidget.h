@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/Font/BitmapFont.h>
@@ -92,6 +91,9 @@ private:
     virtual void resize_event(ResizeEvent&) override;
     virtual void did_change_font() override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void enter_event(Core::Event&) override;
+    virtual void leave_event(Core::Event&) override;
+    virtual void automatic_scrolling_timer_did_fire() override;
     virtual Optional<UISize> calculated_min_size() const override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
@@ -115,7 +117,6 @@ private:
     bool m_show_system_emoji { false };
     HashTable<u32> m_modified_glyphs;
     Unicode::CodePointRange m_active_range { 0x0000, 0x10FFFF };
-    RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
     Gfx::IntPoint m_last_mousemove_position;
 };
 
