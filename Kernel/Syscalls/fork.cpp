@@ -89,6 +89,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             child_protected_data.umask = my_protected_data.umask;
             child_protected_data.signal_trampoline = my_protected_data.signal_trampoline;
             child_protected_data.dumpable = my_protected_data.dumpable;
+            child_protected_data.no_new_privs_mode = my_protected_data.no_new_privs_mode;
         });
     });
 

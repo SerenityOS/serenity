@@ -110,6 +110,12 @@ class Process final
     : public ListedRefCounted<Process, LockType::Spinlock>
     , public LockWeakable<Process> {
 
+    enum class NoNewPrivsMode {
+        Disabled = 0,
+        Enforced = 1,
+        EnforcedQuietly = 2,
+    };
+
     class ProtectedValues {
     public:
         ProcessID pid { 0 };
@@ -119,6 +125,7 @@ class Process final
         RefPtr<Credentials> credentials;
         bool dumpable { false };
         bool executable_is_setid { false };
+        NoNewPrivsMode no_new_privs_mode { NoNewPrivsMode::Disabled };
         Atomic<bool> has_promises { false };
         Atomic<u32> promises { 0 };
         Atomic<bool> has_execpromises { false };
@@ -150,6 +157,21 @@ public:
         SpinlockLocker locker(m_protected_data_lock);
         unprotect_data();
         auto guard = ScopeGuard([&] { protect_data(); });
+        return callback(m_protected_values_do_not_access_directly);
+    }
+
+    ErrorOr<FlatPtr> with_mutable_protected_data_for_new_privs(auto&& callback)
+    {
+        SpinlockLocker locker(m_protected_data_lock);
+        unprotect_data();
+        auto guard = ScopeGuard([&] { protect_data(); });
+        // NOTE: If no_new_privs was set via a prctl syscall, disallow any further code from doing
+        // any change!
+        if (m_protected_values_do_not_access_directly.no_new_privs_mode == NoNewPrivsMode::Enforced)
+            return EPERM;
+        if (m_protected_values_do_not_access_directly.no_new_privs_mode == NoNewPrivsMode::EnforcedQuietly)
+            return 0;
+        VERIFY(m_protected_values_do_not_access_directly.no_new_privs_mode == NoNewPrivsMode::Disabled);
         return callback(m_protected_values_do_not_access_directly);
     }
 
@@ -250,6 +272,11 @@ public:
     bool is_dumpable() const
     {
         return with_protected_data([](auto& protected_data) { return protected_data.dumpable; });
+    }
+
+    bool is_no_new_privs_mode_not_enforced() const
+    {
+        return with_protected_data([](auto& protected_data) { return protected_data.no_new_privs_mode == NoNewPrivsMode::Disabled; });
     }
 
     mode_t umask() const

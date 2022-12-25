@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
     if (new_euid == (uid_t)-1)
         return EINVAL;
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_euid != credentials->uid() && new_euid != credentials->suid() && !credentials->is_superuser())
@@ -50,7 +50,7 @@ ErrorOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
     if (new_egid == (uid_t)-1)
         return EINVAL;
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_egid != credentials->gid() && new_egid != credentials->sgid() && !credentials->is_superuser())
@@ -83,7 +83,7 @@ ErrorOr<FlatPtr> Process::sys$setuid(UserID new_uid)
     if (new_uid == (uid_t)-1)
         return EINVAL;
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_uid != credentials->uid() && new_uid != credentials->euid() && !credentials->is_superuser())
@@ -116,7 +116,7 @@ ErrorOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
     if (new_gid == (uid_t)-1)
         return EINVAL;
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_gid != credentials->gid() && new_gid != credentials->egid() && !credentials->is_superuser())
@@ -146,7 +146,7 @@ ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_ruid == (uid_t)-1)
@@ -185,7 +185,7 @@ ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_ruid == (uid_t)-1)
@@ -223,7 +223,7 @@ ErrorOr<FlatPtr> Process::sys$setregid(GroupID new_rgid, GroupID new_egid)
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_rgid == (gid_t)-1)
@@ -259,7 +259,7 @@ ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, Grou
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (new_rgid == (gid_t)-1)
@@ -300,7 +300,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
     if (count > NGROUPS_MAX)
         return EINVAL;
 
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return with_mutable_protected_data_for_new_privs([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = this->credentials();
 
         if (!credentials->is_superuser())

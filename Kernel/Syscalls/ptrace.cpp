@@ -161,6 +161,17 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<Syscall::SC_ptrace_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    // NOTE: We ask userspace to deliberately pledge the ptrace promise if no_new_privs is set,
+    // because otherwise unprotected (code that does no use pledge) code could be exploited to use
+    // ptrace on a process with the same uid to proxy its activity via that other process.
+    // Therefore, using the ptrace syscall should only be allowed in these cases:
+    // 1. No pledge promise has been made and no_new_privs is not set (Unprotected userspace code).
+    // 2. Pledge promise "ptrace" has been set, regardless of whether no_new_privs has been set or not (userspace code *knows* what it's doing).
+    // On the contrary, it should be disallowed (to prevent potential security issues) when:
+    // 1. No promise has been made and no_new_privs is set.
+    // 2. Pledge promises have been made, but the "ptrace" promise has not been set.
+    if (!has_promises() && !is_no_new_privs_mode_not_enforced())
+        return Error::from_errno(EPERM);
     TRY(require_promise(Pledge::ptrace));
     auto params = TRY(copy_typed_from_user(user_params));
 

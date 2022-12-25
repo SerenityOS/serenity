@@ -513,9 +513,13 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     auto new_credentials = old_credentials;
     auto old_process_attached_jail = m_attached_jail.with([&](auto& jail) -> RefPtr<Jail> { return jail; });
 
+    auto old_no_new_privs_mode = with_protected_data([&](auto& my_protected_data) -> NoNewPrivsMode { return my_protected_data.no_new_privs_mode; });
+
     bool executable_is_setid = false;
 
-    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
+    // NOTE: Silently ignore setting new UID/GID/etc if old_no_new_privs is not set to NoNewPrivsMode::Disabled.
+    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID) && old_no_new_privs_mode == NoNewPrivsMode::Disabled) {
+
         auto new_euid = old_credentials->euid();
         auto new_egid = old_credentials->egid();
         auto new_suid = old_credentials->suid();
@@ -561,6 +565,7 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
         protected_data.credentials = move(new_credentials);
         protected_data.dumpable = !executable_is_setid;
         protected_data.executable_is_setid = executable_is_setid;
+        protected_data.no_new_privs_mode = old_no_new_privs_mode;
     });
 
     // We make sure to enter the new address space before destroying the old one.
