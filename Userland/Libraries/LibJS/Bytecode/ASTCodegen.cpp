@@ -2369,12 +2369,49 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
 {
     VERIFY(generator.is_in_async_function());
 
-    // Transform `await expr` to `yield expr`
+    // Transform `await expr` to `yield expr`, see AsyncFunctionDriverWrapper
+    // For that we just need to copy most of the code from YieldExpression
+    auto received_completion_register = generator.allocate_register();
+    auto received_completion_type_register = generator.allocate_register();
+    auto received_completion_value_register = generator.allocate_register();
+
+    auto type_identifier = generator.intern_identifier("type");
+    auto value_identifier = generator.intern_identifier("value");
+
     TRY(m_argument->generate_bytecode(generator));
 
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
+
+    // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
+    generator.emit<Bytecode::Op::Store>(received_completion_register);
+
+    generator.emit<Bytecode::Op::GetById>(type_identifier);
+    generator.emit<Bytecode::Op::Store>(received_completion_type_register);
+
+    generator.emit<Bytecode::Op::Load>(received_completion_register);
+    generator.emit<Bytecode::Op::GetById>(value_identifier);
+    generator.emit<Bytecode::Op::Store>(received_completion_value_register);
+
+    auto& normal_completion_continuation_block = generator.make_block();
+    auto& throw_value_block = generator.make_block();
+
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Normal)));
+    generator.emit<Bytecode::Op::StrictlyEquals>(received_completion_type_register);
+    generator.emit<Bytecode::Op::JumpConditional>(
+        Bytecode::Label { normal_completion_continuation_block },
+        Bytecode::Label { throw_value_block });
+
+    // Simplification: The only abrupt completion we receive from AsyncFunctionDriverWrapper is Type::Throw
+    //                 So we do not need to account for the Type::Return path
+    generator.switch_to_basic_block(throw_value_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+    generator.perform_needed_unwinds<Bytecode::Op::Throw>();
+    generator.emit<Bytecode::Op::Throw>();
+
+    generator.switch_to_basic_block(normal_completion_continuation_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
     return {};
 }
 

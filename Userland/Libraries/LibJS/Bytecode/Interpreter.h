@@ -65,7 +65,11 @@ public:
         VERIFY(unwind_contexts().last().finalizer);
         jump(Label { *unwind_contexts().last().finalizer });
     }
-    void do_return(Value return_value) { m_return_value = return_value; }
+    void do_return(Value return_value)
+    {
+        m_return_value = return_value;
+        m_saved_exception = {};
+    }
 
     void enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target);
     void leave_unwind_context();
