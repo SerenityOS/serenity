@@ -6,7 +6,7 @@
 
 #pragma once
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(__x86_64__)
 #    include <Kernel/Arch/x86_64/mcontext.h>
 #elif defined(__aarch64__)
 #    include <Kernel/Arch/aarch64/mcontext.h>

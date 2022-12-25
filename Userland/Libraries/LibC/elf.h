@@ -39,11 +39,7 @@
 #    include <AK/Types.h>
 #endif
 
-#ifdef __i386__
-#    define ElfW(type) Elf32_##type
-#else
-#    define ElfW(type) Elf64_##type
-#endif
+#define ElfW(type) Elf64_##type
 
 typedef uint8_t Elf_Byte;
 
