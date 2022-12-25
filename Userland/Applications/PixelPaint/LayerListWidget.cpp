@@ -287,7 +287,7 @@ void LayerListWidget::mousemove_event(GUI::MouseEvent& event)
         gadget.movement_delta.set_y(inner_rect_max_height - gadget.rect.bottom());
 
     m_automatic_scroll_delta = automatic_scroll_delta_from_position(event.position());
-    set_automatic_scrolling_timer(vertical_scrollbar().is_scrollable() && !m_automatic_scroll_delta.is_null());
+    set_automatic_scrolling_timer_active(vertical_scrollbar().is_scrollable() && !m_automatic_scroll_delta.is_null());
 
     relayout_gadgets();
 }
@@ -307,7 +307,7 @@ void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
         new_index = m_image->layer_count() - 1;
 
     m_moving_gadget_index = {};
-    set_automatic_scrolling_timer(false);
+    set_automatic_scrolling_timer_active(false);
 
     auto old_layer_index = to_layer_index(old_index);
     auto new_layer_index = to_layer_index(new_index);
@@ -329,7 +329,7 @@ void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
         on_context_menu_request(event);
 }
 
-void LayerListWidget::on_automatic_scrolling_timer_fired()
+void LayerListWidget::automatic_scrolling_timer_did_fire()
 {
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
     VERIFY(gadget.is_moving);

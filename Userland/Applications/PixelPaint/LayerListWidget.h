@@ -46,7 +46,7 @@ private:
     virtual void image_did_modify_layer_properties(size_t) override;
     virtual void image_did_modify_layer_bitmap(size_t) override;
     virtual void image_did_modify_layer_stack() override;
-    virtual void on_automatic_scrolling_timer_fired() override;
+    virtual void automatic_scrolling_timer_did_fire() override;
 
     void rebuild_gadgets();
     void relayout_gadgets();

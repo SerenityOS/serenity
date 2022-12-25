@@ -58,7 +58,7 @@ public:
     void scroll_to_bottom();
     void update_scrollbar_ranges();
 
-    void set_automatic_scrolling_timer(bool active);
+    void set_automatic_scrolling_timer_active(bool);
     virtual Gfx::IntPoint automatic_scroll_delta_from_position(Gfx::IntPoint) const;
 
     int width_occupied_by_vertical_scrollbar() const;
@@ -84,10 +84,10 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
     virtual void did_scroll() { }
+    virtual void automatic_scrolling_timer_did_fire() {};
     void set_content_size(Gfx::IntSize);
     void set_min_content_size(Gfx::IntSize);
     void set_size_occupied_by_fixed_elements(Gfx::IntSize);
-    virtual void on_automatic_scrolling_timer_fired() {};
     int autoscroll_threshold() const { return m_autoscroll_threshold; }
     void update_scrollbar_visibility();
 

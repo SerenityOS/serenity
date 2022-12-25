@@ -79,8 +79,8 @@ private:
     float unclamped_scrubber_size() const;
     int visible_scrubber_size() const;
     int scrubbable_range_in_pixels() const;
-    void on_automatic_scrolling_timer_fired();
-    void set_automatic_scrolling_active(bool, Component);
+    void automatic_scrolling_timer_did_fire();
+    void set_automatic_scrolling_timer_active(bool, Component);
 
     void scroll_to_position(Gfx::IntPoint);
     void scroll_by_page(Gfx::IntPoint);

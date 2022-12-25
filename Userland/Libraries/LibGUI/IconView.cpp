@@ -238,7 +238,7 @@ void IconView::mouseup_event(MouseEvent& event)
 {
     if (m_rubber_banding && event.button() == MouseButton::Primary) {
         m_rubber_banding = false;
-        set_automatic_scrolling_timer(false);
+        set_automatic_scrolling_timer_active(false);
         update(to_widget_rect(Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current)));
     }
     AbstractView::mouseup_event(event);
@@ -329,7 +329,7 @@ void IconView::mousemove_event(MouseEvent& event)
 
     if (m_rubber_banding) {
         m_out_of_view_position = event.position();
-        set_automatic_scrolling_timer(!m_rubber_band_scroll_delta.is_null());
+        set_automatic_scrolling_timer_active(!m_rubber_band_scroll_delta.is_null());
 
         if (update_rubber_banding(event.position()))
             return;
@@ -338,9 +338,9 @@ void IconView::mousemove_event(MouseEvent& event)
     AbstractView::mousemove_event(event);
 }
 
-void IconView::on_automatic_scrolling_timer_fired()
+void IconView::automatic_scrolling_timer_did_fire()
 {
-    AbstractView::on_automatic_scrolling_timer_fired();
+    AbstractView::automatic_scrolling_timer_did_fire();
 
     if (m_rubber_band_scroll_delta.is_null())
         return;

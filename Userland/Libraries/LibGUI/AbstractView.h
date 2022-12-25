@@ -148,7 +148,7 @@ protected:
     virtual void hide_event(HideEvent&) override;
     virtual void focusin_event(FocusEvent&) override;
 
-    virtual void on_automatic_scrolling_timer_fired() override;
+    virtual void automatic_scrolling_timer_did_fire() override;
 
     virtual void clear_selection();
     virtual void set_selection(ModelIndex const&);
