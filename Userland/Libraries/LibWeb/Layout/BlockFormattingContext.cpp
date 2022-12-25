@@ -372,7 +372,8 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         return;
 
     if (box.is_floating()) {
-        layout_floating_box(box, block_container, layout_mode, available_space, m_margin_state.current_collapsed_margin() + current_y);
+        auto margin_top = !m_margin_state.has_block_container_waiting_for_final_y_position() ? m_margin_state.current_collapsed_margin() : 0;
+        layout_floating_box(box, block_container, layout_mode, available_space, margin_top + current_y);
         bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
         return;
     }
@@ -383,8 +384,18 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         compute_height(box, available_space);
     }
 
+    if (box.computed_values().clear() != CSS::Clear::None) {
+        m_margin_state.reset();
+    }
+
     m_margin_state.add_margin(box_state.margin_top);
+    m_margin_state.update_block_waiting_for_final_y_position();
+
     auto margin_top = m_margin_state.current_collapsed_margin();
+    if (m_margin_state.has_block_container_waiting_for_final_y_position()) {
+        // If first child margin top will collapse with margin-top of containing block then margin-top of child is 0
+        margin_top = 0;
+    }
 
     place_block_level_element_in_normal_flow_vertically(box, current_y + box_state.border_box_top() + margin_top);
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
@@ -401,7 +412,16 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
             if (box.children_are_inline()) {
                 layout_inline_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
             } else {
-                m_margin_state.reset();
+                if (box_state.border_top > 0 || box_state.padding_top > 0) {
+                    // margin-top of block container can't collapse with it's children if it has non zero border or padding
+                    m_margin_state.reset();
+                } else if (!m_margin_state.has_block_container_waiting_for_final_y_position()) {
+                    // margin-top of block container can be updated during children layout hence it's final y position yet to be determined
+                    m_margin_state.register_block_container_y_position_update_callback([&](float margin_top) {
+                        place_block_level_element_in_normal_flow_vertically(box, margin_top + current_y + box_state.border_box_top());
+                    });
+                }
+
                 layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
             }
         }
@@ -415,6 +435,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     }
 
     m_margin_state.add_margin(box_state.margin_bottom);
+    m_margin_state.update_block_waiting_for_final_y_position();
 
     compute_inset(box);
 
@@ -440,7 +461,11 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         return IterationDecision::Continue;
     });
 
-    // FIXME: margin-bottom of last in-flow child can be collapsed with margin-bottom of parent
+    // FIXME: The bottom margin of an in-flow block box with a 'height' of 'auto' collapses with its last in-flow block-level child's bottom margin, if:
+    // the box has no bottom padding, and
+    // the box has no bottom border, and
+    // the child's bottom margin neither collapses with a top margin that has clearance, nor (if the box's min-height is non-zero) with the box's top margin.
+    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
     m_margin_state.reset();
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {

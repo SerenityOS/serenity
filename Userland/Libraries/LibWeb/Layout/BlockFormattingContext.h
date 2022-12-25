@@ -113,16 +113,36 @@ private:
 
     struct BlockMarginState {
         Vector<float> current_collapsible_margins;
+        Function<void(float)> block_container_y_position_update_callback;
 
         void add_margin(float margin)
         {
             current_collapsible_margins.append(margin);
         }
 
+        void register_block_container_y_position_update_callback(Function<void(float)> callback)
+        {
+            block_container_y_position_update_callback = move(callback);
+        }
+
         float current_collapsed_margin() const;
+
+        bool has_block_container_waiting_for_final_y_position() const
+        {
+            return static_cast<bool>(block_container_y_position_update_callback);
+        }
+
+        void update_block_waiting_for_final_y_position() const
+        {
+            if (block_container_y_position_update_callback) {
+                float collapsed_margin = current_collapsed_margin();
+                block_container_y_position_update_callback(collapsed_margin);
+            }
+        }
 
         void reset()
         {
+            block_container_y_position_update_callback = {};
             current_collapsible_margins.clear();
         }
     };
