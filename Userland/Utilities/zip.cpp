@@ -10,7 +10,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
@@ -48,11 +47,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto file_stream = TRY(Core::OutputFileStream::open(zip_file_path));
-
     outln("Archive: {}", zip_file_path);
-
-    Archive::ZipOutputStream zip_stream { file_stream };
+    auto file_stream = TRY(Core::Stream::File::open(zip_file_path, Core::Stream::OpenMode::Write));
+    Archive::ZipOutputStream zip_stream(move(file_stream));
 
     auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
         auto canonicalized_path = LexicalPath::canonicalized_path(path);
@@ -76,11 +73,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Crypto::Checksum::CRC32 checksum { file_buffer.bytes() };
         member.crc32 = checksum.digest();
         member.is_directory = false;
-        zip_stream.add_member(member);
-        return {};
+        return zip_stream.add_member(member);
     };
 
-    auto add_directory = [&](DeprecatedString path, auto handle_directory) -> void {
+    auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
         auto canonicalized_path = DeprecatedString::formatted("{}/", LexicalPath::canonicalized_path(path));
         Archive::ZipMember member {};
         member.name = canonicalized_path;
@@ -89,30 +85,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         member.uncompressed_size = 0;
         member.crc32 = 0;
         member.is_directory = true;
-        zip_stream.add_member(member);
+        TRY(zip_stream.add_member(member));
         outln("  adding: {} (stored 0%)", canonicalized_path);
 
         if (!recurse)
-            return;
+            return {};
 
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
             auto child_path = it.next_full_path();
             if (Core::File::is_link(child_path))
-                return;
+                return {};
             if (!Core::File::is_directory(child_path)) {
                 auto result = add_file(child_path);
                 if (result.is_error())
                     warnln("Couldn't add file '{}': {}", child_path, result.error());
             } else {
-                handle_directory(child_path, handle_directory);
+                auto result = handle_directory(child_path, handle_directory);
+                if (result.is_error())
+                    warnln("Couldn't add directory '{}': {}", child_path, result.error());
             }
         }
+        return {};
     };
 
     for (auto const& source_path : source_paths) {
         if (Core::File::is_directory(source_path)) {
-            add_directory(source_path, add_directory);
+            auto result = add_directory(source_path, add_directory);
+            if (result.is_error())
+                warnln("Couldn't add directory '{}': {}", source_path, result.error());
         } else {
             auto result = add_file(source_path);
             if (result.is_error())
@@ -120,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    zip_stream.finish();
+    TRY(zip_stream.finish());
 
     return 0;
 }
