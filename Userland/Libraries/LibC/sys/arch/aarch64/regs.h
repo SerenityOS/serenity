@@ -21,9 +21,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
 #    if defined(__cplusplus) && defined(__cpp_concepts)
     FlatPtr ip() const
     {
-#        if ARCH(I386)
-        return eip;
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
         return rip;
 #        elif ARCH(AARCH64)
         return pc;
@@ -34,9 +32,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
 
     void set_ip(FlatPtr ip)
     {
-#        if ARCH(I386)
-        eip = ip;
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
         rip = ip;
 #        elif ARCH(AARCH64)
         pc = ip;
@@ -47,9 +43,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
 
     FlatPtr bp() const
     {
-#        if ARCH(I386)
-        return ebp;
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
         return rbp;
 #        elif ARCH(AARCH64)
         return r29;
@@ -60,9 +54,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
 
     void set_bp(FlatPtr bp)
     {
-#        if ARCH(I386)
-        ebp = bp;
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
         rbp = bp;
 #        elif ARCH(AARCH64)
         r29 = bp;
