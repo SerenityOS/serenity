@@ -1193,7 +1193,7 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     (void)inline_;
 
     if (!element.document().browsing_context())
-        Error::from_string_view("Element has no browsing context."sv);
+        return Error::from_string_view("Element has no browsing context."sv);
 
     auto* page = element.document().browsing_context()->page();
     if (!page)
