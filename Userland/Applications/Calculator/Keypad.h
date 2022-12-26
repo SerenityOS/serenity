@@ -21,7 +21,7 @@ public:
     Keypad() = default;
     ~Keypad() = default;
 
-    unsigned type_digit(int digit);
+    void type_digit(int digit);
     void type_decimal_point();
     void type_backspace();
 
