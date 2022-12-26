@@ -706,7 +706,7 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
     if (context.color_type == PNG::ColorType::IndexedColor && context.palette_data.is_empty())
         return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty.");
 
-    auto result = Compress::Zlib::decompress_all(context.compressed_data.span());
+    auto result = Compress::ZlibDecompressor::decompress_all(context.compressed_data.span());
     if (!result.has_value()) {
         context.state = PNGLoadingContext::State::Error;
         return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed");
