@@ -557,7 +557,7 @@ static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster
     //     timestamp of a Block or SimpleBlock in nanoseconds you have to use the following formula:
     //         `( Cluster\Timestamp + ( block timestamp * TrackTimestampScale ) ) * TimestampScale`
     //
-    //     When a CodecDelay Element is set, its value MUST be substracted from each Block timestamp
+    //     When a CodecDelay Element is set, its value MUST be subtracted from each Block timestamp
     //     of that track. To get the timestamp in nanoseconds of the first frame in a Block or
     //     SimpleBlock, the formula becomes:
     //         `( ( Cluster\Timestamp + ( block timestamp * TrackTimestampScale ) ) * TimestampScale ) - CodecDelay`
