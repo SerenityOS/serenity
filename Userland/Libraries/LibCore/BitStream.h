@@ -237,4 +237,170 @@ private:
     Handle<Stream> m_stream;
 };
 
+/// A stream wrapper class that allows you to write arbitrary amounts of bits
+/// in big-endian order to another stream.
+class BigEndianOutputBitStream : public Stream {
+public:
+    static ErrorOr<NonnullOwnPtr<BigEndianOutputBitStream>> construct(Handle<Stream> stream)
+    {
+        return adopt_nonnull_own_or_enomem<BigEndianOutputBitStream>(new BigEndianOutputBitStream(move(stream)));
+    }
+
+    virtual ErrorOr<Bytes> read(Bytes) override
+    {
+        return Error::from_errno(EBADF);
+    }
+
+    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    {
+        VERIFY(m_bit_offset == 0);
+        return m_stream->write(bytes);
+    }
+
+    template<Unsigned T>
+    ErrorOr<void> write_bits(T value, size_t bit_count)
+    {
+        VERIFY(m_bit_offset <= 7);
+
+        while (bit_count > 0) {
+            u8 next_bit = (value >> (bit_count - 1)) & 1;
+            bit_count--;
+
+            m_current_byte <<= 1;
+            m_current_byte |= next_bit;
+            m_bit_offset++;
+
+            if (m_bit_offset > 7) {
+                TRY(m_stream->write({ &m_current_byte, sizeof(m_current_byte) }));
+                m_bit_offset = 0;
+                m_current_byte = 0;
+            }
+        }
+
+        return {};
+    }
+
+    virtual bool is_eof() const override
+    {
+        return true;
+    }
+
+    virtual bool is_open() const override
+    {
+        return m_stream->is_open();
+    }
+
+    virtual void close() override
+    {
+    }
+
+    size_t bit_offset() const
+    {
+        return m_bit_offset;
+    }
+
+    ErrorOr<void> align_to_byte_boundary()
+    {
+        if (m_bit_offset == 0)
+            return {};
+
+        TRY(write_bits(0u, 8 - m_bit_offset));
+        VERIFY(m_bit_offset == 0);
+        return {};
+    }
+
+private:
+    BigEndianOutputBitStream(Handle<Stream> stream)
+        : m_stream(move(stream))
+    {
+    }
+
+    Handle<Stream> m_stream;
+    u8 m_current_byte { 0 };
+    size_t m_bit_offset { 0 };
+};
+
+/// A stream wrapper class that allows you to write arbitrary amounts of bits
+/// in little-endian order to another stream.
+class LittleEndianOutputBitStream : public Stream {
+public:
+    static ErrorOr<NonnullOwnPtr<LittleEndianOutputBitStream>> construct(Handle<Stream> stream)
+    {
+        return adopt_nonnull_own_or_enomem<LittleEndianOutputBitStream>(new LittleEndianOutputBitStream(move(stream)));
+    }
+
+    virtual ErrorOr<Bytes> read(Bytes) override
+    {
+        return Error::from_errno(EBADF);
+    }
+
+    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    {
+        VERIFY(m_bit_offset == 0);
+        return m_stream->write(bytes);
+    }
+
+    template<Unsigned T>
+    ErrorOr<void> write_bits(T value, size_t bit_count)
+    {
+        VERIFY(m_bit_offset <= 7);
+
+        size_t input_offset = 0;
+        while (input_offset < bit_count) {
+            u8 next_bit = (value >> input_offset) & 1;
+            input_offset++;
+
+            m_current_byte |= next_bit << m_bit_offset;
+            m_bit_offset++;
+
+            if (m_bit_offset > 7) {
+                TRY(m_stream->write({ &m_current_byte, sizeof(m_current_byte) }));
+                m_bit_offset = 0;
+                m_current_byte = 0;
+            }
+        }
+
+        return {};
+    }
+
+    virtual bool is_eof() const override
+    {
+        return true;
+    }
+
+    virtual bool is_open() const override
+    {
+        return m_stream->is_open();
+    }
+
+    virtual void close() override
+    {
+    }
+
+    size_t bit_offset() const
+    {
+        return m_bit_offset;
+    }
+
+    ErrorOr<void> align_to_byte_boundary()
+    {
+        if (m_bit_offset == 0)
+            return {};
+
+        TRY(write_bits(0u, 8 - m_bit_offset));
+        VERIFY(m_bit_offset == 0);
+        return {};
+    }
+
+private:
+    LittleEndianOutputBitStream(Handle<Stream> stream)
+        : m_stream(move(stream))
+    {
+    }
+
+    Handle<Stream> m_stream;
+    u8 m_current_byte { 0 };
+    size_t m_bit_offset { 0 };
+};
+
 }

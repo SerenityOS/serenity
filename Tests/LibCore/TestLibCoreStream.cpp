@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/String.h>
+#include <LibCore/BitStream.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/MemoryStream.h>
@@ -557,5 +558,119 @@ TEST_CASE(allocating_memory_stream_10kb)
             FAIL(String::formatted("Data started to diverge at index {}: file={}, stream={}", offset + i, file_array[i], stream_array[i]));
         }
         offset += file_span.size();
+    }
+}
+
+// Bit stream tests
+
+// Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
+TEST_CASE(little_endian_bit_stream_input_output_match)
+{
+    auto memory_stream = make<Core::Stream::AllocatingMemoryStream>();
+
+    // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
+    // so testing with sizes that will not trigger a write will yield unexpected results.
+    auto bit_write_stream = MUST(Core::Stream::LittleEndianOutputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
+    auto bit_read_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
+
+    // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
+    {
+        MUST(bit_write_stream->write_bits(0b1111u, 4));
+        MUST(bit_write_stream->write_bits(0b1111u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1111u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1111u, result);
+    }
+    {
+        MUST(bit_write_stream->write_bits(0b0000u, 4));
+        MUST(bit_write_stream->write_bits(0b0000u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b0000u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b0000u, result);
+    }
+
+    // Test two mirrored chunks of a non-mirrored pattern to check that we are writing bits within a pattern in the correct order.
+    {
+        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1000u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1000u, result);
+    }
+
+    // Test two different chunks to check that we are not confusing their order.
+    {
+        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        MUST(bit_write_stream->write_bits(0b0100u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1000u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b0100u, result);
+    }
+
+    // Test a pattern that spans multiple bytes.
+    {
+        MUST(bit_write_stream->write_bits(0b1101001000100001u, 16));
+        auto result = MUST(bit_read_stream->read_bits(16));
+        EXPECT_EQ(0b1101001000100001u, result);
+    }
+}
+
+// Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
+TEST_CASE(big_endian_bit_stream_input_output_match)
+{
+    auto memory_stream = make<Core::Stream::AllocatingMemoryStream>();
+
+    // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
+    // so testing with sizes that will not trigger a write will yield unexpected results.
+    auto bit_write_stream = MUST(Core::Stream::BigEndianOutputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
+    auto bit_read_stream = MUST(Core::Stream::BigEndianInputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
+
+    // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
+    {
+        MUST(bit_write_stream->write_bits(0b1111u, 4));
+        MUST(bit_write_stream->write_bits(0b1111u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1111u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1111u, result);
+    }
+    {
+        MUST(bit_write_stream->write_bits(0b0000u, 4));
+        MUST(bit_write_stream->write_bits(0b0000u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b0000u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b0000u, result);
+    }
+
+    // Test two mirrored chunks of a non-mirrored pattern to check that we are writing bits within a pattern in the correct order.
+    {
+        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1000u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1000u, result);
+    }
+
+    // Test two different chunks to check that we are not confusing their order.
+    {
+        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        MUST(bit_write_stream->write_bits(0b0100u, 4));
+        auto result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b1000u, result);
+        result = MUST(bit_read_stream->read_bits(4));
+        EXPECT_EQ(0b0100u, result);
+    }
+
+    // Test a pattern that spans multiple bytes.
+    {
+        MUST(bit_write_stream->write_bits(0b1101001000100001u, 16));
+        auto result = MUST(bit_read_stream->read_bits(16));
+        EXPECT_EQ(0b1101001000100001u, result);
     }
 }
