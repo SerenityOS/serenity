@@ -10,6 +10,7 @@
 namespace Desktop {
 
 static constexpr int mouse_max_distance_move = 10;
+static constexpr int mouse_tracking_delay_milliseconds = 750;
 
 ErrorOr<NonnullRefPtr<GUI::Window>> Screensaver::create_window(StringView title, StringView icon)
 {
@@ -39,6 +40,10 @@ void Screensaver::mousedown_event(GUI::MouseEvent&)
 
 void Screensaver::mousemove_event(GUI::MouseEvent& event)
 {
+    auto now = AK::Time::now_monotonic();
+    if ((now - m_start_time).to_milliseconds() < mouse_tracking_delay_milliseconds)
+        return;
+
     if (!m_mouse_origin.has_value())
         m_mouse_origin = event.position();
     else if (event.position().distance_from(m_mouse_origin.value()) > mouse_max_distance_move)
