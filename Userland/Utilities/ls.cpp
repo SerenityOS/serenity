@@ -207,12 +207,12 @@ static int print_escaped(StringView name)
         return utf8_name.length();
     }
 
-    for (int i = 0; name[i] != '\0'; i++) {
-        if (isprint(name[i])) {
-            putchar(name[i]);
+    for (auto c : name) {
+        if (isprint(c)) {
+            putchar(c);
             printed++;
         } else {
-            printed += printf("\\%03d", name[i]);
+            printed += printf("\\%03d", c);
         }
     }
 
