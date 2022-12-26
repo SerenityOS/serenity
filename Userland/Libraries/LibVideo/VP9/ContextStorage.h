@@ -212,7 +212,7 @@ struct FrameBlockContext {
     u8 segment_id { 0 };
 };
 
-// Block context that is kept between frames until explictly cleared.
+// Block context that is kept between frames until explicitly cleared.
 struct PersistentBlockContext {
     PersistentBlockContext()
         : available(false)
