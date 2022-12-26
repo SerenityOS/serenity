@@ -25,6 +25,7 @@ set(SOURCES
     Font/Typeface.cpp
     Font/WOFF/Font.cpp
     GIFLoader.cpp
+    ICCProfile.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
     JPGLoader.cpp
