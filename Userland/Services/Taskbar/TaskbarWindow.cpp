@@ -58,6 +58,7 @@ ErrorOr<NonnullRefPtr<TaskbarWindow>> TaskbarWindow::create()
 {
     auto window = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) TaskbarWindow()));
     TRY(window->populate_taskbar());
+    TRY(window->load_assistant());
     return window;
 }
 
