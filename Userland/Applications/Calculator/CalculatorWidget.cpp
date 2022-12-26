@@ -159,7 +159,8 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
         m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
         mimic_pressed_button(m_equals_button);
     } else if (event.code_point() >= '0' && event.code_point() <= '9') {
-        auto const digit = m_keypad.type_digit(event.code_point() - '0');
+        auto const digit = event.code_point() - '0';
+        m_keypad.type_digit(digit);
         mimic_pressed_button(m_digit_button[digit]);
     } else if (event.code_point() == '.') {
         m_keypad.type_decimal_point();
