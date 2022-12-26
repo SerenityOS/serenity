@@ -10,6 +10,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
+#include <AK/Time.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Point.h>
@@ -27,10 +28,17 @@ public:
     virtual void mousedown_event(GUI::MouseEvent& event) override;
     virtual void mousemove_event(GUI::MouseEvent& event) override;
 
+protected:
+    Screensaver()
+        : m_start_time(AK::Time::now_monotonic())
+    {
+    }
+
 private:
     void trigger_exit();
 
     Optional<Gfx::IntPoint> m_mouse_origin;
+    AK::Time m_start_time;
 };
 
 }
