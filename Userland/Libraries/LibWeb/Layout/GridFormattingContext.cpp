@@ -1761,15 +1761,19 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     };
 
     for (auto& positioned_box : positioned_boxes) {
-        auto row_span_without_overflows = positioned_box.row + positioned_box.row_span > static_cast<int>(m_grid_rows.size()) ? static_cast<int>(m_grid_rows.size()) - positioned_box.row : positioned_box.row_span;
-
         auto resolved_row_start = box.computed_values().row_gap().is_auto() ? positioned_box.row : positioned_box.row * 2;
-        auto resolved_row_end = ((positioned_box.row + row_span_without_overflows) * 2) - 1;
-        auto resolved_row_span = box.computed_values().row_gap().is_auto() ? row_span_without_overflows : resolved_row_end - resolved_row_start;
+        auto resolved_row_span = box.computed_values().row_gap().is_auto() ? positioned_box.row_span : positioned_box.row_span * 2;
+        if (!box.computed_values().row_gap().is_auto() && resolved_row_start == 0)
+            resolved_row_span -= 1;
+        if (resolved_row_start + resolved_row_span > static_cast<int>(m_grid_rows.size()))
+            resolved_row_span = m_grid_rows.size() - resolved_row_start;
 
         auto resolved_column_start = box.computed_values().column_gap().is_auto() ? positioned_box.column : positioned_box.column * 2;
-        auto resolved_column_end = ((positioned_box.column + positioned_box.column_span) * 2) - 1;
-        auto resolved_column_span = box.computed_values().column_gap().is_auto() ? positioned_box.column_span : resolved_column_end - resolved_column_start;
+        auto resolved_column_span = box.computed_values().column_gap().is_auto() ? positioned_box.column_span : positioned_box.column_span * 2;
+        if (!box.computed_values().column_gap().is_auto() && resolved_column_start == 0)
+            resolved_column_span -= 1;
+        if (resolved_column_start + resolved_column_span > static_cast<int>(m_grid_columns.size()))
+            resolved_column_span = m_grid_columns.size() - resolved_column_start;
 
         layout_box(
             resolved_row_start,
