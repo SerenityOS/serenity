@@ -311,7 +311,22 @@ ThrowCompletionOr<Value> calendar_week_of_year(VM& vm, Object& calendar, Object&
     return TRY(to_positive_integer(vm, result));
 }
 
-// 12.2.14 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
+// 12.2.15 CalendarYearOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearofweek
+ThrowCompletionOr<Value> calendar_year_of_week(VM& vm, Object& calendar, Object& date_like)
+{
+    // 1. Let result be ? Invoke(calendar, "yearOfWeek", « dateLike »).
+    auto result = TRY(Value(&calendar).invoke(vm, vm.names.yearOfWeek, &date_like));
+
+    // 2. If result is undefined, throw a RangeError exception.
+    if (result.is_undefined())
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.yearOfWeek.as_string(), vm.names.undefined.as_string());
+
+    // 3. Return ? ToIntegerWithTruncation(result).
+    // FIXME: ToIntegerThrowOnInfinity was renamed to ToIntegerWithTruncation in https://github.com/tc39/proposal-temporal/commit/f2746783e808c0144f2ce669e004a8c6286f9fc7
+    return TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.yearOfWeek.as_string(), vm.names.Infinity.to_string()));
+}
+
+// 12.2.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
 ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
@@ -327,7 +342,7 @@ ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object&
     return TRY(to_positive_integer(vm, result));
 }
 
-// 12.2.16 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
+// 12.2.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
 ThrowCompletionOr<Value> calendar_days_in_month(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
@@ -343,7 +358,7 @@ ThrowCompletionOr<Value> calendar_days_in_month(VM& vm, Object& calendar, Object
     return TRY(to_positive_integer(vm, result));
 }
 
-// 12.2.17 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
+// 12.2.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
 ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
@@ -359,7 +374,7 @@ ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object&
     return TRY(to_positive_integer(vm, result));
 }
 
-// 12.2.18 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
+// 12.2.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
 ThrowCompletionOr<Value> calendar_months_in_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
@@ -375,7 +390,7 @@ ThrowCompletionOr<Value> calendar_months_in_year(VM& vm, Object& calendar, Objec
     return TRY(to_positive_integer(vm, result));
 }
 
-// 12.2.29 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
+// 12.2.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
 ThrowCompletionOr<Value> calendar_in_leap_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
@@ -419,7 +434,7 @@ ThrowCompletionOr<Value> calendar_era_year(VM& vm, Object& calendar, Object& dat
     return result;
 }
 
-// 12.2.20 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
+// 12.2.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
 ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_like)
 {
     // 1. If Type(temporalCalendarLike) is Object, then
@@ -484,7 +499,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
     return MUST(create_temporal_calendar(vm, identifier));
 }
 
-// 12.2.21 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
+// 12.2.22 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
 ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(VM& vm, Value temporal_calendar_like)
 {
     // 1. If temporalCalendarLike is undefined, then
@@ -496,7 +511,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(VM& vm, Value t
     return to_temporal_calendar(vm, temporal_calendar_like);
 }
 
-// 12.2.22 GetTemporalCalendarWithISODefault ( item ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendarwithisodefault
+// 12.2.23 GetTemporalCalendarWithISODefault ( item ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendarwithisodefault
 ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(VM& vm, Object& item)
 {
     // 1. If item has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
@@ -521,7 +536,7 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(VM& vm, Object
     return to_temporal_calendar_with_iso_default(vm, calendar_like);
 }
 
-// 12.2.23 CalendarDateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields
+// 12.2.24 CalendarDateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields
 ThrowCompletionOr<PlainDate*> calendar_date_from_fields(VM& vm, Object& calendar, Object const& fields, Object const* options)
 {
     // 1. If options is not present, set options to undefined.
@@ -538,7 +553,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_from_fields(VM& vm, Object& calendar
     return static_cast<PlainDate*>(date_object);
 }
 
-// 12.2.24 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
+// 12.2.25 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
 ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(VM& vm, Object& calendar, Object const& fields, Object const* options)
 {
     // 1. If options is not present, set options to undefined.
@@ -555,7 +570,7 @@ ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(VM& vm, Objec
     return static_cast<PlainYearMonth*>(year_month_object);
 }
 
-// 12.2.25 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
+// 12.2.26 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
 ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM& vm, Object& calendar, Object const& fields, Object const* options)
 {
     // 1. If options is not present, set options to undefined.
@@ -572,7 +587,7 @@ ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM& vm, Object&
     return static_cast<PlainMonthDay*>(month_day_object);
 }
 
-// 12.2.26 MaybeFormatCalendarAnnotation ( calendarObject, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-maybeformatcalendarannotation
+// 12.2.27 MaybeFormatCalendarAnnotation ( calendarObject, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-maybeformatcalendarannotation
 ThrowCompletionOr<DeprecatedString> maybe_format_calendar_annotation(VM& vm, Object const* calendar_object, StringView show_calendar)
 {
     // 1. If showCalendar is "never", return the empty String.
@@ -589,7 +604,7 @@ ThrowCompletionOr<DeprecatedString> maybe_format_calendar_annotation(VM& vm, Obj
     return format_calendar_annotation(calendar_id, show_calendar);
 }
 
-// 12.2.27 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
+// 12.2.28 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
 DeprecatedString format_calendar_annotation(StringView id, StringView show_calendar)
 {
     VERIFY(show_calendar == "auto"sv || show_calendar == "always"sv || show_calendar == "never"sv || show_calendar == "critical"sv);
@@ -609,7 +624,7 @@ DeprecatedString format_calendar_annotation(StringView id, StringView show_calen
     return DeprecatedString::formatted("[{}u-ca={}]", flag, id);
 }
 
-// 12.2.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
+// 12.2.29 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
 ThrowCompletionOr<bool> calendar_equals(VM& vm, Object& one, Object& two)
 {
     // 1. If one and two are the same Object value, return true.
@@ -630,7 +645,7 @@ ThrowCompletionOr<bool> calendar_equals(VM& vm, Object& one, Object& two)
     return false;
 }
 
-// 12.2.29 ConsolidateCalendars ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-consolidatecalendars
+// 12.2.30 ConsolidateCalendars ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-consolidatecalendars
 ThrowCompletionOr<Object*> consolidate_calendars(VM& vm, Object& one, Object& two)
 {
     // 1. If one and two are the same Object value, return two.
@@ -659,7 +674,7 @@ ThrowCompletionOr<Object*> consolidate_calendars(VM& vm, Object& one, Object& tw
     return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendar);
 }
 
-// 12.2.30 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
+// 12.2.31 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
 u8 iso_days_in_month(i32 year, u8 month)
 {
     // 1. Assert: year is an integer.
@@ -679,8 +694,8 @@ u8 iso_days_in_month(i32 year, u8 month)
     return 28 + JS::in_leap_year(time_from_year(year));
 }
 
-// 12.2.31 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
-u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
+// 12.2.32 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
+YearWeekRecord to_iso_week_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
     VERIFY(is_valid_iso_date(year, month, day));
@@ -721,18 +736,18 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 
         // c. If dayOfJan1st is friday, then
         if (day_of_jan_1st == friday) {
-            // i. Return maxWeekNumber.
-            return max_week_number;
+            // i. Return the Year-Week Record { [[Week]]: maxWeekNumber, [[Year]]: year - 1 }.
+            return YearWeekRecord { .week = max_week_number, .year = year - 1 };
         }
 
         // d. If dayOfJan1st is saturday, and InLeapYear(TimeFromYear(𝔽(year - 1))) is 1𝔽, then
         if (day_of_jan_1st == saturday && in_leap_year(time_from_year(year - 1))) {
-            // i. Return maxWeekNumber.
-            return max_week_number;
+            // i. Return the Year-Week Record { [[Week]]: maxWeekNumber. [[Year]]: year - 1 }.
+            return YearWeekRecord { .week = max_week_number, .year = year - 1 };
         }
 
-        // e. Return maxWeekNumber - 1.
-        return max_week_number - 1;
+        // e. Return the Year-Week Record { [[Week]]: maxWeekNumber - 1, [[Year]]: year - 1 }.
+        return YearWeekRecord { .week = max_week_number - 1, .year = year - 1 };
     }
 
     // 12. If week is maxWeekNumber, then
@@ -748,16 +763,16 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 
         // d. If daysLaterInYear < daysAfterThursday, then
         if (days_later_in_year < days_after_thursday) {
-            // i. Return 1.
-            return 1;
+            // i. Return the Year-Week Record { [[Week]]: 1, [[Year]]: year + 1 }.
+            return YearWeekRecord { .week = 1, .year = year + 1 };
         }
     }
 
-    // 13. Return week.
-    return week;
+    // 13. Return the Year-Week Record { [[Week]]: week, [[Year]]: year }.
+    return YearWeekRecord { .week = static_cast<u8>(week), .year = year };
 }
 
-// 12.2.32 ISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+// 12.2.33 ISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
 DeprecatedString iso_month_code(u8 month)
 {
     // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
@@ -765,7 +780,7 @@ DeprecatedString iso_month_code(u8 month)
     return DeprecatedString::formatted("M{:02}", month);
 }
 
-// 12.2.33 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
+// 12.2.34 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
 ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
 {
     // 1. Assert: fields is an ordinary object with no more and no less than the own data properties listed in Table 13.
@@ -824,7 +839,7 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
     return month_code_number;
 }
 
-// 12.2.34 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
+// 12.2.35 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
 ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM& vm, Object const& fields, Object const& options)
 {
     // 1. Assert: Type(fields) is Object.
@@ -854,7 +869,7 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM& vm, Object const& fiel
     return regulate_iso_date(vm, year.as_double(), month, day.as_double(), overflow);
 }
 
-// 12.2.35 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
+// 12.2.36 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
 ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(VM& vm, Object const& fields, Object const& options)
 {
     // 1. Assert: Type(fields) is Object.
@@ -881,7 +896,7 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(VM& vm, Object const&
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
 }
 
-// 12.2.36 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
+// 12.2.37 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
 ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& fields, Object const& options)
 {
     // 1. Assert: Type(fields) is Object.
@@ -939,7 +954,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& f
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
 }
 
-// 12.2.37 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
+// 12.2.38 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
 ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& fields, Object const& additional_fields)
 {
     auto& realm = *vm.current_realm();
@@ -1015,7 +1030,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     return merged.ptr();
 }
 
-// 12.2.38 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
+// 12.2.39 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
 u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
@@ -1031,7 +1046,7 @@ u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
     return day_within_year(make_date(epoch_days, 0)) + 1;
 }
 
-// 12.2.39 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
+// 12.2.40 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
 u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
