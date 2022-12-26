@@ -12,6 +12,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
+#include <LibCore/Stream.h>
 #include <LibCrypto/Checksum/Adler32.h>
 
 namespace Compress {
@@ -60,23 +61,28 @@ private:
     ReadonlyBytes m_data_bytes;
 };
 
-class ZlibCompressor : public OutputStream {
+class ZlibCompressor : public Core::Stream::Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(OutputStream&, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(Core::Stream::Handle<Core::Stream::Stream>, ZlibCompressionLevel = ZlibCompressionLevel::Default);
     ~ZlibCompressor();
 
-    size_t write(ReadonlyBytes) override;
-    bool write_or_error(ReadonlyBytes) override;
-    void finish();
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+    ErrorOr<void> finish();
 
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
 
 private:
-    ZlibCompressor(OutputStream&, ZlibCompressionLevel);
-    void write_header(ZlibCompressionMethod, ZlibCompressionLevel);
+    ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream>, ZlibCompressionLevel);
+    ErrorOr<void> write_header(ZlibCompressionMethod, ZlibCompressionLevel);
 
     bool m_finished { false };
-    OutputBitStream m_output_stream;
+    // FIXME: Remove this once DeflateCompressor is ported to Core::Stream.
+    NonnullOwnPtr<Core::Stream::WrapInAKOutputStream> m_ak_output_stream;
+    Core::Stream::Handle<Core::Stream::Stream> m_output_stream;
     NonnullOwnPtr<OutputStream> m_compressor;
     Crypto::Checksum::Adler32 m_adler32_checksum;
 };

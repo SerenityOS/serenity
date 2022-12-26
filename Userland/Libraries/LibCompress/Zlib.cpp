@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
+#include <LibCore/MemoryStream.h>
 
 namespace Compress {
 
@@ -68,21 +69,22 @@ u32 ZlibDecompressor::checksum()
     return m_checksum;
 }
 
-ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(OutputStream& stream, ZlibCompressionLevel compression_level)
+ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream, ZlibCompressionLevel compression_level)
 {
     // Zlib only defines Deflate as a compression method.
     auto compression_method = ZlibCompressionMethod::Deflate;
 
-    auto zlib_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ZlibCompressor(stream, compression_level)));
-    zlib_compressor->write_header(compression_method, compression_level);
+    auto zlib_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ZlibCompressor(move(stream), compression_level)));
+    TRY(zlib_compressor->write_header(compression_method, compression_level));
 
     return zlib_compressor;
 }
 
-ZlibCompressor::ZlibCompressor(OutputStream& stream, ZlibCompressionLevel compression_level)
-    : m_output_stream(stream)
+ZlibCompressor::ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, ZlibCompressionLevel compression_level)
+    : m_ak_output_stream(make<Core::Stream::WrapInAKOutputStream>(*stream))
+    , m_output_stream(move(stream))
     // FIXME: Find a way to compress with Deflate's "Best" compression level.
-    , m_compressor(make<DeflateCompressor>(stream, static_cast<DeflateCompressor::CompressionLevel>(compression_level)))
+    , m_compressor(make<DeflateCompressor>(*m_ak_output_stream, static_cast<DeflateCompressor::CompressionLevel>(compression_level)))
 {
 }
 
@@ -91,7 +93,7 @@ ZlibCompressor::~ZlibCompressor()
     VERIFY(m_finished);
 }
 
-void ZlibCompressor::write_header(ZlibCompressionMethod compression_method, ZlibCompressionLevel compression_level)
+ErrorOr<void> ZlibCompressor::write_header(ZlibCompressionMethod compression_method, ZlibCompressionLevel compression_level)
 {
     u8 compression_info = 0;
     if (compression_method == ZlibCompressionMethod::Deflate) {
@@ -110,10 +112,17 @@ void ZlibCompressor::write_header(ZlibCompressionMethod compression_method, Zlib
 
     // FIXME: Support pre-defined dictionaries.
 
-    m_output_stream << header.as_u16;
+    TRY(m_output_stream->write(header.as_u16.bytes()));
+
+    return {};
 }
 
-size_t ZlibCompressor::write(ReadonlyBytes bytes)
+ErrorOr<Bytes> ZlibCompressor::read(Bytes)
+{
+    return Error::from_errno(EBADF);
+}
+
+ErrorOr<size_t> ZlibCompressor::write(ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
 
@@ -122,17 +131,21 @@ size_t ZlibCompressor::write(ReadonlyBytes bytes)
     return n_written;
 }
 
-bool ZlibCompressor::write_or_error(ReadonlyBytes bytes)
+bool ZlibCompressor::is_eof() const
 {
-    if (write(bytes) < bytes.size()) {
-        set_fatal_error();
-        return false;
-    }
-
-    return true;
+    return false;
 }
 
-void ZlibCompressor::finish()
+bool ZlibCompressor::is_open() const
+{
+    return m_output_stream->is_open();
+}
+
+void ZlibCompressor::close()
+{
+}
+
+ErrorOr<void> ZlibCompressor::finish()
 {
     VERIFY(!m_finished);
 
@@ -140,24 +153,26 @@ void ZlibCompressor::finish()
         static_cast<DeflateCompressor*>(m_compressor.ptr())->final_flush();
 
     NetworkOrdered<u32> adler_sum = m_adler32_checksum.digest();
-    m_output_stream << adler_sum;
+    TRY(m_output_stream->write(adler_sum.bytes()));
 
     m_finished = true;
+
+    return {};
 }
 
 ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompressionLevel compression_level)
 {
-    DuplexMemoryStream output_stream;
-    auto zlib_stream = TRY(ZlibCompressor::construct(output_stream, compression_level));
+    auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
+    auto zlib_stream = TRY(ZlibCompressor::construct(Core::Stream::Handle<Core::Stream::Stream>(*output_stream), compression_level));
 
-    zlib_stream->write_or_error(bytes);
+    TRY(zlib_stream->write_entire_buffer(bytes));
 
-    zlib_stream->finish();
+    TRY(zlib_stream->finish());
 
-    if (zlib_stream->handle_any_error())
-        return Error::from_string_literal("Underlying ZlibStream indicated an error");
+    auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
+    TRY(output_stream->read_entire_buffer(buffer.bytes()));
 
-    return output_stream.copy_into_contiguous_buffer();
+    return buffer;
 }
 
 }
