@@ -42,16 +42,16 @@ struct ZlibHeader {
 };
 static_assert(sizeof(ZlibHeader) == sizeof(u16));
 
-class Zlib {
+class ZlibDecompressor {
 public:
     Optional<ByteBuffer> decompress();
     u32 checksum();
 
-    static Optional<Zlib> try_create(ReadonlyBytes data);
+    static Optional<ZlibDecompressor> try_create(ReadonlyBytes data);
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    Zlib(ZlibHeader, ReadonlyBytes data);
+    ZlibDecompressor(ZlibHeader, ReadonlyBytes data);
 
     ZlibHeader m_header;
 

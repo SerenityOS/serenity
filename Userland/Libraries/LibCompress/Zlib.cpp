@@ -15,7 +15,7 @@ namespace Compress {
 
 constexpr static size_t Adler32Size = sizeof(u32);
 
-Optional<Zlib> Zlib::try_create(ReadonlyBytes data)
+Optional<ZlibDecompressor> ZlibDecompressor::try_create(ReadonlyBytes data)
 {
     if (data.size() < (sizeof(ZlibHeader) + Adler32Size))
         return {};
@@ -31,18 +31,18 @@ Optional<Zlib> Zlib::try_create(ReadonlyBytes data)
     if (header.as_u16 % 31 != 0)
         return {}; // error correction code doesn't match
 
-    Zlib zlib { header, data };
+    ZlibDecompressor zlib { header, data };
     zlib.m_data_bytes = data.slice(2, data.size() - sizeof(ZlibHeader) - Adler32Size);
     return zlib;
 }
 
-Zlib::Zlib(ZlibHeader header, ReadonlyBytes data)
+ZlibDecompressor::ZlibDecompressor(ZlibHeader header, ReadonlyBytes data)
     : m_header(header)
     , m_input_data(data)
 {
 }
 
-Optional<ByteBuffer> Zlib::decompress()
+Optional<ByteBuffer> ZlibDecompressor::decompress()
 {
     auto buffer_or_error = DeflateDecompressor::decompress_all(m_data_bytes);
     if (buffer_or_error.is_error())
@@ -50,7 +50,7 @@ Optional<ByteBuffer> Zlib::decompress()
     return buffer_or_error.release_value();
 }
 
-Optional<ByteBuffer> Zlib::decompress_all(ReadonlyBytes bytes)
+Optional<ByteBuffer> ZlibDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     auto zlib = try_create(bytes);
     if (!zlib.has_value())
@@ -58,7 +58,7 @@ Optional<ByteBuffer> Zlib::decompress_all(ReadonlyBytes bytes)
     return zlib->decompress();
 }
 
-u32 Zlib::checksum()
+u32 ZlibDecompressor::checksum()
 {
     if (!m_checksum) {
         auto bytes = m_input_data.slice_from_end(Adler32Size);

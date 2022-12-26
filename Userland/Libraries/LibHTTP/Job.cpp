@@ -51,12 +51,12 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
 
         // Even though the content encoding is "deflate", it's actually deflate with the zlib wrapper.
         // https://tools.ietf.org/html/rfc7230#section-4.2.2
-        auto uncompressed = Compress::Zlib::decompress_all(buf);
+        auto uncompressed = Compress::ZlibDecompressor::decompress_all(buf);
         if (!uncompressed.has_value()) {
             // From the RFC:
             // "Note: Some non-conformant implementations send the "deflate"
             //        compressed data without the zlib wrapper."
-            dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: Zlib::decompress_all() failed. Trying DeflateDecompressor::decompress_all()");
+            dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: ZlibDecompressor::decompress_all() failed. Trying DeflateDecompressor::decompress_all()");
             uncompressed = TRY(Compress::DeflateDecompressor::decompress_all(buf));
         }
 

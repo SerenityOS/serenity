@@ -20,7 +20,7 @@ TEST_CASE(zlib_decompress_simple)
 
     const u8 uncompressed[] = "This is a simple text file :)";
 
-    auto const decompressed = Compress::Zlib::decompress_all(compressed);
+    auto const decompressed = Compress::ZlibDecompressor::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
