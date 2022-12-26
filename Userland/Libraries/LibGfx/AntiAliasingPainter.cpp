@@ -269,8 +269,11 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
     }
 
     // Check if the figure was started and closed as line at the same position.
-    if (thickness > 1 && previous_was_line && path.segments().size() >= 2 && path.segments().first().point() == cursor && (path.segments().first().type() == Segment::Type::LineTo || (path.segments().first().type() == Segment::Type::MoveTo && path.segments()[1].type() == Segment::Type::LineTo)))
+    if (thickness > 1 && previous_was_line && path.segments().size() >= 2 && path.segments().first().point() == cursor
+        && (path.segments().first().type() == Segment::Type::LineTo
+            || (path.segments().first().type() == Segment::Type::MoveTo && path.segments()[1].type() == Segment::Type::LineTo))) {
         stroke_segment_intersection(first_line.value().a(), first_line.value().b(), last_line, color, thickness);
+    }
 }
 
 void AntiAliasingPainter::draw_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
@@ -697,79 +700,67 @@ void AntiAliasingPainter::stroke_segment_intersection(FloatPoint current_line_a,
 
     // Starting point of the current line is where the last line ended... this is an intersection.
     auto intersection = current_line_a;
-    auto previous_line_b = (previous_line.a());
 
-    // If both are straight lines we can simply draw a rectangle at the intersection.
-    if ((current_line_a.x() == current_line_b.x() || current_line_a.y() == current_line_b.y()) && (previous_line.a().x() == previous_line.b().x() || previous_line.a().y() == previous_line.b().y())) {
-        intersection = m_transform.map(current_line_a);
-
-        // Adjust coordinates to handle rounding offsets.
-        auto intersection_rect = IntSize(thickness, thickness);
-        float drawing_edge_offset = fmodf(thickness, 2.0f) < 0.5f && thickness > 3 ? 1 : 0;
-        auto integer_part = [](float x) { return floorf(x); };
-        auto round = [&](float x) { return integer_part(x + 0.5f); };
-
-        if (thickness == 1)
-            drawing_edge_offset = -1;
-        if (current_line_a.x() == current_line_b.x() && previous_line.a().x() == previous_line.b().x()) {
-            intersection_rect.set_height(1);
-        }
-        if (current_line_a.y() == current_line_b.y() && previous_line.a().y() == previous_line.b().y()) {
-            intersection_rect.set_width(1);
-            drawing_edge_offset = thickness == 1 ? -1 : 0;
-            intersection.set_x(intersection.x() - 1 + (thickness == 1 ? 1 : 0));
-            intersection.set_y(intersection.y() + (thickness > 3 && fmodf(thickness, 2.0f) < 0.5f ? 1 : 0));
-        }
-
-        m_underlying_painter.fill_rect(IntRect::centered_on({ round(intersection.x()) + drawing_edge_offset, round(intersection.y()) + drawing_edge_offset }, intersection_rect), color);
+    // If both are straight lines we can simply draw a rectangle at the intersection (or nothing).
+    auto current_vertical = current_line_a.x() == current_line_b.x();
+    auto current_horizontal = current_line_a.y() == current_line_b.y();
+    auto previous_vertical = previous_line.a().x() == previous_line.b().x();
+    auto previous_horizontal = previous_line.a().y() == previous_line.b().y();
+    if (previous_horizontal && current_horizontal)
         return;
+    if (previous_vertical && current_vertical)
+        return;
+    if ((previous_horizontal || previous_vertical) && (current_horizontal || current_vertical)) {
+        intersection = m_transform.map(current_line_a);
+        // Note: int_thickness used here to match behaviour of draw_line()
+        int int_thickness = AK::ceil(thickness);
+        return fill_rect(FloatRect(intersection, { thickness, thickness }).translated(-int_thickness / 2), color);
     }
 
+    auto previous_line_a = previous_line.a();
     float scale_to_move_current = (thickness / 2) / intersection.distance_from(current_line_b);
-    float scale_to_move_previous = (thickness / 2) / intersection.distance_from(previous_line_b);
+    float scale_to_move_previous = (thickness / 2) / intersection.distance_from(previous_line_a);
 
     // Move the point on the line by half of the thickness.
-    double offset_current_edge_x = scale_to_move_current * (current_line_b.x() - intersection.x());
-    double offset_current_edge_y = scale_to_move_current * (current_line_b.y() - intersection.y());
-    double offset_prev_edge_x = scale_to_move_previous * (previous_line_b.x() - intersection.x());
-    double offset_prev_edge_y = scale_to_move_previous * (previous_line_b.y() - intersection.y());
+    float offset_current_edge_x = scale_to_move_current * (current_line_b.x() - intersection.x());
+    float offset_current_edge_y = scale_to_move_current * (current_line_b.y() - intersection.y());
+    float offset_prev_edge_x = scale_to_move_previous * (previous_line_a.x() - intersection.x());
+    float offset_prev_edge_y = scale_to_move_previous * (previous_line_a.y() - intersection.y());
 
     // Rotate the point by 90 and 270 degrees to get the points for both edges.
-    double rad_90deg = 0.5 * M_PI;
-    FloatPoint current_rotated_90deg = { (offset_current_edge_x * cos(rad_90deg) - offset_current_edge_y * sin(rad_90deg)), (offset_current_edge_x * sin(rad_90deg) + offset_current_edge_y * cos(rad_90deg)) };
-    FloatPoint current_rotated_270deg = intersection - current_rotated_90deg;
-    FloatPoint previous_rotated_90deg = { (offset_prev_edge_x * cos(rad_90deg) - offset_prev_edge_y * sin(rad_90deg)), (offset_prev_edge_x * sin(rad_90deg) + offset_prev_edge_y * cos(rad_90deg)) };
-    FloatPoint previous_rotated_270deg = intersection - previous_rotated_90deg;
+    FloatPoint current_rotated_90deg(-offset_current_edge_y, offset_current_edge_x);
+    FloatPoint previous_rotated_90deg(-offset_prev_edge_y, offset_prev_edge_x);
+    auto current_rotated_270deg = intersection - current_rotated_90deg;
+    auto previous_rotated_270deg = intersection - previous_rotated_90deg;
 
     // Translate coordinates to the intersection point.
     current_rotated_90deg += intersection;
     previous_rotated_90deg += intersection;
 
-    FloatLine outer_line_current_90 = FloatLine({ current_rotated_90deg, current_line_b - static_cast<FloatPoint>(intersection - current_rotated_90deg) });
-    FloatLine outer_line_current_270 = FloatLine({ current_rotated_270deg, current_line_b - static_cast<FloatPoint>(intersection - current_rotated_270deg) });
-    FloatLine outer_line_prev_270 = FloatLine({ previous_rotated_270deg, previous_line_b - static_cast<FloatPoint>(intersection - previous_rotated_270deg) });
-    FloatLine outer_line_prev_90 = FloatLine({ previous_rotated_90deg, previous_line_b - static_cast<FloatPoint>(intersection - previous_rotated_90deg) });
+    FloatLine outer_line_current_90(current_rotated_90deg, current_line_b - (intersection - current_rotated_90deg));
+    FloatLine outer_line_current_270(current_rotated_270deg, current_line_b - (intersection - current_rotated_270deg));
+    FloatLine outer_line_prev_270(previous_rotated_270deg, previous_line_a - (intersection - previous_rotated_270deg));
+    FloatLine outer_line_prev_90(previous_rotated_90deg, previous_line_a - (intersection - previous_rotated_90deg));
 
-    Optional<FloatPoint> edge_spike_90 = outer_line_current_90.intersected(outer_line_prev_270);
+    auto edge_spike_90 = outer_line_current_90.intersected(outer_line_prev_270);
     Optional<FloatPoint> edge_spike_270;
 
     if (edge_spike_90.has_value()) {
-        edge_spike_270 = intersection + (intersection - edge_spike_90.value());
+        edge_spike_270 = intersection + (intersection - *edge_spike_90);
     } else {
         edge_spike_270 = outer_line_current_270.intersected(outer_line_prev_90);
-        if (edge_spike_270.has_value()) {
-            edge_spike_90 = intersection + (intersection - edge_spike_270.value());
-        }
+        if (edge_spike_270.has_value())
+            edge_spike_90 = intersection + (intersection - *edge_spike_270);
     }
 
     Path intersection_edge_path;
     intersection_edge_path.move_to(current_rotated_90deg);
     if (edge_spike_90.has_value())
-        intersection_edge_path.line_to(edge_spike_90.value());
+        intersection_edge_path.line_to(*edge_spike_90);
     intersection_edge_path.line_to(previous_rotated_270deg);
     intersection_edge_path.line_to(current_rotated_270deg);
     if (edge_spike_270.has_value())
-        intersection_edge_path.line_to(edge_spike_270.value());
+        intersection_edge_path.line_to(*edge_spike_270);
     intersection_edge_path.line_to(previous_rotated_90deg);
     intersection_edge_path.close();
     fill_path(intersection_edge_path, color);
