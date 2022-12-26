@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
 // This type implements the regular calculator
@@ -36,11 +37,13 @@ public:
         MemClear,
         MemRecall,
         MemSave,
-        MemAdd
+        MemAdd,
+
+        Equals
     };
 
-    Crypto::BigFraction begin_operation(Operation, Crypto::BigFraction);
-    Crypto::BigFraction finish_operation(Crypto::BigFraction);
+    Optional<Crypto::BigFraction> operation_with_literal_argument(Operation, Crypto::BigFraction);
+    Optional<Crypto::BigFraction> operation_without_argument(Operation);
 
     bool has_error() const { return m_has_error; }
 
@@ -48,8 +51,16 @@ public:
     void clear_error() { m_has_error = false; }
 
 private:
-    Operation m_operation_in_progress { Operation::None };
-    Crypto::BigFraction m_saved_argument {};
     Crypto::BigFraction m_mem {};
+
+    Crypto::BigFraction m_current_value {};
+
+    Operation m_binary_operation_in_progress { Operation::None };
+    Crypto::BigFraction m_binary_operation_saved_left_side {};
+
+    Operation m_previous_operation { Operation::None };
+    Crypto::BigFraction m_previous_binary_operation_right_side {};
     bool m_has_error { false };
+
+    Crypto::BigFraction finish_binary_operation(Crypto::BigFraction const& left_side, Operation operation, Crypto::BigFraction const& right_side);
 };

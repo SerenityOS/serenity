@@ -135,6 +135,11 @@ DeprecatedString Keypad::to_deprecated_string() const
     return builder.to_deprecated_string();
 }
 
+bool Keypad::in_typing_state() const
+{
+    return m_state == State::TypingDecimal || m_state == State::TypingInteger;
+}
+
 void Keypad::set_rounding_length(unsigned rounding_threshold)
 {
     m_displayed_fraction_length = rounding_threshold;

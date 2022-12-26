@@ -10,9 +10,13 @@
 #include <AK/Math.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
-Crypto::BigFraction Calculator::begin_operation(Operation operation, Crypto::BigFraction argument)
+Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operation operation, Crypto::BigFraction argument)
 {
-    Crypto::BigFraction res {};
+    // If a previous operation is still in progress, finish it
+    // Makes hitting "1+2+3=" equivalent to hitting "1+2=+3="
+    if (m_binary_operation_in_progress != Operation::None) {
+        argument = finish_binary_operation(m_binary_operation_saved_left_side, m_binary_operation_in_progress, argument);
+    }
 
     switch (operation) {
     case Operation::None:
@@ -22,78 +26,117 @@ Crypto::BigFraction Calculator::begin_operation(Operation operation, Crypto::Big
     case Operation::Subtract:
     case Operation::Multiply:
     case Operation::Divide:
-        m_saved_argument = argument;
-        m_operation_in_progress = operation;
-        return argument;
+        m_binary_operation_saved_left_side = argument;
+        m_binary_operation_in_progress = operation;
+        m_current_value = argument;
+        break;
 
     case Operation::Sqrt:
         if (argument < Crypto::BigFraction {}) {
             m_has_error = true;
-            return argument;
+            m_current_value = argument;
+            break;
         }
-        res = argument.sqrt();
+        m_current_value = argument.sqrt();
         clear_operation();
         break;
     case Operation::Inverse:
         if (argument == Crypto::BigFraction {}) {
             m_has_error = true;
-            return argument;
+            m_current_value = argument;
+            break;
         }
-        res = argument.invert();
+        m_current_value = argument.invert();
         clear_operation();
         break;
     case Operation::Percent:
-        res = argument * Crypto::BigFraction { 1, 100 };
+        m_current_value = argument * Crypto::BigFraction { 1, 100 };
         break;
     case Operation::ToggleSign:
-        res = -argument;
+        m_current_value = -argument;
         break;
 
     case Operation::MemClear:
         m_mem.set_to_0();
-        res = argument;
+        m_current_value = argument;
         break;
     case Operation::MemRecall:
-        res = m_mem;
+        m_current_value = m_mem;
         break;
     case Operation::MemSave:
         m_mem = argument;
-        res = argument;
+        m_current_value = argument;
         break;
     case Operation::MemAdd:
         m_mem = m_mem + argument; // avoids the need for operator+=()
-        res = m_mem;
+        m_current_value = m_mem;
+        break;
+    case Operation::Equals:
+        m_current_value = argument;
         break;
     }
 
-    return res;
+    return m_current_value;
 }
 
-Crypto::BigFraction Calculator::finish_operation(Crypto::BigFraction argument)
+static bool operation_is_binary(Calculator::Operation operation)
+{
+    switch (operation) {
+
+    case Calculator::Operation::Add:
+    case Calculator::Operation::Subtract:
+    case Calculator::Operation::Multiply:
+    case Calculator::Operation::Divide:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Optional<Crypto::BigFraction> Calculator::operation_without_argument(Operation operation)
+{
+    bool in_binary_operation = m_binary_operation_in_progress != Operation::None;
+    bool entering_new_binary_operation = operation_is_binary(operation);
+    bool previous_operation_was_binary = operation_is_binary(m_previous_operation);
+
+    if (in_binary_operation && entering_new_binary_operation) {
+        m_binary_operation_in_progress = operation;
+        return {};
+    }
+    if (!in_binary_operation && previous_operation_was_binary && operation == Operation::Equals) {
+        m_current_value = finish_binary_operation(m_current_value, m_previous_operation, m_previous_binary_operation_right_side);
+        return m_current_value;
+    }
+    return operation_with_literal_argument(operation, m_current_value);
+}
+
+Crypto::BigFraction Calculator::finish_binary_operation(Crypto::BigFraction const& left_side, Operation operation, Crypto::BigFraction const& right_side)
 {
     Crypto::BigFraction res {};
 
-    switch (m_operation_in_progress) {
-    case Operation::None:
-        return argument;
+    m_previous_binary_operation_right_side = right_side;
+
+    switch (operation) {
 
     case Operation::Add:
-        res = m_saved_argument + argument;
+        res = left_side + right_side;
         break;
     case Operation::Subtract:
-        res = m_saved_argument - argument;
+        res = left_side - right_side;
         break;
     case Operation::Multiply:
-        res = m_saved_argument * argument;
+        res = left_side * right_side;
         break;
     case Operation::Divide:
-        if (argument == Crypto::BigFraction {}) {
+        if (right_side == Crypto::BigFraction {}) {
             m_has_error = true;
-            return argument;
+        } else {
+            res = left_side / right_side;
         }
-        res = m_saved_argument / argument;
         break;
 
+    case Operation::None:
     case Operation::Sqrt:
     case Operation::Inverse:
     case Operation::Percent:
@@ -102,6 +145,7 @@ Crypto::BigFraction Calculator::finish_operation(Crypto::BigFraction argument)
     case Operation::MemRecall:
     case Operation::MemSave:
     case Operation::MemAdd:
+    case Operation::Equals:
         VERIFY_NOT_REACHED();
     }
 
@@ -111,7 +155,10 @@ Crypto::BigFraction Calculator::finish_operation(Crypto::BigFraction argument)
 
 void Calculator::clear_operation()
 {
-    m_operation_in_progress = Operation::None;
-    m_saved_argument.set_to_0();
+    if (m_binary_operation_in_progress != Operation::None) {
+        m_previous_operation = m_binary_operation_in_progress;
+        m_binary_operation_in_progress = Operation::None;
+    }
+    m_binary_operation_saved_left_side.set_to_0();
     clear_error();
 }

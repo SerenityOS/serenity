@@ -35,6 +35,8 @@ public:
 
     DeprecatedString to_deprecated_string() const;
 
+    bool in_typing_state() const;
+
 private:
     // Internal representation of the current decimal value.
     // Those variables are only used when the user is entering a value.
