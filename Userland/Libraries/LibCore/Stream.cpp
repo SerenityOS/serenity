@@ -830,4 +830,33 @@ bool WrapInAKInputStream::discard_or_error(size_t count)
     return true;
 }
 
+WrapInAKOutputStream::WrapInAKOutputStream(Core::Stream::Stream& stream)
+    : m_stream(stream)
+{
+}
+
+size_t WrapInAKOutputStream::write(ReadonlyBytes bytes)
+{
+    if (has_any_error())
+        return 0;
+
+    auto length_or_error = m_stream.write(bytes);
+    if (length_or_error.is_error()) {
+        set_fatal_error();
+        return 0;
+    }
+
+    return length_or_error.value();
+}
+
+bool WrapInAKOutputStream::write_or_error(ReadonlyBytes bytes)
+{
+    if (write(bytes) < bytes.size()) {
+        set_fatal_error();
+        return false;
+    }
+
+    return true;
+}
+
 }

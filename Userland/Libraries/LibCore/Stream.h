@@ -1041,4 +1041,15 @@ private:
     Core::Stream::Stream& m_stream;
 };
 
+// Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
+class WrapInAKOutputStream final : public OutputStream {
+public:
+    WrapInAKOutputStream(Core::Stream::Stream& stream);
+    virtual size_t write(ReadonlyBytes) override;
+    virtual bool write_or_error(ReadonlyBytes) override;
+
+private:
+    Core::Stream::Stream& m_stream;
+};
+
 }
