@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='halflife'
-version='2022.07.14'  # Bogus version, this was the last time the commit hashes were updated.
-_hlsdk_commit='5a68ce08bc16c3ad04bd068a501d07b3f540aca7'
+version='2022.12.26'  # Bogus version, this was the last time the commit hashes were updated.
+_hlsdk_commit='63e3769c46ba7f502b53abdfdd55597e4130c0dd'
 useconfigure='true'
 depends=("xash3d-fwgs")
 workdir="hlsdk-portable-${_hlsdk_commit}"
-files="https://github.com/FWGS/hlsdk-portable/archive/${_hlsdk_commit}.tar.gz hlsdk-portable-${_hlsdk_commit}.tar.gz 846c47db9271f23a3ec554c7cd2b8f75a382b56357b2447441e8d8cf5675c2b9"
+files="https://github.com/FWGS/hlsdk-portable/archive/${_hlsdk_commit}.tar.gz hlsdk-portable-${_hlsdk_commit}.tar.gz b010c94ed400e44508f43706aeea68b82615c6ad22d2b1b892e8d6201d97503d"
 auth_type='sha256'
 launcher_name='Half-Life'
 launcher_category='Games'
