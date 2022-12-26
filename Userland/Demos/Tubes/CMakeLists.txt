@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(Tubes ICON app-tubes)
-target_link_libraries(Tubes PRIVATE LibGUI LibCore LibGfx LibGL LibMain)
+target_link_libraries(Tubes PRIVATE LibCore LibDesktop LibGfx LibGL LibGUI LibMain)

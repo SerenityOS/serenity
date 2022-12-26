@@ -8,8 +8,8 @@
 
 #include <AK/FixedArray.h>
 #include <AK/Vector.h>
+#include <LibDesktop/Screensaver.h>
 #include <LibGL/GLContext.h>
-#include <LibGUI/Widget.h>
 #include <LibGfx/Vector3.h>
 
 enum class Direction : u8 {
@@ -31,7 +31,7 @@ struct Tube {
     double progress_to_target { 0 };
 };
 
-class Tubes final : public GUI::Widget {
+class Tubes final : public Desktop::Screensaver {
     C_OBJECT(Tubes)
 public:
     virtual ~Tubes() override = default;
@@ -51,14 +51,10 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void mousedown_event(GUI::MouseEvent& event) override;
-    virtual void mousemove_event(GUI::MouseEvent& event) override;
 
     RefPtr<Gfx::Bitmap> m_bitmap;
     FixedArray<u8> m_grid;
     OwnPtr<GL::GLContext> m_gl_context;
-    Gfx::IntPoint m_mouse_origin;
     u64 m_ticks { 0 };
     Vector<Tube> m_tubes;
 };

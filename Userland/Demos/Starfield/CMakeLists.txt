@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Starfield ICON app-starfield)
-target_link_libraries(Starfield PRIVATE LibGUI LibCore LibGfx LibMain)
+target_link_libraries(Starfield PRIVATE LibDesktop LibGUI LibCore LibGfx LibMain)
