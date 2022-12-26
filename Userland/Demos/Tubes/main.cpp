@@ -27,16 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath prot_exec"));
 
-    auto app_icon = GUI::Icon::default_icon("app-tubes"sv);
-    auto window = TRY(GUI::Window::try_create());
-
-    window->set_double_buffering_enabled(true);
-    window->set_title("Tubes");
-    window->set_resizable(false);
-    window->set_frameless(true);
-    window->set_fullscreen(true);
-    window->set_minimizable(false);
-    window->set_icon(app_icon.bitmap_for_size(16));
+    auto window = TRY(Desktop::Screensaver::create_window("Tubes"sv, "app-tubes"sv));
     window->update();
 
     auto tubes_widget = TRY(window->try_set_main_widget<Tubes>(refresh_rate));

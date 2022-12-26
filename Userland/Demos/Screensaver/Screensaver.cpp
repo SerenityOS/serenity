@@ -5,11 +5,11 @@
  */
 
 #include <LibCore/System.h>
+#include <LibDesktop/Screensaver.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
@@ -17,7 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 
-class Screensaver final : public GUI::Widget {
+class Screensaver final : public Desktop::Screensaver {
     C_OBJECT(Screensaver)
 public:
     virtual ~Screensaver() override = default;
@@ -25,43 +25,20 @@ public:
 private:
     Screensaver(int width = 64, int height = 48, int interval = 10000);
     RefPtr<Gfx::Bitmap> m_bitmap;
-    Gfx::IntPoint m_mouse_origin;
 
     void draw();
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void mousedown_event(GUI::MouseEvent& event) override;
-    virtual void mousemove_event(GUI::MouseEvent& event) override;
 };
 
 Screensaver::Screensaver(int width, int height, int interval)
 {
+    on_screensaver_exit = []() { GUI::Application::the()->quit(); };
     m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }).release_value_but_fixme_should_propagate_errors();
     srand(time(nullptr));
     stop_timer();
     start_timer(interval);
     draw();
-}
-
-void Screensaver::mousemove_event(GUI::MouseEvent& event)
-{
-    constexpr float max_distance_move = 10;
-    if (m_mouse_origin.is_null()) {
-        m_mouse_origin = event.position();
-    } else if (event.position().distance_from(m_mouse_origin) > max_distance_move) {
-        GUI::Application::the()->quit();
-    }
-}
-
-void Screensaver::mousedown_event(GUI::MouseEvent&)
-{
-    GUI::Application::the()->quit();
-}
-
-void Screensaver::keydown_event(GUI::KeyEvent&)
-{
-    GUI::Application::the()->quit();
 }
 
 void Screensaver::paint_event(GUI::PaintEvent& event)
@@ -118,15 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-screensaver"sv);
-    auto window = TRY(GUI::Window::try_create());
-    window->set_double_buffering_enabled(false);
-    window->set_title("Screensaver");
-    window->set_resizable(false);
-    window->set_frameless(true);
-    window->set_fullscreen(true);
-    window->set_minimizable(false);
-    window->set_icon(app_icon.bitmap_for_size(16));
+    auto window = TRY(Desktop::Screensaver::create_window("Screensaver"sv, "app-screensaver"sv));
 
     auto screensaver_window = TRY(window->try_set_main_widget<Screensaver>(64, 48, 10000));
     screensaver_window->set_fill_with_background_color(false);

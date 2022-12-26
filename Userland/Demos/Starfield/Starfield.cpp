@@ -8,11 +8,11 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Screensaver.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
@@ -30,7 +30,7 @@ struct Coordinate {
     }
 };
 
-class Starfield final : public GUI::Widget {
+class Starfield final : public Desktop::Screensaver {
     C_OBJECT(Starfield)
 public:
     virtual ~Starfield() override = default;
@@ -46,8 +46,6 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void mousedown_event(GUI::MouseEvent& event) override;
-    virtual void mousemove_event(GUI::MouseEvent& event) override;
 
     Vector<Coordinate> m_stars;
     int m_sweep_plane = 2000;
@@ -56,6 +54,7 @@ private:
 
 Starfield::Starfield(int interval)
 {
+    on_screensaver_exit = []() { GUI::Application::the()->quit(); };
     srand(time(nullptr));
     stop_timer();
     start_timer(interval);
@@ -75,15 +74,6 @@ ErrorOr<void> Starfield::create_stars(int width, int height, int stars)
     return {};
 }
 
-void Starfield::mousemove_event(GUI::MouseEvent&)
-{
-}
-
-void Starfield::mousedown_event(GUI::MouseEvent&)
-{
-    GUI::Application::the()->quit();
-}
-
 void Starfield::keydown_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
@@ -95,7 +85,7 @@ void Starfield::keydown_event(GUI::KeyEvent& event)
             m_speed = 1;
         break;
     default:
-        GUI::Application::the()->quit();
+        Desktop::Screensaver::keydown_event(event);
     }
 }
 
@@ -164,16 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
-    auto app_icon = GUI::Icon::default_icon("app-starfield"sv);
-    auto window = TRY(GUI::Window::try_create());
-
-    window->set_double_buffering_enabled(true);
-    window->set_title("Starfield");
-    window->set_resizable(false);
-    window->set_frameless(true);
-    window->set_fullscreen(true);
-    window->set_minimizable(false);
-    window->set_icon(app_icon.bitmap_for_size(16));
+    auto window = TRY(Desktop::Screensaver::create_window("Starfield"sv, "app-starfield"sv));
 
     auto starfield_window = TRY(window->try_set_main_widget<Starfield>(refresh_rate));
     starfield_window->set_fill_with_background_color(false);
