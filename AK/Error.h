@@ -21,9 +21,9 @@ namespace AK {
 
 class Error {
 public:
-    static Error from_errno(int code) { return Error(code); }
-    static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
-    static Error from_string_view(StringView string_literal) { return Error(string_literal); }
+    [[nodiscard]] static Error from_errno(int code) { return Error(code); }
+    [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
+    [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
 
     // NOTE: Prefer `from_string_literal` when directly typing out an error message:
     //
@@ -32,7 +32,7 @@ public:
     // If you need to return a static string based on a dynamic condition (like
     // picking an error from an array), then prefer `from_string_view` instead.
     template<size_t N>
-    ALWAYS_INLINE static Error from_string_literal(char const (&string_literal)[N])
+    [[nodiscard]] ALWAYS_INLINE static Error from_string_literal(char const (&string_literal)[N])
     {
         return from_string_view(StringView { string_literal, N - 1 });
     }
