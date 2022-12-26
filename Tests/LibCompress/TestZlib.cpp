@@ -23,3 +23,22 @@ TEST_CASE(zlib_decompress_simple)
     auto const decompressed = Compress::Zlib::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
+
+TEST_CASE(zlib_compress_simple)
+{
+    // Note: This is just the output of our compression function from an arbitrary point in time.
+    // This test is intended to ensure that the decompression doesn't change unintentionally,
+    // it does not make any guarantees for correctness.
+
+    Array<u8, 37> const compressed {
+        0x78, 0x9C, 0x0B, 0xC9, 0xC8, 0x2C, 0x56, 0xC8, 0x2C, 0x56, 0x48, 0x54,
+        0x28, 0xCE, 0xCC, 0x2D, 0xC8, 0x49, 0x55, 0x28, 0x49, 0xAD, 0x28, 0x51,
+        0x48, 0xCB, 0xCC, 0x49, 0x55, 0xB0, 0xD2, 0x04, 0x00, 0x99, 0x5E, 0x09,
+        0xE8
+    };
+
+    const u8 uncompressed[] = "This is a simple text file :)";
+
+    auto const freshly_pressed = Compress::ZlibCompressor::compress_all({ uncompressed, sizeof(uncompressed) - 1 });
+    EXPECT(freshly_pressed.value().bytes() == compressed.span());
+}
