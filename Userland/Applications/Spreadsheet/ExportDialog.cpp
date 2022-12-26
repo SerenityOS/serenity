@@ -11,7 +11,6 @@
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/MemoryStream.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
@@ -169,7 +168,7 @@ void CSVExportDialogPage::update_preview()
         m_data_preview_text_editor->set_text(DeprecatedString::formatted("Cannot update preview: {}", maybe_error.error()));
 }
 
-ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
+ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core::Stream::File> file, DeprecatedString filename, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
     wizard->set_title("File Export Wizard");
@@ -186,8 +185,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
         if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return Error::from_string_literal("CSV Export was cancelled");
 
-        auto file_stream = TRY(try_make<Core::Stream::WrappedAKOutputStream>(TRY(try_make<Core::OutputFileStream>(file))));
-        auto writer = TRY(page.make_writer(move(file_stream)));
+        auto writer = TRY(page.make_writer(move(file)));
         return writer->generate();
     };
 
@@ -197,12 +195,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
             array.append(sheet.to_json());
 
         auto file_content = array.to_deprecated_string();
-        bool result = file.write(file_content);
-        if (!result) {
-            return Error::from_string_literal("Unable to save file.");
-        }
-
-        return {};
+        return file->write_entire_buffer(file_content.bytes());
     };
 
     if (mime == "text/csv") {
@@ -212,7 +205,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
     } else {
         auto page = GUI::WizardPage::construct(
             "Export File Format",
-            DeprecatedString::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(file.filename())));
+            DeprecatedString::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(filename)));
 
         page->on_next_page = [] { return nullptr; };
 

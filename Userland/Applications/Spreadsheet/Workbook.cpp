@@ -68,8 +68,10 @@ ErrorOr<void> Workbook::write_to_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
+    auto file_stream = TRY(Core::Stream::File::adopt_fd(file.leak_fd(), Core::Stream::OpenMode::Write));
+
     // Make an export dialog, we might need to import it.
-    TRY(ExportDialog::make_and_run_for(mime, file, *this));
+    TRY(ExportDialog::make_and_run_for(mime, move(file_stream), file.filename(), *this));
 
     set_filename(file.filename());
     set_dirty(false);
