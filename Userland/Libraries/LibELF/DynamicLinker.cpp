@@ -132,8 +132,16 @@ static Optional<DeprecatedString> resolve_library(DeprecatedString const& name, 
         LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filepath()), ReplaceMode::FirstOnly));
         DeprecatedString library_name = library_path.append(name).string();
 
-        if (access(library_name.characters(), F_OK) == 0)
+        if (access(library_name.characters(), F_OK) == 0) {
+            if (!library_name.starts_with('/')) {
+                // FIXME: Non-absolute paths should resolve from the current working directory. However,
+                //        since that's almost never the effect that is actually desired, let's print
+                //        a warning and only implement it once something actually needs that behavior.
+                dbgln("\033[33mWarning:\033[0m Resolving library '{}' resulted in non-absolute path '{}'. Check your binary for relative RPATHs and RUNPATHs.", name, library_name);
+            }
+
             return library_name;
+        }
     }
 
     return {};
