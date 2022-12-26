@@ -31,6 +31,12 @@ private:
     DeprecatedString m_identifier; // [[Identifier]]
 };
 
+// 14.2 The Year-Week Record Specification Type, https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type
+struct YearWeekRecord {
+    u8 week { 0 };
+    i32 year { 0 };
+};
+
 bool is_builtin_calendar(DeprecatedString const& identifier);
 Span<StringView const> available_calendars();
 ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, DeprecatedString const& identifier, FunctionObject const* new_target = nullptr);
@@ -47,6 +53,7 @@ ThrowCompletionOr<double> calendar_day(VM&, Object& calendar, Object& date_like)
 ThrowCompletionOr<Value> calendar_day_of_week(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_day_of_year(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_week_of_year(VM&, Object& calendar, Object& date_like);
+ThrowCompletionOr<Value> calendar_year_of_week(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_days_in_week(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_days_in_month(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_days_in_year(VM&, Object& calendar, Object& date_like);
@@ -65,7 +72,7 @@ DeprecatedString format_calendar_annotation(StringView id, StringView show_calen
 ThrowCompletionOr<bool> calendar_equals(VM&, Object& one, Object& two);
 ThrowCompletionOr<Object*> consolidate_calendars(VM&, Object& one, Object& two);
 u8 iso_days_in_month(i32 year, u8 month);
-u8 to_iso_week_of_year(i32 year, u8 month, u8 day);
+YearWeekRecord to_iso_week_of_year(i32 year, u8 month, u8 day);
 DeprecatedString iso_month_code(u8 month);
 ThrowCompletionOr<double> resolve_iso_month(VM&, Object const& fields);
 ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM&, Object const& fields, Object const& options);

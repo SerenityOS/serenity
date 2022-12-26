@@ -54,6 +54,7 @@ void ZonedDateTimePrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.dayOfWeek, day_of_week_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.dayOfYear, day_of_year_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.weekOfYear, week_of_year_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.yearOfWeek, year_of_week_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.hoursInDay, hours_in_day_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.daysInWeek, days_in_week_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.daysInMonth, days_in_month_getter, {}, Attribute::Configurable);
@@ -474,7 +475,30 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
     return TRY(calendar_week_of_year(vm, calendar, *temporal_date_time));
 }
 
-// 6.3.22 get Temporal.ZonedDateTime.prototype.hoursInDay, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hoursinday
+// 6.3.22 get Temporal.ZonedDateTime.prototype.yearOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.yearofweek
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_of_week_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(vm));
+
+    // 3. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = MUST(create_temporal_instant(vm, zoned_date_time->nanoseconds()));
+
+    // 5. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *instant, calendar));
+
+    // 7. Return 𝔽(? CalendarYearOfWeek(calendar, temporalDateTime)).
+    return TRY(calendar_year_of_week(vm, calendar, *temporal_date_time));
+}
+
+// 6.3.23 get Temporal.ZonedDateTime.prototype.hoursInDay, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hoursinday
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hours_in_day_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -525,7 +549,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hours_in_day_getter)
     return Value(hours_diff_ns.to_double());
 }
 
-// 6.3.23 get Temporal.ZonedDateTime.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinweek
+// 6.3.24 get Temporal.ZonedDateTime.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinweek
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -548,7 +572,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
     return TRY(calendar_days_in_week(vm, calendar, *temporal_date_time));
 }
 
-// 6.3.24 get Temporal.ZonedDateTime.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinmonth
+// 6.3.25 get Temporal.ZonedDateTime.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinmonth
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -571,7 +595,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
     return TRY(calendar_days_in_month(vm, calendar, *temporal_date_time));
 }
 
-// 6.3.25 get Temporal.ZonedDateTime.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinyear
+// 6.3.26 get Temporal.ZonedDateTime.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinyear
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -594,7 +618,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
     return TRY(calendar_days_in_year(vm, calendar, *temporal_date_time));
 }
 
-// 6.3.26 get Temporal.ZonedDateTime.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthsinyear
+// 6.3.27 get Temporal.ZonedDateTime.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthsinyear
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -617,7 +641,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
     return TRY(calendar_months_in_year(vm, calendar, *temporal_date_time));
 }
 
-// 6.3.27 get Temporal.ZonedDateTime.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.inleapyear
+// 6.3.28 get Temporal.ZonedDateTime.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.inleapyear
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -640,7 +664,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
     return TRY(calendar_in_leap_year(vm, calendar, *temporal_date_time));
 }
 
-// 6.3.28 get Temporal.ZonedDateTime.prototype.offsetNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offsetnanoseconds
+// 6.3.29 get Temporal.ZonedDateTime.prototype.offsetNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offsetnanoseconds
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -657,7 +681,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
     return Value(TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant)));
 }
 
-// 6.3.29 get Temporal.ZonedDateTime.prototype.offset, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offset
+// 6.3.30 get Temporal.ZonedDateTime.prototype.offset, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offset
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
 {
     // 1. Let zonedDateTime be the this value.
@@ -718,7 +742,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
     return TRY(calendar_era_year(vm, calendar, *plain_date_time));
 }
 
-// 6.3.30 Temporal.ZonedDateTime.prototype.with ( temporalZonedDateTimeLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.with
+// 6.3.31 Temporal.ZonedDateTime.prototype.with ( temporalZonedDateTimeLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.with
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
 {
     auto temporal_zoned_date_time_like = vm.argument(0);
@@ -796,7 +820,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone, calendar));
 }
 
-// 6.3.31 Temporal.ZonedDateTime.prototype.withPlainTime ( [ plainTimeLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaintime
+// 6.3.32 Temporal.ZonedDateTime.prototype.withPlainTime ( [ plainTimeLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaintime
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_plain_time)
 {
     // 1. Let zonedDateTime be the this value.
@@ -838,7 +862,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_plain_time)
     return MUST(create_temporal_zoned_date_time(vm, instant->nanoseconds(), time_zone, calendar));
 }
 
-// 6.3.32 Temporal.ZonedDateTime.prototype.withPlainDate ( plainDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaindate
+// 6.3.33 Temporal.ZonedDateTime.prototype.withPlainDate ( plainDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaindate
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_plain_date)
 {
     // 1. Let zonedDateTime be the this value.
@@ -870,7 +894,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_plain_date)
     return MUST(create_temporal_zoned_date_time(vm, instant->nanoseconds(), time_zone, *calendar));
 }
 
-// 6.3.33 Temporal.ZonedDateTime.prototype.withTimeZone ( timeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withtimezone
+// 6.3.34 Temporal.ZonedDateTime.prototype.withTimeZone ( timeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withtimezone
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_time_zone)
 {
     // 1. Let zonedDateTime be the this value.
@@ -884,7 +908,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_time_zone)
     return MUST(create_temporal_zoned_date_time(vm, zoned_date_time->nanoseconds(), *time_zone, zoned_date_time->calendar()));
 }
 
-// 6.3.34 Temporal.ZonedDateTime.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withcalendar
+// 6.3.35 Temporal.ZonedDateTime.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withcalendar
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_calendar)
 {
     // 1. Let zonedDateTime be the this value.
@@ -898,7 +922,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_calendar)
     return MUST(create_temporal_zoned_date_time(vm, zoned_date_time->nanoseconds(), zoned_date_time->time_zone(), *calendar));
 }
 
-// 6.3.35 Temporal.ZonedDateTime.prototype.add ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.add
+// 6.3.36 Temporal.ZonedDateTime.prototype.add ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::add)
 {
     auto temporal_duration_like = vm.argument(0);
@@ -912,7 +936,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::add)
     return TRY(add_duration_to_or_subtract_duration_from_zoned_date_time(vm, ArithmeticOperation::Add, *zoned_date_time, temporal_duration_like, options));
 }
 
-// 6.3.36 Temporal.ZonedDateTime.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.subtract
+// 6.3.37 Temporal.ZonedDateTime.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.subtract
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::subtract)
 {
     auto temporal_duration_like = vm.argument(0);
@@ -926,7 +950,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::subtract)
     return TRY(add_duration_to_or_subtract_duration_from_zoned_date_time(vm, ArithmeticOperation::Subtract, *zoned_date_time, temporal_duration_like, options));
 }
 
-// 6.3.37 Temporal.ZonedDateTime.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.until
+// 6.3.38 Temporal.ZonedDateTime.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.until
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::until)
 {
     auto other = vm.argument(0);
@@ -940,7 +964,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::until)
     return TRY(difference_temporal_zoned_date_time(vm, DifferenceOperation::Until, *zoned_date_time, other, options));
 }
 
-// 6.3.38 Temporal.ZonedDateTime.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.since
+// 6.3.39 Temporal.ZonedDateTime.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.since
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
 {
     auto other = vm.argument(0);
@@ -954,7 +978,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
     return TRY(difference_temporal_zoned_date_time(vm, DifferenceOperation::Since, *zoned_date_time, other, options));
 }
 
-// 6.3.39 Temporal.ZonedDateTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.round
+// 6.3.40 Temporal.ZonedDateTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
 {
     auto& realm = *vm.current_realm();
@@ -1045,7 +1069,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone, calendar));
 }
 
-// 6.3.40 Temporal.ZonedDateTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.equals
+// 6.3.41 Temporal.ZonedDateTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.equals
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::equals)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1067,7 +1091,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::equals)
     return Value(TRY(calendar_equals(vm, zoned_date_time->calendar(), other->calendar())));
 }
 
-// 6.3.41 Temporal.ZonedDateTime.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tostring
+// 6.3.42 Temporal.ZonedDateTime.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1096,7 +1120,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
     return PrimitiveString::create(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, precision.precision, show_calendar, show_time_zone, show_offset, precision.increment, precision.unit, rounding_mode)));
 }
 
-// 6.3.42 Temporal.ZonedDateTime.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tolocalestring
+// 6.3.43 Temporal.ZonedDateTime.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_locale_string)
 {
@@ -1108,7 +1132,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_locale_string)
     return PrimitiveString::create(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, "auto"sv, "auto"sv, "auto"sv, "auto"sv)));
 }
 
-// 6.3.43 Temporal.ZonedDateTime.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tojson
+// 6.3.44 Temporal.ZonedDateTime.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tojson
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_json)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1119,14 +1143,14 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_json)
     return PrimitiveString::create(vm, TRY(temporal_zoned_date_time_to_string(vm, *zoned_date_time, "auto"sv, "auto"sv, "auto"sv, "auto"sv)));
 }
 
-// 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
+// 6.3.45 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.ZonedDateTime", "a primitive value");
 }
 
-// 6.3.45 Temporal.ZonedDateTime.prototype.startOfDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.startofday
+// 6.3.46 Temporal.ZonedDateTime.prototype.startOfDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.startofday
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::start_of_day)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1155,7 +1179,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::start_of_day)
     return MUST(create_temporal_zoned_date_time(vm, start_instant->nanoseconds(), time_zone, calendar));
 }
 
-// 6.3.46 Temporal.ZonedDateTime.prototype.toInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toinstant
+// 6.3.47 Temporal.ZonedDateTime.prototype.toInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toinstant
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1166,7 +1190,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
     return MUST(create_temporal_instant(vm, zoned_date_time->nanoseconds()));
 }
 
-// 6.3.47 Temporal.ZonedDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindate
+// 6.3.48 Temporal.ZonedDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindate
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1189,7 +1213,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
     return MUST(create_temporal_date(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
 }
 
-// 6.3.48 Temporal.ZonedDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaintime
+// 6.3.49 Temporal.ZonedDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaintime
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1212,7 +1236,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
     return MUST(create_temporal_time(vm, temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond()));
 }
 
-// 6.3.49 Temporal.ZonedDateTime.prototype.toPlainDateTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindatetime
+// 6.3.50 Temporal.ZonedDateTime.prototype.toPlainDateTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindatetime
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1229,7 +1253,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
     return TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *instant, zoned_date_time->calendar()));
 }
 
-// 6.3.50 Temporal.ZonedDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainyearmonth
+// 6.3.51 Temporal.ZonedDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainyearmonth
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1258,7 +1282,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
     return TRY(calendar_year_month_from_fields(vm, calendar, *fields));
 }
 
-// 6.3.51 Temporal.ZonedDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainmonthday
+// 6.3.52 Temporal.ZonedDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainmonthday
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
 {
     // 1. Let zonedDateTime be the this value.
@@ -1287,7 +1311,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     return TRY(calendar_month_day_from_fields(vm, calendar, *fields));
 }
 
-// 6.3.52 Temporal.ZonedDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.getisofields
+// 6.3.53 Temporal.ZonedDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.getisofields
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
 {
     auto& realm = *vm.current_realm();

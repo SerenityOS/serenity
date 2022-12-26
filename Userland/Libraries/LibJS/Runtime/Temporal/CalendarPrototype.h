@@ -34,6 +34,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(day_of_week);
     JS_DECLARE_NATIVE_FUNCTION(day_of_year);
     JS_DECLARE_NATIVE_FUNCTION(week_of_year);
+    JS_DECLARE_NATIVE_FUNCTION(year_of_week);
     JS_DECLARE_NATIVE_FUNCTION(days_in_week);
     JS_DECLARE_NATIVE_FUNCTION(days_in_month);
     JS_DECLARE_NATIVE_FUNCTION(days_in_year);

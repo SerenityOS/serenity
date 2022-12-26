@@ -573,6 +573,7 @@ namespace JS {
     P(writable)                              \
     P(year)                                  \
     P(yearMonthFromFields)                   \
+    P(yearOfWeek)                            \
     P(years)                                 \
     P(yearsDisplay)                          \
     P(zonedDateTime)                         \
