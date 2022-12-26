@@ -482,6 +482,9 @@ if (BUILD_LAGOM)
             target_link_libraries(headless-browser LibWeb LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
         endif()
 
+        add_executable(icc ../../Userland/Utilities/icc.cpp)
+        target_link_libraries(icc LibCore LibGfx LibMain)
+
         add_executable(js ../../Userland/Utilities/js.cpp)
         target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
         if (EMSCRIPTEN)
