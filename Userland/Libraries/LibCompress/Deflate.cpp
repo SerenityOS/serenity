@@ -415,7 +415,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
     auto literal_code_result = CanonicalCode::from_bytes(code_lengths.span().trim(literal_code_count));
     if (!literal_code_result.has_value())
-        Error::from_string_literal("Failed to decode the literal code");
+        return Error::from_string_literal("Failed to decode the literal code");
     literal_code = literal_code_result.value();
 
     // Now we extract the code that was used to encode distances in the block.
@@ -431,7 +431,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
     auto distance_code_result = CanonicalCode::from_bytes(code_lengths.span().slice(literal_code_count));
     if (!distance_code_result.has_value())
-        Error::from_string_literal("Failed to decode the distance code");
+        return Error::from_string_literal("Failed to decode the distance code");
     distance_code = distance_code_result.value();
 
     return {};
