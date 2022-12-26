@@ -62,21 +62,22 @@ private:
 
 class ZlibCompressor : public OutputStream {
 public:
-    ZlibCompressor(OutputStream&, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(OutputStream&, ZlibCompressionLevel = ZlibCompressionLevel::Default);
     ~ZlibCompressor();
 
     size_t write(ReadonlyBytes) override;
     bool write_or_error(ReadonlyBytes) override;
     void finish();
 
-    static Optional<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+    static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
 
 private:
+    ZlibCompressor(OutputStream&, ZlibCompressionLevel);
     void write_header(ZlibCompressionMethod, ZlibCompressionLevel);
 
     bool m_finished { false };
     OutputBitStream m_output_stream;
-    OwnPtr<OutputStream> m_compressor;
+    NonnullOwnPtr<OutputStream> m_compressor;
     Crypto::Checksum::Adler32 m_adler32_checksum;
 };
 

@@ -264,11 +264,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         TRY(uncompressed_block_data.try_append(best_filter.buffer));
     }
 
-    auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data, Compress::ZlibCompressionLevel::Best);
-    if (!maybe_zlib_buffer.has_value()) {
-        return Error::from_string_literal("PNGWriter: ZlibCompressor failed");
-    }
-    auto zlib_buffer = maybe_zlib_buffer.release_value();
+    auto zlib_buffer = TRY(Compress::ZlibCompressor::compress_all(uncompressed_block_data, Compress::ZlibCompressionLevel::Best));
 
     TRY(png_chunk.add(zlib_buffer.data(), zlib_buffer.size()));
     TRY(add_chunk(png_chunk));

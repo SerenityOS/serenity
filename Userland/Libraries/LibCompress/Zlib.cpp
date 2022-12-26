@@ -68,16 +68,22 @@ u32 ZlibDecompressor::checksum()
     return m_checksum;
 }
 
-ZlibCompressor::ZlibCompressor(OutputStream& stream, ZlibCompressionLevel compression_level)
-    : m_output_stream(stream)
+ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(OutputStream& stream, ZlibCompressionLevel compression_level)
 {
     // Zlib only defines Deflate as a compression method.
     auto compression_method = ZlibCompressionMethod::Deflate;
 
-    write_header(compression_method, compression_level);
+    auto zlib_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ZlibCompressor(stream, compression_level)));
+    zlib_compressor->write_header(compression_method, compression_level);
 
+    return zlib_compressor;
+}
+
+ZlibCompressor::ZlibCompressor(OutputStream& stream, ZlibCompressionLevel compression_level)
+    : m_output_stream(stream)
     // FIXME: Find a way to compress with Deflate's "Best" compression level.
-    m_compressor = make<DeflateCompressor>(stream, static_cast<DeflateCompressor::CompressionLevel>(compression_level));
+    , m_compressor(make<DeflateCompressor>(stream, static_cast<DeflateCompressor::CompressionLevel>(compression_level)))
+{
 }
 
 ZlibCompressor::~ZlibCompressor()
@@ -139,17 +145,17 @@ void ZlibCompressor::finish()
     m_finished = true;
 }
 
-Optional<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompressionLevel compression_level)
+ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompressionLevel compression_level)
 {
     DuplexMemoryStream output_stream;
-    ZlibCompressor zlib_stream { output_stream, compression_level };
+    auto zlib_stream = TRY(ZlibCompressor::construct(output_stream, compression_level));
 
-    zlib_stream.write_or_error(bytes);
+    zlib_stream->write_or_error(bytes);
 
-    zlib_stream.finish();
+    zlib_stream->finish();
 
-    if (zlib_stream.handle_any_error())
-        return {};
+    if (zlib_stream->handle_any_error())
+        return Error::from_string_literal("Underlying ZlibStream indicated an error");
 
     return output_stream.copy_into_contiguous_buffer();
 }
