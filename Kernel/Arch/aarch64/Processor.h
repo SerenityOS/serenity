@@ -206,7 +206,12 @@ public:
         VERIFY(!Processor::in_critical());
     }
 
-    ALWAYS_INLINE static FPUState const& clean_fpu_state() { TODO_AARCH64(); }
+    ALWAYS_INLINE static FPUState const& clean_fpu_state()
+    {
+        static FPUState s_clean_fpu_state {};
+        dbgln("FIXME: Processor: Actually return correct FPUState.");
+        return s_clean_fpu_state;
+    }
 
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
