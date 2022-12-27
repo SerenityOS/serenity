@@ -51,10 +51,12 @@ public:
 
     Version version() const { return m_version; }
     DeviceClass device_class() const { return m_device_class; }
+    time_t creation_timestamp() const { return m_creation_timestamp; }
 
 private:
     Version m_version;
     DeviceClass m_device_class;
+    time_t m_creation_timestamp;
 };
 
 }
