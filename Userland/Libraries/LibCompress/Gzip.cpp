@@ -173,12 +173,17 @@ ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
     VERIFY_NOT_REACHED();
 }
 
-GzipCompressor::GzipCompressor(OutputStream& stream)
-    : m_output_stream(stream)
+GzipCompressor::GzipCompressor(Core::Stream::Handle<Core::Stream::Stream> stream)
+    : m_output_stream(move(stream))
 {
 }
 
-size_t GzipCompressor::write(ReadonlyBytes bytes)
+ErrorOr<Bytes> GzipCompressor::read(Bytes)
+{
+    return Error::from_errno(EBADF);
+}
+
+ErrorOr<size_t> GzipCompressor::write(ReadonlyBytes bytes)
 {
     BlockHeader header;
     header.identification_1 = 0x1f;
@@ -188,39 +193,45 @@ size_t GzipCompressor::write(ReadonlyBytes bytes)
     header.modification_time = 0;
     header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
     header.operating_system = 3; // unix
-    m_output_stream << Bytes { &header, sizeof(header) };
-    DeflateCompressor compressed_stream { m_output_stream };
-    VERIFY(compressed_stream.write_or_error(bytes));
+    TRY(m_output_stream->write_entire_buffer({ &header, sizeof(header) }));
+    Core::Stream::WrapInAKOutputStream wrapped_stream { *m_output_stream };
+    DeflateCompressor compressed_stream { wrapped_stream };
+    if (!compressed_stream.write_or_error(bytes))
+        return Error::from_string_literal("Underlying DeflateCompressor indicated an error");
     compressed_stream.final_flush();
     Crypto::Checksum::CRC32 crc32;
     crc32.update(bytes);
     LittleEndian<u32> digest = crc32.digest();
     LittleEndian<u32> size = bytes.size();
-    m_output_stream << digest << size;
+    TRY(m_output_stream->write_entire_buffer(digest.bytes()));
+    TRY(m_output_stream->write_entire_buffer(size.bytes()));
     return bytes.size();
 }
 
-bool GzipCompressor::write_or_error(ReadonlyBytes bytes)
+bool GzipCompressor::is_eof() const
 {
-    if (write(bytes) < bytes.size()) {
-        set_fatal_error();
-        return false;
-    }
-
     return true;
 }
 
-Optional<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
+bool GzipCompressor::is_open() const
 {
-    DuplexMemoryStream output_stream;
-    GzipCompressor gzip_stream { output_stream };
+    return m_output_stream->is_open();
+}
 
-    gzip_stream.write_or_error(bytes);
+void GzipCompressor::close()
+{
+}
 
-    if (gzip_stream.handle_any_error())
-        return {};
+ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
+{
+    auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
+    GzipCompressor gzip_stream { Core::Stream::Handle<Core::Stream::Stream>(*output_stream) };
 
-    return output_stream.copy_into_contiguous_buffer();
+    TRY(gzip_stream.write_entire_buffer(bytes));
+
+    auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
+    TRY(output_stream->read_entire_buffer(buffer.bytes()));
+    return buffer;
 }
 
 }

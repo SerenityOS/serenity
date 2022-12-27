@@ -90,7 +90,7 @@ TEST_CASE(gzip_round_trip)
     auto original = ByteBuffer::create_uninitialized(1024).release_value();
     fill_with_random(original.data(), 1024);
     auto compressed = Compress::GzipCompressor::compress_all(original);
-    EXPECT(compressed.has_value());
+    EXPECT(!compressed.is_error());
     auto uncompressed = Compress::GzipDecompressor::decompress_all(compressed.value());
     EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
