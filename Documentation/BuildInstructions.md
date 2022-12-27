@@ -47,7 +47,7 @@ Serenity-specific patches were upstreamed to CMake in major version 3.25. To avo
 patches to CMake, the minimum required CMake to build Serenity is set to that version.
 If more patches are upstreamed to CMake, the minimum will be bumped again once that version releases.
 
-To accomodate distributions that do not ship bleeding-edge CMake versions, the build scripts will
+To accommodate distributions that do not ship bleeding-edge CMake versions, the build scripts will
 attempt to build CMake from source if the version on your path is older than 3.25.x.
 
 ### Windows

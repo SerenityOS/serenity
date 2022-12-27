@@ -45,5 +45,5 @@ Installing macfuse for the first time requires enabling its system extension in 
 It's important to make sure that Xcode is not only installed but also accordingly updated, otherwise CMake will run into incompatibilities with GCC.
 
 Homebrew is known to ship bleeding edge CMake versions, but building CMake from source with homebrew
-gcc or llvm may not work. If homebrew does not offer cmake 3.25.x+ on your platform, it may be neccessary
+gcc or llvm may not work. If homebrew does not offer cmake 3.25.x+ on your platform, it may be necessary
 to manually run Toolchain/BuildCMake.sh with Apple clang from Xcode as the first compiler in your $PATH.

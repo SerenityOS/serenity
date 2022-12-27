@@ -34,7 +34,7 @@ An exception to this is when there's simply no way to propagate the error code t
 Maybe it's a `ATAPort` (in the IDE ATA code) that asynchronously tries to handle reading data from the harddrive,
 but because of the async operation, we can't send the `errno` code back to userland, so we what we do is
 to ensure that internal functions still use the `ErrorOr<>` return type, and in main calling function, we use
-other meaningful infrastructure utilties in the Kernel to indicate that the operation failed.
+other meaningful infrastructure utilities in the Kernel to indicate that the operation failed.
 
 ## We don't break userspace - the SerenityOS version
 
@@ -58,7 +58,7 @@ each git commit is bisectable by itself.
 **It's expected that changes to the Kernel will be tested with userland utilities to ensure the changes
 are not creating any misbehaves in the userland functionality.**
 
-Even more strictier than what has been said above - we don't remove functionality unless it's absolutely
+Even more stricter than what has been said above - we don't remove functionality unless it's absolutely
 clear that nobody uses that functionality. Even when it's absolutely clear that nobody uses some kind
 of kernel functionality, it could still be useful to think about how to make it more available and usable
 to the SerenityOS project community.
@@ -112,7 +112,7 @@ in the past and many of them were removed eventually.**
 We, as the SerenityOS project, take seriously the concept of security information.
 Many security mitigations have been implemented in the Kernel, and are documented in a
 [different file](../../Base/usr/share/man/man7/Mitigations.md).
-As kernel developers, we should be even more strictier on the security measures being
+As kernel developers, we should be even more stricter on the security measures being
 taken than the rest of system.
 One of the core guidelines in that aspect **is to never undermine any security measure
 that was implemented, at the very least.**

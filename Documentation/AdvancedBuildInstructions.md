@@ -204,7 +204,7 @@ can't be built with Clang yet.
 
 To build the Clang-based toolchain, run `BuildClang.sh` from the `Toolchain` directory. The script will build a Clang
 toolchain that is capable of building applications for the build host and serenity, 
-for all supported architecutres (i686, x86_64 and aarch64).
+for all supported architectures (i686, x86_64 and aarch64).
 
 **Warning:** While the build script is running, your computer may slow down extremely or even lock up for short
 intervals.  This generally happens if you have more CPU cores than free RAM in gigabytes. To fix this, limit the number
