@@ -83,32 +83,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto outfile = TRY(Core::Stream::File::open_file_or_standard_stream(outpath, Core::Stream::OpenMode::Write));
 
     size_t count = 0;
-    ByteBuffer previous_buf = TRY(ByteBuffer::create_uninitialized(1024));
-    ByteBuffer current_buf = TRY(ByteBuffer::create_uninitialized(1024));
 
-    StringView previous = TRY(infile->read_line(previous_buf));
+    ByteBuffer first_buffer = TRY(ByteBuffer::create_uninitialized(1024));
+    ByteBuffer second_buffer = TRY(ByteBuffer::create_uninitialized(1024));
+    bool use_first_buffer = false;
+
+    StringView previous = TRY(infile->read_line_unbounded(first_buffer));
     StringView previous_to_compare = skip(previous, skip_chars, skip_fields);
 
-    while (TRY(infile->can_read_line())) {
-        // FIXME: The buffer does not automatically resize,
-        // and this will return EMSGSIZE if the read line
-        // is more than 1024 bytes.
-        StringView current = TRY(infile->read_line(current_buf));
+    while (!(infile->is_eof())) {
+        auto& current_buf = use_first_buffer ? first_buffer : second_buffer;
+        StringView current = TRY(infile->read_line_unbounded(current_buf));
 
         StringView current_to_compare = skip(current, skip_chars, skip_fields);
         bool lines_equal = ignore_case ? current_to_compare.equals_ignoring_case(previous_to_compare) : current_to_compare == previous_to_compare;
         if (!lines_equal) {
             TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
+
+            // Ensure we print out the end of a file that's missing a trailing newline.
+            if (infile->is_eof() && !current.is_empty())
+                TRY(write_line_content(current, 1, duplicates_only, print_count, *outfile));
+
             count = 1;
+            previous = current;
+            previous_to_compare = current_to_compare;
+            use_first_buffer = !use_first_buffer;
         } else {
             count++;
         }
-        swap(current_to_compare, previous_to_compare);
-        swap(current_buf, previous_buf);
-        swap(current, previous);
     }
-
-    TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
 
     return 0;
 }
