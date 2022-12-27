@@ -169,7 +169,7 @@ TEST_CASE(get_time_zone_offset_with_dst)
     test_offset("America/Phoenix"sv, 1671453238, offset(-1, 7, 00, 00), No); // Monday, December 19, 2022 12:33:58 PM
 
     // Moscow's observed DST changed several times in 1919.
-    test_offset("Europe/Moscow"sv, -1609459200, offset(+1, 2, 31, 19), No);  // Wednesday, January 1, 1919 12:00:00 AM
+    test_offset("Europe/Moscow"sv, -1609459200, offset(+1, 3, 31, 19), Yes); // Wednesday, January 1, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1596412800, offset(+1, 4, 31, 19), Yes); // Sunday, June 1, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1592611200, offset(+1, 4, 00, 00), Yes); // Tuesday, July 15, 1919 12:00:00 AM
     test_offset("Europe/Moscow"sv, -1589068800, offset(+1, 3, 00, 00), No);  // Monday, August 25, 1919 12:00:00 AM
@@ -180,10 +180,12 @@ TEST_CASE(get_time_zone_offset_with_dst)
     test_offset("America/Asuncion"sv, 1671453238, offset(-1, 3, 00, 00), Yes); // Monday, December 19, 2022 12:33:58 PM
 
     // Last DST in Brazil ended in 2019
+    test_offset("America/Sao_Paulo"sv, 1549764000, offset(-1, 2, 00, 00), Yes); // Sun Feb 10 12:00:00 AM -02 2019
     test_offset("America/Sao_Paulo"sv, 1550372400, offset(-1, 3, 00, 00), No);  // Sun Feb 17 12:00:00 AM -03 2019
     test_offset("America/Sao_Paulo"sv, 1671505200, offset(-1, 3, 00, 00), No);  // Tue Dec 20 12:00:00 AM -03 2022
 
     // Last DST in Paraguay ended in 2015
+    test_offset("America/Montevideo"sv, 1425693600, offset(-1, 2, 00, 00), Yes); // Sat Mar  7 12:00:00 AM -02 2015
     test_offset("America/Montevideo"sv, 1425794400, offset(-1, 3, 00, 00), No);  // Sun Mar  8 03:00:00 AM -03 2015
     test_offset("America/Montevideo"sv, 1671505200, offset(-1, 3, 00, 00), No);  // Tue Dec 20 12:00:00 AM -03 2022
 }

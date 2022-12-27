@@ -679,22 +679,42 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
 
 static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
 {
-    auto offsets = find_dst_offsets(time_zone_offset, time);
-    if (offsets[0] == offsets[1])
-        return { offsets[0]->offset, InDST::No };
+    auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
 
-    auto standard_time_in_effect = offsets[0]->time_in_effect(time);
-    auto daylight_time_in_effect = offsets[1]->time_in_effect(time);
+    const DaylightSavingsOffset *active_dst_rule = nullptr;
+    Time time_last_dst_change = Time::from_seconds(NumericLimits<i64>::min());
 
-    if (daylight_time_in_effect < standard_time_in_effect) {
-        if ((time < daylight_time_in_effect) || (time >= standard_time_in_effect))
-            return { offsets[0]->offset, InDST::No };
-    } else {
-        if ((time >= standard_time_in_effect) && (time < daylight_time_in_effect))
-            return { offsets[0]->offset, InDST::No };
+    for (size_t index = 0; index < dst_rules.size(); ++index) {
+        auto const& dst_rule = dst_rules[index];
+        auto rule_year_from = seconds_since_epoch_to_year(dst_rule.year_from.to_seconds());
+        auto rule_year_to = seconds_since_epoch_to_year(dst_rule.year_to.to_seconds());
+        auto time_year = seconds_since_epoch_to_year(time.to_seconds());
+
+        if (rule_year_from > time_year)
+            continue;
+
+        auto year = min(rule_year_to - 1, time_year);
+        auto time_dst_change = dst_rule.time_in_effect(Time::from_timestamp(year, 1, 1, 0, 0, 0, 0));
+
+        if (time_dst_change > time) {
+            year = year - 1;
+            if (year < rule_year_from)
+                continue;
+
+            time_dst_change = dst_rule.time_in_effect(Time::from_timestamp(year, 1, 1, 0, 0, 0, 0));
+        }
+
+        if (time_dst_change > time_last_dst_change) {
+            time_last_dst_change = time_dst_change;
+            active_dst_rule = &dst_rule;
+        }
     }
 
-    return { offsets[1]->offset, InDST::Yes };
+    if (!active_dst_rule) {
+        return {0, InDST::No};
+    }
+
+    return {active_dst_rule->offset, active_dst_rule->offset != 0 ? InDST::Yes : InDST::No};
 }
 
 static TimeZoneOffset const& find_time_zone_offset(TimeZone time_zone, AK::Time time)
