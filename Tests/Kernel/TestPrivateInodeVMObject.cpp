@@ -36,7 +36,7 @@ TEST_CASE(private_non_empty_inode_vmobject_sync)
     }
     u8 buf[0x1000];
     memset(buf, 0, sizeof(buf));
-    int fd = open("/tmp/private_non_empty_msync_test", O_RDWR | O_CREAT);
+    int fd = open("/tmp/private_non_empty_msync_test", O_RDWR | O_CREAT, 0644);
     VERIFY(fd >= 0);
     auto rc = write(fd, buf, sizeof(buf));
     VERIFY(rc == sizeof(buf));

@@ -30,7 +30,7 @@ TEST_CASE(shared_zero_length_inode_vmobject_sync)
         int rc = sigaction(SIGBUS, &new_action, nullptr);
         VERIFY(rc == 0);
     }
-    int fd = open("/tmp/shared_msync_test", O_RDWR | O_CREAT);
+    int fd = open("/tmp/shared_msync_test", O_RDWR | O_CREAT, 0644);
     VERIFY(fd >= 0);
     shared_ptr = (u8*)mmap(nullptr, 0x1000, PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, 0);
     EXPECT(shared_ptr != MAP_FAILED);
