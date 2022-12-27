@@ -12,6 +12,7 @@
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/InterruptDisabler.h>
+#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
@@ -83,8 +84,29 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 
 void Processor::initialize_context_switching(Thread& initial_thread)
 {
-    (void)initial_thread;
-    TODO_AARCH64();
+    VERIFY(initial_thread.process().is_kernel_process());
+
+    m_scheduler_initialized = true;
+
+    // FIXME: Figure out if we need to call {pre_,post_,}init_finished once aarch64 supports SMP
+    Processor::set_current_in_scheduler(true);
+
+    auto& regs = initial_thread.regs();
+    // clang-format off
+    asm volatile(
+        "mov sp, %[new_sp] \n"
+
+        "sub sp, sp, 24 \n"
+        "str %[from_to_thread], [sp, #0] \n"
+        "str %[from_to_thread], [sp, #8] \n"
+        "br %[new_ip] \n"
+        :: [new_sp] "r" (regs.sp_el0),
+        [new_ip] "r" (regs.elr_el1),
+        [from_to_thread] "r" (&initial_thread)
+    );
+    // clang-format on
+
+    VERIFY_NOT_REACHED();
 }
 
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
