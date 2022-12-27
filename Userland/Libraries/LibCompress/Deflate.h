@@ -22,7 +22,7 @@ class CanonicalCode {
 public:
     CanonicalCode() = default;
     ErrorOr<u32> read_symbol(Core::Stream::LittleEndianInputBitStream&) const;
-    void write_symbol(OutputBitStream&, u32) const;
+    ErrorOr<void> write_symbol(Core::Stream::LittleEndianOutputBitStream&, u32) const;
 
     static CanonicalCode const& fixed_literal_codes();
     static CanonicalCode const& fixed_distance_codes();
@@ -104,7 +104,7 @@ private:
     CircularDuplexStream<32 * KiB> m_output_stream;
 };
 
-class DeflateCompressor final : public OutputStream {
+class DeflateCompressor final : public Core::Stream::Stream {
 public:
     static constexpr size_t block_size = 32 * KiB - 1; // TODO: this can theoretically be increased to 64 KiB - 2
     static constexpr size_t window_size = block_size * 2;
@@ -139,14 +139,17 @@ public:
         BEST // WARNING: this one can take an unreasonable amount of time!
     };
 
-    DeflateCompressor(OutputStream&, CompressionLevel = CompressionLevel::GOOD);
+    DeflateCompressor(Core::Stream::Handle<Core::Stream::Stream>, CompressionLevel = CompressionLevel::GOOD);
     ~DeflateCompressor();
 
-    size_t write(ReadonlyBytes) override;
-    bool write_or_error(ReadonlyBytes) override;
-    void final_flush();
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+    ErrorOr<void> final_flush();
 
-    static Optional<ByteBuffer> compress_all(ReadonlyBytes bytes, CompressionLevel = CompressionLevel::GOOD);
+    static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, CompressionLevel = CompressionLevel::GOOD);
 
 private:
     Bytes pending_block() { return { m_rolling_window + block_size, block_size }; }
@@ -166,20 +169,20 @@ private:
     template<size_t Size>
     static void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 frequency_cap = UINT16_MAX);
     size_t huffman_block_length(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths);
-    void write_huffman(CanonicalCode const& literal_code, Optional<CanonicalCode> const& distance_code);
+    ErrorOr<void> write_huffman(CanonicalCode const& literal_code, Optional<CanonicalCode> const& distance_code);
     static size_t encode_huffman_lengths(Array<u8, max_huffman_literals + max_huffman_distances> const& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths);
     size_t encode_block_lengths(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t& literal_code_count, size_t& distance_code_count);
-    void write_dynamic_huffman(CanonicalCode const& literal_code, size_t literal_code_count, Optional<CanonicalCode> const& distance_code, size_t distance_code_count, Array<u8, 19> const& code_lengths_bit_lengths, size_t code_length_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances> const& encoded_lengths, size_t encoded_lengths_count);
+    ErrorOr<void> write_dynamic_huffman(CanonicalCode const& literal_code, size_t literal_code_count, Optional<CanonicalCode> const& distance_code, size_t distance_code_count, Array<u8, 19> const& code_lengths_bit_lengths, size_t code_length_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances> const& encoded_lengths, size_t encoded_lengths_count);
 
     size_t uncompressed_block_length();
     size_t fixed_block_length();
     size_t dynamic_block_length(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths, Array<u8, 19> const& code_lengths_bit_lengths, Array<u16, 19> const& code_lengths_frequencies, size_t code_lengths_count);
-    void flush();
+    ErrorOr<void> flush();
 
     bool m_finished { false };
     CompressionLevel m_compression_level;
     CompressionConstants m_compression_constants;
-    OutputBitStream m_output_stream;
+    NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream> m_output_stream;
 
     u8 m_rolling_window[window_size];
     size_t m_pending_block_size { 0 };
