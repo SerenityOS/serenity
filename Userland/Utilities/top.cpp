@@ -203,11 +203,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     unveil(nullptr, nullptr);
 
-    signal(SIGWINCH, [](int) {
+    TRY(Core::System::signal(SIGWINCH, [](int) {
         g_window_size_changed = true;
-    });
-
+    }));
+    TRY(Core::System::signal(SIGINT, [](int) {
+        exit(0);
+    }));
     TRY(Core::System::pledge("stdio rpath tty"));
+
     TopOption top_option;
     parse_args(arguments, top_option);
 
