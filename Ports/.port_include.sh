@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-SCRIPT="$(dirname "${0}")"
+SCRIPT="$(realpath $(dirname "${0}"))"
 
 if [ -z "${SERENITY_STRIPPED_ENV:-}" ]; then
     exec "${SCRIPT}/.strip_env.sh" "${@}"

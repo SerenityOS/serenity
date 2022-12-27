@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SCRIPT="$(dirname "${0}")"
+SCRIPT="$(realpath $(dirname "${BASH_SOURCE[0]}"))"
 
 export SERENITY_ARCH="${SERENITY_ARCH:-x86_64}"
 export SERENITY_TOOLCHAIN="${SERENITY_TOOLCHAIN:-GNU}"
