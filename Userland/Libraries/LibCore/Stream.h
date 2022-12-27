@@ -671,6 +671,53 @@ public:
         return StringView { TRY(read_until(buffer, "\n"sv)) };
     }
 
+    // Read into the buffer until \n is encountered, resizing the buffer as needed.
+    // Returns the bytes read as a StringView.
+    ErrorOr<StringView> read_line_unbounded(ByteBuffer& buffer)
+    {
+        if (!buffer.is_empty())
+            buffer.clear();
+
+        Bytes span_to_copy;
+        Bytes remaining_data;
+
+        while (!is_eof()) {
+            // m_buffer is populated by can_read_line()
+            auto is_line_readable = TRY(can_read_line());
+            auto data_in_buffer = m_buffer.span().slice(0, m_buffered_size);
+
+            if (data_in_buffer.is_empty())
+                break;
+
+            Optional<size_t> newline_index;
+
+            if (is_line_readable)
+                newline_index = data_in_buffer.find_first_index('\n');
+
+            if (newline_index.has_value()) {
+                span_to_copy = data_in_buffer.slice(0, newline_index.value());
+                TRY(buffer.try_append(span_to_copy));
+
+                // The newline character itself is ignored. It's neither appended to the
+                // output buffer nor treated as data remaining to be processed.
+                auto next_line_start = newline_index.value() + 1;
+                remaining_data = data_in_buffer.slice(next_line_start);
+                m_buffer.overwrite(0, remaining_data.data(), remaining_data.size());
+                m_buffered_size -= next_line_start;
+                break;
+            }
+
+            // If no newline was found, then either we're not done reading the line
+            // and need another iteration, or we've read the entirety of the final
+            // line, there's no trailing newline, and is_eof() will now return True.
+            TRY(buffer.try_append(data_in_buffer));
+            m_buffer.clear();
+            m_buffered_size = 0;
+        }
+
+        return StringView(buffer.span());
+    }
+
     ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate)
     {
         return read_until_any_of(buffer, Array { candidate });
@@ -877,6 +924,7 @@ public:
     }
 
     ErrorOr<StringView> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
+    ErrorOr<StringView> read_line_unbounded(ByteBuffer& buffer) { return m_helper.read_line_unbounded(buffer); }
     ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
