@@ -17,6 +17,7 @@
 #include <AK/Vector.h>
 #include <Kernel/API/POSIX/sched.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Arch/ThreadRegisters.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
@@ -48,55 +49,6 @@ struct ThreadSpecificData {
 };
 
 #define THREAD_AFFINITY_DEFAULT 0xffffffff
-
-struct ThreadRegisters {
-#if ARCH(X86_64)
-    FlatPtr rdi;
-    FlatPtr rsi;
-    FlatPtr rbp;
-    FlatPtr rsp;
-    FlatPtr rbx;
-    FlatPtr rdx;
-    FlatPtr rcx;
-    FlatPtr rax;
-    FlatPtr r8;
-    FlatPtr r9;
-    FlatPtr r10;
-    FlatPtr r11;
-    FlatPtr r12;
-    FlatPtr r13;
-    FlatPtr r14;
-    FlatPtr r15;
-    FlatPtr rip;
-    FlatPtr rsp0;
-#endif
-    FlatPtr cs;
-
-#if ARCH(X86_64)
-    FlatPtr rflags;
-    FlatPtr flags() const { return rflags; }
-    void set_flags(FlatPtr value) { rflags = value; }
-    void set_sp(FlatPtr value) { rsp = value; }
-    void set_sp0(FlatPtr value) { rsp0 = value; }
-    void set_ip(FlatPtr value) { rip = value; }
-#endif
-
-    FlatPtr cr3;
-
-    FlatPtr ip() const
-    {
-#if ARCH(X86_64)
-        return rip;
-#endif
-    }
-
-    FlatPtr sp() const
-    {
-#if ARCH(X86_64)
-        return rsp;
-#endif
-    }
-};
 
 class Thread
     : public ListedRefCounted<Thread, LockType::Spinlock>

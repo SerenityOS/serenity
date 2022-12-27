@@ -77,33 +77,12 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
 
     reset_fpu_state();
 
-    // Only IF is set when a process boots.
-    m_regs.set_flags(0x0202);
-
-#if ARCH(X86_64)
-    if (m_process->is_kernel_process())
-        m_regs.cs = GDT_SELECTOR_CODE0;
-    else
-        m_regs.cs = GDT_SELECTOR_CODE3 | 3;
-#elif ARCH(AARCH64)
-    TODO_AARCH64();
-#else
-#    error Unknown architecture
-#endif
-
-    m_regs.cr3 = m_process->address_space().with([](auto& space) { return space->page_directory().cr3(); });
-
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
 
-    if (m_process->is_kernel_process()) {
-        m_regs.set_sp(m_kernel_stack_top);
-        m_regs.set_sp0(m_kernel_stack_top);
-    } else {
-        // Ring 3 processes get a separate stack for ring 0.
-        // The ring 3 stack will be assigned by exec().
-        m_regs.set_sp0(m_kernel_stack_top);
-    }
+    m_process->address_space().with([&](auto& space) {
+        m_regs.set_initial_state(m_process->is_kernel_process(), *space, m_kernel_stack_top);
+    });
 
     // We need to add another reference if we could successfully create
     // all the resources needed for this thread. The reason for this is that
