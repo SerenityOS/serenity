@@ -22,6 +22,8 @@ public:
     virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const&) const override;
 
+    virtual void scroll_into_view(ModelIndex const&, bool scroll_horizontally, bool scroll_vertically) override;
+
 private:
     ColumnsView();
     virtual ~ColumnsView() override = default;
@@ -54,6 +56,7 @@ private:
 
     Optional<Column> column_at_event_position(Gfx::IntPoint) const;
     ModelIndex index_at_event_position_in_column(Gfx::IntPoint, Column const&) const;
+    Gfx::IntRect index_content_rect(ModelIndex const&);
 
     bool m_rubber_banding { false };
     int m_rubber_band_origin { 0 };
