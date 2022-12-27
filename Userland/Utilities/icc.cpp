@@ -6,6 +6,7 @@
 
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICCProfile.h>
 
@@ -22,6 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("version: {}", profile->version());
     outln("device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
+    outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()).to_deprecated_string());
 
     return 0;
 }
