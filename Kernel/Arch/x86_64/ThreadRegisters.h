@@ -73,6 +73,12 @@ struct ThreadRegisters {
             set_sp0(kernel_stack_top);
         }
     }
+
+    void set_entry_function(FlatPtr entry_ip, FlatPtr entry_data)
+    {
+        set_ip(entry_ip);
+        rdi = entry_data; // entry function argument is expected to be in regs.rdi
+    }
 };
 
 }

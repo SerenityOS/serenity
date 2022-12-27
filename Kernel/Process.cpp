@@ -273,15 +273,7 @@ LockRefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thr
         return {};
     auto process = process_or_error.release_value();
 
-    first_thread->regs().set_ip((FlatPtr)entry);
-#if ARCH(X86_64)
-    first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
-#elif ARCH(AARCH64)
-    (void)entry_data;
-    TODO_AARCH64();
-#else
-#    error Unknown architecture
-#endif
+    first_thread->regs().set_entry_function((FlatPtr)entry, (FlatPtr)entry_data);
 
     if (do_register == RegisterProcess::Yes)
         register_new(*process);
