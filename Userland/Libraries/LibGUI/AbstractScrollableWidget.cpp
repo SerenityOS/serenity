@@ -303,6 +303,11 @@ void AbstractScrollableWidget::scroll_to_bottom()
     scroll_into_view({ 0, content_height(), 0, 0 }, Orientation::Vertical);
 }
 
+void AbstractScrollableWidget::scroll_to_right()
+{
+    scroll_into_view({ content_width(), 0, 0, 0 }, Orientation::Horizontal);
+}
+
 void AbstractScrollableWidget::set_automatic_scrolling_timer_active(bool active)
 {
     if (active == m_active_scrolling_enabled)
