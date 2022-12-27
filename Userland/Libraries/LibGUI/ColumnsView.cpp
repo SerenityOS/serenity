@@ -435,6 +435,25 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
         set_cursor(new_index, selection_update);
 }
 
+Gfx::IntRect ColumnsView::index_content_rect(ModelIndex const& index)
+{
+    int column_x = 0;
+    for (auto const& column : m_columns) {
+        if (column.parent_index == index.parent())
+            return { column_x, index.row() * item_height(), column.width, item_height() };
+
+        column_x += column.width + column_separator_width();
+    }
+    return {};
+}
+
+void ColumnsView::scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically)
+{
+    if (!model())
+        return;
+    AbstractScrollableWidget::scroll_into_view(index_content_rect(index), scroll_horizontally, scroll_vertically);
+}
+
 Gfx::IntRect ColumnsView::content_rect(ModelIndex const& index) const
 {
     if (!index.is_valid())
