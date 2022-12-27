@@ -25,6 +25,7 @@ namespace Kernel {
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread) __attribute__((used));
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
 
 Processor* g_current_processor;
 
@@ -112,9 +113,94 @@ void Processor::initialize_context_switching(Thread& initial_thread)
 
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
-    (void)from_thread;
-    (void)to_thread;
-    TODO_AARCH64();
+    VERIFY(!m_in_irq);
+    VERIFY(m_in_critical == 1);
+
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+
+    // m_in_critical is restored in enter_thread_context
+    from_thread->save_critical(m_in_critical);
+
+    // clang-format off
+    asm volatile(
+        "sub sp, sp, #248 \n"
+        "stp x0, x1,     [sp, #(0 * 0)] \n"
+        "stp x2, x3,     [sp, #(2 * 8)] \n"
+        "stp x4, x5,     [sp, #(4 * 8)] \n"
+        "stp x6, x7,     [sp, #(6 * 8)] \n"
+        "stp x8, x9,     [sp, #(8 * 8)] \n"
+        "stp x10, x11,   [sp, #(10 * 8)] \n"
+        "stp x12, x13,   [sp, #(12 * 8)] \n"
+        "stp x14, x15,   [sp, #(14 * 8)] \n"
+        "stp x16, x17,   [sp, #(16 * 8)] \n"
+        "stp x18, x19,   [sp, #(18 * 8)] \n"
+        "stp x20, x21,   [sp, #(20 * 8)] \n"
+        "stp x22, x23,   [sp, #(22 * 8)] \n"
+        "stp x24, x25,   [sp, #(24 * 8)] \n"
+        "stp x26, x27,   [sp, #(26 * 8)] \n"
+        "stp x28, x29,   [sp, #(28 * 8)] \n"
+        "str x30,        [sp, #(30 * 8)] \n"
+        "mov x0, sp \n"
+        "str x0, %[from_sp] \n"
+        "ldr x0, =1f \n"
+        "str x0, %[from_ip] \n"
+
+        "ldr x0, %[to_sp] \n"
+        "mov sp, x0 \n"
+
+        "sub sp, sp, 24 \n"
+        "ldr x0, %[from_thread] \n"
+        "ldr x1, %[to_thread] \n"
+        "ldr x2, %[to_ip] \n"
+        "str x0, [sp, #0] \n"
+        "str x1, [sp, #8] \n"
+        "str x2, [sp, #16] \n"
+
+        "bl enter_thread_context \n"
+        "ldr x0, [sp, #16]\n"
+        "br x0 \n"
+
+        "1: \n"
+        "add sp, sp, 24 \n"
+
+        "ldp x0, x1,     [sp, #(0 * 0)] \n"
+        "ldp x2, x3,     [sp, #(2 * 8)] \n"
+        "ldp x4, x5,     [sp, #(4 * 8)] \n"
+        "ldp x6, x7,     [sp, #(6 * 8)] \n"
+        "ldp x8, x9,     [sp, #(8 * 8)] \n"
+        "ldp x10, x11,   [sp, #(10 * 8)] \n"
+        "ldp x12, x13,   [sp, #(12 * 8)] \n"
+        "ldp x14, x15,   [sp, #(14 * 8)] \n"
+        "ldp x16, x17,   [sp, #(16 * 8)] \n"
+        "ldp x18, x19,   [sp, #(18 * 8)] \n"
+        "ldp x20, x21,   [sp, #(20 * 8)] \n"
+        "ldp x22, x23,   [sp, #(22 * 8)] \n"
+        "ldp x24, x25,   [sp, #(24 * 8)] \n"
+        "ldp x26, x27,   [sp, #(26 * 8)] \n"
+        "ldp x28, x29,   [sp, #(28 * 8)] \n"
+        "ldr x30,        [sp, #(30 * 8)] \n"
+
+        "sub sp, sp, 24 \n"
+        "ldr x0, [sp, #0] \n"
+        "ldr x1, [sp, #8] \n"
+        "str x0, %[from_thread] \n"
+        "str x1, %[to_thread] \n"
+
+        "add sp, sp, #272 \n"
+        :
+        [from_ip] "=m"(from_thread->regs().elr_el1),
+        [from_sp] "=m"(from_thread->regs().sp_el0),
+        "=m"(from_thread),
+        "=m"(to_thread)
+
+        : [to_ip] "m"(to_thread->regs().elr_el1),
+        [to_sp] "m"(to_thread->regs().sp_el0),
+        [from_thread] "m"(from_thread),
+        [to_thread] "m"(to_thread)
+        : "memory", "x0", "x1", "x2");
+    // clang-format on
+
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
 void Processor::assume_context(Thread& thread, FlatPtr flags)
@@ -313,6 +399,20 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     // as we're still in the middle of a context switch. Doing so could
     // trigger a context switch within a context switch, leading to a crash.
     Scheduler::leave_on_first_switch(InterruptsState::Disabled);
+}
+
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
+{
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::State::Running);
+    VERIFY(to_thread->state() == Thread::State::Running);
+
+    Processor::set_current_thread(*to_thread);
+
+    to_thread->set_cpu(Processor::current().id());
+
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    Processor::restore_critical(in_critical);
 }
 
 }

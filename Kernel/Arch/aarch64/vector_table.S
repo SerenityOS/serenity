@@ -60,8 +60,6 @@
     str x0, [sp, #ELR_EL1_SLOT]
     mrs x0, tpidr_el0
     str x0, [sp, #TPIDR_EL0_SLOT]
-    mrs x0, sp_el0
-    str x0, [sp, #SP_EL0_SLOT]
 
     // Set up TrapFrame struct on the stack
     sub sp, sp, #16
@@ -168,6 +166,10 @@ synchronous_current_elsp_el0:
     eret
 
 irq_current_elsp_el0:
+    // An IRQ will always switch the stack pointer to SP_EL1, however we want to use SP_EL0, so switch
+    // to SP_EL0. This means that the stack of the currently executing thread is used as the irq stack.
+    msr SPSel, #0
+
     save_current_context
     bl handle_interrupt
     restore_previous_context
