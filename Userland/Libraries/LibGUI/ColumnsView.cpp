@@ -241,12 +241,10 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-Optional<ColumnsView::Column> ColumnsView::column_at_event_position(Gfx::IntPoint a_position) const
+Optional<ColumnsView::Column> ColumnsView::column_at_event_position(Gfx::IntPoint position) const
 {
     if (!model())
         return {};
-
-    auto position = a_position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 
     int column_x = 0;
 
@@ -288,8 +286,9 @@ ModelIndex ColumnsView::index_at_event_position_in_column(Gfx::IntPoint position
     return model()->index(row, m_model_column, column.parent_index);
 }
 
-ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint position) const
+ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint widget_position) const
 {
+    auto position = to_content_position(widget_position);
     auto const& column = column_at_event_position(position);
     if (!column.has_value())
         return {};
@@ -307,11 +306,12 @@ void ColumnsView::mousedown_event(MouseEvent& event)
     if (event.button() != MouseButton::Primary)
         return;
 
-    auto column = column_at_event_position(event.position());
+    auto position = to_content_position(event.position());
+    auto column = column_at_event_position(position);
     if (!column.has_value())
         return;
 
-    auto index = index_at_event_position_in_column(event.position(), *column);
+    auto index = index_at_event_position_in_column(position, *column);
     if (index.is_valid() && !(event.modifiers() & Mod_Ctrl)) {
         if (model()->row_count(index))
             push_column(index);
@@ -321,8 +321,8 @@ void ColumnsView::mousedown_event(MouseEvent& event)
     if (selection_mode() == SelectionMode::MultiSelection) {
         m_rubber_banding = true;
         m_rubber_band_origin_column = *column;
-        m_rubber_band_origin = event.position().y();
-        m_rubber_band_current = event.position().y();
+        m_rubber_band_origin = position.y();
+        m_rubber_band_current = position.y();
     }
 }
 
