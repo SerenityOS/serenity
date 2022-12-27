@@ -79,18 +79,20 @@ private:
     bool m_eof { false };
 };
 
-class GzipCompressor final : public OutputStream {
+class GzipCompressor final : public Core::Stream::Stream {
 public:
-    GzipCompressor(OutputStream&);
-    ~GzipCompressor() = default;
+    GzipCompressor(Core::Stream::Handle<Core::Stream::Stream>);
 
-    size_t write(ReadonlyBytes) override;
-    bool write_or_error(ReadonlyBytes) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
 
-    static Optional<ByteBuffer> compress_all(ReadonlyBytes bytes);
+    static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes);
 
 private:
-    OutputStream& m_output_stream;
+    Core::Stream::Handle<Core::Stream::Stream> m_output_stream;
 };
 
 }

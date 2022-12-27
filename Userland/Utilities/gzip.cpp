@@ -50,33 +50,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             input_bytes = file->bytes();
         }
 
-        AK::Optional<ByteBuffer> output_bytes;
+        ByteBuffer output_bytes;
         if (decompress)
             output_bytes = TRY(Compress::GzipDecompressor::decompress_all(input_bytes));
         else
-            output_bytes = Compress::GzipCompressor::compress_all(input_bytes);
+            output_bytes = TRY(Compress::GzipCompressor::compress_all(input_bytes));
 
-        if (!output_bytes.has_value()) {
-            warnln("Failed gzip {} input file", decompress ? "decompressing"sv : "compressing"sv);
-            return 1;
-        }
-
-        auto success = false;
-        if (write_to_stdout) {
-            auto stdout = Core::OutputFileStream { Core::File::standard_output() };
-            success = stdout.write_or_error(output_bytes.value());
-        } else {
-            auto output_stream_result = Core::OutputFileStream::open(output_filename);
-            if (output_stream_result.is_error()) {
-                warnln("Failed opening output file for writing: {}", output_stream_result.error());
-                return 1;
-            }
-            success = output_stream_result.value().write_or_error(output_bytes.value());
-        }
-        if (!success) {
-            warnln("Failed writing to output");
-            return 1;
-        }
+        auto output_stream = write_to_stdout ? TRY(Core::Stream::File::standard_output()) : TRY(Core::Stream::File::open(output_filename, Core::Stream::OpenMode::Write));
+        TRY(output_stream->write_entire_buffer(output_bytes));
 
         if (!keep_input_files) {
             TRY(Core::System::unlink(input_filename));
