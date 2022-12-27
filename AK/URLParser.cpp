@@ -201,7 +201,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
-        return {};
+        return base_url ? *base_url : URL {};
 
     if (raw_input.starts_with("data:"sv)) {
         auto maybe_url = parse_data_url(raw_input);

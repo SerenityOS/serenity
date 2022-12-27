@@ -9,6 +9,7 @@
 
 #include <AK/Base64.h>
 #include <AK/URL.h>
+#include <AK/URLParser.h>
 
 TEST_CASE(construct)
 {
@@ -405,4 +406,12 @@ TEST_CASE(complete_file_url_with_base)
     auto sub_url = url.complete_url("js/app.js");
     EXPECT(sub_url.is_valid());
     EXPECT_EQ(sub_url.path(), "/home/js/app.js");
+}
+
+TEST_CASE(empty_url_with_base_url)
+{
+    URL base_url { "https://foo.com/"sv };
+    URL parsed_url = URLParser::parse(""sv, &base_url);
+    EXPECT_EQ(parsed_url.is_valid(), true);
+    EXPECT(base_url.equals(parsed_url));
 }
