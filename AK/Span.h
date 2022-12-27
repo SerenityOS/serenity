@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/Iterator.h>
+#include <AK/Optional.h>
 #include <AK/TypedTransfer.h>
 #include <AK/Types.h>
 
@@ -190,6 +191,16 @@ public:
                 return true;
         }
         return false;
+    }
+
+    [[nodiscard]] Optional<size_t> find_first_index(T const& value) const
+    {
+        for (size_t i = 0; i < size(); ++i) {
+            if (at(i) == value) {
+                return i;
+            }
+        }
+        return {};
     }
 
     [[nodiscard]] bool constexpr starts_with(Span<T const> other) const
