@@ -214,6 +214,7 @@ struct tm* localtime_r(time_t const* t, struct tm* tm)
 
 time_t timegm(struct tm* tm)
 {
+    tm->tm_isdst = 0;
     return tm_to_time(tm, { __utc, __builtin_strlen(__utc) });
 }
 
