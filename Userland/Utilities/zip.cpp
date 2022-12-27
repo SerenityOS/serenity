@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         member.name = TRY(String::from_deprecated_string(canonicalized_path));
 
         auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
-        if (deflate_buffer.has_value() && deflate_buffer.value().size() < file_buffer.size()) {
+        if (!deflate_buffer.is_error() && deflate_buffer.value().size() < file_buffer.size()) {
             member.compressed_data = deflate_buffer.value().bytes();
             member.compression_method = Archive::ZipCompressionMethod::Deflate;
             auto compression_ratio = (double)deflate_buffer.value().size() / file_buffer.size();

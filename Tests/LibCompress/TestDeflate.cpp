@@ -118,7 +118,7 @@ TEST_CASE(deflate_round_trip_store)
     auto original = ByteBuffer::create_uninitialized(1024).release_value();
     fill_with_random(original.data(), 1024);
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::STORE);
-    EXPECT(compressed.has_value());
+    EXPECT(!compressed.is_error());
     auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
     EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
@@ -130,7 +130,7 @@ TEST_CASE(deflate_round_trip_compress)
     fill_with_random(original.data(), 1024); // we pre-filled the second half with 0s to make sure we test back references as well
     // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
-    EXPECT(compressed.has_value());
+    EXPECT(!compressed.is_error());
     auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
     EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
@@ -143,7 +143,7 @@ TEST_CASE(deflate_round_trip_compress_large)
     fill_with_random(original.data(), size);
     // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
-    EXPECT(compressed.has_value());
+    EXPECT(!compressed.is_error());
     auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
     EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
@@ -154,5 +154,5 @@ TEST_CASE(deflate_compress_literals)
     // This byte array is known to not produce any back references with our lz77 implementation even at the highest compression settings
     Array<u8, 0x13> test { 0, 0, 0, 0, 0x72, 0, 0, 0xee, 0, 0, 0, 0x26, 0, 0, 0, 0x28, 0, 0, 0x72 };
     auto compressed = Compress::DeflateCompressor::compress_all(test, Compress::DeflateCompressor::CompressionLevel::GOOD);
-    EXPECT(compressed.has_value());
+    EXPECT(!compressed.is_error());
 }

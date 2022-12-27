@@ -194,11 +194,9 @@ ErrorOr<size_t> GzipCompressor::write(ReadonlyBytes bytes)
     header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
     header.operating_system = 3; // unix
     TRY(m_output_stream->write_entire_buffer({ &header, sizeof(header) }));
-    Core::Stream::WrapInAKOutputStream wrapped_stream { *m_output_stream };
-    DeflateCompressor compressed_stream { wrapped_stream };
-    if (!compressed_stream.write_or_error(bytes))
-        return Error::from_string_literal("Underlying DeflateCompressor indicated an error");
-    compressed_stream.final_flush();
+    DeflateCompressor compressed_stream { Core::Stream::Handle(*m_output_stream) };
+    TRY(compressed_stream.write_entire_buffer(bytes));
+    TRY(compressed_stream.final_flush());
     Crypto::Checksum::CRC32 crc32;
     crc32.update(bytes);
     LittleEndian<u32> digest = crc32.digest();
