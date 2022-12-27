@@ -454,6 +454,54 @@ struct alignas(u64) SCR_EL3 {
 };
 static_assert(sizeof(SCR_EL3) == 8);
 
+// C5.2.18 SPSR_EL1, Saved Program Status Register (EL1)
+struct alignas(u64) SPSR_EL1 {
+    enum Mode : u8 {
+        EL0t = 0b0000,
+        EL1t = 0b0100,
+        EL1h = 0b0101
+    };
+
+    Mode M : 4;
+    int M_4 : 1 = 0;
+    int _reserved5 : 1 = 0;
+    int F : 1;
+    int I : 1;
+    int A : 1;
+    int D : 1;
+    int BTYPE : 2;
+    int SSBS : 1;
+    int _reserved13 : 7 = 0;
+    int IL : 1;
+    int SS : 1;
+    int PAN : 1;
+    int UA0 : 1;
+    int DIT : 1;
+    int TCO : 1;
+    int _reserved26 : 2 = 0;
+    int V : 1;
+    int C : 1;
+    int Z : 1;
+    int N : 1;
+    int _reserved32 : 32 = 0;
+
+    static inline void write(SPSR_EL1 spsr_el1)
+    {
+        asm("msr spsr_el1, %[value]" ::[value] "r"(spsr_el1));
+    }
+
+    static inline SPSR_EL1 read()
+    {
+        SPSR_EL1 spsr;
+
+        asm("mrs %[value], spsr_el1"
+            : [value] "=r"(spsr));
+
+        return spsr;
+    }
+};
+static_assert(sizeof(SPSR_EL1) == 8);
+
 struct alignas(u64) SPSR_EL2 {
     enum Mode : u16 {
         EL0t = 0b0000,
