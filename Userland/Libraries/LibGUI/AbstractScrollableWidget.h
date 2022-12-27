@@ -56,6 +56,7 @@ public:
 
     void scroll_to_top();
     void scroll_to_bottom();
+    void scroll_to_right();
     void update_scrollbar_ranges();
 
     void set_automatic_scrolling_timer_active(bool);

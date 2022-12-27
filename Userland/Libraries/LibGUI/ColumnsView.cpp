@@ -205,6 +205,10 @@ void ColumnsView::push_column(ModelIndex const& parent_index)
     dbgln("Adding a new column");
     m_columns.append({ parent_index, 0 });
     update_column_sizes();
+
+    // FIXME: Find a way not to jump the view so much when changing folders within the same directory.
+    scroll_to_right();
+
     update();
 }
 
