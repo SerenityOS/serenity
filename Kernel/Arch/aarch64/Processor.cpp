@@ -73,7 +73,8 @@ u32 Processor::clear_critical()
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
     (void)wake_count;
-    TODO_AARCH64();
+    // FIXME: Actually wake up other cores when SMP is supported for aarch64.
+    return 0;
 }
 
 void Processor::initialize_context_switching(Thread& initial_thread)
