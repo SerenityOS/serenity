@@ -85,8 +85,6 @@
     msr elr_el1, x0
     ldr x0, [sp, #TPIDR_EL0_SLOT]
     msr tpidr_el0, x0
-    ldr x0, [sp, #SP_EL0_SLOT]
-    msr sp_el0, x0
 
     ldp x0, x1,     [sp, #(0 * 0)]
     ldp x2, x3,     [sp, #(2 * 8)]
@@ -184,5 +182,10 @@ fiq_current_elsp_el0:
 system_error_current_elsp_el0:
     save_current_context
     bl exception_common
+    restore_previous_context
+    eret
+
+.global restore_context_and_eret
+restore_context_and_eret:
     restore_previous_context
     eret

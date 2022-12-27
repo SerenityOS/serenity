@@ -24,6 +24,7 @@ namespace Kernel {
 
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread) __attribute__((used));
 
 Processor* g_current_processor;
 
@@ -279,13 +280,39 @@ void Processor::check_invoke_scheduler()
 NAKED void thread_context_first_enter(void)
 {
     asm(
-        // FIXME: Implement this
-        "wfi \n");
+        "ldr x0, [sp, #0] \n"
+        "ldr x1, [sp, #8] \n"
+        "add sp, sp, 24 \n"
+        "bl context_first_init \n"
+        "b restore_context_and_eret \n");
 }
 
 void exit_kernel_thread(void)
 {
     Thread::current()->exit();
+}
+
+extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread)
+{
+    VERIFY(!are_interrupts_enabled());
+
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+
+    VERIFY(to_thread == Thread::current());
+
+    Scheduler::enter_current(*from_thread);
+
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    Processor::restore_critical(in_critical);
+
+    // Since we got here and don't have Scheduler::context_switch in the
+    // call stack (because this is the first time we switched into this
+    // context), we need to notify the scheduler so that it can release
+    // the scheduler lock. We don't want to enable interrupts at this point
+    // as we're still in the middle of a context switch. Doing so could
+    // trigger a context switch within a context switch, leading to a crash.
+    Scheduler::leave_on_first_switch(InterruptsState::Disabled);
 }
 
 }
