@@ -12,6 +12,7 @@
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/InterruptDisabler.h>
+#include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -19,6 +20,9 @@
 extern "C" uintptr_t vector_table_el1;
 
 namespace Kernel {
+
+extern "C" void thread_context_first_enter(void);
+extern "C" void exit_kernel_thread(void);
 
 Processor* g_current_processor;
 
@@ -99,9 +103,69 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
 
 FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
 {
-    (void)thread;
-    (void)leave_crit;
-    TODO_AARCH64();
+    VERIFY(g_scheduler_lock.is_locked());
+    if (leave_crit) {
+        // Leave the critical section we set up in Process::exec,
+        // but because we still have the scheduler lock we should end up with 1
+        VERIFY(in_critical() == 2);
+        m_in_critical = 1; // leave it without triggering anything or restoring flags
+    }
+
+    u64 kernel_stack_top = thread.kernel_stack_top();
+
+    // Add a random offset between 0-256 (16-byte aligned)
+    kernel_stack_top -= round_up_to_power_of_two(get_fast_random<u8>(), 16);
+
+    u64 stack_top = kernel_stack_top;
+
+    auto& thread_regs = thread.regs();
+
+    // Push a RegisterState and TrapFrame onto the stack, which will be popped of the stack and restored into the
+    // state of the processor by restore_previous_context.
+    stack_top -= sizeof(RegisterState);
+    RegisterState& eretframe = *reinterpret_cast<RegisterState*>(stack_top);
+    memcpy(eretframe.x, thread_regs.x, sizeof(thread_regs.x));
+
+    // x30 is the Link Register for the aarch64 ABI, so this will return to exit_kernel_thread when main thread function returns.
+    eretframe.x[30] = FlatPtr(&exit_kernel_thread);
+    eretframe.elr_el1 = thread_regs.elr_el1;
+    eretframe.sp_el0 = kernel_stack_top;
+    eretframe.tpidr_el0 = 0; // FIXME: Correctly initialize this when aarch64 has support for thread local storage.
+
+    Aarch64::SPSR_EL1 saved_program_status_register_el1 = {};
+
+    // Don't mask any interrupts, so all interrupts are enabled when transfering into the new context
+    saved_program_status_register_el1.D = 0;
+    saved_program_status_register_el1.A = 0;
+    saved_program_status_register_el1.I = 0;
+    saved_program_status_register_el1.F = 0;
+
+    // Set exception origin mode to EL1t, so when the context is restored, we'll be executing in EL1 with SP_EL0
+    // FIXME: This must be EL0t when aarch64 supports userspace applications.
+    saved_program_status_register_el1.M = Aarch64::SPSR_EL1::Mode::EL1t;
+    memcpy(&eretframe.spsr_el1, &saved_program_status_register_el1, sizeof(u64));
+
+    // Push a TrapFrame onto the stack
+    stack_top -= sizeof(TrapFrame);
+    TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
+    trap.regs = &eretframe;
+    trap.next_trap = nullptr;
+
+    if constexpr (CONTEXT_SWITCH_DEBUG) {
+        dbgln("init_context {} ({}) set up to execute at ip={}, sp={}, stack_top={}",
+            thread,
+            VirtualAddress(&thread),
+            VirtualAddress(thread_regs.elr_el1),
+            VirtualAddress(thread_regs.sp_el0),
+            VirtualAddress(stack_top));
+    }
+
+    // This make sure the thread first executes thread_context_first_enter, which will actually call restore_previous_context
+    // which restores the context set up above.
+    thread_regs.set_sp(stack_top);
+    thread_regs.set_ip(FlatPtr(&thread_context_first_enter));
+
+    return stack_top;
 }
 
 void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
@@ -188,6 +252,18 @@ void Processor::check_invoke_scheduler()
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
     }
+}
+
+NAKED void thread_context_first_enter(void)
+{
+    asm(
+        // FIXME: Implement this
+        "wfi \n");
+}
+
+void exit_kernel_thread(void)
+{
+    Thread::current()->exit();
 }
 
 }
