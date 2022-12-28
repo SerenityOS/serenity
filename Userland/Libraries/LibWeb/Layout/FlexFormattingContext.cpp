@@ -305,19 +305,8 @@ void FlexFormattingContext::generate_anonymous_flex_items()
     HashMap<int, Vector<FlexItem>> order_item_bucket;
 
     flex_container().for_each_child_of_type<Box>([&](Box& child_box) {
-        // Skip anonymous text runs that are only whitespace.
-        if (child_box.is_anonymous() && !child_box.is_generated() && !child_box.first_child_of_type<BlockContainer>()) {
-            bool contains_only_white_space = true;
-            child_box.for_each_in_subtree([&](auto const& node) {
-                if (!is<TextNode>(node) || !static_cast<TextNode const&>(node).dom_node().data().is_whitespace()) {
-                    contains_only_white_space = false;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
-            if (contains_only_white_space)
-                return IterationDecision::Continue;
-        }
+        if (can_skip_is_anonymous_text_run(child_box))
+            return IterationDecision::Continue;
 
         // Skip any "out-of-flow" children
         if (child_box.is_out_of_flow(*this))
