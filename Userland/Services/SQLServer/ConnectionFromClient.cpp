@@ -49,7 +49,7 @@ Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedStr
 
     if (auto database_connection = DatabaseConnection::create(m_database_path, database_name, client_id()); !database_connection.is_error())
         return { database_connection.value()->connection_id() };
-    return { {} };
+    return Optional<SQL::ConnectionID> {};
 }
 
 void ConnectionFromClient::disconnect(SQL::ConnectionID connection_id)
@@ -69,13 +69,13 @@ Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_stat
     auto database_connection = DatabaseConnection::connection_for(connection_id);
     if (!database_connection) {
         dbgln("Database connection has disappeared");
-        return { {} };
+        return Optional<SQL::StatementID> {};
     }
 
     auto result = database_connection->prepare_statement(sql);
     if (result.is_error()) {
         dbgln_if(SQLSERVER_DEBUG, "Could not parse SQL statement: {}", result.error().error_string());
-        return { {} };
+        return Optional<SQL::StatementID> {};
     }
 
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement -> statement_id = {}", result.value());
@@ -94,7 +94,7 @@ Messages::SQLServer::ExecuteStatementResponse ConnectionFromClient::execute_stat
 
     dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
     async_execution_error(statement_id, -1, SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
-    return { {} };
+    return Optional<SQL::ExecutionID> {};
 }
 
 }
