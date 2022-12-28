@@ -440,7 +440,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
     }
 }
 
-DeprecatedString MainWidget::read_next_sql_statement_of_editor()
+void MainWidget::read_next_sql_statement_of_editor()
 {
     StringBuilder piece;
     do {
@@ -450,7 +450,7 @@ DeprecatedString MainWidget::read_next_sql_statement_of_editor()
         auto line_maybe = read_next_line_of_editor();
 
         if (!line_maybe.has_value())
-            return {};
+            return;
 
         auto& line = line_maybe.value();
         auto lexer = SQL::AST::Lexer(line);
@@ -490,10 +490,16 @@ DeprecatedString MainWidget::read_next_sql_statement_of_editor()
             m_editor_line_level = last_token_ended_statement ? 0 : (m_editor_line_level > 0 ? m_editor_line_level : 1);
     } while ((m_editor_line_level > 0) || piece.is_empty());
 
-    if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece.to_deprecated_string()); statement_id.has_value())
-        m_sql_client->async_execute_statement(*statement_id, {});
+    auto sql_statement = piece.to_deprecated_string();
 
-    return piece.to_deprecated_string();
+    if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, sql_statement); statement_id.has_value()) {
+        m_sql_client->async_execute_statement(*statement_id, {});
+    } else {
+        auto* editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
+        VERIFY(editor);
+
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not parse {}\n{}", editor->path(), sql_statement));
+    }
 }
 
 Optional<DeprecatedString> MainWidget::read_next_line_of_editor()
