@@ -76,7 +76,7 @@ struct ICCHeader {
     u8 profile_version_minor_bugfix;
     BigEndian<u16> profile_version_zero;
 
-    BigEndian<u32> profile_device_class;
+    BigEndian<DeviceClass> profile_device_class;
     BigEndian<u32> data_color_space;
     BigEndian<u32> pcs; // "Profile Connection Space"
 
@@ -114,14 +114,14 @@ ErrorOr<DeviceClass> parse_device_class(ICCHeader const& header)
 {
     // ICC v4, 7.2.5 Profile/device class field
     switch (header.profile_device_class) {
-    case (u32)DeviceClass::InputDevce:
-    case (u32)DeviceClass::DisplayDevice:
-    case (u32)DeviceClass::OutputDevice:
-    case (u32)DeviceClass::DeviceLink:
-    case (u32)DeviceClass::ColorSpace:
-    case (u32)DeviceClass::Abstract:
-    case (u32)DeviceClass::NamedColor:
-        return DeviceClass { u32 { header.profile_device_class } };
+    case DeviceClass::InputDevce:
+    case DeviceClass::DisplayDevice:
+    case DeviceClass::OutputDevice:
+    case DeviceClass::DeviceLink:
+    case DeviceClass::ColorSpace:
+    case DeviceClass::Abstract:
+    case DeviceClass::NamedColor:
+        return header.profile_device_class;
     }
     return Error::from_string_literal("ICC::Profile: Invalid device class");
 }
