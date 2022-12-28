@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<AHCIController> AHCIController::initialize(PC
 
 bool AHCIController::reset()
 {
-    dmesgln("{}: AHCI controller reset", pci_address());
+    dmesgln_pci(*this, "{}: AHCI controller reset", pci_address());
     {
         SpinlockLocker locker(m_hba_control_lock);
         hba().control_regs.ghc = 1;

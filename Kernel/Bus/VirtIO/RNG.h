@@ -21,6 +21,7 @@ class RNG final
 public:
     static NonnullLockRefPtr<RNG> must_create(PCI::DeviceIdentifier const&);
     virtual StringView purpose() const override { return class_name(); }
+    virtual StringView device_name() const override { return class_name(); }
     virtual ~RNG() override = default;
 
     virtual void initialize() override;

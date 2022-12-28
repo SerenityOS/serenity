@@ -24,6 +24,8 @@ public:
 
     virtual ~IntelNativeGraphicsAdapter() = default;
 
+    virtual StringView device_name() const override { return "IntelNativeGraphicsAdapter"sv; }
+
 private:
     ErrorOr<void> initialize_adapter();
 

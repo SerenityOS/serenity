@@ -32,6 +32,7 @@ public:
 
     // ^IRQHandler
     virtual StringView purpose() const override { return "AC97"sv; }
+    virtual StringView device_name() const override { return purpose(); }
 
 private:
     enum NativeAudioMixerRegister : u8 {

@@ -29,6 +29,8 @@ public:
     static LockRefPtr<VMWareGraphicsAdapter> try_initialize(PCI::DeviceIdentifier const&);
     virtual ~VMWareGraphicsAdapter() = default;
 
+    virtual StringView device_name() const override { return "VMWareGraphicsAdapter"sv; }
+
     ErrorOr<void> modeset_primary_screen_resolution(Badge<VMWareDisplayConnector>, size_t width, size_t height);
     size_t primary_screen_width(Badge<VMWareDisplayConnector>) const;
     size_t primary_screen_height(Badge<VMWareDisplayConnector>) const;

@@ -169,7 +169,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
         sub.identify.cns = NVMe_CNS_ID_ACTIVE_NS & 0xff;
         status = submit_admin_command(sub, true);
         if (status) {
-            dmesgln("Failed to identify active namespace command");
+            dmesgln_pci(*this, "Failed to identify active namespace command");
             return EFAULT;
         }
         if (void* fault_at; !safe_memcpy(active_namespace_list, prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
@@ -192,7 +192,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
             sub.identify.nsid = nsid;
             status = submit_admin_command(sub, true);
             if (status) {
-                dmesgln("Failed identify namespace with nsid {}", nsid);
+                dmesgln_pci(*this, "Failed identify namespace with nsid {}", nsid);
                 return EFAULT;
             }
             static_assert(sizeof(IdentifyNamespace) == NVMe_IDENTIFY_SIZE);
@@ -263,7 +263,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(qdepth), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(qdepth), 4096);
     if (!reset_controller()) {
-        dmesgln("Failed to reset the NVMe controller");
+        dmesgln_pci(*this, "Failed to reset the NVMe controller");
         return EFAULT;
     }
     {
@@ -285,7 +285,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
 
     if (!start_controller()) {
-        dmesgln("Failed to restart the NVMe controller");
+        dmesgln_pci(*this, "Failed to restart the NVMe controller");
         return EFAULT;
     }
     set_admin_queue_ready_flag();

@@ -27,6 +27,8 @@ public:
     static NonnullLockRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
+    virtual StringView device_name() const override { return "AHCI"sv; }
+
     virtual LockRefPtr<StorageDevice> device(u32 index) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;

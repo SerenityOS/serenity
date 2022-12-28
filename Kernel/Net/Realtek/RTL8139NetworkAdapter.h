@@ -32,6 +32,7 @@ public:
     virtual bool link_full_duplex() override;
 
     virtual StringView purpose() const override { return class_name(); }
+    virtual StringView device_name() const override { return "RTL8139"sv; }
 
 private:
     RTL8139NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);

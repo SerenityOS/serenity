@@ -192,16 +192,17 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
 
 UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
 {
-    dmesgln("E1000: Found @ {}", pci_address());
+    dmesgln_pci(*this, "Found @ {}", pci_address());
+
     enable_bus_mastering(pci_address());
 
-    dmesgln("E1000: IO base: {}", m_registers_io_window);
-    dmesgln("E1000: Interrupt line: {}", interrupt_number());
+    dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
+    dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
     detect_eeprom();
-    dmesgln("E1000: Has EEPROM? {}", m_has_eeprom);
+    dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom);
     read_mac_address();
     auto const& mac = mac_address();
-    dmesgln("E1000: MAC address: {}", mac.to_string());
+    dmesgln_pci(*this, "MAC address: {}", mac.to_string());
 
     initialize_rx_descriptors();
     initialize_tx_descriptors();

@@ -169,17 +169,17 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
 {
-    dmesgln("NE2000: Found @ {}", pci_address());
+    dmesgln_pci(*this, "Found @ {}", pci_address());
 
-    dmesgln("NE2000: Port base: {}", m_registers_io_window);
-    dmesgln("NE2000: Interrupt line: {}", interrupt_number());
+    dmesgln_pci(*this, "Port base: {}", m_registers_io_window);
+    dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
 
     int ram_errors = ram_test();
-    dmesgln("NE2000: RAM test {}, got {} byte errors", (ram_errors == 0 ? "OK" : "KO"), ram_errors);
+    dmesgln_pci(*this, "RAM test {}, got {} byte errors", (ram_errors == 0 ? "OK" : "KO"), ram_errors);
 
     reset();
     set_mac_address(m_mac_address);
-    dmesgln("NE2000: MAC address: {}", m_mac_address.to_string());
+    dmesgln_pci(*this, "MAC address: {}", m_mac_address.to_string());
     enable_irq();
 }
 
@@ -206,22 +206,22 @@ bool NE2000NetworkAdapter::handle_irq(RegisterState const&)
         u8 fae = in8(REG_RD_FAE_TALLY);
         u8 crc = in8(REG_RD_CRC_TALLY);
         u8 miss = in8(REG_RD_MISS_PKT_TALLY);
-        dmesgln("NE2000NetworkAdapter: Packet reception error framing={} crc={} missed={}", fae, crc, miss);
+        dmesgln_pci(*this, "Packet reception error framing={} crc={} missed={}", fae, crc, miss);
         // TODO: handle counters
     }
     if (status & BIT_INTERRUPTMASK_TXE) {
-        dmesgln("NE2000NetworkAdapter: Packet transmission error");
+        dmesgln_pci(*this, "Packet transmission error");
     }
     if (status & BIT_INTERRUPTMASK_OVW) {
-        dmesgln("NE2000NetworkAdapter: Ring buffer reception overflow error");
+        dmesgln_pci(*this, "Ring buffer reception overflow error");
         // TODO: handle counters
     }
     if (status & BIT_INTERRUPTMASK_CNT) {
-        dmesgln("NE2000NetworkAdapter: Counter overflow error");
+        dmesgln_pci(*this, "Counter overflow error");
         // TODO: handle counters
     }
     if (status & BIT_INTERRUPTMASK_RST) {
-        dmesgln("NE2000NetworkAdapter: NIC requires reset due to packet reception overflow");
+        dmesgln_pci(*this, "NIC requires reset due to packet reception overflow");
         // TODO: proper reset procedure
         reset();
     }
@@ -371,12 +371,12 @@ void NE2000NetworkAdapter::send_raw(ReadonlyBytes payload)
     dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Sending packet length={}", payload.size());
 
     if (payload.size() > NE2K_RAM_SEND_SIZE) {
-        dmesgln("NE2000NetworkAdapter: Packet to send was too big; discarding");
+        dmesgln_pci(*this, "Packet to send was too big; discarding");
         return;
     }
 
     while (in8(REG_RW_COMMAND) & BIT_COMMAND_TXP)
-        m_wait_queue.wait_forever("NE2000NetworkAdapter"sv);
+        m_wait_queue.wait_forever(device_name());
 
     disable_irq();
     size_t packet_size = payload.size();

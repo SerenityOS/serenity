@@ -32,6 +32,7 @@ public:
     virtual bool link_full_duplex() override;
 
     virtual StringView purpose() const override { return class_name(); }
+    virtual StringView device_name() const override { return "E1000"sv; }
 
 protected:
     void setup_interrupts();

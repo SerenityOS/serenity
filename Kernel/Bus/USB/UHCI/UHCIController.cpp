@@ -75,9 +75,9 @@ ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI
 
 ErrorOr<void> UHCIController::initialize()
 {
-    dmesgln("UHCI: Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
-    dmesgln("UHCI: I/O base {}", m_registers_io_window);
-    dmesgln("UHCI: Interrupt line: {}", interrupt_number());
+    dmesgln_pci(*this, "Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
+    dmesgln_pci(*this, "I/O base {}", m_registers_io_window);
+    dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
 
     TRY(spawn_async_poll_process());
     TRY(spawn_port_process());

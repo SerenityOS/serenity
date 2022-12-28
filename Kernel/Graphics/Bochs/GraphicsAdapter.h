@@ -26,6 +26,7 @@ class BochsGraphicsAdapter final : public GenericGraphicsAdapter
 public:
     static NonnullLockRefPtr<BochsGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
     virtual ~BochsGraphicsAdapter() = default;
+    virtual StringView device_name() const override { return "BochsGraphicsAdapter"sv; }
 
 private:
     ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);

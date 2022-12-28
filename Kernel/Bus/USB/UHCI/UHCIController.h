@@ -38,6 +38,7 @@ public:
     virtual ~UHCIController() override;
 
     virtual StringView purpose() const override { return "UHCI"sv; }
+    virtual StringView device_name() const override { return purpose(); }
 
     virtual ErrorOr<void> initialize() override;
     virtual ErrorOr<void> reset() override;

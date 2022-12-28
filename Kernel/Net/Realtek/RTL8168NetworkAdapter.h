@@ -32,6 +32,7 @@ public:
     virtual i32 link_speed() override;
 
     virtual StringView purpose() const override { return class_name(); }
+    virtual StringView device_name() const override { return class_name(); }
 
 private:
     // FIXME: should this be increased? (maximum allowed here is 1024) - memory usage vs packet loss chance tradeoff

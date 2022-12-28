@@ -22,6 +22,7 @@ public:
     virtual ~Console() override = default;
 
     virtual StringView purpose() const override { return class_name(); }
+    virtual StringView device_name() const override { return class_name(); }
 
     unsigned device_id() const
     {
