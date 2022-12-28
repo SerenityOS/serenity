@@ -46,6 +46,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
 
     Vector<Coordinate> m_stars;
     int m_sweep_plane = 2000;
@@ -87,6 +88,16 @@ void Starfield::keydown_event(GUI::KeyEvent& event)
     default:
         Desktop::Screensaver::keydown_event(event);
     }
+}
+
+void Starfield::mousewheel_event(GUI::MouseEvent& event)
+{
+    if (event.wheel_delta_y() == 0)
+        return;
+
+    m_speed += event.wheel_delta_y() > 0 ? -1 : 1;
+    if (m_speed < 1)
+        m_speed = 1;
 }
 
 void Starfield::paint_event(GUI::PaintEvent& event)
