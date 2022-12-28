@@ -244,8 +244,10 @@ Tab::Tab(BrowserWindow& window)
 
         update_status();
 
-        if (m_dom_inspector_widget)
+        if (m_dom_inspector_widget) {
             m_web_content_view->inspect_dom_tree();
+            m_web_content_view->inspect_accessibility_tree();
+        }
     };
 
     view().on_navigate_back = [this]() {
@@ -419,6 +421,11 @@ Tab::Tab(BrowserWindow& window)
 
     view().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
         m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing);
+    };
+
+    view().on_get_accessibility_tree = [this](auto& accessibility_tree) {
+        if (m_dom_inspector_widget)
+            m_dom_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
     view().on_js_console_new_message = [this](auto message_index) {
@@ -666,6 +673,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         m_dom_inspector_widget = window->set_main_widget<InspectorWidget>().release_value_but_fixme_should_propagate_errors();
         m_dom_inspector_widget->set_web_view(*m_web_content_view);
         m_web_content_view->inspect_dom_tree();
+        m_web_content_view->inspect_accessibility_tree();
     }
 
     if (inspector_target == InspectorTarget::HoveredElement) {

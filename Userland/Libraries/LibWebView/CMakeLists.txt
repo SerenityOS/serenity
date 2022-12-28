@@ -1,4 +1,5 @@
 set(SOURCES
+    AccessibilityTreeModel.cpp
     DOMTreeModel.cpp
     OutOfProcessWebView.cpp
     RequestServerAdapter.cpp
