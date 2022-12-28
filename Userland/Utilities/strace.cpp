@@ -448,10 +448,11 @@ static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, siz
     builder.add_arguments(buffer, size, flags);
 }
 
-static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p, size_t length)
+static ErrorOr<void> format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p, size_t length)
 {
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    auto params = TRY(copy_from_process(params_p));
     builder.add_arguments(StringArgument { params.path }, StringArgument { { params.buffer.data, min(params.buffer.size, length) } });
+    return {};
 }
 
 static void format_exit(FormattedSyscallBuilder& builder, int status)
@@ -468,9 +469,9 @@ struct OpenOptions : BitflagBase {
     };
 };
 
-static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_params* params_p)
+static ErrorOr<void> format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_params* params_p)
 {
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    auto params = TRY(copy_from_process(params_p));
 
     if (params.dirfd == AT_FDCWD)
         builder.add_argument("AT_FDCWD");
@@ -481,6 +482,7 @@ static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_param
 
     if (params.options & O_CREAT)
         builder.add_argument("{:04o}", params.mode);
+    return {};
 }
 
 static void format_ioctl(FormattedSyscallBuilder& builder, int fd, unsigned request, void* arg)
@@ -544,14 +546,15 @@ static void format_fstat(FormattedSyscallBuilder& builder, int fd, struct stat* 
     builder.add_arguments(fd, buf);
 }
 
-static void format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_params* params_p)
+static ErrorOr<void> format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_params* params_p)
 {
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    auto params = TRY(copy_from_process(params_p));
     if (params.dirfd == AT_FDCWD)
         builder.add_argument("AT_FDCWD");
     else
         builder.add_argument(params.dirfd);
     builder.add_arguments(StringArgument { params.path }, copy_from_process(params.statbuf), params.follow_symlinks);
+    return {};
 }
 
 static void format_lseek(FormattedSyscallBuilder& builder, int fd, off_t offset, int whence)
@@ -574,15 +577,16 @@ static void format_close(FormattedSyscallBuilder& builder, int fd)
     builder.add_arguments(fd);
 }
 
-static void format_poll(FormattedSyscallBuilder& builder, Syscall::SC_poll_params* params_p)
+static ErrorOr<void> format_poll(FormattedSyscallBuilder& builder, Syscall::SC_poll_params* params_p)
 {
     // TODO: format fds and sigmask properly
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    auto params = TRY(copy_from_process(params_p));
     builder.add_arguments(
         params.nfds,
         PointerArgument { params.fds },
         copy_from_process(params.timeout),
         PointerArgument { params.sigmask });
+    return {};
 }
 
 namespace AK {
@@ -652,10 +656,11 @@ struct MemoryProtectionFlags : BitflagBase {
     static constexpr StringView default_ = "PROT_NONE"sv;
 };
 
-static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
+static ErrorOr<void> format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
 {
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    auto params = TRY(copy_from_process(params_p));
     builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment, StringArgument { params.name });
+    return {};
 }
 
 static void format_munmap(FormattedSyscallBuilder& builder, void* addr, size_t size)
@@ -668,10 +673,11 @@ static void format_mprotect(FormattedSyscallBuilder& builder, void* addr, size_t
     builder.add_arguments(addr, size, MemoryProtectionFlags { prot });
 }
 
-static void format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
+static ErrorOr<void> format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
 {
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    auto params = TRY(copy_from_process(params_p));
     builder.add_arguments(params.addr, params.size, StringArgument { params.name });
+    return {};
 }
 
 static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clockid, struct timespec* time)
@@ -689,7 +695,7 @@ static void format_get_process_name(FormattedSyscallBuilder& builder, char* buff
     builder.add_argument(StringArgument { { buffer, buffer_size }, "\0"sv });
 }
 
-static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
+static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
         Int,
@@ -737,7 +743,7 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
         break;
     case SC_mmap:
-        format_mmap(builder, (Syscall::SC_mmap_params*)arg1);
+        TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
         result_type = VoidP;
         break;
     case SC_mprotect:
@@ -747,30 +753,30 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         format_munmap(builder, (void*)arg1, (size_t)arg2);
         break;
     case SC_open:
-        format_open(builder, (Syscall::SC_open_params*)arg1);
+        TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
         break;
     case SC_poll:
-        format_poll(builder, (Syscall::SC_poll_params*)arg1);
+        TRY(format_poll(builder, (Syscall::SC_poll_params*)arg1));
         break;
     case SC_read:
         format_read(builder, (int)arg1, (void*)arg2, (size_t)arg3);
         result_type = Ssize;
         break;
     case SC_realpath:
-        format_realpath(builder, (Syscall::SC_realpath_params*)arg1, (size_t)res);
+        TRY(format_realpath(builder, (Syscall::SC_realpath_params*)arg1, (size_t)res));
         break;
     case SC_recvmsg:
         format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
         result_type = Ssize;
         break;
     case SC_set_mmap_name:
-        format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1);
+        TRY(format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1));
         break;
     case SC_socket:
         format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
         break;
     case SC_stat:
-        format_stat(builder, (Syscall::SC_stat_params*)arg1);
+        TRY(format_stat(builder, (Syscall::SC_stat_params*)arg1));
         break;
     case SC_write:
         format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
@@ -803,6 +809,7 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         builder.format_result();
         break;
     }
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -923,7 +930,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
 
         FormattedSyscallBuilder builder(syscall_name);
-        format_syscall(builder, syscall_function, arg1, arg2, arg3, res);
+        TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, res));
 
         TRY(trace_file->write(builder.string_view().bytes()));
     }
