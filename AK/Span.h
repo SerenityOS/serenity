@@ -186,11 +186,7 @@ public:
 
     [[nodiscard]] bool constexpr contains_slow(T const& value) const
     {
-        for (size_t i = 0; i < size(); ++i) {
-            if (at(i) == value)
-                return true;
-        }
-        return false;
+        return find_first_index(value).has_value();
     }
 
     [[nodiscard]] Optional<size_t> find_first_index(T const& value) const
