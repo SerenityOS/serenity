@@ -45,5 +45,28 @@ Installing macfuse for the first time requires enabling its system extension in 
 It's important to make sure that Xcode is not only installed but also accordingly updated, otherwise CMake will run into incompatibilities with GCC.
 
 Homebrew is known to ship bleeding edge CMake versions, but building CMake from source with homebrew
-gcc or llvm may not work. If homebrew does not offer cmake 3.25.x+ on your platform, it may be necessary
+gcc or llvm may not work. If homebrew does not offer cmake 3.25.x+ on your platform, it may be neccessary
 to manually run Toolchain/BuildCMake.sh with Apple clang from Xcode as the first compiler in your $PATH.
+
+# Upgrading macOS
+
+Installing updates to macOS or Xcode may break the SerenityOS Toolchain. In case you get stuck these steps will get you back up and running:
+1. Upgrade macOS
+1. Re-enable macFUSE in settings (in case you use option 1)
+1. Reboot
+
+## Easy upgrade path (works usually, can take longer)
+
+1. Uninstall Xcode by dragging it to the bin
+1. Install Xcode
+1. Install the Command Line Tools for Xcode (Developer Account needed) and accept the terms of use
+1. Run `brew update` and `brew upgrade` (check that the prerequisites are installed)
+1. Nuke your build (`git clean -xdf` (warning: will reset your checkout to a clean clone))
+1. Run `./Meta/serenity.sh rebuild-world`
+1. Run `./Meta/serenity.sh run`
+
+## Advanced Upgrade path (might run into issues)
+
+1. Run `./Meta/serenity.sh rebuild-toolchain`
+1. In case of issues, try deleting `Build/superbuild-${SERENITY_ARCH}`, `Build/${SERENITY_ARCH}`, `Toolchain/Build/${SERENITY_ARCH}` and `Toolchain/Local/${SERENITY_ARCH}`
+1. Run `./Meta/serenity.sh run`
