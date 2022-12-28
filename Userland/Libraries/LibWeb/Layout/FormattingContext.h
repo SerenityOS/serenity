@@ -81,6 +81,7 @@ public:
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) { }
 
     virtual Gfx::FloatPoint calculate_static_position(Box const&) const;
+    bool can_skip_is_anonymous_text_run(Box&);
 
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);

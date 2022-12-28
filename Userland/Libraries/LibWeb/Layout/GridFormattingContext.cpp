@@ -22,21 +22,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     auto& box_state = m_state.get_mutable(box);
     auto grid_template_columns = box.computed_values().grid_template_columns();
     auto grid_template_rows = box.computed_values().grid_template_rows();
-    auto should_skip_is_anonymous_text_run = [&](Box& child_box) -> bool {
-        if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
-            bool contains_only_white_space = true;
-            child_box.for_each_in_subtree([&](auto const& node) {
-                if (!is<TextNode>(node) || !static_cast<TextNode const&>(node).dom_node().data().is_whitespace()) {
-                    contains_only_white_space = false;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
-            if (contains_only_white_space)
-                return true;
-        }
-        return false;
-    };
 
     auto resolve_definite_track_size = [&](CSS::GridSize const& grid_size) -> float {
         VERIFY(grid_size.is_definite());
@@ -110,7 +95,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     Vector<PositionedBox> positioned_boxes;
     Vector<Box const&> boxes_to_place;
     box.for_each_child_of_type<Box>([&](Box& child_box) {
-        if (should_skip_is_anonymous_text_run(child_box))
+        if (can_skip_is_anonymous_text_run(child_box))
             return IterationDecision::Continue;
         boxes_to_place.append(child_box);
         return IterationDecision::Continue;
