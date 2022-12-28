@@ -247,14 +247,14 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address addre
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(TXDescriptor) * (number_of_rx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX"sv, Memory::Region::Access::ReadWrite).release_value())
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(RXDescriptor) * (number_of_tx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX"sv, Memory::Region::Access::ReadWrite).release_value())
 {
-    dmesgln("RTL8168: Found @ {}", pci_address());
-    dmesgln("RTL8168: I/O port base: {}", m_registers_io_window);
+    dmesgln_pci(*this, "Found @ {}", pci_address());
+    dmesgln_pci(*this, "I/O port base: {}", m_registers_io_window);
 
     identify_chip_version();
-    dmesgln("RTL8168: Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
+    dmesgln_pci(*this, "Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
 
     if (!determine_supported_version()) {
-        dmesgln("RTL8168: Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
+        dmesgln_pci(*this, "Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
         return; // Each ChipVersion requires a specific implementation of configure_phy and hardware_quirks
     }
 
@@ -332,7 +332,7 @@ void RTL8168NetworkAdapter::initialize()
     enable_bus_mastering(pci_address());
 
     read_mac_address();
-    dmesgln("RTL8168: MAC address: {}", mac_address().to_string());
+    dmesgln_pci(*this, "MAC address: {}", mac_address().to_string());
 
     // notify about driver start
     if (m_version >= ChipVersion::Version11 && m_version <= ChipVersion::Version13) {
@@ -1155,19 +1155,19 @@ bool RTL8168NetworkAdapter::handle_irq(RegisterState const&)
             dbgln_if(RTL8168_DEBUG, "RTL8168: TX error - invalid packet");
         }
         if (status & INT_RX_OVERFLOW) {
-            dmesgln("RTL8168: RX descriptor unavailable (packet lost)");
+            dmesgln_pci(*this, "RX descriptor unavailable (packet lost)");
             receive();
         }
         if (status & INT_LINK_CHANGE) {
             m_link_up = (in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0;
-            dmesgln("RTL8168: Link status changed up={}", m_link_up);
+            dmesgln_pci(*this, "Link status changed up={}", m_link_up);
         }
         if (status & INT_RX_FIFO_OVERFLOW) {
-            dmesgln("RTL8168: RX FIFO overflow");
+            dmesgln_pci(*this, "RX FIFO overflow");
             receive();
         }
         if (status & INT_SYS_ERR) {
-            dmesgln("RTL8168: Fatal system error");
+            dmesgln_pci(*this, "Fatal system error");
         }
     }
     return was_handled;
@@ -1193,7 +1193,7 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
     dbgln_if(RTL8168_DEBUG, "RTL8168: send_raw length={}", payload.size());
 
     if (payload.size() > TX_BUFFER_SIZE) {
-        dmesgln("RTL8168: Packet was too big; discarding");
+        dmesgln_pci(*this, "Packet was too big; discarding");
         return;
     }
 
@@ -1237,7 +1237,7 @@ void RTL8168NetworkAdapter::receive()
         dbgln_if(RTL8168_DEBUG, "RTL8168: receive, flags={:#04x}, length={}, descriptor={}", flags, length, descriptor_index);
 
         if (length > RX_BUFFER_SIZE || (flags & RXDescriptor::ErrorSummary) != 0) {
-            dmesgln("RTL8168: receive got bad packet, flags={:#04x}, length={}", flags, length);
+            dmesgln_pci(*this, "receive got bad packet, flags={:#04x}, length={}", flags, length);
         } else if ((flags & RXDescriptor::FirstSegment) != 0 && (flags & RXDescriptor::LastSegment) == 0) {
             VERIFY_NOT_REACHED();
             // Our maximum received packet size is smaller than the descriptor buffer size, so packets should never be segmented

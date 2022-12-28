@@ -21,6 +21,8 @@ class PCIIDELegacyModeController final : public IDEController
 public:
     static ErrorOr<NonnullLockRefPtr<PCIIDELegacyModeController>> initialize(PCI::DeviceIdentifier const&, bool force_pio);
 
+    virtual StringView device_name() const override { return "PCIIDELegacyModeController"sv; }
+
     bool is_bus_master_capable() const;
     bool is_pci_native_mode_enabled() const;
 

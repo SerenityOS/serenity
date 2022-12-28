@@ -39,6 +39,7 @@ public:
     virtual bool link_full_duplex() override { return true; }
 
     virtual StringView purpose() const override { return class_name(); }
+    virtual StringView device_name() const override { return class_name(); }
 
 private:
     NE2000NetworkAdapter(PCI::Address, u8, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);

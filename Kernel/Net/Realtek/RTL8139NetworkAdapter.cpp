@@ -133,12 +133,12 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
 {
     m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
 
-    dmesgln("RTL8139: Found @ {}", pci_address());
+    dmesgln_pci(*this, "Found @ {}", pci_address());
 
     enable_bus_mastering(pci_address());
 
-    dmesgln("RTL8139: I/O port base: {}", m_registers_io_window);
-    dmesgln("RTL8139: Interrupt line: {}", interrupt_number());
+    dmesgln_pci(*this, "I/O port base: {}", m_registers_io_window);
+    dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
 
     // we add space to account for overhang from the last packet - the rtl8139
     // can optionally guarantee that packets will be contiguous by
@@ -154,7 +154,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
 
     read_mac_address();
     auto const& mac = mac_address();
-    dmesgln("RTL8139: MAC address: {}", mac.to_string());
+    dmesgln_pci(*this, "MAC address: {}", mac.to_string());
 
     enable_irq();
 }
@@ -181,31 +181,31 @@ bool RTL8139NetworkAdapter::handle_irq(RegisterState const&)
             receive();
         }
         if (status & INT_RXERR) {
-            dmesgln("RTL8139: RX error - resetting device");
+            dmesgln_pci(*this, "RX error - resetting device");
             reset();
         }
         if (status & INT_TXOK) {
             dbgln_if(RTL8139_DEBUG, "RTL8139: TX complete");
         }
         if (status & INT_TXERR) {
-            dmesgln("RTL8139: TX error - resetting device");
+            dmesgln_pci(*this, "TX error - resetting device");
             reset();
         }
         if (status & INT_RX_BUFFER_OVERFLOW) {
-            dmesgln("RTL8139: RX buffer overflow");
+            dmesgln_pci(*this, "RX buffer overflow");
         }
         if (status & INT_LINK_CHANGE) {
             m_link_up = (in8(REG_MSR) & MSR_LINKB) == 0;
-            dmesgln("RTL8139: Link status changed up={}", m_link_up);
+            dmesgln_pci(*this, "Link status changed up={}", m_link_up);
         }
         if (status & INT_RX_FIFO_OVERFLOW) {
-            dmesgln("RTL8139: RX FIFO overflow");
+            dmesgln_pci(*this, "RX FIFO overflow");
         }
         if (status & INT_LENGTH_CHANGE) {
-            dmesgln("RTL8139: Cable length change");
+            dmesgln_pci(*this, "Cable length change");
         }
         if (status & INT_SYSTEM_ERROR) {
-            dmesgln("RTL8139: System error - resetting device");
+            dmesgln_pci(*this, "System error - resetting device");
             reset();
         }
     }
@@ -278,7 +278,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
     dbgln_if(RTL8139_DEBUG, "RTL8139: send_raw length={}", payload.size());
 
     if (payload.size() > PACKET_SIZE_MAX) {
-        dmesgln("RTL8139: Packet was too big; discarding");
+        dmesgln_pci(*this, "Packet was too big; discarding");
         return;
     }
 
@@ -294,7 +294,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
     }
 
     if (hw_buffer == -1) {
-        dmesgln("RTL8139: Hardware buffers full; discarding packet");
+        dmesgln_pci(*this, "Hardware buffers full; discarding packet");
         return;
     }
 
@@ -327,7 +327,7 @@ void RTL8139NetworkAdapter::receive()
     dbgln_if(RTL8139_DEBUG, "RTL8139: receive, status={:#04x}, length={}, offset={}", status, length, m_rx_buffer_offset);
 
     if (!(status & RX_OK) || (status & (RX_INVALID_SYMBOL_ERROR | RX_CRC_ERROR | RX_FRAME_ALIGNMENT_ERROR)) || (length >= PACKET_SIZE_MAX) || (length < PACKET_SIZE_MIN)) {
-        dmesgln("RTL8139: receive got bad packet, status={:#04x}, length={}", status, length);
+        dmesgln_pci(*this, "receive got bad packet, status={:#04x}, length={}", status, length);
         reset();
         return;
     }
