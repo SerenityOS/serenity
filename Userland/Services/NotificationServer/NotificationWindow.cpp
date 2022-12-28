@@ -6,6 +6,7 @@
 
 #include "NotificationWindow.h"
 #include <AK/HashMap.h>
+#include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Desktop.h>
@@ -21,14 +22,14 @@ static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
 
 static void update_notification_window_locations(Gfx::IntRect const& screen_rect)
 {
-    Gfx::IntRect last_window_rect;
+    Optional<Gfx::IntRect> last_window_rect;
     for (auto& window_entry : s_windows) {
         auto& window = window_entry.value;
         Gfx::IntPoint new_window_location;
-        if (last_window_rect.is_null())
-            new_window_location = screen_rect.top_right().translated(-window->rect().width() - 24, 7);
+        if (last_window_rect.has_value())
+            new_window_location = last_window_rect.value().bottom_left().translated(0, 10);
         else
-            new_window_location = last_window_rect.bottom_left().translated(0, 10);
+            new_window_location = screen_rect.top_right().translated(-window->rect().width() - 24, 7);
         if (window->rect().location() != new_window_location) {
             window->move_to(new_window_location);
             window->set_original_rect(window->rect());
@@ -46,10 +47,11 @@ NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& te
     set_resizable(false);
     set_minimizable(false);
 
-    Gfx::IntRect lowest_notification_rect_on_screen;
+    Optional<Gfx::IntRect> lowest_notification_rect_on_screen;
     for (auto& window_entry : s_windows) {
         auto& window = window_entry.value;
-        if (window->m_original_rect.y() > lowest_notification_rect_on_screen.y())
+        if (!lowest_notification_rect_on_screen.has_value()
+            || (window->m_original_rect.y() > lowest_notification_rect_on_screen.value().y()))
             lowest_notification_rect_on_screen = window->m_original_rect;
     }
 
@@ -58,8 +60,8 @@ NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& te
     rect.set_height(40);
     rect.set_location(GUI::Desktop::the().rect().top_right().translated(-rect.width() - 24, 7));
 
-    if (!lowest_notification_rect_on_screen.is_null())
-        rect.set_location(lowest_notification_rect_on_screen.bottom_left().translated(0, 10));
+    if (lowest_notification_rect_on_screen.has_value())
+        rect.set_location(lowest_notification_rect_on_screen.value().bottom_left().translated(0, 10));
 
     set_rect(rect);
 
