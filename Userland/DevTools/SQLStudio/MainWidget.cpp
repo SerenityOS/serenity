@@ -133,6 +133,11 @@ MainWidget::MainWidget()
         // TODO select the database to use in UI.
         constexpr auto database_name = "Test"sv;
 
+        if (m_connection_id.has_value()) {
+            m_sql_client->disconnect(*m_connection_id);
+            m_connection_id.clear();
+        }
+
         if (auto connection_id = m_sql_client->connect(database_name); connection_id.has_value()) {
             m_connection_id = connection_id.release_value();
             read_next_sql_statement_of_editor();
@@ -432,6 +437,9 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
 
 void MainWidget::read_next_sql_statement_of_editor()
 {
+    if (!m_connection_id.has_value())
+        return;
+
     StringBuilder piece;
     do {
         if (!piece.is_empty())
@@ -482,7 +490,7 @@ void MainWidget::read_next_sql_statement_of_editor()
 
     auto sql_statement = piece.to_deprecated_string();
 
-    if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, sql_statement); statement_id.has_value()) {
+    if (auto statement_id = m_sql_client->prepare_statement(*m_connection_id, sql_statement); statement_id.has_value()) {
         m_sql_client->async_execute_statement(*statement_id, {});
     } else {
         auto* editor = active_editor();
