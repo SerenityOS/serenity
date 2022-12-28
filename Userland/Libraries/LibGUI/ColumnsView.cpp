@@ -235,6 +235,9 @@ void ColumnsView::update_column_sizes()
         total_width += column.width + column_separator_width();
     }
 
+    // "Hide" last separator behind a window frame.
+    total_width -= column_separator_width();
+
     set_content_size({ total_width, total_height });
 }
 
