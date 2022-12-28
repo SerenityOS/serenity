@@ -56,6 +56,16 @@ void BlockFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableSp
         layout_inline_children(root(), layout_mode, available_space);
     else
         layout_block_level_children(root(), layout_mode, available_space);
+
+    // Assign collapsed margin left after children layout of formatting context to the last child box
+    if (m_margin_state.current_collapsed_margin()) {
+        for (auto* child_box = root().last_child_of_type<Box>(); child_box; child_box = child_box->previous_sibling_of_type<Box>()) {
+            if (child_box->is_absolutely_positioned() || child_box->is_floating())
+                continue;
+            m_state.get_mutable(*child_box).margin_bottom = m_margin_state.current_collapsed_margin();
+            break;
+        }
+    }
 }
 
 void BlockFormattingContext::parent_context_did_dimension_child_root_box()
@@ -358,6 +368,73 @@ static bool margins_collapse_through(Box const& box, LayoutState& state)
     return state.get(box).border_box_height() == 0;
 }
 
+float BlockFormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space)
+{
+    if (creates_block_formatting_context(box)) {
+        return compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box));
+    }
+
+    auto const& box_state = m_state.get(box);
+
+    auto display = box.display();
+    if (display.is_flex_inside()) {
+        // https://drafts.csswg.org/css-flexbox-1/#algo-main-container
+        // NOTE: The automatic block size of a block-level flex container is its max-content size.
+        return calculate_max_content_height(box, available_space.width);
+    }
+    if (display.is_grid_inside()) {
+        // https://www.w3.org/TR/css-grid-2/#intrinsic-sizes
+        // In both inline and block formatting contexts, the grid container’s auto block size is its
+        // max-content size.
+        return calculate_max_content_height(box, available_space.width);
+    }
+
+    // https://www.w3.org/TR/CSS22/visudet.html#normal-block
+    // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
+
+    // The element's height is the distance from its top content edge to the first applicable of the following:
+
+    // 1. the bottom edge of the last line box, if the box establishes a inline formatting context with one or more lines
+    if (box.children_are_inline() && !box_state.line_boxes.is_empty())
+        return box_state.line_boxes.last().bottom();
+
+    // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
+    // 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
+    if (!box.children_are_inline()) {
+        for (auto* child_box = box.last_child_of_type<Box>(); child_box; child_box = child_box->previous_sibling_of_type<Box>()) {
+            if (child_box->is_absolutely_positioned() || child_box->is_floating())
+                continue;
+
+            // FIXME: This is hack. If the last child is a list-item marker box, we ignore it for purposes of height calculation.
+            //        Perhaps markers should not be considered in-flow(?) Perhaps they should always be the first child of the list-item
+            //        box instead of the last child.
+            if (child_box->is_list_item_marker_box())
+                continue;
+
+            auto const& child_box_state = m_state.get(*child_box);
+
+            // Ignore anonymous block containers with no lines. These don't count as in-flow block boxes.
+            if (child_box->is_anonymous() && child_box->is_block_container() && child_box_state.line_boxes.is_empty())
+                continue;
+
+            if (margins_collapse_through(*child_box, m_state)) {
+                continue;
+            }
+
+            float margin_bottom = m_margin_state.current_collapsed_margin();
+            if (box_state.padding_bottom == 0 && box_state.border_bottom == 0) {
+                m_margin_state.box_last_in_flow_child_margin_bottom_collapsed = true;
+                margin_bottom = 0;
+            }
+
+            return max(0.0f, child_box_state.offset.y() + child_box_state.content_height() + child_box_state.border_box_bottom() + margin_bottom);
+        }
+    }
+
+    // 4. zero, otherwise
+    return 0;
+}
+
 void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& bottom_of_lowest_margin_box, AvailableSpace const& available_space, float& current_y)
 {
     auto& box_state = m_state.get_mutable(box);
@@ -430,9 +507,12 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     compute_height(box, available_space);
 
     if (!margins_collapse_through(box, m_state)) {
-        m_margin_state.reset();
+        if (!m_margin_state.box_last_in_flow_child_margin_bottom_collapsed) {
+            m_margin_state.reset();
+        }
         current_y = box_state.offset.y() + box_state.content_height() + box_state.border_box_bottom();
     }
+    m_margin_state.box_last_in_flow_child_margin_bottom_collapsed = false;
 
     m_margin_state.add_margin(box_state.margin_bottom);
     m_margin_state.update_block_waiting_for_final_y_position();
@@ -461,12 +541,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         return IterationDecision::Continue;
     });
 
-    // FIXME: The bottom margin of an in-flow block box with a 'height' of 'auto' collapses with its last in-flow block-level child's bottom margin, if:
-    // the box has no bottom padding, and
-    // the box has no bottom border, and
-    // the child's bottom margin neither collapses with a top margin that has clearance, nor (if the box's min-height is non-zero) with the box's top margin.
-    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
-    m_margin_state.reset();
+    m_margin_state.block_container_y_position_update_callback = {};
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);

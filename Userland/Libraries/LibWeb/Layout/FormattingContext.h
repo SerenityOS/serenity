@@ -105,7 +105,6 @@ protected:
     static float tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&);
     static float tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&);
     float compute_auto_height_for_block_formatting_context_root(BlockContainer const&) const;
-    float compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
