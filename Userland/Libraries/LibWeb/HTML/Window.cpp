@@ -1394,19 +1394,33 @@ JS_DEFINE_NATIVE_FUNCTION(Window::cancel_idle_callback)
     return JS::js_undefined();
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob-dev
 JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
-    auto string = TRY(vm.argument(0).to_string(vm));
-    auto decoded = decode_base64(StringView(string));
+    auto deprecated_string = TRY(vm.argument(0).to_string(vm));
+    auto string = String::from_utf8(deprecated_string).release_value_but_fixme_should_propagate_errors();
+
+    // must throw an "InvalidCharacterError" DOMException if data contains any character whose code point is greater than U+00FF
+    for (auto code_point : string.code_points()) {
+        if (code_point > 0x00FF)
+            return throw_completion(WebIDL::InvalidCharacterError::create(*vm.current_realm(), "Data contains characters outside the range U+0000 and U+00FF"));
+    }
+
+    // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data
+    // and then must apply forgiving-base64 encode to that byte sequence and return the result.
+    auto decoded = AK::decode_forgiving_base64(StringView(deprecated_string));
     if (decoded.is_error())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidFormat, "Base64");
 
-    // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
-    auto decoder = TextCodec::decoder_for("windows-1252");
-    VERIFY(decoder);
-    return JS::PrimitiveString::create(vm, decoder->to_utf8(decoded.value()));
+    // The bytes object might contain bytes greater than 128, encode them in UTF8
+    // NOTE: Any 8-bit encoding -> utf-8 decoder will work for this
+    auto text_decoder = TextCodec::decoder_for("windows-1252");
+    VERIFY(text_decoder);
+    auto text = text_decoder->to_utf8(decoded.release_value());
+
+    return JS::PrimitiveString::create(vm, DeprecatedString(text));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
