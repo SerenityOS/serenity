@@ -13,6 +13,24 @@
 
 namespace Web::Layout {
 
+class OccupationGrid {
+public:
+    OccupationGrid(int column_count, int row_count);
+    OccupationGrid();
+
+    void maybe_add_column(int needed_number_of_columns);
+    void maybe_add_row(int needed_number_of_rows);
+    void set_occupied(int column_start, int column_end, int row_start, int row_end);
+    void set_occupied(int column_index, int row_index);
+
+    int column_count() { return static_cast<int>(m_occupation_grid[0].size()); }
+    int row_count() { return static_cast<int>(m_occupation_grid.size()); }
+    bool is_occupied(int column_index, int row_index);
+
+private:
+    Vector<Vector<bool>> m_occupation_grid;
+};
+
 class GridFormattingContext final : public BlockFormattingContext {
 public:
     explicit GridFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
@@ -26,6 +44,14 @@ private:
     bool is_auto_positioned_row(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
+
+    struct PositionedBox {
+        Box const& box;
+        int row { 0 };
+        int row_span { 1 };
+        int column { 0 };
+        int column_span { 1 };
+    };
 
     struct TemporaryTrack {
         CSS::GridSize min_track_sizing_function;
@@ -66,27 +92,29 @@ private:
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
 
+    OccupationGrid m_occupation_grid;
+    Vector<PositionedBox> m_positioned_boxes;
+    Vector<Box const&> m_boxes_to_place;
+
     float get_free_space_x(AvailableSpace const& available_space);
     float get_free_space_y(Box const&);
 
     int get_line_index_by_line_name(DeprecatedString const& line_name, CSS::GridTrackSizeList);
-};
+    float resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&, Box const&);
+    size_t count_of_gap_columns();
+    size_t count_of_gap_rows();
+    float resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
+    int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&, Box const&);
+    int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
 
-class OccupationGrid {
-public:
-    OccupationGrid(int column_count, int row_count);
+    void place_item_with_row_and_column_position(Box const& box, Box const& child_box);
+    void place_item_with_row_position(Box const& box, Box const& child_box);
+    void place_item_with_column_position(Box const& box, Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
+    void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
-    void maybe_add_column(int needed_number_of_columns);
-    void maybe_add_row(int needed_number_of_rows);
-    void set_occupied(int column_start, int column_end, int row_start, int row_end);
-    void set_occupied(int column_index, int row_index);
-
-    int column_count() { return static_cast<int>(m_occupation_grid[0].size()); }
-    int row_count() { return static_cast<int>(m_occupation_grid.size()); }
-    bool is_occupied(int column_index, int row_index);
-
-private:
-    Vector<Vector<bool>> m_occupation_grid;
+    void initialize_grid_tracks(Box const&, AvailableSpace const&, int column_count, int row_count);
+    void calculate_sizes_of_columns(Box const&, AvailableSpace const&);
+    void calculate_sizes_of_rows(Box const&);
 };
 
 }
