@@ -81,6 +81,9 @@ private:
 
 template<typename T, typename E>
 class [[nodiscard]] ErrorOr {
+    template<typename U, typename F>
+    friend class ErrorOr;
+
 public:
     using ResultType = T;
     using ErrorType = E;
@@ -98,19 +101,22 @@ public:
 
     template<typename U>
     ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType> const& value)
+    requires(IsConvertible<U, T>)
         : m_value_or_error(value.m_value_or_error.visit([](U const& v) -> Variant<T, ErrorType> { return v; }, [](ErrorType const& error) -> Variant<T, ErrorType> { return error; }))
     {
     }
 
     template<typename U>
     ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>& value)
+    requires(IsConvertible<U, T>)
         : m_value_or_error(value.m_value_or_error.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
     {
     }
 
     template<typename U>
     ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>&& value)
-        : m_value_or_error(value.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
+    requires(IsConvertible<U, T>)
+        : m_value_or_error(value.m_value_or_error.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
     {
     }
 
