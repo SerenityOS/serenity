@@ -410,19 +410,32 @@ pushd "$DIR/Build/$ARCH"
 
     pushd gcc
         echo "XXX configure gcc and libgcc"
-        buildstep "gcc/configure" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
-                                            --target="$TARGET" \
-                                            --with-sysroot="$SYSROOT" \
-                                            --disable-nls \
-                                            --enable-shared \
-                                            --enable-languages=c,c++ \
-                                            --enable-default-pie \
-                                            --enable-lto \
-                                            --enable-threads=posix \
-                                            --enable-initfini-array \
-                                            --with-linker-hash-style=gnu \
-                                            ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-
+        if [ "$SYSTEM_NAME" != "Darwin" ]; then
+            buildstep "gcc/configure" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
+                --target="$TARGET" \
+                --with-sysroot="$SYSROOT" \
+                --disable-nls \
+                --enable-shared \
+                --enable-languages=c,c++ \
+                --enable-default-pie \
+                --enable-lto \
+                --enable-threads=posix \
+                --enable-initfini-array \
+                --with-linker-hash-style=gnu \
+                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+        else
+            buildstep "gcc/configure" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
+                --target="$TARGET" \
+                --with-sysroot="$SYSROOT" \
+                --disable-nls \
+                --enable-shared \
+                --enable-languages=c,c++ \
+                --enable-default-pie \
+                --enable-threads=posix \
+                --enable-initfini-array \
+                --with-linker-hash-style=gnu \
+                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+        fi
         echo "XXX build gcc and libgcc"
         buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
         buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
