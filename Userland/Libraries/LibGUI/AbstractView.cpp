@@ -493,6 +493,8 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
             if (!m_selection.contains(index))
                 clear_selection();
         } else if (selection_update == SelectionUpdate::Shift) {
+            if (!selection_start_index().is_valid())
+                set_selection_start_index(index);
             select_range(index);
         }
 
