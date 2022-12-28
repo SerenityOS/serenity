@@ -61,6 +61,7 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
             }
         }
 
+#if ARCH(X86_64)
         // 2 ** MAXPHYADDR - 1
         // Where MAXPHYADDR = physical_address_bit_width
         u64 max_physical_address = (1ULL << Processor::current().physical_address_bit_width()) - 1;
@@ -83,6 +84,7 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
         // we're checking for sign extension when putting it into a PDPTE. See issue #4584.
         for (auto table_entry : table.raw)
             VERIFY((table_entry & ~pdpte_bit_flags) <= max_physical_address);
+#endif
 
         MM.unquickmap_page();
     }
