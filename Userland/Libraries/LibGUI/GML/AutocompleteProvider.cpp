@@ -143,8 +143,8 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
         // FIXME: Don't show properties that are already specified in the scope.
         auto registration = Core::ObjectClassRegistration::find(class_name);
         if (registration && (registration->is_derived_from(widget_class) || registration->is_derived_from(layout_class))) {
-            if (auto instance = registration->construct()) {
-                for (auto& it : instance->properties()) {
+            if (auto instance = registration->construct(); !instance.is_error()) {
+                for (auto& it : instance.value()->properties()) {
                     if (!it.value->is_readonly() && it.key.matches(pattern))
                         identifier_entries.empend(DeprecatedString::formatted("{}: ", it.key), partial_input_length, CodeComprehension::Language::Unspecified, it.key);
                 }

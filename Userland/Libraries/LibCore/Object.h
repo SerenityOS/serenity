@@ -22,18 +22,18 @@
 
 namespace Core {
 
-#define REGISTER_ABSTRACT_CORE_OBJECT(namespace_, class_name)                                                                     \
-    namespace Core {                                                                                                              \
-    namespace Registration {                                                                                                      \
-    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name##sv, []() { return RefPtr<Object>(); }); \
-    }                                                                                                                             \
+#define REGISTER_ABSTRACT_CORE_OBJECT(namespace_, class_name)                                                                                                                             \
+    namespace Core {                                                                                                                                                                      \
+    namespace Registration {                                                                                                                                                              \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name##sv, []() { return Error::from_string_literal("Attempted to construct an abstract object."); }); \
+    }                                                                                                                                                                                     \
     }
 
-#define REGISTER_CORE_OBJECT(namespace_, class_name)                                                                                                 \
-    namespace Core {                                                                                                                                 \
-    namespace Registration {                                                                                                                         \
-    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name##sv, []() { return namespace_::class_name::construct(); }); \
-    }                                                                                                                                                \
+#define REGISTER_CORE_OBJECT(namespace_, class_name)                                                                                                  \
+    namespace Core {                                                                                                                                  \
+    namespace Registration {                                                                                                                          \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name##sv, []() { return namespace_::class_name::try_create(); }); \
+    }                                                                                                                                                 \
     }
 
 class ObjectClassRegistration {
@@ -41,12 +41,12 @@ class ObjectClassRegistration {
     AK_MAKE_NONMOVABLE(ObjectClassRegistration);
 
 public:
-    ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
+    ObjectClassRegistration(StringView class_name, Function<ErrorOr<NonnullRefPtr<Object>>()> factory, ObjectClassRegistration* parent_class = nullptr);
     ~ObjectClassRegistration() = default;
 
     StringView class_name() const { return m_class_name; }
     ObjectClassRegistration const* parent_class() const { return m_parent_class; }
-    RefPtr<Object> construct() const { return m_factory(); }
+    ErrorOr<NonnullRefPtr<Object>> construct() const { return m_factory(); }
     bool is_derived_from(ObjectClassRegistration const& base_class) const;
 
     static void for_each(Function<void(ObjectClassRegistration const&)>);
@@ -54,7 +54,7 @@ public:
 
 private:
     StringView m_class_name;
-    Function<RefPtr<Object>()> m_factory;
+    Function<ErrorOr<NonnullRefPtr<Object>>()> m_factory;
     ObjectClassRegistration* m_parent_class { nullptr };
 };
 

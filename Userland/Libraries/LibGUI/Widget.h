@@ -32,12 +32,12 @@ extern Core::ObjectClassRegistration registration_Widget;
 }
 }
 
-#define REGISTER_WIDGET(namespace_, class_name)                                                                                                       \
-    namespace Core {                                                                                                                                  \
-    namespace Registration {                                                                                                                          \
-    Core::ObjectClassRegistration registration_##class_name(                                                                                          \
-        #namespace_ "::" #class_name##sv, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Widget); \
-    }                                                                                                                                                 \
+#define REGISTER_WIDGET(namespace_, class_name)                                                                                                                                                     \
+    namespace Core {                                                                                                                                                                                \
+    namespace Registration {                                                                                                                                                                        \
+    Core::ObjectClassRegistration registration_##class_name(                                                                                                                                        \
+        #namespace_ "::" #class_name##sv, []() -> ErrorOr<NonnullRefPtr<Core::Object>> { return static_ptr_cast<Core::Object>(TRY(namespace_::class_name::try_create())); }, &registration_Widget); \
+    }                                                                                                                                                                                               \
     }
 
 namespace GUI {
@@ -353,7 +353,11 @@ public:
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& override_cursor() const { return m_override_cursor; }
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
-    bool load_from_gml(StringView);
+    ErrorOr<void> try_load_from_gml(StringView);
+    ErrorOr<void> try_load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
+
+    // FIXME: Replace all uses of load_from_gml() with try_load_from_gml()
+    bool load_from_gml(StringView gml_string);
     bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
 
     // FIXME: remove this when all uses of shrink_to_fit are eliminated
@@ -363,7 +367,7 @@ public:
     bool has_pending_drop() const;
 
     // In order for others to be able to call this, it needs to be public.
-    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
+    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
 
 protected:
     Widget();

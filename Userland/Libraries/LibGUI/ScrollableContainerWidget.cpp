@@ -102,7 +102,7 @@ void ScrollableContainerWidget::set_widget(GUI::Widget* widget)
     update_widget_position();
 }
 
-bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
@@ -116,15 +116,13 @@ bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> 
 
     auto content_widget_value = object->get_property("content_widget"sv);
     if (!content_widget_value.is_null() && !is<GUI::GML::Object>(content_widget_value.ptr())) {
-        dbgln("content widget is not an object");
-        return false;
+        return Error::from_string_literal("ScrollableContainerWidget content_widget is not an object");
     }
 
     auto has_children = false;
     object->for_each_child_object([&](auto) { has_children = true; });
     if (has_children) {
-        dbgln("children specified for ScrollableContainerWidget, but only 1 widget as content_widget is supported");
-        return false;
+        return Error::from_string_literal("Children specified for ScrollableContainerWidget, but only 1 widget as content_widget is supported");
     }
 
     if (!content_widget_value.is_null() && is<GUI::GML::Object>(content_widget_value.ptr())) {
@@ -133,19 +131,18 @@ bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> 
 
         RefPtr<Core::Object> child;
         if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
-            child = registration->construct();
+            child = TRY(registration->construct());
         } else {
             child = unregistered_child_handler(class_name);
         }
         if (!child)
-            return false;
+            return Error::from_string_literal("Unable to construct a Widget class for ScrollableContainerWidget content_widget property");
         auto widget_ptr = verify_cast<GUI::Widget>(child.ptr());
         set_widget(widget_ptr);
-        static_ptr_cast<Widget>(child)->load_from_gml_ast(content_widget.release_nonnull(), unregistered_child_handler);
-        return true;
+        TRY(static_ptr_cast<Widget>(child)->load_from_gml_ast(content_widget.release_nonnull(), unregistered_child_handler));
     }
 
-    return true;
+    return {};
 }
 
 }

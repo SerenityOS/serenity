@@ -1145,26 +1145,31 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
     }
 }
 
-bool Widget::load_from_gml(StringView gml_string)
+ErrorOr<void> Widget::try_load_from_gml(StringView gml_string)
 {
-    return load_from_gml(gml_string, [](DeprecatedString const& class_name) -> RefPtr<Core::Object> {
+    return try_load_from_gml(gml_string, [](DeprecatedString const& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
         return nullptr;
     });
 }
 
-bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::try_load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
 {
-    auto value = GML::parse_gml(gml_string);
-    if (value.is_error()) {
-        // FIXME: We don't report the error, so at least print it.
-        dbgln("Error while parsing GML: {}", value.error());
-        return false;
-    }
-    return load_from_gml_ast(value.release_value(), unregistered_child_handler);
+    auto value = TRY(GML::parse_gml(gml_string));
+    return load_from_gml_ast(value, unregistered_child_handler);
 }
 
-bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+bool Widget::load_from_gml(StringView gml_string)
+{
+    return !try_load_from_gml(gml_string).is_error();
+}
+
+bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+{
+    return !try_load_from_gml(gml_string, unregistered_child_handler).is_error();
+}
+
+ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
@@ -1180,21 +1185,20 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
     if (!layout.is_null()) {
         auto class_name = layout->name();
         if (class_name.is_null()) {
-            dbgln("Invalid layout class name");
-            return false;
+            return Error::from_string_literal("Invalid layout class name");
         }
 
         auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout"sv);
         if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
-            auto layout = registration->construct();
-            if (!layout || !registration->is_derived_from(layout_class)) {
+            auto layout = TRY(registration->construct());
+            if (!registration->is_derived_from(layout_class)) {
                 dbgln("Invalid layout class: '{}'", class_name.to_deprecated_string());
-                return false;
+                return Error::from_string_literal("Invalid layout class");
             }
-            set_layout(static_ptr_cast<Layout>(layout).release_nonnull());
+            set_layout(static_ptr_cast<Layout>(layout));
         } else {
             dbgln("Unknown layout class: '{}'", class_name.to_deprecated_string());
-            return false;
+            return Error::from_string_literal("Unknown layout class");
         }
 
         layout->for_each_property([&](auto key, auto value) {
@@ -1204,33 +1208,32 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget"sv);
     bool is_tab_widget = is<TabWidget>(*this);
-    object->for_each_child_object_interruptible([&](auto child_data) {
+    TRY(object->try_for_each_child_object([&](auto child_data) -> ErrorOr<void> {
         auto class_name = child_data->name();
 
         // It is very questionable if this pseudo object should exist, but it works fine like this for now.
         if (class_name == "GUI::Layout::Spacer") {
             if (!this->layout()) {
-                dbgln("Specified GUI::Layout::Spacer in GML, but the parent has no Layout.");
-                return IterationDecision::Break;
+                return Error::from_string_literal("Specified GUI::Layout::Spacer in GML, but the parent has no Layout.");
             }
             this->layout()->add_spacer();
         } else {
             RefPtr<Core::Object> child;
             if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
-                child = registration->construct();
-                if (!child || !registration->is_derived_from(widget_class)) {
+                child = TRY(registration->construct());
+                if (!registration->is_derived_from(widget_class)) {
                     dbgln("Invalid widget class: '{}'", class_name);
-                    return IterationDecision::Break;
+                    return Error::from_string_literal("Invalid widget class");
                 }
             } else {
                 child = unregistered_child_handler(class_name);
             }
             if (!child)
-                return IterationDecision::Break;
+                return Error::from_string_literal("Unable to construct a Widget class for child");
             add_child(*child);
 
             // This is possible as we ensure that Widget is a base class above.
-            static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler);
+            TRY(static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler));
 
             if (is_tab_widget) {
                 // FIXME: We need to have the child added before loading it so that it can access us. But the TabWidget logic requires the child to not be present yet.
@@ -1239,10 +1242,10 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
             }
         }
 
-        return IterationDecision::Continue;
-    });
+        return {};
+    }));
 
-    return true;
+    return {};
 }
 
 bool Widget::has_focus_within() const
