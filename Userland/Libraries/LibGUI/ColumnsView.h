@@ -32,6 +32,7 @@ private:
     int icon_size() const { return 16; }
     int icon_spacing() const { return 2; }
     int text_padding() const { return 2; }
+    int column_separator_width() const { return 1; }
 
     virtual void model_did_update(unsigned flags) override;
     virtual void second_paint_event(PaintEvent&) override;

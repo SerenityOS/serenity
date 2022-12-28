@@ -184,7 +184,7 @@ void ColumnsView::paint_event(PaintEvent& event)
         if (height() > separator_height)
             separator_height = height();
         painter.draw_line({ column_x + column.width, 0 }, { column_x + column.width, separator_height }, palette().button());
-        column_x += column.width + 1;
+        column_x += column.width + column_separator_width();
     }
 }
 
@@ -232,7 +232,7 @@ void ColumnsView::update_column_sizes()
             if (row_width > column.width)
                 column.width = row_width;
         }
-        total_width += column.width + 1;
+        total_width += column.width + column_separator_width();
     }
 
     set_content_size({ total_width, total_height });
@@ -251,7 +251,7 @@ Optional<ColumnsView::Column> ColumnsView::column_at_event_position(Gfx::IntPoin
         if (position.x() < column_x)
             break;
         if (position.x() > column_x + column.width) {
-            column_x += column.width;
+            column_x += column.width + column_separator_width();
             continue;
         }
 
