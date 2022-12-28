@@ -23,14 +23,8 @@ stages:
         parameters:
           os: 'macOS'
 
-  - stage: Toolchain
-    dependsOn: []
-
-    jobs:
-      - template: Meta/Azure/Toolchain.yml
-
   - stage: SerenityOS
-    dependsOn: Toolchain
+    dependsOn: []
 
     jobs:
       - template: Meta/Azure/Serenity.yml

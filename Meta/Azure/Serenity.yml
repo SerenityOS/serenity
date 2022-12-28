@@ -33,7 +33,7 @@ jobs:
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
 
     - script: ./Toolchain/BuildClang.sh --ci
-      displayName: Extract Toolchain
+      displayName: Build Toolchain
       env:
         TRY_USE_LOCAL_TOOLCHAIN: 'y'
 
