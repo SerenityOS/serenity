@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Dylan Katz <dykatz@uw.edu>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,104 +45,83 @@ MainWidget::MainWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto maybe_load_path = GUI::FilePicker::get_open_filepath(window());
-        if (!maybe_load_path.has_value())
-            return;
-        auto lexical_path = LexicalPath(maybe_load_path.release_value());
-        open_script_from_file(lexical_path);
+        if (auto result = GUI::FilePicker::get_open_filepath(window()); result.has_value())
+            open_script_from_file(LexicalPath { result.release_value() });
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
-        auto save_attempt = editor->save();
-        if (save_attempt.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save\n{}", save_attempt.release_error()));
+        auto* editor = active_editor();
+        VERIFY(editor);
+
+        if (auto result = editor->save(); result.is_error())
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
-        auto save_attempt = editor->save_as();
-        if (save_attempt.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save\n{}", save_attempt.release_error()));
+        auto* editor = active_editor();
+        VERIFY(editor);
+
+        if (auto result = editor->save_as(); result.is_error())
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
     });
 
     m_save_all_action = GUI::Action::create("Save All", { Mod_Ctrl | Mod_Alt, Key_S }, [this](auto&) {
-        auto current_active_widget = m_tab_widget->active_widget();
-        ErrorOr<void> error {};
+        auto* editor = active_editor();
+        VERIFY(editor);
+
         m_tab_widget->for_each_child_widget([&](auto& child) {
-            auto editor = dynamic_cast<ScriptEditor*>(&child);
-            if (!editor)
-                return IterationDecision::Continue;
-            m_tab_widget->set_active_widget(editor);
-            auto save_attempt = editor->save();
-            if (save_attempt.is_error()) {
-                error = save_attempt.release_error();
+            auto& editor = verify_cast<ScriptEditor>(child);
+            m_tab_widget->set_active_widget(&editor);
+
+            if (auto result = editor.save(); result.is_error()) {
+                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor.path(), result.error()));
+                return IterationDecision::Break;
+            } else if (!result.value()) {
                 return IterationDecision::Break;
             }
-            auto save_result = save_attempt.release_value();
-            if (save_result)
-                return IterationDecision::Continue;
-            return IterationDecision::Break;
+
+            return IterationDecision::Continue;
         });
-        if (error.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save all files\n{}", error.release_error()));
-        m_tab_widget->set_active_widget(current_active_widget);
+
+        m_tab_widget->set_active_widget(editor);
     });
 
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
+        auto* editor = active_editor();
+        VERIFY(editor);
+
         editor->copy_action().activate();
         update_editor_actions(editor);
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
+        auto* editor = active_editor();
+        VERIFY(editor);
+
         editor->cut_action().activate();
         update_editor_actions(editor);
     });
 
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
+        auto* editor = active_editor();
+        VERIFY(editor);
+
         editor->paste_action().activate();
         update_editor_actions(editor);
     });
 
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
+        auto* editor = active_editor();
+        VERIFY(editor);
+
         editor->document().undo();
         update_editor_actions(editor);
     });
 
     m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
-        if (!m_tab_widget)
-            return;
-        auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-        if (!editor)
-            return;
+        auto* editor = active_editor();
+        VERIFY(editor);
+
         editor->document().redo();
         update_editor_actions(editor);
     });
@@ -179,16 +159,12 @@ MainWidget::MainWidget()
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("script_tab_widget"sv);
 
     m_tab_widget->on_tab_close_click = [&](auto& widget) {
-        auto editor = dynamic_cast<ScriptEditor*>(&widget);
-        if (!editor)
-            return;
-        auto close_attempt = editor->attempt_to_close();
-        if (close_attempt.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save before closing\n{}", close_attempt.release_error()));
-            return;
-        }
-        if (close_attempt.release_value()) {
-            m_tab_widget->remove_tab(widget);
+        auto& editor = verify_cast<ScriptEditor>(widget);
+
+        if (auto result = editor.attempt_to_close(); result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save {}\n{}", editor.path(), result.error()));
+        } else if (result.value()) {
+            m_tab_widget->remove_tab(editor);
             update_title();
             on_editor_change();
         }
@@ -298,9 +274,9 @@ void MainWidget::open_new_script()
 void MainWidget::open_script_from_file(LexicalPath const& file_path)
 {
     auto& editor = m_tab_widget->add_tab<ScriptEditor>(file_path.title());
-    auto maybe_error = editor.open_script_from_file(file_path);
-    if (maybe_error.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, maybe_error.release_error()));
+
+    if (auto result = editor.open_script_from_file(file_path); result.is_error()) {
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, result.error()));
         return;
     }
 
@@ -320,15 +296,16 @@ bool MainWidget::request_close()
 {
     auto any_scripts_modified { false };
     auto is_script_modified = [&](auto& child) {
-        auto editor = dynamic_cast<ScriptEditor*>(&child);
-        if (!editor)
-            return IterationDecision::Continue;
-        if (editor->document().is_modified()) {
+        auto& editor = verify_cast<ScriptEditor>(child);
+
+        if (editor.document().is_modified()) {
             any_scripts_modified = true;
             return IterationDecision::Break;
         }
+
         return IterationDecision::Continue;
     };
+
     m_tab_widget->for_each_child_widget(is_script_modified);
     if (!any_scripts_modified)
         return true;
@@ -345,23 +322,29 @@ bool MainWidget::request_close()
 
     m_save_all_action->activate();
     any_scripts_modified = false;
+
     m_tab_widget->for_each_child_widget(is_script_modified);
     return !any_scripts_modified;
 }
 
+ScriptEditor* MainWidget::active_editor()
+{
+    if (!m_tab_widget || !m_tab_widget->active_widget())
+        return nullptr;
+    return verify_cast<ScriptEditor>(m_tab_widget->active_widget());
+}
+
 void MainWidget::update_title()
 {
-    auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
-    if (editor) {
+    if (auto* editor = active_editor())
         window()->set_title(DeprecatedString::formatted("{} - SQL Studio", editor->name()));
-    } else {
+    else
         window()->set_title("SQL Studio");
-    }
 }
 
 void MainWidget::on_editor_change()
 {
-    auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
+    auto* editor = active_editor();
     update_statusbar(editor);
     update_editor_actions(editor);
 }
@@ -390,18 +373,28 @@ void MainWidget::update_statusbar(ScriptEditor* editor)
 void MainWidget::update_editor_actions(ScriptEditor* editor)
 {
     if (!editor) {
+        m_save_action->set_enabled(false);
+        m_save_as_action->set_enabled(false);
+        m_save_all_action->set_enabled(false);
+        m_run_script_action->set_enabled(false);
+
         m_copy_action->set_enabled(false);
         m_cut_action->set_enabled(false);
         m_paste_action->set_enabled(false);
         m_undo_action->set_enabled(false);
         m_redo_action->set_enabled(false);
+
         return;
     }
+
+    m_save_action->set_enabled(true);
+    m_save_as_action->set_enabled(true);
+    m_save_all_action->set_enabled(true);
+    m_run_script_action->set_enabled(true);
 
     m_copy_action->set_enabled(editor->copy_action().is_enabled());
     m_cut_action->set_enabled(editor->cut_action().is_enabled());
     m_paste_action->set_enabled(editor->paste_action().is_enabled());
-
     m_undo_action->set_enabled(editor->undo_action().is_enabled());
     m_redo_action->set_enabled(editor->redo_action().is_enabled());
 }
@@ -492,7 +485,7 @@ void MainWidget::read_next_sql_statement_of_editor()
     if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, sql_statement); statement_id.has_value()) {
         m_sql_client->async_execute_statement(*statement_id, {});
     } else {
-        auto* editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
+        auto* editor = active_editor();
         VERIFY(editor);
 
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not parse {}\n{}", editor->path(), sql_statement));
@@ -501,16 +494,16 @@ void MainWidget::read_next_sql_statement_of_editor()
 
 Optional<DeprecatedString> MainWidget::read_next_line_of_editor()
 {
-    auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
+    auto* editor = active_editor();
     if (!editor)
         return {};
-    if (m_current_line_for_parsing < editor->document().line_count()) {
-        DeprecatedString result = editor->document().line(m_current_line_for_parsing).to_utf8();
-        m_current_line_for_parsing++;
-        return result;
-    } else {
+
+    if (m_current_line_for_parsing >= editor->document().line_count())
         return {};
-    }
+
+    auto result = editor->document().line(m_current_line_for_parsing).to_utf8();
+    ++m_current_line_for_parsing;
+    return result;
 }
 
 }
