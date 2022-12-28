@@ -4,10 +4,16 @@ serenity_component(
     TARGETS SQLStudio
 )
 
+compile_gml(SQLStudio.gml SQLStudioGML.h sql_studio_gml)
+
 set(SOURCES
     main.cpp
     MainWidget.cpp
     ScriptEditor.cpp
+)
+
+set(GENERATED_SOURCES
+    SQLStudioGML.h
 )
 
 serenity_app(SQLStudio ICON app-sql-studio)
