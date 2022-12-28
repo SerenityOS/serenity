@@ -43,6 +43,7 @@ public:
     void set_dom_json(StringView);
     void clear_dom_json();
     void set_dom_node_properties_json(Selection, StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json, StringView node_box_sizing_json);
+    void set_accessibility_json(StringView);
 
     void set_selection(Selection);
     void select_default_node();
@@ -59,6 +60,7 @@ private:
     RefPtr<WebView::OutOfProcessWebView> m_web_view;
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
+    RefPtr<GUI::TreeView> m_accessibility_tree_view;
     RefPtr<GUI::TableView> m_computed_style_table_view;
     RefPtr<GUI::TableView> m_resolved_style_table_view;
     RefPtr<GUI::TableView> m_custom_properties_table_view;

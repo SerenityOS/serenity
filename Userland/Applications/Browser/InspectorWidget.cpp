@@ -15,6 +15,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWebView/AccessibilityTreeModel.h>
 #include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/StylePropertiesModel.h>
@@ -90,6 +91,11 @@ InspectorWidget::InspectorWidget()
         const auto& index = m_dom_tree_view->selection().first();
         set_selection(index);
     };
+
+    auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility");
+    accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>();
+    accessibility_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_accessibility_tree_view = accessibility_tree_container.add<GUI::TreeView>();
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
@@ -210,6 +216,13 @@ void InspectorWidget::clear_style_json()
     m_element_size_view->set_box_model({});
     m_element_size_view->set_node_content_width(0);
     m_element_size_view->set_node_content_height(0);
+}
+
+void InspectorWidget::set_accessibility_json(StringView json)
+{
+    m_accessibility_tree_view->set_model(WebView::AccessibilityTreeModel::create(json, *m_accessibility_tree_view));
+
+    // TODO: Support selections from accessibility tab
 }
 
 }
