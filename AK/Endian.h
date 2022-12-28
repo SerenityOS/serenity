@@ -43,11 +43,11 @@ ALWAYS_INLINE constexpr T convert_between_host_and_little_endian(T value)
     return value;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     if constexpr (sizeof(T) == 8)
-        return __builtin_bswap64(value);
+        return static_cast<T>(__builtin_bswap64(static_cast<u64>(value)));
     if constexpr (sizeof(T) == 4)
-        return __builtin_bswap32(value);
+        return static_cast<T>(__builtin_bswap32(static_cast<u32>(value)));
     if constexpr (sizeof(T) == 2)
-        return __builtin_bswap16(value);
+        return static_cast<T>(__builtin_bswap16(static_cast<u16>(value)));
     if constexpr (sizeof(T) == 1)
         return value;
 #endif
@@ -58,11 +58,11 @@ ALWAYS_INLINE constexpr T convert_between_host_and_big_endian(T value)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     if constexpr (sizeof(T) == 8)
-        return __builtin_bswap64(value);
+        return static_cast<T>(__builtin_bswap64(static_cast<u64>(value)));
     if constexpr (sizeof(T) == 4)
-        return __builtin_bswap32(value);
+        return static_cast<T>(__builtin_bswap32(static_cast<u32>(value)));
     if constexpr (sizeof(T) == 2)
-        return __builtin_bswap16(value);
+        return static_cast<T>(__builtin_bswap16(static_cast<u16>(value)));
     if constexpr (sizeof(T) == 1)
         return value;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
