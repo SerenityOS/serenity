@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Dylan Katz <dykatz@uw.edu>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,15 +38,22 @@ ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
     return {};
 }
 
+static ErrorOr<void> save_text_to_file(StringView filename, DeprecatedString text)
+{
+    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Write));
+
+    if (!text.is_empty())
+        TRY(file->write_entire_buffer(text.bytes()));
+
+    return {};
+}
+
 ErrorOr<bool> ScriptEditor::save()
 {
     if (m_path.is_empty())
         return save_as();
 
-    auto file = TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Write));
-    auto editor_text = text();
-    TRY(file->write_entire_buffer(editor_text.bytes()));
-
+    TRY(save_text_to_file(m_path, text()));
     document().set_unmodified();
     return true;
 }
@@ -55,12 +63,9 @@ ErrorOr<bool> ScriptEditor::save_as()
     auto maybe_save_path = GUI::FilePicker::get_save_filepath(window(), name(), "sql");
     if (!maybe_save_path.has_value())
         return false;
+
     auto save_path = maybe_save_path.release_value();
-
-    auto file = TRY(Core::Stream::File::open(save_path, Core::Stream::OpenMode::Write));
-    auto editor_text = text();
-    TRY(file->write_entire_buffer(editor_text.bytes()));
-
+    TRY(save_text_to_file(save_path, text()));
     m_path = save_path;
 
     auto lexical_path = LexicalPath(save_path);
