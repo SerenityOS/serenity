@@ -19,6 +19,8 @@ namespace AK {
 
 [[nodiscard]] ErrorOr<ByteBuffer> decode_base64(StringView);
 
+[[nodiscard]] ErrorOr<ByteBuffer> decode_forgiving_base64(StringView);
+
 [[nodiscard]] ErrorOr<String> encode_base64(ReadonlyBytes);
 }
 
