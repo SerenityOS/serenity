@@ -263,7 +263,7 @@ static HashMap<StringView, ObjectClassRegistration*>& object_classes()
     return s_map;
 }
 
-ObjectClassRegistration::ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class)
+ObjectClassRegistration::ObjectClassRegistration(StringView class_name, Function<ErrorOr<NonnullRefPtr<Object>>()> factory, ObjectClassRegistration* parent_class)
     : m_class_name(class_name)
     , m_factory(move(factory))
     , m_parent_class(parent_class)

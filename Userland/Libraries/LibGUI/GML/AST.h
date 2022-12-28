@@ -202,18 +202,18 @@ public:
         }
     }
 
-    // Uses IterationDecision to allow the callback to interrupt the iteration, like a for-loop break.
-    template<IteratorFunction<NonnullRefPtr<Object>> Callback>
-    void for_each_child_object_interruptible(Callback callback)
+    template<FallibleFunction<NonnullRefPtr<Object>> Callback>
+    ErrorOr<void> try_for_each_child_object(Callback callback)
     {
         for (NonnullRefPtr<Node> child : m_sub_objects) {
             // doesn't capture layout as intended, as that's behind a kv-pair
             if (is<Object>(child.ptr())) {
                 auto object = static_ptr_cast<Object>(child);
-                if (callback(object) == IterationDecision::Break)
-                    return;
+                TRY(callback(object));
             }
         }
+
+        return {};
     }
 
     RefPtr<Object> layout_object() const
