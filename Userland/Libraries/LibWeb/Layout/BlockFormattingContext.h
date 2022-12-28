@@ -55,6 +55,8 @@ public:
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 
+    float compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
+
     void compute_width_for_floating_box(Box const&, AvailableSpace const&);
 
     void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const&, AvailableSpace const&);
@@ -114,6 +116,7 @@ private:
     struct BlockMarginState {
         Vector<float> current_collapsible_margins;
         Function<void(float)> block_container_y_position_update_callback;
+        bool box_last_in_flow_child_margin_bottom_collapsed { false };
 
         void add_margin(float margin)
         {

@@ -274,63 +274,6 @@ static Gfx::FloatSize solve_replaced_size_constraint(LayoutState const& state, f
     return { w, h };
 }
 
-float FormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space) const
-{
-    if (creates_block_formatting_context(box))
-        return compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box));
-
-    auto const& box_state = m_state.get(box);
-
-    auto display = box.display();
-    if (display.is_flex_inside()) {
-        // https://drafts.csswg.org/css-flexbox-1/#algo-main-container
-        // NOTE: The automatic block size of a block-level flex container is its max-content size.
-        return calculate_max_content_height(box, available_space.width);
-    }
-    if (display.is_grid_inside()) {
-        // https://www.w3.org/TR/css-grid-2/#intrinsic-sizes
-        // In both inline and block formatting contexts, the grid container’s auto block size is its
-        // max-content size.
-        return calculate_max_content_height(box, available_space.width);
-    }
-
-    // https://www.w3.org/TR/CSS22/visudet.html#normal-block
-    // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
-
-    // The element's height is the distance from its top content edge to the first applicable of the following:
-
-    // 1. the bottom edge of the last line box, if the box establishes a inline formatting context with one or more lines
-    if (box.children_are_inline() && !box_state.line_boxes.is_empty())
-        return box_state.line_boxes.last().bottom();
-
-    // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
-    // FIXME: 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
-    if (!box.children_are_inline()) {
-        for (auto* child_box = box.last_child_of_type<Box>(); child_box; child_box = child_box->previous_sibling_of_type<Box>()) {
-            if (child_box->is_absolutely_positioned() || child_box->is_floating())
-                continue;
-
-            // FIXME: This is hack. If the last child is a list-item marker box, we ignore it for purposes of height calculation.
-            //        Perhaps markers should not be considered in-flow(?) Perhaps they should always be the first child of the list-item
-            //        box instead of the last child.
-            if (child_box->is_list_item_marker_box())
-                continue;
-
-            auto const& child_box_state = m_state.get(*child_box);
-
-            // Ignore anonymous block containers with no lines. These don't count as in-flow block boxes.
-            if (child_box->is_anonymous() && child_box->is_block_container() && child_box_state.line_boxes.is_empty())
-                continue;
-
-            // FIXME: Handle margin collapsing.
-            return max(0.0f, child_box_state.offset.y() + child_box_state.content_height() + child_box_state.margin_box_bottom());
-        }
-    }
-
-    // 4. zero, otherwise
-    return 0;
-}
-
 // https://www.w3.org/TR/CSS22/visudet.html#root-height
 float FormattingContext::compute_auto_height_for_block_formatting_context_root(BlockContainer const& root) const
 {
