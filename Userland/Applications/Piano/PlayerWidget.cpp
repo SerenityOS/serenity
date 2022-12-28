@@ -16,20 +16,32 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 
+ErrorOr<NonnullRefPtr<PlayerWidget>> PlayerWidget::create(TrackManager& manager, AudioPlayerLoop& loop)
+{
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PlayerWidget(manager, loop)));
+
+    widget->m_play_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv));
+    widget->m_pause_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv));
+    widget->m_back_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv));    // Go back a note
+    widget->m_next_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)); // Advance a note
+    widget->m_add_track_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png"sv));
+    widget->m_next_track_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png"sv));
+    widget->initialize();
+
+    return widget;
+}
+
 PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
     : m_track_manager(manager)
     , m_audio_loop(loop)
 {
+}
+
+void PlayerWidget::initialize()
+{
     set_layout<GUI::HorizontalBoxLayout>();
     set_fill_with_background_color(true);
     m_track_number_choices.append("1");
-
-    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_back_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors();    // Go back a note
-    m_next_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(); // Advance a note
-    m_add_track_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_next_track_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png"sv).release_value_but_fixme_should_propagate_errors();
 
     RefPtr<GUI::Label> label = add<GUI::Label>("Track");
     label->set_max_width(75);

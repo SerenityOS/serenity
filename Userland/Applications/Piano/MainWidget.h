@@ -25,15 +25,18 @@ class PlayerWidget;
 class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget)
 public:
+    static ErrorOr<NonnullRefPtr<MainWidget>> create(TrackManager&, AudioPlayerLoop&);
     virtual ~MainWidget() override = default;
 
-    void add_track_actions(GUI::Menu&);
+    ErrorOr<void> add_track_actions(GUI::Menu&);
 
     void set_octave_and_ensure_note_change(DSP::Keyboard::Direction);
     void set_octave_and_ensure_note_change(int);
 
 private:
     explicit MainWidget(TrackManager&, AudioPlayerLoop&);
+
+    void initialize();
 
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
