@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Dylan Katz <dykatz@uw.edu>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,6 +31,8 @@ public:
 
 private:
     MainWidget();
+
+    ScriptEditor* active_editor();
 
     void update_title();
     void on_editor_change();
