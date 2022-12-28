@@ -11,14 +11,18 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/PNGWriter.h>
+#include <LibGfx/Painter.h>
 
 PresenterWidget::PresenterWidget()
 {
@@ -67,6 +71,9 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     TRY(presentation_menu.try_add_action(previous_slide_action));
     m_next_slide_action = next_slide_action;
     m_previous_slide_action = previous_slide_action;
+
+    auto export_slides_action = GUI::Action::create("&Export Slides...", { KeyModifier::Mod_Ctrl, KeyCode::Key_E }, [this](auto&) { this->on_export_slides_action(); });
+    TRY(presentation_menu.try_add_action(export_slides_action));
 
     TRY(presentation_menu.try_add_action(GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, [this](auto&) {
         this->window()->set_fullscreen(true);
@@ -140,4 +147,134 @@ void PresenterWidget::paint_event([[maybe_unused]] GUI::PaintEvent& event)
     painter.add_clip_rect(clip_rect);
 
     m_current_presentation->paint(painter);
+}
+
+void PresenterWidget::on_export_slides_action()
+{
+    if (!m_current_presentation)
+        return;
+    auto maybe_path = GUI::FilePicker::get_save_filepath(this->window(), DeprecatedString::formatted("{}-export", m_current_presentation->title()), "png");
+    if (!maybe_path.has_value())
+        return;
+    auto path = LexicalPath { maybe_path.release_value() };
+    auto prefix = LexicalPath::join(path.dirname(), path.title());
+    auto slides = m_current_presentation->slides();
+
+    // FIXME: Allow the user to change the export size; we just make sure it's above 1000px wide and high.
+    auto size = m_current_presentation->normative_size();
+    VERIFY(size.width() > 0 && size.height() > 0);
+    auto display_scale = 1;
+    while (size.height() < 1000 || size.width() < 1000) {
+        display_scale *= 2;
+        size.scale_by(2);
+    }
+
+    auto maybe_slide_image = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size);
+    if (maybe_slide_image.is_error())
+        return;
+    auto slide_image = maybe_slide_image.release_value();
+
+    Core::EventLoop progress_event_loop;
+
+    m_export_done.store(false);
+    m_exporter = Threading::BackgroundAction<int>::construct([=, this](auto&) {
+        auto painter = Gfx::Painter { slide_image };
+        for (size_t i = 0; i < slides.size(); ++i) {
+            m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Starting }; m_export_state_updated.broadcast(); });
+            auto const& slide = slides[i];
+            for (size_t frame = 0; frame < slide.frame_count(); ++frame) {
+                m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Starting }; m_export_state_updated.broadcast(); });
+                // FIXME: Should not be necessary, the slide should paint a background instead.
+                painter.clear_rect({ { 0, 0 }, size }, Gfx::Color::White);
+                painter.clear_clip_rect();
+
+                m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Rendering }; m_export_state_updated.broadcast(); });
+                slide.paint(painter, frame, { display_scale, display_scale });
+
+                m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Writing }; m_export_state_updated.broadcast(); });
+                auto path = DeprecatedString::formatted("{}-{:03}-{:02}.png", prefix, i, frame);
+                auto png = Gfx::PNGWriter::encode(slide_image);
+                if (png.is_error()) {
+                    // Do not store "done" here so that the progress window stays visible and displays the error until the user closes it.
+                    m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Error }; m_export_state_updated.broadcast(); });
+                    return 0;
+                }
+
+                auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
+                if (file.is_error()) {
+                    dbgln("failed to write to path {}: {}", path, file.error());
+                    m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Error }; m_export_state_updated.broadcast(); });
+                    return 0;
+                }
+
+                auto result = file.value()->write_entire_buffer(png.value());                    
+                if (result.is_error()) {
+                    m_export_state.with_locked([&](auto& state) { state = { static_cast<unsigned>(i), SlideProgress::Error }; m_export_state_updated.broadcast(); });
+                    return 0;
+                }
+            }
+        }
+
+        m_export_state_updated.broadcast();
+        m_export_done.store(true);
+        return 0; },
+        nullptr);
+
+    auto maybe_progress_window = GUI::Window::try_create(this->window());
+    // The exporter will still run, we just won't get feedback if we're OOMing here.
+    if (maybe_progress_window.is_error())
+        return;
+    m_progress_window = maybe_progress_window.release_value();
+    m_progress_window->set_title("Exporting Presentation");
+    m_progress_window->set_minimizable(false);
+    auto maybe_progress_bar = m_progress_window->try_set_main_widget<GUI::Progressbar>();
+    if (maybe_progress_bar.is_error())
+        return;
+    m_progress_bar = maybe_progress_bar.release_value();
+    m_progress_bar->set_format(GUI::Progressbar::Format::ValueSlashMax);
+    m_progress_bar->set_min(1);
+    m_progress_bar->set_max(static_cast<int>(slides.size()));
+    m_progress_bar->set_min_size({ 300, 100 });
+    m_progress_window->show();
+
+    progress_event_loop.deferred_invoke([this] { update_export_status(); });
+
+    progress_event_loop.spin_until([&] { return !m_progress_window->is_visible(); });
+    m_export_done.store(true);
+    update_export_status();
+}
+
+void PresenterWidget::update_export_status()
+{
+    if (!m_progress_window || !m_current_presentation)
+        return;
+
+    if (m_export_done.load()) {
+        m_progress_window->hide();
+        this->window()->set_progress({});
+        return;
+    }
+
+    auto const status = m_export_state.with_locked([&](auto status) {
+        // It is okay to return on spurious wakeups here, then we just update too often.
+        m_export_state_updated.wait();
+        return status;
+    });
+    m_progress_bar->set_value(status.current_slide + 1);
+    this->window()->set_progress((status.current_slide * 100) / m_current_presentation->slides().size());
+
+    if (status.progress == SlideProgress::Error) {
+        // Don't hide the window so the user sees the error.
+        m_progress_bar->set_text(DeprecatedString::formatted("Error while writing slide {}!", status.current_slide + 1));
+        return;
+    }
+
+    auto const status_text = status.progress == SlideProgress::Starting ? "Starting "sv
+        : status.progress == SlideProgress::Rendering                   ? "Rendering "sv
+        : status.progress == SlideProgress::Writing                     ? "Writing "sv
+                                                                        : ""sv;
+    m_progress_bar->set_text(status_text);
+    m_progress_bar->update();
+
+    Core::EventLoop::current().deferred_invoke([&] { update_export_status(); });
 }

@@ -15,8 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to ImageDecoder and WindowServer.
-    TRY(Core::System::pledge("stdio rpath unix sendfd recvfd"));
+    // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to ImageDecoder and WindowServer, wpath and cpath are required for exporting, thread is required for running exports and other stuff on separate threads.
+    TRY(Core::System::pledge("stdio rpath wpath cpath unix sendfd recvfd thread"));
 
     DeprecatedString file_to_load;
     Core::ArgsParser argument_parser;

@@ -33,6 +33,7 @@ public:
     Gfx::IntSize normative_size() const { return m_normative_size; }
 
     Slide const& current_slide() const { return m_slides[m_current_slide.value()]; }
+    Span<Slide const> slides() const { return m_slides; }
     unsigned current_slide_number() const { return m_current_slide.value(); }
     unsigned current_frame_in_slide_number() const { return m_current_frame_in_slide.value(); }
 

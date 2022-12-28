@@ -21,4 +21,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Presenter ICON app-display-settings)
-target_link_libraries(Presenter PRIVATE LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibConfig LibCore LibMain)
+target_link_libraries(Presenter PRIVATE LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibConfig LibCore LibMain LibThreading)
