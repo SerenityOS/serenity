@@ -796,7 +796,7 @@ void AbstractView::drag_move_event(DragEvent& event)
 
     if (acceptable) {
         m_automatic_scroll_delta = automatic_scroll_delta_from_position(event.position());
-        set_automatic_scrolling_timer_active(!m_automatic_scroll_delta.is_null());
+        set_automatic_scrolling_timer_active(!m_automatic_scroll_delta.is_zero());
     }
 
     if (m_drop_candidate_index != new_drop_candidate_index) {
@@ -819,7 +819,7 @@ void AbstractView::drag_leave_event(Event&)
 
 void AbstractView::automatic_scrolling_timer_did_fire()
 {
-    if (m_automatic_scroll_delta.is_null())
+    if (m_automatic_scroll_delta.is_zero())
         return;
 
     vertical_scrollbar().increase_slider_by(m_automatic_scroll_delta.y());

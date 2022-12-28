@@ -943,7 +943,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
 
     m_resize_window->apply_minimum_size(new_rect);
 
-    if (!m_resize_window->size_increment().is_null()) {
+    if (!m_resize_window->size_increment().is_empty()) {
         int horizontal_incs = (new_rect.width() - m_resize_window->base_size().width()) / m_resize_window->size_increment().width();
         new_rect.set_width(m_resize_window->base_size().width() + horizontal_incs * m_resize_window->size_increment().width());
         int vertical_incs = (new_rect.height() - m_resize_window->base_size().height()) / m_resize_window->size_increment().height();

@@ -13,7 +13,7 @@ constexpr float wheel_zoom_factor = 8.0f;
 
 void AbstractZoomPanWidget::set_scale(float new_scale)
 {
-    if (m_original_rect.is_null())
+    if (m_original_rect.is_empty())
         return;
 
     m_scale = clamp(new_scale, m_min_scale, m_max_scale);
@@ -36,7 +36,7 @@ void AbstractZoomPanWidget::scale_by(float delta)
 
 void AbstractZoomPanWidget::scale_centered(float new_scale, Gfx::IntPoint center)
 {
-    if (m_original_rect.is_null())
+    if (m_original_rect.is_empty())
         return;
 
     new_scale = clamp(new_scale, m_min_scale, m_max_scale);
@@ -154,7 +154,7 @@ void AbstractZoomPanWidget::mouseup_event(GUI::MouseEvent& event)
 
 void AbstractZoomPanWidget::relayout()
 {
-    if (m_original_rect.is_null())
+    if (m_original_rect.is_empty())
         return;
 
     m_content_rect.set_location({
