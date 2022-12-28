@@ -67,6 +67,11 @@ unsigned Presentation::total_frame_count() const
     return frame_count;
 }
 
+unsigned Presentation::total_slide_count() const
+{
+    return m_slides.size();
+}
+
 unsigned Presentation::global_frame_number() const
 {
     unsigned frame_count = 0;
@@ -103,6 +108,13 @@ void Presentation::go_to_first_slide()
 {
     m_current_frame_in_slide = 0;
     m_current_slide = 0;
+}
+
+void Presentation::go_to_slide(unsigned slide_index)
+{
+    VERIFY(m_slides.size() > slide_index);
+    m_current_slide = slide_index;
+    m_current_frame_in_slide = 0;
 }
 
 ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView file_name, NonnullRefPtr<GUI::Window> window)

@@ -37,11 +37,13 @@ public:
     unsigned current_frame_in_slide_number() const { return m_current_frame_in_slide.value(); }
 
     unsigned total_frame_count() const;
+    unsigned total_slide_count() const;
     unsigned global_frame_number() const;
 
     void next_frame();
     void previous_frame();
     void go_to_first_slide();
+    void go_to_slide(unsigned slide_index);
 
     // This assumes that the caller has clipped the painter to exactly the display area.
     void paint(Gfx::Painter& painter) const;

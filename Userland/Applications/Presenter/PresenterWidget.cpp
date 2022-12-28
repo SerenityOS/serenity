@@ -96,8 +96,11 @@ void PresenterWidget::set_file(StringView file_name)
 
 void PresenterWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && window()->is_fullscreen())
+    if (event.key() == Key_Escape && window()->is_fullscreen()) {
         window()->set_fullscreen(false);
+        event.accept();
+        return;
+    }
 
     // Alternate shortcuts for forward and backward
     switch (event.key()) {
@@ -105,8 +108,17 @@ void PresenterWidget::keydown_event(GUI::KeyEvent& event)
     case Key_PageDown:
     case Key_Space:
     case Key_N:
-    case Key_Return:
         m_next_slide_action->activate();
+        event.accept();
+        break;
+    case Key_Return:
+        if (!m_current_key_sequence.is_empty()) {
+            go_to_slide_from_key_sequence();
+            m_current_key_sequence.clear();
+            update();
+        } else {
+            m_next_slide_action->activate();
+        }
         event.accept();
         break;
     case Key_Up:
@@ -116,10 +128,75 @@ void PresenterWidget::keydown_event(GUI::KeyEvent& event)
         m_previous_slide_action->activate();
         event.accept();
         break;
+    case Key_0:
+    case Key_1:
+    case Key_2:
+    case Key_3:
+    case Key_4:
+    case Key_5:
+    case Key_6:
+    case Key_7:
+    case Key_8:
+    case Key_9:
+        m_current_key_sequence.append(event.key());
+        event.accept();
+        break;
     default:
         event.ignore();
         break;
     }
+}
+
+void PresenterWidget::go_to_slide_from_key_sequence()
+{
+    VERIFY(!m_current_key_sequence.is_empty());
+    unsigned human_slide_number = 0;
+    for (auto key : m_current_key_sequence) {
+        unsigned value = 0;
+        switch (key) {
+        case Key_0:
+            value = 0;
+            break;
+        case Key_1:
+            value = 1;
+            break;
+        case Key_2:
+            value = 2;
+            break;
+        case Key_3:
+            value = 3;
+            break;
+        case Key_4:
+            value = 4;
+            break;
+        case Key_5:
+            value = 5;
+            break;
+        case Key_6:
+            value = 6;
+            break;
+        case Key_7:
+            value = 7;
+            break;
+        case Key_8:
+            value = 8;
+            break;
+        case Key_9:
+            value = 9;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+        human_slide_number = value + human_slide_number * 10;
+    }
+    // We explicitly do not want to VERIFY, return error or show an error message to the user. We will just ignore invalid slide jump key sequences.
+    if (human_slide_number == 0)
+        return;
+    unsigned slide_index = human_slide_number - 1;
+    if (slide_index >= m_current_presentation->total_slide_count())
+        return;
+
+    m_current_presentation->go_to_slide(slide_index);
 }
 
 void PresenterWidget::paint_event([[maybe_unused]] GUI::PaintEvent& event)

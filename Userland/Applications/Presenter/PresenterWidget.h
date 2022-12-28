@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Presentation.h"
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/SettingsWindow.h>
@@ -33,8 +34,12 @@ protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
+    void go_to_slide_from_key_sequence();
+
     OwnPtr<Presentation> m_current_presentation;
     RefPtr<GUI::Action> m_next_slide_action;
     RefPtr<GUI::Action> m_previous_slide_action;
     RefPtr<GUI::SettingsWindow> m_settings_window;
+
+    Vector<KeyCode, 3> m_current_key_sequence;
 };
