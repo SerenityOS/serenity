@@ -18,6 +18,8 @@ class MutexProtected {
     AK_MAKE_NONMOVABLE(MutexProtected);
     using ProtectedType = T;
 
+    friend class ConditionVariable;
+
 public:
     ALWAYS_INLINE MutexProtected() = default;
     ALWAYS_INLINE MutexProtected(T&& value)
