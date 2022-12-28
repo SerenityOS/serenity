@@ -267,8 +267,8 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     column_start -= 1;
     m_positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
 
-    m_occupation_grid.maybe_add_row(row_start + row_span);
-    m_occupation_grid.maybe_add_column(column_start + column_span);
+    m_occupation_grid.maybe_add_row(row_start + 1);
+    m_occupation_grid.maybe_add_column(column_start + 1);
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 }
 
@@ -505,8 +505,8 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
         auto_placement_cursor_y++;
     auto_placement_cursor_x = column_start;
 
-    m_occupation_grid.maybe_add_column(auto_placement_cursor_x + column_span);
-    m_occupation_grid.maybe_add_row(auto_placement_cursor_y + row_span);
+    m_occupation_grid.maybe_add_column(auto_placement_cursor_x + 1);
+    m_occupation_grid.maybe_add_row(auto_placement_cursor_y + 1);
 
     // 4.1.1.2. Increment the cursor's row position until a value is found where the grid item does not
     // overlap any occupied grid cells (creating new rows in the implicit grid as necessary).
