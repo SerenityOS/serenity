@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <DevTools/SQLStudio/SQLStudioGML.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -29,12 +30,14 @@
 #include "MainWidget.h"
 #include "ScriptEditor.h"
 
+REGISTER_WIDGET(SQLStudio, MainWidget);
+
 namespace SQLStudio {
 
 MainWidget::MainWidget()
 {
-    set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>();
+    if (!load_from_gml(sql_studio_gml))
+        VERIFY_NOT_REACHED();
 
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         open_new_script();
@@ -158,9 +161,7 @@ MainWidget::MainWidget()
         }
     });
 
-    auto& toolbar_container = add<GUI::ToolbarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::Toolbar>();
-
+    auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar"sv);
     toolbar.add_action(*m_new_action);
     toolbar.add_action(*m_open_action);
     toolbar.add_action(*m_save_action);
@@ -175,9 +176,7 @@ MainWidget::MainWidget()
     toolbar.add_separator();
     toolbar.add_action(*m_run_script_action);
 
-    m_tab_widget = add<GUI::TabWidget>();
-    m_tab_widget->set_close_button_enabled(true);
-    m_tab_widget->set_reorder_allowed(true);
+    m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("script_tab_widget"sv);
 
     m_tab_widget->on_tab_close_click = [&](auto& widget) {
         auto editor = dynamic_cast<ScriptEditor*>(&widget);
@@ -200,9 +199,7 @@ MainWidget::MainWidget()
         on_editor_change();
     };
 
-    m_action_tab_widget = add<GUI::TabWidget>();
-    m_action_tab_widget->set_fixed_height(0);
-    m_action_tab_widget->set_close_button_enabled(true);
+    m_action_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("action_tab_widget"sv);
 
     m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results");
     m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
@@ -213,7 +210,7 @@ MainWidget::MainWidget()
         m_action_tab_widget->set_fixed_height(0);
     };
 
-    m_statusbar = add<GUI::Statusbar>(3);
+    m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
 
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
     m_statusbar->segment(1).set_fixed_width(font().width("000000 characters (00000 words) selected"sv) + font().max_glyph_width());
