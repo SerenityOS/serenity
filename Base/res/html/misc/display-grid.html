@@ -150,6 +150,13 @@ that I don't quite understand. -->
     <div class="grid-item" style="grid-row: 2 / span 3;">1</div>
 </div>
 
+<div style="
+        display: grid;
+        grid-template-columns: minmax(0, calc(100% - var(--Layout-sidebar-width) - var(--Layout-gutter))) 0 auto
+    ">
+    <div style="grid-column: 2/span 2;"></div>
+</div>
+
 <p>End of crash tests</p>
 
 <!-- Different column sizes -->
@@ -473,4 +480,41 @@ length value, and as a minimum two lengths with an auto. -->
   style="
     grid-row-end: span 3;
   ">2</div>
+</div>
+
+<!-- Column-gaps with overflowing column spans -->
+<p>There should be 1 column that starts at column 2 and spans until the end.</p>
+<div 
+    class="grid-container"
+    style="
+        grid-column-gap: 16px;
+        grid-template-columns: 1fr 1fr;
+    ">
+    <div class="grid-item" style="grid-column: 2 / span 5;">1</div>
+</div>
+
+<!-- Column-gaps with overflowing column spans and row spans -->
+<p>There should be 1 column that starts at column 2 and spans until the end.</p>
+<div 
+    class="grid-container"
+    style="
+        grid-column-gap: 16px;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 20px;
+    ">
+    <div class="grid-item" style="grid-column: 2 / span 5; grid-row: span 4">1</div>
+</div>
+
+<!-- Grid shouldn't expand to 3 columns as having too much span doesn't change size. -->
+<p>The bottom row should take up half the width of the grid.</p>
+<div 
+    class="grid-container"
+    style="
+        grid-template-columns: 1fr 1fr;
+    ">
+    <div class="grid-item" style="
+        grid-column: 1 / span 3;
+        grid-row: 1;
+    ">1</div>
+    <div class="grid-item">1</div>
 </div>
