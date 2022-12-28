@@ -16,25 +16,37 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 
+ErrorOr<NonnullRefPtr<PlayerWidget>> PlayerWidget::create(TrackManager& manager, AudioPlayerLoop& loop)
+{
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PlayerWidget(manager, loop)));
+
+    widget->m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
+    widget->m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
+    widget->m_back_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv));    // Go back a note
+    widget->m_next_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)); // Advance a note
+    widget->m_add_track_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv));
+    widget->m_next_track_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv));
+    TRY(widget->initialize());
+
+    return widget;
+}
+
 PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
     : m_track_manager(manager)
     , m_audio_loop(loop)
 {
-    set_layout<GUI::HorizontalBoxLayout>();
+}
+
+ErrorOr<void> PlayerWidget::initialize()
+{
+    (void)TRY(try_set_layout<GUI::HorizontalBoxLayout>());
     set_fill_with_background_color(true);
-    m_track_number_choices.append("1");
+    TRY(m_track_number_choices.try_append("1"));
 
-    m_play_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_pause_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_back_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors();    // Go back a note
-    m_next_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(); // Advance a note
-    m_add_track_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_next_track_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv).release_value_but_fixme_should_propagate_errors();
-
-    RefPtr<GUI::Label> label = add<GUI::Label>("Track");
+    RefPtr<GUI::Label> label = TRY(try_add<GUI::Label>("Track"));
     label->set_max_width(75);
 
-    m_track_dropdown = add<GUI::ComboBox>();
+    m_track_dropdown = TRY(try_add<GUI::ComboBox>());
     m_track_dropdown->set_max_width(75);
     m_track_dropdown->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_track_number_choices));
     m_track_dropdown->set_only_allow_values_from_model(true);
@@ -44,7 +56,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
         m_track_manager.set_current_track(model_index.row());
     };
 
-    m_add_track_button = add<GUI::Button>();
+    m_add_track_button = TRY(try_add<GUI::Button>());
     m_add_track_button->set_icon(*m_add_track_icon);
     m_add_track_button->set_fixed_width(30);
     m_add_track_button->set_tooltip("Add Track");
@@ -53,7 +65,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
         add_track();
     };
 
-    m_next_track_button = add<GUI::Button>();
+    m_next_track_button = TRY(try_add<GUI::Button>());
     m_next_track_button->set_icon(*m_next_track_icon);
     m_next_track_button->set_fixed_width(30);
     m_next_track_button->set_tooltip("Next Track");
@@ -62,7 +74,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
         next_track();
     };
 
-    m_play_button = add<GUI::Button>();
+    m_play_button = TRY(try_add<GUI::Button>());
     m_play_button->set_icon(*m_pause_icon);
     m_play_button->set_fixed_width(30);
     m_play_button->set_tooltip("Play/Pause playback");
@@ -77,7 +89,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
         }
     };
 
-    m_back_button = add<GUI::Button>();
+    m_back_button = TRY(try_add<GUI::Button>());
     m_back_button->set_icon(*m_back_icon);
     m_back_button->set_fixed_width(30);
     m_back_button->set_tooltip("Previous Note");
@@ -86,7 +98,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
         m_track_manager.time_forward(-(sample_rate / (beats_per_minute / 60) / notes_per_beat));
     };
 
-    m_next_button = add<GUI::Button>();
+    m_next_button = TRY(try_add<GUI::Button>());
     m_next_button->set_icon(*m_next_icon);
     m_next_button->set_fixed_width(30);
     m_next_button->set_tooltip("Next Note");
@@ -94,6 +106,8 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
     m_next_button->on_click = [this](unsigned) {
         m_track_manager.time_forward((sample_rate / (beats_per_minute / 60) / notes_per_beat));
     };
+
+    return {};
 }
 
 void PlayerWidget::add_track()

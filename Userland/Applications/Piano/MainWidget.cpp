@@ -19,53 +19,67 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/TabWidget.h>
 
+ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(TrackManager& manager, AudioPlayerLoop& loop)
+{
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(manager, loop)));
+    TRY(widget->initialize());
+    return widget;
+}
+
 MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
     : m_track_manager(track_manager)
     , m_audio_loop(loop)
 {
-    set_layout<GUI::VerticalBoxLayout>();
+}
+
+ErrorOr<void> MainWidget::initialize()
+{
+    (void)TRY(try_set_layout<GUI::VerticalBoxLayout>());
     layout()->set_spacing(2);
     layout()->set_margins(2);
     set_fill_with_background_color(true);
 
-    m_wave_widget = add<WaveWidget>(track_manager);
+    m_wave_widget = TRY(try_add<WaveWidget>(m_track_manager));
     m_wave_widget->set_fixed_height(100);
 
-    m_tab_widget = add<GUI::TabWidget>();
-    m_roll_widget = m_tab_widget->add_tab<RollWidget>("Piano Roll", track_manager);
+    m_tab_widget = TRY(try_add<GUI::TabWidget>());
+    m_roll_widget = TRY(m_tab_widget->try_add_tab<RollWidget>("Piano Roll", m_track_manager));
 
     m_roll_widget->set_fixed_height(300);
 
-    m_tab_widget->add_tab<SamplerWidget>("Sampler", track_manager);
+    (void)TRY(m_tab_widget->try_add_tab<SamplerWidget>("Sampler", m_track_manager));
+    m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, m_audio_loop));
 
-    m_player_widget = add<PlayerWidget>(track_manager, loop);
-
-    m_keys_and_knobs_container = add<GUI::Widget>();
-    m_keys_and_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
+    m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
+    (void)TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>());
     m_keys_and_knobs_container->layout()->set_spacing(2);
     m_keys_and_knobs_container->set_fixed_height(130);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
-    m_keys_widget = m_keys_and_knobs_container->add<KeysWidget>(track_manager.keyboard());
+    m_keys_widget = TRY(m_keys_and_knobs_container->try_add<KeysWidget>(m_track_manager.keyboard()));
 
-    m_knobs_widget = m_keys_and_knobs_container->add<KnobsWidget>(track_manager, *this);
+    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<KnobsWidget>(m_track_manager, *this));
 
     m_roll_widget->set_keys_widget(m_keys_widget);
+
+    return {};
 }
 
-void MainWidget::add_track_actions(GUI::Menu& menu)
+ErrorOr<void> MainWidget::add_track_actions(GUI::Menu& menu)
 {
-    menu.add_action(GUI::Action::create("&Add Track", { Mod_Ctrl, Key_T }, Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    TRY(menu.try_add_action(GUI::Action::create("&Add Track", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv)), [&](auto&) {
         m_player_widget->add_track();
-    }));
+    })));
 
-    menu.add_action(GUI::Action::create("&Next Track", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    TRY(menu.try_add_action(GUI::Action::create("&Next Track", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv)), [&](auto&) {
         turn_off_pressed_keys();
         m_player_widget->next_track();
         turn_on_pressed_keys();
 
         m_knobs_widget->update_knobs();
-    }));
+    })));
+
+    return {};
 }
 
 // FIXME: There are some unnecessary calls to update() throughout this program,

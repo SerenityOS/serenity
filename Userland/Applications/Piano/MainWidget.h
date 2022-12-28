@@ -23,17 +23,20 @@ class KnobsWidget;
 class PlayerWidget;
 
 class MainWidget final : public GUI::Widget {
-    C_OBJECT(MainWidget)
+    C_OBJECT_ABSTRACT(MainWidget)
 public:
+    static ErrorOr<NonnullRefPtr<MainWidget>> try_create(TrackManager&, AudioPlayerLoop&);
     virtual ~MainWidget() override = default;
 
-    void add_track_actions(GUI::Menu&);
+    ErrorOr<void> add_track_actions(GUI::Menu&);
 
     void set_octave_and_ensure_note_change(DSP::Keyboard::Direction);
     void set_octave_and_ensure_note_change(int);
 
 private:
     explicit MainWidget(TrackManager&, AudioPlayerLoop&);
+
+    ErrorOr<void> initialize();
 
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
