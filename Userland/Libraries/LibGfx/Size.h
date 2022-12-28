@@ -45,7 +45,6 @@ public:
     ALWAYS_INLINE constexpr void set_width(T w) { m_width = w; }
     ALWAYS_INLINE constexpr void set_height(T h) { m_height = h; }
 
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_null() const { return !m_width && !m_height; }
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_empty() const { return m_width <= 0 || m_height <= 0; }
 
     constexpr void scale_by(T dx, T dy)

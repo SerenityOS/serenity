@@ -175,7 +175,7 @@ void Scrollbar::paint_event(PaintEvent& event)
         hovered_component_for_painting = Component::None;
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
-    if (m_gutter_click_state != GutterClickState::NotPressed && has_scrubber() && !scrubber_rect().is_null() && hovered_component_for_painting == Component::Gutter) {
+    if (m_gutter_click_state != GutterClickState::NotPressed && has_scrubber() && !scrubber_rect().is_empty() && hovered_component_for_painting == Component::Gutter) {
         Gfx::IntRect rect_to_fill = rect();
         if (orientation() == Orientation::Vertical) {
             if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
@@ -221,7 +221,7 @@ void Scrollbar::paint_event(PaintEvent& event)
         painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (has_scrubber() && is_enabled() && !is_max()) ? palette().button_text() : palette().threed_shadow1());
     }
 
-    if (has_scrubber() && !scrubber_rect().is_null())
+    if (has_scrubber() && !scrubber_rect().is_empty())
         Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::ThickCap, false, hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber);
 }
 

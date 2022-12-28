@@ -154,7 +154,7 @@ void ConnectionFromClient::popup_menu(i32 menu_id, Gfx::IntPoint screen_position
         return;
     }
     auto& menu = *(*it).value;
-    if (!button_rect.is_null())
+    if (!button_rect.is_empty())
         menu.open_button_menu(position, button_rect);
     else
         menu.popup(position);
@@ -654,7 +654,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
     window->set_alpha_hit_threshold(alpha_hit_threshold);
     window->set_size_increment(size_increment);
     window->set_base_size(base_size);
-    if (resize_aspect_ratio.has_value() && !resize_aspect_ratio.value().is_null())
+    if (resize_aspect_ratio.has_value() && !resize_aspect_ratio.value().is_empty())
         window->set_resize_aspect_ratio(resize_aspect_ratio);
     window->invalidate(true, true);
     if (window->type() == WindowType::Applet)

@@ -76,7 +76,6 @@ public:
     [[nodiscard]] ALWAYS_INLINE Point<T> const& location() const { return m_location; }
     [[nodiscard]] ALWAYS_INLINE Size<T> const& size() const { return m_size; }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return width() == 0 && height() == 0; }
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return width() <= 0 || height() <= 0; }
 
     ALWAYS_INLINE void translate_by(T dx, T dy) { m_location.translate_by(dx, dy); }
@@ -831,7 +830,7 @@ public:
             deltas.clear_with_capacity();
             for (auto& rect : rects) {
                 auto delta = calc_delta(rect);
-                if (!delta.is_null())
+                if (!delta.is_zero())
                     changes = true;
                 deltas.append(delta);
             }
@@ -868,9 +867,9 @@ public:
 
     [[nodiscard]] Rect<T> united(Rect<T> const& other) const
     {
-        if (is_null())
+        if (is_empty())
             return other;
-        if (other.is_null())
+        if (other.is_empty())
             return *this;
         Rect<T> rect;
         rect.set_left(min(left(), other.left()));

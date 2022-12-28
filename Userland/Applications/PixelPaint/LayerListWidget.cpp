@@ -287,7 +287,7 @@ void LayerListWidget::mousemove_event(GUI::MouseEvent& event)
         gadget.movement_delta.set_y(inner_rect_max_height - gadget.rect.bottom());
 
     m_automatic_scroll_delta = automatic_scroll_delta_from_position(event.position());
-    set_automatic_scrolling_timer_active(vertical_scrollbar().is_scrollable() && !m_automatic_scroll_delta.is_null());
+    set_automatic_scrolling_timer_active(vertical_scrollbar().is_scrollable() && !m_automatic_scroll_delta.is_zero());
 
     relayout_gadgets();
 }

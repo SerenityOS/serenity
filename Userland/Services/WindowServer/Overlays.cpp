@@ -236,7 +236,7 @@ void WindowGeometryOverlay::update_rect()
 {
     if (auto* window = m_window.ptr()) {
         auto& wm = WindowManager::the();
-        if (!window->size_increment().is_null()) {
+        if (!window->size_increment().is_empty()) {
             int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
             int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
             m_label = DeprecatedString::formatted("{} ({}x{})", window->rect(), width_steps, height_steps);

@@ -100,7 +100,8 @@ public:
             [](Detail::Boolean v) { return v.value; },
             [](DeprecatedString const& v) { return !v.is_null(); },
             [](Integral auto v) { return v != 0; },
-            [](OneOf<Gfx::IntRect, Gfx::IntPoint, Gfx::IntSize> auto const& v) { return !v.is_null(); },
+            [](Gfx::IntPoint const& v) { return !v.is_zero(); },
+            [](OneOf<Gfx::IntRect, Gfx::IntSize> auto const& v) { return !v.is_empty(); },
             [](Enum auto const&) { return true; },
             [](OneOf<float, DeprecatedString, Color, NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Gfx::Bitmap>, GUI::Icon> auto const&) { return true; });
     }

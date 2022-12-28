@@ -48,8 +48,7 @@ public:
     ALWAYS_INLINE void set_x(T x) { m_x = x; }
     ALWAYS_INLINE void set_y(T y) { m_y = y; }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return !m_x && !m_y; }
-    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_x <= 0 && m_y <= 0; }
+    [[nodiscard]] ALWAYS_INLINE bool is_zero() const { return m_x == 0 && m_y == 0; }
 
     void translate_by(T dx, T dy)
     {

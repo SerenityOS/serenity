@@ -329,7 +329,7 @@ void IconView::mousemove_event(MouseEvent& event)
 
     if (m_rubber_banding) {
         m_out_of_view_position = event.position();
-        set_automatic_scrolling_timer_active(!m_rubber_band_scroll_delta.is_null());
+        set_automatic_scrolling_timer_active(!m_rubber_band_scroll_delta.is_zero());
 
         if (update_rubber_banding(event.position()))
             return;
@@ -342,7 +342,7 @@ void IconView::automatic_scrolling_timer_did_fire()
 {
     AbstractView::automatic_scrolling_timer_did_fire();
 
-    if (m_rubber_band_scroll_delta.is_null())
+    if (m_rubber_band_scroll_delta.is_zero())
         return;
 
     vertical_scrollbar().increase_slider_by(m_rubber_band_scroll_delta.y());
