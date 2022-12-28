@@ -24,6 +24,8 @@ public:
     ErrorOr<bool> save_as();
     ErrorOr<bool> attempt_to_close();
 
+    DeprecatedString const& path() const { return m_path; }
+
 private:
     ScriptEditor();
 

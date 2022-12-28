@@ -61,7 +61,7 @@ private:
     RefPtr<SQL::SQLClient> m_sql_client;
     Vector<Vector<DeprecatedString>> m_results;
 
-    DeprecatedString read_next_sql_statement_of_editor();
+    void read_next_sql_statement_of_editor();
     Optional<DeprecatedString> read_next_line_of_editor();
     size_t m_current_line_for_parsing { 0 };
     int m_editor_line_level { 0 };

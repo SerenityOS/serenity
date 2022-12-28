@@ -275,6 +275,11 @@ private:
                 });
         } else if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece); statement_id.has_value()) {
             m_sql_client->async_execute_statement(*statement_id, {});
+        } else {
+            warnln("\033[33;1mError parsing SQL statement\033[0m: {}", piece);
+            m_loop.deferred_invoke([this]() {
+                read_sql();
+            });
         }
 
         // ...But m_keep_running can also be set to false by a command handler.
