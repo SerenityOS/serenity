@@ -124,10 +124,13 @@ jobs:
       #    Our TRY(..) macro seems to breaks this rule and trigger weird behavior in PVS Studio.
       #
       # - v677: Custom declaration of a standard '<example>' type. The declaration from system header files should be used instead.
-      #    This rule doesn't make sense for Serenity, as We are the system headers.
+      #    This rule doesn't make sense for Serenity, as we are the system headers.
       #
       # - v1061: Extending the 'std' namespace may result in undefined behavior.
       #    We have no choice, some features of C++ require us to.
+      #
+      # - V1052: Declaring virtual methods in a class marked as 'final' is pointless.
+      #    This rule contradicts the serenity style rules.
       #
       # - False Positives:
       #    v591:  Non-void function should return a value.
@@ -138,7 +141,7 @@ jobs:
       - name: Filter PVS Log
         working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
         run: |
-          pvs-studio-analyzer suppress -v530 -v591 -v603 -v677 -v1047 -v1061  -v1076 project.plog
+          pvs-studio-analyzer suppress -v530 -v591 -v603 -v677 -v1047 -v1052 -v1061  -v1076 project.plog
           pvs-studio-analyzer filter-suppressed project.plog
 
       - name: Print PVS Log
