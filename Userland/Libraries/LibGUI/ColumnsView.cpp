@@ -313,8 +313,14 @@ void ColumnsView::mousedown_event(MouseEvent& event)
 
     auto index = index_at_event_position_in_column(position, *column);
     if (index.is_valid() && !(event.modifiers() & Mod_Ctrl)) {
-        if (model()->row_count(index))
-            push_column(index);
+        if (model()->row_count(index)) {
+            auto is_index_already_open = m_columns.first_matching([&](auto& column) { return column.parent_index == index; }).has_value();
+            if (is_index_already_open) {
+                set_cursor(index, SelectionUpdate::Set);
+            } else {
+                push_column(index);
+            }
+        }
         return;
     }
 
@@ -405,7 +411,14 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
     case CursorMovement::Left:
         new_index = cursor_parent;
         break;
-    case CursorMovement::Right:
+    case CursorMovement::Right: {
+        // Don't reset columns if one already exists.
+        auto maybe_column = m_columns.first_matching([&](auto& column) { return model.parent_index(column.parent_index) == cursor_index(); });
+        if (maybe_column.has_value()) {
+            new_index = maybe_column->parent_index;
+            break;
+        }
+
         new_index = model.index(0, m_model_column, cursor_index());
         if (model.is_within_range(new_index)) {
             if (model.is_within_range(cursor_index()))
@@ -413,6 +426,7 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
             update();
         }
         break;
+    }
     default:
         break;
     }
