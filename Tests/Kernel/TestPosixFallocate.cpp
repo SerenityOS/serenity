@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <LibCore/System.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(posix_fallocate_basics)
 {
-    char pattern[] = "/tmp/posix_fallocate.XXXXXX";
-    auto fd = MUST(Core::System::mkstemp(pattern));
+    auto buffer = MUST(AK::ByteBuffer::copy("/tmp/posix_fallocate.XXXXXX"sv.bytes()));
+    auto fd = MUST(Core::System::mkstemp(buffer));
     VERIFY(fd >= 0);
 
     {

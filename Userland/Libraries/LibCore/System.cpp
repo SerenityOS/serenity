@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
 #include <AK/ScopedValueRollback.h>
@@ -983,9 +984,9 @@ ErrorOr<pid_t> fork()
     return pid;
 }
 
-ErrorOr<int> mkstemp(Span<char> pattern)
+ErrorOr<int> mkstemp(ByteBuffer pattern)
 {
-    int fd = ::mkstemp(pattern.data());
+    int fd = ::mkstemp(reinterpret_cast<char*>(pattern.data()));
     if (fd < 0)
         return Error::from_syscall("mkstemp"sv, -errno);
     return fd;
