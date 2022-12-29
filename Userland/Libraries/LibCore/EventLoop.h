@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, kleines Filmröllchen <malu.bertsch@gmail.com>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -47,6 +47,8 @@ namespace Core {
 //
 // EventLoop has one final responsibility: Handling the InspectorServer connection and processing requests to the Object hierarchy.
 class EventLoop {
+    friend struct EventLoopPusher;
+
 public:
     enum class MakeInspectable {
         No,
@@ -83,6 +85,8 @@ public:
     // Post an event to this event loop and possibly wake the loop.
     void post_event(Object& receiver, NonnullOwnPtr<Event>&&, ShouldWake = ShouldWake::No);
     void wake_once(Object& receiver, int custom_event_type);
+
+    void add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise);
 
     void deferred_invoke(Function<void()> invokee)
     {
@@ -141,6 +145,7 @@ private:
     };
 
     Vector<QueuedEvent, 64> m_queued_events;
+    Vector<NonnullRefPtr<Promise<NonnullRefPtr<Object>>>> m_pending_promises;
     static pid_t s_pid;
 
     bool m_exit_requested { false };
