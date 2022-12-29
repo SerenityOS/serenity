@@ -10,6 +10,7 @@
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <AK/Types.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/StandardPaths.h>
@@ -19,6 +20,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibThreading/BackgroundAction.h>
+#include <LibThreading/MutexProtected.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -641,7 +643,16 @@ Icon FileSystemModel::icon_for(Node const& node) const
     return FileIconProvider::icon_for_path(node.full_path(), node.mode);
 }
 
-static HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
+using BitmapBackgroundAction = Threading::BackgroundAction<NonnullRefPtr<Gfx::Bitmap>>;
+
+// Mutex protected thumbnail cache data shared between threads.
+struct ThumbnailCache {
+    // Null pointers indicate an image that couldn't be loaded due to errors.
+    HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> thumbnail_cache {};
+    HashMap<DeprecatedString, NonnullRefPtr<BitmapBackgroundAction>> loading_thumbnails {};
+};
+
+static Threading::MutexProtected<ThumbnailCache> s_thumbnail_cache {};
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
@@ -658,54 +669,69 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 
 bool FileSystemModel::fetch_thumbnail_for(Node const& node)
 {
-    // See if we already have the thumbnail
-    // we're looking for in the cache.
     auto path = node.full_path();
-    auto it = s_thumbnail_cache.find(path);
-    if (it != s_thumbnail_cache.end()) {
-        if (!(*it).value)
-            return false;
-        node.thumbnail = (*it).value;
-        return true;
-    }
 
-    // Otherwise, arrange to render the thumbnail
-    // in background and make it available later.
+    // See if we already have the thumbnail we're looking for in the cache.
+    auto was_in_cache = s_thumbnail_cache.with_locked([&](auto& cache) {
+        auto it = cache.thumbnail_cache.find(path);
+        if (it != cache.thumbnail_cache.end()) {
+            // Loading was unsuccessful.
+            if (!(*it).value)
+                return TriState::False;
+            // Loading was successful.
+            node.thumbnail = (*it).value;
+            return TriState::True;
+        }
+        // Loading is in progress.
+        if (cache.loading_thumbnails.contains(path))
+            return TriState::False;
+        return TriState::Unknown;
+    });
+    if (was_in_cache != TriState::Unknown)
+        return was_in_cache == TriState::True;
 
-    s_thumbnail_cache.set(path, nullptr);
+    // Otherwise, arrange to render the thumbnail in background and make it available later.
+
     m_thumbnail_progress_total++;
 
     auto weak_this = make_weak_ptr();
 
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
-        [path](auto&) {
-            return render_thumbnail(path);
-        },
-
-        [this, path, weak_this](auto thumbnail_or_error) -> ErrorOr<void> {
-            if (thumbnail_or_error.is_error()) {
-                s_thumbnail_cache.set(path, nullptr);
-                dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
-            } else {
-                s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
-            }
-
-            // The model was destroyed, no need to update
-            // progress or call any event handlers.
-            if (weak_this.is_null())
-                return {};
-
-            m_thumbnail_progress++;
-            if (on_thumbnail_progress)
-                on_thumbnail_progress(m_thumbnail_progress, m_thumbnail_progress_total);
-            if (m_thumbnail_progress == m_thumbnail_progress_total) {
-                m_thumbnail_progress = 0;
-                m_thumbnail_progress_total = 0;
-            }
-
-            did_update(UpdateFlag::DontInvalidateIndices);
-            return {};
+    auto const action = [path](auto&) {
+        return render_thumbnail(path);
+    };
+    auto const on_complete = [path, weak_this](auto thumbnail) -> ErrorOr<void> {
+        s_thumbnail_cache.with_locked([path, thumbnail](auto& cache) {
+            cache.thumbnail_cache.set(path, thumbnail);
+            cache.loading_thumbnails.remove(path);
         });
+
+        if (auto strong_this = weak_this.strong_ref(); !strong_this.is_null()) {
+            strong_this->m_thumbnail_progress++;
+            if (strong_this->on_thumbnail_progress)
+                strong_this->on_thumbnail_progress(strong_this->m_thumbnail_progress, strong_this->m_thumbnail_progress_total);
+            if (strong_this->m_thumbnail_progress == strong_this->m_thumbnail_progress_total) {
+                strong_this->m_thumbnail_progress = 0;
+                strong_this->m_thumbnail_progress_total = 0;
+            }
+
+            strong_this->did_update(UpdateFlag::DontInvalidateIndices);
+        }
+        return {};
+    };
+
+    auto const on_error = [path](Error error) -> void {
+        s_thumbnail_cache.with_locked([path, error = move(error)](auto& cache) {
+            if (error != Error::from_errno(ECANCELED)) {
+                cache.thumbnail_cache.set(path, nullptr);
+                dbgln("Failed to load thumbnail for {}: {}", path, error);
+            }
+            cache.loading_thumbnails.remove(path);
+        });
+    };
+
+    s_thumbnail_cache.with_locked([path, action, on_complete, on_error](auto& cache) {
+        cache.loading_thumbnails.set(path, BitmapBackgroundAction::construct(move(action), move(on_complete), move(on_error)));
+    });
 
     return false;
 }
