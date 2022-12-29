@@ -91,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::year_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarYear(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarYear(calendar, temporalDate)).
     return Value(TRY(calendar_year(vm, calendar, *temporal_date)));
 }
 
@@ -105,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarMonth(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarMonth(calendar, temporalDate)).
     return Value(TRY(calendar_month(vm, calendar, *temporal_date)));
 }
 
@@ -133,7 +133,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarDay(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarDay(calendar, temporalDate)).
     return Value(TRY(calendar_day(vm, calendar, *temporal_date)));
 }
 
@@ -147,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_week_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // Return ? CalendarDayOfWeek(calendar, temporalDate).
+    // Return 𝔽(? CalendarDayOfWeek(calendar, temporalDate)).
     return Value(TRY(calendar_day_of_week(vm, calendar, *temporal_date)));
 }
 
@@ -161,7 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_year_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarDayOfYear(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarDayOfYear(calendar, temporalDate)).
     return Value(TRY(calendar_day_of_year(vm, calendar, *temporal_date)));
 }
 
@@ -175,7 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::week_of_year_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarWeekOfYear(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarWeekOfYear(calendar, temporalDate)).
     return Value(TRY(calendar_week_of_year(vm, calendar, *temporal_date)));
 }
 
@@ -203,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_week_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarDaysInWeek(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarDaysInWeek(calendar, temporalDate)).
     return Value(TRY(calendar_days_in_week(vm, calendar, *temporal_date)));
 }
 
@@ -217,7 +217,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_month_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarDaysInMonth(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarDaysInMonth(calendar, temporalDate)).
     return Value(TRY(calendar_days_in_month(vm, calendar, *temporal_date)));
 }
 
@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_year_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarDaysInYear(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarDaysInYear(calendar, temporalDate)).
     return Value(TRY(calendar_days_in_year(vm, calendar, *temporal_date)));
 }
 
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::months_in_year_getter)
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
-    // 4. Return ? CalendarMonthsInYear(calendar, temporalDate).
+    // 4. Return 𝔽(? CalendarMonthsInYear(calendar, temporalDate)).
     return Value(TRY(calendar_months_in_year(vm, calendar, *temporal_date)));
 }
 
