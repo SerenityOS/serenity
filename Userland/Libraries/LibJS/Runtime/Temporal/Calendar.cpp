@@ -934,75 +934,39 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& f
 ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& fields, Object const& additional_fields)
 {
     auto& realm = *vm.current_realm();
+    auto undefined_table = HashTable<Value, ValueTraits>::of(js_undefined()).release_value_but_fixme_should_propagate_errors();
 
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
     auto merged = Object::create(realm, realm.intrinsics().object_prototype());
 
-    // 2. Let fieldsKeys be ? EnumerableOwnPropertyNames(fields, key).
-    auto fields_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
+    // 2. Perform ? CopyDataProperties(merged, fields, « », « undefined »).
+    TRY(merged->copy_data_properties(vm, &fields, {}, undefined_table));
 
-    // 3. For each element key of fieldsKeys, do
-    for (auto& key : fields_keys) {
-        // a. If key is not "month" or "monthCode", then
-        if (key.as_string().deprecated_string() != vm.names.month.as_string() && key.as_string().deprecated_string() != vm.names.monthCode.as_string()) {
-            auto property_key = MUST(PropertyKey::from_value(vm, key));
+    // FIXME: There used to be an optimization which avoided the triple copy if no "month" or
+    //        "monthCode" was present.
+    // 3. Let additionalFieldsCopy be OrdinaryObjectCreate(null).
+    auto additional_fields_copy = Object::create(realm, nullptr);
 
-            // i. Let propValue be ? Get(fields, key).
-            auto prop_value = TRY(fields.get(property_key));
+    // 4. Perform ? CopyDataProperties(additionalFieldsCopy, additionalFields, « », « undefined »).
+    TRY(additional_fields_copy->copy_data_properties(vm, &additional_fields, {}, undefined_table));
 
-            // ii. If propValue is not undefined, then
-            if (!prop_value.is_undefined()) {
-                // 1. Perform ! CreateDataPropertyOrThrow(merged, key, propValue).
-                MUST(merged->create_data_property_or_throw(property_key, prop_value));
-            }
-        }
+    // 5. NOTE: Every property of additionalFieldsCopy is a data property with non-undefined value, but some property keys may be Symbols.
+    // 6. If ! additionalFieldsCopy.[[OwnPropertyKeys]]() contains "month" or "monthCode", then
+    auto keys = MUST(additional_fields_copy->enumerable_own_property_names(Object::PropertyKind::Key));
+    if (any_of(keys, [&vm](Value& value) {
+            return value.is_string() && (value.as_string().deprecated_string() == vm.names.month.as_string() || value.as_string().deprecated_string() == vm.names.monthCode.as_string());
+        })) {
+        // a. Perform ! DeletePropertyOrThrow(merged, "month").
+        MUST(merged->delete_property_or_throw(vm.names.month));
+
+        // b. Perform ! DeletePropertyOrThrow(merged, "monthCode").
+        MUST(merged->delete_property_or_throw(vm.names.monthCode));
     }
 
-    // 4. Let additionalFieldsKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
-    auto additional_fields_keys = TRY(additional_fields.enumerable_own_property_names(Object::PropertyKind::Key));
+    // 7. Perform ? CopyDataProperties(merged, additionalFieldsCopy, « »).
+    TRY(merged->copy_data_properties(vm, additional_fields_copy, {}));
 
-    // IMPLEMENTATION DEFINED: This is an optimization, so we don't have to iterate new_keys three times (worst case), but only once.
-    bool additional_fields_keys_contains_month_or_month_code_property = false;
-
-    // 5. For each element key of additionalFieldsKeys, do
-    for (auto& key : additional_fields_keys) {
-        auto property_key = MUST(PropertyKey::from_value(vm, key));
-
-        // a. Let propValue be ? Get(additionalFields, key).
-        auto prop_value = TRY(additional_fields.get(property_key));
-
-        // b. If propValue is not undefined, then
-        if (!prop_value.is_undefined()) {
-            // i. Perform ! CreateDataPropertyOrThrow(merged, key, propValue).
-            MUST(merged->create_data_property_or_throw(property_key, prop_value));
-        }
-
-        // See comment above.
-        additional_fields_keys_contains_month_or_month_code_property |= key.as_string().deprecated_string() == vm.names.month.as_string() || key.as_string().deprecated_string() == vm.names.monthCode.as_string();
-    }
-
-    // 6. If additionalFieldsKeys does not contain either "month" or "monthCode", then
-    if (!additional_fields_keys_contains_month_or_month_code_property) {
-        // a. Let month be ? Get(fields, "month").
-        auto month = TRY(fields.get(vm.names.month));
-
-        // b. If month is not undefined, then
-        if (!month.is_undefined()) {
-            // i. Perform ! CreateDataPropertyOrThrow(merged, "month", month).
-            MUST(merged->create_data_property_or_throw(vm.names.month, month));
-        }
-
-        // c. Let monthCode be ? Get(fields, "monthCode").
-        auto month_code = TRY(fields.get(vm.names.monthCode));
-
-        // d. If monthCode is not undefined, then
-        if (!month_code.is_undefined()) {
-            // i. Perform ! CreateDataPropertyOrThrow(merged, "monthCode", monthCode).
-            MUST(merged->create_data_property_or_throw(vm.names.monthCode, month_code));
-        }
-    }
-
-    // 7. Return merged.
+    // 8. Return merged.
     return merged.ptr();
 }
 

@@ -352,25 +352,16 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     // 14. Let optionsCopy be OrdinaryObjectCreate(null).
     auto options_copy = Object::create(realm, nullptr);
 
-    // 15. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
-    auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
+    // 15. Perform ? CopyDataProperties(optionsCopy, options, « »).
+    TRY(options_copy->copy_data_properties(vm, options, {}));
 
-    // 16. For each element entry of entries, do
-    for (auto& entry : entries) {
-        auto key = MUST(entry.as_array().get_without_side_effects(0).to_property_key(vm));
-        auto value = entry.as_array().get_without_side_effects(1);
-
-        // a. Perform ! CreateDataPropertyOrThrow(optionsCopy, entry[0], entry[1]).
-        MUST(options_copy->create_data_property_or_throw(key, value));
-    }
-
-    // 17. Let addedDate be ? CalendarDateAdd(calendar, date, durationToAdd, options).
+    // 16. Let addedDate be ? CalendarDateAdd(calendar, date, durationToAdd, options).
     auto* added_date = TRY(calendar_date_add(vm, calendar, date, *duration_to_add, options));
 
-    // 18. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
+    // 17. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
     auto* added_date_fields = TRY(prepare_temporal_fields(vm, *added_date, field_names, Vector<StringView> {}));
 
-    // 19. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
+    // 18. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
     return calendar_year_month_from_fields(vm, calendar, *added_date_fields, options_copy);
 }
 
