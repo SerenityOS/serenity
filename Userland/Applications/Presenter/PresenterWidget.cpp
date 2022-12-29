@@ -8,6 +8,7 @@
 #include "LibGUI/MessageBox.h"
 #include "Presentation.h"
 #include <AK/Format.h>
+#include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
@@ -131,4 +132,25 @@ void PresenterWidget::paint_event([[maybe_unused]] GUI::PaintEvent& event)
     painter.add_clip_rect(clip_rect);
 
     m_current_presentation->paint(painter);
+}
+
+void PresenterWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
+void PresenterWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+
+        window()->move_to_front();
+        set_file(urls.first().path());
+    }
 }
