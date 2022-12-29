@@ -134,7 +134,7 @@ void SQLStatement::next(SQL::ExecutionID execution_id, SQL::ResultSet result, si
         auto result_row = result.take_first();
         client_connection->async_next_result(statement_id(), execution_id, result_row.row.take_data());
 
-        deferred_invoke([this, execution_id, result = move(result), result_size]() {
+        deferred_invoke([this, execution_id, result = move(result), result_size]() mutable {
             next(execution_id, move(result), result_size);
         });
     } else {
