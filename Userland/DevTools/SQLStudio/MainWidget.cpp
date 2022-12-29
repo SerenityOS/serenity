@@ -168,7 +168,7 @@ MainWidget::MainWidget()
             m_connection_id = *connection_id;
             m_run_script_action->set_enabled(true);
         } else {
-            warnln("\033[33;1mCould not connect to:\033[0m {}", database_name);
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not connect to {}", database_name));
         }
     });
 
@@ -256,6 +256,12 @@ MainWidget::MainWidget()
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
     m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto, auto) {
         read_next_sql_statement_of_editor();
+    };
+    m_sql_client->on_execution_error = [this](auto, auto, auto, auto message) {
+        auto* editor = active_editor();
+        VERIFY(editor);
+
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Error executing {}\n{}", editor->path(), message));
     };
     m_sql_client->on_next_result = [this](auto, auto, auto row) {
         m_results.append({});
