@@ -34,6 +34,8 @@ class Object;
 class ObjectClassRegistration;
 class ProcessStatisticsReader;
 class Socket;
+template<typename Result>
+class Promise;
 class SocketAddress;
 class TCPServer;
 class TCPSocket;
