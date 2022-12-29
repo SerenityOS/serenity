@@ -22,6 +22,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
+#include <LibCore/Promise.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/Socket.h>
 #include <LibThreading/Mutex.h>
@@ -34,6 +35,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -76,6 +78,7 @@ static thread_local HashTable<Notifier*>* s_notifiers;
 // While wake() pushes zero into the pipe, signal numbers (by defintion nonzero, see signal_numbers.h) are pushed into the pipe verbatim.
 thread_local int EventLoop::s_wake_pipe_fds[2];
 thread_local bool EventLoop::s_wake_pipe_initialized { false };
+thread_local bool s_warned_promise_count { false };
 
 void EventLoop::initialize_wake_pipes()
 {
@@ -427,6 +430,11 @@ public:
     {
         if (EventLoop::has_been_instantiated()) {
             s_event_loop_stack->take_last();
+            for (auto& job : m_event_loop.m_pending_promises) {
+                // When this event loop was not running below another event loop, the jobs may very well have finished in the meantime.
+                if (!job->is_resolved())
+                    job->cancel(Error::from_string_view("EventLoop is exiting"sv));
+            }
             EventLoop::current().take_pending_events_from(m_event_loop);
         }
     }
@@ -462,6 +470,8 @@ size_t EventLoop::pump(WaitMode mode)
         Threading::MutexLocker locker(m_private->lock);
         events = move(m_queued_events);
     }
+
+    m_pending_promises.remove_all_matching([](auto& job) { return job->is_resolved() || job->is_canceled(); });
 
     size_t processed_events = 0;
     for (size_t i = 0; i < events.size(); ++i) {
@@ -501,6 +511,11 @@ size_t EventLoop::pump(WaitMode mode)
         }
     }
 
+    if (m_pending_promises.size() > 30 && !s_warned_promise_count) {
+        s_warned_promise_count = true;
+        dbgln("EventLoop {:p} warning: Job queue wasn't designed for this load ({} promises). Please begin optimizing EventLoop::pump() -> m_pending_promises.remove_all_matching", this, m_pending_promises.size());
+    }
+
     return processed_events;
 }
 
@@ -528,6 +543,11 @@ void EventLoop::wake_once(Object& receiver, int custom_event_type)
     // Event is not in the queue yet, so we want to wake.
     if (identical_events.is_end())
         post_event(receiver, make<CustomEvent>(custom_event_type), ShouldWake::Yes);
+}
+
+void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise)
+{
+    m_pending_promises.append(move(job_promise));
 }
 
 SignalHandlers::SignalHandlers(int signo, void (*handle_signal)(int))
