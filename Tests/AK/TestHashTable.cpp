@@ -315,3 +315,20 @@ TEST_CASE(clear_with_capacity_when_empty)
     map.set(1);
     VERIFY(map.size() == 2);
 }
+
+TEST_CASE(hashtable_of)
+{
+    {
+        auto table1 = MUST(HashTable<int>::of(1));
+        auto table2 = MUST(HashTable<int>::of({ 1 }));
+        EXPECT_EQ(table1.size(), 1u);
+        EXPECT_EQ(table2.size(), 1u);
+    }
+
+    {
+        auto table1 = MUST(HashTable<int>::of(1, 2, 3));
+        auto table2 = MUST(HashTable<int>::of({ 1, 2, 3 }));
+        EXPECT_EQ(table1.size(), 3u);
+        EXPECT_EQ(table2.size(), 3u);
+    }
+}

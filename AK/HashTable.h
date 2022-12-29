@@ -14,6 +14,7 @@
 #include <AK/Traits.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
+#include <initializer_list>
 
 namespace AK {
 
@@ -458,6 +459,22 @@ public:
         }
         remove(element);
         return element;
+    }
+
+    static ErrorOr<HashTable<T, TraitsForT, IsOrdered>> of(std::initializer_list<T> values)
+    {
+        HashTable<T, TraitsForT, IsOrdered> table;
+        TRY(table.try_ensure_capacity(values.size()));
+
+        for (auto& value : values)
+            TRY(table.template try_set(move(value)));
+        return table;
+    }
+
+    template<typename... Values>
+    static ErrorOr<HashTable<T, TraitsForT, IsOrdered>> of(Values... values)
+    {
+        return of({ values... });
     }
 
 private:
