@@ -52,9 +52,11 @@ private:
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
+    RefPtr<GUI::Action> m_connect_to_database_action;
     RefPtr<GUI::Action> m_run_script_action;
 
     int m_new_script_counter { 1 };
+    RefPtr<GUI::ComboBox> m_databases_combo_box;
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::TabWidget> m_action_tab_widget;

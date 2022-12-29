@@ -6,12 +6,17 @@
  */
 
 #include <DevTools/SQLStudio/SQLStudioGML.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
@@ -34,6 +39,25 @@
 REGISTER_WIDGET(SQLStudio, MainWidget);
 
 namespace SQLStudio {
+
+static Vector<DeprecatedString> lookup_database_names()
+{
+    static constexpr auto database_extension = ".db"sv;
+
+    auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
+    if (!Core::File::exists(database_path))
+        return {};
+
+    Core::DirIterator iterator(move(database_path), Core::DirIterator::SkipParentAndBaseDir);
+    Vector<DeprecatedString> database_names;
+
+    while (iterator.has_next()) {
+        if (auto database = iterator.next_path(); database.ends_with(database_extension))
+            database_names.append(database.substring(0, database.length() - database_extension.length()));
+    }
+
+    return database_names;
+}
 
 MainWidget::MainWidget()
 {
@@ -126,12 +150,13 @@ MainWidget::MainWidget()
         update_editor_actions(editor);
     });
 
-    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        m_results.clear();
-        m_current_line_for_parsing = 0;
+    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        auto database_name = m_databases_combo_box->text().trim_whitespace();
+        if (database_name.is_empty())
+            return;
 
-        // TODO select the database to use in UI.
-        constexpr auto database_name = "Test"sv;
+        m_run_script_action->set_enabled(false);
+        m_statusbar->set_text(1, "Disconnected"sv);
 
         if (m_connection_id.has_value()) {
             m_sql_client->disconnect(*m_connection_id);
@@ -139,12 +164,29 @@ MainWidget::MainWidget()
         }
 
         if (auto connection_id = m_sql_client->connect(database_name); connection_id.has_value()) {
-            m_connection_id = connection_id.release_value();
-            read_next_sql_statement_of_editor();
+            m_statusbar->set_text(1, DeprecatedString::formatted("Connected to: {}", database_name));
+            m_connection_id = *connection_id;
+            m_run_script_action->set_enabled(true);
         } else {
             warnln("\033[33;1mCould not connect to:\033[0m {}", database_name);
         }
     });
+
+    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_results.clear();
+        m_current_line_for_parsing = 0;
+        read_next_sql_statement_of_editor();
+    });
+    m_run_script_action->set_enabled(false);
+
+    static auto database_names = lookup_database_names();
+    m_databases_combo_box = GUI::ComboBox::construct();
+    m_databases_combo_box->set_editor_placeholder("Enter new database or select existing database"sv);
+    m_databases_combo_box->set_max_width(font().width(m_databases_combo_box->editor_placeholder()) + font().max_glyph_width() + 16);
+    m_databases_combo_box->set_model(*GUI::ItemListModel<DeprecatedString>::create(database_names));
+    m_databases_combo_box->on_return_pressed = [this]() {
+        m_connect_to_database_action->activate(m_databases_combo_box);
+    };
 
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar"sv);
     toolbar.add_action(*m_new_action);
@@ -158,6 +200,9 @@ MainWidget::MainWidget()
     toolbar.add_separator();
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_child(*m_databases_combo_box);
+    toolbar.add_action(*m_connect_to_database_action);
     toolbar.add_separator();
     toolbar.add_action(*m_run_script_action);
 
@@ -193,6 +238,7 @@ MainWidget::MainWidget()
 
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
+    m_statusbar->set_text(1, "Disconnected"sv);
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
 
@@ -401,7 +447,7 @@ void MainWidget::update_editor_actions(ScriptEditor* editor)
     m_save_action->set_enabled(true);
     m_save_as_action->set_enabled(true);
     m_save_all_action->set_enabled(true);
-    m_run_script_action->set_enabled(true);
+    m_run_script_action->set_enabled(m_connection_id.has_value());
 
     m_copy_action->set_enabled(editor->copy_action().is_enabled());
     m_cut_action->set_enabled(editor->cut_action().is_enabled());
