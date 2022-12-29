@@ -30,6 +30,8 @@ public:
 protected:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void drag_enter_event(GUI::DragEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
 private:
     OwnPtr<Presentation> m_current_presentation;
