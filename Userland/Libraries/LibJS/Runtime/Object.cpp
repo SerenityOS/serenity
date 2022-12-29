@@ -21,6 +21,7 @@
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueTraits.h>
 
 namespace JS {
 
@@ -428,25 +429,52 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
 }
 
 // 7.3.26 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
-ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashTable<PropertyKey> const& seen_names)
+// 14.7 CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] ), https://tc39.es/proposal-temporal/#sec-copydataproperties
+ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashTable<PropertyKey> const& seen_names, HashTable<Value, ValueTraits> const& excluded_values)
 {
+    // 1. If source is undefined or null, return unused.
     if (source.is_nullish())
         return {};
 
+    // 2. Let from be ! ToObject(source).
     auto* from_object = MUST(source.to_object(vm));
 
+    // 3. Let keys be ? from.[[OwnPropertyKeys]]().
+    // 4. For each element nextKey of keys, do
     for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
         auto next_key = MUST(PropertyKey::from_value(vm, next_key_value));
+
+        // a. Let excluded be false.
+        // b. For each element e of excludedKeys, do
+        //     i. If SameValue(e, nextKey) is true, then
+        //         1. Set excluded to true.
+        // c. If excluded is false, then
         if (seen_names.contains(next_key))
             continue;
 
+        // i. Let desc be ? from.[[GetOwnProperty]](nextKey).
         auto desc = TRY(from_object->internal_get_own_property(next_key));
 
+        // ii. If desc is not undefined and desc.[[Enumerable]] is true, then
         if (desc.has_value() && desc->attributes().is_enumerable()) {
+            // 1. Let propValue be ? Get(from, nextKey).
             auto prop_value = TRY(from_object->get(next_key));
-            TRY(create_data_property_or_throw(next_key, prop_value));
+
+            // 2. If excludedValues is present, then
+            // NOTE: excludedValues is always present, empty just means it will never be included
+
+            // a. For each element e of excludedValues, do
+            //     i. If SameValue(e, propValue) is true, then
+            //         i. Set excluded to true.
+            if (excluded_values.contains(prop_value))
+                continue;
+
+            // 3. If excluded is false, perform ! CreateDataPropertyOrThrow(target, nextKey, propValue).
+            MUST(create_data_property_or_throw(next_key, prop_value));
         }
     }
+
+    // 5. Return unused.
     return {};
 }
 

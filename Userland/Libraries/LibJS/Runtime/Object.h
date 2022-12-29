@@ -22,6 +22,7 @@
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueTraits.h>
 #include <LibJS/SafeFunction.h>
 
 namespace JS {
@@ -100,7 +101,7 @@ public:
     ThrowCompletionOr<bool> set_integrity_level(IntegrityLevel);
     ThrowCompletionOr<bool> test_integrity_level(IntegrityLevel) const;
     ThrowCompletionOr<MarkedVector<Value>> enumerable_own_property_names(PropertyKind kind) const;
-    ThrowCompletionOr<void> copy_data_properties(VM&, Value source, HashTable<PropertyKey> const& seen_names);
+    ThrowCompletionOr<void> copy_data_properties(VM&, Value source, HashTable<PropertyKey> const& seen_names, HashTable<Value, ValueTraits> const& excluded_values = {});
 
     PrivateElement* private_element_find(PrivateName const& name);
     ThrowCompletionOr<void> private_field_add(PrivateName const& name, Value value);
