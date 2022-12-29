@@ -14,9 +14,11 @@
 namespace Snake {
 
 class Game : public GUI::Frame {
-    C_OBJECT(Game);
+    C_OBJECT_ABSTRACT(Game);
 
 public:
+    static ErrorOr<NonnullRefPtr<Game>> try_create();
+
     virtual ~Game() override = default;
 
     void start();
@@ -28,7 +30,7 @@ public:
     Function<bool(u32)> on_score_update;
 
 private:
-    Game();
+    explicit Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;

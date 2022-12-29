@@ -19,7 +19,7 @@ REGISTER_WIDGET(Snake, Game);
 
 namespace Snake {
 
-static NonnullRefPtrVector<Gfx::Bitmap> load_food_bitmaps()
+ErrorOr<NonnullRefPtr<Game>> Game::try_create()
 {
     static constexpr auto food_bitmaps_files = Array {
         "/res/emoji/U+1F41F.png"sv,
@@ -54,23 +54,23 @@ static NonnullRefPtrVector<Gfx::Bitmap> load_food_bitmaps()
     };
 
     NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps;
-    food_bitmaps.ensure_capacity(food_bitmaps_files.size());
+    TRY(food_bitmaps.try_ensure_capacity(food_bitmaps_files.size()));
 
     for (auto file : food_bitmaps_files) {
         auto bitmap = Gfx::Bitmap::try_load_from_file(file);
         if (bitmap.is_error()) {
             dbgln("\033[31;1mCould not load bitmap file\033[0m '{}': {}", file, bitmap.error());
-            VERIFY_NOT_REACHED();
+            return bitmap.release_error();
         }
 
         food_bitmaps.unchecked_append(bitmap.release_value());
     }
 
-    return food_bitmaps;
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps)));
 }
 
-Game::Game()
-    : m_food_bitmaps(load_food_bitmaps())
+Game::Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
+    : m_food_bitmaps(move(food_bitmaps))
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
     reset();
