@@ -64,7 +64,7 @@ ErrorOr<void> Client::on_ready_to_receive()
 
     // Once we get server hello we can start sending.
     if (m_connect_pending) {
-        m_connect_pending->resolve({});
+        TRY(m_connect_pending->resolve({}));
         m_connect_pending.clear();
         m_buffer.clear();
         return {};
@@ -227,13 +227,13 @@ ErrorOr<void> Client::handle_parsed_response(ParseStatus&& parse_status)
         bool should_send_next = false;
         if (!parse_status.successful) {
             m_expecting_response = false;
-            m_pending_promises.first()->resolve({});
+            TRY(m_pending_promises.first()->resolve({}));
             m_pending_promises.remove(0);
         }
         if (parse_status.response.has_value()) {
             m_expecting_response = false;
             should_send_next = parse_status.response->has<SolidResponse>();
-            m_pending_promises.first()->resolve(move(parse_status.response));
+            TRY(m_pending_promises.first()->resolve(move(parse_status.response)));
             m_pending_promises.remove(0);
         }
 
@@ -386,13 +386,14 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
     auto response_promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(response_promise);
 
-    continue_req->on_resolved = [this, message2 { move(message) }](auto& data) {
+    continue_req->on_resolved = [this, message2 { move(message) }](auto& data) -> ErrorOr<void> {
         if (!data.has_value()) {
-            MUST(handle_parsed_response({ .successful = false, .response = {} }));
+            TRY(handle_parsed_response({ .successful = false, .response = {} }));
         } else {
-            MUST(send_raw(message2.data));
+            TRY(send_raw(message2.data));
             m_expecting_response = true;
         }
+        return {};
     };
 
     return cast_promise<SolidResponse>(response_promise);

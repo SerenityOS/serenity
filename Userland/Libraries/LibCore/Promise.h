@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Kyle Pereira <hey@xylepereira.me>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,14 +17,15 @@ class Promise : public Object {
     C_OBJECT(Promise);
 
 public:
-    Function<void(Result&)> on_resolved;
+    Function<ErrorOr<void>(Result&)> on_resolved;
 
-    void resolve(Result&& result)
+    ErrorOr<void> resolve(Result&& result)
     {
         m_pending_or_error = move(result);
 
         if (on_resolved)
-            on_resolved(m_pending_or_error.value());
+            return on_resolved(m_pending_or_error->value());
+        return {};
     }
 
     void cancel(Error error)
@@ -56,7 +58,7 @@ public:
         RefPtr<Promise<T>> new_promise = Promise<T>::construct();
         on_resolved = [new_promise, func](Result& result) {
             auto t = func(result);
-            new_promise->resolve(move(t));
+            return new_promise->resolve(move(t));
         };
         return new_promise;
     }

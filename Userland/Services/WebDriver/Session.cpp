@@ -42,7 +42,8 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<S
     server->on_accept = [this, promise](auto client_socket) {
         auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
         if (maybe_connection.is_error()) {
-            promise->resolve(maybe_connection.release_error());
+            // Use of MUST in this function is safe, as our promise callback can never error out.
+            MUST(promise->resolve(maybe_connection.release_error()));
             return;
         }
 
@@ -56,11 +57,11 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<S
         if (m_current_window_handle.is_empty())
             m_current_window_handle = handle_name;
 
-        promise->resolve({});
+        MUST(promise->resolve({}));
     };
 
     server->on_accept_error = [promise](auto error) {
-        promise->resolve(move(error));
+        MUST(promise->resolve(move(error)));
     };
 
     return server;

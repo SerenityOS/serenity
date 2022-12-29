@@ -571,10 +571,10 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
                 on_result(cookie.release_value());
         },
         [&]() {
-            promise->resolve({});
+            MUST(promise->resolve({}));
         },
         [&](auto) {
-            promise->resolve({});
+            MUST(promise->resolve({}));
         });
 
     MUST(promise->await());

@@ -124,19 +124,19 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         // to handle it as opening a new, named file.
         if (error != -1 && error != ENOENT)
             GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
-        request_data.promise->resolve(Error::from_errno(error));
+        request_data.promise->resolve(Error::from_errno(error)).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
     if (Core::DeprecatedFile::is_device(ipc_file->fd())) {
         GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
-        request_data.promise->resolve(Error::from_string_literal("Cannot open device files"));
+        request_data.promise->resolve(Error::from_string_literal("Cannot open device files")).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
     if (Core::DeprecatedFile::is_directory(ipc_file->fd())) {
         GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open directory", *chosen_file));
-        request_data.promise->resolve(Error::from_errno(EISDIR));
+        request_data.promise->resolve(Error::from_errno(EISDIR)).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
@@ -146,11 +146,11 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         return File({}, move(stream), filename);
     }();
     if (file_or_error.is_error()) {
-        request_data.promise->resolve(file_or_error.release_error());
+        request_data.promise->resolve(file_or_error.release_error()).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
-    request_data.promise->resolve(file_or_error.release_value());
+    request_data.promise->resolve(file_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
 }
 
 void Client::die()
