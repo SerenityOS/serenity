@@ -192,12 +192,20 @@ MainWidget::MainWidget()
     };
 
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
-
-    m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    m_statusbar->segment(1).set_fixed_width(font().width("000000 characters (00000 words) selected"sv) + font().max_glyph_width());
-
+    m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
+
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        m_statusbar->set_override_text(move(text));
+    };
+
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
+    };
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
     m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto, auto) {
@@ -357,21 +365,19 @@ void MainWidget::on_editor_change()
 void MainWidget::update_statusbar(ScriptEditor* editor)
 {
     if (!editor) {
-        m_statusbar->set_text(1, "");
+        m_statusbar->set_text(0, "");
         m_statusbar->set_text(2, "");
         return;
     }
 
+    StringBuilder builder;
     if (editor->has_selection()) {
         auto character_count = editor->selected_text().length();
         auto word_count = editor->number_of_selected_words();
-        m_statusbar->set_text(1, DeprecatedString::formatted("{} {} ({} {}) selected", character_count, character_count == 1 ? "character" : "characters", word_count, word_count == 1 ? "word" : "words"));
-    } else {
-        auto character_count = editor->text().length();
-        auto word_count = editor->number_of_words();
-        m_statusbar->set_text(1, DeprecatedString::formatted("{} {} ({} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count == 1 ? "word" : "words"));
+        builder.appendff("Selected: {} {} ({} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
+    m_statusbar->set_text(0, builder.to_deprecated_string());
     m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", editor->cursor().line() + 1, editor->cursor().column()));
 }
 
