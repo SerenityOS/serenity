@@ -63,6 +63,10 @@ public:
 
 private:
     Promise() = default;
+    Promise(Object* parent)
+        : Object(parent)
+    {
+    }
 
     Optional<ErrorOr<Result>> m_pending_or_error;
 };
