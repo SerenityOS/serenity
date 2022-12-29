@@ -25,36 +25,6 @@ FontEditor has the following basic parts:
 
 Presently, you can resize the entire FontEditor form to your liking. You can turn the visibility of Font Metadata and Unicode Blocks on or off. You can change the glyph editor window zoom factor.  All of these things are currently available in FontEditor automatically.
 
-### Contents of the Menu Bar
-```
-File -> New Font
-File -> Open
-File -> Save
-File -> Save As...
-File -> Quit
-
-Edit -> Undo
-Edit -> Redo
-Edit -> Cut
-Edit -> Copy
-Edit -> Paste
-Edit -> Delete
-Edit -> Select All
-Edit -> Copy as Text
-
-Go -> Previous Glyph
-Go -> Next Glyph
-Go -> Go to Glyph...
-
-View -> Preview Font
-View -> Font Metadata
-View -> Unicode Blocks
-View -> Scale -> 500% | 1000% | 1500%
-
-Help -> Contents
-Help -> About Font Editor
-```
-
 ### The Toolbar
 The Toolbar contains the same functional entries as that of the Menubar and is represented as clickable icons. Hovering on each icon will display additional information listed at the status bar which further states what each icon does.
 
@@ -69,7 +39,8 @@ The main workspace has three partitions:
 Metadata and unicode blocks can be turned on or off via ` Menu -> View ` option. Unicode block filters only what to display contained within the range of the block. Basic Latin covers 000-007F, Latin-1 Supplement covers 0080-00FF, Latin Extended-A covers 0100-017F and so on and so forth. Global search for a glyph is affected when a certain block is currently selected. Only by selecting ` Show All ` will the global glyph search work as expected. So make it a habit of confirming that Show All is active before searching for a glyph.
 
 ### The status bar
-The status bar displays additional information describing what each menu entry and toolbar icon does. It identifies the unicode value of the glyph currently under the cursor. It shows the glyph's visual representation (if available), description and dimensions. Second only to the glyph editor window, the status bar is your next best friend on your path to becoming a font master.
+The status bar displays additional information describing what each menu entry and toolbar icon does. It identifies the unicode value of the glyph currently under the cursor. It shows the glyph's visual representation (if available), description and dimensions. The right-most segment displays the code point range of the currently selected Unicode Block. Clicking this segment will toggle the display of the Unicode Block list. Second only to the glyph editor window, the status bar is your next best friend on your path to becoming a font master.
+
 
 ### Create New Font
 ![](FontEditor_New_Font.png)
