@@ -135,7 +135,7 @@ void FileProvider::query(DeprecatedString const& query, Function<void(Vector<Non
             Vector<NonnullRefPtr<Result>> results;
 
             for (auto& path : m_full_path_cache) {
-                if (task.is_cancelled())
+                if (task.is_canceled())
                     return {};
 
                 auto match_result = fuzzy_match(query, path);
