@@ -269,21 +269,29 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
     // 12. Let thisDate be ? CalendarDateFromFields(calendar, thisFields).
     auto* this_date = TRY(calendar_date_from_fields(vm, calendar, *this_fields));
 
-    // 13. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, settings.largest_unit));
+    auto* realm = vm.current_realm();
 
-    // 14. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
+    // 13. Let untilOptions be OrdinaryObjectCreate(null).
+    auto until_options = Object::create(*realm, nullptr);
+
+    // 14. Perform ? CopyDataProperties(untilOptions, options, « »).
+    TRY(until_options->copy_data_properties(vm, &settings.options, {}));
+
+    // 15. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", settings.[[LargestUnit]]).
+    MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, settings.largest_unit)));
+
+    // 16. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
     auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *until_options));
 
     auto result = DurationRecord { duration->years(), duration->months(), 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    // 15. If settings.[[SmallestUnit]] is not "month" or settings.[[RoundingIncrement]] ≠ 1, then
+    // 17. If settings.[[SmallestUnit]] is not "month" or settings.[[RoundingIncrement]] ≠ 1, then
     if (settings.smallest_unit != "month"sv || settings.rounding_increment != 1) {
         // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], thisDate)).[[DurationRecord]].
         result = TRY(round_duration(vm, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date)).duration_record;
     }
 
-    // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    // 18. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 

@@ -368,16 +368,24 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8
     // 10. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
     auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
-    // 11. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(vm, options, date_largest_unit));
+    auto* realm = vm.current_realm();
 
-    // 12. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
+    // 11. Let untilOptions be OrdinaryObjectCreate(null).
+    auto until_options = Object::create(*realm, nullptr);
+
+    // 12. Perform ? CopyDataProperties(untilOptions, options, « »).
+    TRY(until_options->copy_data_properties(vm, &options, {}));
+
+    // 13. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", settings.[[LargestUnit]]).
+    MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, date_largest_unit)));
+
+    // 14. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
     auto* date_difference = TRY(calendar_date_until(vm, calendar, date1, date2, *until_options));
 
-    // 13. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
+    // 15. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
     auto balance_result = TRY(balance_duration(vm, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { time_difference.nanoseconds }, largest_unit));
 
-    // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
+    // 16. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
     return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds);
 }
 

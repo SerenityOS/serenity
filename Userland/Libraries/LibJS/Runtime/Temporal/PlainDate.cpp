@@ -509,21 +509,29 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(VM& vm, DifferenceOp
     // 4. Let settings be ? GetDifferenceSettings(operation, options, date, « », "day", "day").
     auto settings = TRY(get_difference_settings(vm, operation, options_value, UnitGroup::Date, {}, { "day"sv }, "day"sv));
 
-    // 5. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, settings.largest_unit));
+    auto* realm = vm.current_realm();
 
-    // 6. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
+    // 5. Let untilOptions be OrdinaryObjectCreate(null).
+    auto until_options = Object::create(*realm, nullptr);
+
+    // 6. Perform ? CopyDataProperties(untilOptions, settings.[[Options]], « »).
+    TRY(until_options->copy_data_properties(vm, &settings.options, {}));
+
+    // 7. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", settings.[[LargestUnit]]).
+    MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, settings.largest_unit)));
+
+    // 8. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* duration = TRY(calendar_date_until(vm, temporal_date.calendar(), &temporal_date, other, *until_options));
 
     auto result = DurationRecord { duration->years(), duration->months(), duration->weeks(), duration->days(), 0, 0, 0, 0, 0, 0 };
 
-    // 7. If settings.[[SmallestUnit]] is not "day" or settings.[[RoundingIncrement]] ≠ 1, then
+    // 9. If settings.[[SmallestUnit]] is not "day" or settings.[[RoundingIncrement]] ≠ 1, then
     if (settings.smallest_unit != "day"sv || settings.rounding_increment != 1) {
         // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], temporalDate)).[[DurationRecord]].
         result = TRY(round_duration(vm, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, &temporal_date)).duration_record;
     }
 
-    // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], 0, 0, 0, 0, 0, 0).
+    // 10. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], 0, 0, 0, 0, 0, 0).
     return TRY(create_temporal_duration(vm, sign * result.years, sign * result.months, sign * result.weeks, sign * result.days, 0, 0, 0, 0, 0, 0));
 }
 
