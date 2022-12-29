@@ -170,7 +170,7 @@ int Client::get_new_id()
 
 Result Client::handle_promise(int id)
 {
-    auto result = m_promises.get(id)->promise->await();
+    auto result = TRY(m_promises.get(id)->promise->await());
     m_promises.remove(id);
     return result;
 }

@@ -577,7 +577,7 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
             promise->resolve({});
         });
 
-    promise->await();
+    MUST(promise->await());
 }
 
 void CookieJar::purge_expired_cookies()
