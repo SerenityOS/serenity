@@ -291,12 +291,12 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
     VERIFY(!m_background_action);
 
     m_background_action = Threading::BackgroundAction<int>::construct(
-        [this, strong_this = NonnullRefPtr(*this)](auto& task) {
+        [this, strong_this = NonnullRefPtr(*this)](auto& task) -> ErrorOr<int> {
             auto timer = Core::ElapsedTimer();
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
                 auto result = Core::Directory::for_each_entry(base_directory, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
-                    if (task.is_cancelled())
+                    if (task.is_canceled())
                         return Error::from_errno(ECANCELED);
 
                     struct stat st = {};
@@ -315,7 +315,7 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
                     }
 
                     // Show the first update, then show any subsequent updates every 100ms.
-                    if (!task.is_cancelled() && on_update && (!timer.is_valid() || timer.elapsed_time() > 100_ms)) {
+                    if (!task.is_canceled() && on_update && (!timer.is_valid() || timer.elapsed_time() > 100_ms)) {
                         timer.start();
                         on_update(m_total_size_in_bytes, m_file_count, m_directory_count);
                     }
@@ -323,15 +323,18 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
                     return IterationDecision::Continue;
                 });
                 if (result.is_error() && result.error().code() == ECANCELED)
-                    return ECANCELED;
+                    return Error::from_errno(ECANCELED);
             }
-            return ESUCCESS;
+            return 0;
         },
-        [this](auto result) -> ErrorOr<void> {
-            if (on_update && result == ESUCCESS)
+        [this](auto) -> ErrorOr<void> {
+            if (on_update)
                 on_update(m_total_size_in_bytes, m_file_count, m_directory_count);
 
             return {};
+        },
+        [](auto) {
+            // Ignore the error.
         });
 }
 

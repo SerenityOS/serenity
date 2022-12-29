@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
+#include <LibCore/Promise.h>
 #include <LibThreading/Thread.h>
 
 namespace Threading {
@@ -39,50 +40,80 @@ class BackgroundAction final : public Core::Object
     C_OBJECT(BackgroundAction);
 
 public:
-    void cancel()
-    {
-        m_cancelled = true;
-    }
-
-    bool is_cancelled() const
-    {
-        return m_cancelled;
-    }
+    // Promise is an implementation detail of BackgroundAction in order to communicate with EventLoop.
+    // All of the promise's callbacks and state are either managed by us or by EventLoop.
+    using Promise = Core::Promise<NonnullRefPtr<Core::Object>>;
 
     virtual ~BackgroundAction() = default;
 
+    Optional<Result> const& result() const { return m_result; }
+    Optional<Result>& result() { return m_result; }
+
+    void cancel() { m_canceled = true; }
+    // If your action is long-running, you should periodically check the cancel state and possibly return early.
+    bool is_canceled() const { return m_canceled; }
+
 private:
-    BackgroundAction(Function<Result(BackgroundAction&)> action, Function<ErrorOr<void>(Result)> on_complete, Optional<Function<void(Error)>> on_error = {})
+    BackgroundAction(Function<ErrorOr<Result>(BackgroundAction&)> action, Function<ErrorOr<void>(Result)> on_complete, Optional<Function<void(Error)>> on_error = {})
         : Core::Object(&background_thread())
+        , m_promise(Promise::try_create().release_value_but_fixme_should_propagate_errors())
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {
+        if (m_on_complete) {
+            m_promise->on_resolved = [](NonnullRefPtr<Core::Object>& object) -> ErrorOr<void> {
+                auto self = static_ptr_cast<BackgroundAction<Result>>(object);
+                VERIFY(self->m_result.has_value());
+                if (auto maybe_error = self->m_on_complete(self->m_result.value()); maybe_error.is_error())
+                    self->m_on_error(maybe_error.release_error());
+
+                return {};
+            };
+            Core::EventLoop::current().add_job(m_promise);
+        }
+
         if (on_error.has_value())
             m_on_error = on_error.release_value();
 
         enqueue_work([this, origin_event_loop = &Core::EventLoop::current()] {
-            m_result = m_action(*this);
-            if (m_on_complete) {
-                origin_event_loop->deferred_invoke([this] {
-                    auto maybe_error = m_on_complete(m_result.release_value());
-                    if (maybe_error.is_error())
-                        m_on_error(maybe_error.release_error());
-                    remove_from_parent();
-                });
-                origin_event_loop->wake();
+            auto result = m_action(*this);
+            // The event loop cancels the promise when it exits.
+            m_canceled |= m_promise->is_canceled();
+            // All of our work was successful and we weren't cancelled; resolve the event loop's promise.
+            if (!m_canceled && !result.is_error()) {
+                m_result = result.release_value();
+                // If there is no completion callback, we don't rely on the user keeping around the event loop.
+                if (m_on_complete) {
+                    origin_event_loop->deferred_invoke([this] {
+                        // Our promise's resolution function will never error.
+                        (void)m_promise->resolve(*this);
+                        remove_from_parent();
+                    });
+                    origin_event_loop->wake();
+                }
             } else {
-                this->remove_from_parent();
+                // We were either unsuccessful or cancelled (in which case there is no error).
+                auto error = Error::from_errno(ECANCELED);
+                if (result.is_error())
+                    error = result.release_error();
+
+                m_promise->cancel(Error::from_errno(ECANCELED));
+                if (m_on_error)
+                    m_on_error(move(error));
+
+                remove_from_parent();
             }
         });
     }
 
-    bool m_cancelled { false };
-    Function<Result(BackgroundAction&)> m_action;
+    NonnullRefPtr<Promise> m_promise;
+    Function<ErrorOr<Result>(BackgroundAction&)> m_action;
     Function<ErrorOr<void>(Result)> m_on_complete;
     Function<void(Error)> m_on_error = [](Error error) {
         dbgln("Error occurred while running a BackgroundAction: {}", error);
     };
     Optional<Result> m_result;
+    bool m_canceled { false };
 };
 
 }

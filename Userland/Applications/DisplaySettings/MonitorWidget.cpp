@@ -30,26 +30,25 @@ bool MonitorWidget::set_wallpaper(DeprecatedString path)
     if (!is_different_to_current_wallpaper_path(path))
         return false;
 
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
+    (void)Threading::BackgroundAction<NonnullRefPtr<Gfx::Bitmap>>::construct(
         [path](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
             if (path.is_empty())
                 return Error::from_errno(ENOENT);
             return Gfx::Bitmap::load_from_file(path);
         },
 
-        [this, path](ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap_or_error) -> ErrorOr<void> {
+        [this, path](NonnullRefPtr<Gfx::Bitmap> bitmap) -> ErrorOr<void> {
             // If we've been requested to change while we were loading the bitmap, don't bother spending the cost to
             // move and render the now stale bitmap.
             if (is_different_to_current_wallpaper_path(path))
                 return {};
-            if (bitmap_or_error.is_error())
-                m_wallpaper_bitmap = nullptr;
-            else
-                m_wallpaper_bitmap = bitmap_or_error.release_value();
+            m_wallpaper_bitmap = move(bitmap);
             m_desktop_dirty = true;
             update();
-
-            return bitmap_or_error.is_error() ? bitmap_or_error.release_error() : ErrorOr<void> {};
+            return {};
+        },
+        [this, path](Error) -> void {
+            m_wallpaper_bitmap = nullptr;
         });
 
     if (path.is_empty())
