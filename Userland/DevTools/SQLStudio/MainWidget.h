@@ -25,7 +25,6 @@ public:
     void initialize_menu(GUI::Window*);
     void open_new_script();
     void open_script_from_file(LexicalPath const&);
-    void open_database_from_file(LexicalPath const&);
 
     bool request_close();
 

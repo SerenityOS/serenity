@@ -39,18 +39,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    auto needs_new_script = true;
     if (file_to_open) {
         auto path = LexicalPath(file_to_open);
-        if (path.extension().equals_ignoring_case("sql"sv)) {
-            main_widget->open_script_from_file(path);
-            needs_new_script = false;
-        } else if (path.extension().equals_ignoring_case("db"sv)) {
-            main_widget->open_database_from_file(path);
-        }
-    }
-    if (needs_new_script)
+        main_widget->open_script_from_file(path);
+    } else {
         main_widget->open_new_script();
+    }
 
     window->show();
     return app->exec();

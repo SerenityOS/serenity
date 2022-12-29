@@ -352,11 +352,6 @@ void MainWidget::open_script_from_file(LexicalPath const& file_path)
     m_tab_widget->set_active_widget(&editor);
 }
 
-void MainWidget::open_database_from_file(LexicalPath const&)
-{
-    TODO();
-}
-
 bool MainWidget::request_close()
 {
     auto any_scripts_modified { false };
@@ -485,10 +480,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
                 continue;
 
             auto lexical_path = LexicalPath(url.path());
-            if (lexical_path.extension().equals_ignoring_case("sql"sv))
-                open_script_from_file(lexical_path);
-            if (lexical_path.extension().equals_ignoring_case("db"sv))
-                open_database_from_file(lexical_path);
+            open_script_from_file(lexical_path);
         }
     }
 }
