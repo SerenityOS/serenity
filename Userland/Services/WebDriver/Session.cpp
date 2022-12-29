@@ -80,7 +80,7 @@ ErrorOr<void> Session::start(LaunchBrowserCallbacks const& callbacks)
 
     // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propagate
     //        errors received while accepting the Browser and WebContent sockets.
-    TRY(promise->await());
+    TRY(TRY(promise->await()));
 
     m_started = true;
     return {};
