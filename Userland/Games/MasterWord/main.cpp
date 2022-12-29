@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(settings_menu->try_add_action(GUI::Action::create("Set &Word Length", [&](auto&) {
         auto word_length = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
         auto word_length_string = DeprecatedString::number(word_length);
-        if (GUI::InputBox::show(window, word_length_string, "Word length:"sv, "MasterWord"sv) == GUI::InputBox::ExecResult::OK && !word_length_string.is_empty()) {
+        if (GUI::InputBox::show(window, word_length_string, "Word length:"sv, "MasterWord"sv, {}, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto maybe_word_length = word_length_string.template to_uint();
             if (!maybe_word_length.has_value() || maybe_word_length.value() < shortest_word || maybe_word_length.value() > longest_word) {
                 GUI::MessageBox::show(window, DeprecatedString::formatted("Please enter a number between {} and {}.", shortest_word, longest_word), "MasterWord"sv);
@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(settings_menu->try_add_action(GUI::Action::create("Set &Number Of Guesses", [&](auto&) {
         auto max_guesses = Config::read_i32("MasterWord"sv, ""sv, "max_guesses"sv, 5);
         auto max_guesses_string = DeprecatedString::number(max_guesses);
-        if (GUI::InputBox::show(window, max_guesses_string, "Maximum number of guesses:"sv, "MasterWord"sv) == GUI::InputBox::ExecResult::OK && !max_guesses_string.is_empty()) {
+        if (GUI::InputBox::show(window, max_guesses_string, "Maximum number of guesses:"sv, "MasterWord"sv, {}, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto maybe_max_guesses = max_guesses_string.template to_uint();
             if (!maybe_max_guesses.has_value() || maybe_max_guesses.value() < 1 || maybe_max_guesses.value() > 20) {
                 GUI::MessageBox::show(window, "Please enter a number between 1 and 20."sv, "MasterWord"sv);
