@@ -196,7 +196,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!input.contains(':'))
                 return false;
 
-            // NOTE: Input is explicitly not trimmed, but instad taken in raw;
+            // NOTE: Input is explicitly not trimmed, but instead taken in raw;
             //       Space prepended usernames and appended passwords might be legal in the user's context.
             auto maybe_credentials = String::from_utf8(input);
             if (maybe_credentials.is_error())
