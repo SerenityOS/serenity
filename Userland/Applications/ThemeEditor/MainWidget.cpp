@@ -206,21 +206,30 @@ static const PropertyTab color_scheme_tab {
     }
 };
 
-MainWidget::MainWidget()
-    : m_current_palette(GUI::Application::the()->palette())
+ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 {
-    load_from_gml(theme_editor_gml);
+    auto alignment_model = TRY(AlignmentModel::try_create());
 
-    m_alignment_model = MUST(AlignmentModel::try_create());
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model))));
 
-    m_preview_widget = find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
-    m_property_tabs = find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
-    add_property_tab(window_tab);
-    add_property_tab(widgets_tab);
-    add_property_tab(syntax_highlighting_tab);
-    add_property_tab(color_scheme_tab);
+    TRY(main_widget->try_load_from_gml(theme_editor_gml));
+    main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
+    main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
 
-    build_override_controls();
+    TRY(main_widget->add_property_tab(window_tab));
+    TRY(main_widget->add_property_tab(widgets_tab));
+    TRY(main_widget->add_property_tab(syntax_highlighting_tab));
+    TRY(main_widget->add_property_tab(color_scheme_tab));
+
+    main_widget->build_override_controls();
+
+    return main_widget;
+}
+
+MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model)
+    : m_current_palette(GUI::Application::the()->palette())
+    , m_alignment_model(move(alignment_model))
+{
 }
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
@@ -418,31 +427,31 @@ void MainWidget::build_override_controls()
     };
 }
 
-void MainWidget::add_property_tab(PropertyTab const& property_tab)
+ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
 {
-    auto& scrollable_container = m_property_tabs->add_tab<GUI::ScrollableContainerWidget>(property_tab.title);
-    scrollable_container.set_should_hide_unnecessary_scrollbars(true);
+    auto scrollable_container = TRY(m_property_tabs->try_add_tab<GUI::ScrollableContainerWidget>(property_tab.title));
+    scrollable_container->set_should_hide_unnecessary_scrollbars(true);
 
-    auto properties_list = GUI::Widget::construct();
-    scrollable_container.set_widget(properties_list);
-    properties_list->set_layout<GUI::VerticalBoxLayout>();
+    auto properties_list = TRY(GUI::Widget::try_create());
+    scrollable_container->set_widget(properties_list);
+    (void)TRY(properties_list->try_set_layout<GUI::VerticalBoxLayout>());
     properties_list->layout()->set_spacing(12);
     properties_list->layout()->set_margins({ 8 });
 
     for (auto const& group : property_tab.property_groups) {
-        NonnullRefPtr<GUI::GroupBox> group_box = properties_list->add<GUI::GroupBox>(group.title);
-        group_box->set_layout<GUI::VerticalBoxLayout>();
+        NonnullRefPtr<GUI::GroupBox> group_box = TRY(properties_list->try_add<GUI::GroupBox>(group.title));
+        (void)TRY(group_box->try_set_layout<GUI::VerticalBoxLayout>());
         group_box->layout()->set_spacing(12);
         // 1px less on the left makes the text line up with the group title.
         group_box->layout()->set_margins({ 8, 8, 8, 7 });
         group_box->set_preferred_height(GUI::SpecialDimension::Fit);
 
         for (auto const& property : group.properties) {
-            NonnullRefPtr<GUI::Widget> row_widget = group_box->add<GUI::Widget>();
+            NonnullRefPtr<GUI::Widget> row_widget = TRY(group_box->try_add<GUI::Widget>());
             row_widget->set_fixed_height(22);
-            property.role.visit(
-                [&](Gfx::AlignmentRole role) {
-                    row_widget->load_from_gml(alignment_property_gml);
+            TRY(property.role.visit(
+                [&](Gfx::AlignmentRole role) -> ErrorOr<void> {
+                    TRY(row_widget->try_load_from_gml(alignment_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -456,9 +465,10 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
 
                     VERIFY(m_alignment_inputs[to_underlying(role)].is_null());
                     m_alignment_inputs[to_underlying(role)] = alignment_picker;
+                    return {};
                 },
-                [&](Gfx::ColorRole role) {
-                    row_widget->load_from_gml(color_property_gml);
+                [&](Gfx::ColorRole role) -> ErrorOr<void> {
+                    TRY(row_widget->try_load_from_gml(color_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -471,9 +481,10 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
 
                     VERIFY(m_color_inputs[to_underlying(role)].is_null());
                     m_color_inputs[to_underlying(role)] = color_input;
+                    return {};
                 },
-                [&](Gfx::FlagRole role) {
-                    row_widget->load_from_gml(flag_property_gml);
+                [&](Gfx::FlagRole role) -> ErrorOr<void> {
+                    TRY(row_widget->try_load_from_gml(flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
                     checkbox.set_text(to_string(role));
@@ -484,9 +495,10 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
 
                     VERIFY(m_flag_inputs[to_underlying(role)].is_null());
                     m_flag_inputs[to_underlying(role)] = checkbox;
+                    return {};
                 },
-                [&](Gfx::MetricRole role) {
-                    row_widget->load_from_gml(metric_property_gml);
+                [&](Gfx::MetricRole role) -> ErrorOr<void> {
+                    TRY(row_widget->try_load_from_gml(metric_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -499,9 +511,10 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
 
                     VERIFY(m_metric_inputs[to_underlying(role)].is_null());
                     m_metric_inputs[to_underlying(role)] = spin_box;
+                    return {};
                 },
-                [&](Gfx::PathRole role) {
-                    row_widget->load_from_gml(path_property_gml);
+                [&](Gfx::PathRole role) -> ErrorOr<void> {
+                    TRY(row_widget->try_load_from_gml(path_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -520,9 +533,12 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
 
                     VERIFY(m_path_inputs[to_underlying(role)].is_null());
                     m_path_inputs[to_underlying(role)] = path_input;
-                });
+                    return {};
+                }));
         }
     }
+
+    return {};
 }
 
 void MainWidget::set_alignment(Gfx::AlignmentRole role, Gfx::TextAlignment value)

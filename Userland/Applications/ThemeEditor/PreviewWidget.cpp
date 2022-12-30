@@ -23,9 +23,22 @@ REGISTER_WIDGET(ThemeEditor, PreviewWidget);
 namespace ThemeEditor {
 
 class MiniWidgetGallery final : public GUI::Widget {
-    C_OBJECT(MiniWidgetGallery);
+    C_OBJECT_ABSTRACT(MiniWidgetGallery);
 
 public:
+    static ErrorOr<NonnullRefPtr<MiniWidgetGallery>> try_create()
+    {
+        auto gallery = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MiniWidgetGallery()));
+        TRY(gallery->try_load_from_gml(window_preview_gml));
+
+        gallery->for_each_child_widget([](auto& child) {
+            child.set_focus_policy(GUI::FocusPolicy::NoFocus);
+            return IterationDecision::Continue;
+        });
+
+        return gallery;
+    }
+
     void set_preview_palette(Gfx::Palette const& palette)
     {
         set_palette(palette);
@@ -42,19 +55,19 @@ public:
 private:
     MiniWidgetGallery()
     {
-        load_from_gml(window_preview_gml);
-
-        for_each_child_widget([](auto& child) {
-            child.set_focus_policy(GUI::FocusPolicy::NoFocus);
-            return IterationDecision::Continue;
-        });
     }
 };
 
-PreviewWidget::PreviewWidget(Gfx::Palette const& initial_preview_palette)
-    : GUI::AbstractThemePreview(initial_preview_palette)
+ErrorOr<NonnullRefPtr<PreviewWidget>> PreviewWidget::try_create()
 {
-    m_gallery = add<MiniWidgetGallery>();
+    auto preview_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PreviewWidget()));
+    preview_widget->m_gallery = TRY(preview_widget->try_add<MiniWidgetGallery>());
+    return preview_widget;
+}
+
+PreviewWidget::PreviewWidget()
+    : GUI::AbstractThemePreview(GUI::Application::the()->palette())
+{
     set_greedy_for_hits(true);
 }
 
