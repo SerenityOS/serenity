@@ -160,6 +160,22 @@ ErrorOr<ColorSpace> parse_data_color_space(ICCHeader const& header)
     return Error::from_string_literal("ICC::Profile: Invalid data color space");
 }
 
+ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
+{
+    // ICC v4, 7.2.15 Rendering intent field
+    switch (header.rendering_intent) {
+    case 0:
+        return RenderingIntent::Perceptual;
+    case 1:
+        return RenderingIntent::MediaRelativeColorimetric;
+    case 2:
+        return RenderingIntent::Saturation;
+    case 3:
+        return RenderingIntent::ICCAbsoluteColorimetric;
+    }
+    return Error::from_string_literal("ICC::Profile: Invalid rendering intent");
+}
+
 ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
 {
     // iCC v4, 7.2.8 Date and time field
@@ -255,6 +271,22 @@ char const* color_space_name(ColorSpace color_space)
     }
 }
 
+char const* rendering_intent_name(RenderingIntent rendering_intent)
+{
+    switch (rendering_intent) {
+    case RenderingIntent::Perceptual:
+        return "Perceptual";
+    case RenderingIntent::MediaRelativeColorimetric:
+        return "Media-relative colorimetric";
+    case RenderingIntent::Saturation:
+        return "Saturation";
+    case RenderingIntent::ICCAbsoluteColorimetric:
+        return "ICC-absolute colorimetric";
+    default:
+        return NULL;
+    }
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
@@ -269,6 +301,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_device_class = TRY(parse_device_class(header));
     profile->m_data_color_space = TRY(parse_data_color_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
+    profile->m_rendering_intent = TRY(parse_rendering_intent(header));
 
     return profile;
 }
