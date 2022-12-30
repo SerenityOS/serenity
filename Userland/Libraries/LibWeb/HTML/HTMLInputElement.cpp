@@ -837,4 +837,11 @@ i32 HTMLInputElement::default_tab_index_value() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-setselectionrange
+WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 end, DeprecatedString const& direction)
+{
+    dbgln("(STUBBED) HTMLInputElement::set_selection_range(start={}, end={}, direction='{}'). Called on: {}", start, end, direction, debug_description());
+    return {};
+}
+
 }
