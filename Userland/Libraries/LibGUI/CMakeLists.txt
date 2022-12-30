@@ -17,6 +17,7 @@ set(SOURCES
     ActionGroup.cpp
     Application.cpp
     AutocompleteProvider.cpp
+    BitmapCache.cpp
     BoxLayout.cpp
     Breadcrumbbar.cpp
     Button.cpp
