@@ -13,6 +13,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibGUI/AbstractThemePreview.h>
+#include <LibGUI/BitmapCache.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 
@@ -21,12 +22,12 @@ namespace GUI {
 AbstractThemePreview::AbstractThemePreview(Gfx::Palette const& preview_palette)
     : m_preview_palette(preview_palette)
 {
-    m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_inactive_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_active_window_icon = BitmapCache::load_bitmap("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_inactive_window_icon = BitmapCache::load_bitmap("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
 
-    m_default_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_default_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_default_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_close_bitmap = BitmapCache::load_bitmap("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_maximize_bitmap = BitmapCache::load_bitmap("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_minimize_bitmap = BitmapCache::load_bitmap("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
 
     VERIFY(m_active_window_icon);
     VERIFY(m_inactive_window_icon);

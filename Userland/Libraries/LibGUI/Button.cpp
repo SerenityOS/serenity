@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/BitmapCache.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -182,9 +183,9 @@ void Button::set_icon(RefPtr<Gfx::Bitmap> icon)
 
 void Button::set_icon_from_path(DeprecatedString const& path)
 {
-    auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
+    auto maybe_bitmap = BitmapCache::load_bitmap(path);
     if (maybe_bitmap.is_error()) {
-        dbgln("Unable to load bitmap `{}` for button icon", path);
+        dbgln("Unable to load bitmap `{}` for button icon: {}", path, maybe_bitmap.error());
         return;
     }
     set_icon(maybe_bitmap.release_value());

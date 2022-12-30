@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGUI/BitmapCache.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ColorPicker.h>
@@ -187,8 +188,8 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, DeprecatedString ti
     : Dialog(parent_window)
     , m_color(color)
 {
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
-    set_title(title);
+    set_icon(BitmapCache::load_bitmap("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
+    set_title(move(title));
     set_resizable(false);
     resize(480, 326);
 

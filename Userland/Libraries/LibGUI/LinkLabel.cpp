@@ -6,6 +6,7 @@
  */
 
 #include <LibGUI/Action.h>
+#include <LibGUI/BitmapCache.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/LinkLabel.h>
@@ -29,7 +30,7 @@ LinkLabel::LinkLabel(DeprecatedString text)
 
 void LinkLabel::setup_actions()
 {
-    m_open_action = GUI::Action::create("Show in File Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_open_action = GUI::Action::create("Show in File Manager", {}, BitmapCache::load_bitmap("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         if (on_click)
             on_click();
     });

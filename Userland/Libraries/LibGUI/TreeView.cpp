@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <LibCore/Object.h>
+#include <LibGUI/BitmapCache.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
@@ -42,8 +43,8 @@ TreeView::TreeView()
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_column_headers_visible(false);
-    m_expand_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/serenity/treeview-expand.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_collapse_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/serenity/treeview-collapse.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_expand_bitmap = BitmapCache::load_bitmap("/res/icons/serenity/treeview-expand.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_collapse_bitmap = BitmapCache::load_bitmap("/res/icons/serenity/treeview-collapse.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
 ModelIndex TreeView::index_at_event_position(Gfx::IntPoint a_position, bool& is_toggle) const
