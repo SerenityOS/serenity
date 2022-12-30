@@ -73,11 +73,12 @@ public:
 
     ALWAYS_INLINE static void pause()
     {
-        TODO_AARCH64();
+        asm volatile("isb sy");
     }
     ALWAYS_INLINE static void wait_check()
     {
-        TODO_AARCH64();
+        asm volatile("yield");
+        // FIXME: Process SMP messages once we support SMP on aarch64; cf. x86_64
     }
 
     ALWAYS_INLINE u8 physical_address_bit_width() const
