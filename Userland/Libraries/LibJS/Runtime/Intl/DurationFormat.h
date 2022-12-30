@@ -163,7 +163,7 @@ private:
     DeprecatedString m_locale;                            // [[Locale]]
     DeprecatedString m_data_locale;                       // [[DataLocale]]
     DeprecatedString m_numbering_system;                  // [[NumberingSystem]]
-    Style m_style;                                        // [[Style]]
+    Style m_style { Style::Long };                        // [[Style]]
     ValueStyle m_years_style { ValueStyle::Long };        // [[YearsStyle]]
     Display m_years_display { Display::Auto };            // [[YearsDisplay]]
     ValueStyle m_months_style { ValueStyle::Long };       // [[MonthsStyle]]
