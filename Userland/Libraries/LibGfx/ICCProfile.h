@@ -75,6 +75,15 @@ enum class ColorSpace : u32 {
 };
 char const* color_space_name(ColorSpace);
 
+// ICC v4, 7.2.15 Rendering intent field
+enum class RenderingIntent {
+    Perceptual,
+    MediaRelativeColorimetric,
+    Saturation,
+    ICCAbsoluteColorimetric,
+};
+char const* rendering_intent_name(RenderingIntent);
+
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes bytes);
@@ -83,12 +92,14 @@ public:
     DeviceClass device_class() const { return m_device_class; }
     ColorSpace data_color_space() const { return m_data_color_space; }
     time_t creation_timestamp() const { return m_creation_timestamp; }
+    RenderingIntent rendering_intent() const { return m_rendering_intent; }
 
 private:
     Version m_version;
     DeviceClass m_device_class;
     ColorSpace m_data_color_space;
     time_t m_creation_timestamp;
+    RenderingIntent m_rendering_intent;
 };
 
 }
