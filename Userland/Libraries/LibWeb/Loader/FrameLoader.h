@@ -47,8 +47,6 @@ private:
     void load_favicon(RefPtr<Gfx::Bitmap> bitmap = nullptr);
     bool parse_document(DOM::Document&, ByteBuffer const& data);
 
-    void store_response_cookies(AK::URL const& url, DeprecatedString const& cookies);
-
     HTML::BrowsingContext& m_browsing_context;
     size_t m_redirects_count { 0 };
 };
