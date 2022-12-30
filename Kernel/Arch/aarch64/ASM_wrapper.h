@@ -62,13 +62,10 @@ inline ExceptionLevel get_current_exception_level()
 
 inline void wait_cycles(int n)
 {
-    // This is probably too fast when caching and branch prediction is turned on.
     // FIXME: Make timer-based.
-    asm("mov x0, %[value]\n"
-        "0:\n"
-        "    subs x0, x0, #1\n"
-        "    bne 0b" ::[value] "r"(n)
-        : "x0");
+    for (int volatile i = 0; i < n; i = i + 1) {
+        Processor::pause();
+    }
 }
 
 inline void el1_vector_table_install(void* vector_table)
