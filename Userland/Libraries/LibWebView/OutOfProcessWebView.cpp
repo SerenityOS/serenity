@@ -367,7 +367,7 @@ void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClie
 
 void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, DeprecatedString const& message, DeprecatedString const& default_)
 {
-    m_dialog = GUI::InputBox::construct(window(), default_, message, "Prompt"sv, StringView {}, GUI::InputType::Text);
+    m_dialog = GUI::InputBox::construct(window(), default_, message, "Prompt"sv, GUI::InputType::Text, StringView {});
     m_dialog->set_icon(window()->icon());
 
     if (m_dialog->exec() == GUI::InputBox::ExecResult::OK)

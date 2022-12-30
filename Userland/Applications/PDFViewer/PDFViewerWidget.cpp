@@ -370,7 +370,7 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
     if (auto sh = document->security_handler(); sh && !sh->has_user_password()) {
         DeprecatedString password;
         while (true) {
-            auto result = GUI::InputBox::show(window(), password, "Password"sv, "Password required"sv, {}, GUI::InputType::Password);
+            auto result = GUI::InputBox::show(window(), password, "Password"sv, "Password required"sv, GUI::InputType::Password);
             if (result == GUI::Dialog::ExecResult::OK
                 && document->security_handler()->try_provide_user_password(password))
                 break;
