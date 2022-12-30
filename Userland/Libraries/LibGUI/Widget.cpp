@@ -1147,13 +1147,13 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
 
 ErrorOr<void> Widget::try_load_from_gml(StringView gml_string)
 {
-    return try_load_from_gml(gml_string, [](DeprecatedString const& class_name) -> RefPtr<Core::Object> {
+    return try_load_from_gml(gml_string, [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
         dbgln("Class '{}' not registered", class_name);
-        return nullptr;
+        return Error::from_string_literal("Class not registered");
     });
 }
 
-ErrorOr<void> Widget::try_load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::try_load_from_gml(StringView gml_string, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
 {
     auto value = TRY(GML::parse_gml(gml_string));
     return load_from_gml_ast(value, unregistered_child_handler);
@@ -1164,12 +1164,12 @@ bool Widget::load_from_gml(StringView gml_string)
     return !try_load_from_gml(gml_string).is_error();
 }
 
-bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+bool Widget::load_from_gml(StringView gml_string, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
 {
     return !try_load_from_gml(gml_string, unregistered_child_handler).is_error();
 }
 
-ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
@@ -1226,7 +1226,7 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPt
                     return Error::from_string_literal("Invalid widget class");
                 }
             } else {
-                child = unregistered_child_handler(class_name);
+                child = TRY(unregistered_child_handler(class_name));
             }
             if (!child)
                 return Error::from_string_literal("Unable to construct a Widget class for child");

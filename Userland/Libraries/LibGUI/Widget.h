@@ -354,11 +354,11 @@ public:
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
     ErrorOr<void> try_load_from_gml(StringView);
-    ErrorOr<void> try_load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
+    ErrorOr<void> try_load_from_gml(StringView, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&));
 
     // FIXME: Replace all uses of load_from_gml() with try_load_from_gml()
     bool load_from_gml(StringView gml_string);
-    bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
+    bool load_from_gml(StringView, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&));
 
     // FIXME: remove this when all uses of shrink_to_fit are eliminated
     void set_shrink_to_fit(bool);
@@ -367,7 +367,7 @@ public:
     bool has_pending_drop() const;
 
     // In order for others to be able to call this, it needs to be public.
-    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(DeprecatedString const&));
+    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&));
 
 protected:
     Widget();
