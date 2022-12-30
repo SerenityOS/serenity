@@ -343,7 +343,7 @@ ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object&
 }
 
 // 12.2.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
-ThrowCompletionOr<Value> calendar_days_in_month(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_days_in_month(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Assert: Type(calendar) is Object.
 

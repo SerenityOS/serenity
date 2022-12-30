@@ -324,10 +324,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     // 9. If sign < 0, then
     if (sign < 0) {
         // a. Let dayFromCalendar be ? CalendarDaysInMonth(calendar, yearMonth).
-        auto day_from_calendar = TRY(calendar_days_in_month(vm, calendar, year_month));
-
-        // b. Let day be ? ToPositiveInteger(dayFromCalendar).
-        day = TRY(to_positive_integer(vm, day_from_calendar));
+        day = TRY(calendar_days_in_month(vm, calendar, year_month));
     }
     // 10. Else,
     else {

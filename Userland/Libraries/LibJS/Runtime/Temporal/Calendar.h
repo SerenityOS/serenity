@@ -55,7 +55,7 @@ ThrowCompletionOr<Value> calendar_day_of_year(VM&, Object& calendar, Object& dat
 ThrowCompletionOr<Value> calendar_week_of_year(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_year_of_week(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_days_in_week(VM&, Object& calendar, Object& date_like);
-ThrowCompletionOr<Value> calendar_days_in_month(VM&, Object& calendar, Object& date_like);
+ThrowCompletionOr<double> calendar_days_in_month(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_days_in_year(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_months_in_year(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<Value> calendar_in_leap_year(VM&, Object& calendar, Object& date_like);
