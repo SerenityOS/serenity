@@ -121,8 +121,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     editor->on_change = [&] {
         preview->remove_all_children();
-        preview->load_from_gml(editor->text(), [](const DeprecatedString& class_name) -> RefPtr<Core::Object> {
-            return UnregisteredWidget::construct(class_name);
+        preview->load_from_gml(editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
+            return UnregisteredWidget::try_create(class_name);
         });
     };
 
