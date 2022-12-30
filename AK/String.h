@@ -174,4 +174,9 @@ struct Formatter<String> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder&, String const&);
 };
 
+template<>
+inline constexpr bool Detail::IsHashCompatible<String, StringView> = true;
+template<>
+inline constexpr bool Detail::IsHashCompatible<StringView, String> = true;
+
 }
