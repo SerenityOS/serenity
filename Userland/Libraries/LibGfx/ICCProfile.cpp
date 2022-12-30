@@ -77,7 +77,7 @@ struct ICCHeader {
     BigEndian<u16> profile_version_zero;
 
     BigEndian<DeviceClass> profile_device_class;
-    BigEndian<u32> data_color_space;
+    BigEndian<ColorSpace> data_color_space;
     BigEndian<u32> pcs; // "Profile Connection Space"
 
     DateTimeNumber profile_creation_time;
@@ -126,6 +126,40 @@ ErrorOr<DeviceClass> parse_device_class(ICCHeader const& header)
     return Error::from_string_literal("ICC::Profile: Invalid device class");
 }
 
+ErrorOr<ColorSpace> parse_data_color_space(ICCHeader const& header)
+{
+    // ICC v4, 7.2.6 Data colour space field
+    switch (header.data_color_space) {
+    case ColorSpace::nCIEXYZ:
+    case ColorSpace::CIELAB:
+    case ColorSpace::CIELUV:
+    case ColorSpace::YCbCr:
+    case ColorSpace::CIEYxy:
+    case ColorSpace::RGB:
+    case ColorSpace::Gray:
+    case ColorSpace::HSV:
+    case ColorSpace::HLS:
+    case ColorSpace::CMYK:
+    case ColorSpace::CMY:
+    case ColorSpace::TwoColor:
+    case ColorSpace::ThreeColor:
+    case ColorSpace::FourColor:
+    case ColorSpace::FiveColor:
+    case ColorSpace::SixColor:
+    case ColorSpace::SevenColor:
+    case ColorSpace::EightColor:
+    case ColorSpace::NineColor:
+    case ColorSpace::TenColor:
+    case ColorSpace::ElevenColor:
+    case ColorSpace::TwelveColor:
+    case ColorSpace::ThirteenColor:
+    case ColorSpace::FourteenColor:
+    case ColorSpace::FifteenColor:
+        return header.data_color_space;
+    }
+    return Error::from_string_literal("ICC::Profile: Invalid data color space");
+}
+
 ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
 {
     // iCC v4, 7.2.8 Date and time field
@@ -163,6 +197,64 @@ char const* device_class_name(DeviceClass device_class)
     }
 }
 
+char const* color_space_name(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::nCIEXYZ:
+        return "nCIEXYZ";
+    case ColorSpace::CIELAB:
+        return "CIELAB";
+    case ColorSpace::CIELUV:
+        return "CIELUV";
+    case ColorSpace::YCbCr:
+        return "YCbCr";
+    case ColorSpace::CIEYxy:
+        return "CIEYxy";
+    case ColorSpace::RGB:
+        return "RGB";
+    case ColorSpace::Gray:
+        return "Gray";
+    case ColorSpace::HSV:
+        return "HSV";
+    case ColorSpace::HLS:
+        return "HLS";
+    case ColorSpace::CMYK:
+        return "CMYK";
+    case ColorSpace::CMY:
+        return "CMY";
+    case ColorSpace::TwoColor:
+        return "2 color";
+    case ColorSpace::ThreeColor:
+        return "3 color (other than XYZ, Lab, Luv, YCbCr, CIEYxy, RGB, HSV, HLS, CMY)";
+    case ColorSpace::FourColor:
+        return "4 color (other than CMYK)";
+    case ColorSpace::FiveColor:
+        return "5 color";
+    case ColorSpace::SixColor:
+        return "6 color";
+    case ColorSpace::SevenColor:
+        return "7 color";
+    case ColorSpace::EightColor:
+        return "8 color";
+    case ColorSpace::NineColor:
+        return "9 color";
+    case ColorSpace::TenColor:
+        return "10 color";
+    case ColorSpace::ElevenColor:
+        return "11 color";
+    case ColorSpace::TwelveColor:
+        return "12 color";
+    case ColorSpace::ThirteenColor:
+        return "13 color";
+    case ColorSpace::FourteenColor:
+        return "14 color";
+    case ColorSpace::FifteenColor:
+        return "15 color";
+    default:
+        return NULL;
+    }
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
@@ -175,6 +267,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     TRY(parse_file_signature(header));
     profile->m_version = TRY(parse_version(header));
     profile->m_device_class = TRY(parse_device_class(header));
+    profile->m_data_color_space = TRY(parse_data_color_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
 
     return profile;
