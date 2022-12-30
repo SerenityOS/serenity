@@ -178,7 +178,7 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/switch-mouse-buttons.png"
+                name: "switch_buttons_image_label"
             }
 
             @GUI::CheckBox {
