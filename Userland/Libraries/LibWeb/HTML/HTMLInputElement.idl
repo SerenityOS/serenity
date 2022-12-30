@@ -38,6 +38,8 @@ interface HTMLInputElement : HTMLElement {
     [Reflect] attribute DOMString align;
     [Reflect=usemap] attribute DOMString useMap;
 
+    undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
+
     undefined showPicker();
 
 };
