@@ -287,7 +287,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
     return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
-// 9.5.8 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
+// 9.5.8 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplainyearmonth
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(VM& vm, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
     auto& realm = *vm.current_realm();
@@ -323,7 +323,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
 
     // 9. If sign < 0, then
     if (sign < 0) {
-        // a. Let dayFromCalendar be ? CalendarDaysInMonth(calendar, yearMonth).
+        // a. Let day be ? CalendarDaysInMonth(calendar, yearMonth).
         day = TRY(calendar_days_in_month(vm, calendar, year_month));
     }
     // 10. Else,
