@@ -47,8 +47,10 @@ StringView device_class_name(DeviceClass);
 
 // ICC v4, 7.2.6 Data colour space field, Table 19 — Data colour space signatures
 enum class ColorSpace : u32 {
-    nCIEXYZ = 0x58595A20,       // 'XYZ '
-    CIELAB = 0x4C616220,        // 'Lab '
+    nCIEXYZ = 0x58595A20,       // 'XYZ ', used in data color spaces.
+    PCSXYZ = nCIEXYZ,           // Used in profile connection space instead.
+    CIELAB = 0x4C616220,        // 'Lab ', used in data color spaces.
+    PCSLAB = CIELAB,            // Used in profile connection space instead.
     CIELUV = 0x4C757620,        // 'Luv '
     YCbCr = 0x59436272,         // 'YCbr'
     CIEYxy = 0x59787920,        // 'Yxy '
@@ -73,7 +75,8 @@ enum class ColorSpace : u32 {
     FourteenColor = 0x45434C52, // 'ECLR'
     FifteenColor = 0x46434C52,  // 'FCLR'
 };
-StringView color_space_name(ColorSpace);
+StringView data_color_space_name(ColorSpace);
+StringView profile_connection_space_name(ColorSpace);
 
 // ICC v4, 7.2.15 Rendering intent field
 enum class RenderingIntent {
@@ -119,6 +122,10 @@ public:
     Version version() const { return m_version; }
     DeviceClass device_class() const { return m_device_class; }
     ColorSpace data_color_space() const { return m_data_color_space; }
+
+    // For non-DeviceLink profiles, always PCSXYZ or PCSLAB.
+    ColorSpace connection_space() const { return m_connection_space; }
+
     time_t creation_timestamp() const { return m_creation_timestamp; }
     Flags flags() const { return m_flags; }
     RenderingIntent rendering_intent() const { return m_rendering_intent; }
@@ -127,6 +134,7 @@ private:
     Version m_version;
     DeviceClass m_device_class;
     ColorSpace m_data_color_space;
+    ColorSpace m_connection_space;
     time_t m_creation_timestamp;
     Flags m_flags;
     RenderingIntent m_rendering_intent;

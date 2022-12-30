@@ -78,7 +78,7 @@ struct ICCHeader {
 
     BigEndian<DeviceClass> profile_device_class;
     BigEndian<ColorSpace> data_color_space;
-    BigEndian<u32> pcs; // "Profile Connection Space"
+    BigEndian<ColorSpace> profile_connection_space; // "PCS" in the spec.
 
     DateTimeNumber profile_creation_time;
 
@@ -126,10 +126,10 @@ ErrorOr<DeviceClass> parse_device_class(ICCHeader const& header)
     return Error::from_string_literal("ICC::Profile: Invalid device class");
 }
 
-ErrorOr<ColorSpace> parse_data_color_space(ICCHeader const& header)
+ErrorOr<ColorSpace> parse_color_space(ColorSpace color_space)
 {
-    // ICC v4, 7.2.6 Data colour space field
-    switch (header.data_color_space) {
+    // ICC v4, Table 19 — Data colour space signatures
+    switch (color_space) {
     case ColorSpace::nCIEXYZ:
     case ColorSpace::CIELAB:
     case ColorSpace::CIELUV:
@@ -155,9 +155,27 @@ ErrorOr<ColorSpace> parse_data_color_space(ICCHeader const& header)
     case ColorSpace::ThirteenColor:
     case ColorSpace::FourteenColor:
     case ColorSpace::FifteenColor:
-        return header.data_color_space;
+        return color_space;
     }
-    return Error::from_string_literal("ICC::Profile: Invalid data color space");
+    return Error::from_string_literal("ICC::Profile: Invalid color space");
+}
+
+ErrorOr<ColorSpace> parse_data_color_space(ICCHeader const& header)
+{
+    // ICC v4, 7.2.6 Data colour space field
+    return parse_color_space(header.data_color_space);
+}
+
+ErrorOr<ColorSpace> parse_connection_space(ICCHeader const& header)
+{
+    // ICC v4, 7.2.7 PCS field
+    //         and Annex D
+    auto space = TRY(parse_color_space(header.profile_connection_space));
+
+    if (header.profile_device_class != DeviceClass::DeviceLink && (space != ColorSpace::PCSXYZ && space != ColorSpace::PCSLAB))
+        return Error::from_string_literal("ICC::Profile: Invalid profile connection space: Non-PCS space on non-DeviceLink profile");
+
+    return space;
 }
 
 ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
@@ -212,7 +230,7 @@ StringView device_class_name(DeviceClass device_class)
     VERIFY_NOT_REACHED();
 }
 
-StringView color_space_name(ColorSpace color_space)
+StringView data_color_space_name(ColorSpace color_space)
 {
     switch (color_space) {
     case ColorSpace::nCIEXYZ:
@@ -269,6 +287,18 @@ StringView color_space_name(ColorSpace color_space)
     VERIFY_NOT_REACHED();
 }
 
+StringView profile_connection_space_name(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::PCSXYZ:
+        return "PCSXYZ"sv;
+    case ColorSpace::PCSLAB:
+        return "PCSLAB"sv;
+    default:
+        return data_color_space_name(color_space);
+    }
+}
+
 StringView rendering_intent_name(RenderingIntent rendering_intent)
 {
     switch (rendering_intent) {
@@ -303,6 +333,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_version = TRY(parse_version(header));
     profile->m_device_class = TRY(parse_device_class(header));
     profile->m_data_color_space = TRY(parse_data_color_space(header));
+    profile->m_connection_space = TRY(parse_connection_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
     profile->m_flags = Flags { header.profile_flags };
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
