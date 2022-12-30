@@ -119,7 +119,7 @@ GalleryWidget::GalleryWidget()
 
     m_input_button->on_click = [&](auto) {
         DeprecatedString value;
-        if (GUI::InputBox::show(window(), value, "Enter input:"sv, "Input"sv, {}, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK)
+        if (GUI::InputBox::show(window(), value, "Enter input:"sv, "Input"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK)
             m_text_editor->set_text(value);
     };
 

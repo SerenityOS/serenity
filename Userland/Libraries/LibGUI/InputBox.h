@@ -23,13 +23,13 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override = default;
 
-    static ExecResult show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, StringView placeholder = {}, InputType input_type = InputType::Text);
+    static ExecResult show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, InputType input_type = InputType::Text, StringView placeholder = {});
 
     DeprecatedString const& text_value() const { return m_text_value; }
     void set_text_value(DeprecatedString text_value);
 
 private:
-    explicit InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type);
+    explicit InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder);
 
     virtual void on_done(ExecResult) override;
     void build(InputType input_type);

@@ -15,7 +15,7 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
     : Dialog(parent_window)
     , m_text_value(move(text_value))
     , m_prompt(prompt)
@@ -25,9 +25,9 @@ InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringVie
     build(input_type);
 }
 
-Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
 {
-    auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder, input_type);
+    auto box = InputBox::construct(parent_window, text_value, prompt, title, input_type, placeholder);
     box->set_resizable(false);
     if (parent_window)
         box->set_icon(parent_window->icon());

@@ -100,7 +100,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         DeprecatedString value;
-        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv, {}, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
+        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto file_size = value.to_uint();
             if (!file_size.has_value()) {
                 GUI::MessageBox::show(window(), "Invalid file size entered."sv, "Error"sv, GUI::MessageBox::Type::Error);
@@ -243,7 +243,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_fill_selection_action = GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         DeprecatedString value;
-        if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv, {}, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
+        if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             auto result = m_editor->fill_selection(fill_byte);
             if (result.is_error())
