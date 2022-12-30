@@ -340,6 +340,7 @@ pushd "$DIR/Build/$ARCH"
                                                         --target="$TARGET" \
                                                         --with-sysroot="$SYSROOT" \
                                                         --enable-shared \
+                                                        --disable-werror \
                                                         --disable-nls \
                                                         ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
             fi
