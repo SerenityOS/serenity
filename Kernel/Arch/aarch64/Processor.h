@@ -24,7 +24,7 @@ class PageDirectory;
 
 class Thread;
 class Processor;
-class TrapFrame;
+struct TrapFrame;
 
 // FIXME This needs to go behind some sort of platform abstraction
 //       it is used between Thread and Processor.
