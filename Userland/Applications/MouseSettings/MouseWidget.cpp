@@ -51,9 +51,11 @@ MouseWidget::MouseWidget()
         set_modified(true);
     };
 
+    m_switch_buttons_image_label = *find_descendant_of_type_named<GUI::Label>("switch_buttons_image_label");
     m_switch_buttons_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("switch_buttons_checkbox");
     m_switch_buttons_checkbox->set_checked(GUI::ConnectionToWindowServer::the().are_mouse_buttons_switched(), GUI::AllowCallback::No);
     m_switch_buttons_checkbox->on_checked = [&](auto) {
+        update_switch_buttons_image_label();
         set_modified(true);
     };
 
@@ -65,6 +67,7 @@ MouseWidget::MouseWidget()
 
     update_speed_label();
     update_double_click_speed_label();
+    update_switch_buttons_image_label();
     m_double_click_arrow_widget->set_double_click_speed(m_double_click_speed_slider->value());
 }
 
@@ -95,4 +98,13 @@ void MouseWidget::update_speed_label()
 void MouseWidget::update_double_click_speed_label()
 {
     m_double_click_speed_label->set_text(DeprecatedString::formatted("{} ms", m_double_click_speed_slider->value()));
+}
+
+void MouseWidget::update_switch_buttons_image_label()
+{
+    if (m_switch_buttons_checkbox->is_checked()) {
+        m_switch_buttons_image_label->set_icon_from_path("/res/graphics/mouse-button-right.png");
+    } else {
+        m_switch_buttons_image_label->set_icon_from_path("/res/graphics/mouse-button-left.png");
+    }
 }
