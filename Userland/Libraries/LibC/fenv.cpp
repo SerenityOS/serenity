@@ -56,6 +56,7 @@ int fegetenv(fenv_t* env)
         return 1;
 
 #ifdef AK_ARCH_AARCH64
+    (void)env;
     TODO_AARCH64();
 #else
     asm volatile("fnstenv %0"
@@ -73,6 +74,7 @@ int fesetenv(fenv_t const* env)
         return 1;
 
 #ifdef AK_ARCH_AARCH64
+    (void)env;
     TODO_AARCH64();
 #else
     if (env == FE_DFL_ENV) {
@@ -98,6 +100,7 @@ int feholdexcept(fenv_t* env)
     fegetenv(&current_env);
 
 #ifdef AK_ARCH_AARCH64
+    (void)env;
     TODO_AARCH64();
 #else
     current_env.__x87_fpu_env.__status_word &= ~FE_ALL_EXCEPT;
@@ -137,6 +140,8 @@ int fesetexceptflag(fexcept_t const* except, int exceptions)
 
     exceptions &= FE_ALL_EXCEPT;
 #ifdef AK_ARCH_AARCH64
+    (void)exceptions;
+    (void)except;
     TODO_AARCH64();
 #else
     current_env.__x87_fpu_env.__status_word &= exceptions;
@@ -192,6 +197,7 @@ int feclearexcept(int exceptions)
     fegetenv(&current_env);
 
 #ifdef AK_ARCH_AARCH64
+    (void)exceptions;
     TODO_AARCH64();
 #else
     current_env.__x87_fpu_env.__status_word &= ~exceptions;
@@ -223,6 +229,7 @@ int feraiseexcept(int exceptions)
     exceptions &= FE_ALL_EXCEPT;
 
 #ifdef AK_ARCH_AARCH64
+    (void)exceptions;
     TODO_AARCH64();
 #else
     // While the order in which the exceptions is raised is unspecified, FE_OVERFLOW and FE_UNDERFLOW must be raised before FE_INEXACT, so handle that case in this branch
