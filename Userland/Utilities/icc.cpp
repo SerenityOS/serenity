@@ -23,6 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("version: {}", profile->version());
     outln("device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
+    outln("data color space: {}", Gfx::ICC::color_space_name(profile->data_color_space()));
     outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()).to_deprecated_string());
 
     return 0;
