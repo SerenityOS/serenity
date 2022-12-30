@@ -93,7 +93,7 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     auto& drawing_state = this->drawing_state();
 
     auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-    // We could remove the rounding here, but the lines look better when they have whole number pixel endponts.
+    // We could remove the rounding here, but the lines look better when they have whole number pixel endpoints.
     auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_rounded<float>();
     auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_rounded<float>();
     auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_rounded<float>();
