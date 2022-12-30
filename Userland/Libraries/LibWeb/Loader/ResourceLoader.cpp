@@ -10,6 +10,8 @@
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ProxyMappings.h>
@@ -134,6 +136,22 @@ static void emit_signpost(DeprecatedString const& message, int id)
     (void)message;
     (void)id;
 #endif
+}
+
+static void store_response_cookies(Page& page, AK::URL const& url, DeprecatedString const& cookies)
+{
+    auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
+    VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
+
+    for (auto const& set_cookie_entry : set_cookie_json_value.as_array().values()) {
+        VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
+
+        auto cookie = Cookie::parse_cookie(set_cookie_entry.as_string());
+        if (!cookie.has_value())
+            continue;
+
+        page.client().page_did_set_cookie(url, cookie.value(), Cookie::Source::Http); // FIXME: Determine cookie source correctly
+    }
 }
 
 static size_t resource_id = 0;
@@ -295,10 +313,16 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
         m_active_requests.set(*protocol_request);
 
-        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
+        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) mutable {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
+
+            if (request.page().has_value()) {
+                if (auto set_cookie = response_headers.get("Set-Cookie"); set_cookie.has_value())
+                    store_response_cookies(request.page().value(), request.url(), *set_cookie);
+            }
+
             if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599)) {
                 StringBuilder error_builder;
                 if (status_code.has_value())

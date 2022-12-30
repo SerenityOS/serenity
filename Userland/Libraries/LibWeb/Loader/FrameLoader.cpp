@@ -12,7 +12,6 @@
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -363,32 +362,9 @@ void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
     }
 }
 
-void FrameLoader::store_response_cookies(AK::URL const& url, DeprecatedString const& cookies)
-{
-    auto* page = browsing_context().page();
-    if (!page)
-        return;
-
-    auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
-    VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
-
-    for (auto const& set_cookie_entry : set_cookie_json_value.as_array().values()) {
-        VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
-
-        auto cookie = Cookie::parse_cookie(set_cookie_entry.as_string());
-        if (!cookie.has_value())
-            continue;
-
-        page->client().page_did_set_cookie(url, cookie.value(), Cookie::Source::Http); // FIXME: Determine cookie source correctly
-    }
-}
-
 void FrameLoader::resource_did_load()
 {
     auto url = resource()->url();
-
-    if (auto set_cookie = resource()->response_headers().get("Set-Cookie"); set_cookie.has_value())
-        store_response_cookies(url, *set_cookie);
 
     // For 3xx (Redirection) responses, the Location value refers to the preferred target resource for automatically redirecting the request.
     auto status_code = resource()->status_code();
