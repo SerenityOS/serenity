@@ -41,6 +41,7 @@ private:
     bool focus_previous_element();
 
     bool fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned modifiers, u32 code_point);
+    CSSPixelPoint compute_mouse_event_client_offset(CSSPixelPoint event_page_position) const;
 
     Layout::InitialContainingBlock* layout_root();
     Layout::InitialContainingBlock const* layout_root() const;
