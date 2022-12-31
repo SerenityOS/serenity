@@ -43,6 +43,8 @@ set(LIBTEST_BASED_SOURCES
     TestEmptySharedInodeVMObject.cpp
     TestInvalidUIDSet.cpp
     TestSharedInodeVMObject.cpp
+    TestNoNewPrivsMode1.cpp
+    TestNoNewPrivsMode2.cpp
     TestPosixFallocate.cpp
     TestPrivateInodeVMObject.cpp
     TestKernelAlarm.cpp

@@ -117,6 +117,14 @@ if [ -f mnt/usr/Tests/Kernel/TestProcFSWrite ]; then
     chown 0:0 mnt/usr/Tests/Kernel/TestProcFSWrite
     chmod 4755 mnt/usr/Tests/Kernel/TestProcFSWrite
 fi
+if [ -f mnt/usr/Tests/Kernel/TestNoNewPrivsMode1 ]; then
+    chown 0:0 mnt/usr/Tests/Kernel/TestNoNewPrivsMode1
+    chmod 4755 mnt/usr/Tests/Kernel/TestNoNewPrivsMode1
+fi
+if [ -f mnt/usr/Tests/Kernel/TestNoNewPrivsMode2 ]; then
+    chown 0:0 mnt/usr/Tests/Kernel/TestNoNewPrivsMode2
+    chmod 4755 mnt/usr/Tests/Kernel/TestNoNewPrivsMode2
+fi
 
 chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
