@@ -10,4 +10,6 @@
 
 #if ARCH(X86_64)
 #    include "x86_64/regs.h"
+#elif ARCH(AARCH64)
+#    include "aarch64/regs.h"
 #endif
