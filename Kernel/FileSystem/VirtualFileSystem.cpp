@@ -648,7 +648,11 @@ ErrorOr<void> VirtualFileSystem::rename(Credentials const& credentials, Custody&
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
         auto& new_inode = new_custody.inode();
-        // FIXME: Is this really correct? Check what other systems do.
+        // When the source/dest inodes are the same (in other words,
+        // when `old_path` and `new_path` are the same), perform a no-op
+        // and return success.
+        // Linux (`vfs_rename()`) and OpenBSD (`dorenameat()`) appear to have
+        // this same no-op behavior.
         if (&new_inode == &old_inode)
             return {};
         if (new_parent_inode.metadata().is_sticky()) {
