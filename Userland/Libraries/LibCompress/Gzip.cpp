@@ -8,7 +8,6 @@
 #include <LibCompress/Gzip.h>
 
 #include <AK/DeprecatedString.h>
-#include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/MemoryStream.h>
 
@@ -167,15 +166,17 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
     auto gzip_stream = make<GzipDecompressor>(move(memory_stream));
-    DuplexMemoryStream output_stream;
+    Core::Stream::AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!gzip_stream->is_eof()) {
         auto const data = TRY(gzip_stream->read(buffer));
-        output_stream.write_or_error(data);
+        TRY(output_stream.write_entire_buffer(data));
     }
 
-    return output_stream.copy_into_contiguous_buffer();
+    auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
+    TRY(output_stream.read_entire_buffer(output_buffer));
+    return output_buffer;
 }
 
 bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
