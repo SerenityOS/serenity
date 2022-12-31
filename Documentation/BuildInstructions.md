@@ -50,6 +50,13 @@ If more patches are upstreamed to CMake, the minimum will be bumped again once t
 To accommodate distributions that do not ship bleeding-edge CMake versions, the build scripts will
 attempt to build CMake from source if the version on your path is older than 3.25.x.
 
+If you have previously compiled SerenityOS with an older or distribution-provided version of CMake,
+you will need to manually remove the CMakeCache.txt files, as these files reference the older CMake version and path.
+```console
+rm Build/*/CMakeCache.txt
+```
+
+
 ### Windows
 
 If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](BuildInstructionsWindows.md)
