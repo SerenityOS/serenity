@@ -592,6 +592,11 @@ public:
             VERIFY_NOT_REACHED();
         }
 
+        virtual DeprecatedString subprotocol_in_use() override
+        {
+            return m_websocket->subprotocol_in_use();
+        }
+
         virtual void send(ByteBuffer binary_or_text_message, bool is_text) override
         {
             m_websocket->send(WebSocket::Message(binary_or_text_message, is_text));
@@ -661,10 +666,11 @@ public:
 
     virtual ~HeadlessWebSocketClientManager() override { }
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, DeprecatedString const& origin) override
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols) override
     {
         WebSocket::ConnectionInfo connection_info(url);
         connection_info.set_origin(origin);
+        connection_info.set_protocols(protocols);
 
         auto connection = HeadlessWebSocket::create(WebSocket::WebSocket::create(move(connection_info)));
         return connection;

@@ -75,6 +75,15 @@ Messages::WebSocketServer::ReadyStateResponse ConnectionFromClient::ready_state(
     return (u32)ReadyState::Closed;
 }
 
+Messages::WebSocketServer::SubprotocolInUseResponse ConnectionFromClient::subprotocol_in_use(i32 connection_id)
+{
+    RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
+    if (connection) {
+        return connection->subprotocol_in_use();
+    }
+    return DeprecatedString::empty();
+}
+
 void ConnectionFromClient::send(i32 connection_id, bool is_text, ByteBuffer const& data)
 {
     RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});

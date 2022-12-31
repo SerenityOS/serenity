@@ -74,6 +74,11 @@ ReadyState WebSocket::ready_state()
     }
 }
 
+DeprecatedString WebSocket::subprotocol_in_use()
+{
+    return m_subprotocol_in_use;
+}
+
 void WebSocket::send(Message const& message)
 {
     // Calling send on a socket that is not opened is not allowed
@@ -356,22 +361,21 @@ void WebSocket::read_server_handshake()
         }
 
         if (header_name.equals_ignoring_case("Sec-WebSocket-Protocol"sv)) {
-            // 6. |Sec-WebSocket-Protocol| should not contain an extension that doesn't appear in m_connection->protocols()
-            auto server_protocols = parts[1].split(',');
-            for (auto const& protocol : server_protocols) {
-                auto trimmed_protocol = protocol.trim_whitespace();
-                bool found_protocol = false;
-                for (auto const& supported_protocol : m_connection.protocols()) {
-                    if (trimmed_protocol.equals_ignoring_case(supported_protocol)) {
-                        found_protocol = true;
-                    }
-                }
-                if (!found_protocol) {
-                    dbgln("WebSocket: Server HTTP Handshake Header |Sec-WebSocket-Protocol| contains '{}', which is not supported by the client. Failing connection.", trimmed_protocol);
-                    fatal_error(WebSocket::Error::ConnectionUpgradeFailed);
-                    return;
+            // 6. If the response includes a |Sec-WebSocket-Protocol| header field and this header field indicates the use of a subprotocol that was not present in the client's handshake (the server has indicated a subprotocol not requested by the client), the client MUST _Fail the WebSocket Connection_.
+            // Additionally, Section 4.2.2 says this is "Either a single value representing the subprotocol the server is ready to use or null."
+            auto server_protocol = parts[1].trim_whitespace();
+            bool found_protocol = false;
+            for (auto const& supported_protocol : m_connection.protocols()) {
+                if (server_protocol.equals_ignoring_case(supported_protocol)) {
+                    found_protocol = true;
                 }
             }
+            if (!found_protocol) {
+                dbgln("WebSocket: Server HTTP Handshake Header |Sec-WebSocket-Protocol| contains '{}', which is not supported by the client. Failing connection.", server_protocol);
+                fatal_error(WebSocket::Error::ConnectionUpgradeFailed);
+                return;
+            }
+            m_subprotocol_in_use = server_protocol;
             continue;
         }
     }

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/DOM/Document.h>
@@ -45,7 +46,7 @@ WebSocketClientSocket::~WebSocketClientSocket() = default;
 WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, DeprecatedString const& url)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, DeprecatedString const& url, Optional<Variant<DeprecatedString, Vector<DeprecatedString>>> const& protocols)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     AK::URL url_record(url);
@@ -55,18 +56,39 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
         return WebIDL::SyntaxError::create(realm, "Invalid protocol");
     if (!url_record.fragment().is_empty())
         return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid");
-    // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
-    // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
-    return MUST_OR_THROW_OOM(realm.heap().allocate<WebSocket>(realm, window, url_record));
+    Vector<DeprecatedString> protocols_sequence;
+    if (protocols.has_value()) {
+        // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
+        if (protocols.value().has<DeprecatedString>())
+            protocols_sequence = { protocols.value().get<DeprecatedString>() };
+        else
+            protocols_sequence = protocols.value().get<Vector<DeprecatedString>>();
+        // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
+        auto sorted_protocols = protocols_sequence;
+        quick_sort(sorted_protocols);
+        for (size_t i = 0; i < sorted_protocols.size(); i++) {
+            // https://datatracker.ietf.org/doc/html/rfc6455
+            // The elements that comprise this value MUST be non-empty strings with characters in the range U+0021 to U+007E not including
+            // separator characters as defined in [RFC2616] and MUST all be unique strings.
+            auto protocol = sorted_protocols[i];
+            if (i < sorted_protocols.size() - 1 && protocol == sorted_protocols[i + 1])
+                return WebIDL::SyntaxError::create(realm, "Found a duplicate protocol name in the specified list");
+            for (auto character : protocol) {
+                if (character < '\x21' || character > '\x7E')
+                    return WebIDL::SyntaxError::create(realm, "Found invalid character in subprotocol name");
+            }
+        }
+    }
+    return MUST_OR_THROW_OOM(realm.heap().allocate<WebSocket>(realm, window, url_record, protocols_sequence));
 }
 
-WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
+WebSocket::WebSocket(HTML::Window& window, AK::URL& url, Vector<DeprecatedString> const& protocols)
     : EventTarget(window.realm())
     , m_window(window)
 {
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
     auto origin_string = m_window->associated_document().origin().serialize();
-    m_websocket = WebSocketClientManager::the().connect(url, origin_string);
+    m_websocket = WebSocketClientManager::the().connect(url, origin_string, protocols);
     m_websocket->on_open = [weak_this = make_weak_ptr<WebSocket>()] {
         if (!weak_this)
             return;
@@ -132,9 +154,7 @@ DeprecatedString WebSocket::protocol() const
 {
     if (!m_websocket)
         return DeprecatedString::empty();
-    // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
-    // FIXME: Change the protocol attribute's value to the subprotocol in use, if it is not the null value.
-    return DeprecatedString::empty();
+    return m_websocket->subprotocol_in_use();
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-close
