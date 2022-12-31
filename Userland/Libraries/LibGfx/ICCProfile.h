@@ -43,7 +43,7 @@ enum class DeviceClass : u32 {
     Abstract = 0x61627374,      // 'abst'
     NamedColor = 0x6E6D636C,    // 'nmcl'
 };
-char const* device_class_name(DeviceClass);
+StringView device_class_name(DeviceClass);
 
 // ICC v4, 7.2.6 Data colour space field, Table 19 — Data colour space signatures
 enum class ColorSpace : u32 {
@@ -73,7 +73,7 @@ enum class ColorSpace : u32 {
     FourteenColor = 0x45434C52, // 'ECLR'
     FifteenColor = 0x46434C52,  // 'FCLR'
 };
-char const* color_space_name(ColorSpace);
+StringView color_space_name(ColorSpace);
 
 // ICC v4, 7.2.15 Rendering intent field
 enum class RenderingIntent {
@@ -82,7 +82,7 @@ enum class RenderingIntent {
     Saturation,
     ICCAbsoluteColorimetric,
 };
-char const* rendering_intent_name(RenderingIntent);
+StringView rendering_intent_name(RenderingIntent);
 
 class Profile : public RefCounted<Profile> {
 public:

@@ -191,99 +191,99 @@ ErrorOr<void> parse_file_signature(ICCHeader const& header)
 }
 }
 
-char const* device_class_name(DeviceClass device_class)
+StringView device_class_name(DeviceClass device_class)
 {
     switch (device_class) {
     case DeviceClass::InputDevce:
-        return "InputDevce";
+        return "InputDevce"sv;
     case DeviceClass::DisplayDevice:
-        return "DisplayDevice";
+        return "DisplayDevice"sv;
     case DeviceClass::OutputDevice:
-        return "OutputDevice";
+        return "OutputDevice"sv;
     case DeviceClass::DeviceLink:
-        return "DeviceLink";
+        return "DeviceLink"sv;
     case DeviceClass::ColorSpace:
-        return "ColorSpace";
+        return "ColorSpace"sv;
     case DeviceClass::Abstract:
-        return "Abstract";
+        return "Abstract"sv;
     case DeviceClass::NamedColor:
-        return "NamedColor";
+        return "NamedColor"sv;
     default:
-        return "(unknown device class)";
+        return "(unknown device class)"sv;
     }
 }
 
-char const* color_space_name(ColorSpace color_space)
+StringView color_space_name(ColorSpace color_space)
 {
     switch (color_space) {
     case ColorSpace::nCIEXYZ:
-        return "nCIEXYZ";
+        return "nCIEXYZ"sv;
     case ColorSpace::CIELAB:
-        return "CIELAB";
+        return "CIELAB"sv;
     case ColorSpace::CIELUV:
-        return "CIELUV";
+        return "CIELUV"sv;
     case ColorSpace::YCbCr:
-        return "YCbCr";
+        return "YCbCr"sv;
     case ColorSpace::CIEYxy:
-        return "CIEYxy";
+        return "CIEYxy"sv;
     case ColorSpace::RGB:
-        return "RGB";
+        return "RGB"sv;
     case ColorSpace::Gray:
-        return "Gray";
+        return "Gray"sv;
     case ColorSpace::HSV:
-        return "HSV";
+        return "HSV"sv;
     case ColorSpace::HLS:
-        return "HLS";
+        return "HLS"sv;
     case ColorSpace::CMYK:
-        return "CMYK";
+        return "CMYK"sv;
     case ColorSpace::CMY:
-        return "CMY";
+        return "CMY"sv;
     case ColorSpace::TwoColor:
-        return "2 color";
+        return "2 color"sv;
     case ColorSpace::ThreeColor:
-        return "3 color (other than XYZ, Lab, Luv, YCbCr, CIEYxy, RGB, HSV, HLS, CMY)";
+        return "3 color (other than XYZ, Lab, Luv, YCbCr, CIEYxy, RGB, HSV, HLS, CMY)"sv;
     case ColorSpace::FourColor:
-        return "4 color (other than CMYK)";
+        return "4 color (other than CMYK)"sv;
     case ColorSpace::FiveColor:
-        return "5 color";
+        return "5 color"sv;
     case ColorSpace::SixColor:
-        return "6 color";
+        return "6 color"sv;
     case ColorSpace::SevenColor:
-        return "7 color";
+        return "7 color"sv;
     case ColorSpace::EightColor:
-        return "8 color";
+        return "8 color"sv;
     case ColorSpace::NineColor:
-        return "9 color";
+        return "9 color"sv;
     case ColorSpace::TenColor:
-        return "10 color";
+        return "10 color"sv;
     case ColorSpace::ElevenColor:
-        return "11 color";
+        return "11 color"sv;
     case ColorSpace::TwelveColor:
-        return "12 color";
+        return "12 color"sv;
     case ColorSpace::ThirteenColor:
-        return "13 color";
+        return "13 color"sv;
     case ColorSpace::FourteenColor:
-        return "14 color";
+        return "14 color"sv;
     case ColorSpace::FifteenColor:
-        return "15 color";
+        return "15 color"sv;
     default:
-        return NULL;
+        return {};
     }
 }
 
-char const* rendering_intent_name(RenderingIntent rendering_intent)
+StringView rendering_intent_name(RenderingIntent rendering_intent)
 {
     switch (rendering_intent) {
     case RenderingIntent::Perceptual:
-        return "Perceptual";
+        return "Perceptual"sv;
     case RenderingIntent::MediaRelativeColorimetric:
-        return "Media-relative colorimetric";
+        return "Media-relative colorimetric"sv;
     case RenderingIntent::Saturation:
-        return "Saturation";
+        return "Saturation"sv;
     case RenderingIntent::ICCAbsoluteColorimetric:
-        return "ICC-absolute colorimetric";
+        return "ICC-absolute colorimetric"sv;
     default:
-        return NULL;
+        return {};
     }
 }
 
