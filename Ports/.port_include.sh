@@ -64,6 +64,7 @@ enable_ccache
 host_env() {
     export CC="${HOST_CC}"
     export CXX="${HOST_CXX}"
+    export LD="${HOST_LD}"
     export AR="${HOST_AR}"
     export RANLIB="${HOST_RANLIB}"
     export PATH="${HOST_PATH}"
