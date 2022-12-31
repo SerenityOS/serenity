@@ -8,16 +8,18 @@
         }
     }
 
-    @GUI::TabWidget {
-        name: "script_tab_widget"
-        reorder_allowed: true
-        show_close_buttons: true
-    }
+    @GUI::VerticalSplitter {
+        @GUI::TabWidget {
+            name: "script_tab_widget"
+            reorder_allowed: true
+            show_close_buttons: true
+        }
 
-    @GUI::TabWidget {
-        name: "action_tab_widget"
-        show_close_buttons: true
-        fixed_height: 0
+        @GUI::TabWidget {
+            name: "action_tab_widget"
+            show_close_buttons: true
+            visible: false
+        }
     }
 
     @GUI::Statusbar {
