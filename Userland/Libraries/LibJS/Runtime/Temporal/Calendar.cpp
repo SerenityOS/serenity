@@ -223,8 +223,8 @@ ThrowCompletionOr<double> calendar_month(VM& vm, Object& calendar, Object& date_
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.10 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
@@ -251,8 +251,8 @@ ThrowCompletionOr<double> calendar_day(VM& vm, Object& calendar, Object& date_li
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.12 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
@@ -265,8 +265,8 @@ ThrowCompletionOr<Value> calendar_day_of_week(VM& vm, Object& calendar, Object& 
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.dayOfWeek.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.13 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
@@ -279,8 +279,8 @@ ThrowCompletionOr<Value> calendar_day_of_year(VM& vm, Object& calendar, Object& 
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.dayOfYear.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.14 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
@@ -293,8 +293,8 @@ ThrowCompletionOr<Value> calendar_week_of_year(VM& vm, Object& calendar, Object&
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.weekOfYear.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.15 CalendarYearOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearofweek
@@ -322,8 +322,8 @@ ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object&
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.daysInWeek.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
@@ -336,8 +336,8 @@ ThrowCompletionOr<double> calendar_days_in_month(VM& vm, Object& calendar, Objec
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.daysInMonth.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
@@ -350,8 +350,8 @@ ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object&
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.daysInYear.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
@@ -364,8 +364,8 @@ ThrowCompletionOr<Value> calendar_months_in_year(VM& vm, Object& calendar, Objec
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthsInYear.as_string(), vm.names.undefined.as_string());
 
-    // 2. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(vm, result));
+    // 2. Return ? ToPositiveIntegerWithTruncation(result).
+    return TRY(to_positive_integer_with_truncation(vm, result));
 }
 
 // 12.2.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear

@@ -174,7 +174,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM&, Deprecated
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM&, DeprecatedString const& iso_string);
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM&, DeprecatedString const& iso_string);
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM&, DeprecatedString const& iso_string);
-ThrowCompletionOr<double> to_positive_integer(VM&, Value argument);
+ThrowCompletionOr<double> to_positive_integer_with_truncation(VM&, Value argument);
 ThrowCompletionOr<Object*> prepare_temporal_fields(VM&, Object const& fields, Vector<DeprecatedString> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields);
 ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM&, DifferenceOperation, Value options_value, UnitGroup unit_group, Vector<StringView> const& disallowed_units, TemporalUnitDefault const& fallback_smallest_unit, StringView smallest_largest_default_unit);
 

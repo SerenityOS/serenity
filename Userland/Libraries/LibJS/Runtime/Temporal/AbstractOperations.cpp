@@ -1722,15 +1722,14 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM& vm, De
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.40 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
-ThrowCompletionOr<double> to_positive_integer(VM& vm, Value argument)
+// 13.40 ToPositiveIntegerWithTruncation ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerwithtruncation
+ThrowCompletionOr<double> to_positive_integer_with_truncation(VM& vm, Value argument)
 {
     // 1. Let integer be ? ToIntegerThrowOnInfinity(argument).
     auto integer = TRY(to_integer_throw_on_infinity(vm, argument, ErrorType::TemporalPropertyMustBePositiveInteger));
 
-    // 2. If integer ≤ 0, then
+    // 2. If integer ≤ 0, throw a RangeError exception.
     if (integer <= 0) {
-        // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::TemporalPropertyMustBePositiveInteger);
     }
 
@@ -1768,11 +1767,11 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
                 // b. Set value to 𝔽(value).
                 value = Value(TRY(to_integer_throw_on_infinity(vm, value, ErrorType::TemporalPropertyMustBeFinite)));
             }
-            // 3. Else if Conversion is ToPositiveInteger, then
+            // 3. Else if Conversion is ToPositiveIntegerWithTruncation, then
             else if (property.is_one_of("month"sv, "day"sv)) {
-                // a. Set value to ? ToPositiveInteger(value).
+                // a. Set value to ? ToPositiveIntegerWithTruncation(value).
                 // b. Set value to 𝔽(value).
-                value = Value(TRY(to_positive_integer(vm, value)));
+                value = Value(TRY(to_positive_integer_with_truncation(vm, value)));
             }
             // 4. Else,
             else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv)) {
