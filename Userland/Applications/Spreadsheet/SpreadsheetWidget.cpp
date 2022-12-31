@@ -497,7 +497,7 @@ void SpreadsheetWidget::save(Core::File& file)
 {
     auto result = m_workbook->write_to_file(file);
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), result.error());
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot save file: {}", result.error()));
         return;
     }
     undo_stack().set_current_unmodified();

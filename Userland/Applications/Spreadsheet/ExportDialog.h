@@ -23,7 +23,7 @@ struct CSVExportDialogPage {
     explicit CSVExportDialogPage(Sheet const&);
 
     NonnullRefPtr<GUI::WizardPage> page() { return *m_page; }
-    Optional<XSV> make_writer(OutputStream&);
+    ErrorOr<XSV> make_writer(OutputStream&);
 
 protected:
     void update_preview();
@@ -54,7 +54,7 @@ private:
 };
 
 struct ExportDialog {
-    static Result<void, DeprecatedString> make_and_run_for(StringView mime, Core::File& file, Workbook&);
+    static ErrorOr<void> make_and_run_for(StringView mime, Core::File& file, Workbook&);
 };
 
 }
