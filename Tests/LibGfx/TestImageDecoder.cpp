@@ -16,6 +16,7 @@
 #include <LibGfx/PGMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
+#include <LibGfx/TGALoader.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <string.h>
@@ -141,5 +142,37 @@ TEST_CASE(test_ppm)
     EXPECT(!ppm.loop_count());
 
     auto frame = ppm.frame(0).release_value_but_fixme_should_propagate_errors();
+    EXPECT(frame.duration == 0);
+}
+
+TEST_CASE(test_targa_bottom_left)
+{
+    auto file = Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-bottom-left-uncompressed.tga"sv).release_value();
+    auto tga = Gfx::TGAImageDecoderPlugin(reinterpret_cast<u8 const*>(file->data()), file->size());
+    EXPECT_EQ(tga.frame_count(), 1u);
+
+    EXPECT(tga.sniff());
+    EXPECT(!tga.is_animated());
+    EXPECT(!tga.loop_count());
+
+    auto frame_or_error = tga.frame(0);
+    EXPECT(!frame_or_error.is_error());
+    auto frame = frame_or_error.release_value();
+    EXPECT(frame.duration == 0);
+}
+
+TEST_CASE(test_targa_top_left)
+{
+    auto file = Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-top-left-uncompressed.tga"sv).release_value();
+    auto tga = Gfx::TGAImageDecoderPlugin(reinterpret_cast<u8 const*>(file->data()), file->size());
+    EXPECT_EQ(tga.frame_count(), 1u);
+
+    EXPECT(tga.sniff());
+    EXPECT(!tga.is_animated());
+    EXPECT(!tga.loop_count());
+
+    auto frame_or_error = tga.frame(0);
+    EXPECT(!frame_or_error.is_error());
+    auto frame = frame_or_error.release_value();
     EXPECT(frame.duration == 0);
 }
