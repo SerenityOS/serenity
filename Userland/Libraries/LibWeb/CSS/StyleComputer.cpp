@@ -787,7 +787,8 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
                     property_value = resolved.release_nonnull();
             }
-            set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
+            if (!property_value->is_unresolved())
+                set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
         }
     }
 
@@ -801,7 +802,8 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                     if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
                         property_value = resolved.release_nonnull();
                 }
-                set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
+                if (!property_value->is_unresolved())
+                    set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
             }
         }
     }
