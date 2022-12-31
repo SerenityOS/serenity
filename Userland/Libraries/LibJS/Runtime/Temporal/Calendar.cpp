@@ -202,112 +202,98 @@ ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object& calendar, Value
 // 12.2.8 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
 ThrowCompletionOr<double> calendar_year(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "year", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "year", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.year, &date_like));
 
-    // 3. If result is undefined, throw a RangeError exception.
+    // 2. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.undefined.as_string());
 
-    // 4. Return ? ToIntegerThrowOnInfinity(result).
+    // 3. Return ? ToIntegerThrowOnInfinity(result).
     return TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
 }
 
 // 12.2.9 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
 ThrowCompletionOr<double> calendar_month(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "month", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "month", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.month, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.10 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
 ThrowCompletionOr<DeprecatedString> calendar_month_code(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.monthCode, &date_like));
 
-    // 3. If result is undefined, throw a RangeError exception.
+    // 2. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string(), vm.names.undefined.as_string());
 
-    // 4. Return ? ToString(result).
+    // 3. Return ? ToString(result).
     return result.to_string(vm);
 }
 
 // 12.2.11 CalendarDay ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarday
 ThrowCompletionOr<double> calendar_day(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "day", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "day", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.day, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.12 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
 ThrowCompletionOr<Value> calendar_day_of_week(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "dayOfWeek", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "dayOfWeek", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.dayOfWeek, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.dayOfWeek.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.13 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
 ThrowCompletionOr<Value> calendar_day_of_year(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "dayOfYear", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "dayOfYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.dayOfYear, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.dayOfYear.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.14 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
 ThrowCompletionOr<Value> calendar_week_of_year(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "weekOfYear", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "weekOfYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.weekOfYear, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.weekOfYear.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
@@ -329,76 +315,66 @@ ThrowCompletionOr<Value> calendar_year_of_week(VM& vm, Object& calendar, Object&
 // 12.2.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
 ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "daysInWeek", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "daysInWeek", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.daysInWeek, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.daysInWeek.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
 ThrowCompletionOr<double> calendar_days_in_month(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "daysInMonth", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "daysInMonth", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.daysInMonth, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.daysInMonth.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
 ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "daysInYear", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "daysInYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.daysInYear, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.daysInYear.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
 ThrowCompletionOr<Value> calendar_months_in_year(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "monthsInYear", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "monthsInYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.monthsInYear, &date_like));
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthsInYear.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToPositiveInteger(result).
+    // 2. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
 ThrowCompletionOr<Value> calendar_in_leap_year(VM& vm, Object& calendar, Object& date_like)
 {
-    // 1. Assert: Type(calendar) is Object.
-
-    // 2. Let result be ? Invoke(calendar, "inLeapYear", « dateLike »).
+    // 1. Let result be ? Invoke(calendar, "inLeapYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.inLeapYear, &date_like));
 
-    // 3. Return ToBoolean(result).
+    // 2. Return ToBoolean(result).
     return result.to_boolean();
 }
 
