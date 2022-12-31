@@ -2,7 +2,6 @@ set(TEST_SOURCES
     bind-local-socket-to-symlink.cpp
     crash-fcntl-invalid-cmd.cpp
     elf-execve-mmap-race.cpp
-    elf-symbolication-kernel-read-exploit.cpp
     fuzz-syscalls.cpp
     kill-pidtid-confusion.cpp
     mmap-write-into-running-programs-executable-file.cpp
@@ -20,6 +19,10 @@ set(TEST_SOURCES
     uaf-close-while-blocked-in-read.cpp
     unveil-symlinks.cpp
 )
+
+if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    list(APPEND TEST_SOURCES elf-symbolication-kernel-read-exploit.cpp)
+endif()
 
 # FIXME: These tests do not use LibTest
 foreach(source IN LISTS TEST_SOURCES)
