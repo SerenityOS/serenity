@@ -9,7 +9,6 @@
 #include <AK/Assertions.h>
 #include <AK/BinaryHeap.h>
 #include <AK/BinarySearch.h>
-#include <AK/MemoryStream.h>
 #include <LibCore/MemoryStream.h>
 #include <string.h>
 
@@ -317,15 +316,17 @@ ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
     auto deflate_stream = TRY(DeflateDecompressor::construct(move(memory_stream)));
-    DuplexMemoryStream output_stream;
+    Core::Stream::AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!deflate_stream->is_eof()) {
         auto const slice = TRY(deflate_stream->read(buffer));
-        output_stream.write_or_error(slice);
+        TRY(output_stream.write_entire_buffer(slice));
     }
 
-    return output_stream.copy_into_contiguous_buffer();
+    auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
+    TRY(output_stream.read_entire_buffer(output_buffer));
+    return output_buffer;
 }
 
 ErrorOr<u32> DeflateDecompressor::decode_length(u32 symbol)
