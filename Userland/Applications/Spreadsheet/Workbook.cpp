@@ -64,7 +64,7 @@ Result<bool, DeprecatedString> Workbook::open_file(Core::File& file)
     return true;
 }
 
-Result<bool, DeprecatedString> Workbook::write_to_file(Core::File& file)
+ErrorOr<void> Workbook::write_to_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
@@ -73,7 +73,7 @@ Result<bool, DeprecatedString> Workbook::write_to_file(Core::File& file)
 
     set_filename(file.filename());
     set_dirty(false);
-    return true;
+    return {};
 }
 
 Result<bool, DeprecatedString> Workbook::import_file(Core::File& file)
