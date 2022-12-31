@@ -81,7 +81,7 @@ public:
     {
         auto buffer = TRY(create_uninitialized(size));
         if (buffer.m_inline && size > inline_capacity)
-            __builtin_unreachable();
+            VERIFY_NOT_REACHED();
         if (size != 0)
             __builtin_memcpy(buffer.data(), data, size);
         return { move(buffer) };
