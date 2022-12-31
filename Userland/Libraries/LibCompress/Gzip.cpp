@@ -39,6 +39,18 @@ bool BlockHeader::supported_by_implementation() const
     return true;
 }
 
+ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, Core::Stream::Stream& stream)
+{
+    auto deflate_stream = TRY(DeflateDecompressor::construct(Core::Stream::Handle<Core::Stream::Stream>(stream)));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) Member(header, move(deflate_stream))));
+}
+
+GzipDecompressor::Member::Member(BlockHeader header, NonnullOwnPtr<DeflateDecompressor> stream)
+    : m_header(header)
+    , m_stream(move(stream))
+{
+}
+
 GzipDecompressor::GzipDecompressor(NonnullOwnPtr<Core::Stream::Stream> stream)
     : m_input_stream(move(stream))
 {
@@ -58,8 +70,8 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
 
         auto slice = bytes.slice(total_read);
 
-        if (m_current_member.has_value()) {
-            auto current_slice = TRY(current_member().m_stream.read(slice));
+        if (m_current_member) {
+            auto current_slice = TRY(current_member().m_stream->read(slice));
             current_member().m_checksum.update(current_slice);
             current_member().m_nread += current_slice.size();
 
@@ -131,7 +143,7 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
                 // FIXME: we should probably verify this instead of just assuming it matches
             }
 
-            m_current_member.emplace(header, *m_input_stream);
+            m_current_member = TRY(Member::construct(header, *m_input_stream));
             continue;
         }
     }

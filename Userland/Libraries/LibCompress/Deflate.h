@@ -76,7 +76,7 @@ public:
     friend CompressedBlock;
     friend UncompressedBlock;
 
-    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream);
+    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(Core::Stream::Handle<Core::Stream::Stream> stream);
     ~DeflateDecompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -88,6 +88,8 @@ public:
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
+    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream);
+
     ErrorOr<u32> decode_length(u32);
     ErrorOr<u32> decode_distance(u32);
     ErrorOr<void> decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code);
