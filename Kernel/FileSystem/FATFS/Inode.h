@@ -36,7 +36,8 @@ private:
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;
 
-    static constexpr u8 lfn_entry_text_termination = 0xFF;
+    static constexpr u8 lfn_entry_character_termination = 0x00;
+    static constexpr u8 lfn_entry_unused_byte = 0xFF;
 
     static constexpr u16 first_fat_year = 1980;
 
