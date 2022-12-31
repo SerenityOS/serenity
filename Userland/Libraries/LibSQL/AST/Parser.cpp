@@ -524,6 +524,10 @@ RefPtr<Expression> Parser::parse_literal_value_expression()
         auto value = consume().value();
         return create_ast_node<BlobLiteral>(value);
     }
+    if (consume_if(TokenType::True))
+        return create_ast_node<BooleanLiteral>(true);
+    if (consume_if(TokenType::False))
+        return create_ast_node<BooleanLiteral>(false);
     if (consume_if(TokenType::Null))
         return create_ast_node<NullLiteral>();
 

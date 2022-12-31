@@ -69,6 +69,7 @@ namespace SQL::AST {
     __ENUMERATE_SQL_TOKEN("EXISTS", Exists, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("EXPLAIN", Explain, Keyword)                    \
     __ENUMERATE_SQL_TOKEN("FAIL", Fail, Keyword)                          \
+    __ENUMERATE_SQL_TOKEN("FALSE", False, Keyword)                        \
     __ENUMERATE_SQL_TOKEN("FILTER", Filter, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("FIRST", First, Keyword)                        \
     __ENUMERATE_SQL_TOKEN("FOLLOWING", Following, Keyword)                \
@@ -151,6 +152,7 @@ namespace SQL::AST {
     __ENUMERATE_SQL_TOKEN("TO", To, Keyword)                              \
     __ENUMERATE_SQL_TOKEN("TRANSACTION", Transaction, Keyword)            \
     __ENUMERATE_SQL_TOKEN("TRIGGER", Trigger, Keyword)                    \
+    __ENUMERATE_SQL_TOKEN("TRUE", True, Keyword)                          \
     __ENUMERATE_SQL_TOKEN("UNBOUNDED", Unbounded, Keyword)                \
     __ENUMERATE_SQL_TOKEN("UNION", Union, Keyword)                        \
     __ENUMERATE_SQL_TOKEN("UNIQUE", Unique, Keyword)                      \
