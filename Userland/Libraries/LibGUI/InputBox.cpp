@@ -19,10 +19,11 @@ InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringVie
     : Dialog(parent_window)
     , m_text_value(move(text_value))
     , m_prompt(prompt)
+    , m_input_type(input_type)
     , m_placeholder(placeholder)
 {
     set_title(title);
-    build(input_type);
+    build();
 }
 
 Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
@@ -43,11 +44,22 @@ void InputBox::set_text_value(DeprecatedString text_value)
 
 void InputBox::on_done(ExecResult result)
 {
-    if (result == ExecResult::OK)
+    if (result == ExecResult::OK) {
         m_text_value = m_text_editor->text();
+
+        switch (m_input_type) {
+        case InputType::Text:
+        case InputType::Password:
+            break;
+
+        case InputType::NonemptyText:
+            VERIFY(!m_text_value.is_empty());
+            break;
+        }
+    }
 }
 
-void InputBox::build(InputType input_type)
+void InputBox::build()
 {
     auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
 
@@ -69,7 +81,7 @@ void InputBox::build(InputType input_type)
     auto& label = label_editor_container.add<Label>(m_prompt);
     label.set_preferred_width(text_width);
 
-    switch (input_type) {
+    switch (m_input_type) {
     case InputType::Text:
     case InputType::NonemptyText:
         m_text_editor = label_editor_container.add<TextBox>();
@@ -114,7 +126,7 @@ void InputBox::build(InputType input_type)
     };
     m_text_editor->set_focus(true);
 
-    if (input_type == InputType::NonemptyText) {
+    if (m_input_type == InputType::NonemptyText) {
         m_text_editor->on_change = [this] {
             m_ok_button->set_enabled(!m_text_editor->text().is_empty());
         };

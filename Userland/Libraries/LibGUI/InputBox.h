@@ -32,10 +32,11 @@ private:
     explicit InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder);
 
     virtual void on_done(ExecResult) override;
-    void build(InputType input_type);
+    void build();
 
     DeprecatedString m_text_value;
     DeprecatedString m_prompt;
+    InputType m_input_type;
     DeprecatedString m_placeholder;
 
     RefPtr<Button> m_ok_button;
