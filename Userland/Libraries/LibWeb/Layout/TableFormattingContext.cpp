@@ -276,6 +276,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         row.baseline = max(row.baseline, cell.baseline);
     }
 
+    float row_top_offset = 0.0f;
     for (size_t y = 0; y < m_rows.size(); y++) {
         auto& row = m_rows[y];
         auto& row_state = m_state.get_mutable(row.box);
@@ -286,6 +287,8 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
 
         row_state.set_content_height(row.used_width);
         row_state.set_content_width(row_width);
+        row_state.set_content_y(row_top_offset);
+        row_top_offset += row_state.content_height();
     }
 
     float row_group_top_offset = 0.0f;
