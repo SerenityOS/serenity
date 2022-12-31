@@ -284,6 +284,12 @@ StringView rendering_intent_name(RenderingIntent rendering_intent)
     VERIFY_NOT_REACHED();
 }
 
+Flags::Flags() = default;
+Flags::Flags(u32 bits)
+    : m_bits(bits)
+{
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
@@ -298,6 +304,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_device_class = TRY(parse_device_class(header));
     profile->m_data_color_space = TRY(parse_data_color_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
+    profile->m_flags = Flags { header.profile_flags };
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
 
     return profile;
