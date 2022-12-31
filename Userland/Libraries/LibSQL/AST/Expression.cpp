@@ -24,6 +24,11 @@ ResultOr<Value> StringLiteral::evaluate(ExecutionContext&) const
     return Value { value() };
 }
 
+ResultOr<Value> BooleanLiteral::evaluate(ExecutionContext&) const
+{
+    return Value { value() };
+}
+
 ResultOr<Value> NullLiteral::evaluate(ExecutionContext&) const
 {
     return Value {};

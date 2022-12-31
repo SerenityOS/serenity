@@ -118,6 +118,23 @@ TEST_CASE(blob_literal)
     validate("x'DEADC0DE'"sv, "DEADC0DE"sv);
 }
 
+TEST_CASE(boolean_literal)
+{
+    auto validate = [](StringView sql, bool expected_value) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto expression = result.release_value();
+        EXPECT(is<SQL::AST::BooleanLiteral>(*expression));
+
+        auto const& literal = static_cast<SQL::AST::BooleanLiteral const&>(*expression);
+        EXPECT_EQ(literal.value(), expected_value);
+    };
+
+    validate("TRUE"sv, true);
+    validate("FALSE"sv, false);
+}
+
 TEST_CASE(null_literal)
 {
     auto validate = [](StringView sql) {

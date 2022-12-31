@@ -357,6 +357,21 @@ private:
     DeprecatedString m_value;
 };
 
+class BooleanLiteral : public Expression {
+public:
+    explicit BooleanLiteral(bool value)
+        : m_value(value)
+    {
+    }
+
+    bool value() const { return m_value; }
+
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
+
+private:
+    bool m_value { false };
+};
+
 class NullLiteral : public Expression {
 public:
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
