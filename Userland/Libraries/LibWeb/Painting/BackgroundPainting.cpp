@@ -309,11 +309,11 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         image.resolve_for_size(layout_node, image_rect.size().to_type<float>());
 
-        while (image_y < css_clip_rect.bottom()) {
+        while (image_y <= css_clip_rect.bottom()) {
             image_rect.set_y(image_y);
 
             auto image_x = initial_image_x;
-            while (image_x < css_clip_rect.right()) {
+            while (image_x <= css_clip_rect.right()) {
                 image_rect.set_x(image_x);
                 auto image_device_rect = context.rounded_device_rect(image_rect);
                 if (image_device_rect != last_image_device_rect && image_device_rect.intersects(context.device_viewport_rect()))
