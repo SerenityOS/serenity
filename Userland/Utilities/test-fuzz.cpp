@@ -25,6 +25,7 @@
     T(PNGLoader)             \
     T(PPMLoader)             \
     T(QOILoader)             \
+    T(TGALoader)             \
     T(RegexECMA262)          \
     T(RegexPosixExtended)    \
     T(Shell)                 \
@@ -90,6 +91,10 @@ ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 
 #define LLVMFuzzerTestOneInput TestQOILoader
 #include <Meta/Lagom/Fuzzers/FuzzQOILoader.cpp>
+#undef LLVMFuzzerTestOneInput
+
+#define LLVMFuzzerTestOneInput TestTGALoader
+#include <Meta/Lagom/Fuzzers/FuzzTGALoader.cpp>
 #undef LLVMFuzzerTestOneInput
 
 #define LLVMFuzzerTestOneInput TestRegexECMA262
