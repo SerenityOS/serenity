@@ -21,6 +21,7 @@ public:
     virtual ~WebSocketLadybird() override;
 
     virtual Web::WebSockets::WebSocket::ReadyState ready_state() override;
+    virtual DeprecatedString subprotocol_in_use() override;
     virtual void send(ByteBuffer binary_or_text_message, bool is_text) override;
     virtual void send(StringView message) override;
     virtual void close(u16 code, DeprecatedString reason) override;

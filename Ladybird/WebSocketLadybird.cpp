@@ -74,6 +74,11 @@ Web::WebSockets::WebSocket::ReadyState WebSocketLadybird::ready_state()
     VERIFY_NOT_REACHED();
 }
 
+DeprecatedString WebSocketLadybird::subprotocol_in_use()
+{
+    return m_websocket->subprotocol_in_use();
+}
+
 void WebSocketLadybird::send(ByteBuffer binary_or_text_message, bool is_text)
 {
     m_websocket->send(WebSocket::Message(binary_or_text_message, is_text));
