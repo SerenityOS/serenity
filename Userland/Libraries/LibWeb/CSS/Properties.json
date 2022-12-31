@@ -225,7 +225,6 @@
     ]
   },
   "border-bottom-style": {
-    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-types": [
@@ -284,7 +283,6 @@
     ]
   },
   "border-left-style": {
-    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-types": [
@@ -329,7 +327,6 @@
     ]
   },
   "border-right-style": {
-    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-types": [
@@ -359,7 +356,6 @@
     ]
   },
   "border-style": {
-    "affects-layout": false,
     "initial": "none",
     "longhands": [
       "border-top-style",
@@ -401,7 +397,6 @@
     ]
   },
   "border-top-style": {
-    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-types": [
