@@ -208,9 +208,8 @@ StringView device_class_name(DeviceClass device_class)
         return "Abstract"sv;
     case DeviceClass::NamedColor:
         return "NamedColor"sv;
-    default:
-        return "(unknown device class)"sv;
     }
+    VERIFY_NOT_REACHED();
 }
 
 StringView color_space_name(ColorSpace color_space)
@@ -266,9 +265,8 @@ StringView color_space_name(ColorSpace color_space)
         return "14 color"sv;
     case ColorSpace::FifteenColor:
         return "15 color"sv;
-    default:
-        return {};
     }
+    VERIFY_NOT_REACHED();
 }
 
 StringView rendering_intent_name(RenderingIntent rendering_intent)
@@ -282,9 +280,8 @@ StringView rendering_intent_name(RenderingIntent rendering_intent)
         return "Saturation"sv;
     case RenderingIntent::ICCAbsoluteColorimetric:
         return "ICC-absolute colorimetric"sv;
-    default:
-        return {};
     }
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
