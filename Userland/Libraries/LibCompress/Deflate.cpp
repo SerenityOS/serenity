@@ -189,6 +189,11 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     return true;
 }
 
+ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream)
+{
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateDecompressor(move(stream))));
+}
+
 DeflateDecompressor::DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream)
     : m_input_stream(make<Core::Stream::LittleEndianInputBitStream>(move(stream)))
 {
@@ -311,12 +316,12 @@ void DeflateDecompressor::close()
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
-    DeflateDecompressor deflate_stream { move(memory_stream) };
+    auto deflate_stream = TRY(DeflateDecompressor::construct(move(memory_stream)));
     DuplexMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
-    while (!deflate_stream.is_eof()) {
-        auto const slice = TRY(deflate_stream.read(buffer));
+    while (!deflate_stream->is_eof()) {
+        auto const slice = TRY(deflate_stream->read(buffer));
         output_stream.write_or_error(slice);
     }
 

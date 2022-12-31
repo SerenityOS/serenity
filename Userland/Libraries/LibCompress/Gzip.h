@@ -56,25 +56,24 @@ public:
 private:
     class Member {
     public:
-        Member(BlockHeader header, Core::Stream::Stream& stream)
-            : m_header(header)
-            , m_stream(Core::Stream::Handle<Core::Stream::Stream>(stream))
-        {
-        }
+        static ErrorOr<NonnullOwnPtr<Member>> construct(BlockHeader header, Core::Stream::Stream&);
 
         BlockHeader m_header;
-        DeflateDecompressor m_stream;
+        NonnullOwnPtr<DeflateDecompressor> m_stream;
         Crypto::Checksum::CRC32 m_checksum;
         size_t m_nread { 0 };
+
+    private:
+        Member(BlockHeader, NonnullOwnPtr<DeflateDecompressor>);
     };
 
-    Member const& current_member() const { return m_current_member.value(); }
-    Member& current_member() { return m_current_member.value(); }
+    Member const& current_member() const { return *m_current_member; }
+    Member& current_member() { return *m_current_member; }
 
     NonnullOwnPtr<Core::Stream::Stream> m_input_stream;
     u8 m_partial_header[sizeof(BlockHeader)];
     size_t m_partial_header_offset { 0 };
-    Optional<Member> m_current_member;
+    OwnPtr<Member> m_current_member {};
 
     bool m_eof { false };
 };
