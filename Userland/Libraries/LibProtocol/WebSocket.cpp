@@ -20,6 +20,11 @@ WebSocket::ReadyState WebSocket::ready_state()
     return (WebSocket::ReadyState)m_client->ready_state({}, *this);
 }
 
+DeprecatedString WebSocket::subprotocol_in_use()
+{
+    return m_client->subprotocol_in_use({}, *this);
+}
+
 void WebSocket::send(ByteBuffer binary_or_text_message, bool is_text)
 {
     m_client->send({}, *this, move(binary_or_text_message), is_text);

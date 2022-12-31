@@ -87,6 +87,11 @@ Web::WebSockets::WebSocket::ReadyState WebSocketClientSocketAdapter::ready_state
     VERIFY_NOT_REACHED();
 }
 
+DeprecatedString WebSocketClientSocketAdapter::subprotocol_in_use()
+{
+    return m_websocket->subprotocol_in_use();
+}
+
 void WebSocketClientSocketAdapter::send(ByteBuffer binary_or_text_message, bool is_text)
 {
     m_websocket->send(binary_or_text_message, is_text);
@@ -115,9 +120,9 @@ WebSocketClientManagerAdapter::WebSocketClientManagerAdapter(NonnullRefPtr<Proto
 
 WebSocketClientManagerAdapter::~WebSocketClientManagerAdapter() = default;
 
-RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const AK::URL& url, DeprecatedString const& origin)
+RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerAdapter::connect(const AK::URL& url, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols)
 {
-    auto underlying_websocket = m_websocket_client->connect(url, origin);
+    auto underlying_websocket = m_websocket_client->connect(url, origin, protocols);
     if (!underlying_websocket)
         return {};
     return WebSocketClientSocketAdapter::create(underlying_websocket.release_nonnull());
