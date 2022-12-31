@@ -10,6 +10,8 @@ interface MouseEvent : UIEvent {
     readonly attribute double screenY;
     readonly attribute double x;
     readonly attribute double y;
+    readonly attribute double pageX;
+    readonly attribute double pageY;
 
     readonly attribute short button;
     readonly attribute unsigned short buttons;
