@@ -18,6 +18,8 @@ struct MouseEventInit : public EventModifierInit {
     double offset_y = 0;
     double client_x = 0;
     double client_y = 0;
+    double page_x = 0;
+    double page_y = 0;
 
     i16 button = 0;
     u16 buttons = 0;
@@ -28,7 +30,7 @@ class MouseEvent : public UIEvent {
 
 public:
     static MouseEvent* create(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init = {});
-    static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, unsigned buttons, unsigned mouse_button = 1);
+    static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button = 1);
 
     virtual ~MouseEvent() override;
 
@@ -41,6 +43,9 @@ public:
     // FIXME: Make these actually different from clientX and clientY.
     double screen_x() const { return m_client_x; }
     double screen_y() const { return m_client_y; }
+
+    double page_x() const { return m_page_x; }
+    double page_y() const { return m_page_y; }
 
     double x() const { return client_x(); }
     double y() const { return client_y(); }
@@ -60,6 +65,8 @@ private:
     double m_offset_y { 0 };
     double m_client_x { 0 };
     double m_client_y { 0 };
+    double m_page_x { 0 };
+    double m_page_y { 0 };
     i16 m_button { 0 };
     u16 m_buttons { 0 };
 };

@@ -248,12 +248,13 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, buttons, button));
+            auto page_offset = compute_mouse_event_page_offset(client_offset);
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, buttons, button));
             handled_event = true;
 
             bool run_activation_behavior = true;
             if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
-                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, button));
+                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, button));
             }
 
             if (run_activation_behavior) {
@@ -370,7 +371,8 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
         m_mousedown_target = node.ptr();
         auto offset = compute_mouse_event_offset(position, *layout_node);
         auto client_offset = compute_mouse_event_client_offset(position);
-        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, buttons, button));
+        auto page_offset = compute_mouse_event_page_offset(client_offset);
+        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, page_offset, buttons, button));
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -483,7 +485,8 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, buttons));
+            auto page_offset = compute_mouse_event_page_offset(client_offset);
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, buttons));
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paint_box())
                 return true;
@@ -565,7 +568,8 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
 
     auto offset = compute_mouse_event_offset(position, *layout_node);
     auto client_offset = compute_mouse_event_client_offset(position);
-    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, buttons, button));
+    auto page_offset = compute_mouse_event_page_offset(client_offset);
+    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, buttons, button));
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paint_box())
@@ -793,9 +797,20 @@ CSSPixelPoint EventHandler::compute_mouse_event_client_offset(CSSPixelPoint even
 {
     // https://w3c.github.io/csswg-drafts/cssom-view/#dom-mouseevent-clientx
     // The clientX attribute must return the x-coordinate of the position where the event occurred relative to the origin of the viewport.
-    
+
     auto scroll_offset = m_browsing_context.viewport_scroll_offset();
     return event_page_position.translated(-scroll_offset.to_rounded<CSSPixels>());
 }
 
+CSSPixelPoint EventHandler::compute_mouse_event_page_offset(CSSPixelPoint event_client_offset) const
+{
+    // https://w3c.github.io/csswg-drafts/cssom-view/#dom-mouseevent-pagex
+    // FIXME: 1. If the event’s dispatch flag is set, return the horizontal coordinate of the position where the event occurred relative to the origin of the initial containing block and terminate these steps.
+
+    // 2. Let offset be the value of the scrollX attribute of the event’s associated Window object, if there is one, or zero otherwise.
+    auto scroll_offset = m_browsing_context.viewport_scroll_offset();
+
+    // 3. Return the sum of offset and the value of the event’s clientX attribute.
+    return event_client_offset.translated(scroll_offset.to_rounded<CSSPixels>());
+}
 }
