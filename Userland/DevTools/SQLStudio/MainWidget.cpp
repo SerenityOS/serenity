@@ -232,7 +232,7 @@ MainWidget::MainWidget()
     m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 
     m_action_tab_widget->on_tab_close_click = [this](auto&) {
-        m_action_tab_widget->set_fixed_height(0);
+        m_action_tab_widget->set_visible(false);
     };
 
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
@@ -285,7 +285,7 @@ MainWidget::MainWidget()
                 individual_result_as_json.append(result_row_column);
             query_results_model->add(move(individual_result_as_json));
         }
-        m_action_tab_widget->set_fixed_height(200);
+        m_action_tab_widget->set_visible(true);
     };
 }
 
