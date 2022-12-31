@@ -71,6 +71,7 @@ void CircularBuffer::clear()
 {
     m_reading_head = 0;
     m_used_space = 0;
+    m_seekback_limit = 0;
 }
 
 Bytes CircularBuffer::next_write_span()
@@ -85,6 +86,17 @@ ReadonlyBytes CircularBuffer::next_read_span() const
     return m_buffer.span().slice(m_reading_head, min(capacity() - m_reading_head, m_used_space));
 }
 
+ReadonlyBytes CircularBuffer::next_read_span_with_seekback(size_t distance) const
+{
+    VERIFY(m_seekback_limit <= capacity());
+    VERIFY(distance <= m_seekback_limit);
+
+    // Note: We are adding the capacity once here to ensure that we can wrap around the negative space by using modulo.
+    auto read_offset = (capacity() + m_reading_head + m_used_space - distance) % capacity();
+
+    return m_buffer.span().slice(read_offset, min(capacity() - read_offset, m_seekback_limit));
+}
+
 size_t CircularBuffer::write(ReadonlyBytes bytes)
 {
     auto remaining = bytes.size();
@@ -97,6 +109,10 @@ size_t CircularBuffer::write(ReadonlyBytes bytes)
         auto const written_bytes = bytes.slice(bytes.size() - remaining).copy_trimmed_to(next_span);
 
         m_used_space += written_bytes;
+
+        m_seekback_limit += written_bytes;
+        if (m_seekback_limit > capacity())
+            m_seekback_limit = capacity();
 
         remaining -= written_bytes;
     }
@@ -121,6 +137,27 @@ Bytes CircularBuffer::read(Bytes bytes)
         if (m_reading_head >= capacity())
             m_reading_head -= capacity();
 
+        remaining -= written_bytes;
+    }
+
+    return bytes.trim(bytes.size() - remaining);
+}
+
+ErrorOr<Bytes> CircularBuffer::read_with_seekback(Bytes bytes, size_t distance)
+{
+    if (distance > m_seekback_limit)
+        return Error::from_string_literal("Tried a seekback read beyond the seekback limit");
+
+    auto remaining = bytes.size();
+
+    while (remaining > 0) {
+        auto const next_span = next_read_span_with_seekback(distance);
+        if (next_span.size() == 0)
+            break;
+
+        auto written_bytes = next_span.copy_trimmed_to(bytes.slice(bytes.size() - remaining));
+
+        distance -= written_bytes;
         remaining -= written_bytes;
     }
 

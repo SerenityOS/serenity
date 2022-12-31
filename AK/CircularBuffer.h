@@ -42,6 +42,10 @@ public:
     Bytes read(Bytes bytes);
     ErrorOr<void> discard(size_t discarded_bytes);
 
+    /// Compared to `read()`, this starts reading from an offset that is `distance` bytes
+    /// before the current write pointer and allows for reading already-read data.
+    ErrorOr<Bytes> read_with_seekback(Bytes bytes, size_t distance);
+
     [[nodiscard]] size_t empty_space() const;
     [[nodiscard]] size_t used_space() const;
     [[nodiscard]] size_t capacity() const;
@@ -57,11 +61,13 @@ private:
 
     [[nodiscard]] Bytes next_write_span();
     [[nodiscard]] ReadonlyBytes next_read_span() const;
+    [[nodiscard]] ReadonlyBytes next_read_span_with_seekback(size_t distance) const;
 
     ByteBuffer m_buffer {};
 
     size_t m_reading_head {};
     size_t m_used_space {};
+    size_t m_seekback_limit {};
 };
 
 }
