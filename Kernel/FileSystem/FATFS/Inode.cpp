@@ -167,7 +167,20 @@ ErrorOr<NonnullOwnPtr<KString>> FATInode::compute_filename(FATEntry& entry, Vect
             filename.append(lfn_entry.characters3[1]);
         }
 
-        return TRY(KString::try_create(byte_terminated_string(filename.string_view(), lfn_entry_text_termination)));
+        // Long Filenames have two terminators:
+        // 1. Completely unused "entries" (the `characterN` fields of
+        //    `lfn_entry`) are filled with 0xFF (`lfn_entry_unused_byte`).
+        // 2. Partially used entries (within `characterN`) are null-padded.
+        //
+        // `filename` is truncated first to eliminate unused entries, and
+        // then further truncated to remove any existing null padding characters.
+        //
+        // Page 8 of the Long Filename Specification
+        // (http://www.osdever.net/documents/LongFileName.pdf)
+        // details this encoding ("If the long name does not fill...").
+        return TRY(KString::try_create(
+            byte_terminated_string(
+                byte_terminated_string(filename.string_view(), lfn_entry_unused_byte), lfn_entry_character_termination)));
     }
 
     VERIFY_NOT_REACHED();
@@ -184,7 +197,7 @@ Time FATInode::fat_date_time(FATPackedDate date, FATPackedTime time)
 StringView FATInode::byte_terminated_string(StringView string, u8 fill_byte)
 {
     if (auto index = string.find_last_not(fill_byte); index.has_value())
-        return string.substring_view(0, index.value());
+        return string.substring_view(0, index.value() + 1);
     return string;
 }
 
