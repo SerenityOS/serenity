@@ -543,7 +543,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         //        specified first, so it's far from ideal.
         border.color = computed_style.color_or_fallback(color_property, *this, computed_values.color());
         border.line_style = computed_style.line_style(style_property).value_or(CSS::LineStyle::None);
-        if (border.line_style == CSS::LineStyle::None) {
+
+        // https://w3c.github.io/csswg-drafts/css-backgrounds/#border-style
+        // none
+        //    No border. Color and width are ignored (i.e., the border has width 0). Note this means that the initial value of border-image-width will also resolve to zero.
+        // hidden
+        //    Same as none, but has different behavior in the border conflict resolution rules for border-collapsed tables [CSS2].
+        if (border.line_style == CSS::LineStyle::None || border.line_style == CSS::LineStyle::Hidden) {
             border.width = 0;
         } else {
             auto resolve_border_width = [&]() {
