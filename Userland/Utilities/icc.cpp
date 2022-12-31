@@ -25,6 +25,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
     outln("data color space: {}", Gfx::ICC::color_space_name(profile->data_color_space()));
     outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()).to_deprecated_string());
+
+    auto flags = profile->flags();
+    outln("flags: 0x{:08x}", flags.bits());
+    outln("  embedded in file: {}", flags.is_embedded_in_file() ? "yes" : "no");
+    outln("  can be used independently of embedded color data: {}", flags.can_be_used_independently_of_embedded_color_data() ? "yes" : "no");
+    if (auto unknown_icc_bits = flags.icc_bits() & ~Gfx::ICC::Flags::KnownBitsMask)
+        outln("  other unknown ICC bits: 0x{:04x}", unknown_icc_bits);
+    if (auto color_management_module_bits = flags.color_management_module_bits())
+        outln("  CMM bits: 0x{:04x}", color_management_module_bits);
+
     outln("rendering intent: {}", Gfx::ICC::rendering_intent_name(profile->rendering_intent()));
 
     return 0;
