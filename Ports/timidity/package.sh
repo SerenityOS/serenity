@@ -7,8 +7,13 @@ https://www.quaddicted.com/files/idgames/sounds/eawpats.zip eawpats.zip.no_extra
 auth_type='sha256'
 workdir="TiMidity++-${version}"
 use_fresh_config_sub='true'
-config_sub_paths=('autoconf/config.sub')
-depends=()
+use_fresh_config_guess='true'
+config_sub_paths=(
+    'autoconf/config.sub'
+)
+config_guess_paths=(
+    'autoconf/config.guess'
+)
 configopts=(
     '--without-x'
     'lib_cv___va_copy=no'
