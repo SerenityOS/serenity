@@ -393,12 +393,12 @@ The location of the kernel code is randomized at boot time, this ensures that at
 can not use a hardcoded kernel addresses when attempting ROP, instead they must first find
 an additional information leak to expose the KASLR offset.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/ece5a9a1088012ca9fadfb7e0bc3edd8029d36ad):
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/1ad0e05ea1d3491e4724669d6f00f5668d8e0aa1):
 
 ```
-commit ece5a9a1088012ca9fadfb7e0bc3edd8029d36ad
-Author Idan Horowitz <idan.horowitz@gmail.com>
-Date:  Mon Mar 21 22:59:48 2022 +0200
+commit 1ad0e05ea1d3491e4724669d6f00f5668d8e0aa1
+Author: Idan Horowitz <idan.horowitz@gmail.com>
+Date:   Mon Mar 21 22:59:48 2022 +0200
 
 Kernel: Add an extremely primitive version of KASLR
 ```
