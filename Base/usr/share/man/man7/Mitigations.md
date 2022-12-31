@@ -13,7 +13,7 @@ to collect and describe the mitigations in one centralized place.
 
 ### SMEP (Supervisor Mode Execution Protection)
 
-[Supervisor Mode Execution Protection](https://software.intel.com/security-software-guidance/best-practices/related-intel-security-features-technologies) is an Intel CPU feature which prevents execution
+[Supervisor Mode Execution Protection](https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/best-practices/related-intel-security-features-technologies.html) is an Intel CPU feature which prevents execution
 of userspace code with kernel privileges.
 
 It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8602fa5b49aa4e2b039764a14698f0baa3ad0532):
