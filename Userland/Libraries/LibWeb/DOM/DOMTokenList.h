@@ -45,10 +45,12 @@ public:
 private:
     DOMTokenList(Element const& associated_element, FlyString associated_attribute);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
     WebIDL::ExceptionOr<void> validate_token(StringView token) const;
     void run_update_steps();
 
-    WeakPtr<Element> m_associated_element;
+    JS::NonnullGCPtr<Element> m_associated_element;
     FlyString m_associated_attribute;
     Vector<DeprecatedString> m_token_set;
 };

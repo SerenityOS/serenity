@@ -68,6 +68,12 @@ DOMTokenList::DOMTokenList(Element const& associated_element, FlyString associat
     associated_attribute_changed(value);
 }
 
+void DOMTokenList::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_associated_element);
+}
+
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A1
 void DOMTokenList::associated_attribute_changed(StringView value)
 {
