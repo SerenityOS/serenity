@@ -90,16 +90,11 @@ void GLContext::gl_array_element(GLint i)
     }
 }
 
-void GLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
+void GLContext::gl_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_color, r, g, b, a);
 
-    m_current_vertex_color = {
-        static_cast<float>(r),
-        static_cast<float>(g),
-        static_cast<float>(b),
-        static_cast<float>(a),
-    };
+    m_current_vertex_color = { r, g, b, a };
 }
 
 void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
@@ -289,13 +284,13 @@ void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, vo
     tex_coord_pointer = { .size = size, .type = type, .normalize = false, .stride = stride, .pointer = data_pointer };
 }
 
-void GLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+void GLContext::gl_vertex(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_vertex, x, y, z, w);
 
     GPU::Vertex vertex;
 
-    vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
+    vertex.position = { x, y, z, w };
     vertex.color = m_current_vertex_color;
     for (size_t i = 0; i < m_device_info.num_texture_units; ++i)
         vertex.tex_coords[i] = m_current_vertex_tex_coord[i];

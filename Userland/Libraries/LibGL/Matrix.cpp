@@ -150,21 +150,21 @@ void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
     update_current_matrix(*m_current_matrix * rotation_mat);
 }
 
-void GLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
+void GLContext::gl_scale(GLfloat x, GLfloat y, GLfloat z)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_scale, x, y, z);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto scale_matrix = Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+    auto scale_matrix = Gfx::scale_matrix(FloatVector3 { x, y, z });
     update_current_matrix(*m_current_matrix * scale_matrix);
 }
 
-void GLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
+void GLContext::gl_translate(GLfloat x, GLfloat y, GLfloat z)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_translate, x, y, z);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto translation_matrix = Gfx::translation_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+    auto translation_matrix = Gfx::translation_matrix(FloatVector3 { x, y, z });
     update_current_matrix(*m_current_matrix * translation_matrix);
 }
 
