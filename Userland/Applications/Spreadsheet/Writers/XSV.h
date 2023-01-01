@@ -53,17 +53,15 @@ constexpr WriterBehavior default_behaviors()
 template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(OutputStream& output, ContainerType const& data, WriterTraits const& traits, HeaderType const& headers = {}, WriterBehavior behaviors = default_behaviors())
+    XSV(OutputStream& output, ContainerType const& data, WriterTraits traits, HeaderType const& headers = {}, WriterBehavior behaviors = default_behaviors())
         : m_data(data)
-        , m_traits(traits)
+        , m_traits(move(traits))
         , m_behaviors(behaviors)
         , m_names(headers)
         , m_output(output)
     {
         if (!headers.is_empty())
             m_behaviors = m_behaviors | WriterBehavior::WriteHeaders;
-
-        generate();
     }
 
     virtual ~XSV() = default;
@@ -81,13 +79,6 @@ public:
 #undef E
         }
         VERIFY_NOT_REACHED();
-    }
-
-private:
-    void set_error(WriteError error)
-    {
-        if (m_error == WriteError::None)
-            m_error = error;
     }
 
     void generate()
@@ -109,6 +100,42 @@ private:
             if (m_output.write({ "\n", 1 }) != 1)
                 set_error(WriteError::InternalError);
         }
+    }
+
+    void generate_preview()
+    {
+        auto lines_written = 0;
+        constexpr auto max_preview_lines = 8;
+
+        auto with_headers = has_flag(m_behaviors, WriterBehavior::WriteHeaders);
+        if (with_headers) {
+            write_row(m_names);
+            if (m_output.write({ "\n", 1 }) != 1)
+                set_error(WriteError::InternalError);
+            ++lines_written;
+        }
+
+        for (auto&& row : m_data) {
+            if (with_headers) {
+                if (row.size() != m_names.size())
+                    set_error(WriteError::NonConformingColumnCount);
+            }
+
+            write_row(row);
+            if (m_output.write({ "\n", 1 }) != 1)
+                set_error(WriteError::InternalError);
+            ++lines_written;
+
+            if (lines_written >= max_preview_lines)
+                break;
+        }
+    }
+
+private:
+    void set_error(WriteError error)
+    {
+        if (m_error == WriteError::None)
+            m_error = error;
     }
 
     template<typename T>
@@ -180,7 +207,7 @@ private:
     }
 
     ContainerType const& m_data;
-    WriterTraits const& m_traits;
+    WriterTraits m_traits;
     WriterBehavior m_behaviors;
     HeaderType const& m_names;
     WriteError m_error { WriteError::None };
