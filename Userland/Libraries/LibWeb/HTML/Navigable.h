@@ -43,6 +43,8 @@ public:
     JS::GCPtr<TraversableNavigable> traversable_navigable();
     JS::GCPtr<TraversableNavigable> top_level_traversable();
 
+    static JS::GCPtr<Navigable> navigable_with_active_document(JS::NonnullGCPtr<DOM::Document>);
+
 protected:
     Navigable();
 
