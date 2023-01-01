@@ -66,6 +66,11 @@ StringView DateTimeFormat::style_to_string(Style style)
     }
 }
 
+AK::Time LocalTime::time_since_epoch() const
+{
+    return AK::Time::from_timestamp(year, month + 1, day + 1, hour, minute, second, millisecond);
+}
+
 // 11.5.1 ToDateTimeOptions ( options, required, defaults ), https://tc39.es/ecma402/#sec-todatetimeoptions
 ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, OptionRequired required, OptionDefaults defaults)
 {
