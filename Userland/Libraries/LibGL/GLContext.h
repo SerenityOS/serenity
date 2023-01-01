@@ -110,9 +110,9 @@ public:
     void gl_begin(GLenum mode);
     void gl_clear(GLbitfield mask);
     void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-    void gl_clear_depth(GLdouble depth);
+    void gl_clear_depth(GLfloat depth);
     void gl_clear_stencil(GLint s);
-    void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a);
+    void gl_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
     void gl_delete_textures(GLsizei n, GLuint const* textures);
     void gl_end();
     void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val);
@@ -127,9 +127,9 @@ public:
     void gl_pop_matrix();
     void gl_mult_matrix(FloatMatrix4x4 const& matrix);
     void gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
-    void gl_scale(GLdouble x, GLdouble y, GLdouble z);
-    void gl_translate(GLdouble x, GLdouble y, GLdouble z);
-    void gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
+    void gl_scale(GLfloat x, GLfloat y, GLfloat z);
+    void gl_translate(GLfloat x, GLfloat y, GLfloat z);
+    void gl_vertex(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     void gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height);
     void gl_enable(GLenum);
     void gl_disable(GLenum);

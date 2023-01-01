@@ -117,13 +117,13 @@ void GLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLcl
     m_clear_color.clamp(0.f, 1.f);
 }
 
-void GLContext::gl_clear_depth(GLdouble depth)
+void GLContext::gl_clear_depth(GLfloat depth)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clear_depth, depth);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_clear_depth = clamp(static_cast<float>(depth), 0.f, 1.f);
+    m_clear_depth = clamp(depth, 0.f, 1.f);
 }
 
 void GLContext::gl_end()

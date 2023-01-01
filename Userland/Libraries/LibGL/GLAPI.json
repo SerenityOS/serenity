@@ -93,12 +93,12 @@
     },
     "ClearDepth": {
         "arguments": [
-            {"type": "GLdouble", "name": "depth"}
+            {"type": "GLdouble", "name": "depth", "cast_to": "GLfloat"}
         ]
     },
     "ClearDepthf": {
         "arguments": [
-            {"type": "GLfloat", "name": "depth", "cast_to": "GLdouble"}
+            {"type": "GLfloat", "name": "depth"}
         ],
         "implementation": "clear_depth"
     },
@@ -123,11 +123,11 @@
     },
     "Color": {
         "arguments": [
-            {"name": ["red", "green", "blue", "alpha"], "cast_to": "GLdouble"}
+            {"name": ["red", "green", "blue", "alpha"], "cast_to": "GLfloat"}
         ],
         "variants": {
             "argument_counts": [3, 4],
-            "argument_defaults": ["0.", "0.", "0.", "1."],
+            "argument_defaults": ["0.f", "0.f", "0.f", "1.f"],
             "convert_range": true,
             "pointer_argument": "v",
             "types": {
@@ -877,7 +877,7 @@
     },
     "Scale": {
         "arguments": [
-            {"name": ["x", "y", "z"], "cast_to": "GLdouble"}
+            {"name": ["x", "y", "z"], "cast_to": "GLfloat"}
         ],
         "variants": {
             "types": {
@@ -1128,7 +1128,7 @@
     },
     "Translate": {
         "arguments": [
-            {"name": ["x", "y", "z"], "cast_to": "GLdouble"}
+            {"name": ["x", "y", "z"], "cast_to": "GLfloat"}
         ],
         "variants": {
             "types": {
