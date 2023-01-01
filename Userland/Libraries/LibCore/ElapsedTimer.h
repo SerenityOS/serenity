@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Time.h>
+#include <AK/Forward.h>
 #include <sys/time.h>
 
 namespace Core {

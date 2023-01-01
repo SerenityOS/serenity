@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Time.h>
 #include <LibJS/Console.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/StringConstructor.h>
