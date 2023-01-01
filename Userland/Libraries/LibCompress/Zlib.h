@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/BitStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
