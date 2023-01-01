@@ -978,17 +978,34 @@
         "arguments": [
             {"type": "GLenum", "name": "target"},
             {"type": "GLenum", "name": "pname"},
-            {"name": "param", "cast_to": "GLfloat"}
+            {"name": "param"},
+            {"type": "GLenum", "expression": "@variant_gl_type@"}
         ],
+        "implementation": "tex_envv",
         "variants": {
+            "argument_counts": [1],
             "pointer_argument": "params",
             "types": {
-                "f": {},
-                "fv": {"unimplemented": true},
-                "i": {},
-                "iv": {"unimplemented": true}
+                "fv": {},
+                "iv": {}
             }
         }
+    },
+    "TexEnvf": {
+        "arguments": [
+            {"type": "GLenum", "name": "target"},
+            {"type": "GLenum", "name": "pname"},
+            {"type": "GLfloat", "name": "x", "expression": "{@argument_name@, 0.f, 0.f, 0.f}"}
+        ],
+        "implementation": "tex_env"
+    },
+    "TexEnvi": {
+        "arguments": [
+            {"type": "GLenum", "name": "target"},
+            {"type": "GLenum", "name": "pname"},
+            {"type": "GLint", "name": "x", "expression": "{static_cast<float>(@argument_name@), 0.f, 0.f, 0.f}"}
+        ],
+        "implementation": "tex_env"
     },
     "TexGen": {
         "arguments": [

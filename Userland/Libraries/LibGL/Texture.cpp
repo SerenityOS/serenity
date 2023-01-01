@@ -305,14 +305,15 @@ void GLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
     m_current_vertex_tex_coord[0] = { s, t, r, q };
 }
 
-void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
+void GLContext::gl_tex_env(GLenum target, GLenum pname, FloatVector4 params)
 {
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_env, target, pname, param);
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_env, target, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_ENV && target != GL_TEXTURE_FILTER_CONTROL, GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(target == GL_TEXTURE_FILTER_CONTROL && pname != GL_TEXTURE_LOD_BIAS, GL_INVALID_ENUM);
 
+    auto const param = params[0];
     switch (target) {
     case GL_TEXTURE_ENV:
         switch (pname) {
@@ -422,6 +423,9 @@ void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
             }
             break;
         }
+        case GL_TEXTURE_ENV_COLOR:
+            m_active_texture_unit->set_color(params);
+            break;
         case GL_TEXTURE_ENV_MODE: {
             auto param_enum = static_cast<GLenum>(param);
             switch (param_enum) {
@@ -456,6 +460,28 @@ void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     }
 
     m_sampler_config_is_dirty = true;
+}
+
+void GLContext::gl_tex_envv(GLenum target, GLenum pname, void const* params, GLenum type)
+{
+    VERIFY(type == GL_FLOAT || type == GL_INT);
+
+    auto parameters_to_vector = [&]<typename T>(T const* params) -> FloatVector4 {
+        auto parameters = (target == GL_TEXTURE_ENV && pname == GL_TEXTURE_ENV_COLOR)
+            ? Vector4<T> { params[0], params[1], params[2], params[3] }
+            : Vector4<T> { params[0], 0, 0, 0 };
+        return parameters.template to_type<float>();
+    };
+
+    auto tex_env_parameters = (type == GL_FLOAT)
+        ? parameters_to_vector(reinterpret_cast<GLfloat const*>(params))
+        : parameters_to_vector(reinterpret_cast<GLint const*>(params));
+
+    // Normalize integers to -1..1
+    if (target == GL_TEXTURE_ENV && pname == GL_TEXTURE_ENV_COLOR && type == GL_INT)
+        tex_env_parameters = (tex_env_parameters + 2147483648.f) / 2147483647.5f - 1.f;
+
+    gl_tex_env(target, pname, tex_env_parameters);
 }
 
 void GLContext::gl_tex_gen(GLenum coord, GLenum pname, GLint param)
@@ -822,6 +848,7 @@ void GLContext::sync_device_sampler_config()
         }
 
         auto& fixed_function_env = config.fixed_function_texture_environment;
+        fixed_function_env.color = texture_unit.color();
 
         auto get_env_mode = [](GLenum mode) {
             switch (mode) {
