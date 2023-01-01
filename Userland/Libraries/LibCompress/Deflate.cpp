@@ -139,7 +139,8 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
         return Error::from_string_literal("Invalid deflate literal/length symbol");
 
     if (symbol < 256) {
-        m_decompressor.m_output_stream << static_cast<u8>(symbol);
+        u8 byte_symbol = symbol;
+        m_decompressor.m_output_buffer.write({ &byte_symbol, sizeof(byte_symbol) });
         return true;
     } else if (symbol == 256) {
         m_eof = true;
@@ -157,12 +158,9 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
 
         for (size_t idx = 0; idx < length; ++idx) {
             u8 byte = 0;
-            m_decompressor.m_output_stream.read({ &byte, sizeof(byte) }, distance);
+            TRY(m_decompressor.m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, distance));
 
-            if (m_decompressor.m_output_stream.handle_any_error())
-                return Error::from_string_literal("A back reference was requested that was too far back");
-
-            m_decompressor.m_output_stream << byte;
+            m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
         }
 
         return true;
@@ -180,21 +178,25 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     if (m_bytes_remaining == 0)
         return false;
 
-    auto const nread = min(m_bytes_remaining, m_decompressor.m_output_stream.remaining_contiguous_space());
-    m_bytes_remaining -= nread;
+    Array<u8, 4096> temporary_buffer;
+    auto readable_bytes = temporary_buffer.span().trim(min(m_bytes_remaining, m_decompressor.m_output_buffer.empty_space()));
+    auto read_bytes = TRY(m_decompressor.m_input_stream->read(readable_bytes));
+    auto written_bytes = m_decompressor.m_output_buffer.write(read_bytes);
+    VERIFY(read_bytes.size() == written_bytes);
 
-    TRY(m_decompressor.m_input_stream->read(m_decompressor.m_output_stream.reserve_contiguous_space(nread)));
-
+    m_bytes_remaining -= written_bytes;
     return true;
 }
 
 ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream)
 {
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateDecompressor(move(stream))));
+    auto output_buffer = TRY(CircularBuffer::create_empty(32 * KiB));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateDecompressor(move(stream), move(output_buffer))));
 }
 
-DeflateDecompressor::DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream)
+DeflateDecompressor::DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream, CircularBuffer output_buffer)
     : m_input_stream(make<Core::Stream::LittleEndianInputBitStream>(move(stream)))
+    , m_output_buffer(move(output_buffer))
 {
 }
 
@@ -257,10 +259,10 @@ ErrorOr<Bytes> DeflateDecompressor::read(Bytes bytes)
         }
 
         if (m_state == State::ReadingCompressedBlock) {
-            auto nread = m_output_stream.read(slice);
+            auto nread = m_output_buffer.read(slice).size();
 
             while (nread < slice.size() && TRY(m_compressed_block.try_read_more())) {
-                nread += m_output_stream.read(slice.slice(nread));
+                nread += m_output_buffer.read(slice.slice(nread)).size();
             }
 
             total_read += nread;
@@ -274,10 +276,10 @@ ErrorOr<Bytes> DeflateDecompressor::read(Bytes bytes)
         }
 
         if (m_state == State::ReadingUncompressedBlock) {
-            auto nread = m_output_stream.read(slice);
+            auto nread = m_output_buffer.read(slice).size();
 
             while (nread < slice.size() && TRY(m_uncompressed_block.try_read_more())) {
-                nread += m_output_stream.read(slice.slice(nread));
+                nread += m_output_buffer.read(slice.slice(nread)).size();
             }
 
             total_read += nread;
