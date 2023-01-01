@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/Time.h>
+#include <AK/Forward.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>

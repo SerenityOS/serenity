@@ -6,6 +6,7 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/Socket.h>

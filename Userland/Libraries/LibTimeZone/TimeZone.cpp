@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Time.h>
 #include <LibTimeZone/TimeZone.h>
 #include <limits.h>
 #include <stdio.h>

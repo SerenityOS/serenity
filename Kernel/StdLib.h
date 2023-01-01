@@ -9,7 +9,6 @@
 #include <AK/Checked.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
-#include <AK/Time.h>
 #include <AK/Userspace.h>
 #include <Kernel/KString.h>
 #include <Kernel/UnixTypes.h>

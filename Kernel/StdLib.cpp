@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/MemMem.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
