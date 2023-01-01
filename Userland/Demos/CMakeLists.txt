@@ -1,7 +1,6 @@
 add_subdirectory(CatDog)
 add_subdirectory(Cube)
 add_subdirectory(Eyes)
-add_subdirectory(Fire)
 add_subdirectory(LibGfxDemo)
 add_subdirectory(LibGfxScaleDemo)
 add_subdirectory(Mandelbrot)
