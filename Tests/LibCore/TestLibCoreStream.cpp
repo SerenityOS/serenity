@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/String.h>
+#include <AK/Time.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/MemoryStream.h>
@@ -279,7 +280,7 @@ TEST_CASE(udp_socket_read_write)
     auto udp_server = Core::UDPServer::construct();
     EXPECT(udp_server->bind({ 127, 0, 0, 1 }, 9090));
 
-    auto maybe_client_socket = Core::Stream::UDPSocket::connect({ { 127, 0, 0, 1 }, 9090 });
+    auto maybe_client_socket = Core::Stream::UDPSocket::connect({ { 127, 0, 0, 1 }, 9090 }, {});
     EXPECT(!maybe_client_socket.is_error());
     auto client_socket = maybe_client_socket.release_value();
 

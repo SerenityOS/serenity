@@ -6,6 +6,7 @@
  */
 
 #include "Stream.h"
+#include <AK/Time.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
 #include <netdb.h>

@@ -6,6 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/HashTable.h>
+#include <AK/Time.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Stream.h>
@@ -72,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         Core::EventLoop loop;
-        auto socket = TRY(Core::Stream::UDPSocket::connect(target, port));
+        auto socket = TRY(Core::Stream::UDPSocket::connect(target, port, {}));
 
         if (verbose)
             warnln("connected to {}:{}", target, port);

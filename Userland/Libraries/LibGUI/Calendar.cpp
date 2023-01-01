@@ -7,6 +7,7 @@
  */
 
 #include <AK/DateConstants.h>
+#include <AK/Time.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Calendar.h>

@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
