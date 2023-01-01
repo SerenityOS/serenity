@@ -291,6 +291,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
             return;
         }
 
+        m_alpha->set_base_color(color);
         m_color = color;
         update_color_widgets();
     };
