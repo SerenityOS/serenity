@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
+#include <AK/MemoryStream.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
@@ -34,21 +35,6 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     : m_data(sheet.to_xsv())
 {
     m_headers.extend(m_data.take_first());
-
-    auto temp_template = DeprecatedString::formatted("{}/spreadsheet-csv-export.{}.XXXXXX", Core::StandardPaths::tempfile_directory(), getpid());
-    auto temp_path = ByteBuffer::create_uninitialized(temp_template.length() + 1).release_value_but_fixme_should_propagate_errors();
-    auto buf = reinterpret_cast<char*>(temp_path.data());
-    auto copy_ok = temp_template.copy_characters_to_buffer(buf, temp_path.size());
-    VERIFY(copy_ok);
-
-    int fd = mkstemp(buf);
-    if (fd < 0) {
-        perror("mkstemp");
-        // Just let the operation fail cleanly later.
-    } else {
-        unlink(buf);
-        m_temp_output_file_path = temp_path;
-    }
 
     m_page = GUI::WizardPage::construct(
         "CSV Export Options",
@@ -104,7 +90,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     update_preview();
 }
 
-auto CSVExportDialogPage::make_writer() -> Optional<XSV>
+auto CSVExportDialogPage::make_writer(OutputStream& stream) -> Optional<XSV>
 {
     DeprecatedString delimiter;
     DeprecatedString quote;
@@ -167,78 +153,22 @@ auto CSVExportDialogPage::make_writer() -> Optional<XSV>
     if (should_quote_all_fields)
         behaviors = behaviors | Writer::WriterBehavior::QuoteAll;
 
-    // Note that the stream is used only by the ctor.
-    auto stream = Core::OutputFileStream::open(m_temp_output_file_path);
-    if (stream.is_error()) {
-        dbgln("Cannot open {} for writing: {}", m_temp_output_file_path, stream.error());
-        return {};
-    }
-    XSV writer(stream.value(), m_data, traits, *headers, behaviors);
-
-    if (stream.value().has_any_error()) {
-        dbgln("Write error when making preview");
-        return {};
-    }
-
-    return writer;
+    return XSV(stream, m_data, move(traits), *headers, behaviors);
 }
 
 void CSVExportDialogPage::update_preview()
-
 {
-    m_previously_made_writer = make_writer();
-    if (!m_previously_made_writer.has_value()) {
-    fail:;
+    DuplexMemoryStream memory_stream;
+    auto maybe_writer = make_writer(memory_stream);
+    if (!maybe_writer.has_value()) {
         m_data_preview_text_editor->set_text({});
         return;
     }
 
-    auto file_or_error = Core::File::open(
-        m_temp_output_file_path,
-        Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error())
-        goto fail;
-
-    auto& file = *file_or_error.value();
-    StringBuilder builder;
-    size_t line = 0;
-    while (file.can_read_line()) {
-        if (++line == 8)
-            break;
-
-        builder.append(file.read_line());
-        builder.append('\n');
-    }
-    m_data_preview_text_editor->set_text(builder.string_view());
+    maybe_writer->generate_preview();
+    auto buffer = memory_stream.copy_into_contiguous_buffer();
+    m_data_preview_text_editor->set_text(StringView(buffer));
     m_data_preview_text_editor->update();
-}
-
-Result<void, DeprecatedString> CSVExportDialogPage::move_into(DeprecatedString const& target)
-{
-    auto& source = m_temp_output_file_path;
-
-    // First, try rename().
-    auto rc = rename(source.characters(), target.characters());
-    if (rc == 0)
-        return {};
-
-    auto saved_errno = errno;
-    if (saved_errno == EXDEV) {
-        // Can't do that, copy it instead.
-        auto result = Core::File::copy_file_or_directory(
-            target, source,
-            Core::File::RecursionMode::Disallowed,
-            Core::File::LinkMode::Disallowed,
-            Core::File::AddDuplicateFileMarker::No);
-
-        if (result.is_error())
-            return DeprecatedString::formatted("{}", static_cast<Error const&>(result.error()));
-
-        return {};
-    }
-
-    perror("rename");
-    return DeprecatedString { strerror(saved_errno) };
 }
 
 Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
@@ -255,20 +185,17 @@ Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, C
 
         CSVExportDialogPage page { workbook.sheets().first() };
         wizard->replace_page(page.page());
-        auto result = wizard->exec();
-
-        if (result == GUI::Dialog::ExecResult::OK) {
-            auto& writer = page.writer();
-            if (!writer.has_value())
-                return DeprecatedString { "CSV Export failed" };
-            if (writer->has_error())
-                return DeprecatedString::formatted("CSV Export failed: {}", writer->error_string());
-
-            // No error, move the temp file to the expected location
-            return page.move_into(file.filename());
-        } else {
+        if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return DeprecatedString { "CSV Export was cancelled" };
-        }
+
+        auto file_stream = Core::OutputFileStream(file);
+        auto writer = page.make_writer(file_stream);
+        if (!writer.has_value())
+            return DeprecatedString::formatted("CSV Export failed");
+        writer->generate();
+        if (writer->has_error())
+            return DeprecatedString::formatted("CSV Export failed: {}", writer->error_string());
+        return {};
     };
 
     auto export_worksheet = [&]() -> Result<void, DeprecatedString> {
