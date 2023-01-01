@@ -8,6 +8,8 @@
 
 #include <AK/Types.h>
 
+#define MULTIBOOT_BOOTLOADER_MAGIC 0x2BADB002
+
 struct multiboot_module_entry {
     u32 start;
     u32 end;

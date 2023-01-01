@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -128,6 +129,7 @@ READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
 READONLY_AFTER_INIT PageTableEntry* boot_pd_kernel_pt1023;
 READONLY_AFTER_INIT char const* kernel_cmdline;
+READONLY_AFTER_INIT u32 multiboot_magic;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
 READONLY_AFTER_INIT size_t multiboot_memory_map_count;
@@ -160,6 +162,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
     boot_pd_kernel_pt1023 = (PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
     kernel_cmdline = (char const*)boot_info.kernel_cmdline;
+    multiboot_magic = boot_info.multiboot_magic;
     multiboot_flags = boot_info.multiboot_flags;
     multiboot_memory_map = (multiboot_memory_map_t*)boot_info.multiboot_memory_map;
     multiboot_memory_map_count = boot_info.multiboot_memory_map_count;
@@ -177,7 +180,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
     CommandLine::early_initialize(kernel_cmdline);
-    memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
+    if (multiboot_modules_count > 0)
+        memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
     multiboot_copy_boot_modules_count = multiboot_modules_count;
 
     new (&bsp_processor()) Processor();
@@ -187,6 +191,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
         (*ctor)();
     kmalloc_init();
+
+    dmesgln("Multiboot version {} (0x{:x})", boot_info.multiboot_magic == MULTIBOOT_BOOTLOADER_MAGIC ? 1 : 2, boot_info.multiboot_magic);
 
     load_kernel_symbol_table();
 

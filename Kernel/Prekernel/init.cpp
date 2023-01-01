@@ -2,12 +2,14 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2023, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Types.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/Multiboot2.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/VirtualAddress.h>
@@ -43,6 +45,7 @@ extern "C" void reload_cr3();
 
 extern "C" {
 multiboot_info_t* multiboot_info_ptr;
+u32 multiboot_magic;
 }
 
 [[noreturn]] static void halt()
@@ -67,21 +70,33 @@ namespace Kernel {
 // We declare them here to ensure their signatures don't accidentally change.
 extern "C" [[noreturn]] void init();
 
+u64 generate_secure_seed();
+
+multiboot2_tag_t* multiboot2_find_next_tag(FlatPtr current, u32 type);
+multiboot2_tag_t* multiboot2_find_tag(FlatPtr data, u32 type);
+
 // SerenityOS Pre-Kernel Environment C++ entry point :^)
 //
 // This is where C++ execution begins, after boot.S transfers control here.
 //
-
-u64 generate_secure_seed();
-
 extern "C" [[noreturn]] void init()
 {
-    if (multiboot_info_ptr->mods_count < 1)
+    if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC && multiboot_magic != MULTIBOOT2_BOOTLOADER_MAGIC)
+        halt();
+    bool is_multiboot2 = multiboot_magic == MULTIBOOT2_BOOTLOADER_MAGIC;
+
+    if (!is_multiboot2 && multiboot_info_ptr->mods_count < 1)
         halt();
 
-    multiboot_module_entry_t* kernel_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
+    u8* kernel_image = nullptr;
+    if (!is_multiboot2) {
+        multiboot_module_entry_t* kernel_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
+        kernel_image = (u8*)(FlatPtr)kernel_module->start;
+    } else {
+        multiboot2_tag_module* kernel_module = reinterpret_cast<multiboot2_tag_module_t*>(multiboot2_find_tag((FlatPtr)multiboot_info_ptr, MULTIBOOT2_TAG_TYPE_MODULE));
+        kernel_image = (u8*)(FlatPtr)kernel_module->start;
+    }
 
-    u8* kernel_image = (u8*)(FlatPtr)kernel_module->start;
     // copy the ELF header and program headers because we might end up overwriting them
     ElfW(Ehdr) kernel_elf_header = *(ElfW(Ehdr)*)kernel_image;
     ElfW(Phdr) kernel_program_headers[16];
@@ -168,8 +183,10 @@ extern "C" [[noreturn]] void init()
         __builtin_memset((u8*)kernel_load_base + kernel_program_header.p_vaddr + kernel_program_header.p_filesz, 0, kernel_program_header.p_memsz - kernel_program_header.p_filesz);
     }
 
-    multiboot_info_ptr->mods_count--;
-    multiboot_info_ptr->mods_addr += sizeof(multiboot_module_entry_t);
+    if (!is_multiboot2) {
+        multiboot_info_ptr->mods_count--;
+        multiboot_info_ptr->mods_addr += sizeof(multiboot_module_entry_t);
+    }
 
     auto adjust_by_mapping_base = [kernel_mapping_base](auto ptr) {
         return (decltype(ptr))((FlatPtr)ptr + kernel_mapping_base);
@@ -190,19 +207,39 @@ extern "C" [[noreturn]] void init()
     info.boot_pd0 = (PhysicalPtr)boot_pd0;
     info.boot_pd_kernel = (PhysicalPtr)boot_pd_kernel;
     info.boot_pd_kernel_pt1023 = (FlatPtr)adjust_by_mapping_base(boot_pd_kernel_pt1023);
-    info.kernel_cmdline = (FlatPtr)adjust_by_mapping_base(kernel_cmdline);
-    info.multiboot_flags = multiboot_info_ptr->flags;
-    info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr);
-    info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
-    info.multiboot_modules = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mods_addr);
-    info.multiboot_modules_count = multiboot_info_ptr->mods_count;
-    if ((multiboot_info_ptr->flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) != 0) {
-        info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
-        info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
-        info.multiboot_framebuffer_width = multiboot_info_ptr->framebuffer_width;
-        info.multiboot_framebuffer_height = multiboot_info_ptr->framebuffer_height;
-        info.multiboot_framebuffer_bpp = multiboot_info_ptr->framebuffer_bpp;
-        info.multiboot_framebuffer_type = multiboot_info_ptr->framebuffer_type;
+    info.multiboot_magic = multiboot_magic;
+
+    if (!is_multiboot2) {
+        info.kernel_cmdline = (FlatPtr)adjust_by_mapping_base(kernel_cmdline);
+
+        info.multiboot_flags = multiboot_info_ptr->flags;
+        info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr);
+        info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
+        info.multiboot_modules = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mods_addr);
+        info.multiboot_modules_count = multiboot_info_ptr->mods_count;
+        if ((multiboot_info_ptr->flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) != 0) {
+            info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
+            info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
+            info.multiboot_framebuffer_width = multiboot_info_ptr->framebuffer_width;
+            info.multiboot_framebuffer_height = multiboot_info_ptr->framebuffer_height;
+            info.multiboot_framebuffer_bpp = multiboot_info_ptr->framebuffer_bpp;
+            info.multiboot_framebuffer_type = multiboot_info_ptr->framebuffer_type;
+        }
+    } else {
+        // FIXME: Handle the memory map.
+        // FIXME: Read cmdline.
+        auto const cmd = "serial_debug";
+        info.kernel_cmdline = (FlatPtr)adjust_by_mapping_base(cmd);
+        info.multiboot_flags = 0;
+        info.multiboot_modules_count = 0;
+
+        auto framebuffer = reinterpret_cast<multiboot2_tag_framebuffer_t*>(multiboot2_find_tag((FlatPtr)multiboot_info_ptr, MULTIBOOT2_TAG_TYPE_FRAMEBUFFER));
+        info.multiboot_framebuffer_addr = framebuffer->addr;
+        info.multiboot_framebuffer_pitch = framebuffer->pitch;
+        info.multiboot_framebuffer_width = framebuffer->width;
+        info.multiboot_framebuffer_height = framebuffer->height;
+        info.multiboot_framebuffer_bpp = framebuffer->bpp;
+        info.multiboot_framebuffer_type = framebuffer->type;
     }
 
     asm(
@@ -251,6 +288,29 @@ u64 generate_secure_seed()
     seed ^= multiboot_info_ptr->framebuffer_addr;
 
     return seed;
+}
+
+multiboot2_tag_t* multiboot2_find_next_tag(FlatPtr data, u32 type)
+{
+    FlatPtr current = data;
+    auto tag = (multiboot2_tag_t*)current;
+
+    while (1) {
+        if (tag->type == MULTIBOOT2_TAG_TYPE_END)
+            return nullptr;
+        if (tag->type == type)
+            return tag;
+
+        current += tag->size;
+        while (reinterpret_cast<uintptr_t>(current) & 7)
+            current++;
+        tag = reinterpret_cast<multiboot2_tag_t*>(current);
+    }
+}
+
+multiboot2_tag_t* multiboot2_find_tag(FlatPtr data, u32 type)
+{
+    return multiboot2_find_next_tag(data + 8, type);
 }
 
 // Define some Itanium C++ ABI methods to stop the linker from complaining.

@@ -55,6 +55,9 @@ boot_pd_kernel_pt1023:
 .extern multiboot_info_ptr
 .type multiboot_info_ptr, @object
 
+.extern multiboot_magic
+.type multiboot_magic, @object
+
 /*
     construct the following (64-bit PML4T) page table layout:
     (the PML4T part is not used for 32-bit x86)
@@ -327,6 +330,11 @@ end_of_print_and_halt_function:
 .code32
 real_start:
     cli
+
+    /* Get the multiboot magic and ptr before we overwrite them */
+    movl %eax, multiboot_magic
+    movl %ebx, multiboot_info_ptr
+
     cld
     mov $end_of_prekernel_image, %esi
     cmp $MAX_KERNEL_SIZE, %esi
@@ -496,9 +504,6 @@ long_mode_supported:
 
 .code64
 1:
-    movl %ebx, %ebx
-    movq %rbx, multiboot_info_ptr
-
     mov $0, %ax
     mov %ax, %ss
     mov %ax, %ds

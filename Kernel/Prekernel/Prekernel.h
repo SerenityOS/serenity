@@ -34,6 +34,7 @@ struct [[gnu::packed]] BootInfo {
     u32 boot_pd_kernel;
     u64 boot_pd_kernel_pt1023;
     u64 kernel_cmdline;
+    u32 multiboot_magic;
     u32 multiboot_flags;
     u64 multiboot_memory_map;
     u32 multiboot_memory_map_count;
