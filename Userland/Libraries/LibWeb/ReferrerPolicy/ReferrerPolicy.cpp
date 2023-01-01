@@ -11,6 +11,8 @@ namespace Web::ReferrerPolicy {
 StringView to_string(ReferrerPolicy referrer_policy)
 {
     switch (referrer_policy) {
+    case ReferrerPolicy::EmptyString:
+        return ""sv;
     case ReferrerPolicy::NoReferrer:
         return "no-referrer"sv;
     case ReferrerPolicy::NoReferrerWhenDowngrade:
