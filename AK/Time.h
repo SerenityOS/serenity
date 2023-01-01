@@ -383,6 +383,16 @@ inline bool operator!=(T const& a, T const& b)
     return a.tv_sec != b.tv_sec || a.tv_nsec != b.tv_nsec;
 }
 
+// To use these, add a ``using namespace AK::TimeLiterals`` at block or file scope
+namespace TimeLiterals {
+
+constexpr Time operator""_ns(unsigned long long nanoseconds) { return Time::from_nanoseconds(static_cast<i64>(nanoseconds)); }
+constexpr Time operator""_us(unsigned long long microseconds) { return Time::from_microseconds(static_cast<i64>(microseconds)); }
+constexpr Time operator""_ms(unsigned long long milliseconds) { return Time::from_milliseconds(static_cast<i64>(milliseconds)); }
+constexpr Time operator""_sec(unsigned long long seconds) { return Time::from_seconds(static_cast<i64>(seconds)); }
+
+}
+
 }
 
 #if USING_AK_GLOBALLY
