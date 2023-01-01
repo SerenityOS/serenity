@@ -317,13 +317,76 @@ TEST_CASE(years_to_days_since_epoch_points)
 
 BENCHMARK_CASE(years_to_days_since_epoch_benchmark)
 {
-    // This benchmark takes consistently about 295±1 ms on Linux, and roughly 2300 ms on Serenity.
-    // TODO: Computing the amount of days should never take dozens of milliseconds.
+    // This benchmark takes consistently "0ms" on Linux, and "0ms" on Serenity.
     for (size_t i = 0; i < 100; ++i) {
         int actual_days = years_to_days_since_epoch(-5877640);
         (void)actual_days;
         EXPECT_EQ(actual_days, -2147483456);
     }
+}
+
+TEST_CASE(div_floor_by)
+{
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(-5), -2);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(-4), -1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(-3), -1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(-2), -1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(-1), -1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+0), +0);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+1), +0);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+2), +0);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+3), +0);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+4), +1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+5), +1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+6), +1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+7), +1);
+    EXPECT_EQ(AK::Detail::floor_div_by<4>(+8), +2);
+}
+
+TEST_CASE(mod_zeros_in_range)
+{
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 0), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 1), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 2), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 3), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 4), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 5), 2);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(0, 6), 2);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(1, 1), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(1, 2), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(1, 3), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(1, 4), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(1, 5), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(1, 6), 1);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(2, 2), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(2, 3), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(2, 4), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(2, 5), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(2, 6), 1);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(3, 3), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(3, 4), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(3, 5), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(3, 6), 1);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(4, 4), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(4, 5), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(4, 6), 1);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(5, 5), 0);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(5, 6), 0);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(6, 6), 0);
+
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(-5, 3), 2);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(-4, 3), 2);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(-3, 3), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(-2, 3), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(-1, 3), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(-0, 3), 1);
+    EXPECT_EQ(AK::Detail::mod_zeros_in_range<4>(+1, 3), 0);
 }
 
 TEST_CASE(years_to_days_since_epoch_span)

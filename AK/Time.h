@@ -66,14 +66,46 @@ constexpr int days_in_year(int year)
     return 365 + (is_leap_year(year) ? 1 : 0);
 }
 
+namespace Detail {
+// Integer division rounding towards negative infinity.
+// TODO: This feels like there should be an easier way to do this.
+template<int divisor>
+constexpr int floor_div_by(int dividend)
+{
+    static_assert(divisor >= 1);
+    int is_negative = dividend < 0;
+    return (dividend + is_negative) / divisor - is_negative;
+}
+
+// Counts how many integers n are in the interval [begin, end) with n % positive_mod == 0.
+// NOTE: "end" is not considered to be part of the range, hence "[begin, end)".
+template<int positive_mod>
+constexpr int mod_zeros_in_range(int begin, int end)
+{
+    return floor_div_by<positive_mod>(end - 1) - floor_div_by<positive_mod>(begin - 1);
+}
+}
+
 constexpr int years_to_days_since_epoch(int year)
 {
-    int days = 0;
-    for (int current_year = 1970; current_year < year; ++current_year)
-        days += days_in_year(current_year);
-    for (int current_year = year; current_year < 1970; ++current_year)
-        days -= days_in_year(current_year);
-    return days;
+    int begin_year, end_year, leap_sign;
+    if (year < 1970) {
+        begin_year = year;
+        end_year = 1970;
+        leap_sign = -1;
+    } else {
+        begin_year = 1970;
+        end_year = year;
+        leap_sign = +1;
+    }
+    // This duplicates the logic of 'is_leap_year', with the advantage of not needing any loops.
+    // Given that the definition of leap years is not expected to change, this should be a good trade-off.
+    int days = 365 * (year - 1970);
+    int extra_leap_days = 0;
+    extra_leap_days += Detail::mod_zeros_in_range<4>(begin_year, end_year);
+    extra_leap_days -= Detail::mod_zeros_in_range<100>(begin_year, end_year);
+    extra_leap_days += Detail::mod_zeros_in_range<400>(begin_year, end_year);
+    return days + extra_leap_days * leap_sign;
 }
 
 constexpr int days_since_epoch(int year, int month, int day)
