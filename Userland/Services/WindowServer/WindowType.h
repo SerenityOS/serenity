@@ -21,6 +21,7 @@ enum class WindowType {
     AppletArea,
     Popup,
     Autocomplete,
+    GlobalMenu,
     _Count
 };
 
