@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,8 @@
 
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/POSTResource.h>
 
 namespace Web::HTML {
 
@@ -50,6 +53,20 @@ public:
     };
 
     Variant<Empty, Traversal, String> ongoing_navigation() const { return m_ongoing_navigation; }
+
+    WebIDL::ExceptionOr<void> navigate(
+        AK::URL const&,
+        JS::NonnullGCPtr<DOM::Document> source_document,
+        Variant<Empty, String, POSTResource> document_resource = Empty {},
+        JS::GCPtr<Fetch::Infrastructure::Response> = nullptr,
+        bool exceptions_enabled = false,
+        HistoryHandlingBehavior = HistoryHandlingBehavior::Push,
+        String csp_navigation_type = String::from_utf8_short_string("other"sv),
+        ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString);
+
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
+
+    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, String csp_navigation_type);
 
 protected:
     Navigable();
