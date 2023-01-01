@@ -8,6 +8,7 @@ compile_gml(BackgroundSettings.gml BackgroundSettingsGML.h background_settings_g
 compile_gml(DesktopSettings.gml DesktopSettingsGML.h desktop_settings_gml)
 compile_gml(EffectsSettings.gml EffectsSettingsGML.h effects_settings_gml)
 compile_gml(FontSettings.gml FontSettingsGML.h font_settings_gml)
+compile_gml(InterfaceSettings.gml InterfaceSettingsGML.h interface_settings_gml)
 compile_gml(MonitorSettings.gml MonitorSettingsGML.h monitor_settings_window_gml)
 compile_gml(ThemesSettings.gml ThemesSettingsGML.h themes_settings_gml)
 
@@ -18,6 +19,7 @@ set(SOURCES
     FontSettingsWidget.cpp
     MonitorSettingsWidget.cpp
     MonitorWidget.cpp
+    InterfaceSettingsWidget.cpp
     ThemePreviewWidget.cpp
     ThemesSettingsWidget.cpp
     main.cpp
@@ -28,6 +30,7 @@ set(GENERATED_SOURCES
     DesktopSettingsGML.h
     EffectsSettingsGML.h
     FontSettingsGML.h
+    InterfaceSettingsGML.h
     MonitorSettingsGML.h
     ThemesSettingsGML.h
 )
