@@ -535,6 +535,8 @@ inline IterationDecision WindowManager::for_each_visible_window_from_back_to_fro
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Menu>() == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_window.template operator()<WindowType::GlobalMenu>() == IterationDecision::Break)
+        return IterationDecision::Break;
     return for_each_window.template operator()<WindowType::WindowSwitcher>();
 }
 
@@ -573,6 +575,8 @@ inline IterationDecision WindowManager::for_each_visible_window_from_front_to_ba
     if (for_each_window.template operator()<WindowType::Taskbar>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_window.template operator()<WindowType::GlobalMenu>() == IterationDecision::Break)
         return IterationDecision::Break;
     return for_each_window.template operator()<WindowType::Desktop>();
 }
