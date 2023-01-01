@@ -17,6 +17,9 @@ class OpacitySlider : public AbstractSlider {
 public:
     virtual ~OpacitySlider() override = default;
 
+    void set_base_color(Gfx::Color);
+    Gfx::Color base_color() { return m_base_color; }
+
 protected:
     explicit OpacitySlider(Gfx::Orientation);
 
@@ -28,6 +31,8 @@ protected:
 
 private:
     Gfx::IntRect frame_inner_rect() const;
+
+    Gfx::Color m_base_color { 0, 0, 0 };
 
     virtual Optional<UISize> calculated_min_size() const override;
     virtual Optional<UISize> calculated_preferred_size() const override;

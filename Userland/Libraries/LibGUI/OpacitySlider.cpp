@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, networkException <networkexception@serenityos.social>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +43,7 @@ void OpacitySlider::paint_event(PaintEvent& event)
     for (int pos = inner_rect.first_edge_for_orientation(orientation()); pos <= inner_rect.last_edge_for_orientation(orientation()); ++pos) {
         float relative_offset = (float)pos / (float)inner_rect.primary_size_for_orientation(orientation());
         float alpha = relative_offset * 255.0f;
-        Color color { 0, 0, 0, static_cast<u8>(AK::min(alpha, UINT8_MAX)) };
+        Color color = m_base_color.with_alpha(static_cast<u8>(AK::min(alpha, UINT8_MAX)));
         if (orientation() == Gfx::Orientation::Horizontal) {
             painter.fill_rect({ pos, inner_rect.top(), 1, inner_rect.height() }, color);
         } else {
@@ -147,6 +148,12 @@ int OpacitySlider::value_at(Gfx::IntPoint position) const
 
     int range = max() - min();
     return min() + (int)(relative_offset * (float)range);
+}
+
+void OpacitySlider::set_base_color(Gfx::Color base_color)
+{
+    m_base_color = base_color;
+    update();
 }
 
 void OpacitySlider::mousedown_event(MouseEvent& event)
