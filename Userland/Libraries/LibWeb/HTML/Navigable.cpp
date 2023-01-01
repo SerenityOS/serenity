@@ -13,9 +13,21 @@
 
 namespace Web::HTML {
 
-Navigable::Navigable() = default;
+static HashTable<Navigable*>& all_navigables()
+{
+    static HashTable<Navigable*> set;
+    return set;
+}
 
-Navigable::~Navigable() = default;
+Navigable::Navigable()
+{
+    all_navigables().set(this);
+}
+
+Navigable::~Navigable()
+{
+    all_navigables().remove(this);
+}
 
 void Navigable::visit_edges(Cell::Visitor& visitor)
 {
@@ -24,6 +36,15 @@ void Navigable::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_current_session_history_entry);
     visitor.visit(m_active_session_history_entry);
     visitor.visit(m_container);
+}
+
+JS::GCPtr<Navigable> Navigable::navigable_with_active_document(JS::NonnullGCPtr<DOM::Document> document)
+{
+    for (auto* navigable : all_navigables()) {
+        if (navigable->active_document() == document)
+            return navigable;
+    }
+    return nullptr;
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
