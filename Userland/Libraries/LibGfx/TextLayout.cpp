@@ -20,15 +20,15 @@ struct Block {
     Utf8View characters;
 };
 
-IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
+FloatRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
 {
     auto lines = wrap_lines(TextElision::None, wrapping, line_spacing, FitWithinRect::No);
     if (!lines.size()) {
         return {};
     }
 
-    IntRect bounding_rect = {
-        0, 0, 0, static_cast<int>((lines.size() * (m_font->pixel_size() + line_spacing)) - line_spacing)
+    FloatRect bounding_rect = {
+        0, 0, 0, (lines.size() * (m_font->pixel_size() + line_spacing)) - line_spacing
     };
 
     for (auto& line : lines) {
@@ -119,7 +119,7 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
 
     Vector<DeprecatedString> lines;
     StringBuilder builder;
-    size_t line_width = 0;
+    float line_width = 0;
     size_t current_block = 0;
     bool did_not_finish = false;
     for (Block& block : blocks) {
@@ -139,14 +139,14 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
         }
         case BlockType::Whitespace:
         case BlockType::Word: {
-            size_t block_width = font().width(block.characters);
+            float block_width = font().width(block.characters);
             // FIXME: This should look at the specific advance amount of the
             //        last character, but we don't support that yet.
             if (current_block != blocks.size() - 1) {
                 block_width += font().glyph_spacing();
             }
 
-            if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
+            if (wrapping == TextWrapping::Wrap && line_width + block_width > m_rect.width()) {
                 lines.append(builder.to_deprecated_string());
                 builder.clear();
                 line_width = 0;
@@ -185,10 +185,10 @@ blocks_processed:
 
 DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_elision) const
 {
-    size_t text_width = m_font->width(text);
+    float text_width = m_font->width(text);
     if (force_elision || text_width > static_cast<unsigned>(m_rect.width())) {
-        size_t ellipsis_width = m_font->width("..."sv);
-        size_t current_width = ellipsis_width;
+        float ellipsis_width = m_font->width("..."sv);
+        float current_width = ellipsis_width;
         size_t glyph_spacing = m_font->glyph_spacing();
 
         // FIXME: This code will break when the font has glyphs with advance
@@ -198,11 +198,11 @@ DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_eli
             size_t offset = 0;
             for (auto it = text.begin(); !it.done(); ++it) {
                 auto code_point = *it;
-                int glyph_width = m_font->glyph_or_emoji_width(code_point);
+                auto glyph_width = m_font->glyph_or_emoji_width(code_point);
                 // NOTE: Glyph spacing should not be added after the last glyph on the line,
                 //       but since we are here because the last glyph does not actually fit on the line,
                 //       we don't have to worry about spacing.
-                int width_with_this_glyph_included = current_width + glyph_width + glyph_spacing;
+                auto width_with_this_glyph_included = current_width + glyph_width + glyph_spacing;
                 if (width_with_this_glyph_included > m_rect.width())
                     break;
                 current_width += glyph_width + glyph_spacing;

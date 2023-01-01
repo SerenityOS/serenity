@@ -117,7 +117,7 @@ void Label::size_to_fit()
 
 int Label::text_calculated_preferred_height() const
 {
-    return Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, Gfx::Painter::LINE_SPACING).height();
+    return int(AK::ceil(Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect().to_type<float>()).bounding_rect(Gfx::TextWrapping::Wrap, Gfx::Painter::LINE_SPACING).height()));
 }
 
 Optional<UISize> Label::calculated_preferred_size() const

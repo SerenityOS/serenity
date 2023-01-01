@@ -142,7 +142,7 @@ void TextTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     auto text_bitmap = text_bitmap_result.release_value();
     auto text_painter = GUI::Painter(text_bitmap);
     text_painter.set_font(*m_selected_font);
-    text_painter.draw_text({ 0, 0, text_width, text_height }, typed_text, Gfx::TextAlignment::TopLeft, m_text_color);
+    text_painter.draw_text(Gfx::IntRect { 0, 0, text_width, text_height }, typed_text, Gfx::TextAlignment::TopLeft, m_text_color);
 
     m_text_editor->update();
 

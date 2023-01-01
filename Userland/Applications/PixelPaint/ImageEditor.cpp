@@ -217,7 +217,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             int const editor_x = content_to_frame_position({ x, 0 }).x();
             painter.draw_line({ editor_x, 0 }, { editor_x, m_ruler_thickness }, ruler_fg_color);
-            painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, DeprecatedString::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
+            painter.draw_text(Gfx::IntRect { { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, DeprecatedString::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
         }
 
         // Vertical ruler
@@ -234,7 +234,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
             int const editor_y = content_to_frame_position({ 0, y }).y();
             painter.draw_line({ 0, editor_y }, { m_ruler_thickness, editor_y }, ruler_fg_color);
-            painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, DeprecatedString::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
+            painter.draw_text(Gfx::IntRect { { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, DeprecatedString::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
         }
 
         // Mouse position indicator

@@ -32,7 +32,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_network_link_down_bitmap = Gfx::Bitmap::try_create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size()).release_value_but_fixme_should_propagate_errors();
         {
             Gfx::Painter painter(*m_network_link_down_bitmap);
-            painter.blit_filtered({}, *m_network_connected_bitmap, m_network_connected_bitmap->rect(), [](Color color) {
+            painter.blit_filtered(Gfx::IntPoint {}, *m_network_connected_bitmap, m_network_connected_bitmap->rect(), [](Color color) {
                 return color.to_grayscale();
             });
         }

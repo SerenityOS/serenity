@@ -213,7 +213,7 @@ Gfx::Font const& ScreenNumberOverlay::font()
 
 void ScreenNumberOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
-    painter.draw_text({ {}, rect().size() }, DeprecatedString::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(Gfx::IntRect { {}, rect().size() }, DeprecatedString::formatted("{}", m_screen.index() + 1), font(), Gfx::TextAlignment::Center, Color::White);
 }
 
 Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& screen)
@@ -264,7 +264,7 @@ void WindowGeometryOverlay::update_rect()
 
 void WindowGeometryOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
-    painter.draw_text({ {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(Gfx::IntRect { {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::TextAlignment::Center, Color::White);
 }
 
 void WindowGeometryOverlay::window_rect_changed()

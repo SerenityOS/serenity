@@ -727,10 +727,10 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
 
         // Highlight the text background first
         auto background_searching_length = searching_length;
-        painter.draw_text([&](Gfx::IntRect const& rect, Utf8CodePointIterator&) {
+        painter.draw_text([&](Gfx::FloatRect const& rect, Utf8CodePointIterator&) {
             if (background_searching_length > 0) {
                 background_searching_length--;
-                painter.fill_rect(rect.inflated(0, 2), palette().highlight_searching());
+                painter.fill_rect(rect.to_type<int>().inflated(0, 2), palette().highlight_searching());
             }
         },
             text_rect, item_text, font, alignment, elision);
@@ -739,7 +739,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
         auto text_searching_length = searching_length;
         auto highlight_text_color = palette().highlight_searching_text();
         searching_length = searching_text.length();
-        painter.draw_text([&](Gfx::IntRect const& rect, Utf8CodePointIterator& it) {
+        painter.draw_text([&](auto const& rect, Utf8CodePointIterator& it) {
             if (text_searching_length > 0) {
                 text_searching_length--;
                 painter.draw_glyph_or_emoji(rect.location(), it, font, highlight_text_color);
