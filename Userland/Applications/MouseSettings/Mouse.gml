@@ -108,7 +108,7 @@
                 name: "natural_scroll_checkbox"
                 text: "Natural scrolling"
                 tooltip: "Content follows motion instead of the viewport,\nalso commonly referred to as \"reverse scrolling\"."
-                preferred_width: 108
+                preferred_width: 110
             }
         }
     }
