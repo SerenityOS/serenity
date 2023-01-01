@@ -207,7 +207,7 @@ void CardPainter::paint_inverted_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const& so
 {
     Gfx::Painter painter { bitmap };
     painter.clear_rect(bitmap.rect(), Gfx::Color::Transparent);
-    painter.blit_filtered({ 0, 0 }, source_to_invert, source_to_invert.rect(), [&](Color color) {
+    painter.blit_filtered(Gfx::IntPoint {}, source_to_invert, source_to_invert.rect(), [&](Color color) {
         return color.inverted();
     });
 }
