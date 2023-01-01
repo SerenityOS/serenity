@@ -73,7 +73,6 @@ struct FixedFunctionTextureEnvironment final {
     float alpha_scale { 1.f };
     Array<TextureSource, 3> alpha_source { TextureSource::Texture, TextureSource::Previous, TextureSource::Constant };
     u8 alpha_source_texture_stage { 0 };
-    // FIXME: color is never actually updated
     FloatVector4 color { 0.f, 0.f, 0.f, 0.f };
     TextureEnvMode env_mode { TextureEnvMode::Modulate };
     TextureCombinator rgb_combinator { TextureCombinator::Modulate };

@@ -159,7 +159,8 @@ public:
     void gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params);
     void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-    void gl_tex_env(GLenum target, GLenum pname, GLfloat param);
+    void gl_tex_env(GLenum target, GLenum pname, FloatVector4 params);
+    void gl_tex_envv(GLenum target, GLenum pname, void const* params, GLenum type);
     void gl_bind_texture(GLenum target, GLuint texture);
     GLboolean gl_is_texture(GLuint texture);
     void gl_active_texture(GLenum texture);
@@ -487,6 +488,7 @@ private:
             decltype(&GLContext::gl_bitmap),
             decltype(&GLContext::gl_copy_tex_image_2d),
             decltype(&GLContext::gl_rect),
+            decltype(&GLContext::gl_tex_env),
             decltype(&GLContext::gl_tex_gen),
             decltype(&GLContext::gl_tex_gen_floatv),
             decltype(&GLContext::gl_fogf),

@@ -299,3 +299,23 @@ TEST_CASE(0010_test_store_data_in_buffer)
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0010_test_store_data_in_buffer"sv);
 }
+
+TEST_CASE(0011_tex_env_combine_with_constant_color)
+{
+    auto context = create_testing_context(64, 64);
+
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+
+    float color[4] = { .3f, .5f, .7f, 1.f };
+    glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
+
+    glRecti(-1, -1, 1, 1);
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0011_tex_env_combine_with_constant_color"sv);
+}
