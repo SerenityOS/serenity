@@ -6,6 +6,7 @@
 
 #include <AK/Array.h>
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <LibLocale/DateTimeFormat.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/NumberFormat.h>
