@@ -88,7 +88,7 @@ public:
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream);
+    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream, CircularBuffer buffer);
 
     ErrorOr<u32> decode_length(u32);
     ErrorOr<u32> decode_distance(u32);
@@ -103,7 +103,7 @@ private:
     };
 
     Core::Stream::Handle<Core::Stream::LittleEndianInputBitStream> m_input_stream;
-    CircularDuplexStream<32 * KiB> m_output_stream;
+    CircularBuffer m_output_buffer;
 };
 
 class DeflateCompressor final : public Core::Stream::Stream {
