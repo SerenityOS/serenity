@@ -112,8 +112,8 @@ time_t now()
 
     dmesgln("RTC: {} Year: {}, month: {}, day: {}, hour: {}, minute: {}, second: {}", (did_read_rtc_successfully ? "" : "(failed to read)"), year, month, day, hour, minute, second);
 
-    time_t days_since_epoch = years_to_days_since_epoch(year) + day_of_year(year, month, day);
-    return ((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second;
+    time_t days = days_since_epoch(year, month, day);
+    return ((days * 24 + hour) * 60 + minute) * 60 + second;
 }
 
 }

@@ -70,9 +70,9 @@ namespace Detail {
 // Integer division rounding towards negative infinity.
 // TODO: This feels like there should be an easier way to do this.
 template<int divisor>
-constexpr int floor_div_by(int dividend)
+constexpr i64 floor_div_by(i64 dividend)
 {
-    static_assert(divisor >= 1);
+    static_assert(divisor > 1);
     int is_negative = dividend < 0;
     return (dividend + is_negative) / divisor - is_negative;
 }
@@ -80,13 +80,13 @@ constexpr int floor_div_by(int dividend)
 // Counts how many integers n are in the interval [begin, end) with n % positive_mod == 0.
 // NOTE: "end" is not considered to be part of the range, hence "[begin, end)".
 template<int positive_mod>
-constexpr int mod_zeros_in_range(int begin, int end)
+constexpr i64 mod_zeros_in_range(i64 begin, i64 end)
 {
     return floor_div_by<positive_mod>(end - 1) - floor_div_by<positive_mod>(begin - 1);
 }
 }
 
-constexpr int years_to_days_since_epoch(int year)
+constexpr i64 years_to_days_since_epoch(int year)
 {
     int begin_year, end_year, leap_sign;
     if (year < 1970) {
@@ -98,17 +98,18 @@ constexpr int years_to_days_since_epoch(int year)
         end_year = year;
         leap_sign = +1;
     }
+    i64 year_i64 = year;
     // This duplicates the logic of 'is_leap_year', with the advantage of not needing any loops.
     // Given that the definition of leap years is not expected to change, this should be a good trade-off.
-    int days = 365 * (year - 1970);
-    int extra_leap_days = 0;
+    i64 days = 365 * (year_i64 - 1970);
+    i64 extra_leap_days = 0;
     extra_leap_days += Detail::mod_zeros_in_range<4>(begin_year, end_year);
     extra_leap_days -= Detail::mod_zeros_in_range<100>(begin_year, end_year);
     extra_leap_days += Detail::mod_zeros_in_range<400>(begin_year, end_year);
     return days + extra_leap_days * leap_sign;
 }
 
-constexpr int days_since_epoch(int year, int month, int day)
+constexpr i64 days_since_epoch(int year, int month, int day)
 {
     return years_to_days_since_epoch(year) + day_of_year(year, month, day);
 }

@@ -277,12 +277,12 @@ TEST_CASE(is_negative)
 
 struct YearAndDays {
     int year;
-    int days;
+    i64 days;
 };
 
 TEST_CASE(years_to_days_since_epoch_points)
 {
-    Array<YearAndDays, 22> test_data = { {
+    Array<YearAndDays, 24> test_data = { {
         { 1969, -365 },
         { 1970, 0 },
         { 1971, 365 },
@@ -306,11 +306,14 @@ TEST_CASE(years_to_days_since_epoch_points)
         { 5881474, 2147444740 },
         // Very important year: https://github.com/SerenityOS/serenity/pull/16760#issuecomment-1369054745
         { -999999, -365961662 },
+        // The following two values haven't been verified by any other algorithm, but are very close to "year * 365.2425", and prove that there is no UB due to signed overflow:
+        { 2147483647, 784351576412 },
+        { -2147483648, -784353015833 },
     } };
     for (auto entry : test_data) {
         int year = entry.year;
-        int expected_days = entry.days;
-        int actual_days = years_to_days_since_epoch(year);
+        i64 expected_days = entry.days;
+        i64 actual_days = years_to_days_since_epoch(year);
         EXPECT_EQ(actual_days, expected_days);
     }
 }
@@ -319,7 +322,7 @@ BENCHMARK_CASE(years_to_days_since_epoch_benchmark)
 {
     // This benchmark takes consistently "0ms" on Linux, and "0ms" on Serenity.
     for (size_t i = 0; i < 100; ++i) {
-        int actual_days = years_to_days_since_epoch(-5877640);
+        i64 actual_days = years_to_days_since_epoch(-5877640);
         (void)actual_days;
         EXPECT_EQ(actual_days, -2147483456);
     }
@@ -467,8 +470,8 @@ TEST_CASE(years_to_days_since_epoch_span)
     // clang-format on
     for (size_t offset = 0; offset < test_data.size(); ++offset) {
         int year = offset + test_data_start_year;
-        int expected_days = test_data[offset];
-        int actual_days = years_to_days_since_epoch(year);
+        i64 expected_days = test_data[offset];
+        i64 actual_days = years_to_days_since_epoch(year);
         EXPECT_EQ(actual_days, expected_days);
     }
 }
