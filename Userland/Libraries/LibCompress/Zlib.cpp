@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
 #include <AK/Span.h>
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>
