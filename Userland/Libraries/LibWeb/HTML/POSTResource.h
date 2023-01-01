@@ -12,7 +12,10 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#post-resource
 struct POSTResource {
-    // FIXME: https://html.spec.whatwg.org/multipage/browsing-the-web.html#post-resource-request-body
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#post-resource-request-body
+    // A request body, a byte sequence or failure.
+    // FIXME: Change type to hold failure state.
+    Optional<ByteBuffer> request_body;
 
     enum class RequestContentType {
         ApplicationXWWWFormUrlencoded,
