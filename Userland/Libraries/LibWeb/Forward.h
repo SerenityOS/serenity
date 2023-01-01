@@ -407,6 +407,7 @@ struct CrossOriginOpenerPolicyEnforcementResult;
 struct Environment;
 struct EnvironmentSettingsObject;
 struct NavigationParams;
+struct POSTResource;
 struct PolicyContainer;
 struct SandboxingFlagSet;
 struct SerializedFormData;
