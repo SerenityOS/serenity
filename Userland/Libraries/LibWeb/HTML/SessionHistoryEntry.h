@@ -43,12 +43,9 @@ struct SessionHistoryEntry final : public JS::Cell {
     // step, a non-negative integer or "pending", initially "pending".
     Variant<int, Pending> step { Pending::Tag };
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-url
     // URL, a URL
     AK::URL url;
-
-    // document, a Document or null
-    // FIXME: this property is not present in the spec anymore and should be gone after introducing navigables
-    JS::GCPtr<DOM::Document> document;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document-state
     JS::GCPtr<HTML::DocumentState> document_state;
