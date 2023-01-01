@@ -23,7 +23,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.default_colors = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/default-colors.png"sv));
     icon_bag.load_color_palette = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/load-color-palette.png"sv));
     icon_bag.save_color_palette = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/save-color-palette.png"sv));
-    icon_bag.fit_image_to_view = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/fit-image-to-view.png"sv));
+    icon_bag.fit_image_to_view = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fit-image-to-view.png"sv));
     icon_bag.add_guide = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/add-guide.png"sv));
     icon_bag.clear_guides = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/clear-guides.png"sv));
     icon_bag.edit_flip_vertical = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv));

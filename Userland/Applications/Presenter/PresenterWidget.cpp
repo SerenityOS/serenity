@@ -41,14 +41,14 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     TRY(file_menu.try_add_action(about_action));
 
     auto& presentation_menu = window->add_menu("&Presentation");
-    auto next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, [this](auto&) {
+    auto next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();
             outln("Switched forward to slide {} frame {}", m_current_presentation->current_slide_number(), m_current_presentation->current_frame_in_slide_number());
             update();
         }
     });
-    auto previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, [this](auto&) {
+    auto previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->previous_frame();
             outln("Switched backward to slide {} frame {}", m_current_presentation->current_slide_number(), m_current_presentation->current_frame_in_slide_number());
@@ -60,10 +60,10 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     m_next_slide_action = next_slide_action;
     m_previous_slide_action = previous_slide_action;
 
-    TRY(presentation_menu.try_add_action(GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, [this](auto&) {
+    TRY(presentation_menu.try_add_action(GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
         this->window()->set_fullscreen(true);
     })));
-    TRY(presentation_menu.try_add_action(GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, [this](auto&) {
+    TRY(presentation_menu.try_add_action(GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
         if (m_current_presentation)
             m_current_presentation->go_to_first_slide();
         this->window()->set_fullscreen(true);
