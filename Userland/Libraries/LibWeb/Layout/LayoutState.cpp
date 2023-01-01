@@ -101,13 +101,22 @@ float box_baseline(LayoutState const& state, Box const& box)
 {
     auto const& box_state = state.get(box);
 
+    // https://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align
     auto const& vertical_align = box.computed_values().vertical_align();
     if (vertical_align.has<CSS::VerticalAlign>()) {
         switch (vertical_align.get<CSS::VerticalAlign>()) {
         case CSS::VerticalAlign::Top:
+            // Top: Align the top of the aligned subtree with the top of the line box.
             return box_state.border_box_top();
         case CSS::VerticalAlign::Bottom:
+            // Bottom: Align the bottom of the aligned subtree with the bottom of the line box.
             return box_state.content_height() + box_state.border_box_bottom();
+        case CSS::VerticalAlign::TextTop:
+            // TextTop: Align the top of the box with the top of the parent's content area (see 10.6.1).
+            return box.computed_values().font_size();
+        case CSS::VerticalAlign::TextBottom:
+            // TextTop: Align the bottom of the box with the bottom of the parent's content area (see 10.6.1).
+            return box_state.content_height() - (box.containing_block()->font().pixel_metrics().descent * 2);
         default:
             break;
         }
