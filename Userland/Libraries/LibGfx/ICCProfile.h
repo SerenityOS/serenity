@@ -115,6 +115,12 @@ private:
     u32 m_bits = 0;
 };
 
+struct XYZ {
+    double x { 0 };
+    double y { 0 };
+    double z { 0 };
+};
+
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes bytes);
@@ -129,6 +135,7 @@ public:
     time_t creation_timestamp() const { return m_creation_timestamp; }
     Flags flags() const { return m_flags; }
     RenderingIntent rendering_intent() const { return m_rendering_intent; }
+    const XYZ& pcs_illuminant() const { return m_pcs_illuminant; }
 
 private:
     Version m_version;
@@ -138,6 +145,7 @@ private:
     time_t m_creation_timestamp;
     Flags m_flags;
     RenderingIntent m_rendering_intent;
+    XYZ m_pcs_illuminant;
 };
 
 }
@@ -148,6 +156,14 @@ struct Formatter<Gfx::ICC::Version> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ICC::Version const& version)
     {
         return Formatter<FormatString>::format(builder, "{}.{}.{}"sv, version.major_version(), version.minor_version(), version.bugfix_version());
+    }
+};
+
+template<>
+struct Formatter<Gfx::ICC::XYZ> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::ICC::XYZ const& xyz)
+    {
+        return Formatter<FormatString>::format(builder, "X = {}, Y = {}, Z = {}"sv, xyz.x, xyz.y, xyz.z);
     }
 };
 }

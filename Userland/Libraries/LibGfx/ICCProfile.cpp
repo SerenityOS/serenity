@@ -6,6 +6,7 @@
 
 #include <AK/Endian.h>
 #include <LibGfx/ICCProfile.h>
+#include <math.h>
 #include <time.h>
 
 // V2 spec: https://color.org/specification/ICC.1-2001-04.pdf
@@ -24,6 +25,21 @@ struct DateTimeNumber {
     BigEndian<u16> hour;
     BigEndian<u16> minutes;
     BigEndian<u16> seconds;
+};
+
+// ICC V4, 4.6 s15Fixed16Number
+using s15Fixed16Number = i32;
+
+// ICC V4, 4.14 XYZNumber
+struct XYZNumber {
+    BigEndian<s15Fixed16Number> x;
+    BigEndian<s15Fixed16Number> y;
+    BigEndian<s15Fixed16Number> z;
+
+    operator XYZ() const
+    {
+        return XYZ { x / (double)0x1'0000, y / (double)0x1'0000, z / (double)0x1'0000 };
+    }
 };
 
 ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
@@ -91,9 +107,7 @@ struct ICCHeader {
     BigEndian<u64> device_attributes;
     BigEndian<u32> rendering_intent;
 
-    BigEndian<i32> pcs_illuminant_x;
-    BigEndian<i32> pcs_illuminant_y;
-    BigEndian<i32> pcs_illuminant_z;
+    XYZNumber pcs_illuminant;
 
     BigEndian<u32> profile_creator;
 
@@ -192,6 +206,18 @@ ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
         return RenderingIntent::ICCAbsoluteColorimetric;
     }
     return Error::from_string_literal("ICC::Profile: Invalid rendering intent");
+}
+
+ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
+{
+    // ICC v4, 7.2.16 PCS illuminant field
+    XYZ xyz = (XYZ)header.pcs_illuminant;
+
+    /// "The value, when rounded to four decimals, shall be X = 0,9642, Y = 1,0 and Z = 0,8249."
+    if (round(xyz.x * 10'000) != 9'642 || round(xyz.y * 10'000) != 10'000 || round(xyz.z * 10'000) != 8'249)
+        return Error::from_string_literal("ICC::Profile: Invalid pcs illuminant");
+
+    return xyz;
 }
 
 ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
@@ -337,6 +363,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
     profile->m_flags = Flags { header.profile_flags };
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
+    profile->m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
 
     return profile;
 }
