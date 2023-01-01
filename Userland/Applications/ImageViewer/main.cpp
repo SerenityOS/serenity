@@ -215,7 +215,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window);
 
     auto fit_image_to_view_action = GUI::Action::create(
-        "Fit Image To &View", [&](auto&) {
+        "Fit Image To &View", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
             widget->fit_content_to_view();
         });
 
@@ -314,6 +314,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_separator());
 
     auto scaling_mode_menu = TRY(view_menu->try_add_submenu("&Scaling Mode"));
+    scaling_mode_menu->set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/scale.png"sv)));
 
     auto scaling_mode_group = make<GUI::ActionGroup>();
     scaling_mode_group->set_exclusive(true);
