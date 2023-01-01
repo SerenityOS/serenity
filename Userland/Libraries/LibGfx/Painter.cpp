@@ -531,11 +531,14 @@ void Painter::fill_ellipse(IntRect const& a_rect, Color color)
 
     VERIFY(m_target->rect().contains(rect));
 
-    for (int i = 1; i < a_rect.height(); i++) {
-        float y = a_rect.height() * 0.5 - i;
-        float x = a_rect.width() * AK::sqrt(0.25f - y * y / a_rect.height() / a_rect.height());
-        draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color);
-    }
+    auto const center = a_rect.center();
+
+    on_each_ellipse_point(rect, [this, &color, center](IntPoint position) {
+        IntPoint const directions[4] = { { position.x(), position.y() }, { -position.x(), position.y() }, { position.x(), -position.y() }, { -position.x(), -position.y() } };
+
+        draw_line(center + directions[0], center + directions[1], color);
+        draw_line(center + directions[2], center + directions[3], color);
+    });
 }
 
 void Painter::draw_ellipse_intersecting(IntRect const& rect, Color color, int thickness)
