@@ -111,7 +111,7 @@ NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& pro
                 first = false;
             else
                 MUST(builder.try_append(' '));
-            MUST(builder.try_append(cpu_feature_to_string_view(feature)));
+            MUST(builder.try_append(cpu_feature_to_name(feature)));
         }
     }
     return KString::must_create(builder.string_view());
