@@ -8,7 +8,6 @@
 #include <AK/BinarySearch.h>
 #include <AK/Debug.h>
 #include <AK/Demangle.h>
-#include <AK/Memory.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>

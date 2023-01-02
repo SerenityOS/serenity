@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Memory.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>

@@ -7,7 +7,6 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/MemMem.h>
-#include <AK/Memory.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>

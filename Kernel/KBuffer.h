@@ -16,7 +16,6 @@
 // severely limited kmalloc heap.
 
 #include <AK/Assertions.h>
-#include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Memory/MemoryManager.h>
 

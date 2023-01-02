@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>

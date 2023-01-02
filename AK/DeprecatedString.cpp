@@ -9,7 +9,6 @@
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
-#include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
