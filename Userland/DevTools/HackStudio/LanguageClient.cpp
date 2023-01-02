@@ -192,11 +192,13 @@ ConnectionToServerWrapper* ConnectionToServerInstances::get_instance_wrapper(Dep
 
 void ConnectionToServerWrapper::on_crash()
 {
+    using namespace AK::TimeLiterals;
+
     show_crash_notification();
     m_connection.clear();
 
-    static constexpr int max_crash_frequency_seconds = 10;
-    if (m_last_crash_timer.is_valid() && m_last_crash_timer.elapsed() / 1000 < max_crash_frequency_seconds) {
+    static constexpr Time max_crash_frequency = 10_sec;
+    if (m_last_crash_timer.is_valid() && m_last_crash_timer.elapsed_time() < max_crash_frequency) {
         dbgln("LanguageServer crash frequency is too high");
         m_respawn_allowed = false;
 

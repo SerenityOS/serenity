@@ -252,6 +252,8 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
 void TextEditor::mousedown_event(MouseEvent& event)
 {
+    using namespace AK::TimeLiterals;
+
     if (event.button() != MouseButton::Primary) {
         return;
     }
@@ -262,7 +264,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
     if (is_displayonly())
         return;
 
-    if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
+    if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed_time() < 250_ms) {
         m_triple_click_timer = Core::ElapsedTimer();
         select_current_line();
         return;
