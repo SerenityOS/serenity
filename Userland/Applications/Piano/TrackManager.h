@@ -10,7 +10,6 @@
 #pragma once
 
 #include "Music.h"
-#include <AK/Array.h>
 #include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>

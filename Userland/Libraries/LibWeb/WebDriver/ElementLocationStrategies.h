@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Array.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/DOM/NodeList.h>
 #include <LibWeb/Forward.h>

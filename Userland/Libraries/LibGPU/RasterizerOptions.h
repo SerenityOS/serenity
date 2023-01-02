@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Array.h>
 #include <LibGPU/Config.h>
 #include <LibGPU/Enums.h>
 #include <LibGfx/Rect.h>

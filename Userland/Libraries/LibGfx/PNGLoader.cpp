@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Vector.h>
