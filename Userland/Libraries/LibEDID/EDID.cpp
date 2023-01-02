@@ -7,6 +7,7 @@
 #include <AK/Concepts.h>
 #include <AK/Function.h>
 #include <AK/QuickSort.h>
+#include <AK/Try.h>
 #include <LibEDID/EDID.h>
 
 #ifndef KERNEL
@@ -185,16 +186,14 @@ T Parser::read_be(T const* field) const
 ErrorOr<Parser> Parser::from_bytes(ReadonlyBytes bytes)
 {
     Parser edid(bytes);
-    if (auto parse_result = edid.parse(); parse_result.is_error())
-        return parse_result.error();
+    TRY(edid.parse());
     return edid;
 }
 
 ErrorOr<Parser> Parser::from_bytes(ByteBuffer&& bytes)
 {
     Parser edid(move(bytes));
-    if (auto parse_result = edid.parse(); parse_result.is_error())
-        return parse_result.error();
+    TRY(edid.parse());
     return edid;
 }
 
@@ -683,7 +682,7 @@ ErrorOr<IterationDecision> Parser::for_each_established_timing(Function<Iteratio
     }
 
     auto callback_decision = IterationDecision::Continue;
-    auto result = for_each_display_descriptor([&](u8 descriptor_tag, auto& display_descriptor) {
+    TRY(for_each_display_descriptor([&](u8 descriptor_tag, auto& display_descriptor) {
         if (descriptor_tag != (u8)Definitions::DisplayDescriptorTag::EstablishedTimings3)
             return IterationDecision::Continue;
 
@@ -758,9 +757,7 @@ ErrorOr<IterationDecision> Parser::for_each_established_timing(Function<Iteratio
             byte_index++;
         }
         return IterationDecision::Break; // Only process one descriptor
-    });
-    if (result.is_error())
-        return result.error();
+    }));
     return callback_decision;
 }
 
@@ -898,7 +895,7 @@ ErrorOr<IterationDecision> Parser::for_each_detailed_timing(Function<IterationDe
     }
 
     Optional<Error> extension_error;
-    auto result = for_each_extension_block([&](u8 block_id, u8 tag, u8, ReadonlyBytes bytes) {
+    auto result = TRY(for_each_extension_block([&](u8 block_id, u8 tag, u8, ReadonlyBytes bytes) {
         if (tag != (u8)Definitions::ExtensionBlockTag::CEA_861)
             return IterationDecision::Continue;
 
@@ -913,11 +910,9 @@ ErrorOr<IterationDecision> Parser::for_each_detailed_timing(Function<IterationDe
         }
 
         return result.value();
-    });
-    if (!result.is_error()) {
-        if (extension_error.has_value())
-            return extension_error.value();
-    }
+    }));
+    if (extension_error.has_value())
+        return extension_error.value();
     return result;
 }
 
@@ -978,7 +973,7 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
     }
 
     Optional<Error> extension_error;
-    auto result = for_each_extension_block([&](u8, u8 tag, u8, ReadonlyBytes bytes) {
+    auto result = TRY(for_each_extension_block([&](u8, u8 tag, u8, ReadonlyBytes bytes) {
         if (tag != (u8)Definitions::ExtensionBlockTag::CEA_861)
             return IterationDecision::Continue;
 
@@ -993,11 +988,9 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
         }
 
         return result.value();
-    });
-    if (!result.is_error()) {
-        if (extension_error.has_value())
-            return extension_error.value();
-    }
+    }));
+    if (extension_error.has_value())
+        return extension_error.value();
     return result;
 }
 
@@ -1075,38 +1068,30 @@ auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution
         }
     };
 
-    auto result = for_each_established_timing([&](auto& established_timing) {
+    TRY(for_each_established_timing([&](auto& established_timing) {
         if (established_timing.source() != EstablishedTiming::Source::Manufacturer)
             add_resolution(established_timing.width(), established_timing.height(), established_timing.refresh_rate());
         return IterationDecision::Continue;
-    });
-    if (result.is_error())
-        return result.error();
+    }));
 
-    result = for_each_standard_timing([&](auto& standard_timing) {
+    TRY(for_each_standard_timing([&](auto& standard_timing) {
         add_resolution(standard_timing.width(), standard_timing.height(), standard_timing.refresh_rate());
         return IterationDecision::Continue;
-    });
-    if (result.is_error())
-        return result.error();
+    }));
 
     size_t detailed_timing_index = 0;
-    result = for_each_detailed_timing([&](auto& detailed_timing, auto) {
+    TRY(for_each_detailed_timing([&](auto& detailed_timing, auto) {
         bool is_preferred = detailed_timing_index++ == 0;
         add_resolution(detailed_timing.horizontal_addressable_pixels(), detailed_timing.vertical_addressable_lines(), detailed_timing.refresh_rate(), is_preferred);
         return IterationDecision::Continue;
-    });
-    if (result.is_error())
-        return result.error();
+    }));
 
-    result = for_each_short_video_descriptor([&](unsigned, bool, VIC::Details const& vic_details) {
+    TRY(for_each_short_video_descriptor([&](unsigned, bool, VIC::Details const& vic_details) {
         add_resolution(vic_details.horizontal_pixels, vic_details.vertical_lines, vic_details.refresh_rate_hz());
         return IterationDecision::Continue;
-    });
-    if (result.is_error())
-        return result.error();
+    }));
 
-    result = for_each_coordinated_video_timing([&](auto& coordinated_video_timing) {
+    TRY(for_each_coordinated_video_timing([&](auto& coordinated_video_timing) {
         if (auto* dmt = DMT::find_timing_by_cvt(coordinated_video_timing.cvt_code())) {
             add_resolution(dmt->horizontal_pixels, dmt->vertical_lines, dmt->vertical_frequency_hz());
         } else {
@@ -1115,7 +1100,7 @@ auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution
             dbgln("TODO: Decode CVT code: {:02x},{:02x},{:02x}", cvt.bytes[0], cvt.bytes[1], cvt.bytes[2]);
         }
         return IterationDecision::Continue;
-    });
+    }));
 
     quick_sort(resolutions, [&](auto& info1, auto& info2) {
         if (info1.width < info2.width)
