@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Math.h>
 #include <LibGfx/Filters/ColorFilter.h>
 #include <LibGfx/Matrix3x3.h>
 
