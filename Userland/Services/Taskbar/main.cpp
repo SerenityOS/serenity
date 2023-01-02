@@ -96,6 +96,8 @@ ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
 {
     HashTable<DeprecatedString> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
+        if (af->exclude_from_system_menu())
+            return;
         if (access(af->executable().characters(), X_OK) == 0) {
             g_apps.append({ af->executable(), af->name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal(), af->requires_root() });
             seen_app_categories.set(af->category());
@@ -159,19 +161,12 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         app_category_menus.set(category, category_menu);
     };
 
-    for (auto const& category : sorted_app_categories) {
-        if (category != "Settings"sv)
-            create_category_menu(category);
-    }
+    for (auto const& category : sorted_app_categories)
+        create_category_menu(category);
 
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
     for (auto const& app : g_apps) {
-        if (app.category == "Settings"sv) {
-            ++app_identifier;
-            continue;
-        }
-
         auto icon = app.icon.bitmap_for_size(16);
 
         if constexpr (SYSTEM_MENU_DEBUG) {

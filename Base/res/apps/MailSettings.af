@@ -3,3 +3,4 @@ Name=Mail Settings
 Executable=/bin/MailSettings
 Category=Settings
 Description=Configure the Mail application
+ExcludeFromSystemMenu=true
