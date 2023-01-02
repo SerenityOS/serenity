@@ -49,7 +49,7 @@ Core::Stream::LocalSocket& ConnectionBase::fd_passing_socket()
 
 ErrorOr<void> ConnectionBase::post_message(Message const& message)
 {
-    return post_message(message.encode());
+    return post_message(TRY(message.encode()));
 }
 
 ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
@@ -129,9 +129,15 @@ void ConnectionBase::handle_messages()
     auto messages = move(m_unprocessed_messages);
     for (auto& message : messages) {
         if (message.endpoint_magic() == m_local_endpoint_magic) {
-            if (auto response = m_local_stub.handle(message)) {
-                if (auto result = post_message(*response); result.is_error()) {
-                    dbgln("IPC::ConnectionBase::handle_messages: {}", result.error());
+            auto handler_result = m_local_stub.handle(message);
+            if (handler_result.is_error()) {
+                dbgln("IPC::ConnectionBase::handle_messages: {}", handler_result.error());
+                continue;
+            }
+
+            if (auto response = handler_result.release_value()) {
+                if (auto post_result = post_message(*response); post_result.is_error()) {
+                    dbgln("IPC::ConnectionBase::handle_messages: {}", post_result.error());
                 }
             }
         }

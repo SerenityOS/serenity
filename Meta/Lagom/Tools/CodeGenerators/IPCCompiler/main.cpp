@@ -395,21 +395,21 @@ public:)~~~");
     message_generator.appendln(R"~~~(
     virtual bool valid() const override { return m_ipc_message_valid; }
 
-    virtual IPC::MessageBuffer encode() const override
+    virtual ErrorOr<IPC::MessageBuffer> encode() const override
     {
         VERIFY(valid());
 
         IPC::MessageBuffer buffer;
         IPC::Encoder stream(buffer);
-        stream << endpoint_magic();
-        stream << (int)MessageID::@message.pascal_name@;)~~~");
+        TRY(stream.encode(endpoint_magic()));
+        TRY(stream.encode((int)MessageID::@message.pascal_name@));)~~~");
 
     for (auto const& parameter : parameters) {
         auto parameter_generator = message_generator.fork();
 
         parameter_generator.set("parameter.name", parameter.name);
         parameter_generator.appendln(R"~~~(
-        stream << m_@parameter.name@;)~~~");
+        TRY(stream.encode(m_@parameter.name@));)~~~");
     }
 
     message_generator.appendln(R"~~~(
@@ -665,7 +665,7 @@ public:
     virtual u32 magic() const override { return @endpoint.magic@; }
     virtual DeprecatedString name() const override { return "@endpoint.name@"; }
 
-    virtual OwnPtr<IPC::MessageBuffer> handle(const IPC::Message& message) override
+    virtual ErrorOr<OwnPtr<IPC::MessageBuffer>> handle(const IPC::Message& message) override
     {
         switch (message.message_id()) {)~~~");
     for (auto const& message : endpoint.messages) {
@@ -694,20 +694,20 @@ public:
             [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
             @handler_name@(@arguments@);
             auto response = Messages::@endpoint.name@::@message.response_type@ { };
-            return make<IPC::MessageBuffer>(response.encode());)~~~");
+            return make<IPC::MessageBuffer>(TRY(response.encode()));)~~~");
                 } else {
                     message_generator.appendln(R"~~~(
             [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
             auto response = @handler_name@(@arguments@);
             if (!response.valid())
-                return {};
-            return make<IPC::MessageBuffer>(response.encode());)~~~");
+                return Error::from_string_literal("Failed to handle @endpoint.name@::@message.pascal_name@ message");
+            return make<IPC::MessageBuffer>(TRY(response.encode()));)~~~");
                 }
             } else {
                 message_generator.appendln(R"~~~(
             [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
             @handler_name@(@arguments@);
-            return {};)~~~");
+            return nullptr;)~~~");
             }
             message_generator.appendln(R"~~~(
         })~~~");
@@ -716,7 +716,7 @@ public:
     }
     generator.appendln(R"~~~(
         default:
-            return {};
+            return Error::from_string_literal("Unknown message ID for @endpoint.name@ endpoint");
         }
     })~~~");
 
