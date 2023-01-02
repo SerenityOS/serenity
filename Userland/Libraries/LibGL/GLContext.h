@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>

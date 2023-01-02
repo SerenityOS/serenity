@@ -7,7 +7,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Debug.h>
 #include <LibGL/GLContext.h>
 
 namespace GL {
