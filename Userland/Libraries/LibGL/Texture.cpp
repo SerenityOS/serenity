@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <LibGL/GLContext.h>
 #include <LibGL/Image.h>
 #include <LibGPU/ImageDataLayout.h>

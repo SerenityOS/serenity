@@ -7,7 +7,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Debug.h>
 #include <AK/NumericLimits.h>
 #include <LibGL/GLContext.h>
 
