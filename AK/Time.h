@@ -346,43 +346,6 @@ inline void timespec_to_timeval(TimespecType const& ts, TimevalType& tv)
     tv.tv_usec = ts.tv_nsec / 1000;
 }
 
-template<TimeSpecType T>
-inline bool operator>=(T const& a, T const& b)
-{
-    return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec >= b.tv_nsec);
-}
-
-template<TimeSpecType T>
-inline bool operator>(T const& a, T const& b)
-{
-    return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec > b.tv_nsec);
-}
-
-template<TimeSpecType T>
-inline bool operator<(T const& a, T const& b)
-{
-    return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec);
-}
-
-template<TimeSpecType T>
-inline bool operator<=(T const& a, T const& b)
-
-{
-    return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec <= b.tv_nsec);
-}
-
-template<TimeSpecType T>
-inline bool operator==(T const& a, T const& b)
-{
-    return a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec;
-}
-
-template<TimeSpecType T>
-inline bool operator!=(T const& a, T const& b)
-{
-    return a.tv_sec != b.tv_sec || a.tv_nsec != b.tv_nsec;
-}
-
 // To use these, add a ``using namespace AK::TimeLiterals`` at block or file scope
 namespace TimeLiterals {
 
@@ -412,10 +375,4 @@ using AK::timeval_add;
 using AK::timeval_sub;
 using AK::timeval_to_timespec;
 using AK::years_to_days_since_epoch;
-using AK::operator<=;
-using AK::operator<;
-using AK::operator>;
-using AK::operator>=;
-using AK::operator==;
-using AK::operator!=;
 #endif
