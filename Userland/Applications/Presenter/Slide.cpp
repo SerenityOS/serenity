@@ -5,6 +5,7 @@
  */
 
 #include "Slide.h"
+#include "SlideObject.h"
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Window.h>
@@ -50,4 +51,9 @@ void Slide::paint(Gfx::Painter& painter, unsigned int current_frame, Gfx::FloatS
 
     // FIXME: Move this to user settings.
     painter.draw_text(painter.clip_rect(), title(), Gfx::TextAlignment::BottomCenter);
+}
+
+void Slide::add_slide_object(NonnullRefPtr<SlideObject> slide_object)
+{
+    m_slide_objects.append(move(slide_object));
 }

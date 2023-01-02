@@ -23,6 +23,8 @@ public:
 
     void paint(Gfx::Painter&, unsigned current_frame, Gfx::FloatSize display_scale) const;
 
+    void add_slide_object(NonnullRefPtr<SlideObject> slide_object);
+
 private:
     Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title);
 
