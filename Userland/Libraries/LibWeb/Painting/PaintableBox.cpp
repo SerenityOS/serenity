@@ -224,10 +224,10 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 void PaintableBox::paint_border(PaintContext& context) const
 {
     auto borders_data = BordersData {
-        .top = computed_values().border_top(),
-        .right = computed_values().border_right(),
-        .bottom = computed_values().border_bottom(),
-        .left = computed_values().border_left(),
+        .top = box_model().border.top == 0 ? CSS::BorderData() : computed_values().border_top(),
+        .right = box_model().border.right == 0 ? CSS::BorderData() : computed_values().border_right(),
+        .bottom = box_model().border.bottom == 0 ? CSS::BorderData() : computed_values().border_bottom(),
+        .left = box_model().border.left == 0 ? CSS::BorderData() : computed_values().border_left(),
     };
     paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
 }
