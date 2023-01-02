@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
+#include <AK/StdLibExtraDetails.h>
 
 // Enables bitwise operators for the specified Enum type.
 //

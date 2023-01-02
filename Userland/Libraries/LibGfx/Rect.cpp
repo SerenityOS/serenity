@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Rect.h>

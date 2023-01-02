@@ -7,7 +7,6 @@
 #pragma once
 
 #include "GenericConvolutionFilter.h"
-#include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 
 namespace Gfx {

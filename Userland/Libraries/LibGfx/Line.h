@@ -9,7 +9,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
-#include <AK/StdLibExtras.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>

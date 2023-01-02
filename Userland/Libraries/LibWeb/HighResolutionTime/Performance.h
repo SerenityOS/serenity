@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibWeb/DOM/EventTarget.h>
 

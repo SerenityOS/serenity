@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::NavigationTiming {

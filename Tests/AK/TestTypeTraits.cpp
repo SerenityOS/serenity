@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StdLibExtras.h>
 #include <AK/TypeList.h>
 
 #define STATIC_EXPECT_EQ(lhs, rhs) \

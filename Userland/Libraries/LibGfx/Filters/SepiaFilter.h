@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <LibGfx/Filters/ColorFilter.h>
 #include <math.h>

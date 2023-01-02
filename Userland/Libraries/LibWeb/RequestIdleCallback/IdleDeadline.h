@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::RequestIdleCallback {

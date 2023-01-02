@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/SinglyLinkedList.h>
-#include <AK/StdLibExtras.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
 #include <bits/pthread_cancel.h>

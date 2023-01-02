@@ -8,7 +8,6 @@
 #include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Memory.h>
-#include <AK/StdLibExtras.h>
 #include <AK/StringHash.h>
 #include <AK/StringImpl.h>
 #include <AK/kmalloc.h>

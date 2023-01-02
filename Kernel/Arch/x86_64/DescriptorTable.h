@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/VirtualAddress.h>
 
