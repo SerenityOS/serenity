@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/IterationDecision.h>
 #include <AK/Platform.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
