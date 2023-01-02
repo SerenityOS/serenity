@@ -8,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <AK/Try.h>
 #include <LibCompress/Brotli.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
@@ -20,7 +21,7 @@
 
 namespace HTTP {
 
-static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, DeprecatedString const& content_encoding)
+static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, DeprecatedString const& content_encoding)
 {
     dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
 
@@ -36,19 +37,15 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Depre
 
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is gzip compressed!");
 
-        auto uncompressed = Compress::GzipDecompressor::decompress_all(buf);
-        if (uncompressed.is_error()) {
-            dbgln("Job::handle_content_encoding: Gzip::decompress() failed: {}", uncompressed.error());
-            return {};
-        }
+        auto uncompressed = TRY(Compress::GzipDecompressor::decompress_all(buf));
 
         if constexpr (JOB_DEBUG) {
             dbgln("Job::handle_content_encoding: Gzip::decompress() successful.");
             dbgln("  Input size: {}", buf.size());
-            dbgln("  Output size: {}", uncompressed.value().size());
+            dbgln("  Output size: {}", uncompressed.size());
         }
 
-        return uncompressed.release_value();
+        return uncompressed;
     } else if (content_encoding == "deflate") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is deflate compressed!");
 
@@ -60,14 +57,7 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Depre
             // "Note: Some non-conformant implementations send the "deflate"
             //        compressed data without the zlib wrapper."
             dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: Zlib::decompress_all() failed. Trying DeflateDecompressor::decompress_all()");
-            auto uncompressed_or_error = Compress::DeflateDecompressor::decompress_all(buf);
-
-            if (uncompressed_or_error.is_error()) {
-                dbgln("Job::handle_content_encoding: DeflateDecompressor::decompress_all() failed: {}", uncompressed_or_error.error());
-                return {};
-            }
-
-            uncompressed = uncompressed_or_error.release_value();
+            uncompressed = TRY(Compress::DeflateDecompressor::decompress_all(buf));
         }
 
         if constexpr (JOB_DEBUG) {
@@ -80,27 +70,17 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Depre
     } else if (content_encoding == "br") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is brotli compressed!");
 
-        auto bufstream_result = Core::Stream::FixedMemoryStream::construct({ buf.data(), buf.size() });
-        if (bufstream_result.is_error()) {
-            dbgln("Job::handle_content_encoding: MemoryStream::construct() failed.");
-            return {};
-        }
-        auto bufstream = bufstream_result.release_value();
+        auto bufstream = TRY(Core::Stream::FixedMemoryStream::construct({ buf.data(), buf.size() }));
         auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
 
-        auto uncompressed = brotli_stream.read_until_eof();
-        if (uncompressed.is_error()) {
-            dbgln("Job::handle_content_encoding: Brotli::decompress() failed: {}.", uncompressed.error());
-            return {};
-        }
-
+        auto uncompressed = TRY(brotli_stream.read_until_eof());
         if constexpr (JOB_DEBUG) {
             dbgln("Job::handle_content_encoding: Brotli::decompress() successful.");
             dbgln("  Input size: {}", buf.size());
-            dbgln("  Output size: {}", uncompressed.value().size());
+            dbgln("  Output size: {}", uncompressed.size());
         }
 
-        return uncompressed.release_value();
+        return uncompressed;
     }
 
     return buf;
@@ -620,7 +600,7 @@ void Job::finish_up()
         // FIXME: LibCompress exposes a streaming interface, so this can be resolved
         auto content_encoding = m_headers.get("Content-Encoding");
         if (content_encoding.has_value()) {
-            if (auto result = handle_content_encoding(flattened_buffer, content_encoding.value()); result.has_value())
+            if (auto result = handle_content_encoding(flattened_buffer, content_encoding.value()); !result.is_error())
                 flattened_buffer = result.release_value();
             else
                 return did_fail(Core::NetworkJob::Error::TransmissionFailed);
