@@ -12,7 +12,6 @@
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Bochs/QEMUDisplayConnector.h>

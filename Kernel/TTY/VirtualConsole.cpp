@@ -12,7 +12,6 @@
 #    include <Kernel/Arch/x86_64/PCSpeaker.h>
 #endif
 #include <Kernel/CommandLine.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

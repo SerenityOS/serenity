@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Debug.h>
 #include <LibC/limits.h>
 
 #define KMALLOC_SCRUB_BYTE 0xbb
