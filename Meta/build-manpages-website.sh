@@ -76,11 +76,15 @@ for section_directory in output/*/; do
         <(
             for f in $(find "${section_directory}" -iname '*.html' | ${SORT}); do
                 filename=$(realpath --relative-to="${section_directory}" "$f")
-                name="${filename%.html}"
                 if [[ "$filename" == "index.html" ]]; then
                     continue
                 fi
-                echo "- [${name}](${filename})"
+                filename_no_extension="${filename%.html}"
+                # Generate indentation by subdirectory count: Replace each slash by the two Markdown indentation spaces, then remove all non-space characters.
+                indentation=$(echo "${filename_no_extension}" | sed -e 's/ //g' -e 's/\//  /g' -e 's/[^ ]//g')
+                name="$(basename "${filename}")"
+                name="${name%.html}"
+                echo "${indentation}- [${name}](${filename})"
             done
         ) &
 done
