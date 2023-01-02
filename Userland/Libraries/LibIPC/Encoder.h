@@ -32,13 +32,6 @@ public:
     }
 
     template<typename T>
-    Encoder& operator<<(T const& value)
-    {
-        (void)encode(value);
-        return *this;
-    }
-
-    template<typename T>
     ErrorOr<void> encode(T const& value);
 
     ErrorOr<void> extend_capacity(size_t capacity)
