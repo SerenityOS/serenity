@@ -18,7 +18,7 @@
 namespace IPC {
 
 template<typename T>
-bool encode(Encoder&, T const&)
+ErrorOr<void> encode(Encoder&, T const&)
 {
     static_assert(DependentFalse<T>, "Base IPC::encode() was instantiated");
     VERIFY_NOT_REACHED();
@@ -34,12 +34,12 @@ public:
     template<typename T>
     Encoder& operator<<(T const& value)
     {
-        encode(value);
+        (void)encode(value);
         return *this;
     }
 
     template<typename T>
-    bool encode(T const& value);
+    ErrorOr<void> encode(T const& value);
 
     ErrorOr<void> extend_capacity(size_t capacity)
     {
@@ -72,10 +72,9 @@ private:
 };
 
 template<Arithmetic T>
-bool encode(Encoder& encoder, T const& value)
+ErrorOr<void> encode(Encoder& encoder, T const& value)
 {
-    if (encoder.extend_capacity(sizeof(T)).is_error())
-        return false;
+    TRY(encoder.extend_capacity(sizeof(T)));
 
     if constexpr (sizeof(T) == 1) {
         encoder.append(static_cast<u8>(value));
@@ -100,97 +99,90 @@ bool encode(Encoder& encoder, T const& value)
         static_assert(DependentFalse<T>);
     }
 
-    return true;
+    return {};
 }
 
 template<Enum T>
-bool encode(Encoder& encoder, T const& value)
+ErrorOr<void> encode(Encoder& encoder, T const& value)
 {
     return encoder.encode(to_underlying(value));
 }
 
 template<>
-bool encode(Encoder&, float const&);
+ErrorOr<void> encode(Encoder&, float const&);
 
 template<>
-bool encode(Encoder&, double const&);
+ErrorOr<void> encode(Encoder&, double const&);
 
 template<>
-bool encode(Encoder&, StringView const&);
+ErrorOr<void> encode(Encoder&, StringView const&);
 
 template<>
-bool encode(Encoder&, DeprecatedString const&);
+ErrorOr<void> encode(Encoder&, DeprecatedString const&);
 
 template<>
-bool encode(Encoder&, ByteBuffer const&);
+ErrorOr<void> encode(Encoder&, ByteBuffer const&);
 
 template<>
-bool encode(Encoder&, JsonValue const&);
+ErrorOr<void> encode(Encoder&, JsonValue const&);
 
 template<>
-bool encode(Encoder&, URL const&);
+ErrorOr<void> encode(Encoder&, URL const&);
 
 template<>
-bool encode(Encoder&, Dictionary const&);
+ErrorOr<void> encode(Encoder&, Dictionary const&);
 
 template<>
-bool encode(Encoder&, File const&);
+ErrorOr<void> encode(Encoder&, File const&);
 
 template<>
-bool encode(Encoder&, Empty const&);
+ErrorOr<void> encode(Encoder&, Empty const&);
 
 template<Concepts::Vector T>
-bool encode(Encoder& encoder, T const& vector)
+ErrorOr<void> encode(Encoder& encoder, T const& vector)
 {
-    if (!encoder.encode(static_cast<u64>(vector.size())))
-        return false;
+    TRY(encoder.encode(static_cast<u64>(vector.size())));
 
-    for (auto const& value : vector) {
-        if (!encoder.encode(value))
-            return false;
-    }
+    for (auto const& value : vector)
+        TRY(encoder.encode(value));
 
-    return true;
+    return {};
 }
 
 template<Concepts::HashMap T>
-bool encode(Encoder& encoder, T const& hashmap)
+ErrorOr<void> encode(Encoder& encoder, T const& hashmap)
 {
-    if (!encoder.encode(static_cast<u32>(hashmap.size())))
-        return false;
+    TRY(encoder.encode(static_cast<u32>(hashmap.size())));
 
     for (auto it : hashmap) {
-        if (!encoder.encode(it.key))
-            return false;
-        if (!encoder.encode(it.value))
-            return false;
+        TRY(encoder.encode(it.key));
+        TRY(encoder.encode(it.value));
     }
 
-    return true;
+    return {};
 }
 
 template<Concepts::SharedSingleProducerCircularQueue T>
-bool encode(Encoder& encoder, T const& queue)
+ErrorOr<void> encode(Encoder& encoder, T const& queue)
 {
     return encoder.encode(IPC::File { queue.fd() });
 }
 
 template<Concepts::Optional T>
-bool encode(Encoder& encoder, T const& optional)
+ErrorOr<void> encode(Encoder& encoder, T const& optional)
 {
-    if (!encoder.encode(optional.has_value()))
-        return false;
+    TRY(encoder.encode(optional.has_value()));
 
     if (optional.has_value())
-        return encoder.encode(optional.value());
-    return true;
+        TRY(encoder.encode(optional.value()));
+
+    return {};
 }
 
 template<Concepts::Variant T>
-bool encode(Encoder& encoder, T const& variant)
+ErrorOr<void> encode(Encoder& encoder, T const& variant)
 {
-    if (!encoder.encode(variant.index()))
-        return false;
+    TRY(encoder.encode(variant.index()));
 
     return variant.visit([&](auto const& value) {
         return encoder.encode(value);
@@ -199,7 +191,7 @@ bool encode(Encoder& encoder, T const& variant)
 
 // This must be last so that it knows about the above specializations.
 template<typename T>
-bool Encoder::encode(T const& value)
+ErrorOr<void> Encoder::encode(T const& value)
 {
     return IPC::encode(*this, value);
 }

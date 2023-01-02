@@ -75,7 +75,7 @@ private:
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Core::AnonymousBuffer const&);
+ErrorOr<void> encode(Encoder&, Core::AnonymousBuffer const&);
 
 template<>
 ErrorOr<Core::AnonymousBuffer> decode(Decoder&);

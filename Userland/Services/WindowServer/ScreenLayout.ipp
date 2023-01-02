@@ -393,10 +393,15 @@ bool ScreenLayout::try_auto_add_display_connector(DeprecatedString const& device
 namespace IPC {
 
 template<>
-bool encode(Encoder& encoder, WindowServer::ScreenLayout::Screen const& screen)
+ErrorOr<void> encode(Encoder& encoder, WindowServer::ScreenLayout::Screen const& screen)
 {
-    encoder << screen.mode << screen.device << screen.location << screen.resolution << screen.scale_factor;
-    return true;
+    TRY(encoder.encode(screen.mode));
+    TRY(encoder.encode(screen.device));
+    TRY(encoder.encode(screen.location));
+    TRY(encoder.encode(screen.resolution));
+    TRY(encoder.encode(screen.scale_factor));
+
+    return {};
 }
 
 template<>
@@ -412,10 +417,12 @@ ErrorOr<WindowServer::ScreenLayout::Screen> decode(Decoder& decoder)
 }
 
 template<>
-bool encode(Encoder& encoder, WindowServer::ScreenLayout const& screen_layout)
+ErrorOr<void> encode(Encoder& encoder, WindowServer::ScreenLayout const& screen_layout)
 {
-    encoder << screen_layout.screens << screen_layout.main_screen_index;
-    return true;
+    TRY(encoder.encode(screen_layout.screens));
+    TRY(encoder.encode(screen_layout.main_screen_index));
+
+    return {};
 }
 
 template<>

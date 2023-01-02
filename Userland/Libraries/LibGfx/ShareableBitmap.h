@@ -36,7 +36,7 @@ private:
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Gfx::ShareableBitmap const&);
+ErrorOr<void> encode(Encoder&, Gfx::ShareableBitmap const&);
 
 template<>
 ErrorOr<Gfx::ShareableBitmap> decode(Decoder&);

@@ -54,7 +54,7 @@ struct ProxyData {
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Core::ProxyData const&);
+ErrorOr<void> encode(Encoder&, Core::ProxyData const&);
 
 template<>
 ErrorOr<Core::ProxyData> decode(Decoder&);

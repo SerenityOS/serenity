@@ -574,7 +574,7 @@ struct Formatter<Gfx::Color> : public Formatter<StringView> {
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Gfx::Color const&);
+ErrorOr<void> encode(Encoder&, Gfx::Color const&);
 
 template<>
 ErrorOr<Gfx::Color> decode(Decoder&);

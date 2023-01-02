@@ -33,7 +33,7 @@ Optional<ParsedCookie> parse_cookie(DeprecatedString const& cookie_string);
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Web::Cookie::ParsedCookie const&);
+ErrorOr<void> encode(Encoder&, Web::Cookie::ParsedCookie const&);
 
 template<>
 ErrorOr<Web::Cookie::ParsedCookie> decode(Decoder&);

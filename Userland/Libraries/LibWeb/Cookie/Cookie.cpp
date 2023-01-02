@@ -39,22 +39,22 @@ SameSite same_site_from_string(StringView same_site_mode)
 }
 
 template<>
-bool IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
+ErrorOr<void> IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
 {
-    encoder << cookie.name;
-    encoder << cookie.value;
-    encoder << cookie.domain;
-    encoder << cookie.path;
-    encoder << cookie.creation_time;
-    encoder << cookie.expiry_time;
-    encoder << cookie.host_only;
-    encoder << cookie.http_only;
-    encoder << cookie.last_access_time;
-    encoder << cookie.persistent;
-    encoder << cookie.secure;
-    encoder << cookie.same_site;
+    TRY(encoder.encode(cookie.name));
+    TRY(encoder.encode(cookie.value));
+    TRY(encoder.encode(cookie.domain));
+    TRY(encoder.encode(cookie.path));
+    TRY(encoder.encode(cookie.creation_time));
+    TRY(encoder.encode(cookie.expiry_time));
+    TRY(encoder.encode(cookie.host_only));
+    TRY(encoder.encode(cookie.http_only));
+    TRY(encoder.encode(cookie.last_access_time));
+    TRY(encoder.encode(cookie.persistent));
+    TRY(encoder.encode(cookie.secure));
+    TRY(encoder.encode(cookie.same_site));
 
-    return true;
+    return {};
 }
 
 template<>
