@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Try.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/ASN1/DER.h>
 
@@ -11,11 +12,7 @@ namespace Crypto::ASN1 {
 
 Result<Tag, DecodeError> Decoder::read_tag()
 {
-    auto byte_or_error = read_byte();
-    if (byte_or_error.is_error())
-        return byte_or_error.error();
-
-    auto byte = byte_or_error.value();
+    auto byte = TRY(read_byte());
     u8 class_ = byte & 0xc0;
     u8 type = byte & 0x20;
     u8 kind = byte & 0x1f;
@@ -23,11 +20,7 @@ Result<Tag, DecodeError> Decoder::read_tag()
     if (kind == 0x1f) {
         kind = 0;
         while (byte & 0x80) {
-            auto byte_or_error = read_byte();
-            if (byte_or_error.is_error())
-                return byte_or_error.error();
-
-            byte = byte_or_error.value();
+            byte = TRY(read_byte());
             kind = (kind << 7) | (byte & 0x7f);
         }
     }
@@ -37,22 +30,15 @@ Result<Tag, DecodeError> Decoder::read_tag()
 
 Result<size_t, DecodeError> Decoder::read_length()
 {
-    auto byte_or_error = read_byte();
-    if (byte_or_error.is_error())
-        return byte_or_error.error();
-
-    auto byte = byte_or_error.value();
+    auto byte = TRY(read_byte());
     size_t length = byte;
 
     if (byte & 0x80) {
         auto count = byte & 0x7f;
         if (count == 0x7f)
             return DecodeError::InvalidInputFormat;
-        auto data_or_error = read_bytes(count);
-        if (data_or_error.is_error())
-            return data_or_error.error();
 
-        auto data = data_or_error.value();
+        auto data = TRY(read_bytes(count));
         length = 0;
 
         if (data.size() > sizeof(size_t))
@@ -194,11 +180,7 @@ Result<Tag, DecodeError> Decoder::peek()
     if (m_current_tag.has_value())
         return m_current_tag.value();
 
-    auto tag_or_error = read_tag();
-    if (tag_or_error.is_error())
-        return tag_or_error.error();
-
-    m_current_tag = tag_or_error.value();
+    m_current_tag = TRY(read_tag());
 
     return m_current_tag.value();
 }
@@ -213,27 +195,16 @@ Optional<DecodeError> Decoder::enter()
     if (m_stack.is_empty())
         return DecodeError::NoInput;
 
-    auto tag_or_error = peek();
-    if (tag_or_error.is_error())
-        return tag_or_error.error();
-
-    auto tag = tag_or_error.value();
+    auto tag = TRY(peek());
     if (tag.type != Type::Constructed)
         return DecodeError::EnteringNonConstructedTag;
 
-    auto length_or_error = read_length();
-    if (length_or_error.is_error())
-        return length_or_error.error();
+    auto length = TRY(read_length());
 
-    auto length = length_or_error.value();
-
-    auto data_or_error = read_bytes(length);
-    if (data_or_error.is_error())
-        return data_or_error.error();
+    auto data = TRY(read_bytes(length));
 
     m_current_tag.clear();
 
-    auto data = data_or_error.value();
     m_stack.append(data);
     return {};
 }
