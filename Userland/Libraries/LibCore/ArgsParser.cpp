@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/JsonObject.h"
 #include <AK/Format.h>
+#include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Version.h>

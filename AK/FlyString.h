@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "AK/StringUtils.h"
 #include <AK/DeprecatedString.h>
+#include <AK/StringUtils.h>
 
 namespace AK {
 

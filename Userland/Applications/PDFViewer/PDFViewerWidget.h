@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include "AK/NonnullRefPtr.h"
-#include "AK/RefPtr.h"
 #include "NumericInput.h"
 #include "PDFViewer.h"
 #include "SidebarWidget.h"
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/CheckBox.h>

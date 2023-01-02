@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "AK/Noncopyable.h"
-#include "AK/StdLibExtras.h"
 #include <AK/Atomic.h>
+#include <AK/Noncopyable.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK::UBSanitizer {

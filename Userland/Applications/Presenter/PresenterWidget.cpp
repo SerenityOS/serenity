@@ -5,7 +5,6 @@
  */
 
 #include "PresenterWidget.h"
-#include "LibGUI/MessageBox.h"
 #include "Presentation.h"
 #include <AK/Format.h>
 #include <LibCore/MimeData.h>
@@ -14,6 +13,7 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>

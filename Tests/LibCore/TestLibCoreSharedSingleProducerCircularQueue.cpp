@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "sched.h"
 #include <LibCore/SharedCircularQueue.h>
 #include <LibTest/TestCase.h>
 #include <LibThreading/Thread.h>
+#include <sched.h>
 
 using TestQueue = Core::SharedSingleProducerCircularQueue<int>;
 using QueueError = ErrorOr<int, TestQueue::QueueStatus>;

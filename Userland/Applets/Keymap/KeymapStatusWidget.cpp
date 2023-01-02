@@ -5,8 +5,8 @@
  */
 
 #include "KeymapStatusWidget.h"
-#include "LibGUI/ActionGroup.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>

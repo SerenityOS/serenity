@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/OwnPtr.h"
+#include <AK/OwnPtr.h>
 #include <LibCore/Stream.h>
 #include <LibIMAP/Client.h>
 
