@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Time.h>
-#include <sys/time.h>
 
 namespace Core {
 
@@ -23,17 +22,16 @@ public:
     bool is_valid() const { return m_valid; }
     void start();
     void reset();
-    int elapsed() const;
+
+    i64 elapsed() const; // milliseconds
     Time elapsed_time() const;
 
-    const struct timeval& origin_time() const { return m_origin_time; }
+    Time const& origin_time() const { return m_origin_time; }
 
 private:
+    Time m_origin_time {};
     bool m_precise { false };
     bool m_valid { false };
-    struct timeval m_origin_time {
-        0, 0
-    };
 };
 
 }
