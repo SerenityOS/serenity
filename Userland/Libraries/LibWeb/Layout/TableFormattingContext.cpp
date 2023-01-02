@@ -190,6 +190,9 @@ void TableFormattingContext::distribute_width_to_columns(float extra_width)
     for (auto& column : m_columns)
         grid_max += column.max_width - column.min_width;
 
+    if (grid_max == 0)
+        return;
+
     for (auto& column : m_columns)
         column.used_width += ((column.max_width - column.min_width) / grid_max) * extra_width;
 }
