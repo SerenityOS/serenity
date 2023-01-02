@@ -950,7 +950,7 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
     g_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
     g_config->write_entry("Fonts", "WindowTitle", window_title_font_query);
 
-    return true;
+    return !g_config->sync().is_error();
 }
 
 void ConnectionFromClient::set_system_effects(Vector<bool> const& effects, u8 geometry)
