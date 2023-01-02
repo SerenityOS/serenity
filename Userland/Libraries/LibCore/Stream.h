@@ -12,7 +12,6 @@
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/IPv4Address.h>
-#include <AK/MemMem.h>
 #include <AK/Noncopyable.h>
 #include <AK/Result.h>
 #include <AK/Span.h>
