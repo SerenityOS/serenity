@@ -1086,8 +1086,8 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
 
 bool WindowManager::is_considered_doubleclick(MouseEvent const& event, DoubleClickInfo::ClickMetadata const& metadata) const
 {
-    int elapsed_since_last_click = metadata.clock.elapsed();
-    if (elapsed_since_last_click < m_double_click_speed) {
+    i64 elapsed_ms_since_last_click = metadata.clock.elapsed();
+    if (elapsed_ms_since_last_click < m_double_click_speed) {
         auto diff = event.position() - metadata.last_position;
         auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
         if (distance_travelled_squared <= (m_max_distance_for_double_click * m_max_distance_for_double_click))
