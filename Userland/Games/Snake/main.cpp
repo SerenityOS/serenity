@@ -8,9 +8,11 @@
 #include <AK/URL.h>
 #include <Games/Snake/SnakeGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -92,13 +94,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             action.set_icon(pause_icon);
         }
     })));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
-        game.pause();
-        auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
-        if (dialog->exec() == GUI::Dialog::ExecResult::OK)
-            game.set_snake_base_color(dialog->color());
-        game.start();
-    })));
+    GUI::ActionGroup skin_action_group;
+    skin_action_group.set_exclusive(true);
+
+    auto skin_menu = TRY(game_menu->try_add_submenu("&Skin"));
+    skin_menu->set_icon(app_icon.bitmap_for_size(16));
+
+    Core::DirIterator di("/res/icons/snake/skins/", Core::DirIterator::SkipParentAndBaseDir);
+    while (di.has_next()) {
+        auto set = di.next_path();
+        auto action = GUI::Action::create_checkable(set, [&](auto& action) {
+            MUST(game.set_skin(action.text()));
+            game.update();
+            Config::write_string("Snake"sv, "Snake"sv, "Skin"sv, action.text());
+        });
+
+        skin_action_group.add_action(*action);
+        if (game.skin() == set)
+            action->set_checked(true);
+        TRY(skin_menu->try_add_action(*action));
+    }
+
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();

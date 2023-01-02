@@ -19,7 +19,18 @@ REGISTER_WIDGET(Snake, Game);
 
 namespace Snake {
 
-ErrorOr<NonnullRefPtr<Game>> Game::try_create()
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_bitmap(StringView const& file)
+{
+    auto bitmap = Gfx::Bitmap::try_load_from_file(file);
+    if (bitmap.is_error()) {
+        dbgln("\033[31;1mCould not load bitmap file\033[0m '{}': {}", file, bitmap.error());
+        return bitmap.release_error();
+    }
+
+    return bitmap.release_value();
+}
+
+static ErrorOr<NonnullRefPtrVector<Gfx::Bitmap>> load_food_bitmaps()
 {
     static constexpr auto food_bitmaps_files = Array {
         "/res/emoji/U+1F41F.png"sv,
@@ -57,25 +68,30 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
     TRY(food_bitmaps.try_ensure_capacity(food_bitmaps_files.size()));
 
     for (auto file : food_bitmaps_files) {
-        auto bitmap = Gfx::Bitmap::try_load_from_file(file);
-        if (bitmap.is_error()) {
-            dbgln("\033[31;1mCould not load bitmap file\033[0m '{}': {}", file, bitmap.error());
-            return bitmap.release_error();
-        }
-
-        food_bitmaps.unchecked_append(bitmap.release_value());
+        auto bitmap = TRY(load_bitmap(file));
+        food_bitmaps.unchecked_append(bitmap);
     }
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps)));
+    return food_bitmaps;
+}
+
+ErrorOr<NonnullRefPtr<Game>> Game::try_create()
+{
+    auto food_bitmaps = TRY(load_food_bitmaps());
+    auto game = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps))));
+
+    TRY(game->load_snake_bitmaps());
+
+    return game;
 }
 
 Game::Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
     : m_food_bitmaps(move(food_bitmaps))
 {
+    m_skin = Config::read_string("Snake"sv, "Snake"sv, "Skin"sv, m_skin);
+
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
     reset();
-
-    m_snake_base_color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, m_snake_base_color.value()));
 }
 
 void Game::pause()
@@ -107,16 +123,58 @@ void Game::reset()
     update();
 }
 
-void Game::set_snake_base_color(Color color)
+static DeprecatedString skin_path = DeprecatedString("/res/icons/snake/skins/");
+
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_skin_bitmap(DeprecatedString const& skin, StringView const& file)
 {
-    Config::write_u32("Snake"sv, "Snake"sv, "BaseColor"sv, color.value());
-    m_snake_base_color = color;
+    auto path = DeprecatedString::formatted("{}{}/{}", skin_path, skin, file);
+    return Gfx::Bitmap::try_load_from_file(path);
+}
+
+ErrorOr<void> Game::load_snake_bitmaps()
+{
+    m_snake_bitmaps.clear_with_capacity();
+    auto tail = TRY(load_skin_bitmap(m_skin, "tail.png"sv));
+    auto corner = TRY(load_skin_bitmap(m_skin, "corner.png"sv));
+    auto horizontal = TRY(load_skin_bitmap(m_skin, "horizontal.png"sv));
+    auto vertical = TRY(load_skin_bitmap(m_skin, "vertical.png"sv));
+
+    m_snake_bitmaps.append(tail);
+    m_snake_bitmaps.append(TRY(tail->rotated(Gfx::RotationDirection::Clockwise)));
+    m_snake_bitmaps.append(corner);
+    m_snake_bitmaps.append(TRY(m_snake_bitmaps[1].rotated(Gfx::RotationDirection::Clockwise)));
+    m_snake_bitmaps.append(vertical);
+    m_snake_bitmaps.append(TRY(corner->rotated(Gfx::RotationDirection::Clockwise)));
+    m_snake_bitmaps.append(tail); // Not possible
+    m_snake_bitmaps.append(TRY(m_snake_bitmaps[3].rotated(Gfx::RotationDirection::Clockwise)));
+    m_snake_bitmaps.append(TRY(corner->rotated(Gfx::RotationDirection::CounterClockwise)));
+    m_snake_bitmaps.append(horizontal);
+    m_snake_bitmaps.append(tail); // Not possible
+    m_snake_bitmaps.append(TRY(m_snake_bitmaps[5].rotated(Gfx::RotationDirection::Clockwise)));
+
+    m_head_bitmaps.clear_with_capacity();
+    auto head = TRY(load_skin_bitmap(m_skin, "head.png"sv));
+    m_head_bitmaps.append(head);
+    m_head_bitmaps.append(TRY(head->rotated(Gfx::RotationDirection::Clockwise)));
+    m_head_bitmaps.append(TRY(m_head_bitmaps[1].rotated(Gfx::RotationDirection::Clockwise)));
+    m_head_bitmaps.append(TRY(m_head_bitmaps[2].rotated(Gfx::RotationDirection::Clockwise)));
+
+    return {};
+}
+
+ErrorOr<void> Game::set_skin(DeprecatedString const& skin)
+{
+    if (skin == m_skin)
+        return {};
+
+    m_skin = skin;
+    return load_snake_bitmaps();
 }
 
 bool Game::is_available(Coordinate const& coord)
 {
     for (size_t i = 0; i < m_tail.size(); ++i) {
-        if (m_tail[i] == coord)
+        if (m_tail[i].position == coord)
             return false;
     }
     if (m_head == coord)
@@ -143,15 +201,15 @@ void Game::timer_event(Core::TimerEvent&)
 {
     Vector<Coordinate> dirty_cells;
 
-    m_tail.prepend(m_head);
-
-    if (m_tail.size() > m_length) {
-        dirty_cells.append(m_tail.last());
-        m_tail.take_last();
-    }
-
     if (!m_velocity_queue.is_empty())
         m_velocity = m_velocity_queue.dequeue();
+
+    m_tail.prepend(Tail { m_head, m_velocity });
+
+    if (m_tail.size() > m_length) {
+        dirty_cells.append(m_tail.last().position);
+        m_tail.take_last();
+    }
 
     dirty_cells.append(m_head);
 
@@ -172,7 +230,7 @@ void Game::timer_event(Core::TimerEvent&)
     dirty_cells.append(m_head);
 
     for (size_t i = 0; i < m_tail.size(); ++i) {
-        if (m_head == m_tail[i]) {
+        if (m_head == m_tail[i].position) {
             game_over();
             return;
         }
@@ -190,6 +248,9 @@ void Game::timer_event(Core::TimerEvent&)
         dirty_cells.append(m_fruit);
     }
 
+    for (auto& tail : m_tail) {
+        update(cell_rect(tail.position));
+    }
     for (auto& coord : dirty_cells) {
         update(cell_rect(coord));
     }
@@ -240,6 +301,19 @@ Gfx::IntRect Game::cell_rect(Coordinate const& coord) const
     };
 }
 
+NonnullRefPtr<Gfx::Bitmap> Game::get_head_bitmap() const
+{
+    if (m_velocity.vertical == -1)
+        return m_head_bitmaps[0];
+    if (m_velocity.vertical == 1)
+        return m_head_bitmaps[2];
+    if (m_velocity.horizontal == -1)
+        return m_head_bitmaps[3];
+    if (m_velocity.horizontal == 1)
+        return m_head_bitmaps[1];
+    return m_head_bitmaps[0];
+}
+
 void Game::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
@@ -248,19 +322,37 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::Black);
 
-    painter.fill_rect(cell_rect(m_head), m_snake_base_color);
-    for (auto& part : m_tail) {
-        auto rect = cell_rect(part);
-        painter.fill_rect(rect, m_snake_base_color.darkened(0.77));
+    auto head_bitmap = get_head_bitmap();
+    painter.draw_scaled_bitmap(cell_rect(m_head), head_bitmap, head_bitmap->rect());
 
-        Gfx::IntRect left_side(rect.x(), rect.y(), 2, rect.height());
-        Gfx::IntRect top_side(rect.x(), rect.y(), rect.width(), 2);
-        Gfx::IntRect right_side(rect.right() - 1, rect.y(), 2, rect.height());
-        Gfx::IntRect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
-        painter.fill_rect(left_side, m_snake_base_color.darkened(0.88));
-        painter.fill_rect(right_side, m_snake_base_color.darkened(0.55));
-        painter.fill_rect(top_side, m_snake_base_color.darkened(0.88));
-        painter.fill_rect(bottom_side, m_snake_base_color.darkened(0.55));
+    for (size_t i = 0; i < m_tail.size(); i++) {
+        auto& part = m_tail[i];
+        auto rect = cell_rect(part.position);
+
+        int configuration = 0;
+        auto configure = [&](Velocity const& velocity) {
+            if (velocity.vertical == -1)
+                configuration |= 1;
+            if (velocity.vertical == 1)
+                configuration |= 4;
+            if (velocity.horizontal == -1)
+                configuration |= 8;
+            if (velocity.horizontal == 1)
+                configuration |= 2;
+        };
+
+        if (i == 0)
+            configure(m_velocity);
+        else
+            configure(part.velocity);
+
+        if (i < m_tail.size() - 1)
+            configure(-m_tail[i + 1].velocity);
+
+        // Tail bitmaps are zero-indexed.
+        configuration -= 1;
+
+        painter.draw_scaled_bitmap(rect, m_snake_bitmaps[configuration], m_snake_bitmaps[configuration].rect());
     }
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type].rect());
