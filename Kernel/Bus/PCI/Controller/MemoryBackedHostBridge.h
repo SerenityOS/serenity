@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/Region.h>

@@ -9,7 +9,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
-#include <AK/Vector.h>
 #include <LibCore/Stream.h>
 #include <ctype.h>
 

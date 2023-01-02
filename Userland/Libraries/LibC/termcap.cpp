@@ -8,7 +8,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
-#include <assert.h>
 #include <string.h>
 #include <termcap.h>
 

@@ -35,7 +35,6 @@
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibVT/TerminalWidget.h>
-#include <assert.h>
 #include <errno.h>
 #include <pty.h>
 #include <pwd.h>

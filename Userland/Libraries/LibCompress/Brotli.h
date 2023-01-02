@@ -8,6 +8,7 @@
 
 #include <AK/CircularQueue.h>
 #include <AK/FixedArray.h>
+#include <AK/Vector.h>
 #include <LibCore/InputBitStream.h>
 #include <LibCore/Stream.h>
 

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/OpenType/Tables.h>

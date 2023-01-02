@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <assert.h>
 #include <link.h>
 
 extern "C" {

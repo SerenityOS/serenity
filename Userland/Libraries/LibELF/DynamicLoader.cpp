@@ -14,7 +14,6 @@
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Hashes.h>
 #include <LibELF/Validation.h>
-#include <assert.h>
 #include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
 #include <errno.h>

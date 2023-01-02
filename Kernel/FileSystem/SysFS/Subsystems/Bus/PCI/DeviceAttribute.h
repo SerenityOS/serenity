@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>

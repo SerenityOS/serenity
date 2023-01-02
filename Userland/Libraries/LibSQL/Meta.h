@@ -11,7 +11,6 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Result.h>
-#include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Type.h>

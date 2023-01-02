@@ -6,7 +6,6 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBDevice.h>

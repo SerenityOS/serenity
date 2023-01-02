@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Vector.h>
 #include <LibGUI/Dialog.h>
 
 class RoundingDialog : public GUI::Dialog {

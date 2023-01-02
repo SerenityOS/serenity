@@ -6,7 +6,6 @@
 
 #include "CppComprehensionEngine.h"
 #include <AK/Assertions.h>
-#include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>

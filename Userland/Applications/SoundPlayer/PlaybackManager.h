@@ -9,7 +9,6 @@
 
 #include <AK/FixedArray.h>
 #include <AK/Queue.h>
-#include <AK/Vector.h>
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Loader.h>
 #include <LibAudio/Resampler.h>

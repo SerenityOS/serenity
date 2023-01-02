@@ -11,7 +11,6 @@
 #include "../ImageEditor.h"
 #include "../Layer.h"
 #include "../Mask.h"
-#include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>

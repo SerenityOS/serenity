@@ -12,6 +12,7 @@
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
+#include <AK/Vector.h>
 
 namespace AK {
 

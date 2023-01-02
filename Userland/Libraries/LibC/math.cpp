@@ -16,7 +16,6 @@
 #include <AK/Math.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
-#include <assert.h>
 #include <fenv.h>
 #include <math.h>
 #include <stdint.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <assert.h>
 #include <bits/stdint.h>
 #include <sys/cdefs.h>
 

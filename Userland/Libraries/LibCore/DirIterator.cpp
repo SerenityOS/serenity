@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
 #include <unistd.h>

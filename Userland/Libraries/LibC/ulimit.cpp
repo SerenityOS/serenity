@@ -6,7 +6,6 @@
  */
 
 #include <AK/Format.h>
-#include <assert.h>
 #include <sys/resource.h>
 #include <syscall.h>
 #include <ulimit.h>

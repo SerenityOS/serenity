@@ -9,7 +9,6 @@
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibGLSL/ObjectFile.h>
 #include <LibGPU/IR.h>
 

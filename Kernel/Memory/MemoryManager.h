@@ -8,7 +8,6 @@
 
 #include <AK/Badge.h>
 #include <AK/Concepts.h>
-#include <AK/HashTable.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <Kernel/Forward.h>

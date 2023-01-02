@@ -9,7 +9,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>

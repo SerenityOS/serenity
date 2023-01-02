@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/Vector.h>
 #include <Kernel/Devices/CharacterDevice.h>
 
 namespace Kernel {

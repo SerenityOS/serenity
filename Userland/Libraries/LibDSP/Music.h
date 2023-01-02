@@ -11,7 +11,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
-#include <AK/Vector.h>
 #include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 

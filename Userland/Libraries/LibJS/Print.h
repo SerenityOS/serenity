@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
 #include <LibCore/Stream.h>
 #include <LibJS/Runtime/Value.h>
 

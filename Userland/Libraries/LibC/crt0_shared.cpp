@@ -5,7 +5,6 @@
  */
 
 #include <AK/Types.h>
-#include <assert.h>
 #include <stdio.h>
 #include <sys/internals.h>
 #include <unistd.h>

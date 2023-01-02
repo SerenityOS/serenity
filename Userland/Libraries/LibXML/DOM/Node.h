@@ -10,7 +10,6 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Variant.h>
-#include <AK/Vector.h>
 #include <LibXML/FundamentalTypes.h>
 
 namespace XML {

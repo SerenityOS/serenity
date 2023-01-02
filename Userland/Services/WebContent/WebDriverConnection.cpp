@@ -10,7 +10,6 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/Vector.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/CSS/PropertyID.h>

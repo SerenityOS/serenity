@@ -6,7 +6,6 @@
 
 #include <AK/Types.h>
 #include <LibTest/TestCase.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>

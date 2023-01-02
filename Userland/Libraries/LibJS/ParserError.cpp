@@ -6,7 +6,6 @@
  */
 
 #include <AK/StringView.h>
-#include <AK/Vector.h>
 #include <LibJS/ParserError.h>
 #include <LibJS/Token.h>
 

@@ -6,7 +6,6 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Error.h>
-#include <AK/HashTable.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCI/Controller/HostBridge.h>
 #endif

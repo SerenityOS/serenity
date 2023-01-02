@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <AK/Vector.h>
 
 namespace PDF {
 

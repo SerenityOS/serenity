@@ -10,7 +10,6 @@
 #include <AK/Time.h>
 #include <Kernel/API/TimePage.h>
 #include <LibTimeZone/TimeZone.h>
-#include <assert.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <limits.h>

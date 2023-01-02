@@ -9,7 +9,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/DisjointChunks.h>
 #include <AK/FixedArray.h>
-#include <AK/Vector.h>
 
 TEST_CASE(basic)
 {

@@ -10,7 +10,6 @@
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <AK/Vector.h>
 
 #ifdef KERNEL
 #    include <AK/Error.h>

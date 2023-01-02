@@ -9,7 +9,6 @@
 #include <AK/DisjointChunks.h>
 #include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
-#include <AK/Vector.h>
 #include <LibAudio/Sample.h>
 #include <LibThreading/Mutex.h>
 

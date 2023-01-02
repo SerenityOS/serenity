@@ -9,7 +9,6 @@
 #include <AK/Bitmap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Locking/Spinlock.h>
 

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Format.h>
-#include <assert.h>
 #include <glob.h>
 
 extern "C" {

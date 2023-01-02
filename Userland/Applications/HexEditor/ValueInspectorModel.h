@@ -11,7 +11,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
-#include <AK/Vector.h>
 #include <LibGUI/Model.h>
 
 class ValueInspectorModel final : public GUI::Model {

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Vector.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Platform {

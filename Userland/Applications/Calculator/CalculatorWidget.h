@@ -10,7 +10,6 @@
 
 #include "Calculator.h"
 #include "Keypad.h"
-#include <AK/Vector.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Widget.h>

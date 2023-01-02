@@ -11,7 +11,6 @@
 #include <Kernel/API/Unveil.h>
 #include <LibCore/File.h>
 #include <alloca.h>
-#include <assert.h>
 #include <bits/pthread_cancel.h>
 #include <bits/pthread_integration.h>
 #include <dirent.h>

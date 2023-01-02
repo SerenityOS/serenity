@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/AtomicRefCounted.h>
-#include <AK/Vector.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
