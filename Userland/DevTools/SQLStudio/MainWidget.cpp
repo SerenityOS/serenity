@@ -69,7 +69,7 @@ MainWidget::MainWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
-        if (auto result = GUI::FilePicker::get_open_filepath(window()); result.has_value())
+        if (auto result = GUI::FilePicker::get_open_filepath(window()).release_value_but_fixme_should_propagate_errors(); result.has_value())
             open_script_from_file(LexicalPath { result.release_value() });
     });
 

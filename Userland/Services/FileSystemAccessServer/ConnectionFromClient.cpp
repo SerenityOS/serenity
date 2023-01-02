@@ -121,7 +121,7 @@ void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_cl
 
     auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
-    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, window_title, path_to_view);
+    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, window_title, path_to_view).release_value_but_fixme_should_propagate_errors();
 
     prompt_helper(request_id, user_picked_file, requested_access);
 }
@@ -133,7 +133,7 @@ void ConnectionFromClient::prompt_save_file(i32 request_id, i32 window_server_cl
 
     auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
-    auto user_picked_file = GUI::FilePicker::get_save_filepath(main_window, name, ext, path_to_view);
+    auto user_picked_file = GUI::FilePicker::get_save_filepath(main_window, name, ext, path_to_view).release_value_but_fixme_should_propagate_errors();
 
     prompt_helper(request_id, user_picked_file, requested_access);
 }

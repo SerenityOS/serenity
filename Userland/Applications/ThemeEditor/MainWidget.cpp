@@ -579,7 +579,7 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     } else {
         target_path = "/res/icons";
     }
-    auto result = GUI::FilePicker::get_open_filepath(window(), window_title, target_path, open_folder);
+    auto result = GUI::FilePicker::get_open_filepath(window(), window_title, target_path, open_folder).release_value_but_fixme_should_propagate_errors();
     if (!result.has_value())
         return;
     path_input.set_text(*result);

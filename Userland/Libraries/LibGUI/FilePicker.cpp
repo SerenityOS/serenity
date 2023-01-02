@@ -32,9 +32,9 @@
 
 namespace GUI {
 
-Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position)
+ErrorOr<Optional<DeprecatedString>> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position)
 {
-    auto picker = MUST(FilePicker::try_create(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position));
+    auto picker = TRY(FilePicker::try_create(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position));
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -43,26 +43,26 @@ Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, 
         DeprecatedString file_path = picker->selected_file();
 
         if (file_path.is_null())
-            return {};
+            return { {} };
 
         return file_path;
     }
-    return {};
+    return { {} };
 }
 
-Optional<DeprecatedString> FilePicker::get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path, ScreenPosition screen_position)
+ErrorOr<Optional<DeprecatedString>> FilePicker::get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path, ScreenPosition screen_position)
 {
-    auto picker = MUST(FilePicker::try_create(parent_window, Mode::Save, DeprecatedString::formatted("{}.{}", title, extension), path, screen_position));
+    auto picker = TRY(FilePicker::try_create(parent_window, Mode::Save, DeprecatedString::formatted("{}.{}", title, extension), path, screen_position));
 
     if (picker->exec() == ExecResult::OK) {
         DeprecatedString file_path = picker->selected_file();
 
         if (file_path.is_null())
-            return {};
+            return { {} };
 
         return file_path;
     }
-    return {};
+    return { {} };
 }
 
 ErrorOr<NonnullRefPtr<FilePicker>> FilePicker::try_create(GUI::Window* parent_window, GUI::FilePicker::Mode mode, StringView filename, StringView path, GUI::Dialog::ScreenPosition screen_position)

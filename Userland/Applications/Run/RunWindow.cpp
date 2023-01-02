@@ -65,7 +65,7 @@ RunWindow::RunWindow()
 
     m_browse_button = *find_descendant_of_type_named<GUI::DialogButton>("browse_button");
     m_browse_button->on_click = [this](auto) {
-        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::Center);
+        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::Center).release_value_but_fixme_should_propagate_errors();
         if (path.has_value())
             m_path_combo_box->set_text(path.value().view());
     };

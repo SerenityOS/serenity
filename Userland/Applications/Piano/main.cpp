@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/file-export.png"sv)), [&](const GUI::Action&) {
-        save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
+        save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav").release_value_but_fixme_should_propagate_errors();
         if (!save_path.has_value())
             return;
         DeprecatedString error;

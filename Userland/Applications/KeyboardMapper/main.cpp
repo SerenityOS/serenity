@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!keyboard_mapper_widget->request_close())
                 return;
 
-            Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(window, "Open"sv, "/res/keymaps/"sv);
+            Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(window, "Open"sv, "/res/keymaps/"sv).release_value_but_fixme_should_propagate_errors();
             if (!path.has_value())
                 return;
 
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         DeprecatedString name = "Unnamed";
-        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
+        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window, name, "json").release_value_but_fixme_should_propagate_errors();
         if (!save_path.has_value())
             return;
 

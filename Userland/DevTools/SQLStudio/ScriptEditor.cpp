@@ -60,7 +60,7 @@ ErrorOr<bool> ScriptEditor::save()
 
 ErrorOr<bool> ScriptEditor::save_as()
 {
-    auto maybe_save_path = GUI::FilePicker::get_save_filepath(window(), name(), "sql");
+    auto maybe_save_path = TRY(GUI::FilePicker::get_save_filepath(window(), name(), "sql"));
     if (!maybe_save_path.has_value())
         return false;
 

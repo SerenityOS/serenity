@@ -110,7 +110,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (!request_close())
             return;
-        Optional<DeprecatedString> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv);
+        Optional<DeprecatedString> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv).release_value_but_fixme_should_propagate_errors();
         if (!open_path.has_value())
             return;
         if (auto result = open_file(open_path.value()); result.is_error())
@@ -126,7 +126,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
-        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
+        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension()).release_value_but_fixme_should_propagate_errors();
         if (!save_path.has_value())
             return;
         if (auto result = save_file(save_path.value()); result.is_error())

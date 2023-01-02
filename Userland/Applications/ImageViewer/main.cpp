@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            auto path = GUI::FilePicker::get_open_filepath(window, "Open Image");
+            auto path = GUI::FilePicker::get_open_filepath(window, "Open Image").release_value_but_fixme_should_propagate_errors();
             if (path.has_value()) {
                 widget->set_path(path.value());
                 widget->load_from_file(path.value());

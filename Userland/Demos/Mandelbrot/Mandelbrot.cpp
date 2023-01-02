@@ -421,7 +421,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP",
         [&](GUI::Action&) {
-            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
+            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp").release_value_but_fixme_should_propagate_errors();
             if (!export_path.has_value())
                 return;
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::BMP); result.is_error())
@@ -429,7 +429,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         })));
     TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
-            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
+            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png").release_value_but_fixme_should_propagate_errors();
             if (!export_path.has_value())
                 return;
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::PNG); result.is_error())
@@ -437,7 +437,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         })));
     TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI",
         [&](GUI::Action&) {
-            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
+            Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi").release_value_but_fixme_should_propagate_errors();
             if (!export_path.has_value())
                 return;
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::QOI); result.is_error())

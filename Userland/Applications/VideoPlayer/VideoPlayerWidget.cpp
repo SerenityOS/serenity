@@ -290,7 +290,7 @@ void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     // File menu
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
+        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...").release_value_but_fixme_should_propagate_errors();
         if (path.has_value())
             open_file(path.value());
     }));

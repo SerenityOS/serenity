@@ -872,7 +872,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_action()
 {
     auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv));
     return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, icon, [this](auto&) {
-        auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", m_project->root_path(), true);
+        auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", m_project->root_path(), true).release_value_but_fixme_should_propagate_errors();
         if (!open_path.has_value())
             return;
         open_project(open_path.value());
@@ -904,7 +904,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(),
             old_filename.is_null() ? "Untitled"sv : old_path.title(),
             old_filename.is_null() ? "txt"sv : old_path.extension(),
-            Core::File::absolute_path(old_path.dirname()));
+            Core::File::absolute_path(old_path.dirname()))
+                                                   .release_value_but_fixme_should_propagate_errors();
         if (!save_path.has_value()) {
             return;
         }
