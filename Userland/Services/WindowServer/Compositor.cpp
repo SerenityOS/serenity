@@ -141,8 +141,8 @@ void Compositor::did_construct_window_manager(Badge<WindowManager>)
 
     m_current_window_stack = &wm.current_window_stack();
 
-    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "Center"));
-    m_custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
+    m_wallpaper_mode = mode_to_enum(g_config->read_entry("Background", "Mode", "Center"));
+    m_custom_background_color = Color::from_string(g_config->read_entry("Background", "Color", ""));
 
     invalidate_screen();
     invalidate_occlusions();
@@ -787,9 +787,8 @@ bool Compositor::set_background_color(DeprecatedString const& background_color)
 
     m_custom_background_color = color;
 
-    auto& wm = WindowManager::the();
-    wm.config()->write_entry("Background", "Color", background_color);
-    bool succeeded = !wm.config()->sync().is_error();
+    g_config->write_entry("Background", "Color", background_color);
+    bool succeeded = !g_config->sync().is_error();
 
     if (succeeded) {
         update_wallpaper_bitmap();
@@ -801,9 +800,8 @@ bool Compositor::set_background_color(DeprecatedString const& background_color)
 
 bool Compositor::set_wallpaper_mode(DeprecatedString const& mode)
 {
-    auto& wm = WindowManager::the();
-    wm.config()->write_entry("Background", "Mode", mode);
-    bool succeeded = !wm.config()->sync().is_error();
+    g_config->write_entry("Background", "Mode", mode);
+    bool succeeded = !g_config->sync().is_error();
 
     if (succeeded) {
         m_wallpaper_mode = mode_to_enum(mode);

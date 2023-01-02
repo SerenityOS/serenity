@@ -20,8 +20,7 @@ AppletManager::AppletManager()
 {
     s_the = this;
 
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
-    auto order = wm_config->read_entry("Applet", "Order");
+    auto order = g_config->read_entry("Applet", "Order");
     order_vector = order.split(',');
 }
 

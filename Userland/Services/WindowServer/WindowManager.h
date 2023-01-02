@@ -33,6 +33,8 @@ namespace WindowServer {
 int const double_click_speed_max = 900;
 int const double_click_speed_min = 100;
 
+extern RefPtr<Core::ConfigFile> g_config;
+
 class Screen;
 class MouseEvent;
 class Window;

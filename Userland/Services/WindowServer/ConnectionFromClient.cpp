@@ -872,9 +872,7 @@ Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_
 
 Messages::WindowServer::GetSystemThemeResponse ConnectionFromClient::get_system_theme()
 {
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
-    auto name = wm_config->read_entry("Theme", "Name");
-    return name;
+    return g_config->read_entry("Theme", "Name");
 }
 
 Messages::WindowServer::SetSystemThemeOverrideResponse ConnectionFromClient::set_system_theme_override(Core::AnonymousBuffer const& theme_override)
@@ -925,9 +923,7 @@ Messages::WindowServer::GetCursorHighlightColorResponse ConnectionFromClient::ge
 
 Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_theme()
 {
-    auto config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
-    auto name = config->read_entry("Mouse", "CursorTheme");
-    return name;
+    return g_config->read_entry("Mouse", "CursorTheme");
 }
 
 Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)
@@ -950,15 +946,10 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
 
     WindowManager::the().invalidate_after_theme_or_font_change();
 
-    auto wm_config_or_error = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
-    if (wm_config_or_error.is_error()) {
-        dbgln("Unable to open WindowServer.ini to set system fonts: {}", wm_config_or_error.error());
-        return false;
-    }
-    auto wm_config = wm_config_or_error.release_value();
-    wm_config->write_entry("Fonts", "Default", default_font_query);
-    wm_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
-    wm_config->write_entry("Fonts", "WindowTitle", window_title_font_query);
+    g_config->write_entry("Fonts", "Default", default_font_query);
+    g_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
+    g_config->write_entry("Fonts", "WindowTitle", window_title_font_query);
+
     return true;
 }
 

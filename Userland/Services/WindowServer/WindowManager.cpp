@@ -71,24 +71,22 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
 
 void WindowManager::reload_config()
 {
-    m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
-
-    unsigned workspace_rows = (unsigned)m_config->read_num_entry("Workspaces", "Rows", default_window_stack_rows);
-    unsigned workspace_columns = (unsigned)m_config->read_num_entry("Workspaces", "Columns", default_window_stack_columns);
+    unsigned workspace_rows = (unsigned)g_config->read_num_entry("Workspaces", "Rows", default_window_stack_rows);
+    unsigned workspace_columns = (unsigned)g_config->read_num_entry("Workspaces", "Columns", default_window_stack_columns);
     if (workspace_rows == 0 || workspace_columns == 0 || workspace_rows > max_window_stack_rows || workspace_columns > max_window_stack_columns) {
         workspace_rows = default_window_stack_rows;
         workspace_columns = default_window_stack_columns;
     }
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
-    m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_mouse_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
-    m_natural_scroll = m_config->read_bool_entry("Mouse", "NaturalScroll", false);
-    m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
+    m_double_click_speed = g_config->read_num_entry("Input", "DoubleClickSpeed", 250);
+    m_mouse_buttons_switched = g_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
+    m_natural_scroll = g_config->read_bool_entry("Mouse", "NaturalScroll", false);
+    m_cursor_highlight_radius = g_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
     Color default_highlight_color = Color::NamedColor::Red;
     default_highlight_color.set_alpha(110);
-    m_cursor_highlight_color = Color::from_string(m_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
-    apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
+    m_cursor_highlight_color = Color::from_string(g_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
+    apply_cursor_theme(g_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, DeprecatedString const& name) {
         if (bitmap) {
@@ -99,7 +97,7 @@ void WindowManager::reload_config()
         }
     };
 
-    reload_graphic(m_overlay_rect_shadow, m_config->read_entry("Graphics", "OverlayRectShadow"));
+    reload_graphic(m_overlay_rect_shadow, g_config->read_entry("Graphics", "OverlayRectShadow"));
     Compositor::the().invalidate_after_theme_or_font_change();
 
     WindowFrame::reload_config();
@@ -138,7 +136,7 @@ bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, D
     Compositor::the().screen_resolution_changed();
 
     if (save)
-        Screen::layout().save_config(*m_config);
+        Screen::layout().save_config(*g_config);
     return true;
 }
 
@@ -149,7 +147,7 @@ ScreenLayout WindowManager::get_screen_layout() const
 
 bool WindowManager::save_screen_layout(DeprecatedString& error_msg)
 {
-    if (!Screen::layout().save_config(*m_config)) {
+    if (!Screen::layout().save_config(*g_config)) {
         error_msg = "Could not save";
         return false;
     }
@@ -256,9 +254,9 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
     }
 
     if (save) {
-        m_config->write_num_entry("Workspaces", "Rows", window_stack_rows());
-        m_config->write_num_entry("Workspaces", "Columns", window_stack_columns());
-        return !m_config->sync().is_error();
+        g_config->write_num_entry("Workspaces", "Rows", window_stack_rows());
+        g_config->write_num_entry("Workspaces", "Columns", window_stack_columns());
+        return !g_config->sync().is_error();
     }
     return true;
 }
@@ -266,16 +264,16 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
 void WindowManager::set_acceleration_factor(double factor)
 {
     ScreenInput::the().set_acceleration_factor(factor);
-    dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->filename());
-    m_config->write_entry("Mouse", "AccelerationFactor", DeprecatedString::formatted("{}", factor));
+    dbgln("Saving acceleration factor {} to config file at {}", factor, g_config->filename());
+    g_config->write_entry("Mouse", "AccelerationFactor", DeprecatedString::formatted("{}", factor));
     sync_config_to_disk();
 }
 
 void WindowManager::set_scroll_step_size(unsigned step_size)
 {
     ScreenInput::the().set_scroll_step_size(step_size);
-    dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->filename());
-    m_config->write_entry("Mouse", "ScrollStepSize", DeprecatedString::number(step_size));
+    dbgln("Saving scroll step size {} to config file at {}", step_size, g_config->filename());
+    g_config->write_entry("Mouse", "ScrollStepSize", DeprecatedString::number(step_size));
     sync_config_to_disk();
 }
 
@@ -283,8 +281,8 @@ void WindowManager::set_double_click_speed(int speed)
 {
     VERIFY(speed >= double_click_speed_min && speed <= double_click_speed_max);
     m_double_click_speed = speed;
-    dbgln("Saving double-click speed {} to config file at {}", speed, m_config->filename());
-    m_config->write_entry("Input", "DoubleClickSpeed", DeprecatedString::number(speed));
+    dbgln("Saving double-click speed {} to config file at {}", speed, g_config->filename());
+    g_config->write_entry("Input", "DoubleClickSpeed", DeprecatedString::number(speed));
     sync_config_to_disk();
 }
 
@@ -296,8 +294,8 @@ int WindowManager::double_click_speed() const
 void WindowManager::set_mouse_buttons_switched(bool switched)
 {
     m_mouse_buttons_switched = switched;
-    dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
-    m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
+    dbgln("Saving mouse buttons switched state {} to config file at {}", switched, g_config->filename());
+    g_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
     sync_config_to_disk();
 }
 
@@ -309,8 +307,8 @@ bool WindowManager::are_mouse_buttons_switched() const
 void WindowManager::set_natural_scroll(bool inverted)
 {
     m_natural_scroll = inverted;
-    dbgln("Saving scroll inverted state {} to config file at {}", inverted, m_config->filename());
-    m_config->write_bool_entry("Mouse", "NaturalScroll", inverted);
+    dbgln("Saving scroll inverted state {} to config file at {}", inverted, g_config->filename());
+    g_config->write_bool_entry("Mouse", "NaturalScroll", inverted);
     sync_config_to_disk();
 }
 
@@ -2044,7 +2042,7 @@ void WindowManager::set_accepts_drag(bool accepts)
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
-    Compositor::the().set_background_color(m_config->read_entry("Background", "Color", palette().desktop_background().to_deprecated_string()));
+    Compositor::the().set_background_color(g_config->read_entry("Background", "Color", palette().desktop_background().to_deprecated_string()));
     WindowFrame::reload_config();
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& window) {
@@ -2073,9 +2071,9 @@ bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString t
     m_theme_overridden = false;
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
-    m_config->write_entry("Theme", "Name", theme_name);
+    g_config->write_entry("Theme", "Name", theme_name);
     if (!keep_desktop_background)
-        m_config->remove_entry("Background", "Color");
+        g_config->remove_entry("Background", "Color");
     if (!sync_config_to_disk())
         return false;
     invalidate_after_theme_or_font_change();
@@ -2103,7 +2101,7 @@ Optional<Core::AnonymousBuffer> WindowManager::get_theme_override() const
 void WindowManager::clear_theme_override()
 {
     m_theme_overridden = false;
-    auto previous_theme_name = m_config->read_entry("Theme", "Name");
+    auto previous_theme_name = g_config->read_entry("Theme", "Name");
     auto previous_theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name)));
     Gfx::set_system_theme(previous_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
@@ -2266,7 +2264,7 @@ void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
     reload_cursor(m_zoom_cursor, "Zoom");
 
     Compositor::the().invalidate_cursor();
-    m_config->write_entry("Mouse", "CursorTheme", theme_name);
+    g_config->write_entry("Mouse", "CursorTheme", theme_name);
     sync_config_to_disk();
 }
 
@@ -2275,7 +2273,7 @@ void WindowManager::set_cursor_highlight_radius(int radius)
     // TODO: Validate radius
     m_cursor_highlight_radius = radius;
     Compositor::the().invalidate_cursor();
-    m_config->write_num_entry("Mouse", "CursorHighlightRadius", radius);
+    g_config->write_num_entry("Mouse", "CursorHighlightRadius", radius);
     sync_config_to_disk();
 }
 
@@ -2283,7 +2281,7 @@ void WindowManager::set_cursor_highlight_color(Gfx::Color color)
 {
     m_cursor_highlight_color = color;
     Compositor::the().invalidate_cursor();
-    m_config->write_entry("Mouse", "CursorHighlightColor", color.to_deprecated_string());
+    g_config->write_entry("Mouse", "CursorHighlightColor", color.to_deprecated_string());
     sync_config_to_disk();
 }
 
@@ -2293,35 +2291,35 @@ void WindowManager::apply_system_effects(Vector<bool> effects, ShowGeometry geom
         return;
 
     m_system_effects = { effects, geometry };
-    m_config->write_bool_entry("Effects", "AnimateMenus", m_system_effects.animate_menus());
-    m_config->write_bool_entry("Effects", "FlashMenus", m_system_effects.flash_menus());
-    m_config->write_bool_entry("Effects", "AnimateWindows", m_system_effects.animate_windows());
-    m_config->write_bool_entry("Effects", "SmoothScrolling", m_system_effects.smooth_scrolling());
-    m_config->write_bool_entry("Effects", "TabAccents", m_system_effects.tab_accents());
-    m_config->write_bool_entry("Effects", "SplitterKnurls", m_system_effects.splitter_knurls());
-    m_config->write_bool_entry("Effects", "Tooltips", m_system_effects.tooltips());
-    m_config->write_bool_entry("Effects", "MenuShadow", m_system_effects.menu_shadow());
-    m_config->write_bool_entry("Effects", "WindowShadow", m_system_effects.window_shadow());
-    m_config->write_bool_entry("Effects", "TooltipShadow", m_system_effects.tooltip_shadow());
-    m_config->write_entry("Effects", "ShowGeometry", ShowGeometryTools::enum_to_string(geometry));
+    g_config->write_bool_entry("Effects", "AnimateMenus", m_system_effects.animate_menus());
+    g_config->write_bool_entry("Effects", "FlashMenus", m_system_effects.flash_menus());
+    g_config->write_bool_entry("Effects", "AnimateWindows", m_system_effects.animate_windows());
+    g_config->write_bool_entry("Effects", "SmoothScrolling", m_system_effects.smooth_scrolling());
+    g_config->write_bool_entry("Effects", "TabAccents", m_system_effects.tab_accents());
+    g_config->write_bool_entry("Effects", "SplitterKnurls", m_system_effects.splitter_knurls());
+    g_config->write_bool_entry("Effects", "Tooltips", m_system_effects.tooltips());
+    g_config->write_bool_entry("Effects", "MenuShadow", m_system_effects.menu_shadow());
+    g_config->write_bool_entry("Effects", "WindowShadow", m_system_effects.window_shadow());
+    g_config->write_bool_entry("Effects", "TooltipShadow", m_system_effects.tooltip_shadow());
+    g_config->write_entry("Effects", "ShowGeometry", ShowGeometryTools::enum_to_string(geometry));
     sync_config_to_disk();
 }
 
 void WindowManager::load_system_effects()
 {
     Vector<bool> effects = {
-        m_config->read_bool_entry("Effects", "AnimateMenus", true),
-        m_config->read_bool_entry("Effects", "FlashMenus", true),
-        m_config->read_bool_entry("Effects", "AnimateWindows", true),
-        m_config->read_bool_entry("Effects", "SmoothScrolling", true),
-        m_config->read_bool_entry("Effects", "TabAccents", true),
-        m_config->read_bool_entry("Effects", "SplitterKnurls", true),
-        m_config->read_bool_entry("Effects", "Tooltips", true),
-        m_config->read_bool_entry("Effects", "MenuShadow", true),
-        m_config->read_bool_entry("Effects", "WindowShadow", true),
-        m_config->read_bool_entry("Effects", "TooltipShadow", true)
+        g_config->read_bool_entry("Effects", "AnimateMenus", true),
+        g_config->read_bool_entry("Effects", "FlashMenus", true),
+        g_config->read_bool_entry("Effects", "AnimateWindows", true),
+        g_config->read_bool_entry("Effects", "SmoothScrolling", true),
+        g_config->read_bool_entry("Effects", "TabAccents", true),
+        g_config->read_bool_entry("Effects", "SplitterKnurls", true),
+        g_config->read_bool_entry("Effects", "Tooltips", true),
+        g_config->read_bool_entry("Effects", "MenuShadow", true),
+        g_config->read_bool_entry("Effects", "WindowShadow", true),
+        g_config->read_bool_entry("Effects", "TooltipShadow", true)
     };
-    ShowGeometry geometry = ShowGeometryTools::string_to_enum(m_config->read_entry("Effects", "ShowGeometry", "OnMoveAndResize"));
+    ShowGeometry geometry = ShowGeometryTools::string_to_enum(g_config->read_entry("Effects", "ShowGeometry", "OnMoveAndResize"));
     m_system_effects = { effects, geometry };
 
     ConnectionFromClient::for_each_client([&](auto& client) {
@@ -2331,7 +2329,7 @@ void WindowManager::load_system_effects()
 
 bool WindowManager::sync_config_to_disk()
 {
-    if (auto result = m_config->sync(); result.is_error()) {
+    if (auto result = g_config->sync(); result.is_error()) {
         dbgln("Failed to save config file: {}", result.error());
         return false;
     }

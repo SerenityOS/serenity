@@ -18,7 +18,10 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
 #include <signal.h>
-#include <string.h>
+
+namespace WindowServer {
+RefPtr<Core::ConfigFile> g_config;
+}
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
@@ -41,16 +44,16 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
     TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec tty"));
 
-    auto wm_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
-    auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
+    WindowServer::g_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes));
+    auto theme_name = WindowServer::g_config->read_entry("Theme", "Name", "Default");
 
     auto theme = TRY(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", theme_name)));
     Gfx::set_system_theme(theme);
     auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
 
-    auto default_font_query = wm_config->read_entry("Fonts", "Default", "Katica 10 400 0");
-    auto fixed_width_font_query = wm_config->read_entry("Fonts", "FixedWidth", "Csilla 10 400 0");
-    auto window_title_font_query = wm_config->read_entry("Fonts", "WindowTitle", "Katica 10 700 0");
+    auto default_font_query = WindowServer::g_config->read_entry("Fonts", "Default", "Katica 10 400 0");
+    auto fixed_width_font_query = WindowServer::g_config->read_entry("Fonts", "FixedWidth", "Csilla 10 400 0");
+    auto window_title_font_query = WindowServer::g_config->read_entry("Fonts", "WindowTitle", "Katica 10 700 0");
 
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
@@ -110,7 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             return true;
         };
 
-        if (screen_layout.load_config(*wm_config, &error_msg)) {
+        if (screen_layout.load_config(*WindowServer::g_config, &error_msg)) {
             for (auto& screen_info : screen_layout.screens)
                 if (screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::Device)
                     fb_devices_configured.set(screen_info.device.value());
@@ -129,14 +132,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto& screen_input = WindowServer::ScreenInput::the();
     screen_input.set_cursor_location(WindowServer::Screen::main().rect().center());
-    double f = atof(wm_config->read_entry("Mouse", "AccelerationFactor", "1.0").characters());
+    double f = atof(WindowServer::g_config->read_entry("Mouse", "AccelerationFactor", "1.0").characters());
     if (f < WindowServer::mouse_accel_min || f > WindowServer::mouse_accel_max) {
         dbgln("Mouse.AccelerationFactor out of range resetting to 1.0");
         f = 1.0;
-        wm_config->write_entry("Mouse", "AccelerationFactor", "1.0");
+        WindowServer::g_config->write_entry("Mouse", "AccelerationFactor", "1.0");
     }
     screen_input.set_acceleration_factor(f);
-    screen_input.set_scroll_step_size(wm_config->read_num_entry("Mouse", "ScrollStepSize", 4));
+    screen_input.set_scroll_step_size(WindowServer::g_config->read_num_entry("Mouse", "ScrollStepSize", 4));
 
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
