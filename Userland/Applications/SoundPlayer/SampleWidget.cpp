@@ -6,7 +6,6 @@
  */
 
 #include "SampleWidget.h"
-#include <AK/Math.h>
 #include <LibGUI/Painter.h>
 
 SampleWidget::SampleWidget()
