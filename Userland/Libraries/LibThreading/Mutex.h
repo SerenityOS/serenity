@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Format.h>
 #include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <pthread.h>

@@ -11,7 +11,6 @@
 #include <AK/Array.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Error.h>
-#include <AK/Format.h>
 #include <AK/Math.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>

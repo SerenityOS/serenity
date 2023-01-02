@@ -8,7 +8,6 @@
 
 #include <AK/DisjointChunks.h>
 #include <AK/FixedArray.h>
-#include <AK/Format.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibAudio/Sample.h>

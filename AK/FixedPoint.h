@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/Format.h>
 #include <AK/IntegralMath.h>
 #include <AK/NumericLimits.h>
 #include <AK/Types.h>

@@ -12,7 +12,6 @@
 
 #include <AK/Concepts.h>
 #include <AK/DisjointChunks.h>
-#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
