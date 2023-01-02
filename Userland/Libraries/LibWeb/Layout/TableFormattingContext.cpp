@@ -109,8 +109,13 @@ void TableFormattingContext::compute_table_measures()
         auto& computed_values = cell.box.computed_values();
         float padding_left = computed_values.padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
         float padding_right = computed_values.padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        float border_left = computed_values.border_left().width;
-        float border_right = computed_values.border_right().width;
+
+        auto is_left_most_cell = cell.column_index == 0;
+        auto is_right_most_cell = cell.column_index == m_columns.size() - 1;
+        auto should_hide_borders = cell.box.computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
+        float border_left = should_hide_borders && !is_left_most_cell ? 0 : computed_values.border_left().width;
+        float border_right = should_hide_borders && !is_right_most_cell ? 0 : computed_values.border_right().width;
+
         float width = computed_values.width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
         auto cell_intrinsic_offsets = padding_left + padding_right + border_left + border_right;
         auto min_content_width = calculate_min_content_width(cell.box);
@@ -261,10 +266,17 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         cell_state.padding_bottom = cell.box.computed_values().padding().bottom().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
         cell_state.padding_left = cell.box.computed_values().padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
         cell_state.padding_right = cell.box.computed_values().padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.border_top = cell.box.computed_values().border_top().width;
-        cell_state.border_bottom = cell.box.computed_values().border_bottom().width;
-        cell_state.border_left = cell.box.computed_values().border_left().width;
-        cell_state.border_right = cell.box.computed_values().border_right().width;
+
+        auto is_top_most_cell = cell.row_index == 0;
+        auto is_left_most_cell = cell.column_index == 0;
+        auto is_right_most_cell = cell.column_index == m_columns.size() - 1;
+        auto is_bottom_most_cell = cell.row_index == m_rows.size() - 1;
+        auto should_hide_borders = cell.box.computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
+
+        cell_state.border_top = (should_hide_borders && is_top_most_cell) ? 0 : cell.box.computed_values().border_top().width;
+        cell_state.border_bottom = (should_hide_borders && is_bottom_most_cell) ? 0 : cell.box.computed_values().border_bottom().width;
+        cell_state.border_left = (should_hide_borders && is_left_most_cell) ? 0 : cell.box.computed_values().border_left().width;
+        cell_state.border_right = (should_hide_borders && is_right_most_cell) ? 0 : cell.box.computed_values().border_right().width;
 
         cell_state.set_content_width(span_width - cell_state.border_box_left() - cell_state.border_box_right());
         auto independent_formatting_context = layout_inside(cell.box, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space));
