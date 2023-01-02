@@ -24,10 +24,10 @@ struct ScaledFontMetrics {
 };
 
 struct ScaledGlyphMetrics {
-    int ascender;
-    int descender;
-    int advance_width;
-    int left_side_bearing;
+    float ascender;
+    float descender;
+    float advance_width;
+    float left_side_bearing;
 };
 
 class VectorFont : public RefCounted<VectorFont> {

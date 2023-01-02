@@ -538,13 +538,11 @@ Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y
     auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
     auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
     auto glyph = m_glyf.glyph(glyph_offset);
-    int ascender = glyph.ascender();
-    int descender = glyph.descender();
     return Gfx::ScaledGlyphMetrics {
-        .ascender = (int)roundf(ascender * y_scale),
-        .descender = (int)roundf(descender * y_scale),
-        .advance_width = (int)roundf(horizontal_metrics.advance_width * x_scale),
-        .left_side_bearing = (int)roundf(horizontal_metrics.left_side_bearing * x_scale),
+        .ascender = static_cast<float>(glyph.ascender()) * y_scale,
+        .descender = static_cast<float>(glyph.descender()) * y_scale,
+        .advance_width = static_cast<float>(horizontal_metrics.advance_width) * x_scale,
+        .left_side_bearing = static_cast<float>(horizontal_metrics.left_side_bearing) * x_scale,
     };
 }
 
