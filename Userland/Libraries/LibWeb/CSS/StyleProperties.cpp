@@ -737,4 +737,10 @@ CSS::GridTrackPlacement StyleProperties::grid_row_start() const
     return value->as_grid_track_placement().grid_track_placement();
 }
 
+Optional<CSS::BorderCollapse> StyleProperties::border_collapse() const
+{
+    auto value = property(CSS::PropertyID::BorderCollapse);
+    return value_id_to_border_collapse(value->to_identifier());
+}
+
 }

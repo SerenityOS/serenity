@@ -60,6 +60,10 @@
         "content-box",
         "padding-box"
     ],
+    "border-collapse": [
+      "separate",
+      "collapse"
+    ],
     "box-sizing": [
         "border-box",
         "content-box"

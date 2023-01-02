@@ -202,6 +202,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style));
     case CSS::PropertyID::BorderBottomWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width));
+    case CSS::PropertyID::BorderCollapse:
+        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_collapse()));
     case CSS::PropertyID::BorderLeft: {
         auto border = layout_node.computed_values().border_left();
         auto width = LengthStyleValue::create(Length::make_px(border.width));

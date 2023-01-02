@@ -90,6 +90,7 @@ public:
     CSS::GridTrackPlacement grid_column_start() const;
     CSS::GridTrackPlacement grid_row_end() const;
     CSS::GridTrackPlacement grid_row_start() const;
+    Optional<CSS::BorderCollapse> border_collapse() const;
 
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;
