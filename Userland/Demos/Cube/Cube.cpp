@@ -21,7 +21,6 @@
 #include <LibGfx/Vector3.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 int const WIDTH = 200;

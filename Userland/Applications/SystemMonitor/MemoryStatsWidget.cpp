@@ -16,7 +16,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/StylePainter.h>
-#include <stdlib.h>
 
 REGISTER_WIDGET(SystemMonitor, MemoryStatsWidget)
 

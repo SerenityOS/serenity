@@ -14,7 +14,6 @@
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <ctype.h>
-#include <stdlib.h>
 
 namespace Gfx {
 

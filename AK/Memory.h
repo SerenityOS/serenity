@@ -12,7 +12,6 @@
 #if defined(KERNEL)
 #    include <Kernel/StdLib.h>
 #else
-#    include <stdlib.h>
 #    include <string.h>
 #endif
 

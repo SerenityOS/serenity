@@ -10,7 +10,6 @@
 #include <AK/Forward.h>
 #include <LibLine/StringMetrics.h>
 #include <LibLine/SuggestionManager.h>
-#include <stdlib.h>
 
 namespace Line {
 

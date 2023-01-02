@@ -11,7 +11,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
-#include <stdlib.h>
 
 namespace Web::HTML {
 

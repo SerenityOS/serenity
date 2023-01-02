@@ -8,7 +8,6 @@
 
 #include <AK/Array.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 typedef long double longdouble;

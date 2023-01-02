@@ -10,7 +10,6 @@
 #include <LaunchServer/LaunchServerEndpoint.h>
 #include <LibDesktop/Launcher.h>
 #include <LibIPC/ConnectionToServer.h>
-#include <stdlib.h>
 
 namespace Desktop {
 

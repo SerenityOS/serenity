@@ -12,7 +12,6 @@
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <arpa/inet.h>
-#include <stdlib.h>
 
 namespace DNS {
 
