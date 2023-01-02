@@ -55,7 +55,7 @@ private:
 
 class Glyph {
 public:
-    Glyph(GlyphBitmap const& glyph_bitmap, int left_bearing, int advance, int ascent)
+    Glyph(GlyphBitmap const& glyph_bitmap, float left_bearing, float advance, float ascent)
         : m_glyph_bitmap(glyph_bitmap)
         , m_left_bearing(left_bearing)
         , m_advance(advance)
@@ -63,7 +63,7 @@ public:
     {
     }
 
-    Glyph(RefPtr<Bitmap> bitmap, int left_bearing, int advance, int ascent)
+    Glyph(RefPtr<Bitmap> bitmap, float left_bearing, float advance, float ascent)
         : m_bitmap(bitmap)
         , m_left_bearing(left_bearing)
         , m_advance(advance)
@@ -74,16 +74,16 @@ public:
     bool is_glyph_bitmap() const { return !m_bitmap; }
     GlyphBitmap glyph_bitmap() const { return m_glyph_bitmap; }
     RefPtr<Bitmap> bitmap() const { return m_bitmap; }
-    int left_bearing() const { return m_left_bearing; }
-    int advance() const { return m_advance; }
-    int ascent() const { return m_ascent; }
+    float left_bearing() const { return m_left_bearing; }
+    float advance() const { return m_advance; }
+    float ascent() const { return m_ascent; }
 
 private:
     GlyphBitmap m_glyph_bitmap;
     RefPtr<Bitmap> m_bitmap;
-    int m_left_bearing;
-    int m_advance;
-    int m_ascent;
+    float m_left_bearing;
+    float m_advance;
+    float m_ascent;
 };
 
 struct FontPixelMetrics {
