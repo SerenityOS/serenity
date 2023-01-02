@@ -243,6 +243,8 @@ void Service::spawn(int socket_fd)
 
 void Service::did_exit(int exit_code)
 {
+    using namespace AK::TimeLiterals;
+
     VERIFY(m_pid > 0);
     VERIFY(!m_multi_instance);
 
@@ -254,10 +256,10 @@ void Service::did_exit(int exit_code)
     if (!m_keep_alive)
         return;
 
-    int run_time_in_msec = m_run_timer.elapsed();
+    auto run_time = m_run_timer.elapsed_time();
     bool exited_successfully = exit_code == 0;
 
-    if (!exited_successfully && run_time_in_msec < 1000) {
+    if (!exited_successfully && run_time < 1_sec) {
         switch (m_restart_attempts) {
         case 0:
             dbgln("Trying again");

@@ -100,6 +100,8 @@ bool CatDog::is_inspector() const
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
+    using namespace AK::TimeLiterals;
+
     if (has_flag(m_state, State::Alert))
         return;
 
@@ -127,7 +129,7 @@ void CatDog::timer_event(Core::TimerEvent&)
     if (has_any_flag(m_state, State::Directions)) {
         m_idle_sleep_timer.start();
     } else {
-        if (m_idle_sleep_timer.elapsed() > 5'000)
+        if (m_idle_sleep_timer.elapsed_time() > 5_sec)
             m_state |= State::Sleeping;
         else
             m_state |= State::Idle;
