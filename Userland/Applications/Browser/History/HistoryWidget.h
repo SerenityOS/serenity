@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Applications/Browser/History.h"
+#include "../History.h"
 #include "HistoryModel.h"
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/TextBox.h>

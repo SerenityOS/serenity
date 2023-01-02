@@ -7,10 +7,10 @@
 #include "TextTool.h"
 #include "../ImageEditor.h"
 #include "../Layer.h"
-#include "LibGUI/FontPicker.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/FontPicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>

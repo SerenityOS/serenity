@@ -5,7 +5,6 @@
  */
 
 #include "HelpWindow.h"
-#include "LibFileSystemAccessClient/Client.h"
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
 #include <AK/ScopeGuard.h>
@@ -13,6 +12,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LibCore/Directory.h"
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>
@@ -13,6 +12,7 @@
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/Stream.h>

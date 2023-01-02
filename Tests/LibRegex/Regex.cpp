@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LibRegex/RegexMatcher.h"
 #include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
 #include <AK/StringBuilder.h>
 #include <AK/Tuple.h>
 #include <LibRegex/Regex.h>
 #include <LibRegex/RegexDebug.h>
+#include <LibRegex/RegexMatcher.h>
 #include <stdio.h>
 
 static ECMAScriptOptions match_test_api_options(const ECMAScriptOptions options)

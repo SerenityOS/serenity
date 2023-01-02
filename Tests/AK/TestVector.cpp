@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/ReverseIterator.h"
 #include <LibTest/TestCase.h>
 
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/ReverseIterator.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct)

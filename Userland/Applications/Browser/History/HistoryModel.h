@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Applications/Browser/History.h"
 #include <AK/Vector.h>
+#include <Applications/Browser/History.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
 

@@ -5,8 +5,8 @@
  */
 
 #include "AST.h"
+#include "Formatter.h"
 #include "Shell.h"
-#include "Shell/Formatter.h"
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>

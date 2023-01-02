@@ -16,7 +16,6 @@
 #include "GMLPreviewWidget.h"
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
-#include "LibGUI/Button.h"
 #include "Locator.h"
 #include "Project.h"
 #include "ProjectBuilder.h"
@@ -25,6 +24,7 @@
 #include "ToDoEntriesWidget.h"
 #include <LibCoredump/Inspector.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>

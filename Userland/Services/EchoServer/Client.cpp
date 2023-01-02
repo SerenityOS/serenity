@@ -5,7 +5,7 @@
  */
 
 #include "Client.h"
-#include "LibCore/EventLoop.h"
+#include <LibCore/EventLoop.h>
 
 Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket)
     : m_id(id)

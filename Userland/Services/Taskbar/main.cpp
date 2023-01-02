@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LibGUI/Window.h"
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
@@ -25,6 +24,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Process.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
