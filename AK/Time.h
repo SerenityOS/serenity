@@ -254,15 +254,24 @@ public:
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
-    bool operator==(Time const& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
     Time operator+(Time const& other) const;
     Time& operator+=(Time const& other);
     Time operator-(Time const& other) const;
     Time& operator-=(Time const& other);
-    bool operator<(Time const& other) const;
-    bool operator<=(Time const& other) const;
-    bool operator>(Time const& other) const;
-    bool operator>=(Time const& other) const;
+
+    constexpr bool operator==(Time const& other) const = default;
+    constexpr int operator<=>(Time const& other) const
+    {
+        if (int cmp = (m_seconds > other.m_seconds ? 1 : m_seconds < other.m_seconds ? -1
+                                                                                     : 0);
+            cmp != 0)
+            return cmp;
+        if (int cmp = (m_nanoseconds > other.m_nanoseconds ? 1 : m_nanoseconds < other.m_nanoseconds ? -1
+                                                                                                     : 0);
+            cmp != 0)
+            return cmp;
+        return 0;
+    }
 
 private:
     constexpr explicit Time(i64 seconds, u32 nanoseconds)
