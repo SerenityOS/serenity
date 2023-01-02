@@ -44,26 +44,6 @@ done
 for d in output/*/; do
     section=$(basename "$d")
     section_number="${section#man}"
-    pandoc -f gfm -t html5 -s \
-        -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
-        --metadata title="Section ${section_number} - SerenityOS man pages" \
-        -o "output/${section}/index.html" \
-        <(
-            for f in "$d"/*; do
-                filename=$(basename "$f")
-                name="${filename%.html}"
-                if [[ "$filename" == "index.html" ]]; then
-                    continue
-                fi
-                echo "- [${name}](${filename})"
-            done
-        )
-done
-
-# Generate man page listings through pandoc
-for d in output/*/; do
-    section=$(basename "$d")
-    section_number="${section#man}"
     case "${section_number}" in
         1) section_title="User Programs";;
         2) section_title="System Calls";;
