@@ -24,7 +24,6 @@
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
-#include <stdlib.h>
 
 namespace JS::Temporal {
 

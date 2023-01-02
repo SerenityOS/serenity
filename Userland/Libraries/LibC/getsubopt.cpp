@@ -6,7 +6,6 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 

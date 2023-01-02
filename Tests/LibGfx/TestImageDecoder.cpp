@@ -18,7 +18,6 @@
 #include <LibGfx/PPMLoader.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 TEST_CASE(test_bmp)

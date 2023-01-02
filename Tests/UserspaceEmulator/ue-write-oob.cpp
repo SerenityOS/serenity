@@ -8,7 +8,6 @@
 #include <LibCore/ArgsParser.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/mman.h>
 
 static void write8(void* ptr) { *(uint8_t volatile*)ptr = 1; }

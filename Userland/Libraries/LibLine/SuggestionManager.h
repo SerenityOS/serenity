@@ -11,7 +11,6 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibLine/Style.h>
-#include <stdlib.h>
 
 namespace Line {
 

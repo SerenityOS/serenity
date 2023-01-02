@@ -12,7 +12,6 @@
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <stdlib.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

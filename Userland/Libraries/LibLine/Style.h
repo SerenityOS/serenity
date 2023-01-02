@@ -10,7 +10,6 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
-#include <stdlib.h>
 
 namespace Line {
 

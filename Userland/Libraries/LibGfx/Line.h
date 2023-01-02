@@ -12,7 +12,6 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
-#include <stdlib.h>
 
 namespace Gfx {
 

@@ -15,7 +15,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Timer.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <sys/ioctl.h>
 
 namespace AudioServer {

@@ -15,7 +15,6 @@
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/Typeface.h>
 #include <LibGfx/Font/WOFF/Font.h>
-#include <stdlib.h>
 
 namespace Gfx {
 

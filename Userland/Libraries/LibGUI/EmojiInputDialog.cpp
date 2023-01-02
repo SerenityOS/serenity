@@ -25,7 +25,6 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
-#include <stdlib.h>
 
 namespace GUI {
 

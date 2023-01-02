@@ -20,7 +20,6 @@
 #include <fenv.h>
 #include <math.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 #if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic push

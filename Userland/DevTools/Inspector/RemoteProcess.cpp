@@ -8,7 +8,6 @@
 #include "RemoteObject.h"
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
-#include <stdlib.h>
 
 namespace Inspector {
 
