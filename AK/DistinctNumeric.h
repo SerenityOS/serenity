@@ -24,7 +24,7 @@ namespace AK {
  * - No matter the values of these, `DistinctNumeric` always implements `==` and `!=`.
  * - If `Arithmetic` is present, then `a+b`, `a-b`, `+a`, `-a`, `a*b`, `a/b`, `a%b`, and the respective `a_=b` versions are implemented.
  * - If `CastToBool` is present, then `!a`, `a&&b`, and `a||b` are implemented (but not `operator bool()`, because of overzealous integer promotion rules).
- * - If `Comparison` is present, then `a>b`, `a<b`, `a>=b`, and `a<=b` are implemented.
+ * - If `Comparison` is present, then `a>b`, `a<b`, `a>=b`, and `a<=b` are implemented via operator<=>
  * - If `Flags` is present, then `~a`, `a&b`, `a|b`, `a^b`, `a&=b`, `a|=b`, and `a^=b` are implemented.
  * - If `Increment` is present, then `++a`, `a++`, `--a`, and `a--` are implemented.
  * - If `Shift` is present, then `a<<b`, `a>>b`, `a<<=b`, `a>>=b` are implemented.
@@ -37,9 +37,6 @@ namespace AK {
  *
  * I intentionally decided against overloading `&a` because these shall remain
  * numeric types.
- *
- * The C++20 `operator<=>` would require, among other things `std::weak_equality`.
- * Since we do not have that, it cannot be implemented.
  *
  * The are many operators that do not work on `int`, so I left them out:
  * `a[b]`, `*a`, `a->b`, `a.b`, `a->*b`, `a.*b`.
@@ -144,27 +141,12 @@ public:
     }
 
     // Only implemented when `Comparison` is true:
-    constexpr bool operator>(Self const& other) const
+    constexpr int operator<=>(Self const& other) const
     {
-        static_assert(options.comparisons, "'a>b' is only available for DistinctNumeric types with 'Comparison'.");
-        return this->m_value > other.m_value;
+        static_assert(options.comparisons, "'a<=>b' is only available for DistinctNumeric types with 'Comparison'.");
+        return this->m_value > other.m_value ? 1 : this->m_value < other.m_value ? -1
+                                                                                 : 0;
     }
-    constexpr bool operator<(Self const& other) const
-    {
-        static_assert(options.comparisons, "'a<b' is only available for DistinctNumeric types with 'Comparison'.");
-        return this->m_value < other.m_value;
-    }
-    constexpr bool operator>=(Self const& other) const
-    {
-        static_assert(options.comparisons, "'a>=b' is only available for DistinctNumeric types with 'Comparison'.");
-        return this->m_value >= other.m_value;
-    }
-    constexpr bool operator<=(Self const& other) const
-    {
-        static_assert(options.comparisons, "'a<=b' is only available for DistinctNumeric types with 'Comparison'.");
-        return this->m_value <= other.m_value;
-    }
-    // 'operator<=>' cannot be implemented. See class comment.
 
     // Only implemented when `CastToBool` is true:
     constexpr bool operator!() const
