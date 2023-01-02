@@ -20,170 +20,81 @@
 
 namespace IPC {
 
-Encoder& Encoder::operator<<(bool value)
+template<>
+bool encode(Encoder& encoder, float const& value)
 {
-    return *this << (u8)value;
+    return encoder.encode(bit_cast<u32>(value));
 }
 
-Encoder& Encoder::operator<<(u8 value)
+template<>
+bool encode(Encoder& encoder, double const& value)
 {
-    m_buffer.data.append(value);
-    return *this;
+    return encoder.encode(bit_cast<u64>(value));
 }
 
-Encoder& Encoder::operator<<(u16 value)
+template<>
+bool encode(Encoder& encoder, StringView const& value)
 {
-    m_buffer.data.ensure_capacity(m_buffer.data.size() + 2);
-    m_buffer.data.unchecked_append((u8)value);
-    m_buffer.data.unchecked_append((u8)(value >> 8));
-    return *this;
+    auto result = encoder.append(reinterpret_cast<u8 const*>(value.characters_without_null_termination()), value.length());
+    return !result.is_error();
 }
 
-void Encoder::encode_u32(u32 value)
-{
-    m_buffer.data.ensure_capacity(m_buffer.data.size() + 4);
-    m_buffer.data.unchecked_append((u8)value);
-    m_buffer.data.unchecked_append((u8)(value >> 8));
-    m_buffer.data.unchecked_append((u8)(value >> 16));
-    m_buffer.data.unchecked_append((u8)(value >> 24));
-}
-
-void Encoder::encode_u64(u64 value)
-{
-    m_buffer.data.ensure_capacity(m_buffer.data.size() + 8);
-    m_buffer.data.unchecked_append((u8)value);
-    m_buffer.data.unchecked_append((u8)(value >> 8));
-    m_buffer.data.unchecked_append((u8)(value >> 16));
-    m_buffer.data.unchecked_append((u8)(value >> 24));
-    m_buffer.data.unchecked_append((u8)(value >> 32));
-    m_buffer.data.unchecked_append((u8)(value >> 40));
-    m_buffer.data.unchecked_append((u8)(value >> 48));
-    m_buffer.data.unchecked_append((u8)(value >> 56));
-}
-
-Encoder& Encoder::operator<<(unsigned value)
-{
-    encode_u32(value);
-    return *this;
-}
-
-Encoder& Encoder::operator<<(unsigned long value)
-{
-    if constexpr (sizeof(value) == 4)
-        encode_u32(value);
-    else
-        encode_u64(value);
-    return *this;
-}
-
-Encoder& Encoder::operator<<(unsigned long long value)
-{
-    if constexpr (sizeof(value) == 4)
-        encode_u32(value);
-    else
-        encode_u64(value);
-    return *this;
-}
-
-Encoder& Encoder::operator<<(i8 value)
-{
-    m_buffer.data.append((u8)value);
-    return *this;
-}
-
-Encoder& Encoder::operator<<(i16 value)
-{
-    m_buffer.data.ensure_capacity(m_buffer.data.size() + 2);
-    m_buffer.data.unchecked_append((u8)value);
-    m_buffer.data.unchecked_append((u8)(value >> 8));
-    return *this;
-}
-
-Encoder& Encoder::operator<<(i32 value)
-{
-    m_buffer.data.ensure_capacity(m_buffer.data.size() + 4);
-    m_buffer.data.unchecked_append((u8)value);
-    m_buffer.data.unchecked_append((u8)(value >> 8));
-    m_buffer.data.unchecked_append((u8)(value >> 16));
-    m_buffer.data.unchecked_append((u8)(value >> 24));
-    return *this;
-}
-
-Encoder& Encoder::operator<<(i64 value)
-{
-    m_buffer.data.ensure_capacity(m_buffer.data.size() + 8);
-    m_buffer.data.unchecked_append((u8)value);
-    m_buffer.data.unchecked_append((u8)(value >> 8));
-    m_buffer.data.unchecked_append((u8)(value >> 16));
-    m_buffer.data.unchecked_append((u8)(value >> 24));
-    m_buffer.data.unchecked_append((u8)(value >> 32));
-    m_buffer.data.unchecked_append((u8)(value >> 40));
-    m_buffer.data.unchecked_append((u8)(value >> 48));
-    m_buffer.data.unchecked_append((u8)(value >> 56));
-    return *this;
-}
-
-Encoder& Encoder::operator<<(float value)
-{
-    u32 as_u32 = bit_cast<u32>(value);
-    return *this << as_u32;
-}
-
-Encoder& Encoder::operator<<(double value)
-{
-    u64 as_u64 = bit_cast<u64>(value);
-    return *this << as_u64;
-}
-
-Encoder& Encoder::operator<<(char const* value)
-{
-    return *this << StringView { value, strlen(value) };
-}
-
-Encoder& Encoder::operator<<(StringView value)
-{
-    m_buffer.data.append((u8 const*)value.characters_without_null_termination(), value.length());
-    return *this;
-}
-
-Encoder& Encoder::operator<<(DeprecatedString const& value)
+template<>
+bool encode(Encoder& encoder, DeprecatedString const& value)
 {
     if (value.is_null())
-        return *this << (i32)-1;
-    *this << static_cast<i32>(value.length());
-    return *this << value.view();
+        return encoder.encode(-1);
+
+    if (!encoder.encode(static_cast<i32>(value.length())))
+        return false;
+    return encoder.encode(value.view());
 }
 
-Encoder& Encoder::operator<<(ByteBuffer const& value)
+template<>
+bool encode(Encoder& encoder, ByteBuffer const& value)
 {
-    *this << static_cast<i32>(value.size());
-    m_buffer.data.append(value.data(), value.size());
-    return *this;
+    if (!encoder.encode(static_cast<i32>(value.size())))
+        return false;
+
+    auto result = encoder.append(value.data(), value.size());
+    return !result.is_error();
 }
 
-Encoder& Encoder::operator<<(JsonValue const& value)
+template<>
+bool encode(Encoder& encoder, JsonValue const& value)
 {
-    *this << value.serialized<StringBuilder>();
-    return *this;
+    return encoder.encode(value.serialized<StringBuilder>());
 }
 
-Encoder& Encoder::operator<<(URL const& value)
+template<>
+bool encode(Encoder& encoder, URL const& value)
 {
-    return *this << value.to_deprecated_string();
+    return encoder.encode(value.to_deprecated_string());
 }
 
-Encoder& Encoder::operator<<(Dictionary const& dictionary)
+template<>
+bool encode(Encoder& encoder, Dictionary const& dictionary)
 {
-    *this << (u64)dictionary.size();
-    dictionary.for_each_entry([this](auto& key, auto& value) {
-        *this << key << value;
+    if (!encoder.encode(static_cast<u64>(dictionary.size())))
+        return false;
+
+    bool had_error = false;
+
+    dictionary.for_each_entry([&](auto const& key, auto const& value) {
+        if (had_error)
+            return;
+        if (!encoder.encode(key) || !encoder.encode(value))
+            had_error = true;
     });
-    return *this;
+
+    return !had_error;
 }
 
-Encoder& Encoder::operator<<(File const& file)
+template<>
+bool encode(Encoder& encoder, File const& file)
 {
     int fd = file.fd();
+
     if (fd != -1) {
         auto result = dup(fd);
         if (result < 0) {
@@ -192,40 +103,49 @@ Encoder& Encoder::operator<<(File const& file)
         }
         fd = result;
     }
-    m_buffer.fds.append(adopt_ref(*new AutoCloseFileDescriptor(fd)));
-    return *this;
+
+    if (encoder.append_file_descriptor(fd).is_error())
+        return false;
+    return true;
 }
 
-// No-op.
-Encoder& Encoder::operator<<(AK::Empty const&)
+template<>
+bool encode(Encoder&, Empty const&)
 {
-    return *this;
+    return true;
 }
 
 template<>
 bool encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
 {
-    encoder << buffer.is_valid();
+    if (!encoder.encode(buffer.is_valid()))
+        return false;
+
     if (buffer.is_valid()) {
-        encoder << (u32)buffer.size();
-        encoder << IPC::File(buffer.fd());
+        if (!encoder.encode(static_cast<u32>(buffer.size())))
+            return false;
+        if (!encoder.encode(IPC::File { buffer.fd() }))
+            return false;
     }
+
     return true;
 }
 
 template<>
 bool encode(Encoder& encoder, Core::DateTime const& datetime)
 {
-    encoder << static_cast<i64>(datetime.timestamp());
-    return true;
+    return encoder.encode(static_cast<i64>(datetime.timestamp()));
 }
 
 template<>
 bool encode(Encoder& encoder, Core::ProxyData const& proxy)
 {
-    encoder << to_underlying(proxy.type);
-    encoder << proxy.host_ipv4;
-    encoder << proxy.port;
+    if (!encoder.encode(proxy.type))
+        return false;
+    if (!encoder.encode(proxy.host_ipv4))
+        return false;
+    if (!encoder.encode(proxy.port))
+        return false;
     return true;
 }
 
