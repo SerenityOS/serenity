@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 
@@ -35,6 +36,14 @@ public:
         for (auto& it : m_entries) {
             callback(it.key, it.value);
         }
+    }
+
+    template<FallibleFunction<DeprecatedString const&, DeprecatedString const&> Callback>
+    ErrorOr<void> try_for_each_entry(Callback&& callback) const
+    {
+        for (auto const& it : m_entries)
+            TRY(callback(it.key, it.value));
+        return {};
     }
 
     HashMap<DeprecatedString, DeprecatedString> const& entries() const { return m_entries; }
