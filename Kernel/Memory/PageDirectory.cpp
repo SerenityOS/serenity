@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/PageDirectory.h>

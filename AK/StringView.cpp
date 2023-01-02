@@ -8,7 +8,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Find.h>
 #include <AK/Function.h>
-#include <AK/Memory.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>

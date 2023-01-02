@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Process.h>

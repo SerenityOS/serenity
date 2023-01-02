@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
