@@ -9,7 +9,6 @@
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
-#include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 
 #ifdef ENABLE_COMPILETIME_FORMAT_CHECK

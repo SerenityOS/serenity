@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/StdLibExtras.h>
 
 namespace PDF {
 

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
