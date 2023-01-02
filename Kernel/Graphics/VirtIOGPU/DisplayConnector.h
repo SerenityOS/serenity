@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/BinaryBufferWriter.h>
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Graphics/Console/Console.h>

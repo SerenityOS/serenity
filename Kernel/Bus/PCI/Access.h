@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Try.h>

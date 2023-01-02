@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AnyOf.h>
 #include <AK/Error.h>
 #include <AK/Math.h>
 #include <AK/NumericLimits.h>

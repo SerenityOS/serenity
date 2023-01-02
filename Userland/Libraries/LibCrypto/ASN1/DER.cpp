@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitmapView.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/ASN1/DER.h>

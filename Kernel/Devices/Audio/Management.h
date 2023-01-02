@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>

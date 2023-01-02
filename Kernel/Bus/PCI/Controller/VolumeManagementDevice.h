@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 #include <Kernel/Locking/Spinlock.h>
 

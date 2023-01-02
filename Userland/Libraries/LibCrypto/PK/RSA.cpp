@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitmapView.h>
 #include <AK/Debug.h>
 #include <AK/Random.h>
 #include <AK/ScopeGuard.h>
