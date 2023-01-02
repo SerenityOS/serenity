@@ -23,7 +23,7 @@ struct CSVExportDialogPage {
     explicit CSVExportDialogPage(Sheet const&);
 
     NonnullRefPtr<GUI::WizardPage> page() { return *m_page; }
-    ErrorOr<XSV> make_writer(OutputStream&);
+    ErrorOr<NonnullOwnPtr<XSV>> make_writer(Core::Stream::Handle<Core::Stream::Stream>);
 
 protected:
     void update_preview();

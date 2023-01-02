@@ -10,10 +10,9 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
-#include <AK/MemoryStream.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
-#include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
@@ -90,7 +89,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     update_preview();
 }
 
-auto CSVExportDialogPage::make_writer(OutputStream& stream) -> ErrorOr<XSV>
+auto CSVExportDialogPage::make_writer(Core::Stream::Handle<Core::Stream::Stream> stream) -> ErrorOr<NonnullOwnPtr<XSV>>
 {
     auto delimiter = TRY([this]() -> ErrorOr<DeprecatedString> {
         if (m_delimiter_other_radio->is_checked()) {
@@ -152,23 +151,22 @@ auto CSVExportDialogPage::make_writer(OutputStream& stream) -> ErrorOr<XSV>
     if (should_quote_all_fields)
         behaviors = behaviors | Writer::WriterBehavior::QuoteAll;
 
-    return XSV(stream, m_data, move(traits), *headers, behaviors);
+    return try_make<XSV>(move(stream), m_data, move(traits), *headers, behaviors);
 }
 
 void CSVExportDialogPage::update_preview()
 {
-    DuplexMemoryStream memory_stream;
-    auto writer_or_error = make_writer(memory_stream);
-    if (!writer_or_error.is_error()) {
-        m_data_preview_text_editor->set_text(DeprecatedString::formatted("Cannot update preview: {}", writer_or_error.error()));
-        return;
-    }
-    auto writer = writer_or_error.release_value();
-
-    writer.generate_preview();
-    auto buffer = memory_stream.copy_into_contiguous_buffer();
-    m_data_preview_text_editor->set_text(StringView(buffer));
-    m_data_preview_text_editor->update();
+    auto maybe_error = [this]() -> ErrorOr<void> {
+        Core::Stream::AllocatingMemoryStream memory_stream;
+        auto writer = TRY(make_writer(Core::Stream::Handle<Core::Stream::Stream>(memory_stream)));
+        TRY(writer->generate_preview());
+        auto buffer = TRY(memory_stream.read_until_eof());
+        m_data_preview_text_editor->set_text(StringView(buffer));
+        m_data_preview_text_editor->update();
+        return {};
+    }();
+    if (maybe_error.is_error())
+        m_data_preview_text_editor->set_text(DeprecatedString::formatted("Cannot update preview: {}", maybe_error.error()));
 }
 
 ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
@@ -188,12 +186,9 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
         if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return Error::from_string_literal("CSV Export was cancelled");
 
-        auto file_stream = Core::OutputFileStream(file);
-        auto writer = TRY(page.make_writer(file_stream));
-        writer.generate();
-        if (writer.has_error())
-            return Error::from_string_literal("CSV Export failed");
-        return {};
+        auto file_stream = TRY(try_make<Core::Stream::WrappedAKOutputStream>(TRY(try_make<Core::OutputFileStream>(file))));
+        auto writer = TRY(page.make_writer(move(file_stream)));
+        return writer->generate();
     };
 
     auto export_worksheet = [&]() -> ErrorOr<void> {
