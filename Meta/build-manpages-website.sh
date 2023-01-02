@@ -44,8 +44,12 @@ for md_file in $(find "${MAN_DIR}" -iname '*.md' | ${SORT}); do
         --lua-filter=Meta/convert-markdown-links.lua \
         --metadata title="${name}(${section_number}) - SerenityOS man pages" \
         -o "${output_file}" \
-        "${md_file}"
+        "${md_file}" &
 done
+
+# Wait for all pandoc executions to finish so that man page indices are always correct.
+# shellcheck disable=SC2046 # Word splitting is intentional here
+wait $(jobs -p)
 
 # Generate man page listings through pandoc
 for section_directory in output/*/; do
@@ -78,7 +82,7 @@ for section_directory in output/*/; do
                 fi
                 echo "- [${name}](${filename})"
             done
-        )
+        ) &
 done
 
 # Generate main landing page listings through pandoc
@@ -87,12 +91,12 @@ pandoc -f gfm -t html5 -s \
     -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
     --metadata title="SerenityOS man pages" \
     -o output/index.html \
-    Meta/Websites/man.serenityos.org/index.md
+    Meta/Websites/man.serenityos.org/index.md &
 pandoc -f gfm -t html5 -s \
     -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
     --metadata title="Can't run applications" \
     -o output/cant-run-application.html \
-    Meta/Websites/man.serenityos.org/cant-run-application.md
+    Meta/Websites/man.serenityos.org/cant-run-application.md &
 
 # Copy pre-made files
 echo 'Copying images'
@@ -108,3 +112,6 @@ while read -r p; do
 done < icons.txt
 
 rm icons.txt
+
+# shellcheck disable=SC2046 # Word splitting is intentional here
+wait $(jobs -p)
