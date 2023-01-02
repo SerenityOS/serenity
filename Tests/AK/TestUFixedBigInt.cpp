@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Format.h>
 #include <AK/NumericLimits.h>
 #include <AK/Random.h>
 #include <AK/UFixedBigInt.h>

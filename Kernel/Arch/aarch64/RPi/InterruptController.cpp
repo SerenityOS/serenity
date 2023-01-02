@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <Kernel/Arch/aarch64/RPi/InterruptController.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>

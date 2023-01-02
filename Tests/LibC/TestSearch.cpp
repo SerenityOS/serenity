@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Format.h>
 #include <bits/search.h>
 #include <search.h>
 #include <string.h>

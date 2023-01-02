@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <AK/Math.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/Matrix4x4.h>

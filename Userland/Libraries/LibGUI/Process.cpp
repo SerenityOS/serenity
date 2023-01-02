@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <AK/StringView.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Process.h>

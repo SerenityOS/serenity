@@ -10,7 +10,6 @@
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
 
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibTest/TestCase.h>

@@ -6,7 +6,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/RefPtr.h>
 
 #include <LibSQL/BTree.h>

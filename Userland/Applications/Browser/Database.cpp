@@ -5,7 +5,6 @@
  */
 
 #include "Database.h"
-#include <AK/Format.h>
 #include <AK/StringView.h>
 
 namespace Browser {
