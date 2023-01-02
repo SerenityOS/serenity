@@ -266,9 +266,8 @@
   "border-collapse": {
     "inherited": true,
     "initial": "separate",
-    "valid-identifiers": [
-      "collapse",
-      "separate"
+    "valid-types": [
+      "border-collapse"
     ]
   },
   "border-left-color": {

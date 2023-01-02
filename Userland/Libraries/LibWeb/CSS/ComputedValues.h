@@ -72,6 +72,7 @@ public:
     static CSS::GridTrackPlacement grid_row_start() { return CSS::GridTrackPlacement::make_auto(); }
     static CSS::Size column_gap() { return CSS::Size::make_auto(); }
     static CSS::Size row_gap() { return CSS::Size::make_auto(); }
+    static CSS::BorderCollapse border_collapse() { return CSS::BorderCollapse::Separate; }
 };
 
 struct BackgroundLayerData {
@@ -192,6 +193,7 @@ public:
     CSS::GridTrackPlacement const& grid_row_start() const { return m_noninherited.grid_row_start; }
     CSS::Size const& column_gap() const { return m_noninherited.column_gap; }
     CSS::Size const& row_gap() const { return m_noninherited.row_gap; }
+    CSS::BorderCollapse border_collapse() const { return m_noninherited.border_collapse; }
 
     CSS::LengthBox const& inset() const { return m_noninherited.inset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -316,6 +318,7 @@ protected:
         CSS::GridTrackPlacement grid_row_start { InitialValues::grid_row_start() };
         CSS::Size column_gap { InitialValues::column_gap() };
         CSS::Size row_gap { InitialValues::row_gap() };
+        CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
     } m_noninherited;
 };
 
@@ -396,6 +399,7 @@ public:
     void set_grid_row_start(CSS::GridTrackPlacement value) { m_noninherited.grid_row_start = value; }
     void set_column_gap(CSS::Size const& column_gap) { m_noninherited.column_gap = column_gap; }
     void set_row_gap(CSS::Size const& row_gap) { m_noninherited.row_gap = row_gap; }
+    void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_noninherited.border_collapse = border_collapse; }
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }
