@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/ProcFS/DirectoryInode.h>
 #include <Kernel/FileSystem/ProcFS/LinkInode.h>
 #include <Kernel/KBufferBuilder.h>
