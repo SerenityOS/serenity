@@ -25,7 +25,7 @@ public:
 
     virtual u32 magic() const = 0;
     virtual DeprecatedString name() const = 0;
-    virtual OwnPtr<MessageBuffer> handle(Message const&) = 0;
+    virtual ErrorOr<OwnPtr<MessageBuffer>> handle(Message const&) = 0;
 
 protected:
     Stub() = default;
