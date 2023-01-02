@@ -46,6 +46,154 @@ struct alignas(u64) ID_AA64ISAR0_EL1 {
 };
 static_assert(sizeof(ID_AA64ISAR0_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64ISAR1-EL1--AArch64-Instruction-Set-Attribute-Register-1
+// ID_AA64ISAR1_EL1, AArch64 Instruction Set Attribute Register 1
+struct alignas(u64) ID_AA64ISAR1_EL1 {
+    int DPB : 4;
+    int APA : 4;
+    int API : 4;
+    int JSCVT : 4;
+    int FCMA : 4;
+    int LRCPC : 4;
+    int GPA : 4;
+    int GPI : 4;
+    int FRINTTS : 4;
+    int SB : 4;
+    int SPECRES : 4;
+    int BF16 : 4;
+    int DGH : 4;
+    int I8MM : 4;
+    int XS : 4;
+    int LS64 : 4;
+
+    static inline ID_AA64ISAR1_EL1 read()
+    {
+        ID_AA64ISAR1_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64ISAR1_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64ISAR1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64ISAR2-EL1--AArch64-Instruction-Set-Attribute-Register-2
+// ID_AA64ISAR2_EL1, AArch64 Instruction Set Attribute Register 2
+struct alignas(u64) ID_AA64ISAR2_EL1 {
+    int WFxT : 4;
+    int RPRES : 4;
+    int GPA3 : 4;
+    int APA3 : 4;
+    int MOPS : 4;
+    int BC : 4;
+    int PAC_frac : 4;
+    int CLRBHB : 4;
+    int SYSREG_128 : 4;
+    int SYSINSTR_128 : 4;
+    int PRFMSLC : 4;
+    int : 4;
+    int RPRFM : 4;
+    int CSSC : 4;
+    int : 8;
+
+    static inline ID_AA64ISAR2_EL1 read()
+    {
+        ID_AA64ISAR2_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64ISAR2_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64ISAR2_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64PFR0-EL1--AArch64-Processor-Feature-Register-0
+// ID_AA64PFR0_EL1, AArch64 Processor Feature Register 0
+struct alignas(u64) ID_AA64PFR0_EL1 {
+    int EL0 : 4;
+    int EL1 : 4;
+    int EL2 : 4;
+    int EL3 : 4;
+    int FP : 4;
+    int AdvSIMD : 4;
+    int GIC : 4;
+    int RAS : 4;
+    int SVE : 4;
+    int SEL2 : 4;
+    int MPAM : 4;
+    int AMU : 4;
+    int DIT : 4;
+    int RME : 4;
+    int CSV2 : 4;
+    int CSV3 : 4;
+
+    static inline ID_AA64PFR0_EL1 read()
+    {
+        ID_AA64PFR0_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64PFR0_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64PFR0_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64PFR1-EL1--AArch64-Processor-Feature-Register-1
+// ID_AA64PFR1_EL1, AArch64 Processor Feature Register 1
+struct alignas(u64) ID_AA64PFR1_EL1 {
+    int BT : 4;
+    int SSBS : 4;
+    int MTE : 4;
+    int RAS_frac : 4;
+    int MPAM_frac : 4;
+    int : 4;
+    int SME : 4;
+    int RNDR_trap : 4;
+    int CSV2_frac : 4;
+    int NMI : 4;
+    int MTE_frac : 4;
+    int GCS : 4;
+    int THE : 4;
+    int MTEX : 4;
+    int DF2 : 4;
+    int PFAR : 4;
+
+    static inline ID_AA64PFR1_EL1 read()
+    {
+        ID_AA64PFR1_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64PFR1_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64PFR1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64PFR2-EL1--AArch64-Processor-Feature-Register-2
+// ID_AA64PFR2_EL1, AArch64 Processor Feature Register 2
+struct alignas(u64) ID_AA64PFR2_EL1 {
+    int MTEPERM : 4;
+    int MTESTOREONLY : 4;
+    int MTEFAR : 4;
+    int : 20;
+    int : 32;
+
+    static inline ID_AA64PFR2_EL1 read()
+    {
+        ID_AA64PFR2_EL1 feature_register;
+
+        asm("mrs %[value], s3_0_c0_c4_2" // encoded ID_AA64PFR2_EL1 register
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64PFR2_EL1) == 8);
+
 // https://developer.arm.com/documentation/ddi0595/2021-12/AArch64-Registers/MPIDR-EL1--Multiprocessor-Affinity-Register?lang=en
 // MPIDR_EL1, Multiprocessor Affinity Register
 struct alignas(u64) MPIDR_EL1 {
@@ -71,8 +219,8 @@ struct alignas(u64) MPIDR_EL1 {
 };
 static_assert(sizeof(MPIDR_EL1) == 8);
 
-// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
-// Memory Model Feature Register 0
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
+// ID_AA64MMFR0_EL1, AArch64 Memory Model Feature Register 0
 struct alignas(u64) ID_AA64MMFR0_EL1 {
     int PARange : 4;
     int ASIDBits : 4;
@@ -86,7 +234,7 @@ struct alignas(u64) ID_AA64MMFR0_EL1 {
     int TGran64_2 : 4;
     int TGran4_2 : 4;
     int ExS : 4;
-    int RES0 : 8;
+    int : 8;
     int FGT : 4;
     int ECV : 4;
 
@@ -101,6 +249,244 @@ struct alignas(u64) ID_AA64MMFR0_EL1 {
     }
 };
 static_assert(sizeof(ID_AA64MMFR0_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR1-EL1--AArch64-Memory-Model-Feature-Register-1
+// ID_AA64MMFR1_EL1, AArch64 Memory Model Feature Register 1
+struct alignas(u64) ID_AA64MMFR1_EL1 {
+    int HAFDBS : 4;
+    int VMIDBits : 4;
+    int VH : 4;
+    int HPDS : 4;
+    int LO : 4;
+    int PAN : 4;
+    int SpecSEI : 4;
+    int XNX : 4;
+    int TWED : 4;
+    int ETS : 4;
+    int HCX : 4;
+    int AFP : 4;
+    int nTLBPA : 4;
+    int TIDCP1 : 4;
+    int CMOW : 4;
+    int ECBHB : 4;
+
+    static inline ID_AA64MMFR1_EL1 read()
+    {
+        ID_AA64MMFR1_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64MMFR1_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64MMFR1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR2-EL1--AArch64-Memory-Model-Feature-Register-2
+// ID_AA64MMFR2_EL1, AArch64 Memory Model Feature Register 2
+struct alignas(u64) ID_AA64MMFR2_EL1 {
+    int CnP : 4;
+    int UAO : 4;
+    int LSM : 4;
+    int IESB : 4;
+    int VARange : 4;
+    int CCIDX : 4;
+    int NV : 4;
+    int ST : 4;
+    int AT : 4;
+    int IDS : 4;
+    int FWB : 4;
+    int : 4;
+    int TTL : 4;
+    int BBM : 4;
+    int EVT : 4;
+    int E0PD : 4;
+
+    static inline ID_AA64MMFR2_EL1 read()
+    {
+        ID_AA64MMFR2_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64MMFR2_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64MMFR2_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR3-EL1--AArch64-Memory-Model-Feature-Register-3
+// ID_AA64MMFR3_EL1, AArch64 Memory Model Feature Register 3
+struct alignas(u64) ID_AA64MMFR3_EL1 {
+    int TCRX : 4;
+    int SCTLRX : 4;
+    int S1PIE : 4;
+    int S2PIE : 4;
+    int S1POE : 4;
+    int S2POE : 4;
+    int AIE : 4;
+    int MEC : 4;
+    int D128 : 4;
+    int D128_2 : 4;
+    int SNERR : 4;
+    int ANERR : 4;
+    int : 4;
+    int SDERR : 4;
+    int ADERR : 4;
+    int Spec_FPACC : 4;
+
+    static inline ID_AA64MMFR3_EL1 read()
+    {
+        ID_AA64MMFR3_EL1 feature_register;
+
+        asm("mrs %[value], s3_0_c0_c7_3" // encoded ID_AA64MMFR3_EL1 register
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64MMFR3_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR4-EL1--AArch64-Memory-Model-Feature-Register-4
+// ID_AA64MMFR4_EL1, AArch64 Memory Model Feature Register 4
+struct alignas(u64) ID_AA64MMFR4_EL1 {
+    int : 4;
+    int EIESB : 4;
+    int : 24;
+    int : 32;
+
+    static inline ID_AA64MMFR4_EL1 read()
+    {
+        ID_AA64MMFR4_EL1 feature_register;
+
+        asm("mrs %[value], s3_0_c0_c7_4" // encoded ID_AA64MMFR4_EL1 register
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64MMFR4_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64SMFR0-EL1--SME-Feature-ID-register-0
+// ID_AA64SMFR0_EL1, AArch64 SME Feature ID register 0
+struct alignas(u64) ID_AA64SMFR0_EL1 {
+    int : 32;
+    int F32F32 : 1;
+    int BI32I32 : 1;
+    int B16F32 : 1;
+    int F16F32 : 1;
+    int I8I32 : 4;
+    int : 2;
+    int F16F16 : 1;
+    int B16B16 : 1;
+    int I16I32 : 4;
+    int F64F64 : 1;
+    int : 3;
+    int I16I64 : 4;
+    int SMEver : 4;
+    int : 3;
+    int FA64 : 1;
+
+    static inline ID_AA64SMFR0_EL1 read()
+    {
+        ID_AA64SMFR0_EL1 feature_register;
+
+        asm("mrs %[value], s3_0_c0_c4_5" // encoded ID_AA64SMFR0_EL1 register
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64SMFR0_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64ZFR0-EL1--SVE-Feature-ID-register-0
+// ID_AA64ZFR0_EL1, AArch64 SVE Feature ID register 0
+struct alignas(u64) ID_AA64ZFR0_EL1 {
+    int SVEver : 4;
+    int AES : 4;
+    int : 8;
+    int BitPerm : 4;
+    int BF16 : 4;
+    int B16B16 : 4;
+    int : 4;
+    int SHA3 : 4;
+    int : 4;
+    int SM4 : 4;
+    int I8MM : 4;
+    int : 4;
+    int F32MM : 4;
+    int F64MM : 4;
+    int : 4;
+
+    static inline ID_AA64ZFR0_EL1 read()
+    {
+        ID_AA64ZFR0_EL1 feature_register;
+
+        asm("mrs %[value], s3_0_c0_c4_4" // encoded ID_AA64ZFR0_EL1 register
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64ZFR0_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64DFR0-EL1--AArch64-Debug-Feature-Register-0
+// ID_AA64DFR0_EL1, AArch64 Debug Feature Register 0
+struct alignas(u64) ID_AA64DFR0_EL1 {
+    int DebugVer : 4;
+    int TraceVer : 4;
+    int PMUVer : 4;
+    int BRPs : 4;
+    int PMSS : 4;
+    int WRPs : 4;
+    int SEBEP : 4;
+    int CTX_CMPs : 4;
+    int PMSVer : 4;
+    int DoubleLock : 4;
+    int TraceFilt : 4;
+    int TraceBuffer : 4;
+    int MTPMU : 4;
+    int BRBE : 4;
+    int ExtTrcBuff : 4;
+    int HPMN0 : 4;
+
+    static inline ID_AA64DFR0_EL1 read()
+    {
+        ID_AA64DFR0_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64DFR0_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64DFR0_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64DFR1-EL1--AArch64-Debug-Feature-Register-1
+// ID_AA64DFR1_EL1, AArch64 Debug Feature Register 1
+struct alignas(u64) ID_AA64DFR1_EL1 {
+    int SYSPMUID : 8;
+    int BRPs : 8;
+    int WRPs : 8;
+    int CTX_CMPs : 8;
+    int SPMU : 4;
+    int PMICNTR : 4;
+    int ABLE : 4;
+    int ITE : 4;
+    int EBEP : 4;
+    int : 4;
+    int ABL_CMPs : 8;
+
+    static inline ID_AA64DFR1_EL1 read()
+    {
+        ID_AA64DFR1_EL1 feature_register;
+
+        asm("mrs %[value], ID_AA64DFR1_EL1"
+            : [value] "=r"(feature_register));
+
+        return feature_register;
+    }
+};
+static_assert(sizeof(ID_AA64DFR1_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTFRQ-EL0--Counter-timer-Frequency-register
 // CNTFRQ_EL0, Counter-timer Frequency register
@@ -323,15 +709,32 @@ struct alignas(u64) MIDR_EL1 {
 
     static inline MIDR_EL1 read()
     {
-        MIDR_EL1 affinity_register;
+        MIDR_EL1 main_id_register;
 
         asm("mrs %[value], MIDR_EL1"
-            : [value] "=r"(affinity_register));
+            : [value] "=r"(main_id_register));
 
-        return affinity_register;
+        return main_id_register;
     }
 };
 static_assert(sizeof(MIDR_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/AIDR-EL1--Auxiliary-ID-Register?lang=en
+// AIDR_EL1, Auxiliary ID Register
+struct alignas(u64) AIDR_EL1 {
+    u64 AIDR : 64;
+
+    static inline AIDR_EL1 read()
+    {
+        AIDR_EL1 auxiliary_id_register;
+
+        asm("mrs %[value], AIDR_EL1"
+            : [value] "=r"(auxiliary_id_register));
+
+        return auxiliary_id_register;
+    }
+};
+static_assert(sizeof(AIDR_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
 // Hypervisor Configuration Register

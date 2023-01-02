@@ -11,6 +11,457 @@ namespace Kernel {
 CPUFeature::Type detect_cpu_features()
 {
     auto features = CPUFeature::Type(0u);
+
+    auto instruction_set_attribute_register_0 = Aarch64::ID_AA64ISAR0_EL1::read();
+    auto instruction_set_attribute_register_1 = Aarch64::ID_AA64ISAR1_EL1::read();
+    auto instruction_set_attribute_register_2 = Aarch64::ID_AA64ISAR2_EL1::read();
+    auto processor_feature_register_0 = Aarch64::ID_AA64PFR0_EL1::read();
+    auto processor_feature_register_1 = Aarch64::ID_AA64PFR1_EL1::read();
+    auto memory_model_feature_register_0 = Aarch64::ID_AA64MMFR0_EL1::read();
+    auto memory_model_feature_register_1 = Aarch64::ID_AA64MMFR1_EL1::read();
+    auto memory_model_feature_register_2 = Aarch64::ID_AA64MMFR2_EL1::read();
+    auto memory_model_feature_register_3 = Aarch64::ID_AA64MMFR3_EL1::read();
+    auto sme_feature_register_0 = Aarch64::ID_AA64SMFR0_EL1::read();
+    auto sve_feature_register_0 = Aarch64::ID_AA64ZFR0_EL1::read();
+    auto debug_feature_register_0 = Aarch64::ID_AA64DFR0_EL1::read();
+    auto debug_feature_register_1 = Aarch64::ID_AA64DFR1_EL1::read();
+    auto translation_control_register = Aarch64::TCR_EL1::read();
+
+    // positives
+    if (instruction_set_attribute_register_0.AES == 0b0001)
+        features |= CPUFeature::AES;
+    if (instruction_set_attribute_register_0.AES == 0b0010)
+        features |= CPUFeature::PMULL;
+    if (instruction_set_attribute_register_0.SHA1 == 0b0001)
+        features |= CPUFeature::SHA1;
+    if (instruction_set_attribute_register_0.SHA2 == 0b0001)
+        features |= CPUFeature::SHA256;
+    if (instruction_set_attribute_register_0.SHA2 == 0b0010)
+        features |= CPUFeature::SHA512;
+    if (instruction_set_attribute_register_0.CRC32 == 0b0001)
+        features |= CPUFeature::CRC32;
+    if (instruction_set_attribute_register_0.Atomic == 0b0010)
+        features |= CPUFeature::LSE;
+    if (instruction_set_attribute_register_0.Atomic == 0b0011)
+        features |= CPUFeature::LSE128;
+    if (instruction_set_attribute_register_0.TME == 0b0001)
+        // TODO: confirm that—missing in the spec
+        features |= CPUFeature::TME;
+    if (instruction_set_attribute_register_0.RDM == 0b0001)
+        features |= CPUFeature::RDM;
+    if (instruction_set_attribute_register_0.SHA3 == 0b0001)
+        features |= CPUFeature::SHA3;
+    if (instruction_set_attribute_register_0.SM3 == 0b0001)
+        features |= CPUFeature::SM3;
+    if (instruction_set_attribute_register_0.SM4 == 0b0001)
+        // TODO: confirm that—unclear spec
+        features |= CPUFeature::SM4;
+    if (instruction_set_attribute_register_0.DP == 0b0001)
+        features |= CPUFeature::DotProd;
+    if (instruction_set_attribute_register_0.FHM == 0b0001)
+        features |= CPUFeature::FHM;
+    if (instruction_set_attribute_register_0.TS == 0b0001)
+        features |= CPUFeature::FlagM;
+    if (instruction_set_attribute_register_0.TS == 0b0010)
+        features |= CPUFeature::FlagM2;
+    if (instruction_set_attribute_register_0.TLB == 0b0001 || instruction_set_attribute_register_0.TLB == 0b0010)
+        features |= CPUFeature::TLBIOS;
+    if (instruction_set_attribute_register_0.TLB == 0b0010)
+        features |= CPUFeature::TLBIRANGE;
+    if (instruction_set_attribute_register_0.RNDR == 0b0001)
+        features |= CPUFeature::RNG;
+    if (instruction_set_attribute_register_1.DPB == 0b0001)
+        features |= CPUFeature::DPB;
+    if (instruction_set_attribute_register_1.DPB == 0b0010)
+        features |= CPUFeature::DPB2;
+    if (instruction_set_attribute_register_1.API == 0b0100 && instruction_set_attribute_register_1.APA == 0b0100 && instruction_set_attribute_register_2.APA3 == 0b0100)
+        features |= CPUFeature::FPAC;
+    if (instruction_set_attribute_register_1.API == 0b0101 && instruction_set_attribute_register_1.APA == 0b0101 && instruction_set_attribute_register_2.APA3 == 0b0101)
+        features |= CPUFeature::FPACCOMBINE;
+    if (instruction_set_attribute_register_1.API == 0b0001 && instruction_set_attribute_register_1.APA == 0b0001 && instruction_set_attribute_register_2.APA3 == 0b0001)
+        features |= CPUFeature::PAuth;
+    if (instruction_set_attribute_register_1.API == 0b0011 && instruction_set_attribute_register_1.APA == 0b0011 && instruction_set_attribute_register_2.APA3 == 0b0011)
+        features |= CPUFeature::PAuth2;
+    if (instruction_set_attribute_register_1.JSCVT == 0b0001)
+        features |= CPUFeature::JSCVT;
+    if (instruction_set_attribute_register_1.FCMA == 0b0001)
+        features |= CPUFeature::FCMA;
+    if (instruction_set_attribute_register_1.LRCPC == 0b0001)
+        features |= CPUFeature::LRCPC;
+    if (instruction_set_attribute_register_1.LRCPC == 0b0010)
+        features |= CPUFeature::LRCPC2;
+    if (instruction_set_attribute_register_1.LRCPC == 0b0011)
+        features |= CPUFeature::LRCPC3;
+    if (instruction_set_attribute_register_1.GPA == 0b0001 && instruction_set_attribute_register_1.APA != 0b0000)
+        features |= CPUFeature::PACQARMA5;
+    if (instruction_set_attribute_register_1.GPI == 0b0001 && instruction_set_attribute_register_1.API != 0b0000)
+        features |= CPUFeature::PACIMP;
+    if (instruction_set_attribute_register_1.FRINTTS == 0b0001)
+        features |= CPUFeature::FRINTTS;
+    if (instruction_set_attribute_register_1.SB == 0b0001)
+        features |= CPUFeature::SB;
+    if (instruction_set_attribute_register_1.SPECRES == 0b0001)
+        features |= CPUFeature::SPECRES;
+    if (instruction_set_attribute_register_1.SPECRES == 0b0010)
+        features |= CPUFeature::SPECRES2;
+    if (instruction_set_attribute_register_1.BF16 == 0b0001)
+        features |= CPUFeature::BF16;
+    if (instruction_set_attribute_register_1.BF16 == 0b0010)
+        features |= CPUFeature::EBF16;
+    if (instruction_set_attribute_register_1.DGH == 0b0001)
+        features |= CPUFeature::DGH;
+    if (instruction_set_attribute_register_1.I8MM == 0b0001)
+        features |= CPUFeature::I8MM;
+    if (instruction_set_attribute_register_1.XS == 0b0001)
+        features |= CPUFeature::XS;
+    if (instruction_set_attribute_register_1.LS64 == 0b0001)
+        features |= CPUFeature::LS64;
+    if (instruction_set_attribute_register_1.LS64 == 0b0010)
+        features |= CPUFeature::LS64_V;
+    if (instruction_set_attribute_register_1.LS64 == 0b0011)
+        features |= CPUFeature::LS64_ACCDATA;
+    if (instruction_set_attribute_register_2.WFxT == 0b0010)
+        features |= CPUFeature::WFxT;
+    if (instruction_set_attribute_register_2.RPRES == 0b0001)
+        features |= CPUFeature::RPRES;
+    if (instruction_set_attribute_register_2.GPA3 == 0b0001 && instruction_set_attribute_register_2.APA3 == 0b0000)
+        features |= CPUFeature::PACQARMA3;
+    if (instruction_set_attribute_register_2.MOPS == 0b0001)
+        features |= CPUFeature::MOPS;
+    if (instruction_set_attribute_register_2.BC == 0b0001)
+        features |= CPUFeature::HBC;
+    if (instruction_set_attribute_register_2.PAC_frac == 0b0001)
+        features |= CPUFeature::CONSTPACFIELD;
+    if (instruction_set_attribute_register_2.CLRBHB == 0b0001)
+        features |= CPUFeature::CLRBHB;
+    if (instruction_set_attribute_register_2.SYSREG_128 == 0b0001)
+        features |= CPUFeature::SYSREG128;
+    if (instruction_set_attribute_register_2.SYSINSTR_128 == 0b0001)
+        features |= CPUFeature::SYSINSTR128;
+    if (instruction_set_attribute_register_2.PRFMSLC == 0b0001)
+        features |= CPUFeature::PRFMSLC;
+    if (instruction_set_attribute_register_2.RPRFM == 0b0001)
+        features |= CPUFeature::RPRFM;
+    if (instruction_set_attribute_register_2.CSSC == 0b0001)
+        features |= CPUFeature::CSSC;
+    if (processor_feature_register_0.FP == 0b0001)
+        features |= CPUFeature::FP16;
+    if (processor_feature_register_0.AdvSIMD != 0b0000)
+        features |= CPUFeature::AdvSIMD; // TODO/FIXME: not explicit?
+    if (processor_feature_register_0.AdvSIMD == 0b0001)
+        features |= CPUFeature::FP16;
+    // TODO: GIC
+    if (processor_feature_register_0.RAS == 0b0001)
+        features |= CPUFeature::RAS;
+    if (processor_feature_register_0.RAS == 0b0010)
+        features |= CPUFeature::DoubleFault;
+    if (processor_feature_register_0.RAS == 0b0010)
+        features |= CPUFeature::RASv1p1;
+    if (processor_feature_register_0.RAS == 0b0001 && processor_feature_register_1.RAS_frac == 0b0001)
+        features |= CPUFeature::RASv1p1;
+    if (processor_feature_register_0.RAS == 0b0011)
+        features |= CPUFeature::RASv2;
+    if (processor_feature_register_0.SVE == 0b0001)
+        features |= CPUFeature::SVE;
+    if (processor_feature_register_0.SEL2 == 0b0001)
+        features |= CPUFeature::SEL2;
+    // TODO: MPAM
+    if (processor_feature_register_0.AMU == 0b0001)
+        features |= CPUFeature::AMUv1;
+    if (processor_feature_register_0.AMU == 0b0010)
+        features |= CPUFeature::AMUv1p1;
+    if (processor_feature_register_0.DIT == 0b0001)
+        features |= CPUFeature::DIT;
+    if (processor_feature_register_0.RME == 0b0001)
+        features |= CPUFeature::RME;
+    if (processor_feature_register_0.CSV2 == 0b0001)
+        features |= CPUFeature::CSV2;
+    if (processor_feature_register_0.CSV2 == 0b0010)
+        features |= CPUFeature::CSV2_2;
+    if (processor_feature_register_0.CSV2 == 0b0011)
+        features |= CPUFeature::CSV2_3;
+    if (processor_feature_register_0.CSV3 == 0b0001)
+        features |= CPUFeature::CSV3;
+    if (processor_feature_register_1.BT == 0b0001)
+        features |= CPUFeature::BTI;
+    if (processor_feature_register_1.SSBS == 0b0001)
+        features |= CPUFeature::SSBS;
+    if (processor_feature_register_1.SSBS == 0b0010)
+        features |= CPUFeature::SSBS2;
+    if (processor_feature_register_1.MTE == 0b0001)
+        features |= CPUFeature::MTE;
+    if (processor_feature_register_1.MTE == 0b0010)
+        features |= CPUFeature::MTE2;
+    if (processor_feature_register_1.MTE == 0b0011)
+        features |= CPUFeature::MTE3;
+    if (processor_feature_register_1.MTE >= 0b0010 && processor_feature_register_1.MTEX == 0b0001) {
+        features |= CPUFeature::MTE4;
+        features |= CPUFeature::MTE_CANONICAL_TAGS;  // XXX: not really explicit in the spec
+        features |= CPUFeature::MTE_NO_ADDRESS_TAGS; // XXX: not really explicit in the spec
+    }
+    if (processor_feature_register_1.MTE >= 0b0011 && processor_feature_register_1.MTE_frac == 0b0000)
+        features |= CPUFeature::MTE_ASYM_FAULT; // XXX: not really explicit in the spec
+    if (processor_feature_register_1.SME == 0b0010)
+        features |= CPUFeature::SME2;
+    if (processor_feature_register_1.RNDR_trap == 0b0001)
+        features |= CPUFeature::RNG_TRAP;
+    if (processor_feature_register_1.CSV2_frac == 0b0001)
+        features |= CPUFeature::CSV2_1p1;
+    if (processor_feature_register_1.CSV2_frac == 0b0010)
+        features |= CPUFeature::CSV2_1p2;
+    if (processor_feature_register_1.NMI == 0b0001)
+        features |= CPUFeature::NMI;
+    if (processor_feature_register_1.GCS == 0b0001)
+        features |= CPUFeature::GCS;
+    if (processor_feature_register_1.THE == 0b0001)
+        features |= CPUFeature::THE;
+    if (processor_feature_register_1.DF2 == 0b0001)
+        features |= CPUFeature::DoubleFault2;
+    if (processor_feature_register_1.PFAR == 0b0001)
+        features |= CPUFeature::PFAR;
+    if (memory_model_feature_register_0.PARange == 0b0110) {
+        features |= translation_control_register.DS == 0b1 ? CPUFeature::LPA2 : CPUFeature::LPA;
+    }
+    if (memory_model_feature_register_0.PARange == 0b0111)
+        features |= CPUFeature::D128;
+    if (memory_model_feature_register_0.ExS == 0b0001)
+        features |= CPUFeature::ExS;
+    if (memory_model_feature_register_0.FGT == 0b0001)
+        features |= CPUFeature::FGT;
+    if (memory_model_feature_register_0.FGT == 0b0010)
+        features |= CPUFeature::FGT2;
+    if (memory_model_feature_register_0.ECV == 0b0001 || memory_model_feature_register_0.ECV == 0b0010)
+        features |= CPUFeature::ECV;
+    if (memory_model_feature_register_1.HAFDBS == 0b0001 || memory_model_feature_register_1.HAFDBS == 0b0010)
+        features |= CPUFeature::HAFDBS;
+    if (memory_model_feature_register_1.VMIDBits == 0b0010)
+        features |= CPUFeature::VMID16;
+    if (memory_model_feature_register_1.VH == 0b0011)
+        features |= CPUFeature::HAFT;
+    if (memory_model_feature_register_1.HPDS == 0b0010)
+        features |= CPUFeature::HPDS2;
+    if (memory_model_feature_register_1.LO == 0b0001)
+        features |= CPUFeature::LOR;
+    if (memory_model_feature_register_1.PAN == 0b0001)
+        features |= CPUFeature::PAN;
+    if (memory_model_feature_register_1.PAN == 0b0010)
+        features |= CPUFeature::PAN2;
+    if (memory_model_feature_register_1.PAN == 0b0011)
+        features |= CPUFeature::PAN3;
+    if (memory_model_feature_register_1.XNX == 0b0001)
+        features |= CPUFeature::XNX;
+    if (memory_model_feature_register_1.TWED == 0b0001)
+        features |= CPUFeature::TWED;
+    if (memory_model_feature_register_1.ETS == 0b0001)
+        features |= CPUFeature::ETS;
+    if (memory_model_feature_register_1.HCX == 0b0001)
+        features |= CPUFeature::HCX;
+    if (memory_model_feature_register_1.AFP == 0b0001)
+        features |= CPUFeature::AFP;
+    if (memory_model_feature_register_1.nTLBPA == 0b0001)
+        features |= CPUFeature::nTLBPA;
+    if (memory_model_feature_register_1.TIDCP1 == 0b0001)
+        features |= CPUFeature::TIDCP1;
+    if (memory_model_feature_register_1.CMOW == 0b0001)
+        features |= CPUFeature::CMOW;
+    if (memory_model_feature_register_1.ECBHB == 0b0001)
+        features |= CPUFeature::ECBHB;
+    if (memory_model_feature_register_2.CnP == 0b0001)
+        features |= CPUFeature::TTCNP;
+    if (memory_model_feature_register_2.UAO == 0b0001)
+        features |= CPUFeature::UAO;
+    if (memory_model_feature_register_2.LSM == 0b0001)
+        features |= CPUFeature::LSMAOC;
+    if (memory_model_feature_register_2.IESB == 0b0001)
+        features |= CPUFeature::IESB;
+    if (memory_model_feature_register_2.VARange == 0b0001)
+        features |= CPUFeature::LVA;
+    if (memory_model_feature_register_2.CCIDX == 0b0001)
+        features |= CPUFeature::CCIDX;
+    if (memory_model_feature_register_2.NV == 0b0001)
+        features |= CPUFeature::NV;
+    if (memory_model_feature_register_2.NV == 0b0010)
+        features |= CPUFeature::NV2;
+    if (memory_model_feature_register_2.ST == 0b0001)
+        features |= CPUFeature::TTST;
+    if (memory_model_feature_register_2.AT == 0b0001)
+        features |= CPUFeature::LSE2;
+    if (memory_model_feature_register_2.IDS == 0b0001)
+        features |= CPUFeature::IDST;
+    if (memory_model_feature_register_2.FWB == 0b0001)
+        features |= CPUFeature::S2FWB;
+    if (memory_model_feature_register_2.TTL == 0b0001)
+        features |= CPUFeature::TTL;
+    if (memory_model_feature_register_2.BBM == 0b0000 || memory_model_feature_register_2.BBM == 0b0001 || memory_model_feature_register_2.BBM == 0b0010)
+        features |= CPUFeature::BBM;
+    if (memory_model_feature_register_2.EVT == 0b0001 || memory_model_feature_register_2.EVT == 0b0010)
+        features |= CPUFeature::EVT;
+    if (memory_model_feature_register_2.E0PD == 0b0001) {
+        features |= CPUFeature::E0PD;
+        features |= CPUFeature::CSV3;
+    }
+    if (memory_model_feature_register_3.ADERR == 0b0010 && memory_model_feature_register_3.SDERR == 0b0010)
+        features |= CPUFeature::ADERR;
+    if (memory_model_feature_register_3.ANERR == 0b0010 && memory_model_feature_register_3.SNERR == 0b0010)
+        features |= CPUFeature::ANERR;
+    if (memory_model_feature_register_3.AIE == 0b0001)
+        features |= CPUFeature::AIE;
+    if (memory_model_feature_register_3.MEC == 0b0001)
+        features |= CPUFeature::MEC;
+    if (memory_model_feature_register_3.S1PIE == 0b0001)
+        features |= CPUFeature::S1PIE;
+    if (memory_model_feature_register_3.S2PIE == 0b0001)
+        features |= CPUFeature::S2PIE;
+    if (memory_model_feature_register_3.S1POE == 0b0001)
+        features |= CPUFeature::S1POE;
+    if (memory_model_feature_register_3.S2POE == 0b0001)
+        features |= CPUFeature::S2POE;
+    if (memory_model_feature_register_3.AIE == 0b0001)
+        features |= CPUFeature::AIE;
+    if (memory_model_feature_register_3.MEC == 0b0001)
+        features |= CPUFeature::MEC;
+    if (memory_model_feature_register_3.ANERR == 0b0010 && memory_model_feature_register_3.SNERR == 0b0010)
+        features |= CPUFeature::ANERR;
+    if (memory_model_feature_register_3.ADERR == 0b0001 && memory_model_feature_register_3.SDERR == 0b0000 && memory_model_feature_register_3.ANERR == 0b0010 && memory_model_feature_register_3.SNERR == 0b0010 && processor_feature_register_0.RAS == 0b0011)
+        features |= CPUFeature::RASv2;
+    if (memory_model_feature_register_3.ADERR == 0b0010 && memory_model_feature_register_3.SDERR == 0b0010)
+        features |= CPUFeature::ADERR;
+    if (memory_model_feature_register_3.ADERR == 0b0010 && memory_model_feature_register_3.SDERR == 0b0010)
+        features |= CPUFeature::ADERR;
+    if (translation_control_register.DS == 0b1) {
+        features |= CPUFeature::LVA;
+    }
+    if (sme_feature_register_0.F16F16 == 0b1)
+        features |= CPUFeature::SME_F16F16;
+    if (sme_feature_register_0.F64F64 == 0b1)
+        features |= CPUFeature::SME_F64F64;
+    if (sme_feature_register_0.I16I64 == 0b1111)
+        features |= CPUFeature::SME_I16I64;
+    if (processor_feature_register_1.SME != 0b0000) {
+        if (sme_feature_register_0.SMEver == 0b0000)
+            features |= CPUFeature::SME;
+        if (sme_feature_register_0.SMEver == 0b0001)
+            features |= CPUFeature::SME2;
+        if (sme_feature_register_0.SMEver == 0b0010)
+            features |= CPUFeature::SME2p1;
+        if (sme_feature_register_0.FA64 == 0b1)
+            features |= CPUFeature::SME_FA64; // sve_feature_register_0.I8MM/SM4/SHA3/BitPerm/AES
+    }
+    if (sve_feature_register_0.SVEver == 0b0001 && processor_feature_register_1.SME == 0b0001)
+        features |= CPUFeature::SME; // streaming sve mode only!
+    if (sve_feature_register_0.SVEver == 0b0001)
+        features |= CPUFeature::SVE2; // non-streaming sve mode only!
+    if (sve_feature_register_0.SVEver == 0b0010)
+        features |= CPUFeature::SVE2p1; // non-streaming sve mode only!
+    if (sve_feature_register_0.AES == 0b0001)
+        features |= CPUFeature::SVE_AES;
+    if (sve_feature_register_0.AES == 0b0010)
+        features |= CPUFeature::SVE_PMULL128;
+    if (sve_feature_register_0.BitPerm == 0b0001)
+        features |= CPUFeature::SVE_BitPerm;
+    if (sve_feature_register_0.BF16 == 0b0001)
+        features |= CPUFeature::BF16;
+    if (sve_feature_register_0.BF16 == 0b0010)
+        features |= CPUFeature::EBF16;
+    if (sve_feature_register_0.B16B16 == 0b0001 && sme_feature_register_0.B16B16 == 0b1)
+        features |= CPUFeature::B16B16;
+    if (sve_feature_register_0.SHA3 == 0b0001)
+        features |= CPUFeature::SVE_SHA3;
+    if (sve_feature_register_0.SM4 == 0b0001)
+        features |= CPUFeature::SVE_SM4;
+    if (sve_feature_register_0.I8MM == 0b0001)
+        features |= CPUFeature::I8MM;
+    if (sve_feature_register_0.F32MM == 0b0001)
+        features |= CPUFeature::F32MM;
+    if (sve_feature_register_0.F64MM == 0b0001)
+        features |= CPUFeature::F64MM;
+    if (debug_feature_register_0.DebugVer == 0b1000)
+        features |= CPUFeature::Debugv8p2;
+    if (debug_feature_register_0.DebugVer == 0b1001)
+        features |= CPUFeature::Debugv8p4;
+    if (debug_feature_register_0.DebugVer == 0b1010)
+        features |= CPUFeature::Debugv8p8;
+    if (debug_feature_register_0.DebugVer == 0b0111 && memory_model_feature_register_1.VH == 0b0001)
+        features |= CPUFeature::VHE;
+    if (debug_feature_register_0.DebugVer == 0b1101)
+        features |= CPUFeature::Debugv8p9;
+    if (debug_feature_register_0.PMUVer == 0b0001)
+        features |= CPUFeature::PMUv3;
+    if (debug_feature_register_0.PMUVer == 0b0100)
+        features |= CPUFeature::PMUv3p1;
+    if (debug_feature_register_0.PMUVer == 0b0101)
+        features |= CPUFeature::PMUv3p4;
+    if (debug_feature_register_0.PMUVer == 0b0110)
+        features |= CPUFeature::PMUv3p5;
+    if (debug_feature_register_0.PMUVer == 0b0111)
+        features |= CPUFeature::PMUv3p7;
+    if (debug_feature_register_0.PMUVer == 0b1000)
+        features |= CPUFeature::PMUv3p8;
+    if (debug_feature_register_0.PMUVer == 0b1001)
+        features |= CPUFeature::PMUv3p9;
+    if (debug_feature_register_0.PMSS == 0b0001)
+        features |= CPUFeature::PMUv3_SS;
+    if (debug_feature_register_0.SEBEP == 0b0001)
+        features |= CPUFeature::SEBEP;
+    if (debug_feature_register_0.PMSVer == 0b0001)
+        features |= CPUFeature::SPE;
+    if (debug_feature_register_0.PMSVer == 0b0010)
+        features |= CPUFeature::SPEv1p1;
+    if (debug_feature_register_0.PMSVer == 0b0011)
+        features |= CPUFeature::SPEv1p2;
+    if (debug_feature_register_0.PMSVer == 0b0100)
+        features |= CPUFeature::SPEv1p3;
+    if (debug_feature_register_0.PMSVer == 0b0101)
+        features |= CPUFeature::SPEv1p4;
+    if (debug_feature_register_0.PMSVer == 0b0011)
+        features |= CPUFeature::SPEv1p2;
+    if (debug_feature_register_0.DoubleLock == 0b0000)
+        features |= CPUFeature::DoubleLock;
+    if (debug_feature_register_0.TraceFilt == 0b0001)
+        features |= CPUFeature::TRF;
+    if (debug_feature_register_0.TraceBuffer == 0b0001)
+        features |= CPUFeature::TRBE;
+    if (debug_feature_register_0.MTPMU == 0b0001)
+        features |= CPUFeature::MTPMU; // TODO: has additional notes
+    if (debug_feature_register_0.BRBE == 0b0001)
+        features |= CPUFeature::BRBE;
+    if (debug_feature_register_0.BRBE == 0b0010)
+        features |= CPUFeature::BRBEv1p1;
+    if (debug_feature_register_0.ExtTrcBuff == 0b0001 && features.has_flag(CPUFeature::TRBE)) // XXX: order-dependent!
+        features |= CPUFeature::TRBE_EXT;
+    if (debug_feature_register_0.HPMN0 == 0b0001)
+        features |= CPUFeature::HPMN0;
+    if (debug_feature_register_1.ABLE == 0b0001)
+        features |= CPUFeature::ABLE;
+    if (debug_feature_register_1.EBEP == 0b0001)
+        features |= CPUFeature::EBEP;
+    if (debug_feature_register_1.ITE == 0b0001)
+        features |= CPUFeature::ITE;
+    if (debug_feature_register_1.PMICNTR == 0b0001)
+        features |= CPUFeature::PMUv3_ICNTR;
+    if (debug_feature_register_1.SPMU == 0b0001)
+        features |= CPUFeature::SPMU;
+    if (debug_feature_register_1.ABLE == 0b0001)
+        features |= CPUFeature::ABLE;
+    if (debug_feature_register_1.EBEP == 0b0001)
+        features |= CPUFeature::EBEP;
+    if (debug_feature_register_1.ITE == 0b0001)
+        features |= CPUFeature::ITE;
+    if (debug_feature_register_1.PMICNTR == 0b0001)
+        features |= CPUFeature::PMUv3_ICNTR;
+    if (debug_feature_register_1.SPMU == 0b0001)
+        features |= CPUFeature::SPMU;
+
+    // negatives
+    if (sme_feature_register_0.B16B16 == 0b0000)
+        features &= ~(CPUFeature::SVE2p1 | CPUFeature::SME2p1);
+    if (sme_feature_register_0.F16F16 == 0b0)
+        features &= ~CPUFeature::SME2p1;
+    if (sve_feature_register_0.B16B16 == 0b0000)
+        features &= ~(CPUFeature::SVE2p1 | CPUFeature::SME2p1);
+    if (sve_feature_register_0.B16B16 == 0b0001 && sme_feature_register_0.B16B16 == 0b1)
+        features |= CPUFeature::B16B16;
+
     return features;
 }
 
