@@ -37,6 +37,7 @@ for md_file in $(find "${MAN_DIR}" -iname '*.md' | ${SORT}); do
     name="${filename%.md}"
     output_file="output/${section}/${name}.html"
 
+    echo "Generating $md_file -> $output_file"
     mkdir -p "$(dirname "${output_file}")"
     pandoc -f gfm -t html5 -s \
         -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
@@ -62,6 +63,8 @@ for section_directory in output/*/; do
         *) section_title="SerenityOS man pages"; echo "WARNING: Unrecognized section ${section_number}?!";;
     esac
     output="output/${section}/index.html"
+
+    echo "Generating section ${section_number} index -> ${output}"
     pandoc -f gfm -t html5 -s \
         -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
         --metadata title="Section ${section_number} - ${section_title}" \
@@ -79,6 +82,7 @@ for section_directory in output/*/; do
 done
 
 # Generate main landing page listings through pandoc
+echo 'Generating main pages'
 pandoc -f gfm -t html5 -s \
     -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
     --metadata title="SerenityOS man pages" \
@@ -91,6 +95,7 @@ pandoc -f gfm -t html5 -s \
     Meta/Websites/man.serenityos.org/cant-run-application.md
 
 # Copy pre-made files
+echo 'Copying images'
 cp Meta/Websites/man.serenityos.org/banner.png output/
 cp Base/usr/share/man/man7/LibDSP_classes.svg output/
 cp Base/usr/share/man/man1/*.png output/
