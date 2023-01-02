@@ -7,7 +7,6 @@
 
 #define __USE_MISC
 #define TTYDEFCHARS
-#include <AK/Array.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Array.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibGPU/DeviceInfo.h>

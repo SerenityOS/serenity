@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Array.h>
 #include <AK/Concepts.h>
 #include <AK/Function.h>
 #include <AK/Types.h>
