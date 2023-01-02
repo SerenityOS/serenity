@@ -100,9 +100,9 @@ pandoc -f gfm -t html5 -s \
 
 # Copy pre-made files
 echo 'Copying images'
-cp Meta/Websites/man.serenityos.org/banner.png output/
-cp Base/usr/share/man/man7/LibDSP_classes.svg output/
-cp Base/usr/share/man/man1/*.png output/
+rsync -a Meta/Websites/man.serenityos.org/banner.png output/ &
+rsync -a Base/usr/share/man/man7/LibDSP_classes.svg output/ &
+rsync -a Base/usr/share/man/man1/*.png output/ &
 
 # Copy icons
 mkdir output/icons
