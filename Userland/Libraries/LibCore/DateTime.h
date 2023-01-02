@@ -69,7 +69,7 @@ struct Formatter<Core::DateTime> : StandardFormatter {
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Core::DateTime const&);
+ErrorOr<void> encode(Encoder&, Core::DateTime const&);
 
 template<>
 ErrorOr<Core::DateTime> decode(Decoder&);

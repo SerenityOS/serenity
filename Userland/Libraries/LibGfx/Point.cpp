@@ -52,10 +52,11 @@ DeprecatedString FloatPoint::to_deprecated_string() const
 namespace IPC {
 
 template<>
-bool encode(Encoder& encoder, Gfx::IntPoint const& point)
+ErrorOr<void> encode(Encoder& encoder, Gfx::IntPoint const& point)
 {
-    encoder << point.x() << point.y();
-    return true;
+    TRY(encoder.encode(point.x()));
+    TRY(encoder.encode(point.y()));
+    return {};
 }
 
 template<>

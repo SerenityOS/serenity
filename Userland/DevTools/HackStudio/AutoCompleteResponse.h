@@ -16,14 +16,14 @@
 namespace IPC {
 
 template<>
-inline bool encode(Encoder& encoder, CodeComprehension::AutocompleteResultEntry const& response)
+inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::AutocompleteResultEntry const& response)
 {
-    encoder << response.completion;
-    encoder << response.partial_input_length;
-    encoder << response.language;
-    encoder << response.display_text;
-    encoder << response.hide_autocomplete_after_applying;
-    return true;
+    TRY(encoder.encode(response.completion));
+    TRY(encoder.encode(response.partial_input_length));
+    TRY(encoder.encode(response.language));
+    TRY(encoder.encode(response.display_text));
+    TRY(encoder.encode(response.hide_autocomplete_after_applying));
+    return {};
 }
 
 template<>
@@ -39,12 +39,12 @@ inline ErrorOr<CodeComprehension::AutocompleteResultEntry> decode(Decoder& decod
 }
 
 template<>
-inline bool encode(Encoder& encoder, CodeComprehension::ProjectLocation const& location)
+inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::ProjectLocation const& location)
 {
-    encoder << location.file;
-    encoder << location.line;
-    encoder << location.column;
-    return true;
+    TRY(encoder.encode(location.file));
+    TRY(encoder.encode(location.line));
+    TRY(encoder.encode(location.column));
+    return {};
 }
 
 template<>
@@ -58,14 +58,13 @@ inline ErrorOr<CodeComprehension::ProjectLocation> decode(Decoder& decoder)
 }
 
 template<>
-inline bool encode(Encoder& encoder, CodeComprehension::Declaration const& declaration)
+inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::Declaration const& declaration)
 {
-    encoder << declaration.name;
-    if (!encode(encoder, declaration.position))
-        return false;
-    encoder << declaration.type;
-    encoder << declaration.scope;
-    return true;
+    TRY(encoder.encode(declaration.name));
+    TRY(encoder.encode(declaration.position));
+    TRY(encoder.encode(declaration.type));
+    TRY(encoder.encode(declaration.scope));
+    return {};
 }
 
 template<>
@@ -80,13 +79,13 @@ inline ErrorOr<CodeComprehension::Declaration> decode(Decoder& decoder)
 }
 
 template<>
-inline bool encode(Encoder& encoder, CodeComprehension::TodoEntry const& entry)
+inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::TodoEntry const& entry)
 {
-    encoder << entry.content;
-    encoder << entry.filename;
-    encoder << entry.line;
-    encoder << entry.column;
-    return true;
+    TRY(encoder.encode(entry.content));
+    TRY(encoder.encode(entry.filename));
+    TRY(encoder.encode(entry.line));
+    TRY(encoder.encode(entry.column));
+    return {};
 }
 
 template<>
@@ -101,15 +100,14 @@ inline ErrorOr<CodeComprehension::TodoEntry> decode(Decoder& decoder)
 }
 
 template<>
-inline bool encode(Encoder& encoder, CodeComprehension::TokenInfo const& location)
+inline ErrorOr<void> encode(Encoder& encoder, CodeComprehension::TokenInfo const& location)
 {
-    encoder << (u32)location.type;
-    static_assert(sizeof(location.type) == sizeof(u32));
-    encoder << location.start_line;
-    encoder << location.start_column;
-    encoder << location.end_line;
-    encoder << location.end_column;
-    return true;
+    TRY(encoder.encode(location.type));
+    TRY(encoder.encode(location.start_line));
+    TRY(encoder.encode(location.start_column));
+    TRY(encoder.encode(location.end_line));
+    TRY(encoder.encode(location.end_column));
+    return {};
 }
 
 template<>

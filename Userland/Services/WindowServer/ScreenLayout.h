@@ -74,13 +74,13 @@ public:
 namespace IPC {
 
 template<>
-bool encode(Encoder&, WindowServer::ScreenLayout::Screen const&);
+ErrorOr<void> encode(Encoder&, WindowServer::ScreenLayout::Screen const&);
 
 template<>
 ErrorOr<WindowServer::ScreenLayout::Screen> decode(Decoder&);
 
 template<>
-bool encode(Encoder&, WindowServer::ScreenLayout const&);
+ErrorOr<void> encode(Encoder&, WindowServer::ScreenLayout const&);
 
 template<>
 ErrorOr<WindowServer::ScreenLayout> decode(Decoder&);

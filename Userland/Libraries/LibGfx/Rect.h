@@ -1039,7 +1039,7 @@ struct Formatter<Gfx::Rect<T>> : Formatter<FormatString> {
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Gfx::IntRect const&);
+ErrorOr<void> encode(Encoder&, Gfx::IntRect const&);
 
 template<>
 ErrorOr<Gfx::IntRect> decode(Decoder&);

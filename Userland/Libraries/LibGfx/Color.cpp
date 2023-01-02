@@ -366,10 +366,9 @@ Vector<Color> Color::tints(u32 steps, float max) const
 }
 
 template<>
-bool IPC::encode(Encoder& encoder, Color const& color)
+ErrorOr<void> IPC::encode(Encoder& encoder, Color const& color)
 {
-    encoder << color.value();
-    return true;
+    return encoder.encode(color.value());
 }
 
 template<>

@@ -28,10 +28,11 @@ DeprecatedString FloatSize::to_deprecated_string() const
 namespace IPC {
 
 template<>
-bool encode(Encoder& encoder, Gfx::IntSize const& size)
+ErrorOr<void> encode(Encoder& encoder, Gfx::IntSize const& size)
 {
-    encoder << size.width() << size.height();
-    return true;
+    TRY(encoder.encode(size.width()));
+    TRY(encoder.encode(size.height()));
+    return {};
 }
 
 template<>

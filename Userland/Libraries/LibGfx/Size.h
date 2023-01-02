@@ -214,7 +214,7 @@ struct Formatter<Gfx::Size<T>> : Formatter<FormatString> {
 namespace IPC {
 
 template<>
-bool encode(Encoder&, Gfx::IntSize const&);
+ErrorOr<void> encode(Encoder&, Gfx::IntSize const&);
 
 template<>
 ErrorOr<Gfx::IntSize> decode(Decoder&);

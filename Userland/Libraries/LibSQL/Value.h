@@ -191,7 +191,7 @@ struct AK::Formatter<SQL::Value> : Formatter<StringView> {
 namespace IPC {
 
 template<>
-bool encode(Encoder&, SQL::Value const&);
+ErrorOr<void> encode(Encoder&, SQL::Value const&);
 
 template<>
 ErrorOr<SQL::Value> decode(Decoder&);

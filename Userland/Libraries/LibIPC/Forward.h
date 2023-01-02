@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Error.h>
+
 namespace IPC {
 
 class Decoder;
@@ -16,7 +18,7 @@ class File;
 class Stub;
 
 template<typename T>
-bool encode(Encoder&, T const&);
+ErrorOr<void> encode(Encoder&, T const&);
 
 template<typename T>
 ErrorOr<T> decode(Decoder&);

@@ -28,23 +28,23 @@ Response::Response(Error&& error)
 }
 
 template<>
-bool IPC::encode(Encoder& encoder, Web::WebDriver::Response const& response)
+ErrorOr<void> IPC::encode(Encoder& encoder, Web::WebDriver::Response const& response)
 {
-    response.visit(
-        [](Empty) { VERIFY_NOT_REACHED(); },
-        [&](JsonValue const& value) {
-            encoder << ResponseType::Success;
-            encoder << value;
+    return response.visit(
+        [](Empty) -> ErrorOr<void> { VERIFY_NOT_REACHED(); },
+        [&](JsonValue const& value) -> ErrorOr<void> {
+            TRY(encoder.encode(ResponseType::Success));
+            TRY(encoder.encode(value));
+            return {};
         },
-        [&](Web::WebDriver::Error const& error) {
-            encoder << ResponseType::Error;
-            encoder << error.http_status;
-            encoder << error.error;
-            encoder << error.message;
-            encoder << error.data;
+        [&](Web::WebDriver::Error const& error) -> ErrorOr<void> {
+            TRY(encoder.encode(ResponseType::Error));
+            TRY(encoder.encode(error.http_status));
+            TRY(encoder.encode(error.error));
+            TRY(encoder.encode(error.message));
+            TRY(encoder.encode(error.data));
+            return {};
         });
-
-    return true;
 }
 
 template<>

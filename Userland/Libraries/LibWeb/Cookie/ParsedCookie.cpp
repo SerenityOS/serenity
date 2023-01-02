@@ -348,19 +348,19 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
 }
 
 template<>
-bool IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
+ErrorOr<void> IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
 {
-    encoder << cookie.name;
-    encoder << cookie.value;
-    encoder << cookie.expiry_time_from_expires_attribute;
-    encoder << cookie.expiry_time_from_max_age_attribute;
-    encoder << cookie.domain;
-    encoder << cookie.path;
-    encoder << cookie.secure_attribute_present;
-    encoder << cookie.http_only_attribute_present;
-    encoder << cookie.same_site_attribute;
+    TRY(encoder.encode(cookie.name));
+    TRY(encoder.encode(cookie.value));
+    TRY(encoder.encode(cookie.expiry_time_from_expires_attribute));
+    TRY(encoder.encode(cookie.expiry_time_from_max_age_attribute));
+    TRY(encoder.encode(cookie.domain));
+    TRY(encoder.encode(cookie.path));
+    TRY(encoder.encode(cookie.secure_attribute_present));
+    TRY(encoder.encode(cookie.http_only_attribute_present));
+    TRY(encoder.encode(cookie.same_site_attribute));
 
-    return true;
+    return {};
 }
 
 template<>

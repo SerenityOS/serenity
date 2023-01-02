@@ -101,10 +101,16 @@ ErrorOr<void> AK::Formatter<DNS::RecordClass>::format(AK::FormatBuilder& builder
 namespace IPC {
 
 template<>
-bool encode(Encoder& encoder, DNS::Answer const& answer)
+ErrorOr<void> encode(Encoder& encoder, DNS::Answer const& answer)
 {
-    encoder << answer.name().as_string() << (u16)answer.type() << (u16)answer.class_code() << answer.ttl() << answer.record_data() << answer.mdns_cache_flush();
-    return true;
+    TRY(encoder.encode(answer.name().as_string()));
+    TRY(encoder.encode(static_cast<u16>(answer.type())));
+    TRY(encoder.encode(static_cast<u16>(answer.class_code())));
+    TRY(encoder.encode(answer.ttl()));
+    TRY(encoder.encode(answer.record_data()));
+    TRY(encoder.encode(answer.mdns_cache_flush()));
+
+    return {};
 }
 
 template<>

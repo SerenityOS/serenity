@@ -814,37 +814,32 @@ ResultOr<NonnullRefPtr<TupleDescriptor>> Value::infer_tuple_descriptor(Vector<Va
 }
 
 template<>
-bool IPC::encode(Encoder& encoder, SQL::Value const& value)
+ErrorOr<void> IPC::encode(Encoder& encoder, SQL::Value const& value)
 {
     auto type_flags = encode_type_flags(value);
-    encoder << type_flags;
+    TRY(encoder.encode(type_flags));
 
     if (value.is_null())
-        return true;
+        return {};
 
     switch (value.type()) {
     case SQL::SQLType::Null:
-        break;
+        return {};
     case SQL::SQLType::Text:
-        encoder << value.to_deprecated_string();
-        break;
+        return encoder.encode(value.to_deprecated_string());
     case SQL::SQLType::Integer:
-        SQL::downsize_integer(value, [&](auto integer, auto) {
-            encoder << integer;
+        return SQL::downsize_integer(value, [&](auto integer, auto) {
+            return encoder.encode(integer);
         });
-        break;
     case SQL::SQLType::Float:
-        encoder << value.to_double().value();
-        break;
+        return encoder.encode(value.to_double().value());
     case SQL::SQLType::Boolean:
-        encoder << value.to_bool().value();
-        break;
+        return encoder.encode(value.to_bool().value());
     case SQL::SQLType::Tuple:
-        encoder << value.to_vector().value();
-        break;
+        return encoder.encode(value.to_vector().value());
     }
 
-    return true;
+    VERIFY_NOT_REACHED();
 }
 
 template<>
