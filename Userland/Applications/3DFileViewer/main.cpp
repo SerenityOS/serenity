@@ -116,7 +116,7 @@ private:
     float m_rotation_speed = 60.f;
     bool m_show_frame_rate = false;
     int m_cycles = 0;
-    int m_accumulated_time = 0;
+    Time m_accumulated_time = {};
     RefPtr<GUI::Label> m_stats;
     GLint m_wrap_s_mode = GL_REPEAT;
     GLint m_wrap_t_mode = GL_REPEAT;
@@ -265,10 +265,10 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_context->present();
 
     if ((m_cycles % 30) == 0) {
-        auto render_time = m_accumulated_time / 30.0;
+        auto render_time = static_cast<double>(m_accumulated_time.to_milliseconds()) / 30.0;
         auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
         m_stats->set_text(DeprecatedString::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
-        m_accumulated_time = 0;
+        m_accumulated_time = {};
 
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHT1);
@@ -285,7 +285,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
     update();
 
-    m_accumulated_time += timer.elapsed();
+    m_accumulated_time += timer.elapsed_time();
     m_cycles++;
 }
 
