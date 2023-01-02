@@ -3,3 +3,4 @@ Name=Games Settings
 Executable=/bin/GamesSettings
 Category=Settings
 Description=Configure games
+ExcludeFromSystemMenu=true

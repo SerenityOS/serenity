@@ -112,6 +112,11 @@ bool AppFile::requires_root() const
     return m_config->read_bool_entry("App", "RequiresRoot", false);
 }
 
+bool AppFile::exclude_from_system_menu() const
+{
+    return m_config->read_bool_entry("App", "ExcludeFromSystemMenu", false);
+}
+
 Vector<DeprecatedString> AppFile::launcher_mime_types() const
 {
     Vector<DeprecatedString> mime_types;
