@@ -8,6 +8,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 
 namespace Gfx {
@@ -36,7 +37,7 @@ public:
     virtual ScaledFontMetrics metrics(float x_scale, float y_scale) const = 0;
     virtual ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const = 0;
     virtual float glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const = 0;
-    virtual RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale) const = 0;
+    virtual RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale, GlyphSubpixelOffset) const = 0;
     virtual u32 glyph_count() const = 0;
     virtual u16 units_per_em() const = 0;
     virtual u32 glyph_id_for_code_point(u32 code_point) const = 0;

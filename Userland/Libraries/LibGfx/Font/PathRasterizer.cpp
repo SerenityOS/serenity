@@ -19,9 +19,8 @@ PathRasterizer::PathRasterizer(Gfx::IntSize size)
 
 void PathRasterizer::draw_path(Gfx::Path& path)
 {
-    for (auto& line : path.split_lines()) {
-        draw_line(line.from, line.to);
-    }
+    for (auto& line : path.split_lines())
+        draw_line(line.from.translated(translation()), line.to.translated(translation()));
 }
 
 RefPtr<Gfx::Bitmap> PathRasterizer::accumulate()

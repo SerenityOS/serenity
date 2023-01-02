@@ -16,6 +16,7 @@ set(SOURCES
     Filters/StackBlurFilter.cpp
     Font/BitmapFont.cpp
     Font/Emoji.cpp
+    Font/Font.cpp
     Font/FontDatabase.cpp
     Font/OpenType/Cmap.cpp
     Font/OpenType/Font.cpp
