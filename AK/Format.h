@@ -8,7 +8,6 @@
 
 #include <AK/CheckedFormatString.h>
 
-#include <AK/AllOf.h>
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
 #include <AK/Error.h>
