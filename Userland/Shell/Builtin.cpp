@@ -1007,7 +1007,7 @@ int Shell::builtin_time(int argc, char const** argv)
             block_on_job(job);
             exit_code = job.exit_code();
         }
-        iteration_times.add(timer.elapsed());
+        iteration_times.add(static_cast<float>(timer.elapsed()));
     }
 
     if (number_of_iterations == 1) {

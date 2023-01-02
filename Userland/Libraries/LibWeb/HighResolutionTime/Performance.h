@@ -17,7 +17,7 @@ class Performance final : public DOM::EventTarget {
 public:
     virtual ~Performance() override;
 
-    double now() const { return m_timer.elapsed(); }
+    double now() const { return static_cast<double>(m_timer.elapsed()); }
     double time_origin() const;
 
     JS::GCPtr<NavigationTiming::PerformanceTiming> timing();
