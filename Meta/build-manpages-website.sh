@@ -14,6 +14,9 @@ if [[ -e output ]]; then
     exit 1
 fi
 
+# Use case-insensitive sorting, which will lead to more intuitive index pages.
+SORT="sort -f"
+
 # Prepare output directories
 for d in "${MAN_DIR}"*/; do
     dir_name=$(basename "$d")
@@ -26,23 +29,26 @@ done
 # If you're here because your local results are different from the website:
 # Check that your pandoc version matches the pandoc-version specified in manpages.yaml.
 
-for md_file in "${MAN_DIR}"*/*.md; do
+for md_file in $(find "${MAN_DIR}" -iname '*.md' | ${SORT}); do
     relative_path="$(realpath --relative-to="${MAN_DIR}" "${md_file}")"
     section="${relative_path%%/*}"
     section_number="${section#man}"
     filename="${relative_path#*/}"
     name="${filename%.md}"
+    output_file="output/${section}/${name}.html"
+
+    mkdir -p "$(dirname "${output_file}")"
     pandoc -f gfm -t html5 -s \
         -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
         --lua-filter=Meta/convert-markdown-links.lua \
         --metadata title="${name}(${section_number}) - SerenityOS man pages" \
-        -o "output/${section}/${name}.html" \
+        -o "${output_file}" \
         "${md_file}"
 done
 
 # Generate man page listings through pandoc
-for d in output/*/; do
-    section=$(basename "$d")
+for section_directory in output/*/; do
+    section=$(basename "${section_directory}")
     section_number="${section#man}"
     case "${section_number}" in
         1) section_title="User Programs";;
@@ -50,18 +56,19 @@ for d in output/*/; do
         3) section_title="Library Functions";;
         4) section_title="Special Files";;
         5) section_title="File Formats";;
-        6) section_title="Games";; # TODO: Populate this section
+        6) section_title="Games";;
         7) section_title="Miscellanea";;
         8) section_title="Sysadmin Tools";;
         *) section_title="SerenityOS man pages"; echo "WARNING: Unrecognized section ${section_number}?!";;
     esac
+    output="output/${section}/index.html"
     pandoc -f gfm -t html5 -s \
         -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
         --metadata title="Section ${section_number} - ${section_title}" \
-        -o "output/${section}/index.html" \
+        -o "${output}" \
         <(
-            for f in "$d"/*; do
-                filename=$(basename "$f")
+            for f in $(find "${section_directory}" -iname '*.html' | ${SORT}); do
+                filename=$(realpath --relative-to="${section_directory}" "$f")
                 name="${filename%.html}"
                 if [[ "$filename" == "index.html" ]]; then
                     continue
