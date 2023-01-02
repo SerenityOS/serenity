@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/IterationDecision.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 

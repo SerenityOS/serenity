@@ -11,7 +11,6 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
-#include <AK/IterationDecision.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtr.h>
