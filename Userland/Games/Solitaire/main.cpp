@@ -7,10 +7,12 @@
  */
 
 #include "Game.h"
+#include <AK/URL.h>
 #include <Games/Solitaire/SolitaireGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -29,6 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"sv));
+
+    auto const man_file = "/usr/share/man/man6/Solitaire.md"sv;
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domains({ "Games", "Solitaire" });
     Config::monitor_domain("Games");
@@ -207,6 +214,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window)));
+
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
+    })));
 
     window->set_resizable(false);
     window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height().as_int());
