@@ -48,7 +48,7 @@ protected:
 
 // Objects with a foreground color.
 class GraphicsObject : public SlideObject {
-    C_OBJECT_ABSTRACT(SlideObject);
+    C_OBJECT_ABSTRACT(GraphicsObject);
 
 public:
     virtual ~GraphicsObject() = default;
@@ -64,10 +64,11 @@ protected:
 };
 
 class Text : public GraphicsObject {
-    C_OBJECT(SlideObject);
+    C_OBJECT(Text);
 
 public:
     Text();
+    Text(DeprecatedString text, Gfx::IntPoint position, DeprecatedString font, int font_size, unsigned font_weight, Gfx::Color color);
     virtual ~Text() = default;
 
     virtual void paint(Gfx::Painter&, Gfx::FloatSize display_scale) const override;

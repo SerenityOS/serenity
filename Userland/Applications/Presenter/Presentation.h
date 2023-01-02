@@ -30,7 +30,7 @@ public:
     StringView author() const;
     Gfx::IntSize normative_size() const { return m_normative_size; }
 
-    Slide const& current_slide() const { return m_slides[m_current_slide.value()]; }
+    Slide& current_slide() { return m_slides[m_current_slide.value()]; }
     unsigned current_slide_number() const { return m_current_slide.value(); }
     unsigned current_frame_in_slide_number() const { return m_current_frame_in_slide.value(); }
 
@@ -39,7 +39,7 @@ public:
     void go_to_first_slide();
 
     // This assumes that the caller has clipped the painter to exactly the display area.
-    void paint(Gfx::Painter& painter) const;
+    void paint(Gfx::Painter& painter);
 
 private:
     static HashMap<DeprecatedString, DeprecatedString> parse_metadata(JsonObject const& metadata_object);

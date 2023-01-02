@@ -147,7 +147,7 @@ ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& me
     };
 }
 
-void Presentation::paint(Gfx::Painter& painter) const
+void Presentation::paint(Gfx::Painter& painter)
 {
     auto display_area = painter.clip_rect();
     // These two should be the same, but better be safe than sorry.

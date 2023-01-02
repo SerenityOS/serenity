@@ -6,12 +6,14 @@
 
 #include "PresenterWidget.h"
 #include "Presentation.h"
+#include "SlideObject.h"
 #include <AK/Format.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -118,17 +120,12 @@ void PresenterWidget::paint_event([[maybe_unused]] GUI::PaintEvent& event)
 {
     if (!m_current_presentation)
         return;
-    auto normative_size = m_current_presentation->normative_size();
-    // Choose an aspect-correct size which doesn't exceed actual widget dimensions.
-    auto width_corresponding_to_height = height() * normative_size.aspect_ratio();
-    auto dimension_to_preserve = (width_corresponding_to_height > width()) ? Orientation::Horizontal : Orientation::Vertical;
-    auto display_size = size().match_aspect_ratio(normative_size.aspect_ratio(), dimension_to_preserve);
 
     GUI::Painter painter { *this };
-    auto clip_rect = Gfx::IntRect::centered_at({ width() / 2, height() / 2 }, display_size);
     painter.clear_clip_rect();
     // FIXME: This currently leaves a black border when the window aspect ratio doesn't match.
     // Figure out a way to apply the background color here as well.
+    auto clip_rect = presentation_rect();
     painter.add_clip_rect(clip_rect);
 
     m_current_presentation->paint(painter);
@@ -153,4 +150,45 @@ void PresenterWidget::drop_event(GUI::DropEvent& event)
         window()->move_to_front();
         set_file(urls.first().path());
     }
+}
+
+void PresenterWidget::mousedown_event(GUI::MouseEvent& event)
+{
+    if (!m_current_presentation)
+        return;
+
+    if (event.button() != GUI::MouseButton::Primary)
+        return;
+
+    auto presentation_rect = this->presentation_rect();
+    if (!presentation_rect.contains(event.position()))
+        return;
+
+    DeprecatedString value;
+    if (GUI::InputBox::show(window(), value, "Enter text to insert:"sv, "Insert Text"sv) != GUI::InputBox::ExecResult::OK || value.is_empty())
+        return;
+
+    auto normative_size = m_current_presentation->normative_size();
+    Gfx::FloatPoint scale_factor = {
+        (float)normative_size.width() / (float)presentation_rect.width(),
+        (float)normative_size.height() / (float)presentation_rect.height()
+    };
+    Gfx::IntPoint position = event.position().translated(-presentation_rect.location()).to_type<float>().scaled(scale_factor).to_rounded<int>();
+
+    // (DeprecatedString text, Gfx::IntPoint position, DeprecatedString font, int font_size, unsigned font_weight, Gfx::Color color);
+    auto slide_object = Text::construct(value, position, DeprecatedString("Liberation Serif"), 16, Gfx::FontWeight::Regular, Color::Black);
+    m_current_presentation->current_slide().add_slide_object(move(slide_object));
+}
+
+Gfx::IntRect PresenterWidget::presentation_rect()
+{
+    if (!m_current_presentation)
+        return {};
+
+    auto normative_size = m_current_presentation->normative_size();
+    // Choose an aspect-correct size which doesn't exceed actual widget dimensions.
+    auto width_corresponding_to_height = height() * normative_size.aspect_ratio();
+    auto dimension_to_preserve = (width_corresponding_to_height > width()) ? Orientation::Horizontal : Orientation::Vertical;
+    auto display_size = size().match_aspect_ratio(normative_size.aspect_ratio(), dimension_to_preserve);
+    return Gfx::IntRect::centered_at({ width() / 2, height() / 2 }, display_size);
 }

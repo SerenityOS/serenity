@@ -32,8 +32,11 @@ protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
 
 private:
+    Gfx::IntRect presentation_rect();
+
     OwnPtr<Presentation> m_current_presentation;
     RefPtr<GUI::Action> m_next_slide_action;
     RefPtr<GUI::Action> m_previous_slide_action;

@@ -82,6 +82,18 @@ Text::Text()
     REGISTER_STRING_PROPERTY("font", font, set_font);
 }
 
+Text::Text(DeprecatedString text, Gfx::IntPoint position, DeprecatedString font, int font_size, unsigned font_weight, Gfx::Color color)
+    : m_text(move(text))
+    , m_font(font)
+    , m_font_size(font_size)
+    , m_font_weight(font_weight)
+    , m_text_alignment(Gfx::TextAlignment::TopLeft)
+{
+    // FIXME: Actually calculate the size needed to fit the text
+    m_rect = Gfx::IntRect(position, { 100, 100 });
+    m_color = color;
+}
+
 void Text::paint(Gfx::Painter& painter, Gfx::FloatSize display_scale) const
 {
     auto scaled_bounding_box = this->transformed_bounding_box(painter.clip_rect(), display_scale);
