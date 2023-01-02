@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/BinarySearch.h>
-#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <cstring>
 #include <new>

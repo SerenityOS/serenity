@@ -9,7 +9,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
-#include <AK/Span.h>
 #include <AK/StringView.h>
 #include <LibUnicode/Forward.h>
 

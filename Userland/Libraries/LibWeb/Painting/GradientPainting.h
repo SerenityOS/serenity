@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibWeb/Forward.h>
