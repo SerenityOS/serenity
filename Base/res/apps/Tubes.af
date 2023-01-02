@@ -1,4 +1,5 @@
 [App]
 Name=Tubes
 Executable=/bin/Tubes
-Category=Demos
+Category=Demos/Screensaver
+ExcludeFromSystemMenu=true

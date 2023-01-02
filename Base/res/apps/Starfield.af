@@ -1,4 +1,5 @@
 [App]
 Name=Starfield
 Executable=/bin/Starfield
-Category=Demos
+Category=Demos/Screensaver
+ExcludeFromSystemMenu=true
