@@ -6,6 +6,7 @@
 
 #include "FileDB.h"
 
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
 

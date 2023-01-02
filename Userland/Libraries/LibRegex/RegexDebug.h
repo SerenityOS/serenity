@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibRegex/RegexMatcher.h>
 

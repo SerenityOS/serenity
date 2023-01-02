@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/Tuple.h>
 #include <LibRegex/Regex.h>

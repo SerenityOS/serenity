@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/LEB128.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopeLogger.h>

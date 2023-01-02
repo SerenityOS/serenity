@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Debug.h>
 #include <AK/Vector.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/TupleDescriptor.h>
