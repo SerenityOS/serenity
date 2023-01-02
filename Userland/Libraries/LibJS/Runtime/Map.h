@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
 #include <AK/HashMap.h>
 #include <AK/RedBlackTree.h>
 #include <LibJS/Runtime/GlobalObject.h>

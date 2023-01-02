@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Atomic.h>
-#include <AK/Concepts.h>
 #include <AK/Vector.h>
 
 #include <Kernel/Arch/x86_64/DescriptorTable.h>
