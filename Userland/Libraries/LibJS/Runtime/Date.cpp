@@ -482,10 +482,7 @@ double make_day(double year, double month, double date)
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
     if (!AK::is_within_range<int>(ym) || !AK::is_within_range<int>(mn + 1))
         return NAN;
-
-    // FIXME: We are avoiding AK::years_to_days_since_epoch here because it is implemented by looping over
-    //        the range [1970, ym), which will spin for any time value with an extremely large year.
-    auto t = time_from_year(ym) + (day_of_year(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * ms_per_day);
+    auto t = days_since_epoch(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * ms_per_day;
 
     // 9. Return Day(t) + dt - 1𝔽.
     return day(static_cast<double>(t)) + dt - 1;
