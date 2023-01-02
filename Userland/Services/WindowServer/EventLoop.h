@@ -8,7 +8,6 @@
 
 #include "ConnectionFromClient.h"
 #include "WMConnectionFromClient.h"
-#include <AK/ByteBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <LibIPC/MultiServer.h>

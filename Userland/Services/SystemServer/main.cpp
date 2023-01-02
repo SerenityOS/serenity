@@ -7,7 +7,6 @@
 
 #include "Service.h"
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <Kernel/API/DeviceEvent.h>
 #include <LibCore/ArgsParser.h>

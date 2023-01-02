@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/Time.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 

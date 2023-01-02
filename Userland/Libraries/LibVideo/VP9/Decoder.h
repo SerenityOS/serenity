@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Queue.h>

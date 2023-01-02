@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>

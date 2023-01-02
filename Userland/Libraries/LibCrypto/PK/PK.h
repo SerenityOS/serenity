@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <AK/Span.h>
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>

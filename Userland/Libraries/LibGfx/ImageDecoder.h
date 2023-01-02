@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>

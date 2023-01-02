@@ -9,7 +9,6 @@
 #include "ImportDialog.h"
 #include "JSIntegration.h"
 #include "Readers/CSV.h"
-#include <AK/ByteBuffer.h>
 #include <AK/StringView.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>

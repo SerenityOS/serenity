@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibTest/TestCase.h>
 

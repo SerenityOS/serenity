@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/FixedArray.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>

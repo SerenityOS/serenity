@@ -10,7 +10,6 @@
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>

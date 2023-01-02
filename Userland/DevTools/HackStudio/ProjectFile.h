@@ -7,7 +7,6 @@
 #pragma once
 
 #include "CodeDocument.h"
-#include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>

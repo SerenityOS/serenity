@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <LibGfx/Palette.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Span.h>
