@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/Time.h>

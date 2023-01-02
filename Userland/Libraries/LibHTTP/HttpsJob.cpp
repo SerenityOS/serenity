@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <LibHTTP/HttpsJob.h>
 
 namespace HTTP {

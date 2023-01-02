@@ -9,6 +9,7 @@
 #include "RegexDebug.h"
 #include <AK/AnyOf.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/ScopeGuard.h>

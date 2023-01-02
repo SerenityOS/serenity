@@ -8,7 +8,6 @@
 #include "RegexDebug.h"
 #include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibUnicode/CharacterTypes.h>
 

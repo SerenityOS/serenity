@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/MemoryStream.h>

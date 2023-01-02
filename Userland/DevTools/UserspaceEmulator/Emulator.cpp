@@ -9,7 +9,6 @@
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
-#include <AK/Debug.h>
 #include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/RedBlackTree.h>
 #include <AK/Stack.h>

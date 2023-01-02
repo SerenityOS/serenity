@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/HashTable.h>
 #include <AK/SourceLocation.h>
 #include <AK/Tuple.h>

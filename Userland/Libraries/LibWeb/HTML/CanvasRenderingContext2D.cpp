@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
