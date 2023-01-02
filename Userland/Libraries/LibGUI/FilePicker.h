@@ -18,7 +18,7 @@ namespace GUI {
 class FilePicker final
     : public Dialog
     , private ModelClient {
-    C_OBJECT(FilePicker);
+    C_OBJECT_ABSTRACT(FilePicker);
 
 public:
     enum class Mode {
@@ -43,7 +43,8 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    FilePicker(Window* parent_window, Mode type = Mode::Open, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    static ErrorOr<NonnullRefPtr<FilePicker>> try_create(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
 
     static DeprecatedString ok_button_name(Mode mode)
     {
