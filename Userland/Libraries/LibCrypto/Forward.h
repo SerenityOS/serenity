@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
+#include <AK/StdLibExtraDetails.h>
 
 namespace Crypto {
 
