@@ -9,7 +9,6 @@
 #include <AK/Atomic.h>
 #include <AK/CircularQueue.h>
 #include <AK/Error.h>
-#include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
