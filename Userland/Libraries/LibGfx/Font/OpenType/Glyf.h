@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/OpenType/Tables.h>
 #include <LibGfx/Font/PathRasterizer.h>
 #include <math.h>
@@ -55,13 +56,13 @@ public:
             }
         }
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> rasterize(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset, GlyphCb glyph_callback) const
         {
             switch (m_type) {
             case Type::Simple:
-                return rasterize_simple(font_ascender, font_descender, x_scale, y_scale);
+                return rasterize_simple(font_ascender, font_descender, x_scale, y_scale, subpixel_offset);
             case Type::Composite:
-                return rasterize_composite(font_ascender, font_descender, x_scale, y_scale, glyph_callback);
+                return rasterize_composite(font_ascender, font_descender, x_scale, y_scale, subpixel_offset, glyph_callback);
             }
             VERIFY_NOT_REACHED();
         }
@@ -94,7 +95,7 @@ public:
         };
 
         void rasterize_impl(Gfx::PathRasterizer&, Gfx::AffineTransform const&) const;
-        RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale) const;
+        RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset) const;
 
         template<typename GlyphCb>
         void rasterize_composite_loop(Gfx::PathRasterizer& rasterizer, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
@@ -120,11 +121,12 @@ public:
         }
 
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> rasterize_composite(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize_composite(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset, GlyphCb glyph_callback) const
         {
             u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
             u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
             Gfx::PathRasterizer rasterizer(Gfx::IntSize(width, height));
+            rasterizer.translate(subpixel_offset.to_float_point());
             auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
 
             rasterize_composite_loop(rasterizer, affine, glyph_callback);
