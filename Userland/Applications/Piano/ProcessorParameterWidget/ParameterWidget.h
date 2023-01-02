@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <AK/StdLibExtraDetails.h>
 #include <LibCore/Object.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/Label.h>
