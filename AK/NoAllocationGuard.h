@@ -12,8 +12,8 @@
 #if defined(KERNEL)
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Heap/kmalloc.h>
-#else
-#    include <LibC/mallocdefs.h>
+#elif defined(AK_OS_SERENITY)
+#    include <mallocdefs.h>
 #endif
 
 namespace AK {
