@@ -243,8 +243,9 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     struct msghdr msg;
     TRY(copy_from_user(&msg, user_msg));
 
-    if (msg.msg_iovlen != 1)
-        return ENOTSUP; // FIXME: Support this :)
+    if (msg.msg_iovlen <= 0 || msg.msg_iovlen > IOV_MAX)
+        return EMSGSIZE;
+
     Vector<iovec, 1> iovs;
     TRY(iovs.try_resize(msg.msg_iovlen));
     TRY(copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen));
@@ -255,24 +256,33 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
-    auto& socket = *description->socket();
 
+    auto& socket = *description->socket();
     if (socket.is_shut_down_for_reading())
         return 0;
 
-    auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
     Time timestamp {};
     bool blocking = (flags & MSG_DONTWAIT) ? false : description->is_blocking();
-    auto result = socket.recvfrom(*description, data_buffer, iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp, blocking);
-
-    if (result.is_error())
-        return result.release_error();
-
     int msg_flags = 0;
 
-    if (result.value() > iovs[0].iov_len) {
-        VERIFY(socket.type() != SOCK_STREAM);
-        msg_flags |= MSG_TRUNC;
+    Checked<ssize_t> total_length = 0;
+    for (auto const& iov : iovs)
+        total_length += iov.iov_len;
+
+    if (total_length.has_overflow())
+        return EINVAL;
+
+    auto data = TRY(ByteBuffer::create_zeroed(total_length.value()));
+    auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
+    auto nread = TRY(socket.recvfrom(*description, data_buffer, data.size(), flags, user_addr, user_addr_length, timestamp, blocking));
+    size_t offset = 0;
+    for (auto const& iov : iovs) {
+        VERIFY(offset + iov.iov_len <= data.size());
+        TRY(copy_to_user(iov.iov_base, data.offset_pointer(offset), iov.iov_len));
+        offset += iov.iov_len;
+
+        if (offset >= nread)
+            break;
     }
 
     if (socket.wants_timestamp()) {
@@ -291,7 +301,7 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     }
 
     TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_flags, &msg_flags));
-    return result.value();
+    return nread;
 }
 
 template<bool sockname, typename Params>

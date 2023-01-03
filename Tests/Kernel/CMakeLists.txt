@@ -54,6 +54,7 @@ set(LIBTEST_BASED_SOURCES
     TestProcFS.cpp
     TestProcFSWrite.cpp
     TestSendMsg.cpp
+    TestRecvMsg.cpp
     TestSigAltStack.cpp
     TestSigHandler.cpp
     TestSigWait.cpp
