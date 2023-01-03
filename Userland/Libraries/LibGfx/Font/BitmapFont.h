@@ -56,7 +56,7 @@ public:
     bool contains_glyph(u32 code_point) const override;
     bool contains_raw_glyph(u32 code_point) const { return m_glyph_widths[code_point] > 0; }
 
-    ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const override
+    virtual float glyph_or_emoji_width(u32 code_point) const override
     {
         if (m_fixed_width)
             return m_glyph_width;
@@ -67,7 +67,7 @@ public:
     int x_height() const override { return m_x_height; }
     int preferred_line_height() const override { return glyph_height() + m_line_gap; }
 
-    u8 glyph_width(u32 code_point) const override;
+    virtual float glyph_width(u32 code_point) const override;
     u8 raw_glyph_width(u32 code_point) const { return m_glyph_widths[code_point]; }
 
     u8 min_glyph_width() const override { return m_min_glyph_width; }

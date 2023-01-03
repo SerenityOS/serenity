@@ -308,7 +308,7 @@ bool BitmapFont::contains_glyph(u32 code_point) const
     return index.has_value() && m_glyph_widths[index.value()] > 0;
 }
 
-u8 BitmapFont::glyph_width(u32 code_point) const
+float BitmapFont::glyph_width(u32 code_point) const
 {
     if (is_ascii(code_point) && !is_ascii_printable(code_point))
         return 0;

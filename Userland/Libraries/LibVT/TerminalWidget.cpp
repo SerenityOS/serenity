@@ -154,13 +154,13 @@ Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width('x');
-    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x'), font().glyph_height() };
+    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, static_cast<int>(ceilf(font().glyph_width('x'))), font().glyph_height() };
 }
 
 Gfx::IntRect TerminalWidget::row_rect(u16 row)
 {
     int y = row * m_line_height;
-    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_terminal.columns(), font().glyph_height() };
+    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, static_cast<int>(ceilf(font().glyph_width('x'))) * m_terminal.columns(), font().glyph_height() };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -534,7 +534,7 @@ Gfx::IntSize TerminalWidget::compute_base_size() const
 
 void TerminalWidget::apply_size_increments_to_window(GUI::Window& window)
 {
-    window.set_size_increment({ font().glyph_width('x'), m_line_height });
+    window.set_size_increment({ static_cast<int>(ceilf(font().glyph_width('x'))), m_line_height });
     window.set_base_size(compute_base_size());
 }
 
@@ -1230,7 +1230,7 @@ void TerminalWidget::update_color_scheme()
 Gfx::IntSize TerminalWidget::widget_size_for_font(Gfx::Font const& font) const
 {
     return {
-        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * font.glyph_width('x')) + m_scrollbar->width(),
+        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * static_cast<int>(ceilf(font.glyph_width('x')))) + m_scrollbar->width(),
         (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * (font.glyph_height() + m_line_spacing))
     };
 }

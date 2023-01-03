@@ -57,14 +57,14 @@ Gfx::Glyph ScaledFont::glyph(u32 code_point) const
     return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender);
 }
 
-u8 ScaledFont::glyph_width(u32 code_point) const
+float ScaledFont::glyph_width(u32 code_point) const
 {
     auto id = glyph_id_for_code_point(code_point);
     auto metrics = glyph_metrics(id);
     return metrics.advance_width;
 }
 
-int ScaledFont::glyph_or_emoji_width(u32 code_point) const
+float ScaledFont::glyph_or_emoji_width(u32 code_point) const
 {
     auto id = glyph_id_for_code_point(code_point);
     auto metrics = glyph_metrics(id);

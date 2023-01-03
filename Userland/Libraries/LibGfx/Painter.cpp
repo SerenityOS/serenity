@@ -2450,7 +2450,7 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
 
     if (underline_offset.has_value()) {
         Utf8View utf8_view { name_to_draw };
-        int width = 0;
+        float width = 0;
         for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
             if (utf8_view.byte_offset_of(it) >= underline_offset.value()) {
                 int y = text_rect.bottom() + 1;
