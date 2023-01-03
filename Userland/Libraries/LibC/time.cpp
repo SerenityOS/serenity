@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Atomic.h>
 #include <AK/DateConstants.h>
 #include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>

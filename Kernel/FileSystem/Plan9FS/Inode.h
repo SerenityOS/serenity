@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/Plan9FS/FileSystem.h>
 #include <Kernel/FileSystem/Plan9FS/Message.h>

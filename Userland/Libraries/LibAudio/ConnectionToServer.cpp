@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
 #include <AK/Format.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Queue.h>

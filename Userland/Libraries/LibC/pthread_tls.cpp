@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
+#include <AK/StdLibExtras.h>
 #include <errno.h>
 #include <pthread.h>
 #include <unistd.h>

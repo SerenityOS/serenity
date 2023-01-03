@@ -9,7 +9,6 @@
 
 #include "ConnectionFromClient.h"
 #include "FadingProperty.h"
-#include <AK/Atomic.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Queue.h>
 #include <AK/RefCounted.h>
