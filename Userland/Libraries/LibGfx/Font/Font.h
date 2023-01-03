@@ -118,7 +118,7 @@ public:
     virtual FontPixelMetrics pixel_metrics() const = 0;
 
     virtual u8 presentation_size() const = 0;
-    virtual int pixel_size() const = 0;
+    virtual float pixel_size() const = 0;
     virtual float point_size() const = 0;
     virtual u8 slope() const = 0;
 

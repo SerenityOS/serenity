@@ -42,7 +42,7 @@ public:
     u8 presentation_size() const override { return m_presentation_size; }
     void set_presentation_size(u8 size) { m_presentation_size = size; }
 
-    virtual int pixel_size() const override { return m_glyph_height; }
+    virtual float pixel_size() const override { return m_glyph_height; }
     virtual float point_size() const override { return static_cast<float>(m_glyph_height) * 0.75f; }
 
     u16 weight() const override { return m_weight; }
