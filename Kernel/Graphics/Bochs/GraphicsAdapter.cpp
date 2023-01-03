@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
+#include <AK/Platform.h>
+
 #include <AK/Try.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Hypervisor/BochsDisplayConnector.h>

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
 #include <AK/Math.h>
 #include <LibGfx/Gamma.h>
 #include <LibGfx/Line.h>
