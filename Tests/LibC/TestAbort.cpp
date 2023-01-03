@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <assert.h> // FIXME: Remove when `_abort` is moved to <stdlib.h>
 #include <signal.h>
 #include <stdlib.h>
 
