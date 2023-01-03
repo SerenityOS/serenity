@@ -243,7 +243,7 @@ void WindowGeometryOverlay::update_rect()
         } else {
             m_label = window->rect().to_deprecated_string();
         }
-        m_label_rect = Gfx::IntRect { 0, 0, wm.font().width(m_label) + 16, wm.font().glyph_height() + 10 };
+        m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().glyph_height() + 10 };
 
         auto rect = calculate_frame_rect(m_label_rect).centered_within(window->frame().rect());
         auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());

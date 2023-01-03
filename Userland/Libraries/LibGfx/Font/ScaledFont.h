@@ -54,9 +54,9 @@ public:
     virtual u8 glyph_fixed_width() const override;
     virtual u8 baseline() const override { return m_point_height; }  // FIXME: Read from font
     virtual u8 mean_line() const override { return m_point_height; } // FIXME: Read from font
-    virtual int width(StringView) const override;
-    virtual int width(Utf8View const&) const override;
-    virtual int width(Utf32View const&) const override;
+    virtual float width(StringView) const override;
+    virtual float width(Utf8View const&) const override;
+    virtual float width(Utf32View const&) const override;
     virtual DeprecatedString name() const override { return DeprecatedString::formatted("{} {}", family(), variant()); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
     virtual u8 glyph_spacing() const override { return 0; }
@@ -75,7 +75,7 @@ private:
     mutable HashMap<u32, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
 
     template<typename T>
-    int unicode_view_width(T const& view) const;
+    float unicode_view_width(T const& view) const;
 };
 
 }

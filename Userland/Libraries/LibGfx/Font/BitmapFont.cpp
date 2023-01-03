@@ -335,9 +335,9 @@ int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) con
     return glyph_height() * emoji->width() / emoji->height();
 }
 
-int BitmapFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
-int BitmapFont::width(Utf8View const& view) const { return unicode_view_width(view); }
-int BitmapFont::width(Utf32View const& view) const { return unicode_view_width(view); }
+float BitmapFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
+float BitmapFont::width(Utf8View const& view) const { return unicode_view_width(view); }
+float BitmapFont::width(Utf32View const& view) const { return unicode_view_width(view); }
 
 template<typename T>
 ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const

@@ -205,7 +205,7 @@ void TextTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.draw_scaled_bitmap(scaled_rect, text_bitmap, text_bitmap->rect(), 1.0);
 
     // marching ants box
-    auto right_padding = m_selected_font->width("  "sv);
+    auto right_padding = static_cast<int>(ceilf(m_selected_font->width("  "sv)));
     m_ants_rect = Gfx::IntRect(text_location.translated(-4, -2), { scaled_rect.width() + 4 + right_padding, scaled_rect.height() + 4 });
     m_editor->draw_marching_ants(painter, m_ants_rect);
 
@@ -241,7 +241,7 @@ void TextTool::apply_text_to_layer()
     auto text_height = m_selected_font->preferred_line_height() * static_cast<int>(m_text_editor->line_count());
 
     painter.set_font(*m_selected_font);
-    auto text_rect = Gfx::Rect<int>(m_add_text_position, { text_width, text_height });
+    auto text_rect = Gfx::Rect<int>(m_add_text_position, { static_cast<int>(ceilf(text_width)), text_height });
     painter.draw_text(text_rect, demo_text, Gfx::TextAlignment::TopLeft, m_text_color);
     m_editor->did_complete_action(tool_name());
     layer->did_modify_bitmap(text_rect);

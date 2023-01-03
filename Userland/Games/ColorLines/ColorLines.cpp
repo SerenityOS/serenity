@@ -211,7 +211,7 @@ void ColorLines::paint_event(GUI::PaintEvent& event)
 
     // Draw score
     auto const score_text = MUST(String::formatted("{:05}"sv, m_score));
-    auto text_width { m_score_font->width(score_text) };
+    auto text_width = static_cast<int>(ceilf(m_score_font->width(score_text)));
     auto const glyph_height = m_score_font->glyph_height();
     auto const score_text_rect = Gfx::IntRect {
         frame_inner_rect().top_left().translated(text_margin),

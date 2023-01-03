@@ -188,7 +188,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
             auto node_text = index.data().to_deprecated_string();
             Gfx::IntRect rect = {
                 x_offset, y_offset,
-                icon_size() + icon_spacing() + text_padding() + font_for_index(index)->width(node_text) + text_padding(), row_height()
+                static_cast<int>(ceilf(icon_size() + icon_spacing() + text_padding() + font_for_index(index)->width(node_text) + text_padding())), row_height()
             };
             Gfx::IntRect toggle_rect;
             if (row_count_at_index > 0) {

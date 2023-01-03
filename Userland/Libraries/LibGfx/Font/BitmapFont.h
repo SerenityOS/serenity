@@ -88,9 +88,9 @@ public:
         update_x_height();
     }
 
-    int width(StringView) const override;
-    int width(Utf8View const&) const override;
-    int width(Utf32View const&) const override;
+    virtual float width(StringView) const override;
+    virtual float width(Utf8View const&) const override;
+    virtual float width(Utf32View const&) const override;
 
     DeprecatedString name() const override { return m_name; }
     void set_name(DeprecatedString name) { m_name = move(name); }

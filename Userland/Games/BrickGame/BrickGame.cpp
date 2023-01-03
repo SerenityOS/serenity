@@ -499,7 +499,7 @@ void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, bool is_on)
 
 void BrickGame::paint_text(GUI::Painter& painter, int row, DeprecatedString const& text)
 {
-    auto const text_width { font().width(text) };
+    auto const text_width = static_cast<int>(ceilf(font().width(text)));
     auto const entire_area_rect { frame_inner_rect() };
     auto const margin = 4;
     auto const glyph_height = font().glyph_height();

@@ -2443,7 +2443,7 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
     Optional<size_t> underline_offset;
     auto name_to_draw = parse_ampersand_string(text, &underline_offset);
 
-    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), static_cast<int>(ceilf(font.pixel_size())) };
+    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(name_to_draw))), static_cast<int>(ceilf(font.pixel_size())) };
     text_rect.align_within(rect, text_alignment);
 
     draw_text(text_rect, name_to_draw, font, text_alignment, color);

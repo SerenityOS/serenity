@@ -140,9 +140,9 @@ public:
     virtual u8 baseline() const = 0;
     virtual u8 mean_line() const = 0;
 
-    virtual int width(StringView) const = 0;
-    virtual int width(Utf8View const&) const = 0;
-    virtual int width(Utf32View const&) const = 0;
+    virtual float width(StringView) const = 0;
+    virtual float width(Utf8View const&) const = 0;
+    virtual float width(Utf32View const&) const = 0;
 
     virtual DeprecatedString name() const = 0;
 

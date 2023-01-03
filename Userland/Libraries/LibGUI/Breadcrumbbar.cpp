@@ -109,10 +109,10 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
     auto button_width = min(button_text_width + icon_width + icon_padding + 16, max_button_width);
     auto shrunken_width = icon_width + icon_padding + (icon ? 4 : 16);
 
-    button.set_max_size(button_width, 16 + 8);
+    button.set_max_size(static_cast<int>(ceilf(button_width)), 16 + 8);
     button.set_min_size(shrunken_width, 16 + 8);
 
-    Segment segment { icon, text, data, button_width, shrunken_width, button.make_weak_ptr<GUI::Button>() };
+    Segment segment { icon, text, data, static_cast<int>(ceilf(button_width)), shrunken_width, button.make_weak_ptr<GUI::Button>() };
 
     m_segments.append(move(segment));
     relayout();

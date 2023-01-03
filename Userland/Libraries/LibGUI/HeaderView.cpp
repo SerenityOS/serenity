@@ -272,7 +272,7 @@ void HeaderView::paint_horizontal(Painter& painter)
         painter.draw_text(text_rect, text, font(), section_data.alignment, palette().button_text());
 
         if (is_key_column && (m_table_view.sort_order() != SortOrder::None)) {
-            Gfx::IntPoint offset { text_rect.x() + font().width(text) + sorting_arrow_offset, sorting_arrow_offset };
+            Gfx::IntPoint offset { text_rect.x() + static_cast<int>(ceilf(font().width(text))) + sorting_arrow_offset, sorting_arrow_offset };
             auto coordinates = m_table_view.sort_order() == SortOrder::Ascending
                 ? ascending_arrow_coordinates.span()
                 : descending_arrow_coordinates.span();
