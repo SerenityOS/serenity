@@ -1,0 +1,9 @@
+/Userland/Applications/CrashReporter @linusg
+/Userland/Libraries/LibJS @linusg
+/Userland/Libraries/LibWeb/Fetch @linusg
+/Userland/Libraries/LibWeb/HTML/Scripting @linusg
+/Userland/Libraries/LibWeb/Infra @linusg
+/Userland/Libraries/LibWeb/WebDriver @linusg
+/Userland/Libraries/LibWeb/WebIDL @linusg
+/Userland/Utilities/js.cpp @linusg
+*.js @linusg
