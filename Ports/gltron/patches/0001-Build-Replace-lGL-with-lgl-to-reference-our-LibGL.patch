@@ -8,7 +8,7 @@ Subject: [PATCH] Build: Replace `-lGL` with `-lgl` to reference our LibGL
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/configure b/configure
-index 226d00e..086139a 100755
+index 226d00eb04f048a51cfbc742ccfe62cfb7ad6750..086139a0e045fe6ad914fc641625fc281ca630e7 100755
 --- a/configure
 +++ b/configure
 @@ -3130,7 +3130,7 @@ if test "${ac_cv_lib_GL_main+set}" = set; then

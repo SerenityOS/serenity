@@ -10,7 +10,7 @@ compiler.
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/nebu/include/scripting/nebu_scripting.h b/nebu/include/scripting/nebu_scripting.h
-index 867eada..f5d8084 100644
+index 867eada85698197845f1bf500211f88fba286601..f5d80848390c13aa879cfa60127a5b140deb73d0 100644
 --- a/nebu/include/scripting/nebu_scripting.h
 +++ b/nebu/include/scripting/nebu_scripting.h
 @@ -18,9 +18,9 @@ extern int scripting_GetStringResult(char **s);

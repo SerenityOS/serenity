@@ -17,12 +17,3 @@ Build: Fix `char*` vs. `const char*` arguments
 These arguments are of the wrong constness, which will trip our
 compiler.
 
-## `0004-Build-Disable-nebu-using-SDL-s-glext.h-constants.patch`
-
-Build: Disable nebu using SDL's glext.h constants
-
-SerenityOS provides glext.h definitions inside GL/gl.h, but the
-build process thinks that glext.h doesn't exist, therefore it attempts
-to use SDL's definitions, which leads to a conflict. Therefore, disable
-use of said definitions.
-
