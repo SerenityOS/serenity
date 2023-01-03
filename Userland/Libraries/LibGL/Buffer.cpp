@@ -61,7 +61,7 @@ void GLContext::gl_buffer_sub_data(GLenum target, GLintptr offset, GLsizeiptr si
 
     auto& target_buffer = target == GL_ELEMENT_ARRAY_BUFFER ? m_element_array_buffer : m_array_buffer;
     RETURN_WITH_ERROR_IF(!target_buffer, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF((offset + size) > target_buffer->size(), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(static_cast<size_t>(offset + size) > target_buffer->size(), GL_INVALID_VALUE);
 
     target_buffer->replace_data(data, offset, size);
 }
