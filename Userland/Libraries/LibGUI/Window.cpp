@@ -385,8 +385,8 @@ void Window::handle_mouse_event(MouseEvent& event)
         } else {
             auto is_hovered = m_automatic_cursor_tracking_widget.ptr() == result.widget.ptr();
             set_hovered_widget(is_hovered ? m_automatic_cursor_tracking_widget.ptr() : nullptr);
-            return;
         }
+        return;
     }
     set_hovered_widget(result.widget);
     if (event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
