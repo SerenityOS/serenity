@@ -139,7 +139,7 @@ public:
         BEST // WARNING: this one can take an unreasonable amount of time!
     };
 
-    DeflateCompressor(Core::Stream::Handle<Core::Stream::Stream>, CompressionLevel = CompressionLevel::GOOD);
+    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(Core::Stream::Handle<Core::Stream::Stream>, CompressionLevel = CompressionLevel::GOOD);
     ~DeflateCompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -152,6 +152,8 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, CompressionLevel = CompressionLevel::GOOD);
 
 private:
+    DeflateCompressor(NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream>, CompressionLevel = CompressionLevel::GOOD);
+
     Bytes pending_block() { return { m_rolling_window + block_size, block_size }; }
 
     // LZ77 Compression
