@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Atomic.h>
-#include <AK/CircularQueue.h>
 #include <AK/Error.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
