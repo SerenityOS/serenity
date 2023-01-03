@@ -222,13 +222,13 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
 
 ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
 {
-    // iCC v4, 7.2.8 Date and time field
+    // ICC v4, 7.2.8 Date and time field
     return parse_date_time_number(header.profile_creation_time);
 }
 
 ErrorOr<void> parse_file_signature(ICCHeader const& header)
 {
-    // iCC v4, 7.2.9 Profile file signature field
+    // ICC v4, 7.2.9 Profile file signature field
     if (header.profile_file_signature != 0x61637370)
         return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
     return {};
