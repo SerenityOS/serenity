@@ -28,6 +28,11 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
     'Userland/Libraries/LibCpp/Tests/parser/',
     'Userland/Libraries/LibCpp/Tests/preprocessor/'
 }
+LIBC_CHECK_EXCLUDES = {
+    'Kernel/',
+    'Userland/Libraries/LibELF/',
+    'Userland/Libraries/LibRegex/'
+}
 
 # We check that "#pragma once" is present
 PRAGMA_ONCE_STRING = '#pragma once'
@@ -37,6 +42,9 @@ PRAGMA_ONCE_CHECK_EXCLUDES = {
 
 # We make sure that there's a blank line before and after pragma once
 GOOD_PRAGMA_ONCE_PATTERN = re.compile('(^|\\S\n\n)#pragma once(\n\n\\S.|$)')
+
+# LibC is supposed to be a system library; don't mention the directory.
+BAD_INCLUDE_LIBC = re.compile("# *include <LibC/")
 
 
 def should_check_file(filename):
@@ -63,6 +71,7 @@ def run():
     errors_license = []
     errors_pragma_once_bad = []
     errors_pragma_once_missing = []
+    errors_include_libc = []
 
     for filename in find_files_here_or_argv():
         with open(filename, "r") as f:
@@ -83,6 +92,9 @@ def run():
             else:
                 # Bad, the '#pragma once' is missing completely.
                 errors_pragma_once_missing.append(filename)
+        if not any(filename.startswith(forbidden_prefix) for forbidden_prefix in LIBC_CHECK_EXCLUDES):
+            if BAD_INCLUDE_LIBC.search(file_content):
+                errors_include_libc.append(filename)
 
     if errors_license:
         print("Files with bad licenses:", " ".join(errors_license))
@@ -90,8 +102,10 @@ def run():
         print("Files without #pragma once:", " ".join(errors_pragma_once_missing))
     if errors_pragma_once_bad:
         print("Files with a bad #pragma once:", " ".join(errors_pragma_once_bad))
+    if errors_include_libc:
+        print("Files that include a LibC header using #include <LibC/...>:", " ".join(errors_include_libc))
 
-    if errors_license or errors_pragma_once_missing or errors_pragma_once_bad:
+    if errors_license or errors_pragma_once_missing or errors_pragma_once_bad or errors_include_libc:
         sys.exit(1)
 
 

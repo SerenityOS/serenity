@@ -11,7 +11,7 @@
 #include <AK/Variant.h>
 
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
-#    include <LibC/errno_codes.h>
+#    include <errno_codes.h>
 #else
 #    include <errno.h>
 #    include <string.h>

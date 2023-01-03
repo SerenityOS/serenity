@@ -11,8 +11,6 @@
 #include <AK/Types.h>
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
-#include <LibC/serenity.h>
-#include <LibC/spawn.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -39,6 +37,8 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <LibThreading/BackgroundAction.h>
+#include <serenity.h>
+#include <spawn.h>
 #include <string.h>
 #include <unistd.h>
 

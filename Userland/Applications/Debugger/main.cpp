@@ -11,7 +11,6 @@
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
-#include <LibC/sys/arch/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDebug/DebugInfo.h>
@@ -23,6 +22,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/arch/regs.h>
 #include <unistd.h>
 
 RefPtr<Line::Editor> editor;
