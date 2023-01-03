@@ -775,6 +775,7 @@ Gfx::IntRect TreeView::content_rect(ModelIndex const& index) const
     traverse_in_paint_order([&](ModelIndex const& current_index, Gfx::IntRect const& rect, Gfx::IntRect const&, int) {
         if (index == current_index) {
             found_rect = rect;
+            found_rect.translate_by(0, column_header().height());
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
