@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace JS {
 
 enum class FunctionKind : u8 {
