@@ -502,5 +502,6 @@ else
         $SERENITY_PACKET_LOGGING_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        -append "${SERENITY_KERNEL_CMDLINE}" \
+        
 fi
