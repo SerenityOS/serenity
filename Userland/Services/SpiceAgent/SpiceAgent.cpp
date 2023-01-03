@@ -7,14 +7,14 @@
 #include "SpiceAgent.h"
 #include "ConnectionToClipboardServer.h"
 #include <AK/DeprecatedString.h>
-#include <LibC/memory.h>
-#include <LibC/unistd.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/JPGLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PNGWriter.h>
+#include <memory.h>
+#include <unistd.h>
 
 SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
     : m_fd(fd)

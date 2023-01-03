@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <LibC/mallocdefs.h>
+#include <mallocdefs.h>
 #include <stdlib.h>
 
 static constexpr size_t runs = 5000;
