@@ -1,9 +1,17 @@
 /Userland/Applications/CrashReporter @linusg
 /Userland/Libraries/LibJS @linusg
+/Userland/Libraries/LibJS/Runtime/Intl @trflynn89
+/Userland/Libraries/LibLocale @trflynn89
+/Userland/Libraries/LibSQL @trflynn89
+/Userland/Libraries/LibTimeZone @trflynn89
+/Userland/Libraries/LibUnicode @trflynn89
 /Userland/Libraries/LibWeb/Fetch @linusg
 /Userland/Libraries/LibWeb/HTML/Scripting @linusg
 /Userland/Libraries/LibWeb/Infra @linusg
-/Userland/Libraries/LibWeb/WebDriver @linusg
+/Userland/Libraries/LibWeb/WebDriver @linusg @trflynn89
 /Userland/Libraries/LibWeb/WebIDL @linusg
+/Userland/Services/SQLServer @trflynn89
+/Userland/Services/WebDriver @trflynn89
 /Userland/Utilities/js.cpp @linusg
+/Userland/Utilities/sql.cpp @trflynn89
 *.js @linusg
