@@ -28,8 +28,10 @@ typedef unsigned char GLboolean;
 typedef short GLshort;
 typedef unsigned short GLushort;
 typedef int GLint;
+typedef long GLint64;
 typedef long GLintptr;
 typedef unsigned int GLuint;
+typedef unsigned long GLuint64;
 typedef int GLfixed;
 typedef int GLsizei;
 typedef long GLsizeiptr;
@@ -40,11 +42,3 @@ typedef float GLclampf;
 typedef double GLdouble;
 typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
-
-#if defined(__x86_64__) || defined(__aarch64__)
-typedef long GLint64;
-typedef unsigned long GLuint64;
-#else
-typedef long long GLint64;
-typedef unsigned long long GLuint64;
-#endif
