@@ -14,7 +14,10 @@
 
 namespace Gfx {
 
-static constexpr int menubar_height = 20;
+int ClassicWindowTheme::menubar_height() const
+{
+    return max(20, FontDatabase::default_font().pixel_size() + 6);
+}
 
 Gfx::IntRect ClassicWindowTheme::titlebar_icon_rect(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette) const
 {
@@ -120,7 +123,7 @@ IntRect ClassicWindowTheme::menubar_rect(WindowType window_type, WindowMode wind
 {
     if (window_type != WindowType::Normal)
         return {};
-    return { palette.window_border_thickness(), palette.window_border_thickness() - 1 + titlebar_height(window_type, window_mode, palette) + 2, window_rect.width(), menubar_height * menu_row_count };
+    return { palette.window_border_thickness(), palette.window_border_thickness() - 1 + titlebar_height(window_type, window_mode, palette) + 2, window_rect.width(), menubar_height() * menu_row_count };
 }
 
 IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette) const
@@ -180,9 +183,9 @@ IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, Window
     case WindowType::Normal:
         return {
             window_rect.x() - border_thickness,
-            window_rect.y() - window_titlebar_height - border_thickness - 1 - menu_row_count * menubar_height,
+            window_rect.y() - window_titlebar_height - border_thickness - 1 - menu_row_count * menubar_height(),
             window_rect.width() + (border_thickness * 2),
-            window_rect.height() + (border_thickness * 2) + 1 + window_titlebar_height + menu_row_count * menubar_height
+            window_rect.height() + (border_thickness * 2) + 1 + window_titlebar_height + menu_row_count * menubar_height(),
         };
     case WindowType::Notification:
         return {

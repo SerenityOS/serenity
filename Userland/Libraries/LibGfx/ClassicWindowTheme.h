@@ -37,6 +37,8 @@ public:
     virtual float frame_alpha_hit_threshold(WindowState) const override { return 1.0f; }
 
 private:
+    int menubar_height() const;
+
     struct FrameColors {
         Color title_color;
         Color border_color;
