@@ -1260,8 +1260,8 @@ constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) cons
 
 void TerminalWidget::set_font_and_resize_to_fit(Gfx::Font const& font)
 {
-    set_font(font);
     resize(widget_size_for_font(font));
+    set_font(font);
 }
 
 // Used for sending data that was not directly typed by the user.
