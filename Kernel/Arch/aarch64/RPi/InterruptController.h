@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/aarch64/IRQController.h>
 
