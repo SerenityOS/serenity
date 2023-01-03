@@ -6,7 +6,6 @@
  */
 
 #include "UnsignedBigIntegerAlgorithms.h"
-#include <AK/BuiltinWrappers.h>
 #include <AK/NumericLimits.h>
 
 namespace Crypto {
