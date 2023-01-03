@@ -32,7 +32,7 @@ function post_install() {
         git clone https://github.com/scummvm/scummvm-icons "$(basename ${icons_build_dir})"
         cd "$(basename ${icons_build_dir})"
 
-        ./gen-set.py 19700101
+        ./gen-set.py 20210825
         cp gui-icons-*.dat "${SERENITY_INSTALL_ROOT}/usr/local/share/scummvm/gui-icons.dat"
     fi
 }
