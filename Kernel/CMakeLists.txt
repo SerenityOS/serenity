@@ -544,6 +544,8 @@ set(SOURCES
 
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
+# -Wvolatile is broken in C++20 and GCC will report bogus errors around it.
+add_compile_options(-Wno-volatile)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
