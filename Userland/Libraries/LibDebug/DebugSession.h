@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Demangle.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
