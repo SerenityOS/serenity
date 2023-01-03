@@ -406,6 +406,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(view_menu->try_add_action(terminal->clear_including_history_action()));
 
+    auto adjust_font_size = [&](float adjustment) {
+        auto& font = terminal->font();
+        auto new_size = max(5, font.presentation_size() + adjustment);
+        if (auto new_font = Gfx::FontDatabase::the().get(font.family(), new_size, font.weight(), font.slope())) {
+            terminal->set_font_and_resize_to_fit(*new_font);
+            terminal->apply_size_increments_to_window(*window);
+            window->resize(terminal->size());
+        }
+
+    };
+
+    TRY(view_menu->try_add_separator());
+    TRY(view_menu->try_add_action(GUI::CommonActions::make_zoom_in_action([&](auto&) {
+        adjust_font_size(1);
+    })));
+    TRY(view_menu->try_add_action(GUI::CommonActions::make_zoom_out_action([&](auto&) {
+        adjust_font_size(-1);
+    })));
+
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
