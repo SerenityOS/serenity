@@ -234,9 +234,9 @@ int ClassicWindowTheme::titlebar_height(WindowType window_type, WindowMode windo
     case WindowType::Normal:
     case WindowType::Notification: {
         if (window_mode == WindowMode::RenderAbove)
-            return max(palette.window_title_height() - 4, title_font.glyph_height() + 4);
+            return max(palette.window_title_height() - 4, title_font.pixel_size() + 2);
         else
-            return max(palette.window_title_height(), title_font.glyph_height() + 8);
+            return max(palette.window_title_height(), title_font.pixel_size() + 6);
     }
     default:
         return 0;
