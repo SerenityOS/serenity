@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/BinaryBufferWriter.h>
-#include <AK/DistinctNumeric.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>

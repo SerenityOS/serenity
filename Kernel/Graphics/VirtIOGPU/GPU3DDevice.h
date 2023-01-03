@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DistinctNumeric.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
