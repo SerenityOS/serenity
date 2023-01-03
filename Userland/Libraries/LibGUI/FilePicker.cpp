@@ -153,8 +153,17 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_filename_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("filename_textbox");
     m_filename_textbox->set_focus(true);
     if (m_mode == Mode::Save) {
+        LexicalPath lexical_filename { filename };
         m_filename_textbox->set_text(filename);
-        m_filename_textbox->select_all();
+
+        if (auto extension = lexical_filename.extension(); !extension.is_empty()) {
+            TextPosition start_of_filename { 0, 0 };
+            TextPosition end_of_filename { 0, filename.length() - extension.length() - 1 };
+
+            m_filename_textbox->set_selection({ end_of_filename, start_of_filename });
+        } else {
+            m_filename_textbox->select_all();
+        }
     }
     m_filename_textbox->on_return_pressed = [&] {
         on_file_return();
