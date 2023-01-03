@@ -9,7 +9,7 @@ Subject: [PATCH] Build: Remove `-ansi` build argument
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lua/src/Makefile.in b/lua/src/Makefile.in
-index 22ee463..fa110ef 100644
+index 22ee463cb777b50411a67b06612b277f7e570148..fa110efab1f7c0de1ca618221f2c29fc879e70d5 100644
 --- a/lua/src/Makefile.in
 +++ b/lua/src/Makefile.in
 @@ -84,7 +84,7 @@ noinst_LIBRARIES = liblua.a
@@ -22,7 +22,7 @@ index 22ee463..fa110ef 100644
  LIBS = -lm
  
 diff --git a/lua/src/lib/Makefile.in b/lua/src/lib/Makefile.in
-index e2f256f..d2f4040 100644
+index e2f256fca4e459bea5f4e551be6994e406a6b497..d2f4040302215d15b711aa000e092d1f2ab782ef 100644
 --- a/lua/src/lib/Makefile.in
 +++ b/lua/src/lib/Makefile.in
 @@ -82,7 +82,7 @@ noinst_LIBRARIES = liblualib.a
