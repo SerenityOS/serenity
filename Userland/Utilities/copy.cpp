@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>

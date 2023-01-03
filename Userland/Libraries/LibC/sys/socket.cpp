@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <stdio.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>

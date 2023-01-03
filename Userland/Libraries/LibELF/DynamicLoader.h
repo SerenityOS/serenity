@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>

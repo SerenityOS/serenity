@@ -7,7 +7,6 @@
 #include "Node.h"
 #include "PageNode.h"
 #include "SectionNode.h"
-#include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
