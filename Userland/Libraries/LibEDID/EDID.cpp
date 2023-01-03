@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/Concepts.h>
 #include <AK/Function.h>
 #include <AK/QuickSort.h>

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteReader.h>
 #include <AK/Error.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCI/Controller/HostBridge.h>

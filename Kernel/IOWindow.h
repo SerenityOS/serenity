@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteReader.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 #if ARCH(X86_64)
