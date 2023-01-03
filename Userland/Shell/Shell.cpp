@@ -7,6 +7,7 @@
 #include "Shell.h"
 #include "Execution.h"
 #include "Formatter.h"
+#include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>

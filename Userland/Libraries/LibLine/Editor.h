@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/BinarySearch.h>
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
