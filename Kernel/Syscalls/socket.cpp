@@ -178,13 +178,12 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
     TRY(require_promise(Pledge::stdio));
     auto msg = TRY(copy_typed_from_user(user_msg));
 
-    if (msg.msg_iovlen != 1)
-        return ENOTSUP; // FIXME: Support this :)
+    if (msg.msg_iovlen <= 0 || msg.msg_iovlen > IOV_MAX)
+        return EMSGSIZE;
+
     Vector<iovec, 1> iovs;
     TRY(iovs.try_resize(msg.msg_iovlen));
     TRY(copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen));
-    if (iovs[0].iov_len > NumericLimits<ssize_t>::max())
-        return EINVAL;
 
     Userspace<sockaddr const*> user_addr((FlatPtr)msg.msg_name);
     socklen_t addr_length = msg.msg_namelen;
@@ -199,32 +198,41 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
             Thread::current()->send_signal(SIGPIPE, &Process::current());
         return EPIPE;
     }
-    auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
 
-    while (true) {
-        while (!description->can_write()) {
-            if (!description->is_blocking()) {
-                return EAGAIN;
-            }
+    Checked<ssize_t> total_length = 0;
+    for (auto const& iov : iovs)
+        total_length += iov.iov_len;
 
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags).was_interrupted()) {
-                return EINTR;
-            }
-            // TODO: handle exceptions in unblock_flags
-        }
+    if (total_length.has_overflow())
+        return EINVAL;
 
-        auto bytes_sent_or_error = socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length);
-        if (bytes_sent_or_error.is_error()) {
-            if ((flags & MSG_NOSIGNAL) == 0 && bytes_sent_or_error.error().code() == EPIPE)
-                Thread::current()->send_signal(SIGPIPE, &Process::current());
-            return bytes_sent_or_error.release_error();
-        }
-
-        auto bytes_sent = bytes_sent_or_error.release_value();
-        if (bytes_sent > 0)
-            return bytes_sent;
+    auto data = TRY(ByteBuffer::create_uninitialized(total_length.value()));
+    size_t offset = 0;
+    for (auto const& iov : iovs) {
+        TRY(copy_from_user(data.offset_pointer(offset), iov.iov_base, iov.iov_len));
+        offset += iov.iov_len;
     }
+
+    while (!description->can_write()) {
+        if (!description->is_blocking())
+            return EAGAIN;
+
+        auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+        if (Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags).was_interrupted())
+            return EINTR;
+
+        // TODO: handle exceptions in unblock_flags
+    }
+
+    auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
+    auto bytes_sent_or_error = socket.sendto(*description, data_buffer, data.size(), flags, user_addr, addr_length);
+    if (bytes_sent_or_error.is_error()) {
+        if ((flags & MSG_NOSIGNAL) == 0 && bytes_sent_or_error.error().code() == EPIPE)
+            Thread::current()->send_signal(SIGPIPE, &Process::current());
+        return bytes_sent_or_error.release_error();
+    }
+
+    return bytes_sent_or_error.release_value();
 }
 
 ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int flags)
