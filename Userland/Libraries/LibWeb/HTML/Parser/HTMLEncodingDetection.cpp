@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringView.h>
 #include <AK/Utf8View.h>

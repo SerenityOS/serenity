@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <LibGUI/Event.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>

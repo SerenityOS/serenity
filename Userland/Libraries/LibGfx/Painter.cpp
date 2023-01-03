@@ -17,6 +17,7 @@
 #include "Font/FontDatabase.h"
 #include "Gamma.h"
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/Math.h>

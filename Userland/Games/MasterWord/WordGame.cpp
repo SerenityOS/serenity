@@ -5,6 +5,7 @@
  */
 
 #include "WordGame.h"
+#include <AK/CharacterTypes.h>
 #include <AK/QuickSort.h>
 #include <AK/Random.h>
 #include <AK/StringView.h>

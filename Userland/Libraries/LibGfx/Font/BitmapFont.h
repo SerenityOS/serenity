@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>

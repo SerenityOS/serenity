@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/SourceLocation.h>
 #include <AK/Utf32View.h>

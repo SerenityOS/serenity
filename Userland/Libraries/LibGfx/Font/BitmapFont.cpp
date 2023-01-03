@@ -7,6 +7,7 @@
 #include "BitmapFont.h"
 #include "Emoji.h"
 #include <AK/BuiltinWrappers.h>
+#include <AK/CharacterTypes.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/FileStream.h>

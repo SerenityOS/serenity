@@ -6,7 +6,6 @@
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/Array.h>
-#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Find.h>
 #include <AK/Format.h>

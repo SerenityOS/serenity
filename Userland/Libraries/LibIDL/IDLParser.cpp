@@ -9,6 +9,7 @@
 
 #include "IDLParser.h"
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/File.h>

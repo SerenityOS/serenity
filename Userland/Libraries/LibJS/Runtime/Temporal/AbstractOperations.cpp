@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
 #include <AK/DateTimeLexer.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
