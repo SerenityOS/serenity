@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
