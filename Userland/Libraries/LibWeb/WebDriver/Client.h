@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Variant.h>

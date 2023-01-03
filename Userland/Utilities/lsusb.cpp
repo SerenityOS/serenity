@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>

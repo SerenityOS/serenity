@@ -8,7 +8,6 @@
 
 #include "AttributeValue.h"
 #include "DwarfTypes.h"
-#include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RedBlackTree.h>

@@ -6,7 +6,6 @@
 
 #include "Game.h"
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/NumericLimits.h>
 #include <AK/ScopeGuard.h>
 #include <stdlib.h>

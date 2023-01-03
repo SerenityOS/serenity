@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/URL.h>
 #include <LibCore/Forward.h>

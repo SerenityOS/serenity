@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/OwnPtr.h>
 #include <sys/stat.h>

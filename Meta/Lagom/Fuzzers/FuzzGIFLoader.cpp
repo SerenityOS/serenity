@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <LibGfx/GIFLoader.h>
 #include <stddef.h>

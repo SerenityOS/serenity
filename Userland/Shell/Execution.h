@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Forward.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Vector.h>

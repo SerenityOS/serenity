@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibGfx/Point.h>
 

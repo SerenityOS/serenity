@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/MemoryStream.h>
