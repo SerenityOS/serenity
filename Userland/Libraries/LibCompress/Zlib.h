@@ -76,7 +76,7 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
 
 private:
-    ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream>, ZlibCompressionLevel);
+    ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream);
     ErrorOr<void> write_header(ZlibCompressionMethod, ZlibCompressionLevel);
 
     bool m_finished { false };
