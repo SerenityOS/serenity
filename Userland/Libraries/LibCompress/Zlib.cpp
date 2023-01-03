@@ -74,16 +74,18 @@ ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(Core::Stream::H
     // Zlib only defines Deflate as a compression method.
     auto compression_method = ZlibCompressionMethod::Deflate;
 
-    auto zlib_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ZlibCompressor(move(stream), compression_level)));
+    // FIXME: Find a way to compress with Deflate's "Best" compression level.
+    auto compressor_stream = TRY(DeflateCompressor::construct(Core::Stream::Handle(*stream), static_cast<DeflateCompressor::CompressionLevel>(compression_level)));
+
+    auto zlib_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ZlibCompressor(move(stream), move(compressor_stream))));
     TRY(zlib_compressor->write_header(compression_method, compression_level));
 
     return zlib_compressor;
 }
 
-ZlibCompressor::ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, ZlibCompressionLevel compression_level)
+ZlibCompressor::ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream)
     : m_output_stream(move(stream))
-    // FIXME: Find a way to compress with Deflate's "Best" compression level.
-    , m_compressor(DeflateCompressor::construct(Core::Stream::Handle(*m_output_stream), static_cast<DeflateCompressor::CompressionLevel>(compression_level)).release_value_but_fixme_should_propagate_errors())
+    , m_compressor(move(compressor_stream))
 {
 }
 
