@@ -32,7 +32,7 @@ typedef long GLintptr;
 typedef unsigned int GLuint;
 typedef int GLfixed;
 typedef int GLsizei;
-typedef unsigned long GLsizeiptr;
+typedef long GLsizeiptr;
 typedef void GLvoid;
 typedef float GLfloat;
 typedef double GLclampd;
