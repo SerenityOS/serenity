@@ -6,7 +6,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/Endian.h>
 #include <AK/Random.h>
 
 #include <LibCore/Timer.h>

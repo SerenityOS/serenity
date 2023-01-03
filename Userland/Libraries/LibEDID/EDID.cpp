@@ -6,6 +6,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Concepts.h>
+#include <AK/Endian.h>
 #include <AK/Function.h>
 #include <AK/QuickSort.h>
 #include <AK/Try.h>

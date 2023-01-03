@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Endian.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>

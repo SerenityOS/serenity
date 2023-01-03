@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Endian.h>
 #include <AK/Format.h>
 #include <LibDeviceTree/Validation.h>
 

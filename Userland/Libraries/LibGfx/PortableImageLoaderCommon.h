@@ -9,7 +9,6 @@
 
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
-#include <AK/Endian.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>

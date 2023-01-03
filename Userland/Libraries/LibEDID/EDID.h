@@ -8,7 +8,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Concepts.h>
-#include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedPoint.h>
 #include <AK/Forward.h>

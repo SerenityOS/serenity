@@ -8,7 +8,6 @@
 #include "PPMLoader.h"
 #include "PortableImageLoaderCommon.h"
 #include "Streamer.h"
-#include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
