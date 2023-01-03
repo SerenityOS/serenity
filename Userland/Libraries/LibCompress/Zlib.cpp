@@ -83,7 +83,7 @@ ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(Core::Stream::H
 ZlibCompressor::ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, ZlibCompressionLevel compression_level)
     : m_output_stream(move(stream))
     // FIXME: Find a way to compress with Deflate's "Best" compression level.
-    , m_compressor(make<DeflateCompressor>(Core::Stream::Handle(*m_output_stream), static_cast<DeflateCompressor::CompressionLevel>(compression_level)))
+    , m_compressor(DeflateCompressor::construct(Core::Stream::Handle(*m_output_stream), static_cast<DeflateCompressor::CompressionLevel>(compression_level)).release_value_but_fixme_should_propagate_errors())
 {
 }
 

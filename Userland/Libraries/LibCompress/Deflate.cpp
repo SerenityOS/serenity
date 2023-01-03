@@ -438,10 +438,17 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
     return {};
 }
 
-DeflateCompressor::DeflateCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, CompressionLevel compression_level)
+ErrorOr<NonnullOwnPtr<DeflateCompressor>> DeflateCompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream, CompressionLevel compression_level)
+{
+    auto bit_stream = TRY(Core::Stream::LittleEndianOutputBitStream::construct(move(stream)));
+    auto deflate_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateCompressor(move(bit_stream), compression_level)));
+    return deflate_compressor;
+}
+
+DeflateCompressor::DeflateCompressor(NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream> stream, CompressionLevel compression_level)
     : m_compression_level(compression_level)
     , m_compression_constants(compression_constants[static_cast<int>(m_compression_level)])
-    , m_output_stream(Core::Stream::LittleEndianOutputBitStream::construct(move(stream)).release_value_but_fixme_should_propagate_errors())
+    , m_output_stream(move(stream))
 {
     m_symbol_frequencies.fill(0);
     m_distance_frequencies.fill(0);
@@ -1002,10 +1009,10 @@ ErrorOr<void> DeflateCompressor::final_flush()
 ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, CompressionLevel compression_level)
 {
     auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
-    DeflateCompressor deflate_stream { Core::Stream::Handle<Core::Stream::Stream>(*output_stream), compression_level };
+    auto deflate_stream = TRY(DeflateCompressor::construct(Core::Stream::Handle<Core::Stream::Stream>(*output_stream), compression_level));
 
-    TRY(deflate_stream.write_entire_buffer(bytes));
-    TRY(deflate_stream.final_flush());
+    TRY(deflate_stream->write_entire_buffer(bytes));
+    TRY(deflate_stream->final_flush());
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
     TRY(output_stream->read_entire_buffer(buffer));
