@@ -9,7 +9,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/SyscallString.h>
-#include <LibC/sys/arch/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -21,6 +20,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/arch/regs.h>
 #include <syscall.h>
 #include <unistd.h>
 

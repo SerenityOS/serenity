@@ -10,7 +10,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/API/SyscallString.h>
-#include <LibC/sys/arch/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -21,6 +20,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/arch/regs.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>

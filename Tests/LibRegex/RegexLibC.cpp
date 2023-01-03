@@ -8,7 +8,7 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibC/regex.h>
+#include <regex.h>
 #include <stdio.h>
 
 TEST_CASE(catch_all)
