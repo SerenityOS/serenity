@@ -18,7 +18,20 @@ class Menubar {
 public:
     void add_menu(Menu& menu, Gfx::IntRect window_rect)
     {
-        // FIXME: Check against duplicate menu additions.
+        bool duplicate_menu_detected = false;
+
+        for_each_menu([&](Menu& existing_menu) {
+            if (&menu == &existing_menu) {
+                dbgln("Duplicate Menu \"{}\" ({})", menu.name(), &menu);
+                duplicate_menu_detected = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        if (duplicate_menu_detected) {
+            return;
+        }
+
         m_menus.append(menu);
         layout_menu(menu, window_rect);
     }
