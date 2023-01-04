@@ -9,7 +9,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
