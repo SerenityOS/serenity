@@ -6,7 +6,6 @@
 
 #include "TerminalSettingsWidget.h"
 #include <AK/Assertions.h>
-#include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <Applications/TerminalSettings/TerminalSettingsMainGML.h>
 #include <Applications/TerminalSettings/TerminalSettingsViewGML.h>

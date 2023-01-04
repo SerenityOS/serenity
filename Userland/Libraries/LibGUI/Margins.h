@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/JsonObject.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Rect.h>
 

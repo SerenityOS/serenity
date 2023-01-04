@@ -12,6 +12,7 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/GenericLexer.h>
+#include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>

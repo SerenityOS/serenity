@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGUI/Painter.h>

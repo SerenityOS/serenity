@@ -6,7 +6,6 @@
 
 #include "Launcher.h"
 #include <AK/Function.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>

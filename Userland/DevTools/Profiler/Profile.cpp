@@ -10,6 +10,7 @@
 #include "SamplesModel.h"
 #include "SourceModel.h"
 #include <AK/HashTable.h>
+#include <AK/JsonObject.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/QuickSort.h>

@@ -16,7 +16,6 @@
 #include "SourceModel.h"
 #include <AK/Bitmap.h>
 #include <AK/FlyString.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>

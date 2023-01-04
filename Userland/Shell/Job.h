@@ -11,7 +11,6 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/ElapsedTimer.h>

@@ -6,7 +6,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/JsonObject.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>

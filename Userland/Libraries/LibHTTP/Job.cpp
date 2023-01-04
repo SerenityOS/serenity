@@ -7,7 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
-#include <AK/JsonObject.h>
+#include <AK/JsonArray.h>
 #include <AK/Try.h>
 #include <LibCompress/Brotli.h>
 #include <LibCompress/Gzip.h>

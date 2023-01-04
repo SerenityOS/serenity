@@ -9,7 +9,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
