@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Certificate.h"
-#include <AK/IPv4Address.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Stream.h>
