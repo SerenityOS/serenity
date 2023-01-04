@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>

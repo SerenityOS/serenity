@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 #include <LibVideo/Containers/Matroska/Reader.h>

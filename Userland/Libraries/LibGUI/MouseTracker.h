@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Point.h>

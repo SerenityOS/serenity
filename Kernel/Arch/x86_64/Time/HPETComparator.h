@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86_64/Time/HPET.h>
 #include <Kernel/Time/HardwareTimer.h>

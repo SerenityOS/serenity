@@ -5,7 +5,6 @@
  */
 
 #include "ConnectionToClipboardServer.h"
-#include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
 
 // Copied from LibGUI/Clipboard.cpp

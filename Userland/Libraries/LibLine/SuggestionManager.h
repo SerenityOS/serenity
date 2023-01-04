@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
+#include <AK/Function.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibLine/Style.h>

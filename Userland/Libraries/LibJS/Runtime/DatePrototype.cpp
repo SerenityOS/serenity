@@ -9,7 +9,6 @@
 
 #include <AK/DateConstants.h>
 #include <AK/DeprecatedString.h>
-#include <AK/Function.h>
 #include <AK/TypeCasts.h>
 #include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>

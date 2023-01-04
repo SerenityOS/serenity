@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>

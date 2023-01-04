@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
 #include <LibJS/Heap/Handle.h>

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <AK/Function.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 

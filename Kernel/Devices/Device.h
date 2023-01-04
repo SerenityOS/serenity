@@ -16,7 +16,6 @@
 //   - CharacterDevice (sequential)
 #include <AK/DoublyLinkedList.h>
 #include <AK/Error.h>
-#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/DeviceFileTypes.h>

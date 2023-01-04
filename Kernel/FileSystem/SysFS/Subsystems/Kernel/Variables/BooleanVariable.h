@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/Function.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>

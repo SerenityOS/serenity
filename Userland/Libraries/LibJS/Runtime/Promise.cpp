@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Error.h>

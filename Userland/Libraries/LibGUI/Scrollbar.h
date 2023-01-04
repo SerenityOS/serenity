@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractSlider.h>
 

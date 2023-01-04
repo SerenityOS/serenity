@@ -8,7 +8,6 @@
 
 #include <AK/Badge.h>
 #include <AK/DistinctNumeric.h>
-#include <AK/Function.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Debug.h>

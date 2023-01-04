@@ -8,7 +8,6 @@
 #    pragma GCC optimize("O3")
 #endif
 
-#include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 

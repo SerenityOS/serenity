@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <AK/Function.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
 #include <DevTools/HackStudio/LanguageServers/FileDB.h>

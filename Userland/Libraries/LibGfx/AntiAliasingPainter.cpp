@@ -11,7 +11,6 @@
 #endif
 
 #include "FillPathImplementation.h"
-#include <AK/Function.h>
 #include <AK/NumericLimits.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Line.h>

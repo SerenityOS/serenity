@@ -7,7 +7,6 @@
  */
 
 #include <AK/Array.h>
-#include <AK/Function.h>
 #include <AK/StringFloatingPointConversions.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>

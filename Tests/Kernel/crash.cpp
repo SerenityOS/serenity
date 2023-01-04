@@ -5,8 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
+
 #include <AK/Assertions.h>
-#include <AK/Function.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/IO.h>
 #endif

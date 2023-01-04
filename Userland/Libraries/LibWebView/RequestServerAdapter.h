@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/URL.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
