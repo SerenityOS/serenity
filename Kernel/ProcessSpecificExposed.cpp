@@ -6,7 +6,6 @@
 
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/ProcFS/ProcessPropertyInode.h>
 #include <Kernel/InterruptDisabler.h>

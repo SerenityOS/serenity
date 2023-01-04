@@ -7,7 +7,6 @@
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>

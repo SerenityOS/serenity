@@ -12,7 +12,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>

@@ -8,7 +8,6 @@
  */
 
 #include <AK/GenericShorthands.h>
-#include <AK/JsonValue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>

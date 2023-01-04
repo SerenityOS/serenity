@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/JsonPath.h>
-#include <AK/JsonValue.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Model.h>
 
