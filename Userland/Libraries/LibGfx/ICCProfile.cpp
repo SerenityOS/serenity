@@ -233,6 +233,23 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
 
     return xyz;
 }
+
+Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header)
+{
+    // ICC v4, 7.2.18 Profile ID field
+    // "A profile ID field value of zero (00h) shall indicate that a profile ID has not been calculated."
+    bool did_calculate_profile_id = false;
+    for (u8 b : header.profile_md5)
+        if (b != 0)
+            did_calculate_profile_id = true;
+    if (!did_calculate_profile_id)
+        return {};
+
+    Crypto::Hash::MD5::DigestType md5;
+    static_assert(sizeof(md5.data) == sizeof(header.profile_md5));
+    memcpy(md5.data, header.profile_md5, sizeof(md5.data));
+    return md5;
+}
 }
 
 StringView device_class_name(DeviceClass device_class)
@@ -364,6 +381,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_flags = Flags { header.profile_flags };
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
     profile->m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
+    profile->m_id = parse_profile_id(header);
 
     return profile;
 }
