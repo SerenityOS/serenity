@@ -8,6 +8,8 @@
 #include "Presentation.h"
 #include "SlideObject.h"
 #include <AK/Format.h>
+#include <AK/NonnullRefPtr.h>
+#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
@@ -37,10 +39,57 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
             return;
         this->set_file(response.value()->filename());
     });
+    auto save_action = GUI::CommonActions::make_save_action([this](auto&) {
+        if (!m_current_presentation)
+            return;
+
+        AK::RefPtr<Core::File> file = nullptr;
+        if (m_current_presentation->file_path().is_empty()) {
+            auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(this->window(), "", ".presenter");
+            if (response.is_error())
+                return;
+
+            file = response.release_value();
+            m_current_presentation->set_file_path(file->filename());
+        } else {
+            auto file_or_error = Core::File::open(m_current_presentation->file_path(), Core::OpenMode::WriteOnly);
+            if (file_or_error.is_error())
+                return;
+
+            file = file_or_error.release_value();
+        }
+
+        auto object = m_current_presentation->to_json();
+
+        if (!file->write(object.to_deprecated_string().to_byte_buffer())) {
+            GUI::MessageBox::show_error(this->window(), "Failed to write to file."sv);
+            return;
+        }
+    });
+    auto save_as_action = GUI::CommonActions::make_save_as_action([this](auto&) {
+        if (!m_current_presentation)
+            return;
+
+        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(this->window(), "", ".presenter");
+        if (response.is_error())
+            return;
+
+        auto file = response.release_value();
+        m_current_presentation->set_file_path(file->filename());
+
+        auto object = m_current_presentation->to_json();
+
+        if (!file->write(object.to_deprecated_string().to_byte_buffer())) {
+            GUI::MessageBox::show_error(this->window(), "Failed to write to file."sv);
+            return;
+        }
+    });
     auto about_action = GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-display-settings"sv));
 
     TRY(file_menu.try_add_action(open_action));
     TRY(file_menu.try_add_action(about_action));
+    TRY(file_menu.try_add_action(save_action));
+    TRY(file_menu.try_add_action(save_as_action));
 
     auto& presentation_menu = window->add_menu("&Presentation");
     auto next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
