@@ -192,6 +192,20 @@ ErrorOr<ColorSpace> parse_connection_space(ICCHeader const& header)
     return space;
 }
 
+ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
+{
+    // ICC v4, 7.2.8 Date and time field
+    return parse_date_time_number(header.profile_creation_time);
+}
+
+ErrorOr<void> parse_file_signature(ICCHeader const& header)
+{
+    // ICC v4, 7.2.9 Profile file signature field
+    if (header.profile_file_signature != 0x61637370)
+        return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
+    return {};
+}
+
 ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
 {
     // ICC v4, 7.2.15 Rendering intent field
@@ -218,20 +232,6 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
         return Error::from_string_literal("ICC::Profile: Invalid pcs illuminant");
 
     return xyz;
-}
-
-ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
-{
-    // ICC v4, 7.2.8 Date and time field
-    return parse_date_time_number(header.profile_creation_time);
-}
-
-ErrorOr<void> parse_file_signature(ICCHeader const& header)
-{
-    // ICC v4, 7.2.9 Profile file signature field
-    if (header.profile_file_signature != 0x61637370)
-        return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
-    return {};
 }
 }
 
