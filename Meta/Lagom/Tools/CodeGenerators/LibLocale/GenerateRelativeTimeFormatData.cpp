@@ -9,7 +9,6 @@
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
