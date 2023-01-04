@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Forward.h>

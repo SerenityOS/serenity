@@ -7,7 +7,6 @@
 #pragma once
 
 #include "PreviewWidget.h"
-#include <AK/FixedArray.h>
 #include <AK/Time.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
