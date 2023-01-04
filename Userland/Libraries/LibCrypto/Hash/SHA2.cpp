@@ -7,8 +7,7 @@
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA2.h>
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 constexpr static auto ROTRIGHT(u32 a, size_t b) { return (a >> b) | (a << (32 - b)); }
 constexpr static auto CH(u32 x, u32 y, u32 z) { return (x & y) ^ (z & ~x); }
 constexpr static auto MAJ(u32 x, u32 y, u32 z) { return (x & y) ^ (x & z) ^ (y & z); }
@@ -391,6 +390,5 @@ SHA512::DigestType SHA512::peek()
         digest.data[i + 56] = (m_state[7] >> (56 - i * 8)) & 0x000000ff;
     }
     return digest;
-}
 }
 }

@@ -9,8 +9,7 @@
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 
 static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
 {
@@ -146,5 +145,4 @@ SHA1::DigestType SHA1::peek()
     return digest;
 }
 
-}
 }

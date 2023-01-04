@@ -13,8 +13,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 
 namespace MD5Constants {
 
@@ -96,7 +95,5 @@ private:
 
     u8 m_data_buffer[64] {};
 };
-
-}
 
 }
