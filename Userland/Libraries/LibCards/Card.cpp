@@ -26,7 +26,10 @@ void Card::paint(GUI::Painter& painter) const
     auto bitmap = [&]() {
         if (m_inverted)
             return m_upside_down ? card_painter.card_back_inverted() : card_painter.card_front_inverted(m_suit, m_rank);
-
+        if (m_highlighted) {
+            VERIFY(!m_upside_down);
+            return card_painter.card_front_highlighted(m_suit, m_rank);
+        }
         return m_upside_down ? card_painter.card_back() : card_painter.card_front(m_suit, m_rank);
     }();
     painter.blit(position(), bitmap, bitmap->rect());
