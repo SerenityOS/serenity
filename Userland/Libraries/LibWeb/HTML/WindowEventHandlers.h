@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <LibWeb/Forward.h>
 
 #define ENUMERATE_WINDOW_EVENT_HANDLERS(E)                        \

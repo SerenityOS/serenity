@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-status

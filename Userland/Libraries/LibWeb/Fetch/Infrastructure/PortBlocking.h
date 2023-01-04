@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <LibWeb/Fetch/Infrastructure/RequestOrResponseBlocking.h>
 #include <LibWeb/Forward.h>
 

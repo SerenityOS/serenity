@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <AK/Types.h>
 
 namespace AK::UnicodeUtils {
 

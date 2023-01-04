@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>

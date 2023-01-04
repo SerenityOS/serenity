@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/TreeNode.h>
 
