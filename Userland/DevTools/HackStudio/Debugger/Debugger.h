@@ -8,7 +8,6 @@
 
 #include "BreakpointCallback.h"
 #include <AK/Function.h>
-#include <AK/LexicalPath.h>
 #include <AK/Vector.h>
 #include <LibDebug/DebugSession.h>
 #include <LibThreading/Mutex.h>

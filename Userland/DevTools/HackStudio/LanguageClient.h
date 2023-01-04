@@ -9,7 +9,6 @@
 #include "AutoCompleteResponse.h"
 #include "Language.h"
 #include <AK/Forward.h>
-#include <AK/LexicalPath.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>

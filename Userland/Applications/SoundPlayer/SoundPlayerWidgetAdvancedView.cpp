@@ -10,7 +10,6 @@
 #include "Common.h"
 #include "M3UParser.h"
 #include "PlaybackManager.h"
-#include <AK/LexicalPath.h>
 #include <AK/SIMD.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>

@@ -9,6 +9,7 @@
  */
 
 #include "MainWidget.h"
+#include <AK/LexicalPath.h>
 #include <Applications/ThemeEditor/AlignmentPropertyGML.h>
 #include <Applications/ThemeEditor/ColorPropertyGML.h>
 #include <Applications/ThemeEditor/FlagPropertyGML.h>

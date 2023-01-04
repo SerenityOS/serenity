@@ -9,7 +9,6 @@
 
 #include "../AutoCompleteResponse.h"
 #include "FileDB.h"
-#include <AK/LexicalPath.h>
 #include <LibCodeComprehension/CodeComprehensionEngine.h>
 #include <LibIPC/ConnectionFromClient.h>
 

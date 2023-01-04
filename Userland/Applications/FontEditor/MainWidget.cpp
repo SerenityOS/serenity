@@ -9,6 +9,7 @@
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/Array.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>

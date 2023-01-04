@@ -8,7 +8,6 @@
  */
 
 #include "PreviewWidget.h"
-#include <AK/LexicalPath.h>
 #include <AK/StringView.h>
 #include <Applications/ThemeEditor/WindowPreviewGML.h>
 #include <LibCore/MimeData.h>

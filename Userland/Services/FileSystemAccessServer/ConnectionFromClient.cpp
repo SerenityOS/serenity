@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <FileSystemAccessServer/ConnectionFromClient.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>

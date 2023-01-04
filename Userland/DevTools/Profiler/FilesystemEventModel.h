@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/LexicalPath.h>
 #include <LibGUI/Model.h>
 
 namespace Profiler {

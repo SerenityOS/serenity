@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Language.h"
-#include <AK/LexicalPath.h>
 #include <LibGUI/TextDocument.h>
 
 namespace HackStudio {

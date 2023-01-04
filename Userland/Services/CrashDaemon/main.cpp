@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/MappedFile.h>

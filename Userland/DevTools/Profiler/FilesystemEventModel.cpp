@@ -6,6 +6,7 @@
 
 #include "FilesystemEventModel.h"
 #include "Profile.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibSymbolication/Symbolication.h>

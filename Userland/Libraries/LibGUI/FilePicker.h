@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Dialog.h>

@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>

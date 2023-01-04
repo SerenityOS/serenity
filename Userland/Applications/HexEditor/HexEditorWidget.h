@@ -11,7 +11,6 @@
 
 #include "HexEditor.h"
 #include "ValueInspectorModel.h"
-#include <AK/LexicalPath.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/TextEditor.h>

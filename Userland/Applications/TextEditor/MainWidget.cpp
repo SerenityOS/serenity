@@ -6,6 +6,7 @@
  */
 
 #include "MainWidget.h"
+#include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>

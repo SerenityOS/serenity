@@ -5,6 +5,7 @@
  */
 
 #include "Debugger.h"
+#include <AK/LexicalPath.h>
 #include <LibDebug/StackFrameUtils.h>
 
 namespace HackStudio {

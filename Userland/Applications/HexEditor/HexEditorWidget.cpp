@@ -13,6 +13,7 @@
 #include "SearchResultsModel.h"
 #include "ValueInspectorModel.h"
 #include <AK/Forward.h>
+#include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>

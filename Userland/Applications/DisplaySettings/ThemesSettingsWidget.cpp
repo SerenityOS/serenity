@@ -6,7 +6,6 @@
  */
 
 #include "ThemesSettingsWidget.h"
-#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <Applications/DisplaySettings/ThemesSettingsGML.h>
 #include <LibCore/DirIterator.h>

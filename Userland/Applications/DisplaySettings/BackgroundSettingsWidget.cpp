@@ -7,6 +7,7 @@
  */
 
 #include "BackgroundSettingsWidget.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibConfig/Client.h>
