@@ -44,6 +44,7 @@ private:
 
     RefPtr<GUI::TextBox> m_entry;
     RefPtr<GUI::Label> m_label;
+    RefPtr<GUI::Label> m_running_expression_label;
 
     RefPtr<GUI::Button> m_digit_button[10];
     RefPtr<GUI::Button> m_mem_add_button;

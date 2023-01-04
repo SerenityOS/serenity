@@ -30,6 +30,11 @@ CalculatorWidget::CalculatorWidget()
     m_label->set_frame_shape(Gfx::FrameShape::Container);
     m_label->set_frame_thickness(2);
 
+    m_running_expression_label = *find_descendant_of_type_named<GUI::Label>("running_expression_label");
+    m_running_expression_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
+    m_running_expression_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
+    m_running_expression_label->set_frame_shadow(Gfx::FrameShadow::Plain);
+
     for (int i = 0; i < 10; i++) {
         m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(DeprecatedString::formatted("{}_button", i));
         add_digit_button(*m_digit_button[i], i);
@@ -50,7 +55,7 @@ CalculatorWidget::CalculatorWidget()
     m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
     m_clear_button->on_click = [this](auto) {
         m_keypad.set_to_0();
-        m_calculator.clear_operation();
+        m_calculator.clear();
         update_display();
     };
 
@@ -150,6 +155,9 @@ void CalculatorWidget::mimic_pressed_button(RefPtr<GUI::Button> button)
 void CalculatorWidget::update_display()
 {
     m_entry->set_text(m_keypad.to_deprecated_string());
+
+    m_running_expression_label->set_text(m_calculator.running_expression().to_string());
+
     if (m_calculator.has_error())
         m_label->set_text("E");
     else
@@ -170,7 +178,7 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
         mimic_pressed_button(m_decimal_point_button);
     } else if (event.key() == KeyCode::Key_Escape || event.key() == KeyCode::Key_Delete) {
         m_keypad.set_to_0();
-        m_calculator.clear_operation();
+        m_calculator.clear();
         mimic_pressed_button(m_clear_button);
     } else if (event.key() == KeyCode::Key_Backspace) {
         m_keypad.type_backspace();

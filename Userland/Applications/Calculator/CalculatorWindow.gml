@@ -16,6 +16,11 @@
                 margins: [8]
             }
 
+            @GUI::Label {
+                name: "running_expression_label"
+                font_type: "FixedWidth"
+            }
+
             @GUI::TextBox {
                 name: "entry_textbox"
                 font_type: "FixedWidth"
