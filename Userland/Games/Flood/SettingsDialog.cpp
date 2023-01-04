@@ -5,7 +5,6 @@
  */
 
 #include "SettingsDialog.h"
-#include <AK/IntegralMath.h>
 #include <AK/QuickSort.h>
 #include <Games/Flood/SettingsDialogGML.h>
 #include <LibCore/DirIterator.h>

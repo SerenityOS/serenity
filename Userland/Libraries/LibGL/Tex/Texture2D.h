@@ -10,7 +10,6 @@
 
 #include "Texture.h"
 
-#include <AK/IntegralMath.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/Tex/Sampler2D.h>
 #include <LibGPU/ImageDataLayout.h>

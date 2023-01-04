@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/IntegralMath.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
