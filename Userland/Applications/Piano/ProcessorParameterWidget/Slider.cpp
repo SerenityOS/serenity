@@ -6,7 +6,6 @@
 
 #include "Slider.h"
 #include "WidgetWithLabel.h"
-#include <AK/FixedPoint.h>
 #include <AK/Math.h>
 
 ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP::ProcessorRangeParameter& parameter, RefPtr<GUI::Label> value_label)
