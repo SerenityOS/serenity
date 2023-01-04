@@ -12,6 +12,7 @@
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/FlacLoader.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -28,6 +29,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread unix proc"));
 
+    StringView file_path;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(file_path, "Path to audio file to play", "file", Core::ArgsParser::Required::No);
+    args_parser.parse(arguments);
+
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
@@ -42,10 +49,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // start in advanced view by default
     Player* player = TRY(window->try_set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client));
-    if (arguments.argc > 1) {
-        StringView path = arguments.strings[1];
-        player->play_file_path(path);
-        if (player->is_playlist(path))
+
+    if (!file_path.is_empty()) {
+        player->play_file_path(file_path);
+        if (player->is_playlist(file_path))
             player->set_loop_mode(Player::LoopMode::Playlist);
     }
 
