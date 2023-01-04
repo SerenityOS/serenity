@@ -256,9 +256,9 @@ ByteBuffer StandardSecurityHandler::compute_encryption_key(ByteBuffer password_s
             n_bytes.ensure_capacity(m_length);
 
             while (n_bytes.size() < m_length) {
-                auto out = md5.peek().bytes();
-                for (size_t j = 0; j < out.size() && n_bytes.size() < m_length; j++)
-                    n_bytes.append(out[j]);
+                auto out = md5.peek();
+                for (size_t j = 0; j < out.data_length() && n_bytes.size() < m_length; j++)
+                    n_bytes.append(out.data[j]);
             }
 
             VERIFY(n_bytes.size() == m_length);
