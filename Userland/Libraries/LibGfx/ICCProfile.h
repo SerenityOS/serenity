@@ -139,6 +139,8 @@ public:
     XYZ const& pcs_illuminant() const { return m_pcs_illuminant; }
     Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_id; }
 
+    static Crypto::Hash::MD5::DigestType compute_id(ReadonlyBytes);
+
 private:
     Version m_version;
     DeviceClass m_device_class;
