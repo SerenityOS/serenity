@@ -44,6 +44,11 @@ ErrorOr<void> encode(Encoder& encoder, double const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, StringView const& value)
 {
+    // NOTE: Do not change this encoding without also updating LibC/netdb.cpp.
+    if (value.is_null())
+        return encoder.encode(NumericLimits<u32>::max());
+
+    TRY(encoder.encode_size(value.length()));
     TRY(encoder.append(reinterpret_cast<u8 const*>(value.characters_without_null_termination()), value.length()));
     return {};
 }
@@ -51,13 +56,7 @@ ErrorOr<void> encode(Encoder& encoder, StringView const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, DeprecatedString const& value)
 {
-    // NOTE: Do not change this encoding without also updating LibC/netdb.cpp.
-    if (value.is_null())
-        return encoder.encode(NumericLimits<u32>::max());
-
-    TRY(encoder.encode_size(value.length()));
-    TRY(encoder.encode(value.view()));
-    return {};
+    return encoder.encode(value.view());
 }
 
 template<>
