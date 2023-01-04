@@ -124,7 +124,7 @@ struct XYZ {
 
 class Profile : public RefCounted<Profile> {
 public:
-    static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes bytes);
+    static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
 
     Version version() const { return m_version; }
     DeviceClass device_class() const { return m_device_class; }
