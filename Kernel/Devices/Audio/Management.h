@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>

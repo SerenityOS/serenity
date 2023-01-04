@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 #include <LibGLSL/ObjectFile.h>

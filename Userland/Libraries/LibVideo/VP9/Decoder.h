@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Queue.h>
 #include <AK/Span.h>
