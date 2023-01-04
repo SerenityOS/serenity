@@ -62,7 +62,7 @@ class Thread
     friend struct ThreadReadyQueue;
 
 public:
-    inline static Thread* current()
+    static Thread* current()
     {
         return Processor::current_thread();
     }

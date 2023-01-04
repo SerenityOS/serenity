@@ -162,14 +162,14 @@ public:
 public:
     class ProcessProcFSTraits;
 
-    inline static Process& current()
+    static Process& current()
     {
         auto* current_thread = Processor::current_thread();
         VERIFY(current_thread);
         return current_thread->process();
     }
 
-    inline static bool has_current()
+    static bool has_current()
     {
         return Processor::current_thread() != nullptr;
     }
