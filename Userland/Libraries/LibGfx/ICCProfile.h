@@ -136,7 +136,7 @@ public:
     time_t creation_timestamp() const { return m_creation_timestamp; }
     Flags flags() const { return m_flags; }
     RenderingIntent rendering_intent() const { return m_rendering_intent; }
-    const XYZ& pcs_illuminant() const { return m_pcs_illuminant; }
+    XYZ const& pcs_illuminant() const { return m_pcs_illuminant; }
     Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_id; }
 
 private:
