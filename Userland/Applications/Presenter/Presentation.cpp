@@ -12,15 +12,16 @@
 #include <LibGfx/Forward.h>
 #include <errno_codes.h>
 
-Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
-    : m_normative_size(normative_size)
+Presentation::Presentation(Gfx::IntSize normative_size, Metadata metadata, DeprecatedString file_path)
+    : m_file_path(move(file_path))
+    , m_normative_size(normative_size)
     , m_metadata(move(metadata))
 {
 }
 
-NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
+NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, Metadata metadata, DeprecatedString file_path)
 {
-    return NonnullOwnPtr<Presentation>(NonnullOwnPtr<Presentation>::Adopt, *new Presentation(normative_size, move(metadata)));
+    return NonnullOwnPtr<Presentation>(NonnullOwnPtr<Presentation>::Adopt, *new Presentation(normative_size, move(metadata), move(file_path)));
 }
 
 void Presentation::append_slide(Slide slide)
@@ -30,15 +31,15 @@ void Presentation::append_slide(Slide slide)
 
 StringView Presentation::title() const
 {
-    if (m_metadata.contains("title"sv))
-        return m_metadata.get("title"sv)->view();
+    if (!m_metadata.title.is_empty())
+        return m_metadata.title;
     return "Untitled Presentation"sv;
 }
 
 StringView Presentation::author() const
 {
-    if (m_metadata.contains("author"sv))
-        return m_metadata.get("author"sv)->view();
+    if (!m_metadata.author.is_empty())
+        return m_metadata.author;
     return "Unknown Author"sv;
 }
 
@@ -96,7 +97,7 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     auto metadata = parse_metadata(raw_metadata);
     auto size = TRY(parse_presentation_size(raw_metadata));
 
-    auto presentation = Presentation::construct(size, metadata);
+    auto presentation = Presentation::construct(size, metadata, file_name);
 
     auto const& slides = maybe_slides.as_array();
     for (auto const& maybe_slide : slides.values()) {
@@ -111,14 +112,14 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     return presentation;
 }
 
-HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObject const& metadata_object)
+Metadata Presentation::parse_metadata(JsonObject const& metadata_object)
 {
-    HashMap<DeprecatedString, DeprecatedString> metadata;
-
-    metadata_object.for_each_member([&](auto const& key, auto const& value) {
-        metadata.set(key, value.to_deprecated_string());
-    });
-
+    Metadata metadata;
+    metadata.author = metadata_object.get("author"sv).to_deprecated_string();
+    metadata.last_modified = metadata_object.get("last-modified"sv).to_deprecated_string();
+    metadata.title = metadata_object.get("title"sv).to_deprecated_string();
+    metadata.aspect_ratio = metadata_object.get("aspect"sv).to_deprecated_string();
+    metadata.width = metadata_object.get("width"sv).to_int();
     return metadata;
 }
 
