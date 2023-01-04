@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
-#include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>

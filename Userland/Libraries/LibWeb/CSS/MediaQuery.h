@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>

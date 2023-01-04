@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/PropertyKey.h>
 

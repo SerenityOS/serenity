@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Debug.h>
-#include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/RefCounted.h>
 #include <AK/SourceLocation.h>
