@@ -8,7 +8,6 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <AK/kmalloc.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>

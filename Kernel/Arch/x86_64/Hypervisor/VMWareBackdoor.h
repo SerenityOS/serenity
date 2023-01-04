@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <AK/kmalloc.h>
 #include <Kernel/API/MousePacket.h>
 
 namespace Kernel {

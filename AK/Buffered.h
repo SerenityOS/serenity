@@ -11,7 +11,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Stream.h>
 #include <AK/Types.h>
-#include <AK/kmalloc.h>
 
 namespace AK {
 
