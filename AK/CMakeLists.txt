@@ -10,6 +10,7 @@ set(AK_SOURCES
     FuzzyMatch.cpp
     GenericLexer.cpp
     Hex.cpp
+    JsonObject.cpp
     JsonParser.cpp
     JsonPath.cpp
     JsonValue.cpp
