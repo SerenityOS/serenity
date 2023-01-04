@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/EnumBits.h>
 #include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/RecursionDecision.h>
