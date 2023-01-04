@@ -14,7 +14,7 @@
 
 namespace Gfx::Detail {
 
-[[maybe_unused]] inline static void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
+[[maybe_unused]] inline void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
 {
     auto diffs = fto - ffrom;
     // Truncate all first (round down).

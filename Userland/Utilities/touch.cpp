@@ -31,7 +31,7 @@ template<typename... Parameters>
     exit(1);
 }
 
-inline static bool validate_timestamp(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
+inline bool validate_timestamp(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
 {
     return (year >= 1970) && (month >= 1 && month <= 12) && (day >= 1 && day <= static_cast<unsigned>(days_in_month(year, month))) && (hour <= 23) && (minute <= 59) && (second <= 59);
 }

@@ -1012,7 +1012,7 @@ inline ProcessID Thread::pid() const
 #define VERIFY_NO_PROCESS_BIG_LOCK(process) \
     VERIFY(!process->big_lock().is_exclusively_locked_by_current_thread())
 
-inline static ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(Kernel::Syscall::StringArgument const& string)
+inline ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(Kernel::Syscall::StringArgument const& string)
 {
     Userspace<char const*> characters((FlatPtr)string.characters);
     return try_copy_kstring_from_user(characters, string.length);
