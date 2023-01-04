@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/URL.h>

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/Random.h>
 #include <AK/RefPtr.h>

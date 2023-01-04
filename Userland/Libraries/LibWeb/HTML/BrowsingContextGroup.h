@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>

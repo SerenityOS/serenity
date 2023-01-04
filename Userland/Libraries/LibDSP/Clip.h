@@ -9,6 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibDSP/Music.h>
 
 namespace DSP {

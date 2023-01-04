@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <LibCore/DateTime.h>
 #include <LibSQL/Type.h>

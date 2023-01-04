@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/Queue.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>

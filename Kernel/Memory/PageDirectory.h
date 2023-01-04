@@ -8,7 +8,6 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Badge.h>
-#include <AK/HashMap.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>

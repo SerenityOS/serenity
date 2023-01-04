@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>

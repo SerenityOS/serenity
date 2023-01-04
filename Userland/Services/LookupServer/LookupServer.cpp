@@ -8,7 +8,6 @@
 #include "ConnectionFromClient.h"
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
-#include <AK/HashMap.h>
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>

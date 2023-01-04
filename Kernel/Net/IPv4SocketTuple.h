@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/KString.h>

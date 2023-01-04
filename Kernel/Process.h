@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveListRelaxedConst.h>
 #include <AK/OwnPtr.h>

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/HashMap.h>
 #include <AK/Math.h>
 
 namespace Audio::MP3::Tables {

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>

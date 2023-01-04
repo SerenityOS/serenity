@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
 #include <LibXML/DOM/Node.h>
 
 namespace XML {

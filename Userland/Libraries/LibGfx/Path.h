@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>

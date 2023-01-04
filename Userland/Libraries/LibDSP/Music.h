@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/FixedArray.h>
-#include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>

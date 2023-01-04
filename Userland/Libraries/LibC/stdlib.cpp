@@ -7,7 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
 #include <AK/FloatingPointStringConversions.h>
-#include <AK/HashMap.h>
+#include <AK/HashTable.h>
 #include <AK/Noncopyable.h>
 #include <AK/Random.h>
 #include <AK/StdLibExtras.h>

@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Font/Typeface.h>
 #include <LibGfx/Forward.h>

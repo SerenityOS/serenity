@@ -10,7 +10,6 @@
 
 #include <AK/Forward.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>

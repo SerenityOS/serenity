@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <LibCore/NetworkJob.h>
 #include <LibCore/Stream.h>
 #include <LibHTTP/HttpRequest.h>

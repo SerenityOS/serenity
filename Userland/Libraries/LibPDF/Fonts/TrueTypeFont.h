@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibPDF/Fonts/PDFFont.h>
 

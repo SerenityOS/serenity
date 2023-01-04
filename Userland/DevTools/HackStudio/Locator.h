@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {

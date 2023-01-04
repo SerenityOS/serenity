@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <LibSQL/Type.h>
