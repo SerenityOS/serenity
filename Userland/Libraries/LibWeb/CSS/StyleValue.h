@@ -120,7 +120,7 @@ struct PositionValue {
         Bottom
     };
 
-    inline static PositionValue center()
+    static PositionValue center()
     {
         return PositionValue { HorizontalPreset::Center, VerticalPreset::Center };
     }

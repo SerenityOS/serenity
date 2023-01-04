@@ -90,15 +90,15 @@ public:
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    inline static DigestType hash(u8 const* data, size_t length)
+    static DigestType hash(u8 const* data, size_t length)
     {
         SHA256 sha;
         sha.update(data, length);
         return sha.digest();
     }
 
-    inline static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
+    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
+    static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual DeprecatedString class_name() const override
@@ -107,7 +107,7 @@ public:
     }
 #endif
 
-    inline virtual void reset() override
+    virtual void reset() override
     {
         m_data_length = 0;
         m_bit_length = 0;
@@ -142,15 +142,15 @@ public:
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    inline static DigestType hash(u8 const* data, size_t length)
+    static DigestType hash(u8 const* data, size_t length)
     {
         SHA384 sha;
         sha.update(data, length);
         return sha.digest();
     }
 
-    inline static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
+    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
+    static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual DeprecatedString class_name() const override
@@ -159,7 +159,7 @@ public:
     }
 #endif
 
-    inline virtual void reset() override
+    virtual void reset() override
     {
         m_data_length = 0;
         m_bit_length = 0;
@@ -194,15 +194,15 @@ public:
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    inline static DigestType hash(u8 const* data, size_t length)
+    static DigestType hash(u8 const* data, size_t length)
     {
         SHA512 sha;
         sha.update(data, length);
         return sha.digest();
     }
 
-    inline static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
+    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
+    static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual DeprecatedString class_name() const override
@@ -211,7 +211,7 @@ public:
     }
 #endif
 
-    inline virtual void reset() override
+    virtual void reset() override
     {
         m_data_length = 0;
         m_bit_length = 0;
