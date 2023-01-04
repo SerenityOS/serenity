@@ -408,28 +408,41 @@ static bool is_table_track_group(CSS::Display display)
         || display.is_table_column_group();
 }
 
+static bool is_proper_table_child(Node const& node)
+{
+    auto const display = node.display();
+    return is_table_track_group(display) || is_table_track(display) || display.is_table_caption();
+}
+
 static bool is_not_proper_table_child(Node const& node)
 {
     if (!node.has_style())
         return true;
-    auto const display = node.display();
-    return !is_table_track_group(display) && !is_table_track(display) && !display.is_table_caption();
+    return !is_proper_table_child(node);
+}
+
+static bool is_table_row(Node const& node)
+{
+    return node.display().is_table_row();
 }
 
 static bool is_not_table_row(Node const& node)
 {
     if (!node.has_style())
         return true;
-    auto const display = node.display();
-    return !display.is_table_row();
+    return !is_table_row(node);
+}
+
+static bool is_table_cell(Node const& node)
+{
+    return node.display().is_table_cell();
 }
 
 static bool is_not_table_cell(Node const& node)
 {
     if (!node.has_style())
         return true;
-    auto const display = node.display();
-    return !display.is_table_cell();
+    return !is_table_cell(node);
 }
 
 static bool is_ignorable_whitespace(Layout::Node const& node)
@@ -467,7 +480,7 @@ static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& pa
     };
 
     for (auto child = parent.first_child(); child; child = child->next_sibling()) {
-        if (matcher(*child)) {
+        if (matcher(*child) || (!sequence.is_empty() && is_ignorable_whitespace(*child))) {
             sequence.append(*child);
         } else {
             if (!sequence.is_empty()) {
@@ -535,9 +548,32 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
     });
 }
 
-void TreeBuilder::generate_missing_parents(NodeWithStyle&)
+void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
 {
-    // FIXME: Implement.
+    root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& parent) {
+        // An anonymous table-row box must be generated around each sequence of consecutive table-cell boxes whose parent is not a table-row.
+        if (is_not_table_row(parent)) {
+            for_each_sequence_of_consecutive_children_matching(parent, is_table_cell, [&](auto& sequence, auto nearest_sibling) {
+                wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+            });
+        }
+
+        // A table-row is misparented if its parent is neither a table-row-group nor a table-root box.
+        if (!parent.display().is_table_inside() && !is_proper_table_child(parent)) {
+            for_each_sequence_of_consecutive_children_matching(parent, is_table_row, [&](auto& sequence, auto nearest_sibling) {
+                wrap_in_anonymous<TableBox>(sequence, nearest_sibling);
+            });
+        }
+
+        // A table-row-group, table-column-group, or table-caption box is misparented if its parent is not a table-root box.
+        if (!parent.display().is_table_inside() && !is_proper_table_child(parent)) {
+            for_each_sequence_of_consecutive_children_matching(parent, is_proper_table_child, [&](auto& sequence, auto nearest_sibling) {
+                wrap_in_anonymous<TableBox>(sequence, nearest_sibling);
+            });
+        }
+
+        return IterationDecision::Continue;
+    });
 }
 
 }
