@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -58,3 +59,16 @@ protected:
     virtual ~HashFunction() = default;
 };
 }
+
+template<size_t DigestS>
+struct AK::Formatter<Crypto::Hash::Digest<DigestS>> : StandardFormatter {
+    ErrorOr<void> format(FormatBuilder& builder, Crypto::Hash::Digest<DigestS> const& digest)
+    {
+        for (size_t i = 0; i < digest.Size; ++i) {
+            if (i > 0 && i % 4 == 0)
+                TRY(builder.put_padding('-', 1));
+            TRY(builder.put_u64(digest.data[i], 16, false, false, true, FormatBuilder::Align::Right, 2));
+        }
+        return {};
+    }
+};
