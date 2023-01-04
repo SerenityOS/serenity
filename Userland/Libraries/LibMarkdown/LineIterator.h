@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Iterator.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
