@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
 #include <LibGemini/Document.h>

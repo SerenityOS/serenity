@@ -6,7 +6,6 @@
  */
 
 #include <AK/Format.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/Stream.h>

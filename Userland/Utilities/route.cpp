@@ -6,7 +6,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <AK/StringView.h>

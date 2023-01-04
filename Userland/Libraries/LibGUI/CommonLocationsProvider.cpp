@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>

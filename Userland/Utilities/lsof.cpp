@@ -6,7 +6,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
