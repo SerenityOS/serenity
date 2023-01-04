@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/NumericLimits.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
@@ -20,6 +21,13 @@
 #include <LibIPC/File.h>
 
 namespace IPC {
+
+ErrorOr<void> Encoder::encode_size(size_t size)
+{
+    if (static_cast<u64>(size) > static_cast<u64>(NumericLimits<u32>::max()))
+        return Error::from_string_literal("Container exceeds the maximum allowed size");
+    return encode(static_cast<u32>(size));
+}
 
 template<>
 ErrorOr<void> encode(Encoder& encoder, float const& value)
@@ -43,10 +51,11 @@ ErrorOr<void> encode(Encoder& encoder, StringView const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, DeprecatedString const& value)
 {
+    // NOTE: Do not change this encoding without also updating LibC/netdb.cpp.
     if (value.is_null())
-        return encoder.encode(-1);
+        return encoder.encode(NumericLimits<u32>::max());
 
-    TRY(encoder.encode(static_cast<i32>(value.length())));
+    TRY(encoder.encode_size(value.length()));
     TRY(encoder.encode(value.view()));
     return {};
 }
@@ -54,7 +63,7 @@ ErrorOr<void> encode(Encoder& encoder, DeprecatedString const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, ByteBuffer const& value)
 {
-    TRY(encoder.encode(static_cast<i32>(value.size())));
+    TRY(encoder.encode_size(value.size()));
     TRY(encoder.append(value.data(), value.size()));
     return {};
 }
@@ -74,7 +83,7 @@ ErrorOr<void> encode(Encoder& encoder, URL const& value)
 template<>
 ErrorOr<void> encode(Encoder& encoder, Dictionary const& dictionary)
 {
-    TRY(encoder.encode(static_cast<u64>(dictionary.size())));
+    TRY(encoder.encode_size(dictionary.size()));
 
     TRY(dictionary.try_for_each_entry([&](auto const& key, auto const& value) -> ErrorOr<void> {
         TRY(encoder.encode(key));
@@ -109,7 +118,7 @@ ErrorOr<void> encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
     TRY(encoder.encode(buffer.is_valid()));
 
     if (buffer.is_valid()) {
-        TRY(encoder.encode(static_cast<u32>(buffer.size())));
+        TRY(encoder.encode_size(buffer.size()));
         TRY(encoder.encode(IPC::File { buffer.fd() }));
     }
 

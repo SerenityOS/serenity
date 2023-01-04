@@ -57,6 +57,8 @@ public:
         return m_buffer.fds.try_append(move(auto_fd));
     }
 
+    ErrorOr<void> encode_size(size_t size);
+
 private:
     void encode_u32(u32);
     void encode_u64(u64);
@@ -134,7 +136,8 @@ ErrorOr<void> encode(Encoder&, Empty const&);
 template<Concepts::Vector T>
 ErrorOr<void> encode(Encoder& encoder, T const& vector)
 {
-    TRY(encoder.encode(static_cast<u64>(vector.size())));
+    // NOTE: Do not change this encoding without also updating LibC/netdb.cpp.
+    TRY(encoder.encode_size(vector.size()));
 
     for (auto const& value : vector)
         TRY(encoder.encode(value));
@@ -145,7 +148,7 @@ ErrorOr<void> encode(Encoder& encoder, T const& vector)
 template<Concepts::HashMap T>
 ErrorOr<void> encode(Encoder& encoder, T const& hashmap)
 {
-    TRY(encoder.encode(static_cast<u32>(hashmap.size())));
+    TRY(encoder.encode_size(hashmap.size()));
 
     for (auto it : hashmap) {
         TRY(encoder.encode(it.key));
