@@ -7,7 +7,6 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
-#include <AK/FloatingPointStringConversions.h>
 #include <AK/SourceLocation.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
