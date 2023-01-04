@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/KString.h>
 
