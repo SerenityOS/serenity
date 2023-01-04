@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <AK/Hex.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>

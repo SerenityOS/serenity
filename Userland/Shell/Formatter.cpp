@@ -7,7 +7,6 @@
 #include "Formatter.h"
 #include "AST.h"
 #include "Parser.h"
-#include <AK/Hex.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
 
