@@ -206,6 +206,8 @@ public:
     i16 typographic_descender() const;
     i16 typographic_line_gap() const;
 
+    bool use_typographic_metrics() const;
+
     explicit OS2(ReadonlyBytes slice)
         : m_slice(slice)
     {

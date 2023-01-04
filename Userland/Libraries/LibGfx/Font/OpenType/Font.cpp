@@ -518,14 +518,24 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
 
 Gfx::ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_scale) const
 {
-    auto ascender = m_hhea.ascender() * y_scale;
-    auto descender = m_hhea.descender() * y_scale;
-    auto line_gap = m_hhea.line_gap() * y_scale;
+    i16 raw_ascender;
+    i16 raw_descender;
+    i16 raw_line_gap;
+
+    if (m_os2.has_value() && m_os2->use_typographic_metrics()) {
+        raw_ascender = m_os2->typographic_ascender();
+        raw_descender = m_os2->typographic_descender();
+        raw_line_gap = m_os2->typographic_line_gap();
+    } else {
+        raw_ascender = m_hhea.ascender();
+        raw_descender = m_hhea.descender();
+        raw_line_gap = m_hhea.line_gap();
+    }
 
     return Gfx::ScaledFontMetrics {
-        .ascender = ascender,
-        .descender = descender,
-        .line_gap = line_gap,
+        .ascender = static_cast<float>(raw_ascender) * y_scale,
+        .descender = static_cast<float>(raw_descender) * y_scale,
+        .line_gap = static_cast<float>(raw_line_gap) * y_scale,
     };
 }
 
@@ -561,7 +571,19 @@ RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_s
     }
     auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
     auto glyph = m_glyf.glyph(glyph_offset);
-    return glyph.rasterize(m_hhea.ascender(), m_hhea.descender(), x_scale, y_scale, subpixel_offset, [&](u16 glyph_id) {
+
+    i16 ascender = 0;
+    i16 descender = 0;
+
+    if (m_os2.has_value() && m_os2->use_typographic_metrics()) {
+        ascender = m_os2->typographic_ascender();
+        descender = m_os2->typographic_descender();
+    } else {
+        ascender = m_hhea.ascender();
+        descender = m_hhea.descender();
+    }
+
+    return glyph.rasterize(ascender, descender, x_scale, y_scale, subpixel_offset, [&](u16 glyph_id) {
         if (glyph_id >= glyph_count()) {
             glyph_id = 0;
         }
@@ -655,6 +677,11 @@ i16 OS2::typographic_descender() const
 i16 OS2::typographic_line_gap() const
 {
     return header().s_typo_line_gap;
+}
+
+bool OS2::use_typographic_metrics() const
+{
+    return header().fs_selection & 0x80;
 }
 
 }
