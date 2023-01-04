@@ -13,8 +13,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 
 namespace SHA256Constants {
 constexpr static u32 RoundConstants[64] {
@@ -232,5 +231,4 @@ private:
     constexpr static auto Rounds = 80;
 };
 
-}
 }

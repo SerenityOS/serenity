@@ -45,8 +45,7 @@ static constexpr void round_4(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
     a += b;
 }
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 
 void MD5::update(u8 const* input, size_t length)
 {
@@ -203,5 +202,4 @@ void MD5::transform(u8 const* block)
     secure_zero(x, sizeof(x));
 }
 
-}
 }

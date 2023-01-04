@@ -10,8 +10,7 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 
 template<size_t DigestS>
 struct Digest {
@@ -58,5 +57,4 @@ public:
 protected:
     virtual ~HashFunction() = default;
 };
-}
 }
