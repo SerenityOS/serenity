@@ -312,21 +312,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, frequency);
     }
 
-    auto& refresh_timer = window->add<Core::Timer>(
-        frequency * 1000, [&] {
-            // FIXME: remove the primitive re-toggling code once persistent model indices work.
-            auto toggled_indices = process_table_view.selection().indices();
-            toggled_indices.remove_all_matching([&](auto const& index) { return !process_table_view.is_toggled(index); });
-            process_model->update();
-            if (!process_table_view.selection().is_empty())
-                process_table_view.selection().for_each_index([&](auto& selection) {
-                    if (toggled_indices.contains_slow(selection))
-                        process_table_view.expand_all_parents_of(selection);
-                });
+    auto update_stats = [&] {
+        // FIXME: remove the primitive re-toggling code once persistent model indices work.
+        auto toggled_indices = process_table_view.selection().indices();
+        toggled_indices.remove_all_matching([&](auto const& index) { return !process_table_view.is_toggled(index); });
+        process_model->update();
+        if (!process_table_view.selection().is_empty())
+            process_table_view.selection().for_each_index([&](auto& selection) {
+                if (toggled_indices.contains_slow(selection))
+                    process_table_view.expand_all_parents_of(selection);
+            });
 
-            if (auto* memory_stats_widget = SystemMonitor::MemoryStatsWidget::the())
-                memory_stats_widget->refresh();
-        });
+        if (auto* memory_stats_widget = SystemMonitor::MemoryStatsWidget::the())
+            memory_stats_widget->refresh();
+    };
+    update_stats();
+    auto& refresh_timer = window->add<Core::Timer>(frequency * 1000, move(update_stats));
 
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
