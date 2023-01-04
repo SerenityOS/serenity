@@ -124,7 +124,7 @@ struct FontPixelMetrics {
     // Line gap specified by font.
     float line_gap { 0 };
 
-    float line_spacing() const { return roundf(ascent) + roundf(descent) + roundf(line_gap); }
+    float line_spacing() const { return ascent + descent + line_gap; }
 };
 
 class Font : public RefCounted<Font> {
