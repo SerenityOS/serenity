@@ -60,9 +60,6 @@ public:
     ErrorOr<void> encode_size(size_t size);
 
 private:
-    void encode_u32(u32);
-    void encode_u64(u64);
-
     MessageBuffer& m_buffer;
 };
 
