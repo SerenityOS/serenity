@@ -152,61 +152,43 @@ int regexec(regex_t const* reg, char const* string, size_t nmatch, regmatch_t pm
     return REG_NOMATCH;
 }
 
-inline static DeprecatedString get_error(ReError errcode)
+static StringView get_error(ReError errcode)
 {
-    DeprecatedString error;
-    switch ((ReError)errcode) {
+    switch (errcode) {
     case REG_NOERR:
-        error = "No error";
-        break;
+        return "No error"sv;
     case REG_NOMATCH:
-        error = "regexec() failed to match.";
-        break;
+        return "regexec() failed to match."sv;
     case REG_BADPAT:
-        error = "Invalid regular expression.";
-        break;
+        return "Invalid regular expression."sv;
     case REG_ECOLLATE:
-        error = "Invalid collating element referenced.";
-        break;
+        return "Invalid collating element referenced."sv;
     case REG_ECTYPE:
-        error = "Invalid character class type referenced.";
-        break;
+        return "Invalid character class type referenced."sv;
     case REG_EESCAPE:
-        error = "Trailing \\ in pattern.";
-        break;
+        return "Trailing \\ in pattern."sv;
     case REG_ESUBREG:
-        error = "Number in \\digit invalid or in error.";
-        break;
+        return "Number in \\digit invalid or in error."sv;
     case REG_EBRACK:
-        error = "[ ] imbalance.";
-        break;
+        return "[ ] imbalance."sv;
     case REG_EPAREN:
-        error = "\\( \\) or ( ) imbalance.";
-        break;
+        return "\\( \\) or ( ) imbalance."sv;
     case REG_EBRACE:
-        error = "\\{ \\} imbalance.";
-        break;
+        return "\\{ \\} imbalance."sv;
     case REG_BADBR:
-        error = "Content of \\{ \\} invalid: not a number, number too large, more than two numbers, first larger than second.";
-        break;
+        return "Content of \\{ \\} invalid: not a number, number too large, more than two numbers, first larger than second."sv;
     case REG_ERANGE:
-        error = "Invalid endpoint in range expression.";
-        break;
+        return "Invalid endpoint in range expression."sv;
     case REG_ESPACE:
-        error = "Out of memory.";
-        break;
+        return "Out of memory."sv;
     case REG_BADRPT:
-        error = "?, * or + not preceded by valid regular expression.";
-        break;
+        return "?, * or + not preceded by valid regular expression."sv;
     case REG_ENOSYS:
-        error = "The implementation does not support the function.";
-        break;
+        return "The implementation does not support the function."sv;
     case REG_EMPTY_EXPR:
-        error = "Empty expression provided";
-        break;
+        return "Empty expression provided"sv;
     }
-
-    return error;
+    return {};
 }
 
 size_t regerror(int errcode, regex_t const* reg, char* errbuf, size_t errbuf_size)
