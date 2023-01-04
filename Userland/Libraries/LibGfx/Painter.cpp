@@ -1382,13 +1382,14 @@ FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Color color)
 
 FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Font const& font, Color color)
 {
-    auto glyph = font.glyph(code_point);
-    auto top_left = point + IntPoint(glyph.left_bearing(), 0);
+    auto top_left = point + FloatPoint(font.glyph_left_bearing(code_point), 0);
+    auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(top_left);
+    auto glyph = font.glyph(code_point, glyph_position.subpixel_offset);
 
     if (glyph.is_glyph_bitmap()) {
         draw_bitmap(top_left.to_type<int>(), glyph.glyph_bitmap(), color);
     } else {
-        blit_filtered(top_left.to_type<int>(), *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
+        blit_filtered(glyph_position.blit_position, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
             return pixel.multiply(color);
         });
     }
