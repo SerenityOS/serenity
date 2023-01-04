@@ -104,6 +104,7 @@ public:
     void set_moving(bool moving) { m_moving = moving; }
     void set_upside_down(bool upside_down) { m_upside_down = upside_down; }
     void set_inverted(bool inverted) { m_inverted = inverted; }
+    void set_highlighted(bool highlighted) { m_highlighted = highlighted; }
 
     void save_old_position();
 
@@ -122,6 +123,7 @@ private:
     bool m_moving { false };
     bool m_upside_down { false };
     bool m_inverted { false };
+    bool m_highlighted { false };
 };
 
 enum class Shuffle {

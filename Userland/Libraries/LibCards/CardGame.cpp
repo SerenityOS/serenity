@@ -126,5 +126,8 @@ void CardGame::set_background_color(Gfx::Color color)
     auto new_palette = palette();
     new_palette.set_color(Gfx::ColorRole::Background, color);
     set_palette(new_palette);
+
+    CardPainter::the().set_background_color(color);
 }
+
 }
