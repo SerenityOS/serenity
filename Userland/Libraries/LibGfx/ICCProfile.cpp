@@ -248,6 +248,9 @@ Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header
     Crypto::Hash::MD5::DigestType md5;
     static_assert(sizeof(md5.data) == sizeof(header.profile_md5));
     memcpy(md5.data, header.profile_md5, sizeof(md5.data));
+
+    // FIXME: Consider comparing read id with compute_id() result and failing if they aren't equal.
+
     return md5;
 }
 }
@@ -384,6 +387,27 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_id = parse_profile_id(header);
 
     return profile;
+}
+
+Crypto::Hash::MD5::DigestType Profile::compute_id(ReadonlyBytes bytes)
+{
+    // ICC v4, 7.2.18 Profile ID field
+    // The Profile ID shall be calculated using the MD5 fingerprinting method as defined in Internet RFC 1321.
+    // The entire profile, whose length is given by the size field in the header,
+    // with the profile flags field (bytes 44 to 47, see 7.2.11),
+    // rendering intent field (bytes 64 to 67, see 7.2.15),
+    // and profile ID field (bytes 84 to 99) in the profile header
+    // temporarily set to zeros (00h), shall be used to calculate the ID.
+    const u8 zero[16] = {};
+    Crypto::Hash::MD5 md5;
+    md5.update(bytes.slice(0, 44));
+    md5.update(ReadonlyBytes { zero, 4 }); // profile flags field
+    md5.update(bytes.slice(48, 64 - 48));
+    md5.update(ReadonlyBytes { zero, 4 }); // rendering intent field
+    md5.update(bytes.slice(68, 84 - 68));
+    md5.update(ReadonlyBytes { zero, 16 }); // profile ID field
+    md5.update(bytes.slice(100));
+    return md5.digest();
 }
 
 }
