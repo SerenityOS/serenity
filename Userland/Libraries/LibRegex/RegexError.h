@@ -39,51 +39,51 @@ enum class Error : u8 {
     InvalidCharacterClassEscape = __Regex_InvalidCharacterClassEscape, // Invalid escaped entity in character class.
 };
 
-inline DeprecatedString get_error_string(Error error)
+inline StringView get_error_string(Error error)
 {
     switch (error) {
     case Error::NoError:
-        return "No error";
+        return "No error"sv;
     case Error::InvalidPattern:
-        return "Invalid regular expression.";
+        return "Invalid regular expression."sv;
     case Error::InvalidCollationElement:
-        return "Invalid collating element referenced.";
+        return "Invalid collating element referenced."sv;
     case Error::InvalidCharacterClass:
-        return "Invalid character class type referenced.";
+        return "Invalid character class type referenced."sv;
     case Error::InvalidTrailingEscape:
-        return "Trailing \\ in pattern.";
+        return "Trailing \\ in pattern."sv;
     case Error::InvalidNumber:
-        return "Number in \\digit invalid or in error.";
+        return "Number in \\digit invalid or in error."sv;
     case Error::MismatchingBracket:
-        return "[ ] imbalance.";
+        return "[ ] imbalance."sv;
     case Error::MismatchingParen:
-        return "( ) imbalance.";
+        return "( ) imbalance."sv;
     case Error::MismatchingBrace:
-        return "{ } imbalance.";
+        return "{ } imbalance."sv;
     case Error::InvalidBraceContent:
-        return "Content of {} invalid: not a number, number too large, more than two numbers, first larger than second.";
+        return "Content of {} invalid: not a number, number too large, more than two numbers, first larger than second."sv;
     case Error::InvalidBracketContent:
-        return "Content of [] invalid.";
+        return "Content of [] invalid."sv;
     case Error::InvalidRange:
-        return "Invalid endpoint in range expression.";
+        return "Invalid endpoint in range expression."sv;
     case Error::InvalidRepetitionMarker:
-        return "?, * or + not preceded by valid regular expression.";
+        return "?, * or + not preceded by valid regular expression."sv;
     case Error::ReachedMaxRecursion:
-        return "Maximum recursion has been reached.";
+        return "Maximum recursion has been reached."sv;
     case Error::EmptySubExpression:
-        return "Sub expression has empty content.";
+        return "Sub expression has empty content."sv;
     case Error::InvalidCaptureGroup:
-        return "Content of capture group is invalid.";
+        return "Content of capture group is invalid."sv;
     case Error::InvalidNameForCaptureGroup:
-        return "Name of capture group is invalid.";
+        return "Name of capture group is invalid."sv;
     case Error::InvalidNameForProperty:
-        return "Name of property is invalid.";
+        return "Name of property is invalid."sv;
     case Error::DuplicateNamedCapture:
-        return "Duplicate capture group name";
+        return "Duplicate capture group name"sv;
     case Error::InvalidCharacterClassEscape:
-        return "Invalid escaped entity in character class.";
+        return "Invalid escaped entity in character class."sv;
     }
-    return "Undefined error.";
+    return "Undefined error."sv;
 }
 }
 
