@@ -11,6 +11,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <LibCrypto/Hash/MD5.h>
 
 namespace Gfx::ICC {
 
@@ -136,6 +137,7 @@ public:
     Flags flags() const { return m_flags; }
     RenderingIntent rendering_intent() const { return m_rendering_intent; }
     const XYZ& pcs_illuminant() const { return m_pcs_illuminant; }
+    Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_id; }
 
 private:
     Version m_version;
@@ -146,6 +148,7 @@ private:
     Flags m_flags;
     RenderingIntent m_rendering_intent;
     XYZ m_pcs_illuminant;
+    Optional<Crypto::Hash::MD5::DigestType> m_id;
 };
 
 }
