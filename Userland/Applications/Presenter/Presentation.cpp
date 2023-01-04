@@ -148,6 +148,37 @@ ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& me
     };
 }
 
+JsonObject Presentation::to_json() const
+{
+    JsonObject json_object;
+    json_object.set("version", PRESENTATION_FORMAT_VERSION);
+    json_object.set("slides", slides_to_json());
+    json_object.set("metadata", metadata_to_json());
+    auto json_string = json_object.to_deprecated_string();
+
+    return json_object;
+}
+
+JsonObject Presentation::metadata_to_json() const
+{
+    JsonObject metadata_object;
+    metadata_object.set("author", m_metadata.author);
+    metadata_object.set("last-modified"sv, m_metadata.last_modified);
+    metadata_object.set("title", m_metadata.title);
+    metadata_object.set("aspect"sv, m_metadata.aspect_ratio);
+    metadata_object.set("width"sv, m_metadata.width);
+    return metadata_object;
+}
+
+JsonArray Presentation::slides_to_json() const
+{
+    JsonArray slides;
+    for (auto const& slide : m_slides) {
+        slides.append(slide.to_json());
+    }
+    return slides;
+}
+
 void Presentation::paint(Gfx::Painter& painter)
 {
     auto display_area = painter.clip_rect();

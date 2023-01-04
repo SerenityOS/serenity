@@ -36,7 +36,7 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
         return Error::from_string_view("Unsupported slide object type"sv);
 
     slide_object_json.for_each_member([&](auto const& key, auto const& value) {
-        if (key == "type"sv)
+        if (key == "type"sv || key == "parent"sv || key == "class_name" || key == "address")
             return;
         auto successful = object->set_property(key, value);
         if (!successful)
@@ -46,7 +46,8 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
     return object.release_nonnull();
 }
 
-SlideObject::SlideObject()
+SlideObject::SlideObject(DeprecatedString type)
+    : m_type(move(type))
 {
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
 }
@@ -59,7 +60,8 @@ Gfx::IntRect SlideObject::transformed_bounding_box(Gfx::IntRect clip_rect, Gfx::
     return m_rect.to_type<float>().scaled(display_scale.width(), display_scale.height()).to_rounded<int>().translated(clip_rect.top_left());
 }
 
-GraphicsObject::GraphicsObject()
+GraphicsObject::GraphicsObject(DeprecatedString type)
+    : SlideObject(move(type))
 {
     register_property(
         "color", [this]() { return this->color().to_deprecated_string(); },
@@ -74,6 +76,7 @@ GraphicsObject::GraphicsObject()
 }
 
 Text::Text()
+    : GraphicsObject("text")
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_FONT_WEIGHT_PROPERTY("font-weight", font_weight, set_font_weight);
@@ -83,12 +86,13 @@ Text::Text()
 }
 
 Text::Text(DeprecatedString text, Gfx::IntPoint position, DeprecatedString font, int font_size, unsigned font_weight, Gfx::Color color)
-    : m_text(move(text))
-    , m_font(font)
-    , m_font_size(font_size)
-    , m_font_weight(font_weight)
-    , m_text_alignment(Gfx::TextAlignment::TopLeft)
+    : Text()
 {
+    m_text = move(text);
+    m_font = move(font);
+    m_font_size = font_size;
+    m_font_weight = font_weight;
+    m_text_alignment = Gfx::TextAlignment::TopLeft;
     // FIXME: Actually calculate the size needed to fit the text
     m_rect = Gfx::IntRect(position, { 100, 100 });
     m_color = color;
@@ -107,7 +111,8 @@ void Text::paint(Gfx::Painter& painter, Gfx::FloatSize display_scale) const
 }
 
 Image::Image(NonnullRefPtr<ImageDecoderClient::Client> client, NonnullRefPtr<GUI::Window> window)
-    : m_client(move(client))
+    : SlideObject("image")
+    , m_client(move(client))
     , m_window(move(window))
 {
     REGISTER_STRING_PROPERTY("path", image_path, set_image_path);

@@ -20,10 +20,12 @@ public:
     // FIXME: shouldn't be hard-coded to 1.
     unsigned frame_count() const { return 1; }
     StringView title() const { return m_title; }
+    NonnullRefPtrVector<SlideObject> slide_objects() const { return m_slide_objects; }
 
     void paint(Gfx::Painter&, unsigned current_frame, Gfx::FloatSize display_scale) const;
 
     void add_slide_object(NonnullRefPtr<SlideObject> slide_object);
+    JsonObject to_json() const;
 
 private:
     Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title);

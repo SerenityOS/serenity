@@ -57,3 +57,18 @@ void Slide::add_slide_object(NonnullRefPtr<SlideObject> slide_object)
 {
     m_slide_objects.append(move(slide_object));
 }
+
+JsonObject Slide::to_json() const
+{
+    JsonObject json;
+    json.set("title"sv, m_title);
+    JsonArray json_slide_objects;
+    for (auto& slide_object : slide_objects()) {
+        JsonObject object;
+        object.set("type"sv, slide_object.type());
+        slide_object.save_to(object);
+        json_slide_objects.append(move(object));
+    }
+    json.set("objects"sv, move(json_slide_objects));
+    return json;
+}

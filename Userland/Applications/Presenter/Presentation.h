@@ -52,12 +52,16 @@ public:
     // This assumes that the caller has clipped the painter to exactly the display area.
     void paint(Gfx::Painter& painter);
 
+    JsonObject to_json() const;
+
 private:
     static Metadata parse_metadata(JsonObject const& metadata_object);
     static ErrorOr<Gfx::IntSize> parse_presentation_size(JsonObject const& metadata_object);
 
     Presentation(Gfx::IntSize normative_size, Metadata metadata, DeprecatedString file_path);
     static NonnullOwnPtr<Presentation> construct(Gfx::IntSize normative_size, Metadata metadata, DeprecatedString file_path);
+    JsonObject metadata_to_json() const;
+    JsonArray slides_to_json() const;
 
     void append_slide(Slide slide);
 

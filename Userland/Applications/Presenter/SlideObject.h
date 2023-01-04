@@ -39,11 +39,13 @@ public:
 
     void set_rect(Gfx::IntRect rect) { m_rect = rect; }
     Gfx::IntRect rect() const { return m_rect; }
+    DeprecatedString type() const { return m_type; }
 
 protected:
-    SlideObject();
+    SlideObject(DeprecatedString type);
 
     Gfx::IntRect m_rect;
+    DeprecatedString m_type;
 };
 
 // Objects with a foreground color.
@@ -57,7 +59,7 @@ public:
     Gfx::Color color() const { return m_color; }
 
 protected:
-    GraphicsObject();
+    GraphicsObject(DeprecatedString type);
 
     // FIXME: Change the default color based on the color scheme
     Gfx::Color m_color { Gfx::Color::Black };
