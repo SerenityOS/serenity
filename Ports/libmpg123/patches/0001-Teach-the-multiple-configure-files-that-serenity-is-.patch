@@ -8,14 +8,10 @@ Subject: [PATCH] Teach the multiple configure files that serenity is a thing
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/configure b/configure
-index d3404be..809a412 100755
+index d3404bea2f..42a42d415c 100755
 --- a/configure
 +++ b/configure
-@@ -14826,11 +14826,11 @@ case $host in
-     cpu_type="x86"
-     newoldwritesample=enabled
-   ;;
-   i686-*-linux*|i686-*-kfreebsd*-gnu)
+@@ -14830,7 +14830,7 @@ case $host in
      cpu_type="x86"
      newoldwritesample=enabled
    ;;
