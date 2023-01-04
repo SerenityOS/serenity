@@ -122,20 +122,19 @@ hostent* gethostbyname(char const* name)
         close(fd);
     });
 
-    size_t unsigned_name_length = strlen(name);
-    VERIFY(unsigned_name_length <= NumericLimits<i32>::max());
-    i32 name_length = static_cast<i32>(unsigned_name_length);
+    auto name_length = strlen(name);
+    VERIFY(name_length <= NumericLimits<i32>::max());
 
     struct [[gnu::packed]] {
         u32 message_size;
         u32 endpoint_magic;
         i32 message_id;
-        i32 name_length;
+        u32 name_length;
     } request_header = {
         (u32)(sizeof(request_header) - sizeof(request_header.message_size) + name_length),
         lookup_server_endpoint_magic,
         1,
-        name_length,
+        static_cast<u32>(name_length),
     };
     if (auto nsent = write(fd, &request_header, sizeof(request_header)); nsent < 0) {
         h_errno = TRY_AGAIN;
@@ -148,7 +147,7 @@ hostent* gethostbyname(char const* name)
     if (auto nsent = write(fd, name, name_length); nsent < 0) {
         h_errno = TRY_AGAIN;
         return nullptr;
-    } else if (nsent != name_length) {
+    } else if (static_cast<size_t>(nsent) != name_length) {
         h_errno = NO_RECOVERY;
         return nullptr;
     }
@@ -158,7 +157,7 @@ hostent* gethostbyname(char const* name)
         u32 endpoint_magic;
         i32 message_id;
         i32 code;
-        u64 addresses_count;
+        u32 addresses_count;
     } response_header;
 
     if (auto nreceived = read(fd, &response_header, sizeof(response_header)); nreceived < 0) {
@@ -270,7 +269,7 @@ hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
         u32 endpoint_magic;
         i32 message_id;
         i32 code;
-        i32 name_length;
+        u32 name_length;
     } response_header;
 
     if (auto nreceived = read(fd, &response_header, sizeof(response_header)); nreceived < 0) {
@@ -293,7 +292,7 @@ hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
     if (auto nreceived = read(fd, buffer, response_header.name_length); nreceived < 0) {
         h_errno = TRY_AGAIN;
         return nullptr;
-    } else if (nreceived != response_header.name_length) {
+    } else if (static_cast<u32>(nreceived) != response_header.name_length) {
         h_errno = NO_RECOVERY;
         return nullptr;
     }

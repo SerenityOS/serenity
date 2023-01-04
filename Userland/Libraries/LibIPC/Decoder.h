@@ -50,6 +50,8 @@ public:
         return {};
     }
 
+    ErrorOr<size_t> decode_size();
+
     Core::Stream::LocalSocket& socket() { return m_socket; }
 
 private:
@@ -96,11 +98,9 @@ ErrorOr<Empty> decode(Decoder&);
 template<Concepts::Vector T>
 ErrorOr<T> decode(Decoder& decoder)
 {
-    auto size = TRY(decoder.decode<u64>());
-    if (size > NumericLimits<i32>::max())
-        return Error::from_string_literal("IPC: Invalid Vector size");
-
     T vector;
+
+    auto size = TRY(decoder.decode_size());
     TRY(vector.try_ensure_capacity(size));
 
     for (size_t i = 0; i < size; ++i) {
@@ -114,11 +114,10 @@ ErrorOr<T> decode(Decoder& decoder)
 template<Concepts::HashMap T>
 ErrorOr<T> decode(Decoder& decoder)
 {
-    auto size = TRY(decoder.decode<u32>());
-    if (size > NumericLimits<i32>::max())
-        return Error::from_string_literal("IPC: Invalid HashMap size");
-
     T hashmap;
+
+    auto size = TRY(decoder.decode_size());
+    TRY(hashmap.try_ensure_capacity(size));
 
     for (size_t i = 0; i < size; ++i) {
         auto key = TRY(decoder.decode<typename T::KeyType>());
