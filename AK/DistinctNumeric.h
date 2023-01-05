@@ -286,8 +286,8 @@ public:
     }
     constexpr Self& operator-=(Self const& other)
     {
-        static_assert(options.arithmetic, "'a+=b' is only available for DistinctNumeric types with 'Arithmetic'.");
-        this->m_value += other.m_value;
+        static_assert(options.arithmetic, "'a-=b' is only available for DistinctNumeric types with 'Arithmetic'.");
+        this->m_value -= other.m_value;
         return *this;
     }
     constexpr Self& operator*=(Self const& other)
