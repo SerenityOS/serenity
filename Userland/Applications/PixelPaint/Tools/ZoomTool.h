@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, the SerenityOS developers.
+ * Copyright (c) 2021-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +25,7 @@ private:
     virtual StringView tool_name() const override { return "Zoom Tool"sv; }
 
     RefPtr<GUI::Widget> m_properties_widget;
-    double m_sensitivity { 0.5 };
+    float m_sensitivity { 0.5f };
 };
 
 }
