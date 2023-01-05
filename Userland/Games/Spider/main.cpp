@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,11 +57,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Spider");
 
-    auto mode = static_cast<Spider::Mode>(Config::read_i32("Spider"sv, "Settings"sv, "Mode"sv, static_cast<int>(Spider::Mode::SingleSuit)));
+    auto mode = static_cast<Spider::Mode>(Config::read_u32("Spider"sv, "Settings"sv, "Mode"sv, to_underlying(Spider::Mode::SingleSuit)));
 
     auto update_mode = [&](Spider::Mode new_mode) {
         mode = new_mode;
-        Config::write_i32("Spider"sv, "Settings"sv, "Mode"sv, static_cast<int>(mode));
+        Config::write_u32("Spider"sv, "Settings"sv, "Mode"sv, to_underlying(mode));
     };
 
     auto mode_id = [&]() {
@@ -75,40 +75,40 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    auto statistic_display = static_cast<StatisticDisplay>(Config::read_i32("Spider"sv, "Settings"sv, "StatisticDisplay"sv, static_cast<int>(StatisticDisplay::HighScore)));
+    auto statistic_display = static_cast<StatisticDisplay>(Config::read_u32("Spider"sv, "Settings"sv, "StatisticDisplay"sv, to_underlying(StatisticDisplay::HighScore)));
     auto update_statistic_display = [&](StatisticDisplay new_statistic_display) {
         statistic_display = new_statistic_display;
-        Config::write_i32("Spider"sv, "Settings"sv, "StatisticDisplay"sv, static_cast<int>(statistic_display));
+        Config::write_u32("Spider"sv, "Settings"sv, "StatisticDisplay"sv, to_underlying(statistic_display));
     };
 
     auto high_score = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider"sv, "HighScores"sv, mode_id(), 0));
+        return Config::read_u32("Spider"sv, "HighScores"sv, mode_id(), 0);
     };
 
     auto update_high_score = [&](u32 new_high_score) {
-        Config::write_i32("Spider"sv, "HighScores"sv, mode_id(), static_cast<int>(new_high_score));
+        Config::write_u32("Spider"sv, "HighScores"sv, mode_id(), new_high_score);
     };
 
     auto best_time = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider"sv, "BestTimes"sv, mode_id(), 0));
+        return Config::read_u32("Spider"sv, "BestTimes"sv, mode_id(), 0);
     };
 
     auto update_best_time = [&](u32 new_best_time) {
-        Config::write_i32("Spider"sv, "BestTimes"sv, mode_id(), static_cast<int>(new_best_time));
+        Config::write_u32("Spider"sv, "BestTimes"sv, mode_id(), new_best_time);
     };
 
     auto total_wins = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider"sv, "TotalWins"sv, mode_id(), 0));
+        return Config::read_u32("Spider"sv, "TotalWins"sv, mode_id(), 0);
     };
     auto increment_total_wins = [&]() {
-        Config::write_i32("Spider"sv, "TotalWins"sv, mode_id(), static_cast<int>(total_wins() + 1));
+        Config::write_u32("Spider"sv, "TotalWins"sv, mode_id(), total_wins() + 1);
     };
 
     auto total_losses = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider"sv, "TotalLosses"sv, mode_id(), 0));
+        return Config::read_u32("Spider"sv, "TotalLosses"sv, mode_id(), 0);
     };
     auto increment_total_losses = [&]() {
-        Config::write_i32("Spider"sv, "TotalLosses"sv, mode_id(), static_cast<int>(total_losses() + 1));
+        Config::write_u32("Spider"sv, "TotalLosses"sv, mode_id(), total_losses() + 1);
     };
 
     if (mode >= Spider::Mode::__Count)
