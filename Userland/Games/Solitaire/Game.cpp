@@ -21,20 +21,20 @@ static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
 {
-    add_stack(adopt_ref(*new CardStack({ 10, 10 }, CardStack::Type::Stock)));
-    add_stack(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste)));
-    add_stack(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play, stack_at_location(Waste))));
-    add_stack(adopt_ref(*new CardStack({ Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation)));
-    add_stack(adopt_ref(*new CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation)));
-    add_stack(adopt_ref(*new CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation)));
-    add_stack(adopt_ref(*new CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation)));
-    add_stack(adopt_ref(*new CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    add_stack(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    add_stack(adopt_ref(*new CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    add_stack(adopt_ref(*new CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    add_stack(adopt_ref(*new CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    add_stack(adopt_ref(*new CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    add_stack(adopt_ref(*new CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    MUST(add_stack(Gfx::IntPoint { 10, 10 }, CardStack::Type::Stock));
+    MUST(add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 }, CardStack::Type::Waste));
+    MUST(add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 }, CardStack::Type::Play, stack_at_location(Waste)));
+    MUST(add_stack(Gfx::IntPoint { Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation));
+    MUST(add_stack(Gfx::IntPoint { Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation));
+    MUST(add_stack(Gfx::IntPoint { Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation));
+    MUST(add_stack(Gfx::IntPoint { Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation));
+    MUST(add_stack(Gfx::IntPoint { 10, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    MUST(add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    MUST(add_stack(Gfx::IntPoint { 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    MUST(add_stack(Gfx::IntPoint { 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    MUST(add_stack(Gfx::IntPoint { 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    MUST(add_stack(Gfx::IntPoint { 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    MUST(add_stack(Gfx::IntPoint { 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal));
 }
 
 static float rand_float()

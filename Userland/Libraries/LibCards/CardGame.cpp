@@ -33,11 +33,6 @@ CardGame::CardGame()
     set_background_color(background_color.value_or(Color::from_rgb(0x008000)));
 }
 
-void CardGame::add_stack(NonnullRefPtr<CardStack> stack)
-{
-    m_stacks.append(move(stack));
-}
-
 void CardGame::mark_intersecting_stacks_dirty(Cards::Card const& intersecting_card)
 {
     for (auto& stack : stacks()) {
