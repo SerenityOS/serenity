@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/StringUtils.h"
+#include "AK/StringView.h"
 #include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/Base64.h>
@@ -146,7 +148,13 @@ ErrorOr<String> encode_base64(ReadonlyBytes input)
 ErrorOr<ByteBuffer> decode_forgiving_base64(StringView input)
 {
     // 1. Remove all ASCII whitespace from data.
-    auto data = input.trim_whitespace();
+    StringBuilder builder(input.length());
+    for (auto ch : input) {
+        if (!is_ascii_space(ch)) {
+            builder.append(ch);
+        }
+    }
+    auto data = builder.string_view();
 
     // 2. If data’s code point length divides by 4 leaving no remainder, then:
     if (data.length() % 4 == 0) {
