@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Forward.h"
 #include <AK/Base64.h>
+#include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -15,10 +17,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     bool decode = false;
+    bool forgiving = false;
     StringView filepath = {};
 
     Core::ArgsParser args_parser;
     args_parser.add_option(decode, "Decode data", "decode", 'd');
+    args_parser.add_option(forgiving, "Decode data in forgiving mode", "forgiving", 'f');
     args_parser.add_positional_argument(filepath, "", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -28,7 +32,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio"));
 
     if (decode) {
-        auto decoded = TRY(decode_base64(buffer));
+        AK::ByteBuffer decoded;
+        if (forgiving) {
+            decoded = TRY(AK::decode_forgiving_base64(buffer));
+        } else {
+            decoded = TRY(decode_base64(buffer));
+        }
         out("{}", StringView(decoded.bytes()));
         return 0;
     }
