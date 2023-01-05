@@ -15,7 +15,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/GML/AutocompleteProvider.h>
 #include <LibGUI/GML/Formatter.h>
-#include <LibGUI/GML/Lexer.h>
 #include <LibGUI/GML/SyntaxHighlighter.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -28,8 +27,6 @@
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <string.h>
-#include <unistd.h>
 
 namespace {
 
@@ -95,6 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     preview_window->set_title("Preview - GML Playground");
     preview_window->set_icon(app_icon.bitmap_for_size(16));
     auto preview_window_widget = TRY(preview_window->try_set_main_widget<GUI::Widget>());
+    preview_window_widget->set_fill_with_background_color(true);
 
     GUI::Widget* preview = preview_frame_widget;
 
