@@ -51,7 +51,7 @@ struct Destination {
 
     Type type;
     Optional<u32> page;
-    Vector<float> parameters;
+    Vector<Optional<float>> parameters;
 };
 
 struct OutlineItem final : public RefCounted<OutlineItem> {
@@ -232,9 +232,15 @@ struct Formatter<PDF::Destination> : Formatter<FormatString> {
             TRY(builder.put_literal("{{}}"sv));
         else
             TRY(builder.put_u64(destination.page.value()));
-        for (auto& param : destination.parameters) {
-            TRY(builder.put_f64(double(param)));
-            TRY(builder.put_literal(" "sv));
+        if (!destination.parameters.is_empty()) {
+            TRY(builder.put_literal(" parameters="sv));
+            for (auto const& param : destination.parameters) {
+                if (param.has_value())
+                    TRY(builder.put_f64(double(param.value())));
+                else
+                    TRY(builder.put_literal("{{}}"sv));
+                TRY(builder.put_literal(" "sv));
+            }
         }
         return builder.put_literal(" }}"sv);
     }
