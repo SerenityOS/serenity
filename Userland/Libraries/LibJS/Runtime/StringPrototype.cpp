@@ -7,7 +7,6 @@
 
 #include <AK/Checked.h>
 #include <AK/Function.h>
-#include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -24,6 +23,7 @@
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLocale/Locale.h>
@@ -528,11 +528,11 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     auto fill_code_units = fill_string.length_in_code_units();
     auto fill_length = max_length - string_length;
 
-    StringBuilder filler_builder;
+    ThrowableStringBuilder filler_builder(vm);
     for (size_t i = 0; i < fill_length / fill_code_units; ++i)
-        filler_builder.append(fill_string.view());
+        TRY(filler_builder.append(fill_string.view()));
 
-    filler_builder.append(fill_string.substring_view(0, fill_length % fill_code_units));
+    TRY(filler_builder.append(fill_string.substring_view(0, fill_length % fill_code_units)));
     auto filler = filler_builder.build();
 
     auto formatted = placement == PadPlacement::Start
@@ -575,9 +575,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     if (string.is_empty())
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
-    StringBuilder builder;
+    ThrowableStringBuilder builder(vm);
     for (size_t i = 0; i < n; ++i)
-        builder.append(string);
+        TRY(builder.append(string));
     return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
@@ -615,10 +615,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         replacement = TRY(get_substitution(vm, search_string.view(), string.view(), *position, {}, js_undefined(), replace_value));
     }
 
-    StringBuilder builder;
-    builder.append(preserved);
-    builder.append(replacement);
-    builder.append(string.substring_view(*position + search_string.length_in_code_units()));
+    ThrowableStringBuilder builder(vm);
+    TRY(builder.append(preserved));
+    TRY(builder.append(replacement));
+    TRY(builder.append(string.substring_view(*position + search_string.length_in_code_units())));
 
     return PrimitiveString::create(vm, builder.build());
 }
@@ -667,7 +667,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     }
 
     size_t end_of_last_match = 0;
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     for (auto position : match_positions) {
         auto preserved = string.substring_view(end_of_last_match, position - end_of_last_match);
@@ -680,14 +680,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             replacement = TRY(get_substitution(vm, search_string.view(), string.view(), position, {}, js_undefined(), replace_value));
         }
 
-        result.append(preserved);
-        result.append(replacement);
+        TRY(result.append(preserved));
+        TRY(result.append(replacement));
 
         end_of_last_match = position + search_length;
     }
 
     if (end_of_last_match < string_length)
-        result.append(string.substring_view(end_of_last_match));
+        TRY(result.append(string.substring_view(end_of_last_match)));
 
     return PrimitiveString::create(vm, result.build());
 }
@@ -995,7 +995,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     size_t k = 0;
 
     // 5. Let result be the empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 6. Repeat, while k < strLen,
     while (k < length) {
@@ -1005,12 +1005,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
         // b. If cp.[[IsUnpairedSurrogate]] is true, then
         if (code_point.is_unpaired_surrogate) {
             // i. Set result to the string-concatenation of result and 0xFFFD (REPLACEMENT CHARACTER).
-            result.append_code_point(0xfffd);
+            TRY(result.append_code_point(0xfffd));
         }
         // c. Else,
         else {
             // i. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp.[[CodePoint]]).
-            result.append_code_point(code_point.code_point);
+            TRY(result.append_code_point(code_point.code_point));
         }
 
         // d. Set k to k + cp.[[CodeUnitCount]].
@@ -1119,22 +1119,22 @@ static ThrowCompletionOr<Value> create_html(VM& vm, Value string, DeprecatedStri
 {
     TRY(require_object_coercible(vm, string));
     auto str = TRY(string.to_string(vm));
-    StringBuilder builder;
-    builder.append('<');
-    builder.append(tag);
+    ThrowableStringBuilder builder(vm);
+    TRY(builder.append('<'));
+    TRY(builder.append(tag));
     if (!attribute.is_empty()) {
         auto value_string = TRY(value.to_string(vm));
-        builder.append(' ');
-        builder.append(attribute);
-        builder.append("=\""sv);
-        builder.append(value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All));
-        builder.append('"');
+        TRY(builder.append(' '));
+        TRY(builder.append(attribute));
+        TRY(builder.append("=\""sv));
+        TRY(builder.append(value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All)));
+        TRY(builder.append('"'));
     }
-    builder.append('>');
-    builder.append(str);
-    builder.append("</"sv);
-    builder.append(tag);
-    builder.append('>');
+    TRY(builder.append('>'));
+    TRY(builder.append(str));
+    TRY(builder.append("</"sv));
+    TRY(builder.append(tag));
+    TRY(builder.append('>'));
     return PrimitiveString::create(vm, builder.build());
 }
 
