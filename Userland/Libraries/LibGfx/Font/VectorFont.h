@@ -18,9 +18,9 @@ struct ScaledFontMetrics {
     float descender { 0 };
     float line_gap { 0 };
 
-    int height() const
+    float height() const
     {
-        return ascender - descender;
+        return ascender + descender;
     }
 };
 

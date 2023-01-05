@@ -534,7 +534,7 @@ Gfx::ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_sca
 
     return Gfx::ScaledFontMetrics {
         .ascender = static_cast<float>(raw_ascender) * y_scale,
-        .descender = static_cast<float>(raw_descender) * y_scale,
+        .descender = -static_cast<float>(raw_descender) * y_scale,
         .line_gap = static_cast<float>(raw_line_gap) * y_scale,
     };
 }

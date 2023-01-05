@@ -111,7 +111,7 @@ Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
         .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),
         .ascent = metrics.ascender,
-        .descent = -metrics.descender,
+        .descent = metrics.descender,
         .line_gap = metrics.line_gap,
     };
 }

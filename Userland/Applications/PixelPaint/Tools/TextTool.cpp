@@ -130,7 +130,7 @@ void TextTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.translate(editor_layer_location(*layer));
     auto typed_text = m_text_editor->text();
     auto text_width = max<int>(m_selected_font->width(typed_text), m_selected_font->width(" "sv));
-    auto text_height = m_selected_font->preferred_line_height() * max<int>(static_cast<int>(m_text_editor->line_count()), 1);
+    auto text_height = static_cast<int>(ceilf(m_selected_font->preferred_line_height() * max<int>(static_cast<int>(m_text_editor->line_count()), 1)));
     auto text_location = editor_stroke_position(m_add_text_position, 1);
 
     // Since ImageEditor can be zoomed in/out, we need to be able to render the preview properly scaled
@@ -238,7 +238,7 @@ void TextTool::apply_text_to_layer()
 
     auto demo_text = m_text_editor->text();
     auto text_width = m_selected_font->width(demo_text);
-    auto text_height = m_selected_font->preferred_line_height() * static_cast<int>(m_text_editor->line_count());
+    auto text_height = static_cast<int>(ceilf(m_selected_font->preferred_line_height() * static_cast<int>(m_text_editor->line_count())));
 
     painter.set_font(*m_selected_font);
     auto text_rect = Gfx::Rect<int>(m_add_text_position, { static_cast<int>(ceilf(text_width)), text_height });

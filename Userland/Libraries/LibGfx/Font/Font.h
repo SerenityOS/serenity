@@ -156,7 +156,7 @@ public:
     virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const = 0;
     virtual u8 glyph_height() const = 0;
     virtual int x_height() const = 0;
-    virtual int preferred_line_height() const = 0;
+    virtual float preferred_line_height() const = 0;
 
     virtual u8 min_glyph_width() const = 0;
     virtual u8 max_glyph_width() const = 0;

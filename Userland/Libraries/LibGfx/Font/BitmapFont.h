@@ -69,7 +69,7 @@ public:
     float glyphs_horizontal_kerning(u32, u32) const override { return 0.f; }
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
-    int preferred_line_height() const override { return glyph_height() + m_line_gap; }
+    virtual float preferred_line_height() const override { return glyph_height() + m_line_gap; }
 
     virtual float glyph_width(u32 code_point) const override;
     u8 raw_glyph_width(u32 code_point) const { return m_glyph_widths[code_point]; }
