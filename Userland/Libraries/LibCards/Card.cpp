@@ -20,13 +20,13 @@ Card::Card(Suit suit, Rank rank)
     VERIFY(to_underlying(rank) < card_count);
 }
 
-void Card::paint(GUI::Painter& painter) const
+void Card::paint(GUI::Painter& painter, bool highlighted) const
 {
     auto& card_painter = CardPainter::the();
     auto bitmap = [&]() {
         if (m_inverted)
             return m_upside_down ? card_painter.card_back_inverted() : card_painter.card_front_inverted(m_suit, m_rank);
-        if (m_highlighted) {
+        if (highlighted) {
             VERIFY(!m_upside_down);
             return card_painter.card_front_highlighted(m_suit, m_rank);
         }
@@ -46,12 +46,12 @@ void Card::save_old_position()
     m_old_position_valid = true;
 }
 
-void Card::clear_and_paint(GUI::Painter& painter, Color background_color)
+void Card::clear_and_paint(GUI::Painter& painter, Color background_color, bool highlighted)
 {
     if (is_old_position_valid())
         clear(painter, background_color);
 
-    paint(painter);
+    paint(painter, highlighted);
     save_old_position();
 }
 
