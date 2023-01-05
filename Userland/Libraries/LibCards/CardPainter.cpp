@@ -247,7 +247,8 @@ void CardPainter::paint_highlighted_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const&
     painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, Card::card_radius);
     paint_rect.shrink(2, 2);
     painter.fill_rect_with_rounded_corners(paint_rect, background_complement, Card::card_radius - 1);
-    paint_rect.shrink(2, 2);
+    paint_rect.shrink(4, 4);
+    painter.fill_rect_with_rounded_corners(paint_rect, Color::White, Card::card_radius - 1);
     painter.blit({ 4, 4 }, source_to_highlight, source_to_highlight.rect().shrunken(8, 8));
 }
 
