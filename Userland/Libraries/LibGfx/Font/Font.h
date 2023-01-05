@@ -142,7 +142,6 @@ public:
 
     virtual u8 presentation_size() const = 0;
     virtual float pixel_size() const = 0;
-    virtual float point_size() const = 0;
     virtual u8 slope() const = 0;
 
     virtual u16 weight() const = 0;

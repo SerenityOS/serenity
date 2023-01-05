@@ -44,7 +44,6 @@ public:
     virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return *this; }
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual float pixel_size() const override { return m_point_height * 1.33333333f; }
-    virtual float point_size() const override { return m_point_height; }
     virtual Gfx::FontPixelMetrics pixel_metrics() const override;
     virtual u8 slope() const override { return m_font->slope(); }
     virtual u16 weight() const override { return m_font->weight(); }
