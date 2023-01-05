@@ -111,7 +111,7 @@ struct ICCHeader {
 
     BigEndian<u32> profile_creator;
 
-    u8 profile_md5[16];
+    u8 profile_id[16];
     u8 reserved[28];
 };
 static_assert(sizeof(ICCHeader) == 128);
@@ -239,15 +239,15 @@ Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header
     // ICC v4, 7.2.18 Profile ID field
     // "A profile ID field value of zero (00h) shall indicate that a profile ID has not been calculated."
     bool did_calculate_profile_id = false;
-    for (u8 b : header.profile_md5)
+    for (u8 b : header.profile_id)
         if (b != 0)
             did_calculate_profile_id = true;
     if (!did_calculate_profile_id)
         return {};
 
     Crypto::Hash::MD5::DigestType md5;
-    static_assert(sizeof(md5.data) == sizeof(header.profile_md5));
-    memcpy(md5.data, header.profile_md5, sizeof(md5.data));
+    static_assert(sizeof(md5.data) == sizeof(header.profile_id));
+    memcpy(md5.data, header.profile_id, sizeof(md5.data));
 
     // FIXME: Consider comparing read id with compute_id() result and failing if they aren't equal.
 
