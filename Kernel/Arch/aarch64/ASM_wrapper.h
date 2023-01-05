@@ -63,7 +63,7 @@ inline ExceptionLevel get_current_exception_level()
 inline void wait_cycles(int n)
 {
     // FIXME: Make timer-based.
-    for (int volatile i = 0; i < n; i = i + 1) {
+    for (int i = 0; i < n; i = i + 1) {
         Processor::pause();
     }
 }
