@@ -353,6 +353,7 @@ inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
 }
 
 #if USING_AK_GLOBALLY
+using AK::adopt_nonnull_ref_or_enomem;
 using AK::adopt_ref_if_nonnull;
 using AK::RefPtr;
 using AK::static_ptr_cast;
