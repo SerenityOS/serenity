@@ -144,7 +144,9 @@ void LassoSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event
     painter.add_clip_rect(event.rect());
     if (layer)
         painter.translate(editor_layer_location(*layer));
-    painter.stroke_path(m_preview_path, Gfx::Color::Black, 1);
+    // FIXME: Find a way to draw this in a single call
+    painter.stroke_path(m_preview_path, Gfx::Color::Black, 3);
+    painter.stroke_path(m_preview_path, Gfx::Color::White, 1);
 }
 
 bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
