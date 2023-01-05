@@ -82,8 +82,12 @@ public:
     ALWAYS_INLINE Value const& operator[](size_t index) const { return at(index); }
     ALWAYS_INLINE Value const& at(size_t index) const { return m_elements[index]; }
 
-#define DEFINE_INDEXER(class_name, snake_name) \
-    PDFErrorOr<NonnullRefPtr<class_name>> get_##snake_name##_at(Document*, size_t index) const;
+    PDFErrorOr<NonnullRefPtr<Object>> get_object_at(Document* document, size_t index) const;
+    NonnullRefPtr<Object> get_object_at(size_t index) const { return at(index).get<NonnullRefPtr<Object>>(); };
+
+#define DEFINE_INDEXER(class_name, snake_name)                                                  \
+    PDFErrorOr<NonnullRefPtr<class_name>> get_##snake_name##_at(Document*, size_t index) const; \
+    NonnullRefPtr<class_name> get_##snake_name##_at(size_t index) const;
     ENUMERATE_OBJECT_TYPES(DEFINE_INDEXER)
 #undef DEFINE_INDEXER
 
@@ -128,8 +132,9 @@ public:
 
     PDFErrorOr<NonnullRefPtr<Object>> get_object(Document*, FlyString const& key) const;
 
-#define DEFINE_GETTER(class_name, snake_name) \
-    PDFErrorOr<NonnullRefPtr<class_name>> get_##snake_name(Document*, FlyString const& key) const;
+#define DEFINE_GETTER(class_name, snake_name)                                                      \
+    PDFErrorOr<NonnullRefPtr<class_name>> get_##snake_name(Document*, FlyString const& key) const; \
+    NonnullRefPtr<class_name> get_##snake_name(FlyString const& key) const;
     ENUMERATE_OBJECT_TYPES(DEFINE_GETTER)
 #undef DEFINE_GETTER
 

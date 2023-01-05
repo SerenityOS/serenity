@@ -10,6 +10,11 @@
 
 namespace PDF {
 
+PDFErrorOr<NonnullRefPtr<Object>> ArrayObject::get_object_at(Document* document, size_t index) const
+{
+    return document->resolve_to<Object>(at(index));
+}
+
 PDFErrorOr<NonnullRefPtr<Object>> DictObject::get_object(Document* document, FlyString const& key) const
 {
     return document->resolve_to<Object>(get_value(key));
@@ -23,10 +28,22 @@ PDFErrorOr<NonnullRefPtr<Object>> DictObject::get_object(Document* document, Fly
         return document->resolve_to<class_name>(m_elements[index]);                                                    \
     }                                                                                                                  \
                                                                                                                        \
+    NonnullRefPtr<class_name> ArrayObject::get_##snake_name##_at(size_t index) const                                   \
+    {                                                                                                                  \
+        VERIFY(index < m_elements.size());                                                                             \
+        return cast_to<class_name>(m_elements[index]);                                                                 \
+    }                                                                                                                  \
+                                                                                                                       \
     PDFErrorOr<NonnullRefPtr<class_name>> DictObject::get_##snake_name(Document* document, FlyString const& key) const \
     {                                                                                                                  \
-        return document->resolve_to<class_name>(get(key).value());                                                     \
+        return document->resolve_to<class_name>(get_value(key));                                                       \
+    }                                                                                                                  \
+                                                                                                                       \
+    NonnullRefPtr<class_name> DictObject::get_##snake_name(FlyString const& key) const                                 \
+    {                                                                                                                  \
+        return cast_to<class_name>(get_value(key));                                                                    \
     }
+
 ENUMERATE_OBJECT_TYPES(DEFINE_ACCESSORS)
 #undef DEFINE_INDEXER
 
