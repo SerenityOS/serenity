@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -19,23 +19,29 @@ namespace Solitaire {
 static constexpr uint8_t new_game_animation_delay = 2;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
-Game::Game()
+ErrorOr<NonnullRefPtr<Game>> Game::try_create()
 {
-    MUST(add_stack(Gfx::IntPoint { 10, 10 }, CardStack::Type::Stock));
-    MUST(add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 }, CardStack::Type::Waste));
-    MUST(add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 }, CardStack::Type::Play, stack_at_location(Waste)));
-    MUST(add_stack(Gfx::IntPoint { Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation));
-    MUST(add_stack(Gfx::IntPoint { Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation));
-    MUST(add_stack(Gfx::IntPoint { Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation));
-    MUST(add_stack(Gfx::IntPoint { Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation));
-    MUST(add_stack(Gfx::IntPoint { 10, 10 + Card::height + 10 }, CardStack::Type::Normal));
-    MUST(add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal));
-    MUST(add_stack(Gfx::IntPoint { 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal));
-    MUST(add_stack(Gfx::IntPoint { 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal));
-    MUST(add_stack(Gfx::IntPoint { 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal));
-    MUST(add_stack(Gfx::IntPoint { 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal));
-    MUST(add_stack(Gfx::IntPoint { 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    auto game = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Game()));
+
+    TRY(game->add_stack(Gfx::IntPoint { 10, 10 }, CardStack::Type::Stock));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 }, CardStack::Type::Waste));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 }, CardStack::Type::Play, game->stack_at_location(Waste)));
+    TRY(game->add_stack(Gfx::IntPoint { Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation));
+    TRY(game->add_stack(Gfx::IntPoint { Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation));
+    TRY(game->add_stack(Gfx::IntPoint { Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation));
+    TRY(game->add_stack(Gfx::IntPoint { Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation));
+    TRY(game->add_stack(Gfx::IntPoint { 10, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal));
+    TRY(game->add_stack(Gfx::IntPoint { 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal));
+
+    return game;
 }
+
+Game::Game() = default;
 
 static float rand_float()
 {
