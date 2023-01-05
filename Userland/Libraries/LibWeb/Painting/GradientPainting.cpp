@@ -66,7 +66,7 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
     //    or transition hint before it.
     auto max_previous_color_stop_or_hint = resolved_color_stops[0].position;
     auto resolve_stop_position = [&](auto& position) {
-        float value = static_cast<float>(resolve_position_to_float(position));
+        float value = resolve_position_to_float(position);
         value = max(value, max_previous_color_stop_or_hint);
         max_previous_color_stop_or_hint = value;
         return value;
@@ -138,7 +138,7 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPix
 
     auto resolved_color_stops = resolve_color_stop_positions(
         linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_length_px;
+            return length_percentage.resolved(node, gradient_length).to_px(node).value() / gradient_length_px;
         },
         linear_gradient.is_repeating());
 
@@ -162,7 +162,7 @@ RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, CSSPix
     auto gradient_length = CSS::Length::make_px(gradient_size.width());
     auto resolved_color_stops = resolve_color_stop_positions(
         radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width().value();
+            return (length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width()).value();
         },
         radial_gradient.is_repeating());
     return { resolved_color_stops };
