@@ -93,12 +93,14 @@
     A(Length1)                    \
     A(Length2)                    \
     A(Length3)                    \
+    A(Limits)                     \
     A(Linearized)                 \
     A(ML)                         \
     A(Matrix)                     \
     A(MediaBox)                   \
     A(MissingWidth)               \
     A(N)                          \
+    A(Names)                      \
     A(Next)                       \
     A(O)                          \
     A(OP)                         \

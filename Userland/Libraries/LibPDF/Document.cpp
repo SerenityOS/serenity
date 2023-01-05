@@ -199,6 +199,46 @@ PDFErrorOr<void> Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObj
     return {};
 }
 
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<DictObject> tree, FlyString name)
+{
+    if (tree->contains(CommonNames::Kids)) {
+        return find_in_name_tree_nodes(tree->get_array(CommonNames::Kids), name);
+    }
+    if (!tree->contains(CommonNames::Names))
+        return Error { Error::Type::MalformedPDF, "name tree has neither Kids nor Names" };
+    auto key_value_names_array = TRY(tree->get_array(this, CommonNames::Names));
+    return find_in_key_value_array(key_value_names_array, name);
+}
+
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, FlyString name)
+{
+    for (size_t i = 0; i < siblings->size(); i++) {
+        auto sibling = TRY(resolve_to<DictObject>(siblings->at(i)));
+        auto limits = sibling->get_array(CommonNames::Limits);
+        if (limits->size() != 2)
+            return Error { Error::Type::MalformedPDF, "Expected 2-element Limits array" };
+        auto start = limits->get_string_at(0);
+        auto end = limits->get_string_at(1);
+        if (start->string() <= name && end->string() >= name) {
+            return find_in_name_tree(sibling, name);
+        }
+    }
+    return Error { Error::Type::MalformedPDF, DeprecatedString::formatted("Didn't find node in name tree containing name {}", name) };
+}
+
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, FlyString name)
+{
+    if (key_value_array->size() % 2 == 1)
+        return Error { Error::Type::MalformedPDF, "key/value array has dangling key" };
+    for (size_t i = 0; i < key_value_array->size() / 2; i++) {
+        auto key = key_value_array->get_string_at(2 * i);
+        if (key->string() == name) {
+            return key_value_array->get_object_at(this, 2 * i + 1);
+        }
+    }
+    return Error { Error::Type::MalformedPDF, DeprecatedString::formatted("Didn't find expected name {} in key/value array", name) };
+}
+
 PDFErrorOr<void> Document::build_outline()
 {
     if (!m_catalog->contains(CommonNames::Outlines))
