@@ -139,6 +139,10 @@ private:
 
     PDFErrorOr<NonnullRefPtr<Object>> get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject>);
 
+    PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree(NonnullRefPtr<DictObject> root, FlyString name);
+    PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, FlyString name);
+    PDFErrorOr<NonnullRefPtr<Object>> find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, FlyString name);
+
     NonnullRefPtr<DocumentParser> m_parser;
     RefPtr<DictObject> m_catalog;
     RefPtr<DictObject> m_trailer;
