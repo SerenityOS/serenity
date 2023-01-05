@@ -76,23 +76,26 @@ float Type1Font::get_char_width(u16 char_code) const
     return static_cast<float>(width) / 1000.0f;
 }
 
-void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint point, float width, u32 char_code, Color color)
+void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color)
 {
     if (!m_data.font_program)
         return;
+    auto translation = m_data.font_program->glyph_translation(char_code, width);
+    point = point.translated(translation);
+
+    auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
+    Gfx::GlyphIndexWithSubpixelOffset index { char_code, glyph_position.subpixel_offset };
 
     RefPtr<Gfx::Bitmap> bitmap;
-
-    auto maybe_bitmap = m_glyph_cache.get(char_code);
+    auto maybe_bitmap = m_glyph_cache.get(index);
     if (maybe_bitmap.has_value()) {
         bitmap = maybe_bitmap.value();
     } else {
-        bitmap = m_data.font_program->rasterize_glyph(char_code, width);
-        m_glyph_cache.set(char_code, bitmap);
+        bitmap = m_data.font_program->rasterize_glyph(char_code, width, glyph_position.subpixel_offset);
+        m_glyph_cache.set(index, bitmap);
     }
 
-    auto translation = m_data.font_program->glyph_translation(char_code, width);
-    painter.blit_filtered(point.translated(translation.to_rounded<int>()), *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
+    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
         return pixel.multiply(color);
     });
 }

@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Path.h>
 #include <LibPDF/Error.h>
 
@@ -20,7 +21,7 @@ class PS1FontProgram : public RefCounted<PS1FontProgram> {
 public:
     PDFErrorOr<void> create(ReadonlyBytes const&, RefPtr<Encoding>, size_t cleartext_length, size_t encrypted_length);
 
-    RefPtr<Gfx::Bitmap> rasterize_glyph(u32 char_code, float width);
+    RefPtr<Gfx::Bitmap> rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset);
     Gfx::Path build_char(u32 char_code, float width);
 
     RefPtr<Encoding> encoding() const { return m_encoding; }

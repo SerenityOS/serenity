@@ -747,7 +747,7 @@ void Renderer::show_text(DeprecatedString const& string)
         auto glyph_width = char_width * font_size;
 
         if (code_point != 0x20)
-            text_state().font->draw_glyph(m_painter, glyph_position.to_type<int>(), glyph_width, char_code, state().paint_color);
+            text_state().font->draw_glyph(m_painter, glyph_position, glyph_width, char_code, state().paint_color);
 
         auto tx = glyph_width;
         tx += text_state().character_spacing;
