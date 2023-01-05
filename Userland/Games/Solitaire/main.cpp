@@ -49,19 +49,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Solitaire");
 
-    auto mode = static_cast<Solitaire::Mode>(Config::read_i32("Solitaire"sv, "Settings"sv, "Mode"sv, static_cast<int>(Solitaire::Mode::SingleCardDraw)));
+    auto mode = static_cast<Solitaire::Mode>(Config::read_u32("Solitaire"sv, "Settings"sv, "Mode"sv, to_underlying(Solitaire::Mode::SingleCardDraw)));
 
     auto update_mode = [&](Solitaire::Mode new_mode) {
         mode = new_mode;
-        Config::write_i32("Solitaire"sv, "Settings"sv, "Mode"sv, static_cast<int>(mode));
+        Config::write_u32("Solitaire"sv, "Settings"sv, "Mode"sv, to_underlying(mode));
     };
 
     auto high_score = [&]() {
         switch (mode) {
         case Solitaire::Mode::SingleCardDraw:
-            return static_cast<u32>(Config::read_i32("Solitaire"sv, "HighScores"sv, "SingleCardDraw"sv, 0));
+            return Config::read_u32("Solitaire"sv, "HighScores"sv, "SingleCardDraw"sv, 0);
         case Solitaire::Mode::ThreeCardDraw:
-            return static_cast<u32>(Config::read_i32("Solitaire"sv, "HighScores"sv, "ThreeCardDraw"sv, 0));
+            return Config::read_u32("Solitaire"sv, "HighScores"sv, "ThreeCardDraw"sv, 0);
         default:
             VERIFY_NOT_REACHED();
         }
@@ -70,10 +70,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto update_high_score = [&](u32 new_high_score) {
         switch (mode) {
         case Solitaire::Mode::SingleCardDraw:
-            Config::write_i32("Solitaire"sv, "HighScores"sv, "SingleCardDraw"sv, static_cast<int>(new_high_score));
+            Config::write_u32("Solitaire"sv, "HighScores"sv, "SingleCardDraw"sv, new_high_score);
             break;
         case Solitaire::Mode::ThreeCardDraw:
-            Config::write_i32("Solitaire"sv, "HighScores"sv, "ThreeCardDraw"sv, static_cast<int>(new_high_score));
+            Config::write_u32("Solitaire"sv, "HighScores"sv, "ThreeCardDraw"sv, new_high_score);
             break;
         default:
             VERIFY_NOT_REACHED();
