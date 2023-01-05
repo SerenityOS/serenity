@@ -104,7 +104,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
 void TableFormattingContext::compute_table_measures()
 {
     for (auto& cell : m_cells) {
-        auto width_of_containing_block = m_state.get(*cell.box.containing_block()).content_width();
+        auto width_of_containing_block = m_available_space->width.to_px();
         auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
         auto& computed_values = cell.box.computed_values();
         CSSPixels padding_left = computed_values.padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
@@ -226,6 +226,8 @@ void TableFormattingContext::determine_intrisic_size_of_table_container(Availabl
 
 void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
+    m_available_space = available_space;
+
     CSSPixels total_content_height = 0;
 
     // Determine the number of rows/columns the table requires.

@@ -28,6 +28,8 @@ private:
 
     CSSPixels m_automatic_content_height { 0 };
 
+    Optional<AvailableSpace> m_available_space;
+
     struct Column {
         CSSPixels left_offset { 0 };
         CSSPixels min_width { 0 };
