@@ -355,7 +355,8 @@ void PDFViewerWidget::open_file(Core::File& file)
     if (maybe_error.is_error()) {
         auto error = maybe_error.release_error();
         warnln("{}", error.message());
-        GUI::MessageBox::show_error(nullptr, "Failed to load the document."sv);
+        auto user_error_message = DeprecatedString::formatted("Failed to load the document. Error:\n{}.", error.message());
+        GUI::MessageBox::show_error(nullptr, user_error_message.view());
     }
 }
 
