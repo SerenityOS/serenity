@@ -6,11 +6,15 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <LibCards/CardStack.h>
 #include <LibConfig/Listener.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Frame.h>
 
 namespace Cards {
+
+ErrorOr<NonnullRefPtr<GUI::Action>> make_cards_settings_action(GUI::Window* parent = nullptr);
 
 class CardGame
     : public GUI::Frame
