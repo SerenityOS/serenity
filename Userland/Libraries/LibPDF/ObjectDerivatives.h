@@ -195,4 +195,20 @@ private:
     Value m_value;
 };
 
+template<IsValueType T>
+UnwrappedValueType<T> cast_to(Value const& value)
+{
+    if constexpr (IsSame<T, bool>)
+        return value.get<bool>();
+    else if constexpr (IsSame<T, int>)
+        return value.get<int>();
+    else if constexpr (IsSame<T, float>)
+        return value.get<float>();
+    else if constexpr (IsSame<T, Object>)
+        return value.get<NonnullRefPtr<Object>>();
+    else if constexpr (IsObject<T>)
+        return value.get<NonnullRefPtr<Object>>()->cast<T>();
+    VERIFY_NOT_REACHED();
+}
+
 }
