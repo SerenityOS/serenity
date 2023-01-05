@@ -35,15 +35,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domains({ "Games", "Hearts" });
     Config::monitor_domain("Games");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec"));
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man6/Hearts.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec"));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin/GamesSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
@@ -93,7 +94,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         game.setup(player_name);
     })));
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(TRY(Cards::make_cards_settings_action(window))));
+    TRY(game_menu->try_add_action(GUI::Action::create("Hearts &Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
         change_settings();
     })));
     TRY(game_menu->try_add_separator());
