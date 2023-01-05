@@ -55,7 +55,7 @@ public:
     virtual float glyph_or_emoji_width(u32 code_point) const override;
     virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
     virtual float preferred_line_height() const override { return metrics().height() + metrics().line_gap; }
-    virtual u8 glyph_height() const override { return m_point_height; }
+    virtual u8 glyph_height() const override { return pixel_size(); }
     virtual int x_height() const override { return m_point_height; }      // FIXME: Read from font
     virtual u8 min_glyph_width() const override { return 1; }             // FIXME: Read from font
     virtual u8 max_glyph_width() const override { return m_point_width; } // FIXME: Read from font
