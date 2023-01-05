@@ -41,7 +41,7 @@ public:
     virtual u32 char_code_to_code_point(u16 char_code) const = 0;
     virtual float get_char_width(u16 char_code) const = 0;
 
-    virtual void draw_glyph(Gfx::Painter& painter, Gfx::IntPoint point, float width, u32 char_code, Color color) = 0;
+    virtual void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) = 0;
 
     virtual bool is_standard_font() const { return m_is_standard_font; }
     virtual Type type() const = 0;

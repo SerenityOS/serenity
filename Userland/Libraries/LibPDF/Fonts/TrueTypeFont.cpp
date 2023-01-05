@@ -68,7 +68,7 @@ float TrueTypeFont::get_char_width(u16 char_code) const
     return static_cast<float>(width) / 1000.0f;
 }
 
-void TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint point, float, u32 char_code, Color color)
+void TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u32 char_code, Color color)
 {
     if (!m_data.font)
         return;

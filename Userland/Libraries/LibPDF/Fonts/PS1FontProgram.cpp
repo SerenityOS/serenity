@@ -94,15 +94,16 @@ PDFErrorOr<void> PS1FontProgram::create(ReadonlyBytes const& bytes, RefPtr<Encod
     return parse_encrypted_portion(decrypted);
 }
 
-RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 char_code, float width)
+RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
     auto path = build_char(char_code, width);
     auto bounding_box = path.bounding_box().size();
 
-    u32 w = (u32)ceilf(bounding_box.width()) + 1;
-    u32 h = (u32)ceilf(bounding_box.height()) + 1;
+    u32 w = (u32)ceilf(bounding_box.width()) + 2;
+    u32 h = (u32)ceilf(bounding_box.height()) + 2;
 
     Gfx::PathRasterizer rasterizer(Gfx::IntSize(w, h));
+    rasterizer.translate(subpixel_offset.to_float_point());
     rasterizer.draw_path(path);
     return rasterizer.accumulate();
 }
