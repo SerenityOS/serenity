@@ -2,11 +2,8 @@
 
 alias fm=FileManager
 alias mag=Magnifier
-alias ms=Minesweeper
 alias sh=Shell
-alias sn=Snake
 alias tb=Taskbar
-alias wg=WidgetGallery
 alias te=TextEditor
 alias he=HexEditor
 alias pp=PixelPaint
@@ -23,7 +20,6 @@ alias sdb=Debugger
 alias sm=SystemMonitor
 alias pv=Profiler
 alias ws=WebServer
-alias sl=Solitaire
 alias ue=UserspaceEmulator
 alias fe=FontEditor
 alias ss=Spreadsheet
