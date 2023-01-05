@@ -93,7 +93,7 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
 
     // Report vendor / device ID
     u32 vendor_id = m_mixer_io_window->read16(NativeAudioMixerRegister::VendorID1) << 16 | m_mixer_io_window->read16(NativeAudioMixerRegister::VendorID2);
-    dbgln("AC97 @ {}: Vendor ID: {:#8x}", pci_address(), vendor_id);
+    dmesgln_pci(*this, "Vendor ID: {:#8x}", vendor_id);
 
     // Bus cold reset, enable interrupts
     enable_pin_based_interrupts();
@@ -154,7 +154,7 @@ ErrorOr<void> AC97::set_pcm_output_sample_rate(u32 sample_rate)
     m_mixer_io_window->write16(NativeAudioMixerRegister::PCMFrontDACRate, shifted_sample_rate);
     m_sample_rate = static_cast<u32>(m_mixer_io_window->read16(NativeAudioMixerRegister::PCMFrontDACRate)) << double_rate_shift;
 
-    dbgln("AC97 @ {}: PCM front DAC rate set to {} Hz", pci_address(), m_sample_rate);
+    dmesgln_pci(*this, "PCM front DAC rate set to {} Hz", m_sample_rate);
 
     // Setting the sample rate stops a running DMA engine, so restart it
     if (m_pcm_out_channel->dma_running())
