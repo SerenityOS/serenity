@@ -116,20 +116,7 @@ public:
     template<IsValueType T>
     PDFErrorOr<UnwrappedValueType<T>> resolve_to(Value const& value)
     {
-        auto resolved = TRY(resolve(value));
-
-        if constexpr (IsSame<T, bool>)
-            return resolved.get<bool>();
-        else if constexpr (IsSame<T, int>)
-            return resolved.get<int>();
-        else if constexpr (IsSame<T, float>)
-            return resolved.get<float>();
-        else if constexpr (IsSame<T, Object>)
-            return resolved.get<NonnullRefPtr<Object>>();
-        else if constexpr (IsObject<T>)
-            return resolved.get<NonnullRefPtr<Object>>()->cast<T>();
-
-        VERIFY_NOT_REACHED();
+        return cast_to<T>(TRY(resolve(value)));
     }
 
 private:
