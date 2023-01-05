@@ -28,11 +28,11 @@ FloatRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) con
     }
 
     FloatRect bounding_rect = {
-        0, 0, 0, (lines.size() * (m_font->pixel_size() + line_spacing)) - line_spacing
+        0, 0, 0, (lines.size() * (m_font.pixel_size() + line_spacing)) - line_spacing
     };
 
     for (auto& line : lines) {
-        auto line_width = m_font->width(line);
+        auto line_width = m_font.width(line);
         if (line_width > bounding_rect.width())
             bounding_rect.set_width(line_width);
     }
@@ -107,11 +107,11 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
     }
 
     size_t max_lines_that_can_fit = 0;
-    if (m_rect.height() >= m_font->glyph_height()) {
+    if (m_rect.height() >= m_font.glyph_height()) {
         // NOTE: If glyph height is 10 and line spacing is 1, we can fit a
         // single line into a 10px rect and a 20px rect, but 2 lines into a
         // 21px rect.
-        max_lines_that_can_fit = 1 + (m_rect.height() - m_font->glyph_height()) / (m_font->glyph_height() + line_spacing);
+        max_lines_that_can_fit = 1 + (m_rect.height() - m_font.glyph_height()) / (m_font.glyph_height() + line_spacing);
     }
 
     if (max_lines_that_can_fit == 0)
@@ -139,11 +139,11 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
         }
         case BlockType::Whitespace:
         case BlockType::Word: {
-            float block_width = font().width(block.characters);
+            float block_width = m_font.width(block.characters);
             // FIXME: This should look at the specific advance amount of the
             //        last character, but we don't support that yet.
             if (current_block != blocks.size() - 1) {
-                block_width += font().glyph_spacing();
+                block_width += m_font.glyph_spacing();
             }
 
             if (wrapping == TextWrapping::Wrap && line_width + block_width > m_rect.width()) {
@@ -185,11 +185,11 @@ blocks_processed:
 
 DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_elision) const
 {
-    float text_width = m_font->width(text);
+    float text_width = m_font.width(text);
     if (force_elision || text_width > static_cast<unsigned>(m_rect.width())) {
-        float ellipsis_width = m_font->width("..."sv);
+        float ellipsis_width = m_font.width("..."sv);
         float current_width = ellipsis_width;
-        size_t glyph_spacing = m_font->glyph_spacing();
+        size_t glyph_spacing = m_font.glyph_spacing();
 
         // FIXME: This code will break when the font has glyphs with advance
         //        amounts different from the actual width of the glyph
@@ -198,7 +198,7 @@ DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_eli
             size_t offset = 0;
             for (auto it = text.begin(); !it.done(); ++it) {
                 auto code_point = *it;
-                auto glyph_width = m_font->glyph_or_emoji_width(code_point);
+                auto glyph_width = m_font.glyph_or_emoji_width(code_point);
                 // NOTE: Glyph spacing should not be added after the last glyph on the line,
                 //       but since we are here because the last glyph does not actually fit on the line,
                 //       we don't have to worry about spacing.

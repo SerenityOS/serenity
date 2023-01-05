@@ -1724,7 +1724,7 @@ void Painter::do_draw_text(FloatRect const& rect, Utf8View const& text, Font con
     if (draw_text_get_length(text) == 0)
         return;
 
-    TextLayout layout(&font, text, rect);
+    TextLayout layout(font, text, rect);
 
     auto line_height = font.pixel_size() + LINE_SPACING;
 
