@@ -37,17 +37,16 @@ Image::Image(Gfx::IntSize size)
 {
 }
 
-void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) const
+void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect, float scale) const
 {
-    float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(dest_rect);
     for (auto const& layer : m_layers) {
         if (!layer.is_visible())
             continue;
-        auto target = dest_rect.translated(layer.location().x() * scale, layer.location().y() * scale);
+        auto target = dest_rect.to_type<float>().translated(layer.location().x() * scale, layer.location().y() * scale);
         target.set_size(layer.size().width() * scale, layer.size().height() * scale);
-        painter.draw_scaled_bitmap(target, layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+        painter.draw_scaled_bitmap(target.to_type<int>(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     }
 }
 
@@ -150,7 +149,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::compose_bitmap(Gfx::BitmapFormat form
 {
     auto bitmap = TRY(Gfx::Bitmap::create(format, m_size));
     GUI::Painter painter(bitmap);
-    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
     return bitmap;
 }
 
@@ -343,7 +342,7 @@ void Image::flatten_all_layers()
     auto& bottom_layer = m_layers.at(0);
 
     GUI::Painter painter(bottom_layer.content_bitmap());
-    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
 
     for (size_t index = m_layers.size() - 1; index > 0; index--) {
         auto& layer = m_layers.at(index);
@@ -364,7 +363,7 @@ void Image::merge_visible_layers()
         if (m_layers.at(index).is_visible()) {
             auto& bottom_layer = m_layers.at(index);
             GUI::Painter painter(bottom_layer.content_bitmap());
-            paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+            paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
             select_layer(&bottom_layer);
             index++;
             break;

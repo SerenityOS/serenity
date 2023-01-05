@@ -69,7 +69,7 @@ public:
     ErrorOr<NonnullRefPtr<Image>> take_snapshot() const;
     ErrorOr<void> restore_snapshot(Image const&);
 
-    void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
+    void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect, float scale) const;
 
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
     ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
