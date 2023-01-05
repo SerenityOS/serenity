@@ -22,19 +22,27 @@ public:
 private:
     void calculate_row_column_grid(Box const&);
     void compute_table_measures();
-    void compute_table_width(CSSPixels&);
-    void distribute_width_to_columns(CSSPixels extra_width);
+    void compute_table_width();
+    void distribute_width_to_columns();
     void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
 
     CSSPixels m_automatic_content_height { 0 };
 
     Optional<AvailableSpace> m_available_space;
 
+    enum class ColumnType {
+        Percent,
+        Pixel,
+        Auto
+    };
+
     struct Column {
+        ColumnType type { ColumnType::Auto };
         CSSPixels left_offset { 0 };
         CSSPixels min_width { 0 };
         CSSPixels max_width { 0 };
         CSSPixels used_width { 0 };
+        float percentage_width { 0 };
     };
 
     struct Row {

@@ -129,18 +129,22 @@ void TableFormattingContext::compute_table_measures()
         if (!computed_values.max_width().is_none())
             max_width = min(max_width, computed_values.max_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
 
+        auto computed_width = computed_values.width();
+        if (computed_width.is_percentage()) {
+            m_columns[cell.column_index].type = ColumnType::Percent;
+            m_columns[cell.column_index].percentage_width = max(m_columns[cell.column_index].percentage_width, computed_width.percentage().value());
+        } else if (computed_width.is_length()) {
+            m_columns[cell.column_index].type = ColumnType::Pixel;
+        }
+
         auto cell_outer_min_content_width = min_width + cell_intrinsic_offsets;
         auto cell_outer_max_content_width = max(max(width, min_width), max_width) + cell_intrinsic_offsets;
         m_columns[cell.column_index].min_width = max(m_columns[cell.column_index].min_width, cell_outer_min_content_width);
         m_columns[cell.column_index].max_width = max(m_columns[cell.column_index].max_width, cell_outer_max_content_width);
     }
-
-    for (auto& column : m_columns) {
-        column.used_width = column.min_width;
-    }
 }
 
-void TableFormattingContext::compute_table_width(CSSPixels& extra_width)
+void TableFormattingContext::compute_table_width()
 {
     auto const& table_box = context_box();
     auto& table_box_state = m_state.get_mutable(table_box);
@@ -183,23 +187,101 @@ void TableFormattingContext::compute_table_width(CSSPixels& extra_width)
         used_width = max(resolved_table_width, used_min_width);
         table_box_state.set_content_width(used_width);
     }
-
-    if (used_width > grid_min) {
-        extra_width = used_width - grid_min;
-    }
 }
 
-void TableFormattingContext::distribute_width_to_columns(CSSPixels extra_width)
+void TableFormattingContext::distribute_width_to_columns()
 {
-    CSSPixels grid_max = 0.0f;
-    for (auto& column : m_columns)
-        grid_max += column.max_width - column.min_width;
+    // Implements https://www.w3.org/TR/css-tables-3/#width-distribution-algorithm
 
-    if (grid_max == 0)
+    CSSPixels available_width = m_state.get(context_box()).content_width();
+
+    auto columns_total_used_width = [&]() {
+        CSSPixels total_used_width = 0;
+        for (auto& column : m_columns) {
+            total_used_width += column.used_width;
+        }
+        return total_used_width;
+    };
+
+    auto column_preferred_width = [&](Column& column) {
+        switch (column.type) {
+        case ColumnType::Percent: {
+            return max(column.min_width, column.percentage_width / 100 * available_width);
+        }
+        case ColumnType::Pixel:
+        case ColumnType::Auto: {
+            return column.max_width;
+        }
+        default: {
+            VERIFY_NOT_REACHED();
+        }
+        }
+    };
+
+    auto expand_columns_to_fill_available_width = [&](ColumnType column_type) {
+        CSSPixels remaining_available_width = available_width;
+        CSSPixels total_preferred_width_increment = 0;
+        for (auto& column : m_columns) {
+            remaining_available_width -= column.used_width;
+            if (column.type == column_type) {
+                total_preferred_width_increment += column_preferred_width(column) - column.min_width;
+            }
+        }
+
+        for (auto& column : m_columns) {
+            if (column.type == column_type) {
+                CSSPixels preferred_width_increment = column_preferred_width(column) - column.min_width;
+                column.used_width += preferred_width_increment * remaining_available_width / total_preferred_width_increment;
+            }
+        }
+    };
+
+    auto shrink_columns_to_fit_available_width = [&](ColumnType column_type) {
+        for (auto& column : m_columns) {
+            if (column.type == column_type)
+                column.used_width = column.min_width;
+        }
+
+        expand_columns_to_fill_available_width(column_type);
+    };
+
+    for (auto& column : m_columns) {
+        column.used_width = column.min_width;
+    }
+
+    for (auto& column : m_columns) {
+        if (column.type == ColumnType::Percent) {
+            column.used_width = max(column.min_width, column.percentage_width / 100 * available_width);
+        }
+    }
+
+    if (columns_total_used_width() > available_width) {
+        shrink_columns_to_fit_available_width(ColumnType::Percent);
         return;
+    }
 
-    for (auto& column : m_columns)
-        column.used_width += ((column.max_width - column.min_width) / grid_max) * extra_width;
+    for (auto& column : m_columns) {
+        if (column.type == ColumnType::Pixel) {
+            column.used_width = column.max_width;
+        }
+    }
+
+    if (columns_total_used_width() > available_width) {
+        shrink_columns_to_fit_available_width(ColumnType::Pixel);
+        return;
+    }
+
+    if (columns_total_used_width() < available_width) {
+        expand_columns_to_fill_available_width(ColumnType::Auto);
+    }
+
+    if (columns_total_used_width() < available_width) {
+        expand_columns_to_fill_available_width(ColumnType::Pixel);
+    }
+
+    if (columns_total_used_width() < available_width) {
+        expand_columns_to_fill_available_width(ColumnType::Percent);
+    }
 }
 
 void TableFormattingContext::determine_intrisic_size_of_table_container(AvailableSpace const& available_space)
@@ -242,11 +324,10 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
     }
 
     // Compute the width of the table.
-    CSSPixels extra_width = 0;
-    compute_table_width(extra_width);
+    compute_table_width();
 
     // Distribute the width of the table among columns.
-    distribute_width_to_columns(extra_width);
+    distribute_width_to_columns();
 
     CSSPixels left_column_offset = 0;
     for (auto& column : m_columns) {
