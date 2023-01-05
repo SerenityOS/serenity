@@ -22,7 +22,7 @@ public:
     PDFErrorOr<void> create(ReadonlyBytes const&, RefPtr<Encoding>, size_t cleartext_length, size_t encrypted_length);
 
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset);
-    Gfx::Path build_char(u32 char_code, float width);
+    Gfx::Path build_char(u32 char_code, float width, Gfx::GlyphSubpixelOffset);
 
     RefPtr<Encoding> encoding() const { return m_encoding; }
     Gfx::FloatPoint glyph_translation(u32 char_code, float width) const;
