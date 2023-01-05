@@ -13,24 +13,34 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
 * Set `Add to version control` to `<None>`. Click Finish.
 * In your shell, go to your SerenityOS project directory, and invoke the `Meta/refresh-serenity-qtcreator.sh` script to regenerate the `serenity.files` file. You will also have to do this every time you delete or add a new file to the project.
 * Edit the `serenity.config` file (In Qt Creator, hit ^K or CMD+K on a Mac to open the search dialog, type the name of the file and hit return to open it)
-* Add the following `#define`s to the file: `SANITIZE_PTRS`, `__serenity__` and `KERNEL`. `__serenity__` define is needed to recognize functions like `unveil`. Depending on what you are working on, you need to have that last define commented out. If you're planning on working in the userland, comment out `#define KERNEL`. If you're working on the Kernel, then uncomment `#define KERNEL`.
-* Edit the `serenity.cxxflags` file to say `-std=c++2a -m32`
-* Edit the `serenity.includes` file to list the following lines:
+* Add the following `#define`s to the file:
+    ```
+    //#define KERNEL
 
-```
-.
-Userland/
-Userland/Services/
-Userland/Libraries/
-Userland/Libraries/LibC/
-Userland/Libraries/LibSystem/
-Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.1.0
-Build/x86_64/
-Build/x86_64/Userland/
-Build/x86_64/Userland/Services/
-Build/x86_64/Userland/Libraries/
-AK/
-```
+    #define ENABLE_UNICODE_DATA 1
+    //#define ENABLE_COMPILETIME_FORMAT_CHECK
+
+    #define __serenity__
+    #define SANITIZE_PTRS 1
+    #define __SSE__
+    ```
+    If you're working on the Kernel, just uncomment `#define KERNEL`.
+* Edit the `serenity.cxxflags` file to say `-std=c++20 -fsigned-char -fconcepts -fno-exceptions -fno-semantic-interposition -fPIC`
+* Edit the `serenity.includes` file to list the following lines:
+    ```
+    ./
+    Userland/
+    Userland/Libraries/
+    Userland/Libraries/LibC/
+    Userland/Libraries/LibSystem/
+    Userland/Services/
+    Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.2.0
+    Build/x86_64/
+    Build/x86_64/Userland/
+    Build/x86_64/Userland/Libraries/
+    Build/x86_64/Userland/Services/
+    AK/
+    ```
 
 Finally, search in the options for "BOM" (Text Editor > Behavior > File Encodings > UTF-8 BOM), and switch to "Always delete".
 
@@ -72,7 +82,7 @@ In order to so, create a new file anywhere, for example `license-template.creato
 
 ```
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
