@@ -197,6 +197,10 @@ TEST_CASE(operator_arith)
     EXPECT_EQ(a, ArithNumeric(1));
     EXPECT_EQ(a %= a, ArithNumeric(0));
     EXPECT_EQ(a, ArithNumeric(0));
+
+    a = ArithNumeric(12);
+    EXPECT_EQ(a -= a, ArithNumeric(0));
+    EXPECT_EQ(a, ArithNumeric(0));
 }
 
 TEST_CASE(composability)
