@@ -256,7 +256,7 @@ ThrowCompletionOr<double> calendar_day(VM& vm, Object& calendar, Object& date_li
 }
 
 // 12.2.12 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
-ThrowCompletionOr<Value> calendar_day_of_week(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_day_of_week(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "dayOfWeek", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.dayOfWeek, &date_like));
@@ -270,7 +270,7 @@ ThrowCompletionOr<Value> calendar_day_of_week(VM& vm, Object& calendar, Object& 
 }
 
 // 12.2.13 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
-ThrowCompletionOr<Value> calendar_day_of_year(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_day_of_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "dayOfYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.dayOfYear, &date_like));
@@ -284,7 +284,7 @@ ThrowCompletionOr<Value> calendar_day_of_year(VM& vm, Object& calendar, Object& 
 }
 
 // 12.2.14 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
-ThrowCompletionOr<Value> calendar_week_of_year(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_week_of_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "weekOfYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.weekOfYear, &date_like));
@@ -298,7 +298,7 @@ ThrowCompletionOr<Value> calendar_week_of_year(VM& vm, Object& calendar, Object&
 }
 
 // 12.2.15 CalendarYearOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearofweek
-ThrowCompletionOr<Value> calendar_year_of_week(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_year_of_week(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "yearOfWeek", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.yearOfWeek, &date_like));
@@ -313,7 +313,7 @@ ThrowCompletionOr<Value> calendar_year_of_week(VM& vm, Object& calendar, Object&
 }
 
 // 12.2.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
-ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_days_in_week(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "daysInWeek", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.daysInWeek, &date_like));
@@ -341,7 +341,7 @@ ThrowCompletionOr<double> calendar_days_in_month(VM& vm, Object& calendar, Objec
 }
 
 // 12.2.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
-ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_days_in_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "daysInYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.daysInYear, &date_like));
@@ -355,7 +355,7 @@ ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object&
 }
 
 // 12.2.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
-ThrowCompletionOr<Value> calendar_months_in_year(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_months_in_year(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "monthsInYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.monthsInYear, &date_like));

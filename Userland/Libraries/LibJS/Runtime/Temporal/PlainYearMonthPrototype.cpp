@@ -120,8 +120,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
 
-    // 4. Return ? CalendarDaysInYear(calendar, yearMonth).
-    return Value(TRY(calendar_days_in_year(vm, calendar, *year_month)));
+    // 4. Return 𝔽(? CalendarDaysInYear(calendar, yearMonth)).
+    return TRY(calendar_days_in_year(vm, calendar, *year_month));
 }
 
 // 9.3.8 get Temporal.PlainYearMonth.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinmonth
@@ -134,8 +134,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_month_getter)
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
 
-    // 4. Return ? CalendarDaysInMonth(calendar, yearMonth).
-    return Value(TRY(calendar_days_in_month(vm, calendar, *year_month)));
+    // 4. Return 𝔽(? CalendarDaysInMonth(calendar, yearMonth)).
+    return TRY(calendar_days_in_month(vm, calendar, *year_month));
 }
 
 // 9.3.9 get Temporal.PlainYearMonth.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthsinyear
@@ -148,8 +148,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::months_in_year_getter)
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month->calendar();
 
-    // 4. Return ? CalendarMonthsInYear(calendar, yearMonth).
-    return Value(TRY(calendar_months_in_year(vm, calendar, *year_month)));
+    // 4. Return 𝔽(? CalendarMonthsInYear(calendar, yearMonth)).
+    return TRY(calendar_months_in_year(vm, calendar, *year_month));
 }
 
 // 9.3.10 get Temporal.PlainYearMonth.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.inleapyear
