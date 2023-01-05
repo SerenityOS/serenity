@@ -161,6 +161,8 @@ private:
     VT::Position next_position_after(const VT::Position&, bool should_wrap) const;
     VT::Position previous_position_before(const VT::Position&, bool should_wrap) const;
 
+    void update_cached_font_metrics();
+
     VT::Terminal m_terminal;
 
     VT::Range m_selection;
@@ -191,6 +193,7 @@ private:
     int m_inset { 2 };
     int m_line_spacing { 4 };
     int m_line_height { 0 };
+    int m_column_width { 0 };
 
     int m_ptm_fd { -1 };
 

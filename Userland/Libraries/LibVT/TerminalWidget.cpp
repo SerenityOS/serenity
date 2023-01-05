@@ -121,7 +121,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     else
         set_font(Gfx::FontDatabase::the().get_by_name(font_entry));
 
-    m_line_height = font().glyph_height() + m_line_spacing;
+    update_cached_font_metrics();
 
     m_terminal.set_size(Config::read_i32("Terminal"sv, "Window"sv, "Width"sv, 80), Config::read_i32("Terminal"sv, "Window"sv, "Height"sv, 25));
 
@@ -153,14 +153,14 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
-    int x = column * font().glyph_width('x');
-    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, static_cast<int>(ceilf(font().glyph_width('x'))), font().glyph_height() };
+    int x = column * m_column_width;
+    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, m_column_width, font().glyph_height() };
 }
 
 Gfx::IntRect TerminalWidget::row_rect(u16 row)
 {
     int y = row * m_line_height;
-    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, static_cast<int>(ceilf(font().glyph_width('x'))) * m_terminal.columns(), font().glyph_height() };
+    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, m_column_width * m_terminal.columns(), font().glyph_height() };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -511,7 +511,7 @@ void TerminalWidget::relayout(Gfx::IntSize size)
     TemporaryChange change(m_in_relayout, true);
 
     auto base_size = compute_base_size();
-    int new_columns = (size.width() - base_size.width()) / font().glyph_width('x');
+    int new_columns = (size.width() - base_size.width()) / m_column_width;
     int new_rows = (size.height() - base_size.height()) / m_line_height;
     m_terminal.set_size(new_columns, new_rows);
 
@@ -534,7 +534,7 @@ Gfx::IntSize TerminalWidget::compute_base_size() const
 
 void TerminalWidget::apply_size_increments_to_window(GUI::Window& window)
 {
-    window.set_size_increment({ static_cast<int>(ceilf(font().glyph_width('x'))), m_line_height });
+    window.set_size_increment({ m_column_width, m_line_height });
     window.set_base_size(compute_base_size());
 }
 
@@ -595,7 +595,7 @@ VT::Position TerminalWidget::buffer_position_at(Gfx::IntPoint position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;
-    int column = adjusted_position.x() / font().glyph_width('x');
+    int column = adjusted_position.x() / m_column_width;
     if (row < 0)
         row = 0;
     if (column < 0)
@@ -1167,9 +1167,21 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
 void TerminalWidget::did_change_font()
 {
     GUI::Frame::did_change_font();
-    m_line_height = font().glyph_height() + m_line_spacing;
+    update_cached_font_metrics();
     if (!size().is_empty())
         relayout(size());
+}
+
+static void collect_font_metrics(Gfx::Font const& font, int& column_width, int& line_height, int& line_spacing)
+{
+    line_spacing = 4;
+    column_width = static_cast<int>(ceilf(font.glyph_width('x')));
+    line_height = static_cast<int>(ceilf(font.glyph_height())) + line_spacing;
+}
+
+void TerminalWidget::update_cached_font_metrics()
+{
+    collect_font_metrics(font(), m_column_width, m_line_height, m_line_spacing);
 }
 
 void TerminalWidget::clear_including_history()
@@ -1229,9 +1241,13 @@ void TerminalWidget::update_color_scheme()
 
 Gfx::IntSize TerminalWidget::widget_size_for_font(Gfx::Font const& font) const
 {
+    int column_width = 0;
+    int line_height = 0;
+    int line_spacing = 0;
+    collect_font_metrics(font, column_width, line_height, line_spacing);
     return {
-        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * static_cast<int>(ceilf(font.glyph_width('x')))) + m_scrollbar->width(),
-        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * (font.glyph_height() + m_line_spacing))
+        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * column_width) + m_scrollbar->width(),
+        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * line_height)
     };
 }
 
