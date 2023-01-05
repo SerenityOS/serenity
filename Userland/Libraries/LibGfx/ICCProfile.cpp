@@ -392,12 +392,13 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
 Crypto::Hash::MD5::DigestType Profile::compute_id(ReadonlyBytes bytes)
 {
     // ICC v4, 7.2.18 Profile ID field
-    // The Profile ID shall be calculated using the MD5 fingerprinting method as defined in Internet RFC 1321.
-    // The entire profile, whose length is given by the size field in the header,
-    // with the profile flags field (bytes 44 to 47, see 7.2.11),
-    // rendering intent field (bytes 64 to 67, see 7.2.15),
-    // and profile ID field (bytes 84 to 99) in the profile header
-    // temporarily set to zeros (00h), shall be used to calculate the ID.
+    // "The Profile ID shall be calculated using the MD5 fingerprinting method as defined in Internet RFC 1321.
+    //  The entire profile, whose length is given by the size field in the header, with the
+    //  profile flags field (bytes 44 to 47, see 7.2.11),
+    //  rendering intent field (bytes 64 to 67, see 7.2.15),
+    //  and profile ID field (bytes 84 to 99)
+    //  in the profile header temporarily set to zeros (00h),
+    //  shall be used to calculate the ID."
     const u8 zero[16] = {};
     Crypto::Hash::MD5 md5;
     md5.update(bytes.slice(0, 44));
