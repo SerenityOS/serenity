@@ -1247,9 +1247,10 @@ Gfx::IntSize TerminalWidget::widget_size_for_font(Gfx::Font const& font) const
     int cell_height = 0;
     int line_spacing = 0;
     collect_font_metrics(font, column_width, cell_height, line_height, line_spacing);
+    auto base_size = compute_base_size();
     return {
-        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * column_width) + m_scrollbar->width(),
-        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * line_height)
+        base_size.width() + (m_terminal.columns() * column_width),
+        base_size.height() + (m_terminal.rows() * line_height),
     };
 }
 
