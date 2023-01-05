@@ -1791,6 +1791,18 @@ void WindowManager::set_highlight_window(Window* new_highlight_window)
         new_highlight_window->invalidate(true, true);
         Compositor::the().invalidate_screen(new_highlight_window->frame().render_rect());
     }
+
+    if (active_fullscreen_window()) {
+        // Find the Taskbar window and invalidate it so it draws correctly
+        for_each_visible_window_from_back_to_front([](Window& window) {
+            if (window.type() == WindowType::Taskbar) {
+                window.invalidate();
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    }
+
     // Invalidate occlusions in case the state change changes geometry
     Compositor::the().invalidate_occlusions();
 }
