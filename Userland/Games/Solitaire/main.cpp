@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, the SerenityOS developers.
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_mode(Solitaire::Mode::SingleCardDraw);
 
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    widget->load_from_gml(solitaire_gml);
+    TRY(widget->try_load_from_gml(solitaire_gml));
 
     auto& game = *widget->find_descendant_of_type_named<Solitaire::Game>("game");
     game.set_focus(true);
