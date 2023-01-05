@@ -227,16 +227,16 @@ struct Formatter<PDF::Destination> : Formatter<FormatString> {
         }
 
         StringBuilder param_builder;
-        TRY(Formatter<FormatString>::format(builder, "{{ type={} page="sv, type_str));
-        if (destination.page.has_value())
-            TRY(builder.put_literal("{}"sv));
+        builder.builder().appendff("{{ type={} page="sv, type_str);
+        if (!destination.page.has_value())
+            TRY(builder.put_literal("{{}}"sv));
         else
             TRY(builder.put_u64(destination.page.value()));
         for (auto& param : destination.parameters) {
             TRY(builder.put_f64(double(param)));
             TRY(builder.put_literal(" "sv));
         }
-        return builder.put_literal("}}"sv);
+        return builder.put_literal(" }}"sv);
     }
 };
 
