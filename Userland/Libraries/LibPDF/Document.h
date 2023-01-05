@@ -136,6 +136,7 @@ private:
     PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const&);
 
     PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>, HashMap<u32, u32> const&);
+    PDFErrorOr<Destination> create_destination_from_dictionary_entry(NonnullRefPtr<Object> const& entry, HashMap<u32, u32> const& page_number_by_index_ref);
 
     PDFErrorOr<NonnullRefPtr<Object>> get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject>);
 

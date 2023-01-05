@@ -315,6 +315,17 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(FlyString con
     return object->get_object(this, name);
 }
 
+PDFErrorOr<Destination> Document::create_destination_from_dictionary_entry(NonnullRefPtr<Object> const& entry, HashMap<u32, u32> const& page_number_by_index_ref)
+{
+    if (entry->is<ArrayObject>()) {
+        auto entry_array = entry->cast<ArrayObject>();
+        return create_destination_from_parameters(entry_array, page_number_by_index_ref);
+    }
+    auto entry_dictionary = entry->cast<DictObject>();
+    auto d_array = MUST(entry_dictionary->get_array(this, CommonNames::D));
+    return create_destination_from_parameters(d_array, page_number_by_index_ref);
+}
+
 PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict, HashMap<u32, u32> const& page_number_by_index_ref)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
@@ -340,19 +351,22 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
         if (dest_obj->is<ArrayObject>()) {
             auto dest_arr = dest_obj->cast<ArrayObject>();
             outline_item->dest = TRY(create_destination_from_parameters(dest_arr, page_number_by_index_ref));
-        } else if (dest_obj->is<NameObject>()) {
-            auto dest_name = dest_obj->cast<NameObject>()->name();
+        } else if (dest_obj->is<NameObject>() || dest_obj->is<StringObject>()) {
+            FlyString dest_name;
+            if (dest_obj->is<NameObject>())
+                dest_name = dest_obj->cast<NameObject>()->name();
+            else
+                dest_name = dest_obj->cast<StringObject>()->string();
             if (auto dests_value = m_catalog->get(CommonNames::Dests); dests_value.has_value()) {
                 auto dests = dests_value.value().get<NonnullRefPtr<Object>>()->cast<DictObject>();
                 auto entry = MUST(dests->get_object(this, dest_name));
-                if (entry->is<ArrayObject>()) {
-                    auto entry_array = entry->cast<ArrayObject>();
-                    outline_item->dest = TRY(create_destination_from_parameters(entry_array, page_number_by_index_ref));
-                } else {
-                    auto entry_dictionary = entry->cast<DictObject>();
-                    auto d_array = MUST(entry_dictionary->get_array(this, CommonNames::D));
-                    outline_item->dest = TRY(create_destination_from_parameters(d_array, page_number_by_index_ref));
-                }
+                outline_item->dest = TRY(create_destination_from_dictionary_entry(entry, page_number_by_index_ref));
+            } else if (auto names_value = m_catalog->get(CommonNames::Names); names_value.has_value()) {
+                auto names = TRY(resolve(names_value.release_value())).get<NonnullRefPtr<Object>>()->cast<DictObject>();
+                if (!names->contains(CommonNames::Dests))
+                    return Error { Error::Type::MalformedPDF, "Missing Dests key in document catalogue's Names dictionary" };
+                auto dest_obj = TRY(find_in_name_tree(TRY(names->get_dict(this, CommonNames::Dests)), dest_name));
+                outline_item->dest = TRY(create_destination_from_dictionary_entry(dest_obj, page_number_by_index_ref));
             } else {
                 return Error { Error::Type::MalformedPDF, "Malformed outline destination" };
             }
