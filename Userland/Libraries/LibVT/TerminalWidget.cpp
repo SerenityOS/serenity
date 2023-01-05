@@ -154,13 +154,13 @@ Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
     int x = column * m_column_width;
-    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, m_column_width, font().glyph_height() };
+    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, m_column_width, m_cell_height };
 }
 
 Gfx::IntRect TerminalWidget::row_rect(u16 row)
 {
     int y = row * m_line_height;
-    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, m_column_width * m_terminal.columns(), font().glyph_height() };
+    Gfx::IntRect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, m_column_width * m_terminal.columns(), m_cell_height };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -1172,16 +1172,17 @@ void TerminalWidget::did_change_font()
         relayout(size());
 }
 
-static void collect_font_metrics(Gfx::Font const& font, int& column_width, int& line_height, int& line_spacing)
+static void collect_font_metrics(Gfx::Font const& font, int& column_width, int& cell_height, int& line_height, int& line_spacing)
 {
     line_spacing = 4;
     column_width = static_cast<int>(ceilf(font.glyph_width('x')));
-    line_height = static_cast<int>(ceilf(font.glyph_height())) + line_spacing;
+    cell_height = static_cast<int>(ceilf(font.pixel_size()));
+    line_height = cell_height + line_spacing;
 }
 
 void TerminalWidget::update_cached_font_metrics()
 {
-    collect_font_metrics(font(), m_column_width, m_line_height, m_line_spacing);
+    collect_font_metrics(font(), m_column_width, m_cell_height, m_line_height, m_line_spacing);
 }
 
 void TerminalWidget::clear_including_history()
@@ -1243,8 +1244,9 @@ Gfx::IntSize TerminalWidget::widget_size_for_font(Gfx::Font const& font) const
 {
     int column_width = 0;
     int line_height = 0;
+    int cell_height = 0;
     int line_spacing = 0;
-    collect_font_metrics(font, column_width, line_height, line_spacing);
+    collect_font_metrics(font, column_width, cell_height, line_height, line_spacing);
     return {
         (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * column_width) + m_scrollbar->width(),
         (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * line_height)

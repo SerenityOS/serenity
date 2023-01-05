@@ -193,6 +193,7 @@ private:
     int m_inset { 2 };
     int m_line_spacing { 4 };
     int m_line_height { 0 };
+    int m_cell_height { 0 };
     int m_column_width { 0 };
 
     int m_ptm_fd { -1 };
