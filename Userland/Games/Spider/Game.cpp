@@ -22,11 +22,11 @@ static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
 {
-    add_stack(adopt_ref(*new CardStack({ 10, Game::height - Card::height - 10 }, CardStack::Type::Waste)));
-    add_stack(adopt_ref(*new CardStack({ Game::width - Card::width - 10, Game::height - Card::height - 10 }, CardStack::Type::Stock)));
+    MUST(add_stack(Gfx::IntPoint { 10, Game::height - Card::height - 10 }, CardStack::Type::Waste));
+    MUST(add_stack(Gfx::IntPoint { Game::width - Card::width - 10, Game::height - Card::height - 10 }, CardStack::Type::Stock));
 
     for (int i = 0; i < 10; i++) {
-        add_stack(adopt_ref(*new CardStack({ 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal)));
+        MUST(add_stack(Gfx::IntPoint { 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal));
     }
 }
 

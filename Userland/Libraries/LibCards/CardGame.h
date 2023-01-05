@@ -28,7 +28,13 @@ public:
     NonnullRefPtrVector<CardStack>& stacks() { return m_stacks; }
     NonnullRefPtrVector<CardStack> const& stacks() const { return m_stacks; }
     CardStack& stack_at_location(int location) { return m_stacks[location]; }
-    void add_stack(NonnullRefPtr<CardStack>);
+
+    template<class... Args>
+    ErrorOr<void> add_stack(Args&&... args)
+    {
+        auto stack = TRY(try_make_ref_counted<CardStack>(forward<Args>(args)...));
+        return m_stacks.try_append(move(stack));
+    }
     void mark_intersecting_stacks_dirty(Card const& intersecting_card);
 
     bool is_moving_cards() const { return !m_moving_cards.is_empty(); }
