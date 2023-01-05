@@ -102,8 +102,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::year_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarYear(calendar, dateTime).
-    return Value(TRY(calendar_year(vm, calendar, *date_time)));
+    // 4. Return 𝔽(? CalendarYear(calendar, dateTime)).
+    return TRY(calendar_year(vm, calendar, *date_time));
 }
 
 // 5.3.5 get Temporal.PlainDateTime.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.month
@@ -116,8 +116,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::month_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarMonth(calendar, dateTime).
-    return Value(TRY(calendar_month(vm, calendar, *date_time)));
+    // 4. Return 𝔽(? CalendarMonth(calendar, dateTime)).
+    return TRY(calendar_month(vm, calendar, *date_time));
 }
 
 // 5.3.6 get Temporal.PlainDateTime.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthcode
@@ -144,8 +144,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarDay(calendar, dateTime).
-    return Value(TRY(calendar_day(vm, calendar, *date_time)));
+    // 4. Return 𝔽(? CalendarDay(calendar, dateTime)).
+    return TRY(calendar_day(vm, calendar, *date_time));
 }
 
 // 5.3.8 get Temporal.PlainDateTime.prototype.hour, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.hour
@@ -224,7 +224,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_week_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarDayOfWeek(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarDayOfWeek(calendar, dateTime)).
     return TRY(calendar_day_of_week(vm, calendar, *date_time));
 }
 
@@ -238,7 +238,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_year_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarDayOfYear(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarDayOfYear(calendar, dateTime)).
     return TRY(calendar_day_of_year(vm, calendar, *date_time));
 }
 
@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::week_of_year_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarWeekOfYear(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarWeekOfYear(calendar, dateTime)).
     return TRY(calendar_week_of_year(vm, calendar, *date_time));
 }
 
@@ -280,7 +280,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_week_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarDaysInWeek(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarDaysInWeek(calendar, dateTime)).
     return TRY(calendar_days_in_week(vm, calendar, *date_time));
 }
 
@@ -294,7 +294,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_month_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarDaysInMonth(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarDaysInMonth(calendar, dateTime)).
     return TRY(calendar_days_in_month(vm, calendar, *date_time));
 }
 
@@ -308,7 +308,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_year_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarDaysInYear(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarDaysInYear(calendar, dateTime)).
     return TRY(calendar_days_in_year(vm, calendar, *date_time));
 }
 
@@ -322,7 +322,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::months_in_year_getter)
     // 3. Let calendar be dateTime.[[Calendar]].
     auto& calendar = date_time->calendar();
 
-    // 4. Return ? CalendarMonthsInYear(calendar, dateTime).
+    // 4. Return 𝔽(? CalendarMonthsInYear(calendar, dateTime)).
     return TRY(calendar_months_in_year(vm, calendar, *date_time));
 }
 
