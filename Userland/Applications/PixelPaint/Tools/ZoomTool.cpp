@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, the SerenityOS developers.
+ * Copyright (c) 2021-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@ void ZoomTool::on_mousedown(Layer*, MouseEvent& event)
         return;
 
     auto scale_factor = (raw_event.button() == GUI::MouseButton::Primary) ? m_sensitivity : -m_sensitivity;
-    auto new_scale = AK::exp2(scale_factor);
+    auto new_scale = m_editor->scale() * AK::exp2(scale_factor);
     m_editor->scale_centered(new_scale, raw_event.position());
 }
 
@@ -42,7 +42,7 @@ GUI::Widget* ZoomTool::get_properties_widget()
         sensitivity_slider.set_value(100 * m_sensitivity);
 
         sensitivity_slider.on_change = [&](int value) {
-            m_sensitivity = (double)value / 100.0;
+            m_sensitivity = value / 100.0f;
         };
         set_primary_slider(&sensitivity_slider);
     }
