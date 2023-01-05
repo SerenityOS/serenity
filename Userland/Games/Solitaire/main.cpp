@@ -27,7 +27,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"sv));
@@ -40,9 +40,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domains({ "Games", "Solitaire" });
     Config::monitor_domain("Games");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec"));
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin/GamesSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
@@ -204,6 +205,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     undo_action->set_enabled(false);
     TRY(game_menu->try_add_action(undo_action));
     TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(TRY(Cards::make_cards_settings_action(window))));
     TRY(game_menu->try_add_action(single_card_draw_action));
     TRY(game_menu->try_add_action(three_card_draw_action));
     TRY(game_menu->try_add_separator());
