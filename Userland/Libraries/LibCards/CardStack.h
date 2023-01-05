@@ -53,6 +53,8 @@ public:
     void paint(GUI::Painter&, Gfx::Color background_color);
     void clear();
 
+    void set_highlighted(bool highlighted) { m_highlighted = highlighted; }
+
 private:
     struct StackRules {
         uint8_t shift_x { 0 };
@@ -92,6 +94,7 @@ private:
     Type m_type { Type::Invalid };
     StackRules m_rules;
     Gfx::IntRect m_base;
+    bool m_highlighted { false };
 };
 
 }

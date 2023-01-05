@@ -174,7 +174,7 @@ private:
     void create_new_animation_card();
     void set_background_fill_enabled(bool);
     void check_for_game_over();
-    void clear_hovered_card();
+    void clear_hovered_stack();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -205,7 +205,7 @@ private:
 
     bool m_auto_collect { false };
 
-    RefPtr<Card> m_hovered_card;
+    RefPtr<CardStack> m_hovered_stack;
 };
 
 }

@@ -43,8 +43,18 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
             return false;
         if (!is_empty() && (m_stack.size() != number_of_moving_cards))
             return false;
-        painter.fill_rect_with_rounded_corners(m_base, background_color.darkened(0.5), Card::card_radius);
-        painter.fill_rect_with_rounded_corners(m_base.shrunken(2, 2), background_color, Card::card_radius - 1);
+
+        auto paint_rect = m_base;
+        painter.fill_rect_with_rounded_corners(paint_rect, background_color.darkened(0.5), Card::card_radius);
+        paint_rect.shrink(2, 2);
+
+        if (m_highlighted) {
+            auto background_complement = background_color.xored(Color::White);
+            painter.fill_rect_with_rounded_corners(paint_rect, background_complement, Card::card_radius - 1);
+            paint_rect.shrink(4, 4);
+        }
+
+        painter.fill_rect_with_rounded_corners(paint_rect, background_color, Card::card_radius - 1);
         return true;
     };
 
@@ -83,9 +93,11 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
         return;
     }
 
-    for (auto& card : m_stack) {
-        if (!card.is_moving())
-            card.clear_and_paint(painter, Gfx::Color::Transparent);
+    for (size_t i = 0; i < m_stack.size(); ++i) {
+        if (auto& card = m_stack[i]; !card.is_moving()) {
+            auto highlighted = m_highlighted && (i == m_stack.size() - 1);
+            card.clear_and_paint(painter, Gfx::Color::Transparent, highlighted);
+        }
     }
 }
 

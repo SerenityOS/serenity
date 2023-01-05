@@ -272,7 +272,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
-    clear_hovered_card();
+    clear_hovered_stack();
 
     if (!is_moving_cards() || m_game_over_animation || m_new_game_animation)
         return;
@@ -313,16 +313,16 @@ void Game::mousemove_event(GUI::MouseEvent& event)
     int dx = click_location.dx_relative_to(m_mouse_down_location);
     int dy = click_location.dy_relative_to(m_mouse_down_location);
 
-    if (auto target_stack = find_stack_to_drop_on(Cards::CardStack::MovementRule::Alternating); target_stack && !target_stack->is_empty()) {
-        if (auto& top_card = target_stack->peek(); top_card != m_hovered_card) {
-            clear_hovered_card();
-            m_hovered_card = top_card;
+    if (auto target_stack = find_stack_to_drop_on(Cards::CardStack::MovementRule::Alternating)) {
+        if (target_stack != m_hovered_stack) {
+            clear_hovered_stack();
 
-            m_hovered_card->set_highlighted(true);
-            update(m_hovered_card->rect());
+            m_hovered_stack = move(target_stack);
+            m_hovered_stack->set_highlighted(true);
+            update(m_hovered_stack->bounding_box());
         }
     } else {
-        clear_hovered_card();
+        clear_hovered_stack();
     }
 
     for (auto& to_intersect : moving_cards()) {
@@ -632,14 +632,14 @@ void Game::perform_undo()
     invalidate_layout();
 }
 
-void Game::clear_hovered_card()
+void Game::clear_hovered_stack()
 {
-    if (!m_hovered_card)
+    if (!m_hovered_stack)
         return;
 
-    m_hovered_card->set_highlighted(false);
-    update(m_hovered_card->rect());
-    m_hovered_card = nullptr;
+    m_hovered_stack->set_highlighted(false);
+    update(m_hovered_stack->bounding_box());
+    m_hovered_stack = nullptr;
 }
 
 }
