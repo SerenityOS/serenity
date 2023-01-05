@@ -232,9 +232,15 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
     auto page_ref = array->at(0);
     auto type_name = TRY(array->get_name_at(this, 1))->name();
 
-    Vector<float> parameters;
-    for (size_t i = 2; i < array->size(); i++)
-        parameters.append(array->at(i).to_float());
+    Vector<Optional<float>> parameters;
+    TRY(parameters.try_ensure_capacity(array->size() - 2));
+    for (size_t i = 2; i < array->size(); i++) {
+        auto& param = array->at(i);
+        if (param.has<nullptr_t>())
+            parameters.unchecked_append({});
+        else
+            parameters.append(param.to_float());
+    }
 
     Destination::Type type;
     if (type_name == CommonNames::XYZ) {
