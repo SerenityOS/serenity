@@ -126,8 +126,10 @@ public:
             u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
             u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
             Gfx::PathRasterizer rasterizer(Gfx::IntSize(width, height));
-            rasterizer.translate(subpixel_offset.to_float_point());
-            auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
+            auto affine = Gfx::AffineTransform()
+                              .translate(subpixel_offset.to_float_point())
+                              .scale(x_scale, -y_scale)
+                              .translate(-m_xmin, -font_ascender);
 
             rasterize_composite_loop(rasterizer, affine, glyph_callback);
 

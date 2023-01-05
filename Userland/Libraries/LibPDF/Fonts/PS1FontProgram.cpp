@@ -96,26 +96,27 @@ PDFErrorOr<void> PS1FontProgram::create(ReadonlyBytes const& bytes, RefPtr<Encod
 
 RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
-    auto path = build_char(char_code, width);
+    auto path = build_char(char_code, width, subpixel_offset);
     auto bounding_box = path.bounding_box().size();
 
     u32 w = (u32)ceilf(bounding_box.width()) + 2;
     u32 h = (u32)ceilf(bounding_box.height()) + 2;
 
     Gfx::PathRasterizer rasterizer(Gfx::IntSize(w, h));
-    rasterizer.translate(subpixel_offset.to_float_point());
     rasterizer.draw_path(path);
     return rasterizer.accumulate();
 }
 
-Gfx::Path PS1FontProgram::build_char(u32 char_code, float width)
+Gfx::Path PS1FontProgram::build_char(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
     auto maybe_glyph = m_glyph_map.get(char_code);
     if (!maybe_glyph.has_value())
         return {};
 
     auto& glyph = maybe_glyph.value();
-    auto transform = glyph_transform_to_device_space(glyph, width);
+    auto transform = Gfx::AffineTransform()
+                         .translate(subpixel_offset.to_float_point())
+                         .multiply(glyph_transform_to_device_space(glyph, width));
 
     // Translate such that the top-left point is at [0, 0].
     auto bounding_box = glyph.path.bounding_box();
