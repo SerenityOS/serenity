@@ -204,11 +204,10 @@ void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, 
 
     auto& drawing_state = this->drawing_state();
 
-    // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
-    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : painter->font().width(text), painter->font().pixel_size());
+    auto text_rect = Gfx::FloatRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : painter->font().width(text), painter->font().pixel_size());
     auto transformed_rect = drawing_state.transform.map(text_rect);
     painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, drawing_state.fill_style);
-    did_draw(transformed_rect.to_type<float>());
+    did_draw(transformed_rect);
 }
 
 void CanvasRenderingContext2D::stroke_text(DeprecatedString const& text, float x, float y, Optional<double> max_width)
