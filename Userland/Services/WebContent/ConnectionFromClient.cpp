@@ -306,7 +306,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             properties.for_each_property([&](auto property_id, auto& value) {
-                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_deprecated_string()));
+                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string()));
             });
             MUST(serializer.finish());
 
@@ -323,7 +323,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
                 for (auto const& property : element_to_check->custom_properties()) {
                     if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
-                        MUST(serializer.add(property.key, property.value.value->to_deprecated_string()));
+                        MUST(serializer.add(property.key, property.value.value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string()));
                     }
                 }
 

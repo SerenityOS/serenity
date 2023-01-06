@@ -68,7 +68,7 @@ enum class ValueID {
 };
 
 ValueID value_id_from_string(StringView);
-const char* string_from_value_id(ValueID);
+StringView string_from_value_id(ValueID);
 
 }
 
@@ -107,7 +107,7 @@ ValueID value_id_from_string(StringView string)
     return ValueID::Invalid;
 }
 
-const char* string_from_value_id(ValueID value_id) {
+StringView string_from_value_id(ValueID value_id) {
     switch (value_id) {
 )~~~");
 
@@ -117,13 +117,13 @@ const char* string_from_value_id(ValueID value_id) {
         member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
         member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
-        return "@name@";
+        return "@name@"sv;
         )~~~");
     });
 
     generator.append(R"~~~(
     default:
-        return "(invalid CSS::ValueID)";
+        return "(invalid CSS::ValueID)"sv;
     }
 }
 

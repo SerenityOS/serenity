@@ -52,7 +52,7 @@ public:
         return (m_type == Type::Length && !m_length.is_auto()) || is_percentage();
     }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridSize const& other) const
     {
         return m_type == other.type()
@@ -78,7 +78,7 @@ public:
     GridSize min_grid_size() const& { return m_min_grid_size; }
     GridSize max_grid_size() const& { return m_max_grid_size; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridMinMax const& other) const
     {
         return m_min_grid_size == other.min_grid_size()
@@ -100,7 +100,7 @@ public:
     Vector<CSS::ExplicitGridTrack> track_list() const { return m_track_list; }
     Vector<Vector<DeprecatedString>> line_names() const { return m_line_names; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridTrackSizeList const& other) const
     {
         return m_line_names == other.line_names() && m_track_list == other.track_list();
@@ -133,7 +133,7 @@ public:
     GridTrackSizeList grid_track_size_list() const& { return m_grid_track_size_list; }
     Type type() const& { return m_type; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridRepeat const& other) const
     {
         if (m_type != other.type())
@@ -183,7 +183,7 @@ public:
 
     Type type() const { return m_type; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(ExplicitGridTrack const& other) const
     {
         if (is_repeat() && other.is_repeat())

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -29,7 +30,7 @@ DeprecatedString escape_a_character_as_code_point(u32 character);
 DeprecatedString serialize_an_identifier(StringView ident);
 DeprecatedString serialize_a_string(StringView string);
 DeprecatedString serialize_a_url(StringView url);
-DeprecatedString serialize_a_srgb_value(Color color);
+ErrorOr<String> serialize_a_srgb_value(Color color);
 
 template<typename T, typename SerializeItem>
 void serialize_a_comma_separated_list(StringBuilder& builder, Vector<T> const& items, SerializeItem serialize_item)

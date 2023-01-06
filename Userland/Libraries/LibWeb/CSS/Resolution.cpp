@@ -21,9 +21,9 @@ Resolution::Resolution(float value, Type type)
 {
 }
 
-DeprecatedString Resolution::to_deprecated_string() const
+ErrorOr<String> Resolution::to_string() const
 {
-    return DeprecatedString::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}{}", m_value, unit_name());
 }
 
 float Resolution::to_dots_per_pixel() const

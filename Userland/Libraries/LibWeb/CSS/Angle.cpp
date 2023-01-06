@@ -41,11 +41,11 @@ Angle Angle::percentage_of(Percentage const& percentage) const
     return Angle { percentage.as_fraction() * m_value, m_type };
 }
 
-DeprecatedString Angle::to_deprecated_string() const
+ErrorOr<String> Angle::to_string() const
 {
     if (is_calculated())
-        return m_calculated_style->to_deprecated_string();
-    return DeprecatedString::formatted("{}{}", m_value, unit_name());
+        return m_calculated_style->to_string();
+    return String::formatted("{}{}", m_value, unit_name());
 }
 
 float Angle::to_degrees() const

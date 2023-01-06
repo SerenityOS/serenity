@@ -74,22 +74,22 @@ bool Size::contains_percentage() const
     }
 }
 
-DeprecatedString Size::to_deprecated_string() const
+ErrorOr<String> Size::to_string() const
 {
     switch (m_type) {
     case Type::Auto:
-        return "auto";
+        return String::from_utf8("auto"sv);
     case Type::Length:
     case Type::Percentage:
-        return m_length_percentage.to_deprecated_string();
+        return m_length_percentage.to_string();
     case Type::MinContent:
-        return "min-content";
+        return String::from_utf8("min-content"sv);
     case Type::MaxContent:
-        return "max-content";
+        return String::from_utf8("max-content"sv);
     case Type::FitContent:
-        return DeprecatedString::formatted("fit-content({})", m_length_percentage.to_deprecated_string());
+        return String::formatted("fit-content({})", TRY(m_length_percentage.to_string()));
     case Type::None:
-        return "none";
+        return String::from_utf8("none"sv);
     }
     VERIFY_NOT_REACHED();
 }

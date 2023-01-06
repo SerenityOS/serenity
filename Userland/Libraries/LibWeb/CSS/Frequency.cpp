@@ -40,11 +40,11 @@ Frequency Frequency::percentage_of(Percentage const& percentage) const
     return Frequency { percentage.as_fraction() * m_value, m_type };
 }
 
-DeprecatedString Frequency::to_deprecated_string() const
+ErrorOr<String> Frequency::to_string() const
 {
     if (is_calculated())
-        return m_calculated_style->to_deprecated_string();
-    return DeprecatedString::formatted("{}{}", m_value, unit_name());
+        return m_calculated_style->to_string();
+    return String::formatted("{}{}", m_value, unit_name());
 }
 
 float Frequency::to_hertz() const
