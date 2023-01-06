@@ -442,9 +442,15 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
     )
+    set(SOURCES_RUNNING_WITHOUT_MMU
+        Arch/aarch64/Exceptions.cpp
+        Arch/aarch64/MMU.cpp
+        Arch/aarch64/pre_init.cpp
+        )
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         ${RPI_SOURCES}
+        ${SOURCES_RUNNING_WITHOUT_MMU}
         Arch/Processor.cpp
 
         Arch/aarch64/boot.S
@@ -453,16 +459,13 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
-        Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
         Arch/aarch64/InterruptManagement.cpp
         Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
-        Arch/aarch64/MMU.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
-        Arch/aarch64/pre_init.cpp
         Arch/aarch64/Processor.cpp
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
@@ -474,6 +477,10 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
     # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
     add_compile_options(-Wno-nonnull)
+
+    # NOTE: These files cannot use a stack protector and sanitizers, as these will cause accesses to global variables to be inserted
+    #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
+    set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all")
 endif()
 
 set(AK_SOURCES
