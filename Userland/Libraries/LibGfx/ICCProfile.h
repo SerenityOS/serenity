@@ -101,7 +101,7 @@ public:
     // "These can indicate various hints for the CMM such as distributed processing and caching options."
     // "The least-significant 16 bits are reserved for the ICC."
     u16 color_management_module_bits() const { return bits() >> 16; }
-    u16 icc_bits() const { return bits() & 0xff; }
+    u16 icc_bits() const { return bits() & 0xffff; }
 
     // "Bit position 0: Embedded profile (0 if not embedded, 1 if embedded in file)"
     bool is_embedded_in_file() const { return (icc_bits() & 1) != 0; }
