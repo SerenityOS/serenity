@@ -93,12 +93,23 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
         return;
     }
 
+    RefPtr<Card> previewed_card;
+
     for (size_t i = 0; i < m_stack.size(); ++i) {
         if (auto& card = m_stack[i]; !card.is_moving()) {
+            if (card.is_previewed()) {
+                VERIFY(!previewed_card);
+                previewed_card = card;
+                continue;
+            }
+
             auto highlighted = m_highlighted && (i == m_stack.size() - 1);
             card.clear_and_paint(painter, Gfx::Color::Transparent, highlighted);
         }
     }
+
+    if (previewed_card)
+        previewed_card->clear_and_paint(painter, Gfx::Color::Transparent, false);
 }
 
 void CardStack::rebound_cards()
@@ -237,6 +248,32 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
     }
 
     return true;
+}
+
+bool CardStack::preview_card(Gfx::IntPoint click_location)
+{
+    RefPtr<Card> last_intersect;
+
+    for (auto& card : m_stack) {
+        if (!card.rect().contains(click_location))
+            continue;
+        if (card.is_upside_down())
+            continue;
+
+        last_intersect = card;
+    }
+
+    if (!last_intersect)
+        return false;
+
+    last_intersect->set_previewed(true);
+    return true;
+}
+
+void CardStack::clear_card_preview()
+{
+    for (auto& card : m_stack)
+        card.set_previewed(false);
 }
 
 bool CardStack::make_top_card_visible()

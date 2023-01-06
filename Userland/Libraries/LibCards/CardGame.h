@@ -41,6 +41,10 @@ public:
     void drop_cards_on_stack(CardStack&, CardStack::MovementRule);
     void clear_moving_cards();
 
+    bool is_previewing_card() const { return !m_previewed_card_stack.is_null(); }
+    void preview_card(CardStack&, Gfx::IntPoint click_location);
+    void clear_card_preview();
+
     void dump_layout() const;
 
 protected:
@@ -53,6 +57,7 @@ private:
 
     NonnullRefPtrVector<Card> m_moving_cards;
     RefPtr<CardStack> m_moving_cards_source_stack;
+    RefPtr<CardStack> m_previewed_card_stack;
 };
 
 }
