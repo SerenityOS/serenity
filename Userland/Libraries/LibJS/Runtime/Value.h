@@ -19,7 +19,6 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/BigInt.h>
-#include <LibJS/Runtime/Utf16String.h>
 #include <math.h>
 
 // 2 ** 53 - 1

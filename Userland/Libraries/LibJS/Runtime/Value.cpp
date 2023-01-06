@@ -36,6 +36,7 @@
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolObject.h>
+#include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
