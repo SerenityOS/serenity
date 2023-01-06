@@ -36,6 +36,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto color_management_module_bits = flags.color_management_module_bits())
         outln("  CMM bits: 0x{:04x}", color_management_module_bits);
 
+    auto device_attributes = profile->device_attributes();
+    outln("device attributes: 0x{:016x}", device_attributes.bits());
+    outln("  media is {}, {}, {}, {}",
+        device_attributes.media_reflectivity() == Gfx::ICC::DeviceAttributes::MediaReflectivity::Reflective ? "reflective" : "transparent",
+        device_attributes.media_glossiness() == Gfx::ICC::DeviceAttributes::MediaGlossiness::Glossy ? "glossy" : "matte",
+        device_attributes.media_polarity() == Gfx::ICC::DeviceAttributes::MediaPolarity::Positive ? "of positive polarity" : "of negative polarity",
+        device_attributes.media_color() == Gfx::ICC::DeviceAttributes::MediaColor::Colored ? "colored" : "black and white");
+    VERIFY((flags.icc_bits() & ~Gfx::ICC::DeviceAttributes::KnownBitsMask) == 0);
+    if (auto vendor_bits = device_attributes.vendor_bits())
+        outln("  vendor bits: 0x{:08x}", vendor_bits);
+
     outln("rendering intent: {}", Gfx::ICC::rendering_intent_name(profile->rendering_intent()));
     outln("pcs illuminant: {}", profile->pcs_illuminant());
 
