@@ -309,7 +309,7 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(VM& vm, Object const& norm
     // 7. Set increment to floor(ℝ(increment)).
     auto floored_increment = static_cast<u64>(increment);
 
-    // 8. If dividend is not undefined and dividend modulo increment is not zero, then
+    // 8. If dividend is not undefined and dividend modulo increment ≠ 0, then
     if (dividend.has_value() && static_cast<u64>(*dividend) % floored_increment != 0)
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");

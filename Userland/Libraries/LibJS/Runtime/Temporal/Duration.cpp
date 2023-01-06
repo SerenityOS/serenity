@@ -259,39 +259,39 @@ bool is_valid_duration(double years, double months, double weeks, double days, d
 // 7.5.12 DefaultTemporalLargestUnit ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds ), https://tc39.es/proposal-temporal/#sec-temporal-defaulttemporallargestunit
 StringView default_temporal_largest_unit(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds)
 {
-    // 1. If years is not zero, return "year".
+    // 1. If years ≠ 0, return "year".
     if (years != 0)
         return "year"sv;
 
-    // 2. If months is not zero, return "month".
+    // 2. If months ≠ 0, return "month".
     if (months != 0)
         return "month"sv;
 
-    // 3. If weeks is not zero, return "week".
+    // 3. If weeks ≠ 0, return "week".
     if (weeks != 0)
         return "week"sv;
 
-    // 4. If days is not zero, return "day".
+    // 4. If days ≠ 0, return "day".
     if (days != 0)
         return "day"sv;
 
-    // 5. If hours is not zero, return "hour".
+    // 5. If hours ≠ 0, return "hour".
     if (hours != 0)
         return "hour"sv;
 
-    // 6. If minutes is not zero, return "minute".
+    // 6. If minutes ≠ 0, return "minute".
     if (minutes != 0)
         return "minute"sv;
 
-    // 7. If seconds is not zero, return "second".
+    // 7. If seconds ≠ 0, return "second".
     if (seconds != 0)
         return "second"sv;
 
-    // 8. If milliseconds is not zero, return "millisecond".
+    // 8. If milliseconds ≠ 0, return "millisecond".
     if (milliseconds != 0)
         return "millisecond"sv;
 
-    // 9. If microseconds is not zero, return "microsecond".
+    // 9. If microseconds ≠ 0, return "microsecond".
     if (microseconds != 0)
         return "microsecond"sv;
 
