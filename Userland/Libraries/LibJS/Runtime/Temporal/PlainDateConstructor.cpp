@@ -50,14 +50,14 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PlainDateConstructor::construct(Function
 {
     auto& vm = this->vm();
 
-    // 2. Let y be ? ToIntegerThrowOnInfinity(isoYear).
-    auto y = TRY(to_integer_throw_on_infinity(vm, vm.argument(0), ErrorType::TemporalInvalidPlainDate));
+    // 2. Let y be ? ToIntegerWithTruncation(isoYear).
+    auto y = TRY(to_integer_with_truncation(vm, vm.argument(0), ErrorType::TemporalInvalidPlainDate));
 
-    // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = TRY(to_integer_throw_on_infinity(vm, vm.argument(1), ErrorType::TemporalInvalidPlainDate));
+    // 3. Let m be ? ToIntegerWithTruncation(isoMonth).
+    auto m = TRY(to_integer_with_truncation(vm, vm.argument(1), ErrorType::TemporalInvalidPlainDate));
 
-    // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
-    auto d = TRY(to_integer_throw_on_infinity(vm, vm.argument(2), ErrorType::TemporalInvalidPlainDate));
+    // 4. Let d be ? ToIntegerWithTruncation(isoDay).
+    auto d = TRY(to_integer_with_truncation(vm, vm.argument(2), ErrorType::TemporalInvalidPlainDate));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, vm.argument(3)));

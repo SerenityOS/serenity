@@ -61,17 +61,17 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PlainYearMonthConstructor::construct(Fun
         reference_iso_day = Value(1);
     }
 
-    // 3. Let y be ? ToIntegerThrowOnInfinity(isoYear).
-    auto y = TRY(to_integer_throw_on_infinity(vm, iso_year, ErrorType::TemporalInvalidPlainYearMonth));
+    // 3. Let y be ? ToIntegerWithTruncation(isoYear).
+    auto y = TRY(to_integer_with_truncation(vm, iso_year, ErrorType::TemporalInvalidPlainYearMonth));
 
-    // 4. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = TRY(to_integer_throw_on_infinity(vm, iso_month, ErrorType::TemporalInvalidPlainYearMonth));
+    // 4. Let m be ? ToIntegerWithTruncation(isoMonth).
+    auto m = TRY(to_integer_with_truncation(vm, iso_month, ErrorType::TemporalInvalidPlainYearMonth));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, calendar_like));
 
-    // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISODay).
-    auto ref = TRY(to_integer_throw_on_infinity(vm, reference_iso_day, ErrorType::TemporalInvalidPlainYearMonth));
+    // 6. Let ref be ? ToIntegerWithTruncation(referenceISODay).
+    auto ref = TRY(to_integer_with_truncation(vm, reference_iso_day, ErrorType::TemporalInvalidPlainYearMonth));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalYearMonth will immediately check that these values are valid

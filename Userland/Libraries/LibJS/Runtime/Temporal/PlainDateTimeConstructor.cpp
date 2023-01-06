@@ -50,32 +50,32 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PlainDateTimeConstructor::construct(Func
 {
     auto& vm = this->vm();
 
-    // 2. Let isoYear be ? ToIntegerThrowOnInfinity(isoYear).
-    auto iso_year = TRY(to_integer_throw_on_infinity(vm, vm.argument(0), ErrorType::TemporalInvalidPlainDateTime));
+    // 2. Let isoYear be ? ToIntegerWithTruncation(isoYear).
+    auto iso_year = TRY(to_integer_with_truncation(vm, vm.argument(0), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 3. Let isoMonth be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto iso_month = TRY(to_integer_throw_on_infinity(vm, vm.argument(1), ErrorType::TemporalInvalidPlainDateTime));
+    // 3. Let isoMonth be ? ToIntegerWithTruncation(isoMonth).
+    auto iso_month = TRY(to_integer_with_truncation(vm, vm.argument(1), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 4. Let isoDay be ? ToIntegerThrowOnInfinity(isoDay).
-    auto iso_day = TRY(to_integer_throw_on_infinity(vm, vm.argument(2), ErrorType::TemporalInvalidPlainDateTime));
+    // 4. Let isoDay be ? ToIntegerWithTruncation(isoDay).
+    auto iso_day = TRY(to_integer_with_truncation(vm, vm.argument(2), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 5. Let hour be ? ToIntegerThrowOnInfinity(hour).
-    auto hour = TRY(to_integer_throw_on_infinity(vm, vm.argument(3), ErrorType::TemporalInvalidPlainDateTime));
+    // 5. Let hour be ? ToIntegerWithTruncation(hour).
+    auto hour = TRY(to_integer_with_truncation(vm, vm.argument(3), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 6. Let minute be ? ToIntegerThrowOnInfinity(minute).
-    auto minute = TRY(to_integer_throw_on_infinity(vm, vm.argument(4), ErrorType::TemporalInvalidPlainDateTime));
+    // 6. Let minute be ? ToIntegerWithTruncation(minute).
+    auto minute = TRY(to_integer_with_truncation(vm, vm.argument(4), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 7. Let second be ? ToIntegerThrowOnInfinity(second).
-    auto second = TRY(to_integer_throw_on_infinity(vm, vm.argument(5), ErrorType::TemporalInvalidPlainDateTime));
+    // 7. Let second be ? ToIntegerWithTruncation(second).
+    auto second = TRY(to_integer_with_truncation(vm, vm.argument(5), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 8. Let millisecond be ? ToIntegerThrowOnInfinity(millisecond).
-    auto millisecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(6), ErrorType::TemporalInvalidPlainDateTime));
+    // 8. Let millisecond be ? ToIntegerWithTruncation(millisecond).
+    auto millisecond = TRY(to_integer_with_truncation(vm, vm.argument(6), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 9. Let microsecond be ? ToIntegerThrowOnInfinity(microsecond).
-    auto microsecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(7), ErrorType::TemporalInvalidPlainDateTime));
+    // 9. Let microsecond be ? ToIntegerWithTruncation(microsecond).
+    auto microsecond = TRY(to_integer_with_truncation(vm, vm.argument(7), ErrorType::TemporalInvalidPlainDateTime));
 
-    // 10. Let nanosecond be ? ToIntegerThrowOnInfinity(nanosecond).
-    auto nanosecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(8), ErrorType::TemporalInvalidPlainDateTime));
+    // 10. Let nanosecond be ? ToIntegerWithTruncation(nanosecond).
+    auto nanosecond = TRY(to_integer_with_truncation(vm, vm.argument(8), ErrorType::TemporalInvalidPlainDateTime));
 
     // 11. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, vm.argument(9)));
