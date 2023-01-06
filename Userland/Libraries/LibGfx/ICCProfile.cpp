@@ -234,15 +234,21 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
     return xyz;
 }
 
+template<size_t N>
+bool all_bytes_are_zero(const u8 (&bytes)[N])
+{
+    for (u8 byte : bytes) {
+        if (byte != 0)
+            return false;
+    }
+    return true;
+}
+
 Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header)
 {
     // ICC v4, 7.2.18 Profile ID field
     // "A profile ID field value of zero (00h) shall indicate that a profile ID has not been calculated."
-    bool did_calculate_profile_id = false;
-    for (u8 b : header.profile_id)
-        if (b != 0)
-            did_calculate_profile_id = true;
-    if (!did_calculate_profile_id)
+    if (all_bytes_are_zero(header.profile_id))
         return {};
 
     Crypto::Hash::MD5::DigestType md5;
