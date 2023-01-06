@@ -1731,40 +1731,7 @@ void Painter::do_draw_text(FloatRect const& rect, Utf8View const& text, Font con
     auto lines = layout.lines(elision, wrapping, LINE_SPACING);
     auto bounding_rect = layout.bounding_rect(wrapping, LINE_SPACING);
 
-    switch (alignment) {
-    case TextAlignment::TopCenter:
-        bounding_rect.set_y(rect.y());
-        bounding_rect.center_horizontally_within(rect);
-        break;
-    case TextAlignment::TopLeft:
-        bounding_rect.set_location(rect.location());
-        break;
-    case TextAlignment::TopRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.y() });
-        break;
-    case TextAlignment::CenterLeft:
-        bounding_rect.set_location({ rect.x(), rect.center().y() - int(bounding_rect.height() / 2) });
-        break;
-    case TextAlignment::CenterRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - int(bounding_rect.height() / 2) });
-        break;
-    case TextAlignment::Center:
-        bounding_rect.center_within(rect);
-        break;
-    case TextAlignment::BottomCenter:
-        bounding_rect.set_y((rect.bottom() + 1) - bounding_rect.height());
-        bounding_rect.center_horizontally_within(rect);
-        break;
-    case TextAlignment::BottomLeft:
-        bounding_rect.set_location({ rect.x(), (rect.bottom() + 1) - bounding_rect.height() });
-        break;
-    case TextAlignment::BottomRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
+    bounding_rect.align_within(rect, alignment);
     bounding_rect.intersect(rect);
 
     for (size_t i = 0; i < lines.size(); ++i) {
