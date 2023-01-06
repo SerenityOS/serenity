@@ -55,6 +55,11 @@ public:
     T const median()
     {
         quick_sort(m_values);
+        // If the number of values is even, the median is the arithmetic mean of the two middle values
+        if (size() % 2 == 0) {
+            auto index = size() / 2;
+            return (m_values.at(index) + m_values.at(index + 1)) / 2;
+        }
         return m_values.at(size() / 2);
     }
 
