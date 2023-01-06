@@ -23,7 +23,7 @@ Creating a SerenityOS virtual machine is similar to any other virtual machine. T
 4. Choose any size for the hard disk. This disk will later be removed and replaced with the converted GRUB image from the previous stage.
 5. Select **Finish** to finalize creation of the virtual machine.
 6. Select the newly created virtual machine and click **Edit virtual machine settings**.
-7. Serenity requires at minimum 32 MB of memory. Set **Memory for this virtual machine** equal to or above 32 MB. The currently recommended size is 256 MB. Please note that Serenity is currently a 32-bit system, so anything above the ~3.5 GB mark will not be recognized.
+7. Serenity requires at minimum 512 MiB of memory. Set **Memory for this virtual machine** equal to or above 512 MiB. The currently recommended size is 1 GiB.
 8. Select the existing **Hard Disk** and click **Remove**.
 9. Select **Add**, select **Hard Disk**, select **IDE (Recommended)**, select **Use an existing virtual disk**.
 10. Click **Browse** and browse to where you stored the converted VMDK disk image from the previous stage and add it. Click **Finish**.
