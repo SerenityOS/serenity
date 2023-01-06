@@ -299,6 +299,7 @@ void Game::move_focused_cards(CardStack& stack)
 void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
+    clear_hovered_stack();
 
     if (!is_moving_cards() || m_new_game_animation || m_draw_animation)
         return;
@@ -345,6 +346,18 @@ void Game::mousemove_event(GUI::MouseEvent& event)
     auto click_location = event.position();
     int dx = click_location.dx_relative_to(m_mouse_down_location);
     int dy = click_location.dy_relative_to(m_mouse_down_location);
+
+    if (auto target_stack = find_stack_to_drop_on(Cards::CardStack::MovementRule::Any)) {
+        if (target_stack != m_hovered_stack) {
+            clear_hovered_stack();
+
+            m_hovered_stack = move(target_stack);
+            m_hovered_stack->set_highlighted(true);
+            update(m_hovered_stack->bounding_box());
+        }
+    } else {
+        clear_hovered_stack();
+    }
 
     for (auto& to_intersect : moving_cards()) {
         mark_intersecting_stacks_dirty(to_intersect);
@@ -417,4 +430,15 @@ void Game::timer_event(Core::TimerEvent&)
         }
     }
 }
+
+void Game::clear_hovered_stack()
+{
+    if (!m_hovered_stack)
+        return;
+
+    m_hovered_stack->set_highlighted(false);
+    update(m_hovered_stack->bounding_box());
+    m_hovered_stack = nullptr;
+}
+
 }
