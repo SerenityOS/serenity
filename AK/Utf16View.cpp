@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,10 +21,10 @@ static constexpr u32 replacement_code_point = 0xfffd;
 static constexpr u32 first_supplementary_plane_code_point = 0x10000;
 
 template<typename UtfViewType>
-static Vector<u16, 1> to_utf16_impl(UtfViewType const& view)
+static Utf16Data to_utf16_impl(UtfViewType const& view)
 requires(IsSame<UtfViewType, Utf8View> || IsSame<UtfViewType, Utf32View>)
 {
-    Vector<u16, 1> utf16_data;
+    Utf16Data utf16_data;
     utf16_data.ensure_capacity(view.length());
 
     for (auto code_point : view)
@@ -33,22 +33,22 @@ requires(IsSame<UtfViewType, Utf8View> || IsSame<UtfViewType, Utf32View>)
     return utf16_data;
 }
 
-Vector<u16, 1> utf8_to_utf16(StringView utf8_view)
+Utf16Data utf8_to_utf16(StringView utf8_view)
 {
     return to_utf16_impl(Utf8View { utf8_view });
 }
 
-Vector<u16, 1> utf8_to_utf16(Utf8View const& utf8_view)
+Utf16Data utf8_to_utf16(Utf8View const& utf8_view)
 {
     return to_utf16_impl(utf8_view);
 }
 
-Vector<u16, 1> utf32_to_utf16(Utf32View const& utf32_view)
+Utf16Data utf32_to_utf16(Utf32View const& utf32_view)
 {
     return to_utf16_impl(utf32_view);
 }
 
-void code_point_to_utf16(Vector<u16, 1>& string, u32 code_point)
+void code_point_to_utf16(Utf16Data& string, u32 code_point)
 {
     VERIFY(is_unicode(code_point));
 

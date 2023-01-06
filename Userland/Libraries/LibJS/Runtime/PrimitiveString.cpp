@@ -180,7 +180,7 @@ void PrimitiveString::resolve_rope_if_needed() const
         auto const& lhs_string = m_lhs->utf16_string();
         auto const& rhs_string = m_rhs->utf16_string();
 
-        Vector<u16, 1> combined;
+        Utf16Data combined;
         combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
         combined.extend(lhs_string.string());
         combined.extend(rhs_string.string());

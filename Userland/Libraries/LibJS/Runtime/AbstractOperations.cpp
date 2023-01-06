@@ -1233,7 +1233,7 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
     auto replace_string = TRY(replacement_template.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 
-    Vector<u16, 1> result;
+    Utf16Data result;
 
     for (size_t i = 0; i < replace_view.length_in_code_units(); ++i) {
         u16 curr = replace_view.code_unit_at(i);

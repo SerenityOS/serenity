@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +16,12 @@
 
 namespace AK {
 
-Vector<u16, 1> utf8_to_utf16(StringView);
-Vector<u16, 1> utf8_to_utf16(Utf8View const&);
-Vector<u16, 1> utf32_to_utf16(Utf32View const&);
-void code_point_to_utf16(Vector<u16, 1>&, u32);
+using Utf16Data = Vector<u16, 1>;
+
+Utf16Data utf8_to_utf16(StringView);
+Utf16Data utf8_to_utf16(Utf8View const&);
+Utf16Data utf32_to_utf16(Utf32View const&);
+void code_point_to_utf16(Utf16Data&, u32);
 
 class Utf16View;
 
@@ -126,5 +128,6 @@ struct AK::Formatter<AK::Utf16View> : Formatter<FormatString> {
 };
 
 #if USING_AK_GLOBALLY
+using AK::Utf16Data;
 using AK::Utf16View;
 #endif
