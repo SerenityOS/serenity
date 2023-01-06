@@ -10,6 +10,16 @@
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICCProfile.h>
 
+template<class T>
+static void out_optional(char const* label, Optional<T> optional)
+{
+    out("{}: ", label);
+    if (optional.has_value())
+        outln("{}", *optional);
+    else
+        outln("(not set)");
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -49,12 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("rendering intent: {}", Gfx::ICC::rendering_intent_name(profile->rendering_intent()));
     outln("pcs illuminant: {}", profile->pcs_illuminant());
-
-    out("id: ");
-    if (auto id = profile->id(); id.has_value())
-        outln("{}", *id);
-    else
-        outln("(not set)");
+    out_optional("id", profile->id());
 
     return 0;
 }
