@@ -259,6 +259,15 @@ Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header
 
     return md5;
 }
+
+ErrorOr<void> parse_reserved(ICCHeader const& header)
+{
+    // ICC v4, 7.2.19 Reserved field
+    // "This field of the profile header is reserved for future ICC definition and shall be set to zero."
+    if (!all_bytes_are_zero(header.reserved))
+        return Error::from_string_literal("ICC::Profile: Reserved header bytes are not zero");
+    return {};
+}
 }
 
 StringView device_class_name(DeviceClass device_class)
@@ -391,6 +400,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
     profile->m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
     profile->m_id = parse_profile_id(header);
+    TRY(parse_reserved(header));
 
     return profile;
 }
