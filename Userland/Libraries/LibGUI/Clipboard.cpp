@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Math.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibGUI/Clipboard.h>
@@ -125,15 +126,17 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
 
 void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
-    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(data.size());
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(max(1, data.size()));
     if (buffer_or_error.is_error()) {
         dbgln("GUI::Clipboard::set_data() failed to create a buffer");
         return;
     }
     auto buffer = buffer_or_error.release_value();
-    if (!data.is_empty())
+    if (!data.is_empty()) {
         memcpy(buffer.data<void>(), data.data(), data.size());
-
+    } else {
+        memset(buffer.data<void>(), 0, 1);
+    }
     connection().async_set_clipboard_data(move(buffer), type, metadata);
 }
 
