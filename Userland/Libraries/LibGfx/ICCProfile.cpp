@@ -251,13 +251,13 @@ Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header
     if (all_bytes_are_zero(header.profile_id))
         return {};
 
-    Crypto::Hash::MD5::DigestType md5;
-    static_assert(sizeof(md5.data) == sizeof(header.profile_id));
-    memcpy(md5.data, header.profile_id, sizeof(md5.data));
+    Crypto::Hash::MD5::DigestType id;
+    static_assert(sizeof(id.data) == sizeof(header.profile_id));
+    memcpy(id.data, header.profile_id, sizeof(id.data));
 
     // FIXME: Consider comparing read id with compute_id() result and failing if they aren't equal.
 
-    return md5;
+    return id;
 }
 
 ErrorOr<void> parse_reserved(ICCHeader const& header)
