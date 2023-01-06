@@ -39,6 +39,7 @@ static_assert(AssertSize<ICONDIRENTRY, 16>());
 struct ICOImageDescriptor {
     u16 width;
     u16 height;
+    u16 bits_per_pixel;
     size_t offset;
     size_t size;
     RefPtr<Gfx::Bitmap> bitmap;
@@ -77,7 +78,7 @@ static Optional<ICOImageDescriptor> decode_ico_direntry(InputMemoryStream& strea
     if (stream.handle_any_error())
         return {};
 
-    ICOImageDescriptor desc = { entry.width, entry.height, entry.offset, entry.size, nullptr };
+    ICOImageDescriptor desc = { entry.width, entry.height, entry.bits_per_pixel, entry.offset, entry.size, nullptr };
     if (desc.width == 0)
         desc.width = 256;
     if (desc.height == 0)
@@ -91,10 +92,14 @@ static size_t find_largest_image(ICOLoadingContext const& context)
     size_t max_area = 0;
     size_t index = 0;
     size_t largest_index = 0;
+    u16 max_bits_per_pixel = 0;
     for (auto const& desc : context.images) {
-        if (static_cast<size_t>(desc.width) * static_cast<size_t>(desc.height) > max_area) {
-            max_area = desc.width * desc.height;
-            largest_index = index;
+        if (static_cast<size_t>(desc.width) * static_cast<size_t>(desc.height) >= max_area) {
+            if (desc.bits_per_pixel > max_bits_per_pixel) {
+                max_area = desc.width * desc.height;
+                largest_index = index;
+                max_bits_per_pixel = desc.bits_per_pixel;
+            }
         }
         ++index;
     }
