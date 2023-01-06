@@ -1050,6 +1050,16 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
+    if (event.shift() && event.ctrl() && event.key() == KeyCode::Key_U) {
+        uppercase_selection();
+    }
+    if (event.shift() && event.ctrl() && event.key() == KeyCode::Key_L) {
+        lowercase_selection();
+    }
+    if (event.shift() && event.ctrl() && event.key() == KeyCode::Key_N) {
+        snakecase_selection();
+    }
+
     event.ignore();
 }
 
@@ -1107,6 +1117,42 @@ void TextEditor::unindent_line()
 
         set_cursor({ m_cursor.line(), temp_column <= unindent_size ? 0 : temp_column - unindent_size });
     }
+}
+
+void TextEditor::uppercase_selection() {
+    if (!has_selection())
+        return;
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    auto const range = TextRange(selection_start, selection_end);
+    auto selectedText = document().text_in_range(range);
+    selectedText = selectedText.to_uppercase();
+    execute<ReplaceAllTextCommand>(selectedText, range, "Uppercase a selection");
+}
+
+void TextEditor::lowercase_selection() {
+    if (!has_selection())
+        return;
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    auto const range = TextRange(selection_start, selection_end);
+    auto selectedText = document().text_in_range(range);
+    selectedText = selectedText.to_lowercase();
+    execute<ReplaceAllTextCommand>(selectedText, range, "Lowercase a selection");
+}
+
+void TextEditor::snakecase_selection() {
+    if (!has_selection())
+        return;
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    auto const range = TextRange(selection_start, selection_end);
+    auto selectedText = document().text_in_range(range);
+    selectedText = selectedText.to_snakecase();
+    execute<ReplaceAllTextCommand>(selectedText, range, "Snake case a selection");
 }
 
 void TextEditor::delete_previous_word()
