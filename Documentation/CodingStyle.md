@@ -683,3 +683,72 @@ size_t mask_length = (size_t)((u8)-1) + 1;
 // This should be reinterpret_cast.
 return (u8 const*)string.characters_without_null_termination();
 ```
+
+### Omission of curly braces from statement blocks
+
+Curly braces may only be omitted from `if`/`else`/`for`/`while`/etc. statement blocks if the body is a single line.
+
+Additionally, if any body of a connected if/else statement requires curly braces according to this rule, all of them do.
+
+###### Right:
+```cpp
+if (condition)
+    foo();
+```
+
+```cpp
+if (condition) {
+    foo();
+    bar();
+}
+```
+
+```cpp
+if (condition) {
+    foo();
+} else if (condition) {
+    bar();
+    baz();
+} else {
+    qux();
+}
+```
+
+```cpp
+for (size_t i = i; condition; ++i) {
+    if (other_condition)
+        foo();
+}
+```
+
+##### OK:
+
+```cpp
+if (condition) {
+    foo();
+}
+```
+
+###### Wrong:
+
+```cpp
+if (condition)
+    // There is a comment here.
+    foo();
+```
+
+```cpp
+if (condition)
+    foo();
+else {
+    bar();
+    baz();
+} else
+    qux();
+```
+
+```cpp
+for (size_t i = i; condition; ++i)
+    if (other_condition)
+        foo();
+```
