@@ -1518,11 +1518,6 @@ void draw_text_line(FloatRect const& a_rect, Utf8View const& text, Font const& f
         VERIFY_NOT_REACHED();
     }
 
-    if (is_vertically_centered_text_alignment(alignment)) {
-        auto distance_from_baseline_to_bottom = (font.pixel_size() - 1) - font.baseline();
-        rect.translate_by(0, distance_from_baseline_to_bottom / 2);
-    }
-
     auto point = rect.location();
     auto space_width = font.glyph_width(' ') + font.glyph_spacing();
 
@@ -1726,19 +1721,17 @@ void Painter::do_draw_text(FloatRect const& rect, Utf8View const& text, Font con
 
     TextLayout layout(font, text, rect);
 
-    auto line_height = font.pixel_size() + LINE_SPACING;
+    auto line_height = font.preferred_line_height();
 
-    auto lines = layout.lines(elision, wrapping, LINE_SPACING);
-    auto bounding_rect = layout.bounding_rect(wrapping, LINE_SPACING);
+    auto lines = layout.lines(elision, wrapping);
+    auto bounding_rect = layout.bounding_rect(wrapping);
 
     bounding_rect.align_within(rect, alignment);
-    bounding_rect.intersect(rect);
 
     for (size_t i = 0; i < lines.size(); ++i) {
         auto line = Utf8View { lines[i] };
 
         FloatRect line_rect { bounding_rect.x(), bounding_rect.y() + i * line_height, bounding_rect.width(), line_height };
-        line_rect.intersect(rect);
 
         TextDirection line_direction = get_text_direction(line);
         if (text_contains_bidirectional_text(line, line_direction)) { // Slow Path: The line contains mixed BiDi classes

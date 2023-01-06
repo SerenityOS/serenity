@@ -20,15 +20,15 @@ struct Block {
     Utf8View characters;
 };
 
-FloatRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
+FloatRect TextLayout::bounding_rect(TextWrapping wrapping) const
 {
-    auto lines = wrap_lines(TextElision::None, wrapping, line_spacing, FitWithinRect::No);
-    if (!lines.size()) {
+    auto lines = wrap_lines(TextElision::None, wrapping);
+    if (lines.is_empty()) {
         return {};
     }
 
     FloatRect bounding_rect = {
-        0, 0, 0, (lines.size() * (m_font.pixel_size() + line_spacing)) - line_spacing
+        0, 0, 0, (static_cast<float>(lines.size()) * (m_font_metrics.ascent + m_font_metrics.descent + m_font_metrics.line_gap)) - m_font_metrics.line_gap
     };
 
     for (auto& line : lines) {
@@ -40,7 +40,7 @@ FloatRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) con
     return bounding_rect;
 }
 
-Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping, int line_spacing, FitWithinRect fit_within_rect) const
+Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping) const
 {
     Vector<Block> blocks;
 
@@ -106,34 +106,16 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
         });
     }
 
-    size_t max_lines_that_can_fit = 0;
-    if (m_rect.height() >= m_font.glyph_height()) {
-        // NOTE: If glyph height is 10 and line spacing is 1, we can fit a
-        // single line into a 10px rect and a 20px rect, but 2 lines into a
-        // 21px rect.
-        max_lines_that_can_fit = 1 + (m_rect.height() - m_font.glyph_height()) / (m_font.glyph_height() + line_spacing);
-    }
-
-    if (max_lines_that_can_fit == 0)
-        return {};
-
     Vector<DeprecatedString> lines;
     StringBuilder builder;
     float line_width = 0;
     size_t current_block = 0;
-    bool did_not_finish = false;
     for (Block& block : blocks) {
         switch (block.type) {
         case BlockType::Newline: {
             lines.append(builder.to_deprecated_string());
             builder.clear();
             line_width = 0;
-
-            if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
-                did_not_finish = true;
-                goto blocks_processed;
-            }
-
             current_block++;
             continue;
         }
@@ -152,11 +134,6 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
                 line_width = 0;
             }
 
-            if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
-                did_not_finish = true;
-                goto blocks_processed;
-            }
-
             builder.append(block.characters.as_string());
             line_width += block_width;
             current_block++;
@@ -164,18 +141,15 @@ Vector<DeprecatedString, 32> TextLayout::wrap_lines(TextElision elision, TextWra
         }
     }
 
-blocks_processed:
-    if (!did_not_finish) {
-        auto last_line = builder.to_deprecated_string();
-        if (!last_line.is_empty())
-            lines.append(last_line);
-    }
+    auto last_line = builder.to_deprecated_string();
+    if (!last_line.is_empty())
+        lines.append(last_line);
 
     switch (elision) {
     case TextElision::None:
         break;
     case TextElision::Right: {
-        lines.at(lines.size() - 1) = elide_text_from_right(Utf8View { lines.at(lines.size() - 1) }, did_not_finish);
+        lines.at(lines.size() - 1) = elide_text_from_right(Utf8View { lines.at(lines.size() - 1) });
         break;
     }
     }
@@ -183,10 +157,10 @@ blocks_processed:
     return lines;
 }
 
-DeprecatedString TextLayout::elide_text_from_right(Utf8View text, bool force_elision) const
+DeprecatedString TextLayout::elide_text_from_right(Utf8View text) const
 {
     float text_width = m_font.width(text);
-    if (force_elision || text_width > static_cast<unsigned>(m_rect.width())) {
+    if (text_width > static_cast<float>(m_rect.width())) {
         float ellipsis_width = m_font.width("..."sv);
         float current_width = ellipsis_width;
         size_t glyph_spacing = m_font.glyph_spacing();
