@@ -24,8 +24,8 @@ struct Digest {
 
     [[nodiscard]] ALWAYS_INLINE ReadonlyBytes bytes() const { return { immutable_data(), data_length() }; }
 
-    [[nodiscard]] bool operator==(Digest const& other) const { return memcmp(data, other.data, sizeof(data)) == 0; }
-    [[nodiscard]] bool operator!=(Digest const& other) const { return !(*this == other); }
+    [[nodiscard]] bool operator==(Digest const& other) const = default;
+    [[nodiscard]] bool operator!=(Digest const& other) const = default;
 };
 
 template<size_t BlockS, size_t DigestS, typename DigestT = Digest<DigestS>>
