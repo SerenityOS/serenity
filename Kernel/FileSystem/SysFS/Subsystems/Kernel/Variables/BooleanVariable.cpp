@@ -23,12 +23,10 @@ ErrorOr<size_t> SysFSSystemBooleanVariable::write_bytes(off_t, size_t count, Use
     char value = 0;
     TRY(buffer.read(&value, 1));
 
-    TRY(Process::current().jail().with([&](auto& my_jail) -> ErrorOr<void> {
-        // Note: If we are in a jail, don't let the current process to change the variable.
-        if (my_jail)
-            return Error::from_errno(EPERM);
-        return {};
-    }));
+    // NOTE: If we are in a jail, don't let the current process to change the variable.
+    if (Process::current().is_currently_in_jail())
+        return Error::from_errno(EPERM);
+
     if (count != 1)
         return Error::from_errno(EINVAL);
     if (value == '0') {

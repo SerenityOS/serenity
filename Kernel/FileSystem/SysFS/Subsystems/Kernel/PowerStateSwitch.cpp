@@ -46,12 +46,9 @@ ErrorOr<void> SysFSPowerStateSwitchNode::truncate(u64 size)
 
 ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription*)
 {
-    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
-        // Note: If we are in a jail, don't let the current process to change the power state.
-        if (my_jail)
-            return Error::from_errno(EPERM);
-        return {};
-    }));
+    // Note: If we are in a jail, don't let the current process to change the power state.
+    if (Process::current().is_currently_in_jail())
+        return Error::from_errno(EPERM);
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return Error::from_errno(EOVERFLOW);
     if (offset > 0)
