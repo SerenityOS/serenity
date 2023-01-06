@@ -36,8 +36,6 @@ void Processor::install(u32 cpu)
     m_physical_address_bit_width = detect_physical_address_bit_width();
     m_virtual_address_bit_width = detect_virtual_address_bit_width();
 
-    initialize_exceptions();
-
     g_current_processor = this;
 }
 

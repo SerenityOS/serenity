@@ -32,7 +32,7 @@ Lbss_clear_loop:
   subs x15, x15, #1
   bne Lbss_clear_loop
 
-  b init
+  b pre_init
 
 halt:
   msr daifset, #2
