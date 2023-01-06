@@ -19,11 +19,13 @@ start:
   // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
   // but for now it's ok.
   msr SPSel, #0   //Use the same SP as we descend into EL1
-  ldr x14, =start
+  adrp x14, start
+  add x14, x14, :lo12:start
   mov sp, x14
 
   // Clear BSS.
-  ldr x14, =start_of_bss
+  adrp x14, start_of_bss
+  add x14, x14, :lo12:start_of_bss
   ldr x15, =size_of_bss_divided_by_8
 Lbss_clear_loop:
   str xzr, [x14], #8
