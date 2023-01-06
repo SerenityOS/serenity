@@ -12,6 +12,7 @@
 #include <LibCore/FileStream.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Painter.h>
 #include <string.h>
 
 namespace Gfx {
@@ -402,7 +403,7 @@ FontPixelMetrics BitmapFont::pixel_metrics() const
         .glyph_spacing = (float)glyph_spacing(),
         .ascent = (float)m_baseline,
         .descent = (float)(m_glyph_height - m_baseline),
-        .line_gap = (float)pixel_size() * 0.4f, // FIXME: Do something nicer here.
+        .line_gap = Gfx::Painter::LINE_SPACING,
     };
 }
 
