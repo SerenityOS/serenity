@@ -414,7 +414,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             terminal->apply_size_increments_to_window(*window);
             window->resize(terminal->size());
         }
-
     };
 
     TRY(view_menu->try_add_separator());
