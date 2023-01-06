@@ -110,9 +110,14 @@ protected:
     void compute_width_for_absolutely_positioned_element(Box const&, AvailableSpace const&);
     void compute_width_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&);
     void compute_width_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&);
-    void compute_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&);
-    void compute_height_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&);
-    void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&);
+
+    enum class BeforeOrAfterInsideLayout {
+        Before,
+        After,
+    };
+    void compute_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
+    void compute_height_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
+    void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
 
     Type m_type {};
 
