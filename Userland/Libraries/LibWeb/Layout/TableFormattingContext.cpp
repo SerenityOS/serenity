@@ -103,6 +103,8 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
 
 void TableFormattingContext::compute_table_measures()
 {
+    size_t max_cell_column_span = 1;
+
     for (auto& cell : m_cells) {
         auto width_of_containing_block = m_available_space->width.to_px();
         auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
@@ -137,10 +139,68 @@ void TableFormattingContext::compute_table_measures()
             m_columns[cell.column_index].type = ColumnType::Pixel;
         }
 
-        auto cell_outer_min_content_width = min_width + cell_intrinsic_offsets;
-        auto cell_outer_max_content_width = max(max(width, min_width), max_width) + cell_intrinsic_offsets;
-        m_columns[cell.column_index].min_width = max(m_columns[cell.column_index].min_width, cell_outer_min_content_width);
-        m_columns[cell.column_index].max_width = max(m_columns[cell.column_index].max_width, cell_outer_max_content_width);
+        cell.min_width = min_width + cell_intrinsic_offsets;
+        cell.max_width = max(max(width, min_width), max_width) + cell_intrinsic_offsets;
+
+        max_cell_column_span = max(max_cell_column_span, cell.column_span);
+    }
+
+    for (auto& cell : m_cells) {
+        if (cell.column_span == 1) {
+            m_columns[cell.column_index].min_width = max(m_columns[cell.column_index].min_width, cell.min_width);
+            m_columns[cell.column_index].max_width = max(m_columns[cell.column_index].max_width, cell.max_width);
+        }
+    }
+
+    for (size_t current_column_span = 2; current_column_span < max_cell_column_span; current_column_span++) {
+        // https://www.w3.org/TR/css-tables-3/#min-content-width-of-a-column-based-on-cells-of-span-up-to-n-n--1
+        Vector<Vector<CSSPixels>> cell_min_contributions_by_column_index;
+        cell_min_contributions_by_column_index.resize(m_columns.size());
+        // https://www.w3.org/TR/css-tables-3/#max-content-width-of-a-column-based-on-cells-of-span-up-to-n-n--1
+        Vector<Vector<CSSPixels>> cell_max_contributions_by_column_index;
+        cell_max_contributions_by_column_index.resize(m_columns.size());
+        for (auto& cell : m_cells) {
+            if (cell.column_span == current_column_span) {
+                // Define the baseline max-content width as the sum of the max-content widths based on cells of span up to N-1 of all columns that the cell spans.
+                CSSPixels baseline_max_content_width = 0;
+                auto cell_start_column_index = cell.column_index;
+                auto cell_end_column_index = cell.column_index + cell.column_span;
+                for (auto column_index = cell_start_column_index; column_index < cell_end_column_index; column_index++) {
+                    baseline_max_content_width += m_columns[column_index].max_width;
+                }
+
+                // The contribution of the cell is the sum of:
+                // the min-content width of the column based on cells of span up to N-1
+                auto cell_min_contribution = m_columns[cell.column_index].min_width;
+                // and the product of:
+                // - the ratio of the max-content width based on cells of span up to N-1 of the column to the baseline max-content width
+                // - the outer min-content width of the cell minus the baseline max-content width and baseline border spacing, or 0 if this is negative
+                cell_min_contribution += (m_columns[cell.column_index].max_width / baseline_max_content_width) * max(CSSPixels(0), cell.min_width - baseline_max_content_width);
+
+                // The contribution of the cell is the sum of:
+                // the max-content width of the column based on cells of span up to N-1
+                auto cell_max_contribution = m_columns[cell.column_index].max_width;
+                // and the product of:
+                // - the ratio of the max-content width based on cells of span up to N-1 of the column to the baseline max-content width
+                // - the outer max-content width of the cell minus the baseline max-content width and the baseline border spacing, or 0 if this is negative
+                cell_max_contribution += (m_columns[cell.column_index].max_width / baseline_max_content_width) * max(CSSPixels(0), cell.max_width - baseline_max_content_width);
+
+                cell_min_contributions_by_column_index[cell.column_index].append(cell_min_contribution);
+                cell_max_contributions_by_column_index[cell.column_index].append(cell_max_contribution);
+            }
+        }
+
+        for (size_t column_index = 0; column_index < m_columns.size(); column_index++) {
+            // min-content width of a column based on cells of span up to N (N > 1) is
+            // the largest of the min-content width of the column based on cells of span up to N-1 and the contributions of the cells in the column whose colSpan is N
+            for (auto min_contribution : cell_min_contributions_by_column_index[column_index])
+                m_columns[column_index].min_width = max(m_columns[column_index].min_width, min_contribution);
+
+            // max-content width of a column based on cells of span up to N (N > 1) is
+            // the largest of the max-content width based on cells of span up to N-1 and the contributions of the cells in the column whose colSpan is N
+            for (auto max_contribution : cell_max_contributions_by_column_index[column_index])
+                m_columns[column_index].max_width = max(m_columns[column_index].max_width, max_contribution);
+        }
     }
 }
 
