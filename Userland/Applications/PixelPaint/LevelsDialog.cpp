@@ -18,8 +18,8 @@ LevelsDialog::LevelsDialog(GUI::Window* parent_window, ImageEditor* editor)
     set_title("Levels");
     set_icon(parent_window->icon());
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(levels_dialog_gml))
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(levels_dialog_gml))
         VERIFY_NOT_REACHED();
 
     resize(305, 202);
@@ -27,12 +27,12 @@ LevelsDialog::LevelsDialog(GUI::Window* parent_window, ImageEditor* editor)
 
     m_editor = editor;
 
-    m_brightness_slider = main_widget.find_descendant_of_type_named<GUI::ValueSlider>("brightness_slider");
-    m_contrast_slider = main_widget.find_descendant_of_type_named<GUI::ValueSlider>("contrast_slider");
-    m_gamma_slider = main_widget.find_descendant_of_type_named<GUI::ValueSlider>("gamma_slider");
-    auto context_label = main_widget.find_descendant_of_type_named<GUI::Label>("context_label");
-    auto apply_button = main_widget.find_descendant_of_type_named<GUI::Button>("apply_button");
-    auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_brightness_slider = main_widget->find_descendant_of_type_named<GUI::ValueSlider>("brightness_slider");
+    m_contrast_slider = main_widget->find_descendant_of_type_named<GUI::ValueSlider>("contrast_slider");
+    m_gamma_slider = main_widget->find_descendant_of_type_named<GUI::ValueSlider>("gamma_slider");
+    auto context_label = main_widget->find_descendant_of_type_named<GUI::Label>("context_label");
+    auto apply_button = main_widget->find_descendant_of_type_named<GUI::Button>("apply_button");
+    auto cancel_button = main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
 
     VERIFY(m_brightness_slider);
     VERIFY(m_contrast_slider);

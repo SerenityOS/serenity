@@ -47,28 +47,28 @@ private:
     BookmarkEditor(Window* parent_window, StringView title, StringView url)
         : Dialog(parent_window)
     {
-        auto& widget = set_main_widget<GUI::Widget>();
-        if (!widget.load_from_gml(edit_bookmark_gml))
+        auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+        if (!widget->load_from_gml(edit_bookmark_gml))
             VERIFY_NOT_REACHED();
 
         set_resizable(false);
         resize(260, 85);
 
-        m_title_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("title_textbox");
+        m_title_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("title_textbox");
         m_title_textbox->set_text(title);
         m_title_textbox->set_focus(true);
         m_title_textbox->select_all();
 
-        m_url_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("url_textbox");
+        m_url_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("url_textbox");
         m_url_textbox->set_text(url);
 
-        auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+        auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
             done(ExecResult::OK);
         };
         ok_button.set_default(true);
 
-        auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+        auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
             done(ExecResult::Cancel);
         };

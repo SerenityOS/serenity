@@ -81,11 +81,11 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_inline_documentation_window->set_rect(m_cell_value_editor->rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
     m_inline_documentation_window->set_window_type(GUI::WindowType::Tooltip);
     m_inline_documentation_window->set_resizable(false);
-    auto& inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>();
-    inline_widget.set_fill_with_background_color(true);
-    inline_widget.set_layout<GUI::VerticalBoxLayout>().set_margins(4);
-    inline_widget.set_frame_shape(Gfx::FrameShape::Box);
-    m_inline_documentation_label = inline_widget.add<GUI::Label>();
+    auto inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    inline_widget->set_fill_with_background_color(true);
+    inline_widget->set_layout<GUI::VerticalBoxLayout>().set_margins(4);
+    inline_widget->set_frame_shape(Gfx::FrameShape::Box);
+    m_inline_documentation_label = inline_widget->add<GUI::Label>();
     m_inline_documentation_label->set_fill_with_background_color(true);
     m_inline_documentation_label->set_autosize(false);
     m_inline_documentation_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

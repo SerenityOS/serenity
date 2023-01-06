@@ -21,15 +21,15 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     resize(400, 250);
     set_resizable(true);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(filter_gallery_gml))
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(filter_gallery_gml))
         VERIFY_NOT_REACHED();
 
-    m_filter_tree = main_widget.find_descendant_of_type_named<GUI::TreeView>("tree_view");
-    auto apply_button = main_widget.find_descendant_of_type_named<GUI::Button>("apply_button");
-    auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
-    m_config_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("config_widget");
-    m_preview_widget = main_widget.find_descendant_of_type_named<FilterPreviewWidget>("preview_widget");
+    m_filter_tree = main_widget->find_descendant_of_type_named<GUI::TreeView>("tree_view");
+    auto apply_button = main_widget->find_descendant_of_type_named<GUI::Button>("apply_button");
+    auto cancel_button = main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_config_widget = main_widget->find_descendant_of_type_named<GUI::Widget>("config_widget");
+    m_preview_widget = main_widget->find_descendant_of_type_named<FilterPreviewWidget>("preview_widget");
 
     VERIFY(m_filter_tree);
     VERIFY(apply_button);

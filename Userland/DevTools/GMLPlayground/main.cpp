@@ -84,14 +84,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
-    auto splitter = TRY(window->try_set_main_widget<GUI::HorizontalSplitter>());
+    auto splitter = TRY(window->set_main_widget<GUI::HorizontalSplitter>());
     auto editor = TRY(splitter->try_add<GUI::TextEditor>());
     auto preview_frame_widget = TRY(splitter->try_add<GUI::Frame>());
 
     auto preview_window = TRY(GUI::Window::try_create());
     preview_window->set_title("Preview - GML Playground");
     preview_window->set_icon(app_icon.bitmap_for_size(16));
-    auto preview_window_widget = TRY(preview_window->try_set_main_widget<GUI::Widget>());
+    auto preview_window_widget = TRY(preview_window->set_main_widget<GUI::Widget>());
     preview_window_widget->set_fill_with_background_color(true);
 
     GUI::Widget* preview = preview_frame_widget;

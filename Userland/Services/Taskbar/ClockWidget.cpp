@@ -40,14 +40,14 @@ ClockWidget::ClockWidget()
     m_calendar_window->set_window_type(GUI::WindowType::Popup);
     m_calendar_window->resize(m_window_size.width(), m_window_size.height());
 
-    auto& root_container = m_calendar_window->set_main_widget<GUI::Frame>();
-    root_container.set_fill_with_background_color(true);
-    root_container.set_layout<GUI::VerticalBoxLayout>();
-    root_container.layout()->set_margins({ 2, 0 });
-    root_container.layout()->set_spacing(0);
-    root_container.set_frame_shape(Gfx::FrameShape::Window);
+    auto root_container = m_calendar_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    root_container->set_fill_with_background_color(true);
+    root_container->set_layout<GUI::VerticalBoxLayout>();
+    root_container->layout()->set_margins({ 2, 0 });
+    root_container->layout()->set_spacing(0);
+    root_container->set_frame_shape(Gfx::FrameShape::Window);
 
-    auto& navigation_container = root_container.add<GUI::Widget>();
+    auto& navigation_container = root_container->add<GUI::Widget>();
     navigation_container.set_fixed_height(24);
     navigation_container.set_layout<GUI::HorizontalBoxLayout>();
     navigation_container.layout()->set_margins({ 2 });
@@ -109,10 +109,10 @@ ClockWidget::ClockWidget()
             m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
-    auto& separator1 = root_container.add<GUI::HorizontalSeparator>();
+    auto& separator1 = root_container->add<GUI::HorizontalSeparator>();
     separator1.set_fixed_height(2);
 
-    auto& calendar_container = root_container.add<GUI::Widget>();
+    auto& calendar_container = root_container->add<GUI::Widget>();
     calendar_container.set_layout<GUI::HorizontalBoxLayout>();
     calendar_container.layout()->set_margins({ 2 });
 
@@ -127,10 +127,10 @@ ClockWidget::ClockWidget()
         m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
-    auto& separator2 = root_container.add<GUI::HorizontalSeparator>();
+    auto& separator2 = root_container->add<GUI::HorizontalSeparator>();
     separator2.set_fixed_height(2);
 
-    auto& settings_container = root_container.add<GUI::Widget>();
+    auto& settings_container = root_container->add<GUI::Widget>();
     settings_container.set_fixed_height(24);
     settings_container.set_layout<GUI::HorizontalBoxLayout>();
     settings_container.layout()->set_margins({ 2 });

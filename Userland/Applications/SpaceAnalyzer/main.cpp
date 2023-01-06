@@ -141,14 +141,14 @@ static NonnullRefPtr<GUI::Window> create_progress_window()
     window->resize(240, 50);
     window->center_on_screen();
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto main_widget = window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto& label = main_widget.add<GUI::Label>("Analyzing storage space...");
+    auto& label = main_widget->add<GUI::Label>("Analyzing storage space...");
     label.set_fixed_height(22);
 
-    auto& progresslabel = main_widget.add<GUI::Label>();
+    auto& progresslabel = main_widget->add<GUI::Label>();
     progresslabel.set_name("progresslabel");
     progresslabel.set_fixed_height(22);
 
@@ -321,11 +321,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // Load widgets.
-    auto& mainwidget = window->set_main_widget<GUI::Widget>();
-    mainwidget.load_from_gml(space_analyzer_gml);
-    auto& breadcrumbbar = *mainwidget.find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
-    auto& treemapwidget = *mainwidget.find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
-    auto& statusbar = *mainwidget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto mainwidget = TRY(window->set_main_widget<GUI::Widget>());
+    mainwidget->load_from_gml(space_analyzer_gml);
+    auto& breadcrumbbar = *mainwidget->find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
+    auto& treemapwidget = *mainwidget->find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
+    auto& statusbar = *mainwidget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     treemapwidget.set_focus(true);
 

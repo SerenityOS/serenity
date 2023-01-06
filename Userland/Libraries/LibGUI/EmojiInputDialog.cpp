@@ -92,8 +92,8 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
     , m_category_action_group(make<ActionGroup>())
 {
-    auto& main_widget = set_main_widget<Frame>();
-    if (!main_widget.load_from_gml(emoji_input_dialog_gml))
+    auto main_widget = set_main_widget<Frame>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(emoji_input_dialog_gml))
         VERIFY_NOT_REACHED();
 
     set_window_type(GUI::WindowType::Popup);
@@ -101,10 +101,10 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     set_blocks_emoji_input(true);
     resize(400, 300);
 
-    auto& scrollable_container = *main_widget.find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
-    m_search_box = main_widget.find_descendant_of_type_named<GUI::TextBox>("search_box"sv);
-    m_toolbar = main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar"sv);
-    m_emojis_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("emojis"sv);
+    auto& scrollable_container = *main_widget->find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
+    m_search_box = main_widget->find_descendant_of_type_named<GUI::TextBox>("search_box"sv);
+    m_toolbar = main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar"sv);
+    m_emojis_widget = main_widget->find_descendant_of_type_named<GUI::Widget>("emojis"sv);
     m_emojis = supported_emoji();
 
     m_category_action_group->set_exclusive(true);

@@ -20,24 +20,24 @@ LoginWindow::LoginWindow(GUI::Window* parent)
     set_closeable(false);
     set_icon(GUI::Icon::default_icon("ladyball"sv).bitmap_for_size(16));
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.load_from_gml(login_window_gml);
-    m_banner = *widget.find_descendant_of_type_named<GUI::ImageWidget>("banner");
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(login_window_gml);
+    m_banner = *widget->find_descendant_of_type_named<GUI::ImageWidget>("banner");
     m_banner->load_from_file("/res/graphics/brand-banner.png"sv);
     m_banner->set_auto_resize(true);
 
-    m_username = *widget.find_descendant_of_type_named<GUI::TextBox>("username");
+    m_username = *widget->find_descendant_of_type_named<GUI::TextBox>("username");
     m_username->set_focus(true);
-    m_password = *widget.find_descendant_of_type_named<GUI::PasswordBox>("password");
+    m_password = *widget->find_descendant_of_type_named<GUI::PasswordBox>("password");
 
-    m_log_in_button = *widget.find_descendant_of_type_named<GUI::Button>("log_in");
+    m_log_in_button = *widget->find_descendant_of_type_named<GUI::Button>("log_in");
     m_log_in_button->on_click = [&](auto) {
         if (on_submit)
             on_submit();
     };
     m_log_in_button->set_default(true);
 
-    m_fail_message = *widget.find_descendant_of_type_named<GUI::Label>("fail_message");
+    m_fail_message = *widget->find_descendant_of_type_named<GUI::Label>("fail_message");
     m_username->on_change = [&] {
         m_fail_message->set_text("");
     };

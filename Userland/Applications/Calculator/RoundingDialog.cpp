@@ -39,18 +39,18 @@ RoundingDialog::RoundingDialog(GUI::Window* parent_window, StringView title)
     set_resizable(false);
     set_title(title);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
 
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
 
     m_rounding_spinbox = GUI::SpinBox::construct();
     m_buttons_container = GUI::Widget::construct();
     m_ok_button = GUI::DialogButton::construct("OK");
     m_cancel_button = GUI::DialogButton::construct("Cancel");
 
-    main_widget.add_child(*m_rounding_spinbox);
-    main_widget.add_child(*m_buttons_container);
+    main_widget->add_child(*m_rounding_spinbox);
+    main_widget->add_child(*m_buttons_container);
 
     m_buttons_container->set_layout<GUI::HorizontalBoxLayout>();
     m_buttons_container->layout()->add_spacer();

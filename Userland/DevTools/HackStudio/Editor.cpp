@@ -94,7 +94,7 @@ ErrorOr<void> Editor::initialize_tooltip_window()
         s_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     }
     if (s_tooltip_page_view.is_null()) {
-        s_tooltip_page_view = TRY(s_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
+        s_tooltip_page_view = TRY(s_tooltip_window->set_main_widget<WebView::OutOfProcessWebView>());
     }
     return {};
 }

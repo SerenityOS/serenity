@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-theme-editor"sv);
     auto window = GUI::Window::construct();
 
-    auto main_widget = TRY(window->try_set_main_widget<ThemeEditor::MainWidget>());
+    auto main_widget = TRY(window->set_main_widget<ThemeEditor::MainWidget>());
 
     if (path.has_value()) {
         // Note: This is deferred to ensure that the window has already popped and thus proper window stealing can be performed.

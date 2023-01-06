@@ -187,7 +187,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_window_type(GUI::WindowType::Applet);
     window->set_has_alpha_channel(true);
     window->resize(16, 16);
-    auto icon = TRY(window->try_set_main_widget<NetworkWidget>(display_notifications));
+    auto icon = TRY(window->set_main_widget<NetworkWidget>(display_notifications));
     icon->load_from_file("/res/icons/16x16/network.png"sv);
     window->resize(16, 16);
     window->show();

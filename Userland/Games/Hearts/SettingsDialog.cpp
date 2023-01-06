@@ -19,13 +19,13 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     set_icon(parent->icon());
     set_resizable(false);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins(4);
 
-    auto& name_box = main_widget.add<GUI::Widget>();
+    auto& name_box = main_widget->add<GUI::Widget>();
     auto& input_layout = name_box.set_layout<GUI::HorizontalBoxLayout>();
     input_layout.set_spacing(4);
 
@@ -38,7 +38,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
         m_player_name = textbox.text();
     };
 
-    auto& button_box = main_widget.add<GUI::Widget>();
+    auto& button_box = main_widget->add<GUI::Widget>();
     auto& button_layout = button_box.set_layout<GUI::HorizontalBoxLayout>();
     button_layout.set_spacing(10);
 

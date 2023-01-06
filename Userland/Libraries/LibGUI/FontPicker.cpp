@@ -26,26 +26,26 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     resize(430, 280);
     set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    if (!widget.load_from_gml(font_picker_dialog_gml))
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!widget->load_from_gml(font_picker_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    m_family_list_view = *widget.find_descendant_of_type_named<ListView>("family_list_view");
+    m_family_list_view = *widget->find_descendant_of_type_named<ListView>("family_list_view");
     m_family_list_view->set_model(ItemListModel<DeprecatedString>::create(m_families));
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_variant_list_view = *widget.find_descendant_of_type_named<ListView>("variant_list_view");
+    m_variant_list_view = *widget->find_descendant_of_type_named<ListView>("variant_list_view");
     m_variant_list_view->set_model(ItemListModel<DeprecatedString>::create(m_variants));
     m_variant_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_size_spin_box = *widget.find_descendant_of_type_named<SpinBox>("size_spin_box");
+    m_size_spin_box = *widget->find_descendant_of_type_named<SpinBox>("size_spin_box");
     m_size_spin_box->set_range(1, 255);
 
-    m_size_list_view = *widget.find_descendant_of_type_named<ListView>("size_list_view");
+    m_size_list_view = *widget->find_descendant_of_type_named<ListView>("size_list_view");
     m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
     m_size_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_sample_text_label = *widget.find_descendant_of_type_named<Label>("sample_text_label");
+    m_sample_text_label = *widget->find_descendant_of_type_named<Label>("sample_text_label");
 
     m_families.clear();
     Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
@@ -157,13 +157,13 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
         update_font();
     };
 
-    auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
 
-    auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

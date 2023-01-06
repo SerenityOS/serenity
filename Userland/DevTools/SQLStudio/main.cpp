@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("SQL Studio");
 
-    auto main_widget = TRY(window->try_set_main_widget<MainWidget>());
+    auto main_widget = TRY(window->set_main_widget<MainWidget>());
     main_widget->initialize_menu(window);
 
     window->on_close_request = [&] {

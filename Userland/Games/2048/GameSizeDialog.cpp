@@ -25,16 +25,16 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     set_icon(parent->icon());
     set_resizable(false);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(game_size_dialog_gml))
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(game_size_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    auto board_size_spinbox = main_widget.find_descendant_of_type_named<GUI::SpinBox>("board_size_spinbox");
+    auto board_size_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("board_size_spinbox");
     board_size_spinbox->set_value(m_board_size);
 
-    auto tile_value_label = main_widget.find_descendant_of_type_named<GUI::Label>("tile_value_label");
+    auto tile_value_label = main_widget->find_descendant_of_type_named<GUI::Label>("tile_value_label");
     tile_value_label->set_text(DeprecatedString::number(target_tile()));
-    auto target_spinbox = main_widget.find_descendant_of_type_named<GUI::SpinBox>("target_spinbox");
+    auto target_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("target_spinbox");
     target_spinbox->set_max(Game::max_power_for_board(m_board_size));
     target_spinbox->set_value(m_target_tile_power);
 
@@ -48,20 +48,20 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
         tile_value_label->set_text(DeprecatedString::number(target_tile()));
     };
 
-    auto evil_ai_checkbox = main_widget.find_descendant_of_type_named<GUI::CheckBox>("evil_ai_checkbox");
+    auto evil_ai_checkbox = main_widget->find_descendant_of_type_named<GUI::CheckBox>("evil_ai_checkbox");
     evil_ai_checkbox->set_checked(m_evil_ai);
     evil_ai_checkbox->on_checked = [this](auto checked) { m_evil_ai = checked; };
 
-    auto temporary_checkbox = main_widget.find_descendant_of_type_named<GUI::CheckBox>("temporary_checkbox");
+    auto temporary_checkbox = main_widget->find_descendant_of_type_named<GUI::CheckBox>("temporary_checkbox");
     temporary_checkbox->set_checked(m_temporary);
     temporary_checkbox->on_checked = [this](auto checked) { m_temporary = checked; };
 
-    auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    auto cancel_button = main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button->on_click = [this](auto) {
         done(ExecResult::Cancel);
     };
 
-    auto ok_button = main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    auto ok_button = main_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button->on_click = [this](auto) {
         done(ExecResult::OK);
     };

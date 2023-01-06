@@ -31,18 +31,18 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_re
 {
     auto lexical_path = LexicalPath(path);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
-    main_widget.layout()->set_spacing(6);
-    main_widget.layout()->set_margins(4);
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
+    main_widget->layout()->set_spacing(6);
+    main_widget->layout()->set_margins(4);
+    main_widget->set_fill_with_background_color(true);
 
     set_rect({ 0, 0, 360, 420 });
     set_resizable(false);
 
     set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
 
-    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+    auto& tab_widget = main_widget->add<GUI::TabWidget>();
 
     auto& general_tab = tab_widget.add_tab<GUI::Widget>("General");
     general_tab.load_from_gml(properties_window_general_tab_gml);
@@ -142,7 +142,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_re
     auto others_execute = general_tab.find_descendant_of_type_named<GUI::CheckBox>("others_execute");
     setup_permission_checkboxes(*others_read, *others_write, *others_execute, { S_IROTH, S_IWOTH, S_IXOTH }, m_mode);
 
-    auto& button_widget = main_widget.add<GUI::Widget>();
+    auto& button_widget = main_widget->add<GUI::Widget>();
     button_widget.set_layout<GUI::HorizontalBoxLayout>();
     button_widget.set_fixed_height(22);
     button_widget.layout()->set_spacing(5);

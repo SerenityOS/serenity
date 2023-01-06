@@ -17,13 +17,13 @@ PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
     set_icon(chess_widget.window()->icon());
     resize(70 * 4, 70);
 
-    auto& main_widget = set_main_widget<GUI::Frame>();
-    main_widget.set_frame_shape(Gfx::FrameShape::Container);
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::HorizontalBoxLayout>();
+    auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_frame_shape(Gfx::FrameShape::Container);
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout<GUI::HorizontalBoxLayout>();
 
     for (auto const& type : { Chess::Type::Queen, Chess::Type::Knight, Chess::Type::Rook, Chess::Type::Bishop }) {
-        auto& button = main_widget.add<GUI::Button>("");
+        auto& button = main_widget->add<GUI::Button>("");
         button.set_fixed_height(70);
         button.set_icon(chess_widget.get_piece_graphic({ chess_widget.board().turn(), type }));
         button.on_click = [this, type](auto) {

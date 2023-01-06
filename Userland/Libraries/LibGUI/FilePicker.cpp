@@ -84,16 +84,16 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     }
     resize(560, 320);
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    if (!widget.load_from_gml(file_picker_dialog_gml))
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!widget->load_from_gml(file_picker_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    auto& toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    auto& toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
 
-    m_location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
+    m_location_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("location_textbox");
     m_location_textbox->set_text(path);
 
-    m_view = *widget.find_descendant_of_type_named<GUI::MultiView>("view");
+    m_view = *widget->find_descendant_of_type_named<GUI::MultiView>("view");
     m_view->set_selection_mode(m_mode == Mode::OpenMultiple ? GUI::AbstractView::SelectionMode::MultiSelection : GUI::AbstractView::SelectionMode::SingleSelection);
     m_view->set_model(MUST(SortingProxyModel::create(*m_model)));
     m_view->set_model_column(FileSystemModel::Column::Name);
@@ -150,7 +150,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     toolbar.add_action(m_view->view_as_table_action());
     toolbar.add_action(m_view->view_as_columns_action());
 
-    m_filename_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("filename_textbox");
+    m_filename_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("filename_textbox");
     m_filename_textbox->set_focus(true);
     if (m_mode == Mode::Save) {
         LexicalPath lexical_filename { filename };
@@ -183,14 +183,14 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         }
     };
 
-    auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.set_text(ok_button_name(m_mode));
     ok_button.on_click = [this](auto) {
         on_file_return();
     };
     ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
 
-    auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
@@ -237,7 +237,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         m_view->view_as_columns_action().set_enabled(false);
     };
 
-    auto& common_locations_tray = *widget.find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
+    auto& common_locations_tray = *widget->find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
     m_model->on_complete = [&] {
         m_view->set_active_widget(&m_view->current_view());
         for (auto& location_button : m_common_location_buttons)

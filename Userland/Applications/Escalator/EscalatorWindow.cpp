@@ -31,10 +31,10 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     set_resizable(false);
     set_minimizable(false);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.load_from_gml(escalator_gml);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(escalator_gml);
 
-    RefPtr<GUI::Label> app_label = *main_widget.find_descendant_of_type_named<GUI::Label>("description");
+    RefPtr<GUI::Label> app_label = *main_widget->find_descendant_of_type_named<GUI::Label>("description");
 
     DeprecatedString prompt;
     if (options.description.is_empty())
@@ -44,10 +44,10 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
 
     app_label->set_text(prompt);
 
-    m_icon_image_widget = *main_widget.find_descendant_of_type_named<GUI::ImageWidget>("icon");
+    m_icon_image_widget = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));
 
-    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("ok_button");
+    m_ok_button = *main_widget->find_descendant_of_type_named<GUI::DialogButton>("ok_button");
     m_ok_button->on_click = [this](auto) {
         auto result = check_password();
         if (result.is_error()) {
@@ -57,12 +57,12 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     };
     m_ok_button->set_default(true);
 
-    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("cancel_button");
+    m_cancel_button = *main_widget->find_descendant_of_type_named<GUI::DialogButton>("cancel_button");
     m_cancel_button->on_click = [this](auto) {
         close();
     };
 
-    m_password_input = *main_widget.find_descendant_of_type_named<GUI::PasswordBox>("password");
+    m_password_input = *main_widget->find_descendant_of_type_named<GUI::PasswordBox>("password");
 }
 
 ErrorOr<void> EscalatorWindow::check_password()

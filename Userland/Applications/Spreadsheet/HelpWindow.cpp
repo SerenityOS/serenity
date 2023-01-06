@@ -67,11 +67,11 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     set_title("Spreadsheet Functions Help");
     set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.set_fill_with_background_color(true);
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->set_layout<GUI::VerticalBoxLayout>();
+    widget->set_fill_with_background_color(true);
 
-    auto& splitter = widget.add<GUI::HorizontalSplitter>();
+    auto& splitter = widget->add<GUI::HorizontalSplitter>();
     auto& left_frame = splitter.add<GUI::Frame>();
     left_frame.set_layout<GUI::VerticalBoxLayout>();
     // FIXME: Get rid of the magic number, dynamically calculate initial size based on left frame contents
@@ -112,14 +112,14 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->set_title(DeprecatedString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
-            auto& widget = window->set_main_widget<SpreadsheetWidget>(window, NonnullRefPtrVector<Sheet> {}, false);
-            auto sheet = Sheet::from_json(value.as_object(), widget.workbook());
+            auto widget = window->set_main_widget<SpreadsheetWidget>(window, NonnullRefPtrVector<Sheet> {}, false).release_value_but_fixme_should_propagate_errors();
+            auto sheet = Sheet::from_json(value.as_object(), widget->workbook());
             if (!sheet) {
                 GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, url.path()));
                 return;
             }
 
-            widget.add_sheet(sheet.release_nonnull());
+            widget->add_sheet(sheet.release_nonnull());
             window->show();
         } else if (url.host() == "doc") {
             auto entry = LexicalPath::basename(url.path());

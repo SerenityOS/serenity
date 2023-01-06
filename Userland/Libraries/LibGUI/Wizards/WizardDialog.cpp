@@ -27,19 +27,19 @@ WizardDialog::WizardDialog(Window* parent_window)
     if (parent_window)
         set_icon(parent_window->icon());
 
-    auto& main_widget = set_main_widget<Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<VerticalBoxLayout>();
-    main_widget.layout()->set_spacing(0);
+    auto main_widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout<VerticalBoxLayout>();
+    main_widget->layout()->set_spacing(0);
 
-    m_page_container_widget = main_widget.add<Widget>();
+    m_page_container_widget = main_widget->add<Widget>();
     m_page_container_widget->set_fixed_size(500, 315);
     m_page_container_widget->set_layout<VerticalBoxLayout>();
 
-    auto& separator = main_widget.add<SeparatorWidget>(Gfx::Orientation::Horizontal);
+    auto& separator = main_widget->add<SeparatorWidget>(Gfx::Orientation::Horizontal);
     separator.set_fixed_height(2);
 
-    auto& nav_container_widget = main_widget.add<Widget>();
+    auto& nav_container_widget = main_widget->add<Widget>();
     nav_container_widget.set_layout<HorizontalBoxLayout>();
     nav_container_widget.set_fixed_height(42);
     nav_container_widget.layout()->set_margins({ 0, 10 });

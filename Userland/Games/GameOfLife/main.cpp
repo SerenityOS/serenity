@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_double_buffering_enabled(false);
     window->set_title("Game Of Life");
 
-    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->load_from_gml(game_of_life_gml);
     main_widget->set_fill_with_background_color(true);
 

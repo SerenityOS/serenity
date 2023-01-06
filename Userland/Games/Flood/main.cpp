@@ -82,16 +82,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Flood");
     window->resize(304, 325);
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(flood_window_gml))
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    if (!main_widget->load_from_gml(flood_window_gml))
         VERIFY_NOT_REACHED();
 
-    auto board_widget = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns));
+    auto board_widget = TRY(main_widget->find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns));
     board_widget->board()->randomize();
     int ai_moves = get_number_of_moves_from_ai(*board_widget->board());
     int moves_made = 0;
 
-    auto statusbar = main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();

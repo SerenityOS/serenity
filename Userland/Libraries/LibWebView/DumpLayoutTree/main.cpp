@@ -16,10 +16,10 @@ int main(int argc, char** argv)
     window->set_title("DumpLayoutTree");
     window->resize(800, 600);
     window->show();
-    auto& web_view = window->set_main_widget<WebView::OutOfProcessWebView>();
-    web_view.load(URL::create_with_file_scheme(argv[1]));
-    web_view.on_load_finish = [&](auto&) {
-        auto dump = web_view.dump_layout_tree();
+    auto web_view = window->set_main_widget<WebView::OutOfProcessWebView>().release_value_but_fixme_should_propagate_errors();
+    web_view->load(URL::create_with_file_scheme(argv[1]));
+    web_view->on_load_finish = [&](auto&) {
+        auto dump = web_view->dump_layout_tree();
         write(STDOUT_FILENO, dump.characters(), dump.length() + 1);
         _exit(0);
     };

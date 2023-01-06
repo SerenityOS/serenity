@@ -32,7 +32,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
     window->set_resizable(false);
     window->set_minimizable(false);
 
-    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
     (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins(4);

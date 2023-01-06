@@ -51,8 +51,8 @@ private:
     KeymapSelectionDialog(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
         : Dialog(parent_window)
     {
-        auto& widget = set_main_widget<GUI::Widget>();
-        if (!widget.load_from_gml(keymap_dialog_gml))
+        auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+        if (!widget->load_from_gml(keymap_dialog_gml))
             VERIFY_NOT_REACHED();
 
         set_resizable(false);
@@ -77,7 +77,7 @@ private:
 
         m_selected_keymap = m_character_map_files.first();
 
-        m_keymaps_combobox = *widget.find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
+        m_keymaps_combobox = *widget->find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
         m_keymaps_combobox->set_only_allow_values_from_model(true);
         m_keymaps_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_character_map_files));
         m_keymaps_combobox->set_selected_index(0);
@@ -86,12 +86,12 @@ private:
             m_selected_keymap = keymap;
         };
 
-        auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+        auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
             done(ExecResult::OK);
         };
 
-        auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+        auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
             done(ExecResult::Cancel);
         };

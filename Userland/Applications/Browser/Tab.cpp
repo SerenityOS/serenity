@@ -70,18 +70,18 @@ void Tab::start_download(const URL& url)
     window->resize(300, 170);
     window->set_title(DeprecatedString::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
-    window->set_main_widget<DownloadWidget>(url);
+    (void)window->set_main_widget<DownloadWidget>(url).release_value_but_fixme_should_propagate_errors();
     window->show();
 }
 
 void Tab::view_source(const URL& url, DeprecatedString const& source)
 {
     auto window = GUI::Window::construct(&this->window());
-    auto& editor = window->set_main_widget<GUI::TextEditor>();
-    editor.set_text(source);
-    editor.set_mode(GUI::TextEditor::ReadOnly);
-    editor.set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
-    editor.set_ruler_visible(true);
+    auto editor = window->set_main_widget<GUI::TextEditor>().release_value_but_fixme_should_propagate_errors();
+    editor->set_text(source);
+    editor->set_mode(GUI::TextEditor::ReadOnly);
+    editor->set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
+    editor->set_ruler_visible(true);
     window->resize(640, 480);
     window->set_title(url.to_deprecated_string());
     window->set_icon(g_icon_bag.filetype_text);
@@ -663,7 +663,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         window->on_close = [&]() {
             m_web_content_view->clear_inspected_dom_node();
         };
-        m_dom_inspector_widget = window->set_main_widget<InspectorWidget>();
+        m_dom_inspector_widget = window->set_main_widget<InspectorWidget>().release_value_but_fixme_should_propagate_errors();
         m_dom_inspector_widget->set_web_view(*m_web_content_view);
         m_web_content_view->inspect_dom_tree();
     }
@@ -702,7 +702,7 @@ void Tab::show_console_window()
         console_window->resize(500, 300);
         console_window->set_title("JS Console");
         console_window->set_icon(g_icon_bag.filetype_javascript);
-        m_console_widget = console_window->set_main_widget<ConsoleWidget>();
+        m_console_widget = console_window->set_main_widget<ConsoleWidget>().release_value_but_fixme_should_propagate_errors();
         m_console_widget->on_js_input = [this](DeprecatedString const& js_source) {
             m_web_content_view->js_console_input(js_source);
         };
@@ -723,7 +723,7 @@ void Tab::show_storage_inspector()
         storage_window->resize(500, 300);
         storage_window->set_title("Storage inspector");
         storage_window->set_icon(g_icon_bag.cookie);
-        m_storage_widget = storage_window->set_main_widget<StorageWidget>();
+        m_storage_widget = storage_window->set_main_widget<StorageWidget>().release_value_but_fixme_should_propagate_errors();
         m_storage_widget->on_update_cookie = [this](Web::Cookie::Cookie cookie) {
             if (on_update_cookie)
                 on_update_cookie(move(cookie));
@@ -760,7 +760,7 @@ void Tab::show_history_inspector()
         history_window->resize(500, 300);
         history_window->set_title("History");
         history_window->set_icon(g_icon_bag.history);
-        m_history_widget = history_window->set_main_widget<HistoryWidget>();
+        m_history_widget = history_window->set_main_widget<HistoryWidget>().release_value_but_fixme_should_propagate_errors();
     }
 
     m_history_widget->clear_history_entries();

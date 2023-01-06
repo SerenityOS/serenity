@@ -206,12 +206,12 @@ void ColorPicker::set_color_has_alpha_channel(bool has_alpha)
 
 void ColorPicker::build_ui()
 {
-    auto& root_container = set_main_widget<Widget>();
-    root_container.set_layout<VerticalBoxLayout>();
-    root_container.layout()->set_margins(4);
-    root_container.set_fill_with_background_color(true);
+    auto root_container = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    root_container->set_layout<VerticalBoxLayout>();
+    root_container->layout()->set_margins(4);
+    root_container->set_fill_with_background_color(true);
 
-    auto& tab_widget = root_container.add<GUI::TabWidget>();
+    auto& tab_widget = root_container->add<GUI::TabWidget>();
 
     auto& tab_palette = tab_widget.add_tab<Widget>("Palette");
     tab_palette.set_layout<VerticalBoxLayout>();
@@ -227,7 +227,7 @@ void ColorPicker::build_ui()
 
     build_ui_custom(tab_custom_color);
 
-    auto& button_container = root_container.add<Widget>();
+    auto& button_container = root_container->add<Widget>();
     button_container.set_preferred_height(GUI::SpecialDimension::Fit);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->set_spacing(4);

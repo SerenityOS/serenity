@@ -45,14 +45,14 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     set_icon(parent->icon());
     resize(285, 360);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_layout<GUI::VerticalBoxLayout>().set_margins(4);
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_layout<GUI::VerticalBoxLayout>().set_margins(4);
+    main_widget->set_fill_with_background_color(true);
 
-    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+    auto& tab_widget = main_widget->add<GUI::TabWidget>();
     setup_tabs(tab_widget, positions, sheet);
 
-    auto& buttonbox = main_widget.add<GUI::Widget>();
+    auto& buttonbox = main_widget->add<GUI::Widget>();
     buttonbox.set_shrink_to_fit(true);
     auto& button_layout = buttonbox.set_layout<GUI::HorizontalBoxLayout>();
     button_layout.set_spacing(10);

@@ -165,14 +165,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Assistant::AppState app_state;
     Assistant::Database db { app_state };
 
-    auto& container = window->set_main_widget<GUI::Frame>();
-    container.set_fill_with_background_color(true);
-    container.set_frame_shape(Gfx::FrameShape::Window);
-    auto& layout = container.set_layout<GUI::VerticalBoxLayout>();
+    auto container = TRY(window->set_main_widget<GUI::Frame>());
+    container->set_fill_with_background_color(true);
+    container->set_frame_shape(Gfx::FrameShape::Window);
+    auto& layout = container->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 8 });
 
-    auto& text_box = container.add<GUI::TextBox>();
-    auto& results_container = container.add<GUI::Widget>();
+    auto& text_box = container->add<GUI::TextBox>();
+    auto& results_container = container->add<GUI::Widget>();
     auto& results_layout = results_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto mark_selected_item = [&]() {
