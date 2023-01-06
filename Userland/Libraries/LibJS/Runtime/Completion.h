@@ -140,7 +140,7 @@ public:
     }
 
     Optional(Optional&& other)
-        : m_value(other.m_value)
+        : m_value(move(other.m_value))
     {
     }
 
