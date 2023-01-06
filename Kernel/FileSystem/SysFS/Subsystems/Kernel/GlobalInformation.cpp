@@ -52,7 +52,7 @@ ErrorOr<void> SysFSGlobalInformation::refresh_data(OpenFileDescription& descript
             return ENOMEM;
     }
     auto builder = TRY(KBufferBuilder::try_create());
-    TRY(Process::current().jail().with([&](auto& my_jail) -> ErrorOr<void> {
+    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
         if (my_jail && !is_readable_by_jailed_processes())
             return Error::from_errno(EPERM);
         return {};
