@@ -20,7 +20,6 @@ jobs:
       - name: Label pull request
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.BUGGIEBOT_TOKEN }}
           script: |
             const script = require('./Meta/label-pull-requests.js')
             script({github, context})
