@@ -10,7 +10,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/TextLayout.h>
 #include <LibGfx/TextWrapping.h>
 
 REGISTER_WIDGET(GUI, Label)
@@ -117,7 +116,7 @@ void Label::size_to_fit()
 
 int Label::text_calculated_preferred_height() const
 {
-    return static_cast<int>(ceilf(Gfx::TextLayout(font(), Utf8View { m_text }, text_rect().to_type<float>()).bounding_rect(Gfx::TextWrapping::Wrap).height()));
+    return static_cast<int>(ceilf(font().preferred_line_height()) * (m_text.count("\n"sv) + 1));
 }
 
 Optional<UISize> Label::calculated_preferred_size() const
