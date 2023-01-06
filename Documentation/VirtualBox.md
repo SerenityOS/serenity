@@ -31,7 +31,7 @@ Note that if you are on Windows and you do not have QEMU or VirtualBox in your P
 1. Open the **Create Virtual Machine** dialog. Switch to **Expert Mode**.
 2. Feel free to give it any name and store it anywhere.
 3. Switch the **Type** to **Other** and the **Version** to **Other/Unknown (64-bit)**.
-4. Serenity requires at minimum 256 MB of memory. Set **Memory size** equal to or above 256 MB. The currently recommended size is 1024 MB. Please note that Serenity is currently a 32-bit system, so anything above the ~3.5 GB mark will not be recognized.
+4. Serenity requires at minimum 512 MiB of memory. Set **Memory size** equal to or above 512 MiB. The currently recommended size is 1 GiB.
 5. For **Hard disk**, select **Use an existing virtual hard disk file**. Click the folder icon next to the dropdown to open the **Hard Disk Selector**.
 6. Click **Add**. Browse to where you stored the converted disk image from the previous stage and add it. Click **Choose**.
 7. Finally click **Create**.
