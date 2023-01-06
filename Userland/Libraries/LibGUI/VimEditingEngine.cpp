@@ -512,6 +512,10 @@ void VimMotion::calculate_word_range(VimCursor& cursor, int amount, bool normali
             return Unknown;
     };
 
+    // If the direction is forwards, and the word being removed contains the final valid character in the line for the cursor,
+    // the cursor cannot advance resulting in an off by one error (last character is not removed).
+    bool cursor_bounced_off_edge = false;
+
     // A small explanation for the code below: Because the direction of the
     // movement for this motion determines what the "start" and "end" of a word
     // is, the code below treats the motions like so:
@@ -550,13 +554,21 @@ void VimMotion::calculate_word_range(VimCursor& cursor, int amount, bool normali
                 if (part_of_word(cursor.current_char())) {
                     do {
                         cursor.move();
-                        if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                        if (cursor.hit_edge()) {
+                            cursor_bounced_off_edge = true;
+                            break;
+                        }
+                        if (cursor.crossed_line_boundary())
                             break;
                     } while (part_of_word(cursor.current_char()));
                 } else if (part_of_punctuation(cursor.current_char())) {
                     do {
                         cursor.move();
-                        if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                        if (cursor.hit_edge()) {
+                            cursor_bounced_off_edge = true;
+                            break;
+                        }
+                        if (cursor.crossed_line_boundary())
                             break;
                     } while (part_of_punctuation(cursor.current_char()));
                 } else if (cursor.on_empty_line()) {
@@ -567,7 +579,11 @@ void VimMotion::calculate_word_range(VimCursor& cursor, int amount, bool normali
                 if (!isspace(cursor.current_char())) {
                     do {
                         cursor.move();
-                        if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                        if (cursor.hit_edge()) {
+                            cursor_bounced_off_edge = true;
+                            break;
+                        }
+                        if (cursor.crossed_line_boundary())
                             break;
                     } while (!isspace(cursor.current_char()));
                 } else if (cursor.on_empty_line()) {
@@ -625,6 +641,8 @@ void VimMotion::calculate_word_range(VimCursor& cursor, int amount, bool normali
     if (cursor.forwards()) {
         m_end_line = cursor.current_position().line();
         m_end_column = cursor.current_position().column() + normalize_for_position;
+        if (cursor_bounced_off_edge)
+            m_end_column += 1;
     } else {
         m_start_line = cursor.current_position().line();
         m_start_column = cursor.current_position().column();
