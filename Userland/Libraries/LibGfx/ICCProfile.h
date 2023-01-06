@@ -116,6 +116,61 @@ private:
     u32 m_bits = 0;
 };
 
+// ICC v4, 7.2.14 Device attributes field
+class DeviceAttributes {
+public:
+    DeviceAttributes();
+
+    // "The device attributes field shall contain flags used to identify attributes
+    // unique to the particular device setup for which the profile is applicable."
+    DeviceAttributes(u64);
+
+    u64 bits() const { return m_bits; }
+
+    // "The least-significant 32 bits of this 64-bit value are defined by the ICC. "
+    u32 icc_bits() const { return bits() & 0xffff'ffff; }
+
+    // "Notice that bits 0, 1, 2, and 3 describe the media, not the device."
+
+    // "0": "Reflective (0) or transparency (1)"
+    enum class MediaReflectivity {
+        Reflective,
+        Transparent,
+    };
+    MediaReflectivity media_reflectivity() const { return MediaReflectivity(icc_bits() & 1); }
+
+    // "1": "Glossy (0) or matte (1)"
+    enum class MediaGlossiness {
+        Glossy,
+        Matte,
+    };
+    MediaGlossiness media_glossiness() const { return MediaGlossiness((icc_bits() >> 1) & 1); }
+
+    // "2": "Media polarity, positive (0) or negative (1)"
+    enum class MediaPolarity {
+        Positive,
+        Negative,
+    };
+    MediaPolarity media_polarity() const { return MediaPolarity((icc_bits() >> 2) & 1); }
+
+    // "3": "Colour media (0), black & white media (1)"
+    enum class MediaColor {
+        Colored,
+        BlackAndWhite,
+    };
+    MediaColor media_color() const { return MediaColor((icc_bits() >> 3) & 1); }
+
+    // "4 to 31": Reserved (set to binary zero)"
+
+    // "32 to 63": "Use not defined by ICC (vendor specific"
+    u32 vendor_bits() const { return bits() >> 32; }
+
+    static constexpr u64 KnownBitsMask = 0xf;
+
+private:
+    u64 m_bits = 0;
+};
+
 struct XYZ {
     double x { 0 };
     double y { 0 };
@@ -135,6 +190,7 @@ public:
 
     time_t creation_timestamp() const { return m_creation_timestamp; }
     Flags flags() const { return m_flags; }
+    DeviceAttributes device_attributes() const { return m_device_attributes; }
     RenderingIntent rendering_intent() const { return m_rendering_intent; }
     XYZ const& pcs_illuminant() const { return m_pcs_illuminant; }
     Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_id; }
@@ -148,6 +204,7 @@ private:
     ColorSpace m_connection_space;
     time_t m_creation_timestamp;
     Flags m_flags;
+    DeviceAttributes m_device_attributes;
     RenderingIntent m_rendering_intent;
     XYZ m_pcs_illuminant;
     Optional<Crypto::Hash::MD5::DigestType> m_id;

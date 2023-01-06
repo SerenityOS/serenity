@@ -198,6 +198,17 @@ ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
     return parse_date_time_number(header.profile_creation_time);
 }
 
+ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
+{
+    // ICC v4, 7.2.14 Device attributes field
+
+    // "4 to 31": "Reserved (set to binary zero)"
+    if (header.device_attributes & 0xffff'fff0)
+        return Error::from_string_literal("ICC::Profile: Device attributes reserved bits not set to 0");
+
+    return DeviceAttributes { header.device_attributes };
+}
+
 ErrorOr<void> parse_file_signature(ICCHeader const& header)
 {
     // ICC v4, 7.2.9 Profile file signature field
@@ -383,6 +394,12 @@ Flags::Flags(u32 bits)
 {
 }
 
+DeviceAttributes::DeviceAttributes() = default;
+DeviceAttributes::DeviceAttributes(u64 bits)
+    : m_bits(bits)
+{
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
@@ -399,6 +416,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_connection_space = TRY(parse_connection_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
     profile->m_flags = Flags { header.profile_flags };
+    profile->m_device_attributes = TRY(parse_device_attributes(header));
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
     profile->m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
     profile->m_id = TRY(parse_profile_id(header, bytes));
