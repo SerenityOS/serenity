@@ -159,7 +159,7 @@ jobs:
           git-config-email: buggiebot@serenityos.org
           branch: main
           repository-name: linusg/libjs-website
-          token: ${{ secrets.BUGGIEBOT }}
+          token: ${{ secrets.BUGGIEBOT_TOKEN }}
           folder: libjs-website
 
       - name: Compare non-bytecode
