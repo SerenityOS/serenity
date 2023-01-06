@@ -144,4 +144,22 @@ void CardGame::set_background_color(Gfx::Color color)
     CardPainter::the().set_background_color(color);
 }
 
+void CardGame::preview_card(CardStack& stack, Gfx::IntPoint click_location)
+{
+    if (!stack.preview_card(click_location))
+        return;
+
+    m_previewed_card_stack = stack;
+    update(stack.bounding_box());
+}
+
+void CardGame::clear_card_preview()
+{
+    VERIFY(m_previewed_card_stack);
+
+    update(m_previewed_card_stack->bounding_box());
+    m_previewed_card_stack->clear_card_preview();
+    m_previewed_card_stack = nullptr;
+}
+
 }
