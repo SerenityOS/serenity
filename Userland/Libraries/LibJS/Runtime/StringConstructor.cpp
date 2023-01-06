@@ -123,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         if (code_point < 0 || code_point > 0x10FFFF)
             return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
 
-        AK::code_point_to_utf16(string, static_cast<u32>(code_point));
+        TRY_OR_THROW_OOM(vm, code_point_to_utf16(string, static_cast<u32>(code_point)));
     }
 
     return PrimitiveString::create(vm, Utf16String(move(string)));

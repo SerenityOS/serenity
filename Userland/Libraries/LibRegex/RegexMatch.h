@@ -280,7 +280,7 @@ public:
                 return RegexStringView { Utf32View { data.data(), data.size() } };
             },
             [&](Utf16View) {
-                optional_utf16_storage = AK::utf32_to_utf16(Utf32View { data.data(), data.size() });
+                optional_utf16_storage = AK::utf32_to_utf16(Utf32View { data.data(), data.size() }).release_value_but_fixme_should_propagate_errors();
                 return RegexStringView { Utf16View { optional_utf16_storage } };
             });
 

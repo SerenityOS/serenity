@@ -490,7 +490,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
     auto string = TRY(vm.argument(0).to_string(vm));
     StringBuilder escaped;
-    for (auto code_point : utf8_to_utf16(string)) {
+    for (auto code_point : TRY_OR_THROW_OOM(vm, utf8_to_utf16(string))) {
         if (code_point < 256) {
             if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(static_cast<char>(code_point)))
                 escaped.append(code_point);
