@@ -518,7 +518,7 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     if (max_length <= string_length)
         return PrimitiveString::create(vm, move(string));
 
-    Utf16String fill_string(Vector<u16, 1> { 0x20 });
+    Utf16String fill_string(Utf16Data { 0x20 });
     if (!vm.argument(1).is_undefined()) {
         fill_string = TRY(vm.argument(1).to_utf16_string(vm));
         if (fill_string.is_empty())
