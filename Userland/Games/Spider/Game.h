@@ -91,6 +91,7 @@ private:
     void detect_full_stacks();
     void detect_victory();
     void move_focused_cards(CardStack& stack);
+    void clear_hovered_stack();
 
     void paint_event(GUI::PaintEvent&) override;
     void mousedown_event(GUI::MouseEvent&) override;
@@ -117,6 +118,8 @@ private:
     Gfx::IntRect m_original_stock_rect;
 
     uint32_t m_score { 500 };
+
+    RefPtr<CardStack> m_hovered_stack;
 };
 
 }
