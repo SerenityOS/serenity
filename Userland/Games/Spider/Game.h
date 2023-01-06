@@ -30,11 +30,12 @@ enum class GameOverReason {
 };
 
 class Game final : public Cards::CardGame {
-    C_OBJECT(Game)
+    C_OBJECT_ABSTRACT(Game)
 public:
     static constexpr int width = 10 + 10 * Card::width + 90 + 10;
     static constexpr int height = 480;
 
+    static ErrorOr<NonnullRefPtr<Game>> try_create();
     ~Game() override = default;
 
     Mode mode() const { return m_mode; }

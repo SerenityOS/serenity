@@ -20,15 +20,21 @@ static constexpr uint8_t new_game_animation_delay = 2;
 static constexpr uint8_t draw_animation_delay = 2;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
-Game::Game()
+ErrorOr<NonnullRefPtr<Game>> Game::try_create()
 {
-    MUST(add_stack(Gfx::IntPoint { 10, Game::height - Card::height - 10 }, CardStack::Type::Waste));
-    MUST(add_stack(Gfx::IntPoint { Game::width - Card::width - 10, Game::height - Card::height - 10 }, CardStack::Type::Stock));
+    auto game = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Game()));
+
+    TRY(game->add_stack(Gfx::IntPoint { 10, Game::height - Card::height - 10 }, CardStack::Type::Waste));
+    TRY(game->add_stack(Gfx::IntPoint { Game::width - Card::width - 10, Game::height - Card::height - 10 }, CardStack::Type::Stock));
 
     for (int i = 0; i < 10; i++) {
-        MUST(add_stack(Gfx::IntPoint { 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal));
+        TRY(game->add_stack(Gfx::IntPoint { 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal));
     }
+
+    return game;
 }
+
+Game::Game() = default;
 
 void Game::setup(Mode mode)
 {

@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_statistic_display(StatisticDisplay::HighScore);
 
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    widget->load_from_gml(spider_gml);
+    TRY(widget->try_load_from_gml(spider_gml));
 
     auto& game = *widget->find_descendant_of_type_named<Spider::Game>("game");
     game.set_focus(true);
