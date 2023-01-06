@@ -116,6 +116,25 @@ struct ICCHeader {
 };
 static_assert(sizeof(ICCHeader) == 128);
 
+Optional<PreferredCMMType> parse_preferred_cmm_type(ICCHeader const& header)
+{
+    // ICC v4, 7.2.3 Preferred CMM type field
+
+    // "This field may be used to identify the preferred CMM to be used.
+    //  If used, it shall match a CMM type signature registered in the ICC Tag Registry"
+    // https://www.color.org/signatures2.xalter currently links to
+    // https://www.color.org/registry/signature/TagRegistry-2021-03.pdf, which contains
+    // some CMM signatures.
+    // This requirement is often honored in practice, but not always. For example,
+    // JPEGs exported in Adobe Lightroom contain profiles that set this to 'Lino',
+    // which is not present in the "CMM Signatures" table in that PDF.
+
+    // "If no preferred CMM is identified, this field shall be set to zero (00000000h)."
+    if (header.preferred_cmm_type == 0)
+        return {};
+    return PreferredCMMType { header.preferred_cmm_type };
+}
+
 ErrorOr<Version> parse_version(ICCHeader const& header)
 {
     // ICC v4, 7.2.4 Profile version field
@@ -217,6 +236,38 @@ ErrorOr<void> parse_file_signature(ICCHeader const& header)
     return {};
 }
 
+Optional<DeviceManufacturer> parse_device_manufacturer(ICCHeader const& header)
+{
+    // ICC v4, 7.2.12 Device manufacturer field
+    // "This field may be used to identify a device manufacturer.
+    //  If used the signature shall match the signature contained in the appropriate section of the ICC signature registry found at www.color.org"
+    // Device manufacturers can be looked up at https://www.color.org/signatureRegistry/index.xalter
+    // For example: https://www.color.org/signatureRegistry/?entityEntry=APPL-4150504C
+    // Some icc files use codes not in that registry. For example. D50_XYZ.icc from https://www.color.org/XYZprofiles.xalter
+    // has its device manufacturer set to 'none', but https://www.color.org/signatureRegistry/?entityEntry=none-6E6F6E65 does not exist.
+
+    // "If not used this field shall be set to zero (00000000h)."
+    if (header.device_manufacturer == 0)
+        return {};
+    return DeviceManufacturer { header.device_manufacturer };
+}
+
+Optional<DeviceModel> parse_device_model(ICCHeader const& header)
+{
+    // ICC v4, 7.2.13 Device model field
+    // "This field may be used to identify a device model.
+    //  If used the signature shall match the signature contained in the appropriate section of the ICC signature registry found at www.color.org"
+    // Device models can be looked up at https://www.color.org/signatureRegistry/deviceRegistry/index.xalter
+    // For example: https://www.color.org/signatureRegistry/deviceRegistry/?entityEntry=7FD8-37464438
+    // Some icc files use codes not in that registry. For example. D50_XYZ.icc from https://www.color.org/XYZprofiles.xalter
+    // has its device model set to 'none', but https://www.color.org/signatureRegistry/deviceRegistry?entityEntry=none-6E6F6E65 does not exist.
+
+    // "If not used this field shall be set to zero (00000000h)."
+    if (header.device_model == 0)
+        return {};
+    return DeviceModel { header.device_model };
+}
+
 ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
 {
     // ICC v4, 7.2.15 Rendering intent field
@@ -243,6 +294,20 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
         return Error::from_string_literal("ICC::Profile: Invalid pcs illuminant");
 
     return xyz;
+}
+
+Optional<Creator> parse_profile_creator(ICCHeader const& header)
+{
+    // ICC v4, 7.2.17 Profile creator field
+    // "This field may be used to identify the creator of the profile.
+    //  If used the signature should match the signature contained in the device manufacturer section of the ICC signature registry found at www.color.org."
+    // This is not always true in practice.
+    // For example, .icc files in /System/ColorSync/Profiles on macOS 12.6 set this to 'appl', which is a CMM signature, not a device signature (that one would be 'APPL').
+
+    // "If not used this field shall be set to zero (00000000h)."
+    if (header.profile_creator == 0)
+        return {};
+    return Creator { header.profile_creator };
 }
 
 template<size_t N>
@@ -410,15 +475,19 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     auto header = *bit_cast<ICCHeader const*>(bytes.data());
 
     TRY(parse_file_signature(header));
+    profile->m_preferred_cmm_type = parse_preferred_cmm_type(header);
     profile->m_version = TRY(parse_version(header));
     profile->m_device_class = TRY(parse_device_class(header));
     profile->m_data_color_space = TRY(parse_data_color_space(header));
     profile->m_connection_space = TRY(parse_connection_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
     profile->m_flags = Flags { header.profile_flags };
+    profile->m_device_manufacturer = parse_device_manufacturer(header);
+    profile->m_device_model = parse_device_model(header);
     profile->m_device_attributes = TRY(parse_device_attributes(header));
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
     profile->m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
+    profile->m_creator = parse_profile_creator(header);
     profile->m_id = TRY(parse_profile_id(header, bytes));
     TRY(parse_reserved(header));
 
