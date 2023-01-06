@@ -209,8 +209,8 @@ ThrowCompletionOr<double> calendar_year(VM& vm, Object& calendar, Object& date_l
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.undefined.as_string());
 
-    // 3. Return ? ToIntegerThrowOnInfinity(result).
-    return TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
+    // 3. Return ? ToIntegerWithTruncation(result).
+    return TRY(to_integer_with_truncation(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
 }
 
 // 12.2.9 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
@@ -308,8 +308,7 @@ ThrowCompletionOr<double> calendar_year_of_week(VM& vm, Object& calendar, Object
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.yearOfWeek.as_string(), vm.names.undefined.as_string());
 
     // 3. Return ? ToIntegerWithTruncation(result).
-    // FIXME: ToIntegerThrowOnInfinity was renamed to ToIntegerWithTruncation in https://github.com/tc39/proposal-temporal/commit/f2746783e808c0144f2ce669e004a8c6286f9fc7
-    return TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.yearOfWeek.as_string(), vm.names.Infinity.to_string()));
+    return TRY(to_integer_with_truncation(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.yearOfWeek.as_string(), vm.names.Infinity.to_string()));
 }
 
 // 12.2.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
@@ -402,9 +401,9 @@ ThrowCompletionOr<Value> calendar_era_year(VM& vm, Object& calendar, Object& dat
     // 2. Let result be ? Invoke(calendar, "eraYear", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.eraYear, &date_like));
 
-    // 3. If result is not undefined, set result to ? ToIntegerThrowOnInfinity(result).
+    // 3. If result is not undefined, set result to ? ToIntegerWithTruncation(result).
     if (!result.is_undefined())
-        result = Value(TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv)));
+        result = Value(TRY(to_integer_with_truncation(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv)));
 
     // 4. Return result.
     return result;

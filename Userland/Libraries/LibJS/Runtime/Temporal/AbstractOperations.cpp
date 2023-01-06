@@ -1725,8 +1725,8 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM& vm, De
 // 13.40 ToPositiveIntegerWithTruncation ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerwithtruncation
 ThrowCompletionOr<double> to_positive_integer_with_truncation(VM& vm, Value argument)
 {
-    // 1. Let integer be ? ToIntegerThrowOnInfinity(argument).
-    auto integer = TRY(to_integer_throw_on_infinity(vm, argument, ErrorType::TemporalPropertyMustBePositiveInteger));
+    // 1. Let integer be ? ToIntegerWithTruncation(argument).
+    auto integer = TRY(to_integer_with_truncation(vm, argument, ErrorType::TemporalPropertyMustBePositiveInteger));
 
     // 2. If integer ≤ 0, throw a RangeError exception.
     if (integer <= 0) {
@@ -1761,11 +1761,11 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
 
             // ii. If property is in the Property column of Table 15 and there is a Conversion value in the same row, then
             // 1. Let Conversion be the Conversion value of the same row.
-            // 2. If Conversion is ToIntegerThrowOnInfinity, then
+            // 2. If Conversion is ToIntegerWithTruncation, then
             if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv)) {
-                // a. Set value to ? ToIntegerThrowOnInfinity(value).
+                // a. Set value to ? ToIntegerWithTruncation(value).
                 // b. Set value to 𝔽(value).
-                value = Value(TRY(to_integer_throw_on_infinity(vm, value, ErrorType::TemporalPropertyMustBeFinite)));
+                value = Value(TRY(to_integer_with_truncation(vm, value, ErrorType::TemporalPropertyMustBeFinite)));
             }
             // 3. Else if Conversion is ToPositiveIntegerWithTruncation, then
             else if (property.is_one_of("month"sv, "day"sv)) {

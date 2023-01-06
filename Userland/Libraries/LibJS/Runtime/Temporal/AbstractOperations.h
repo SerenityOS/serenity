@@ -184,21 +184,24 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     return get_option(vm, options, property, type, Span<StringView const> { values }, default_);
 }
 
-// 13.40 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
+// 13.40 ToIntegerWithTruncation ( argument ), https://tc39.es/proposal-temporal/#sec-tointegerwithtruncation
 template<typename... Args>
-ThrowCompletionOr<double> to_integer_throw_on_infinity(VM& vm, Value argument, ErrorType error_type, Args... args)
+ThrowCompletionOr<double> to_integer_with_truncation(VM& vm, Value argument, ErrorType error_type, Args... args)
 {
-    // 1. Let integer be ? ToIntegerOrInfinity(argument).
-    auto integer = TRY(argument.to_integer_or_infinity(vm));
+    // 1. Let number be ? ToIntegerOrInfinity(argument).
+    auto number = TRY(argument.to_number(vm));
 
-    // 2. If integer is -∞ or +∞ , then
-    if (Value(integer).is_infinity()) {
-        // a. Throw a RangeError exception.
+    // 2. If number is NaN, return 0.
+    if (number.is_nan())
+        return 0;
+
+    // 3. If number is +∞𝔽 or -∞𝔽, throw a RangeError exception.
+    if (Value(number).is_infinity()) {
         return vm.template throw_completion<RangeError>(error_type, args...);
     }
 
-    // 3. Return integer.
-    return integer;
+    // 4. Return truncate(ℝ(number)).
+    return trunc(number.as_double());
 }
 
 // 13.41 ToIntegerIfIntegral ( argument ), https://tc39.es/proposal-temporal/#sec-tointegerifintegral
