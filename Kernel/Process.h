@@ -240,6 +240,11 @@ public:
 
     SpinlockProtected<RefPtr<Jail>, LockRank::Process>& jail() { return m_attached_jail; }
 
+    bool is_currently_in_jail() const
+    {
+        return m_attached_jail.with([&](auto& jail) -> bool { return !jail.is_null(); });
+    }
+
     NonnullRefPtr<Credentials> credentials() const;
 
     bool is_dumpable() const
