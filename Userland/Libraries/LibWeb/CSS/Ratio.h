@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 
 namespace Web::CSS {
 
@@ -17,7 +17,7 @@ public:
     float value() const { return m_first_value / m_second_value; }
     bool is_degenerate() const;
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
 
 private:
     float m_first_value { 0 };

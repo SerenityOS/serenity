@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -31,7 +31,7 @@ public:
     bool is_calculated() const { return m_type == Type::Calculated; }
     NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     float to_seconds() const;
 
     bool operator==(Time const& other) const
@@ -55,6 +55,6 @@ template<>
 struct AK::Formatter<Web::CSS::Time> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Time const& time)
     {
-        return Formatter<StringView>::format(builder, time.to_deprecated_string());
+        return Formatter<StringView>::format(builder, TRY(time.to_string()));
     }
 };

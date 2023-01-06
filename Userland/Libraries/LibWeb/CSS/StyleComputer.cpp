@@ -1175,7 +1175,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (family.is_identifier()) {
                 found_font = find_generic_font(family.to_identifier());
             } else if (family.is_string()) {
-                found_font = find_font(family.to_deprecated_string());
+                found_font = find_font(family.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
             }
             if (found_font)
                 break;
@@ -1183,7 +1183,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     } else if (family_value->is_identifier()) {
         found_font = find_generic_font(family_value->to_identifier());
     } else if (family_value->is_string()) {
-        found_font = find_font(family_value->to_deprecated_string());
+        found_font = find_font(family_value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     }
 
     if (!found_font) {

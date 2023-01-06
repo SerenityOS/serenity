@@ -3966,7 +3966,7 @@ RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_val
 RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
-        return StringStyleValue::create(component_value.token().string());
+        return StringStyleValue::create(String::from_utf8(component_value.token().string()).release_value_but_fixme_should_propagate_errors());
 
     return {};
 }
@@ -5238,7 +5238,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
                 return nullptr;
             if (!is_comma_or_eof(i + 1))
                 return nullptr;
-            font_families.append(StringStyleValue::create(part.token().string()));
+            font_families.append(StringStyleValue::create(String::from_utf8(part.token().string()).release_value_but_fixme_should_propagate_errors()));
             i++;
             continue;
         }
@@ -5266,7 +5266,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
         if (part.is(Token::Type::Comma)) {
             if (current_name_parts.is_empty())
                 return nullptr;
-            font_families.append(StringStyleValue::create(DeprecatedString::join(' ', current_name_parts)));
+            font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()));
             current_name_parts.clear();
             // Can't have a trailing comma
             if (i + 1 == component_values.size())
@@ -5276,7 +5276,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(StringStyleValue::create(DeprecatedString::join(' ', current_name_parts)));
+        font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()));
         current_name_parts.clear();
     }
 

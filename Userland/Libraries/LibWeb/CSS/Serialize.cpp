@@ -182,11 +182,11 @@ DeprecatedString serialize_a_url(StringView url)
     return builder.to_deprecated_string();
 }
 
-DeprecatedString serialize_a_srgb_value(Color color)
+ErrorOr<String> serialize_a_srgb_value(Color color)
 {
     StringBuilder builder;
     serialize_a_srgb_value(builder, color);
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 }

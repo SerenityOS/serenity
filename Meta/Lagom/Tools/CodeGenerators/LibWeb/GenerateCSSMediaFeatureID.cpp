@@ -71,7 +71,7 @@ enum class MediaFeatureID {)~~~");
 };
 
 Optional<MediaFeatureID> media_feature_id_from_string(StringView);
-char const* string_from_media_feature_id(MediaFeatureID);
+StringView string_from_media_feature_id(MediaFeatureID);
 
 bool media_feature_type_is_range(MediaFeatureID);
 bool media_feature_accepts_type(MediaFeatureID, MediaFeatureValueType);
@@ -109,7 +109,7 @@ Optional<MediaFeatureID> media_feature_id_from_string(StringView string)
     return {};
 }
 
-char const* string_from_media_feature_id(MediaFeatureID media_feature_id)
+StringView string_from_media_feature_id(MediaFeatureID media_feature_id)
 {
     switch (media_feature_id) {)~~~");
 
@@ -119,7 +119,7 @@ char const* string_from_media_feature_id(MediaFeatureID media_feature_id)
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
-        return "@name@";)~~~");
+        return "@name@"sv;)~~~");
     });
 
     generator.append(R"~~~(

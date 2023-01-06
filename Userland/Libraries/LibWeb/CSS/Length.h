@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PixelUnits.h>
@@ -118,7 +119,7 @@ public:
         }
     }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
 
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.
@@ -141,6 +142,6 @@ template<>
 struct AK::Formatter<Web::CSS::Length> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Length const& length)
     {
-        return Formatter<StringView>::format(builder, length.to_deprecated_string());
+        return Formatter<StringView>::format(builder, TRY(length.to_string()));
     }
 };

@@ -33,25 +33,25 @@ GridTrackPlacement::GridTrackPlacement()
 {
 }
 
-DeprecatedString GridTrackPlacement::to_deprecated_string() const
+ErrorOr<String> GridTrackPlacement::to_string() const
 {
     StringBuilder builder;
     if (is_auto()) {
         builder.append("auto"sv);
-        return builder.to_deprecated_string();
+        return builder.to_string();
     }
     if (is_span()) {
         builder.append("span"sv);
         builder.append(" "sv);
     }
     if (m_span_count_or_position != 0) {
-        builder.append(DeprecatedString::number(m_span_count_or_position));
+        builder.append(TRY(String::number(m_span_count_or_position)));
         builder.append(" "sv);
     }
     if (has_line_name()) {
         builder.append(m_line_name);
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 }
