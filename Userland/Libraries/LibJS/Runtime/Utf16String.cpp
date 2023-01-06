@@ -33,7 +33,7 @@ NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Utf16Data string)
 
 NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(StringView string)
 {
-    return create(AK::utf8_to_utf16(string));
+    return create(AK::utf8_to_utf16(string).release_value_but_fixme_should_propagate_errors());
 }
 
 NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Utf16View const& view)

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
@@ -18,10 +19,10 @@ namespace AK {
 
 using Utf16Data = Vector<u16, 1>;
 
-Utf16Data utf8_to_utf16(StringView);
-Utf16Data utf8_to_utf16(Utf8View const&);
-Utf16Data utf32_to_utf16(Utf32View const&);
-void code_point_to_utf16(Utf16Data&, u32);
+ErrorOr<Utf16Data> utf8_to_utf16(StringView);
+ErrorOr<Utf16Data> utf8_to_utf16(Utf8View const&);
+ErrorOr<Utf16Data> utf32_to_utf16(Utf32View const&);
+ErrorOr<void> code_point_to_utf16(Utf16Data&, u32);
 
 class Utf16View;
 

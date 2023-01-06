@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::SVG {
 
@@ -15,7 +16,7 @@ class SVGTextContentElement : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGTextContentElement, SVGGraphicsElement);
 
 public:
-    int get_number_of_chars() const;
+    WebIDL::ExceptionOr<int> get_number_of_chars() const;
 
 protected:
     SVGTextContentElement(DOM::Document&, DOM::QualifiedName);
