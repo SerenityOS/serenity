@@ -156,9 +156,6 @@ extern "C" [[noreturn]] void init()
     new (&bootstrap_processor()) Processor();
     bootstrap_processor().install(0);
 
-    // We want to enable the MMU as fast as possible to make the boot faster.
-    init_page_tables();
-
     // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
     // might rely on being able to call new/kmalloc in the constructor. We do have to run the
     // kmalloc constructors, because kmalloc_init relies on that.
