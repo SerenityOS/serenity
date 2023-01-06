@@ -257,10 +257,14 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     if (is_auto_collecting() && attempt_to_move_card_to_foundations(to_check))
                         break;
 
-                    pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Alternating);
+                    if (event.button() == GUI::MouseButton::Secondary) {
+                        preview_card(to_check, click_location);
+                    } else {
+                        pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Alternating);
+                        m_mouse_down_location = click_location;
+                        m_mouse_down = true;
+                    }
 
-                    m_mouse_down_location = click_location;
-                    m_mouse_down = true;
                     start_timer_if_necessary();
                 }
             }
@@ -273,6 +277,11 @@ void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
     clear_hovered_stack();
+
+    if (is_previewing_card()) {
+        clear_card_preview();
+        return;
+    }
 
     if (!is_moving_cards() || m_game_over_animation || m_new_game_animation)
         return;
