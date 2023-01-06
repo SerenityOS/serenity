@@ -40,14 +40,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("pcs illuminant: {}", profile->pcs_illuminant());
 
     out("id: ");
-    if (auto id = profile->id(); id.has_value()) {
-        out("{}", *id);
-        auto computed = Gfx::ICC::Profile::compute_id(icc_file->bytes());
-        if (*id == computed)
-            outln(" (valid)");
-        else
-            outln(" (invalid! valid would be {})", computed);
-    } else
+    if (auto id = profile->id(); id.has_value())
+        outln("{}", *id);
+    else
         outln("(not set)");
 
     return 0;

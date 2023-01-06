@@ -244,18 +244,20 @@ bool all_bytes_are_zero(const u8 (&bytes)[N])
     return true;
 }
 
-Optional<Crypto::Hash::MD5::DigestType> parse_profile_id(ICCHeader const& header)
+ErrorOr<Optional<Crypto::Hash::MD5::DigestType>> parse_profile_id(ICCHeader const& header, ReadonlyBytes icc_bytes)
 {
     // ICC v4, 7.2.18 Profile ID field
     // "A profile ID field value of zero (00h) shall indicate that a profile ID has not been calculated."
     if (all_bytes_are_zero(header.profile_id))
-        return {};
+        return Optional<Crypto::Hash::MD5::DigestType> {};
 
     Crypto::Hash::MD5::DigestType id;
     static_assert(sizeof(id.data) == sizeof(header.profile_id));
     memcpy(id.data, header.profile_id, sizeof(id.data));
 
-    // FIXME: Consider comparing read id with compute_id() result and failing if they aren't equal.
+    auto computed_id = Profile::compute_id(icc_bytes);
+    if (id != computed_id)
+        return Error::from_string_literal("ICC::Profile: Invalid profile id");
 
     return id;
 }
@@ -399,7 +401,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_flags = Flags { header.profile_flags };
     profile->m_rendering_intent = TRY(parse_rendering_intent(header));
     profile->m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
-    profile->m_id = parse_profile_id(header);
+    profile->m_id = TRY(parse_profile_id(header, bytes));
     TRY(parse_reserved(header));
 
     return profile;
