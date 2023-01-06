@@ -23,15 +23,15 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, DeprecatedString co
     resize(200, 130);
     set_resizable(false);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(edit_guide_dialog_gml))
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(edit_guide_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    auto horizontal_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("orientation_horizontal_radio");
-    auto vertical_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("orientation_vertical_radio");
-    auto ok_button = main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
-    auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
-    m_offset_text_box = main_widget.find_descendant_of_type_named<GUI::TextBox>("offset_text_box");
+    auto horizontal_radio = main_widget->find_descendant_of_type_named<GUI::RadioButton>("orientation_horizontal_radio");
+    auto vertical_radio = main_widget->find_descendant_of_type_named<GUI::RadioButton>("orientation_vertical_radio");
+    auto ok_button = main_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
+    auto cancel_button = main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_offset_text_box = main_widget->find_descendant_of_type_named<GUI::TextBox>("offset_text_box");
 
     VERIFY(horizontal_radio);
     VERIFY(ok_button);

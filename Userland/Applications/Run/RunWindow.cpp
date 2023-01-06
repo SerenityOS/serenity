@@ -41,24 +41,24 @@ RunWindow::RunWindow()
     set_resizable(false);
     set_minimizable(false);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.load_from_gml(run_gml);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(run_gml);
 
-    m_icon_image_widget = *main_widget.find_descendant_of_type_named<GUI::ImageWidget>("icon");
+    m_icon_image_widget = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));
 
-    m_path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path");
+    m_path_combo_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("path");
     m_path_combo_box->set_model(m_path_history_model);
     if (!m_path_history.is_empty())
         m_path_combo_box->set_selected_index(0);
 
-    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("ok_button");
+    m_ok_button = *main_widget->find_descendant_of_type_named<GUI::DialogButton>("ok_button");
     m_ok_button->on_click = [this](auto) {
         do_run();
     };
     m_ok_button->set_default(true);
 
-    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("cancel_button");
+    m_cancel_button = *main_widget->find_descendant_of_type_named<GUI::DialogButton>("cancel_button");
     m_cancel_button->on_click = [this](auto) {
         close();
     };

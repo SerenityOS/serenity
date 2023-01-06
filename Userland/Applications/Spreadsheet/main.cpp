@@ -58,13 +58,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
+    auto spreadsheet_widget = TRY(window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr));
 
-    spreadsheet_widget.initialize_menubar(*window);
-    spreadsheet_widget.update_window_title();
+    spreadsheet_widget->initialize_menubar(*window);
+    spreadsheet_widget->update_window_title();
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (spreadsheet_widget.request_close())
+        if (spreadsheet_widget->request_close())
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (filename) {
         auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, filename));
-        spreadsheet_widget.load_file(file);
+        spreadsheet_widget->load_file(file);
     }
 
     return app->exec();

@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Image Viewer");
 
-    auto root_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto root_widget = TRY(window->set_main_widget<GUI::Widget>());
     root_widget->set_fill_with_background_color(true);
     root_widget->set_layout<GUI::VerticalBoxLayout>();
     root_widget->layout()->set_spacing(2);

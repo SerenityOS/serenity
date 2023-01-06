@@ -73,12 +73,12 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Browser");
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.load_from_gml(browser_window_gml);
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(browser_window_gml);
 
-    auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
+    auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
-    m_tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    m_tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
         top_line.set_visible(tab_count > 1);
     };

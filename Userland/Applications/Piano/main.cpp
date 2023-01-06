@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-piano"sv);
     auto window = GUI::Window::construct();
-    auto main_widget = TRY(window->try_set_main_widget<MainWidget>(track_manager, audio_loop));
+    auto main_widget = TRY(window->set_main_widget<MainWidget>(track_manager, audio_loop));
     window->set_title("Piano");
     window->resize(840, 600);
     window->set_icon(app_icon.bitmap_for_size(16));

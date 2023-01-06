@@ -182,15 +182,15 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
 
     collect_actions(parent_window);
 
-    auto& main_widget = set_main_widget<GUI::Frame>();
-    main_widget.set_frame_shape(Gfx::FrameShape::Window);
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_frame_shape(Gfx::FrameShape::Window);
+    main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins(4);
 
-    m_text_box = main_widget.add<GUI::TextBox>();
-    m_table_view = main_widget.add<GUI::TableView>();
+    m_text_box = main_widget->add<GUI::TextBox>();
+    m_table_view = main_widget->add<GUI::TableView>();
     m_model = adopt_ref(*new ActionModel(m_actions));
     m_table_view->set_column_headers_visible(false);
 

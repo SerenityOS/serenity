@@ -67,20 +67,20 @@ NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& te
 
     m_original_rect = rect;
 
-    auto& widget = set_main_widget<GUI::Widget>();
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
 
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::HorizontalBoxLayout>();
-    widget.layout()->set_margins(8);
-    widget.layout()->set_spacing(6);
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<GUI::HorizontalBoxLayout>();
+    widget->layout()->set_margins(8);
+    widget->layout()->set_spacing(6);
 
-    m_image = &widget.add<GUI::ImageWidget>();
+    m_image = &widget->add<GUI::ImageWidget>();
     m_image->set_visible(icon.is_valid());
     if (icon.is_valid()) {
         m_image->set_bitmap(icon.bitmap());
     }
 
-    auto& left_container = widget.add<GUI::Widget>();
+    auto& left_container = widget->add<GUI::Widget>();
     left_container.set_layout<GUI::VerticalBoxLayout>();
 
     m_title_label = &left_container.add<GUI::Label>(title);

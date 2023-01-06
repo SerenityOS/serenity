@@ -86,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
-    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 
@@ -318,19 +318,19 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    auto& layout = widget.set_layout<GUI::VerticalBoxLayout>();
+    auto widget = window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->set_fill_with_background_color(true);
+    auto& layout = widget->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 0, 0, 16 });
 
-    auto& timer_label = widget.add<GUI::Label>("...");
+    auto& timer_label = widget->add<GUI::Label>("...");
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::construct(100, [&] {
         timer_label.set_text(DeprecatedString::formatted("{:.1} seconds", clock.elapsed() / 1000.0f));
     });
 
-    auto& stop_button = widget.add<GUI::Button>("Stop");
+    auto& stop_button = widget->add<GUI::Button>("Stop");
     stop_button.set_fixed_size(140, 22);
     stop_button.on_click = [&](auto) {
         GUI::Application::the()->quit();

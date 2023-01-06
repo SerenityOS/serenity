@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(Desktop::Screensaver::create_window("Screensaver"sv, "app-screensaver"sv));
 
-    auto screensaver_window = TRY(window->try_set_main_widget<Screensaver>(64, 48, 10000));
+    auto screensaver_window = TRY(window->set_main_widget<Screensaver>(64, 48, 10000));
     screensaver_window->set_fill_with_background_color(false);
     screensaver_window->set_override_cursor(Gfx::StandardCursor::Hidden);
     screensaver_window->update();

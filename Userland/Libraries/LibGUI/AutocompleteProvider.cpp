@@ -92,11 +92,11 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     m_popup_window->set_obey_widget_min_size(false);
     m_popup_window->set_rect(0, 0, 175, 25);
 
-    auto& main_widget = m_popup_window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto main_widget = m_popup_window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    m_suggestion_view = main_widget.add<GUI::TableView>();
+    m_suggestion_view = main_widget->add<GUI::TableView>();
     m_suggestion_view->set_frame_shadow(Gfx::FrameShadow::Plain);
     m_suggestion_view->set_frame_thickness(1);
     m_suggestion_view->set_column_headers_visible(false);
@@ -109,7 +109,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
         apply_suggestion();
     };
 
-    m_no_suggestions_view = main_widget.add<GUI::Label>("No suggestions");
+    m_no_suggestions_view = main_widget->add<GUI::Label>("No suggestions");
 }
 
 void AutocompleteBox::update_suggestions(Vector<CodeComprehension::AutocompleteResultEntry>&& suggestions)

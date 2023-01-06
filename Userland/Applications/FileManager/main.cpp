@@ -351,7 +351,7 @@ ErrorOr<int> run_in_desktop_mode()
     window->set_window_type(GUI::WindowType::Desktop);
     window->set_has_alpha_channel(true);
 
-    auto desktop_widget = TRY(window->try_set_main_widget<FileManager::DesktopWidget>());
+    auto desktop_widget = TRY(window->set_main_widget<FileManager::DesktopWidget>());
     (void)TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
     auto directory_view = TRY(desktop_widget->try_add<DirectoryView>(DirectoryView::Mode::Desktop));
@@ -579,7 +579,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto height = Config::read_i32("FileManager"sv, "Window"sv, "Height"sv, 480);
     auto was_maximized = Config::read_bool("FileManager"sv, "Window"sv, "Maximized"sv, false);
 
-    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto widget = TRY(window->set_main_widget<GUI::Widget>());
 
     widget->load_from_gml(file_manager_window_gml);
 

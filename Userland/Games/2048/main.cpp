@@ -66,15 +66,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("2048");
     window->resize(315, 336);
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(game_window_gml))
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    if (!main_widget->load_from_gml(game_window_gml))
         VERIFY_NOT_REACHED();
 
     Game game { board_size, target_tile, evil_ai };
 
-    auto board_view = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_view_container")->try_add<BoardView>(&game.board()));
+    auto board_view = TRY(main_widget->find_descendant_of_type_named<GUI::Widget>("board_view_container")->try_add<BoardView>(&game.board()));
     board_view->set_focus(true);
-    auto statusbar = main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();

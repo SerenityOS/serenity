@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Hearts");
 
-    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto widget = TRY(window->set_main_widget<GUI::Widget>());
     widget->load_from_gml(hearts_gml);
 
     auto& game = *widget->find_descendant_of_type_named<Hearts::Game>("game");

@@ -17,13 +17,13 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
     set_title("Commit");
     set_icon(parent->icon());
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.load_from_gml(git_commit_dialog_gml);
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(git_commit_dialog_gml);
 
-    m_message_editor = widget.find_descendant_of_type_named<GUI::TextEditor>("message_editor");
-    m_cancel_button = widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
-    m_commit_button = widget.find_descendant_of_type_named<GUI::Button>("commit_button");
-    m_line_and_col_label = widget.find_descendant_of_type_named<GUI::Label>("line_and_col_label");
+    m_message_editor = widget->find_descendant_of_type_named<GUI::TextEditor>("message_editor");
+    m_cancel_button = widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_commit_button = widget->find_descendant_of_type_named<GUI::Button>("commit_button");
+    m_line_and_col_label = widget->find_descendant_of_type_named<GUI::Label>("line_and_col_label");
 
     m_message_editor->on_change = [this]() {
         m_commit_button->set_enabled(!m_message_editor->text().is_empty() && on_commit);

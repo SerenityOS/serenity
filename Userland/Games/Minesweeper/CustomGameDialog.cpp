@@ -45,15 +45,15 @@ CustomGameDialog::CustomGameDialog(Window* parent_window)
     set_resizable(false);
     set_title("Custom game");
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(minesweeper_custom_game_window_gml))
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(minesweeper_custom_game_window_gml))
         VERIFY_NOT_REACHED();
 
-    m_columns_spinbox = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
-    m_rows_spinbox = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
-    m_mines_spinbox = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("mines_spinbox");
-    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
-    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
+    m_rows_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
+    m_mines_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("mines_spinbox");
+    m_ok_button = *main_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
+    m_cancel_button = *main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
 
     m_columns_spinbox->on_change = [this](auto) {
         set_max_mines();

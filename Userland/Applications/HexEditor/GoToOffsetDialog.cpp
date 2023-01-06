@@ -96,15 +96,15 @@ GoToOffsetDialog::GoToOffsetDialog()
     set_resizable(false);
     set_title("Go to Offset");
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(go_to_offset_dialog_gml))
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    if (!main_widget->load_from_gml(go_to_offset_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    m_text_editor = *main_widget.find_descendant_of_type_named<GUI::TextBox>("text_editor");
-    m_go_button = *main_widget.find_descendant_of_type_named<GUI::Button>("go_button");
-    m_offset_type_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("offset_type");
-    m_offset_from_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("offset_from");
-    m_statusbar = *main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_text_editor = *main_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");
+    m_go_button = *main_widget->find_descendant_of_type_named<GUI::Button>("go_button");
+    m_offset_type_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_type");
+    m_offset_from_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_from");
+    m_statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     m_offset_type.append("Decimal");
     m_offset_type.append("Hexadecimal");

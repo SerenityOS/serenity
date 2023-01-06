@@ -28,11 +28,11 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     set_resizable(false);
     set_icon(parent_window->icon());
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto& top_container = widget.add<GUI::Widget>();
+    auto& top_container = widget->add<GUI::Widget>();
     top_container.set_layout<GUI::VerticalBoxLayout>();
     top_container.set_fixed_height(45);
     top_container.layout()->set_margins(4);
@@ -45,12 +45,12 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     auto& event_title_textbox = top_container.add<GUI::TextBox>();
     event_title_textbox.set_fixed_height(20);
 
-    auto& middle_container = widget.add<GUI::Widget>();
+    auto& middle_container = widget->add<GUI::Widget>();
     middle_container.set_layout<GUI::HorizontalBoxLayout>();
     middle_container.set_fixed_height(25);
     middle_container.layout()->set_margins(4);
 
-    auto& time_container = widget.add<GUI::Widget>();
+    auto& time_container = widget->add<GUI::Widget>();
     time_container.set_layout<GUI::HorizontalBoxLayout>();
     time_container.set_fixed_height(25);
     time_container.layout()->set_margins(4);
@@ -87,9 +87,9 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     starting_meridiem_combo.set_model(MeridiemListModel::create());
     starting_meridiem_combo.set_selected_index(0);
 
-    widget.layout()->add_spacer();
+    widget->layout()->add_spacer();
 
-    auto& button_container = widget.add<GUI::Widget>();
+    auto& button_container = widget->add<GUI::Widget>();
     button_container.set_fixed_height(20);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->add_spacer();

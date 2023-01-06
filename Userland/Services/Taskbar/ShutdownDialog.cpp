@@ -42,15 +42,15 @@ Vector<char const*> ShutdownDialog::show()
 ShutdownDialog::ShutdownDialog()
     : Dialog(nullptr)
 {
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_spacing(0);
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<GUI::VerticalBoxLayout>();
+    widget->layout()->set_spacing(0);
 
-    auto& banner_image = widget.add<GUI::ImageWidget>();
+    auto& banner_image = widget->add<GUI::ImageWidget>();
     banner_image.load_from_file("/res/graphics/brand-banner.png"sv);
 
-    auto& content_container = widget.add<GUI::Widget>();
+    auto& content_container = widget->add<GUI::Widget>();
     content_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& left_container = content_container.add<GUI::Widget>();

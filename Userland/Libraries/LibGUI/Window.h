@@ -143,19 +143,11 @@ public:
     void set_main_widget(Widget*);
 
     template<class T, class... Args>
-    inline ErrorOr<NonnullRefPtr<T>> try_set_main_widget(Args&&... args)
+    inline ErrorOr<NonnullRefPtr<T>> set_main_widget(Args&&... args)
     {
         auto widget = TRY(T::try_create(forward<Args>(args)...));
         set_main_widget(widget.ptr());
         return widget;
-    }
-
-    template<class T, class... Args>
-    inline T& set_main_widget(Args&&... args)
-    {
-        auto widget = T::construct(forward<Args>(args)...);
-        set_main_widget(widget.ptr());
-        return *widget;
     }
 
     Widget* default_return_key_widget() { return m_default_return_key_widget; }

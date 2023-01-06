@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Help");
     window->resize(570, 500);
 
-    auto main_widget = TRY(window->try_set_main_widget<MainWidget>());
+    auto main_widget = TRY(window->set_main_widget<MainWidget>());
     TRY(main_widget->initialize_fallibles(window));
     TRY(main_widget->set_start_page(query_parameters));
 

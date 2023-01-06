@@ -30,15 +30,15 @@ AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const*
     if (parent_window)
         set_icon(parent_window->icon());
 
-    auto& widget = set_main_widget<Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<VerticalBoxLayout>();
-    widget.layout()->set_spacing(0);
+    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<VerticalBoxLayout>();
+    widget->layout()->set_spacing(0);
 
-    auto& banner_image = widget.add<GUI::ImageWidget>();
+    auto& banner_image = widget->add<GUI::ImageWidget>();
     banner_image.load_from_file("/res/graphics/brand-banner.png"sv);
 
-    auto& content_container = widget.add<Widget>();
+    auto& content_container = widget->add<Widget>();
     content_container.set_layout<HorizontalBoxLayout>();
 
     auto& left_container = content_container.add<Widget>();

@@ -14,7 +14,7 @@ KeymapStatusWindow::KeymapStatusWindow()
 {
     set_window_type(GUI::WindowType::Applet);
     set_has_alpha_channel(true);
-    m_status_widget = &set_main_widget<KeymapStatusWidget>();
+    m_status_widget = set_main_widget<KeymapStatusWidget>().release_value_but_fixme_should_propagate_errors();
 
     auto current_keymap = MUST(Keyboard::CharacterMap::fetch_system_map());
     auto current_keymap_name = current_keymap.character_map_name();

@@ -49,10 +49,10 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
     set_resizable(false);
     set_title("New project");
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.load_from_gml(new_project_dialog_gml);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(new_project_dialog_gml);
 
-    m_icon_view_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("icon_view_container");
+    m_icon_view_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("icon_view_container");
     m_icon_view = m_icon_view_container->add<GUI::IconView>();
     m_icon_view->set_always_wrap_item_labels(true);
     m_icon_view->set_model(m_model);
@@ -65,24 +65,24 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
             do_create_project();
     };
 
-    m_description_label = *main_widget.find_descendant_of_type_named<GUI::Label>("description_label");
-    m_name_input = *main_widget.find_descendant_of_type_named<GUI::TextBox>("name_input");
+    m_description_label = *main_widget->find_descendant_of_type_named<GUI::Label>("description_label");
+    m_name_input = *main_widget->find_descendant_of_type_named<GUI::TextBox>("name_input");
     m_name_input->on_change = [&]() {
         update_dialog();
     };
-    m_create_in_input = *main_widget.find_descendant_of_type_named<GUI::TextBox>("create_in_input");
+    m_create_in_input = *main_widget->find_descendant_of_type_named<GUI::TextBox>("create_in_input");
     m_create_in_input->on_change = [&]() {
         update_dialog();
     };
-    m_full_path_label = *main_widget.find_descendant_of_type_named<GUI::Label>("full_path_label");
+    m_full_path_label = *main_widget->find_descendant_of_type_named<GUI::Label>("full_path_label");
 
-    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    m_ok_button = *main_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     m_ok_button->set_default(true);
     m_ok_button->on_click = [this](auto) {
         do_create_project();
     };
 
-    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_cancel_button = *main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     m_cancel_button->on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

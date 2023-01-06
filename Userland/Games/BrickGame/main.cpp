@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(360, 462);
     window->set_resizable(false);
 
-    auto game = TRY(window->try_set_main_widget<BrickGame>(app_name));
+    auto game = TRY(window->set_main_widget<BrickGame>(app_name));
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 

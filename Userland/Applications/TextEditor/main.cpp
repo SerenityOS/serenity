@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 400);
 
-    auto text_widget = TRY(window->try_set_main_widget<MainWidget>());
+    auto text_widget = TRY(window->set_main_widget<MainWidget>());
 
     text_widget->editor().set_focus(true);
 

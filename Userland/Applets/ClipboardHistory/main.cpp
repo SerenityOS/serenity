@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_window->set_rect(670, 65, 325, 500);
     main_window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto table_view = TRY(main_window->try_set_main_widget<GUI::TableView>());
+    auto table_view = TRY(main_window->set_main_widget<GUI::TableView>());
     auto model = ClipboardHistoryModel::create();
     table_view->set_model(model);
 
@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     applet_window->set_title("ClipboardHistory");
     applet_window->set_window_type(GUI::WindowType::Applet);
     applet_window->set_has_alpha_channel(true);
-    auto icon_widget = TRY(applet_window->try_set_main_widget<GUI::ImageWidget>());
+    auto icon_widget = TRY(applet_window->set_main_widget<GUI::ImageWidget>());
     icon_widget->set_tooltip("Clipboard History");
     icon_widget->load_from_file("/res/icons/16x16/edit-copy.png"sv);
     icon_widget->on_click = [&main_window = *main_window] {
