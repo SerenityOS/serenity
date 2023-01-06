@@ -10,6 +10,7 @@
 
 #include <AK/Array.h>
 #include <LibCards/CardGame.h>
+#include <LibCards/CardPainter.h>
 #include <LibCards/CardStack.h>
 
 using Cards::Card;
@@ -58,20 +59,29 @@ private:
         {
         }
 
-        Animation(RefPtr<Card> animation_card, float gravity, int x_vel, float bouncyness)
-            : m_animation_card(animation_card)
+        Animation(Cards::Suit suit, Cards::Rank rank, Gfx::IntPoint start_position, float gravity, int x_vel, float bouncyness)
+            : m_suit(suit)
+            , m_rank(rank)
+            , m_position(start_position)
             , m_gravity(gravity)
             , m_x_velocity(x_vel)
             , m_bouncyness(bouncyness)
         {
         }
 
-        RefPtr<Card> card() { return m_animation_card; }
+        Gfx::IntRect card_rect() const
+        {
+            return {
+                m_position.x(), m_position.y(), Card::width, Card::height
+            };
+        }
+
+        Gfx::IntPoint position() const { return m_position; }
 
         void draw(GUI::Painter& painter)
         {
-            VERIFY(!m_animation_card.is_null());
-            m_animation_card->paint(painter);
+            auto bitmap = Cards::CardPainter::the().card_front(m_suit, m_rank);
+            painter.blit(m_position, bitmap, bitmap->rect());
             m_dirty = false;
         }
 
@@ -81,15 +91,14 @@ private:
             if (m_dirty)
                 return false;
 
-            VERIFY(!m_animation_card.is_null());
             m_y_velocity += m_gravity;
 
-            if (m_animation_card->position().y() + Card::height + m_y_velocity > Game::height + 1 && m_y_velocity > 0) {
+            if (m_position.y() + Card::height + m_y_velocity > Game::height + 1 && m_y_velocity > 0) {
                 m_y_velocity = min((m_y_velocity * -m_bouncyness), -8.f);
-                m_animation_card->rect().set_y(Game::height - Card::height);
-                m_animation_card->rect().translate_by(m_x_velocity, 0);
+                m_position.set_y(Game::height - Card::height);
+                m_position.translate_by(m_x_velocity, 0);
             } else {
-                m_animation_card->rect().translate_by(m_x_velocity, m_y_velocity);
+                m_position.translate_by(m_x_velocity, m_y_velocity);
             }
 
             m_dirty = true;
@@ -97,7 +106,9 @@ private:
         }
 
     private:
-        RefPtr<Card> m_animation_card;
+        Cards::Suit m_suit { Cards::Suit::Spades };
+        Cards::Rank m_rank { Cards::Rank::Ace };
+        Gfx::IntPoint m_position { 0, 0 };
         float m_gravity { 0 };
         int m_x_velocity { 0 };
         float m_y_velocity { 0 };

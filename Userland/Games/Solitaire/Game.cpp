@@ -55,12 +55,11 @@ void Game::timer_event(Core::TimerEvent&)
         m_game_over_animation = true;
         set_background_fill_enabled(false);
     } else if (m_game_over_animation) {
-        VERIFY(!m_animation.card().is_null());
-        if (m_animation.card()->position().x() >= Game::width || m_animation.card()->rect().right() <= 0)
+        if (m_animation.position().x() >= Game::width || m_animation.card_rect().right() <= 0)
             create_new_animation_card();
 
         if (m_animation.tick())
-            update(m_animation.card()->rect());
+            update(m_animation.card_rect());
     } else if (m_new_game_animation) {
         if (m_new_game_animation_delay < new_game_animation_delay) {
             ++m_new_game_animation_delay;
@@ -96,11 +95,12 @@ void Game::timer_event(Core::TimerEvent&)
 
 void Game::create_new_animation_card()
 {
-    auto card = Card::construct(static_cast<Cards::Suit>(get_random_uniform(to_underlying(Cards::Suit::__Count))), static_cast<Cards::Rank>(get_random_uniform(to_underlying(Cards::Rank::__Count))));
-    card->set_position({ get_random_uniform(Game::width - Card::width), get_random_uniform(Game::height / 8) });
+    auto suit = static_cast<Cards::Suit>(get_random_uniform(to_underlying(Cards::Suit::__Count)));
+    auto rank = static_cast<Cards::Rank>(get_random_uniform(to_underlying(Cards::Rank::__Count)));
+    Gfx::IntPoint position { get_random_uniform(Game::width - Card::width), get_random_uniform(Game::height / 8) };
 
-    int x_sgn = card->position().x() > (Game::width / 2) ? -1 : 1;
-    m_animation = Animation(card, rand_float() + .4f, x_sgn * (get_random_uniform(3) + 2), .6f + rand_float() * .4f);
+    int x_direction = position.x() > (Game::width / 2) ? -1 : 1;
+    m_animation = Animation(suit, rank, position, rand_float() + .4f, x_direction * (get_random_uniform(3) + 2), .6f + rand_float() * .4f);
 }
 
 void Game::set_background_fill_enabled(bool enabled)
