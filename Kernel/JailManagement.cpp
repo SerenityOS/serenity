@@ -39,7 +39,7 @@ LockRefPtr<Jail> JailManagement::find_jail_by_index(JailIndex index)
 
 ErrorOr<void> JailManagement::for_each_in_same_jail(Function<ErrorOr<void>(Jail&)> callback)
 {
-    return Process::current().jail().with([&](auto& my_jail) -> ErrorOr<void> {
+    return Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
         // Note: If we are in a jail, don't reveal anything about the outside world,
         // not even the fact that we are in which jail...
         if (my_jail)
