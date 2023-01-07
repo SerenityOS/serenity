@@ -86,12 +86,12 @@ public:
     ErrorOr<void> initialize_menubar(GUI::Window&);
     GUI::Window::CloseRequestDecision request_close();
     void update_title();
-    ErrorOr<void> load_from_file(Core::File&);
+    ErrorOr<void> load_from_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file);
 
 private:
     explicit MainWidget(NonnullRefPtr<AlignmentModel>);
 
-    void save_to_file(Core::File&);
+    void save_to_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file);
     ErrorOr<Core::AnonymousBuffer> encode();
     void set_path(DeprecatedString);
 
