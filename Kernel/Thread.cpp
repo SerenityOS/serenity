@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
+#include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
@@ -29,7 +30,6 @@
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/kstdio.h>
-#include <LibC/signal_numbers.h>
 
 namespace Kernel {
 

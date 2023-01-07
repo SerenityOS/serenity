@@ -9,7 +9,6 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibTest/TestCase.h>
 #include <signal.h>
-#include <signal_numbers.h>
 #include <unistd.h>
 
 class SuccessContext {
