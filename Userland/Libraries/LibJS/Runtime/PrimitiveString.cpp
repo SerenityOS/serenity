@@ -68,7 +68,8 @@ DeprecatedString const& PrimitiveString::deprecated_string() const
 {
     resolve_rope_if_needed();
     if (!m_has_utf8_string) {
-        m_utf8_string = m_utf16_string.to_utf8();
+        // FIXME: Propagate this error.
+        m_utf8_string = MUST(m_utf16_string.to_utf8(vm()));
         m_has_utf8_string = true;
     }
     return m_utf8_string;

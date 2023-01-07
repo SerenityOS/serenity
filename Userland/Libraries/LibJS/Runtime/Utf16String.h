@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <AK/Utf16View.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/Completion.h>
 
 namespace JS {
 namespace Detail {
@@ -49,7 +50,7 @@ public:
     Utf16View substring_view(size_t code_unit_offset, size_t code_unit_length) const;
     Utf16View substring_view(size_t code_unit_offset) const;
 
-    DeprecatedString to_utf8() const;
+    ThrowCompletionOr<DeprecatedString> to_utf8(VM&) const;
     u16 code_unit_at(size_t index) const;
 
     size_t length_in_code_units() const;
