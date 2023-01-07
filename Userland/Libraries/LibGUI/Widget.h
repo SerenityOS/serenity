@@ -357,10 +357,6 @@ public:
     ErrorOr<void> try_load_from_gml(StringView);
     ErrorOr<void> try_load_from_gml(StringView, UnregisteredChildHandler);
 
-    // FIXME: Replace all uses of load_from_gml() with try_load_from_gml()
-    bool load_from_gml(StringView gml_string);
-    bool load_from_gml(StringView, UnregisteredChildHandler);
-
     // FIXME: remove this when all uses of shrink_to_fit are eliminated
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return preferred_width().is_shrink() || preferred_height().is_shrink(); }
