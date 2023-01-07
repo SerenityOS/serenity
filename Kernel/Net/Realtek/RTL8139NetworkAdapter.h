@@ -22,7 +22,9 @@ class RTL8139NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static ErrorOr<LockRefPtr<RTL8139NetworkAdapter>> try_to_initialize(PCI::DeviceIdentifier const&);
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~RTL8139NetworkAdapter() override;
 
@@ -35,7 +37,7 @@ public:
     virtual StringView device_name() const override { return "RTL8139"sv; }
 
 private:
-    RTL8139NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
+    RTL8139NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<Memory::Region> rx_buffer, NonnullOwnPtr<Memory::Region> packet_buffer, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8139NetworkAdapter"sv; }
 
@@ -53,11 +55,11 @@ private:
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
     u8 m_interrupt_line { 0 };
-    OwnPtr<Memory::Region> m_rx_buffer;
+    NonnullOwnPtr<Memory::Region> m_rx_buffer;
     u16 m_rx_buffer_offset { 0 };
     Vector<OwnPtr<Memory::Region>> m_tx_buffers;
     u8 m_tx_next_buffer { 0 };
-    OwnPtr<Memory::Region> m_packet_buffer;
+    NonnullOwnPtr<Memory::Region> m_packet_buffer;
     bool m_link_up { false };
     EntropySource m_entropy_source;
 };

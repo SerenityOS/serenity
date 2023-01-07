@@ -327,7 +327,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::construct(100, [&] {
-        timer_label.set_text(DeprecatedString::formatted("{:.1} seconds", clock.elapsed() / 1000.0f));
+        timer_label.set_text(DeprecatedString::formatted("{:.1} seconds", static_cast<float>(clock.elapsed()) / 1000.0f));
     });
 
     auto& stop_button = widget->add<GUI::Button>("Stop");

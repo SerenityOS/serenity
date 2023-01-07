@@ -58,6 +58,8 @@ private:
         size_t column_span;
         size_t row_span;
         CSSPixels baseline { 0 };
+        CSSPixels min_width { 0 };
+        CSSPixels max_width { 0 };
     };
 
     Vector<Cell> m_cells;

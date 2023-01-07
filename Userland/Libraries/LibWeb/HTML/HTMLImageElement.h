@@ -43,6 +43,8 @@ public:
     // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-complete
     bool complete() const;
 
+    virtual FlyString default_role() const override;
+
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 

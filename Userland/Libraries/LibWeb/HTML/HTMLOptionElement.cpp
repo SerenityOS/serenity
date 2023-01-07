@@ -7,6 +7,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
@@ -138,6 +139,13 @@ bool HTMLOptionElement::disabled() const
     // An option element is disabled if its disabled attribute is present or if it is a child of an optgroup element whose disabled attribute is present.
     return has_attribute(AttributeNames::disabled)
         || (parent() && is<HTMLOptGroupElement>(parent()) && static_cast<HTMLOptGroupElement const&>(*parent()).has_attribute(AttributeNames::disabled));
+}
+
+FlyString HTMLOptionElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-option
+    // TODO: Only an option element that is in a list of options or that represents a suggestion in a datalist should return option
+    return DOM::ARIARoleNames::option;
 }
 
 }

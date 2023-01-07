@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 
@@ -35,6 +36,9 @@ public:
 
     JS::NonnullGCPtr<DOM::HTMLCollection> elements() const;
     unsigned length() const;
+
+    // https://www.w3.org/TR/html-aria/#el-form
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::form; }
 
 private:
     HTMLFormElement(DOM::Document&, DOM::QualifiedName);

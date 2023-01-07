@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -1540,6 +1541,50 @@ bool Node::is_following(Node const& other) const
     }
 
     return false;
+}
+
+void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
+{
+    if (is_uninteresting_whitespace_node())
+        return;
+
+    if (is_document()) {
+        auto const* document = static_cast<DOM::Document const*>(this);
+        auto const* document_element = document->document_element();
+        if (document_element) {
+            parent.set_value(document_element);
+            if (document_element->has_child_nodes())
+                document_element->for_each_child([&parent](DOM::Node const& child) {
+                    child.build_accessibility_tree(parent);
+                });
+        }
+    } else if (is_element()) {
+        auto const* element = static_cast<DOM::Element const*>(this);
+
+        if (is<HTML::HTMLScriptElement>(element) || is<HTML::HTMLStyleElement>(element))
+            return;
+
+        if (element->include_in_accessibility_tree()) {
+            auto current_node = AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this);
+            parent.append_child(current_node);
+            if (has_child_nodes()) {
+                for_each_child([&current_node](DOM::Node& child) {
+                    child.build_accessibility_tree(*current_node);
+                });
+            }
+        } else if (has_child_nodes()) {
+            for_each_child([&parent](DOM::Node& child) {
+                child.build_accessibility_tree(parent);
+            });
+        }
+    } else if (is_text()) {
+        parent.append_child(AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this));
+        if (has_child_nodes()) {
+            for_each_child([&parent](DOM::Node& child) {
+                child.build_accessibility_tree(parent);
+            });
+        }
+    }
 }
 
 }

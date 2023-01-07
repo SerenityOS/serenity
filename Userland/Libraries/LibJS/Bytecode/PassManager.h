@@ -6,10 +6,9 @@
 
 #pragma once
 
+#include <LibCore/ElapsedTimer.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
-#include <sys/time.h>
-#include <time.h>
 
 namespace JS::Bytecode {
 
@@ -28,31 +27,18 @@ public:
     virtual void perform(PassPipelineExecutable&) = 0;
     void started()
     {
-        gettimeofday(&m_start_time, nullptr);
+        m_timer.start();
     }
     void finished()
     {
-        struct timeval end_time {
-            0, 0
-        };
-        gettimeofday(&end_time, nullptr);
-        time_t interval_s = end_time.tv_sec - m_start_time.tv_sec;
-        suseconds_t interval_us = end_time.tv_usec;
-        if (interval_us < m_start_time.tv_usec) {
-            interval_s -= 1;
-            interval_us += 1000000;
-        }
-        interval_us -= m_start_time.tv_usec;
-        m_time_difference = interval_s * 1000000 + interval_us;
+        m_time_difference = m_timer.elapsed_time();
     }
 
-    u64 elapsed() const { return m_time_difference; }
+    u64 elapsed() const { return m_time_difference.to_microseconds(); }
 
 protected:
-    struct timeval m_start_time {
-        0, 0
-    };
-    u64 m_time_difference { 0 };
+    Core::ElapsedTimer m_timer;
+    Time m_time_difference {};
 };
 
 class PassManager : public Pass {

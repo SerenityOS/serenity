@@ -10,6 +10,16 @@
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICCProfile.h>
 
+template<class T>
+static void out_optional(char const* label, Optional<T> optional)
+{
+    out("{}: ", label);
+    if (optional.has_value())
+        outln("{}", *optional);
+    else
+        outln("(not set)");
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -21,6 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto icc_file = TRY(Core::MappedFile::map(icc_path));
     auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
 
+    out_optional("preferred CMM type", profile->preferred_cmm_type());
     outln("version: {}", profile->version());
     outln("device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
     outln("data color space: {}", Gfx::ICC::data_color_space_name(profile->data_color_space()));
@@ -36,6 +47,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto color_management_module_bits = flags.color_management_module_bits())
         outln("  CMM bits: 0x{:04x}", color_management_module_bits);
 
+    out_optional("device manufacturer", profile->device_manufacturer());
+    out_optional("device model", profile->device_model());
+
     auto device_attributes = profile->device_attributes();
     outln("device attributes: 0x{:016x}", device_attributes.bits());
     outln("  media is {}, {}, {}, {}",
@@ -49,12 +63,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("rendering intent: {}", Gfx::ICC::rendering_intent_name(profile->rendering_intent()));
     outln("pcs illuminant: {}", profile->pcs_illuminant());
-
-    out("id: ");
-    if (auto id = profile->id(); id.has_value())
-        outln("{}", *id);
-    else
-        outln("(not set)");
+    out_optional("creator", profile->creator());
+    out_optional("id", profile->id());
 
     return 0;
 }

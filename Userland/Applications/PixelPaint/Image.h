@@ -15,7 +15,6 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
-#include <LibCore/File.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Bitmap.h>
@@ -73,9 +72,9 @@ public:
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
 
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
-    ErrorOr<void> export_bmp_to_file(Core::File&, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_png_to_file(Core::File&, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_qoi_to_file(Core::File&) const;
+    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_png_to_file(NonnullOwnPtr<Core::Stream::Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<Core::Stream::Stream>) const;
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);

@@ -795,6 +795,8 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
 
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
+    using namespace AK::TimeLiterals;
+
     if (event.button() == GUI::MouseButton::Primary) {
         m_left_mousedown_position = event.position();
         m_left_mousedown_position_buffer = buffer_position_at(m_left_mousedown_position);
@@ -809,7 +811,7 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
         m_active_href = {};
         m_active_href_id = {};
 
-        if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
+        if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed_time() < 250_ms) {
             int start_column = 0;
             int end_column = m_terminal.columns() - 1;
 

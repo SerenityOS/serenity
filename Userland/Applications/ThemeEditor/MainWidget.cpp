@@ -212,7 +212,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 
     auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model))));
 
-    TRY(main_widget->try_load_from_gml(theme_editor_gml));
+    TRY(main_widget->load_from_gml(theme_editor_gml));
     main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
     main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
 
@@ -238,7 +238,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes"sv);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(&window, "Select theme file", "/res/themes"sv);
         if (response.is_error())
             return;
         auto load_from_file_result = load_from_file(*response.value());
@@ -250,7 +250,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.has_value()) {
-            auto result = FileSystemAccessClient::Client::the().try_request_file(&window, *m_path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().try_request_file_deprecated(&window, *m_path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value());
@@ -451,7 +451,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
             row_widget->set_fixed_height(22);
             TRY(property.role.visit(
                 [&](Gfx::AlignmentRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(alignment_property_gml));
+                    TRY(row_widget->load_from_gml(alignment_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -468,7 +468,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::ColorRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(color_property_gml));
+                    TRY(row_widget->load_from_gml(color_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -484,7 +484,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::FlagRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(flag_property_gml));
+                    TRY(row_widget->load_from_gml(flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
                     checkbox.set_text(to_string(role));
@@ -498,7 +498,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::MetricRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(metric_property_gml));
+                    TRY(row_widget->load_from_gml(metric_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -514,7 +514,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::PathRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(path_property_gml));
+                    TRY(row_widget->load_from_gml(path_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));

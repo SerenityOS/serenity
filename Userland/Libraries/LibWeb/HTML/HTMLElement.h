@@ -59,6 +59,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const { return false; }
 
+    virtual FlyString default_role() const override;
+
 protected:
     HTMLElement(DOM::Document&, DOM::QualifiedName);
 

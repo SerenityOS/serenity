@@ -43,8 +43,10 @@ static ErrorOr<Result> benchmark(DeprecatedString const& filename, int file_size
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    using namespace AK::TimeLiterals;
+
     DeprecatedString directory = ".";
-    int time_per_benchmark = 10;
+    i64 time_per_benchmark_sec = 10;
     Vector<size_t> file_sizes;
     Vector<size_t> block_sizes;
     bool allow_cache = false;
@@ -52,10 +54,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_option(allow_cache, "Allow using disk cache", "cache", 'c');
     args_parser.add_option(directory, "Path to a directory where we can store the disk benchmark temp file", "directory", 'd', "directory");
-    args_parser.add_option(time_per_benchmark, "Time elapsed per benchmark", "time-per-benchmark", 't', "time-per-benchmark");
+    args_parser.add_option(time_per_benchmark_sec, "Time elapsed per benchmark (seconds)", "time-per-benchmark", 't', "time-per-benchmark");
     args_parser.add_option(file_sizes, "A comma-separated list of file sizes", "file-size", 'f', "file-size");
     args_parser.add_option(block_sizes, "A comma-separated list of block sizes", "block-size", 'b', "block-size");
     args_parser.parse(arguments);
+
+    Time const time_per_benchmark = Time::from_seconds(time_per_benchmark_sec);
 
     if (file_sizes.size() == 0) {
         file_sizes = { 131072, 262144, 524288, 1048576, 5242880 };
@@ -82,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             outln("Running: file_size={} block_size={}", file_size, block_size);
             auto timer = Core::ElapsedTimer::start_new();
-            while (timer.elapsed() < time_per_benchmark * 1000) {
+            while (timer.elapsed_time() < time_per_benchmark) {
                 out(".");
                 fflush(stdout);
                 auto result = TRY(benchmark(filename, file_size, buffer_result.value(), allow_cache));

@@ -1093,3 +1093,8 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
     //        we don't need to do anything here. But we'll need to once we start asking web content first.
     (void)event_was_accepted;
 }
+
+void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const&)
+{
+    dbgln("TODO: support accessibility tree in Ladybird");
+}

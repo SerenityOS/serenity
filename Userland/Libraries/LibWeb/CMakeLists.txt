@@ -72,8 +72,12 @@ set(SOURCES
     DOM/AbortController.cpp
     DOM/AbortSignal.cpp
     DOM/AbstractRange.cpp
+    DOM/AccessibilityTreeNode.cpp
     DOM/Attr.cpp
     DOM/Attr.idl
+    DOM/ARIAMixin.cpp
+    DOM/ARIAMixin.idl
+    DOM/ARIARoleNames.cpp
     DOM/CDATASection.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl

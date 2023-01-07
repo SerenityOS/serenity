@@ -522,7 +522,7 @@ Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
 
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
+    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window(), path);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else
@@ -828,6 +828,17 @@ void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool eve
     }
 
     process_next_input_event();
+}
+
+void OutOfProcessWebView::inspect_accessibility_tree()
+{
+    client().async_inspect_accessibility_tree();
+}
+
+void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
+{
+    if (on_get_accessibility_tree)
+        on_get_accessibility_tree(accessibility_tree);
 }
 
 }

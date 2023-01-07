@@ -182,7 +182,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());
-    widget->load_from_gml(crash_reporter_window_gml);
+    TRY(widget->load_from_gml(crash_reporter_window_gml));
 
     auto& icon_image_widget = *widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
@@ -280,7 +280,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto file = file_or_error.release_value();
+        auto file = file_or_error.release_value().release_stream();
         if (auto result = file->write(full_backtrace.to_byte_buffer()); result.is_error())
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", result.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };

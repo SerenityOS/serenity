@@ -2338,4 +2338,23 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
     return *this;
 }
 
+DeprecatedString Document::dump_accessibility_tree_as_json()
+{
+    StringBuilder builder;
+    auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr);
+    build_accessibility_tree(*&accessibility_tree);
+    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
+
+    // Empty document
+    if (!accessibility_tree->value()) {
+        MUST(json.add("type"sv, "element"sv));
+        MUST(json.add("role"sv, "document"sv));
+    } else {
+        accessibility_tree->serialize_tree_as_json(json);
+    }
+
+    MUST(json.finish());
+    return builder.to_deprecated_string();
+}
+
 }

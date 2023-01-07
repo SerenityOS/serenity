@@ -182,12 +182,17 @@ namespace Kernel {
 #define TX_BUFFER_SIZE 0x1FF8
 #define RX_BUFFER_SIZE 0x1FF8 // FIXME: this should be increased (0x3FFF)
 
-UNMAP_AFTER_INIT ErrorOr<LockRefPtr<RTL8168NetworkAdapter>> RTL8168NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> RTL8168NetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Realtek)
-        return nullptr;
+        return false;
     if (pci_device_identifier.hardware_id().device_id != 0x8168)
-        return nullptr;
+        return false;
+    return true;
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> RTL8168NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
@@ -249,21 +254,17 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address addre
 {
     dmesgln_pci(*this, "Found @ {}", pci_address());
     dmesgln_pci(*this, "I/O port base: {}", m_registers_io_window);
+}
 
+UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<NetworkingManagement>)
+{
     identify_chip_version();
     dmesgln_pci(*this, "Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
 
     if (!determine_supported_version()) {
         dmesgln_pci(*this, "Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
-        return; // Each ChipVersion requires a specific implementation of configure_phy and hardware_quirks
+        return Error::from_errno(ENODEV); // Each ChipVersion requires a specific implementation of configure_phy and hardware_quirks
     }
-
-    initialize();
-    startup();
-}
-
-void RTL8168NetworkAdapter::initialize()
-{
     // set initial REG_RXCFG
     auto rx_config = RXCFG_MAX_DMA_UNLIMITED;
     if (m_version <= ChipVersion::Version3) {
@@ -344,6 +345,9 @@ void RTL8168NetworkAdapter::initialize()
         //  notify
         TODO();
     }
+
+    startup();
+    return {};
 }
 
 void RTL8168NetworkAdapter::startup()

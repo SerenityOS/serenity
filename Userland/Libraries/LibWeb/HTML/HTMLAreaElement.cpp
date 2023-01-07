@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -40,6 +41,15 @@ i32 HTMLAreaElement::default_tab_index_value() const
 {
     // See the base function for the spec comments.
     return 0;
+}
+
+FlyString HTMLAreaElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-area-no-href
+    if (!href().is_null())
+        return DOM::ARIARoleNames::link;
+    // https://www.w3.org/TR/html-aria/#el-area
+    return DOM::ARIARoleNames::generic;
 }
 
 }

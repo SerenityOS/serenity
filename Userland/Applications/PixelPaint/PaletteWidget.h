@@ -31,9 +31,10 @@ public:
 
     Vector<Color> colors();
 
-    static Result<Vector<Color>, DeprecatedString> load_palette_file(Core::File&);
-    static Result<Vector<Color>, DeprecatedString> load_palette_path(DeprecatedString const&);
-    static Result<void, DeprecatedString> save_palette_file(Vector<Color>, Core::File&);
+    static ErrorOr<Vector<Color>> load_palette_file(NonnullOwnPtr<Core::Stream::File>);
+    static ErrorOr<Vector<Color>> load_palette_path(DeprecatedString const&);
+    static ErrorOr<void> save_palette_file(Vector<Color>, NonnullOwnPtr<Core::Stream::File>);
+
     static Vector<Color> fallback_colors();
 
     void set_image_editor(ImageEditor*);

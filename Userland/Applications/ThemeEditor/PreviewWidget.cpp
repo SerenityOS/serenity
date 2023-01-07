@@ -29,7 +29,7 @@ public:
     static ErrorOr<NonnullRefPtr<MiniWidgetGallery>> try_create()
     {
         auto gallery = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MiniWidgetGallery()));
-        TRY(gallery->try_load_from_gml(window_preview_gml));
+        TRY(gallery->load_from_gml(window_preview_gml));
 
         gallery->for_each_child_widget([](auto& child) {
             child.set_focus_policy(GUI::FocusPolicy::NoFocus);
@@ -170,7 +170,7 @@ void PreviewWidget::drop_event(GUI::DropEvent& event)
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
 

@@ -128,7 +128,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
         StringBuilder builder;
         builder.append("Downloaded "sv);
         builder.append(human_readable_size(downloaded_size));
-        builder.appendff(" in {} sec", m_elapsed_timer.elapsed() / 1000);
+        builder.appendff(" in {} sec", m_elapsed_timer.elapsed_time().to_seconds());
         m_progress_label->set_text(builder.to_deprecated_string());
     }
 

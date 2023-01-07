@@ -15,6 +15,31 @@
 
 namespace Gfx::ICC {
 
+// The ICC spec uses FourCCs for many different things.
+// This is used to give FourCCs for different roles distinct types, so that they can only be compared to the correct constants.
+// (FourCCs that have only a small and fixed set of values should use an enum class instead, see e.g. DeviceClass and ColorSpace below.)
+enum class FourCCType {
+    PreferredCMMType,
+    DeviceManufacturer,
+    DeviceModel,
+    Creator,
+};
+
+template<FourCCType type>
+struct DistinctFourCC {
+    u32 value;
+
+    char c0() const { return value >> 24; }
+    char c1() const { return (value >> 16) & 0xff; }
+    char c2() const { return (value >> 8) & 0xff; }
+    char c3() const { return value & 0xff; }
+};
+
+using PreferredCMMType = DistinctFourCC<FourCCType::PreferredCMMType>;     // ICC v4, "7.2.3 Preferred CMM type field"
+using DeviceManufacturer = DistinctFourCC<FourCCType::DeviceManufacturer>; // ICC v4, "7.2.12 Device manufacturer field"
+using DeviceModel = DistinctFourCC<FourCCType::DeviceModel>;               // ICC v4, "7.2.13 Device model field"
+using Creator = DistinctFourCC<FourCCType::Creator>;                       // ICC v4, "7.2.17 Profile creator field"
+
 // ICC v4, 7.2.4 Profile version field
 class Version {
 public:
@@ -181,6 +206,7 @@ class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
 
+    Optional<PreferredCMMType> preferred_cmm_type() const { return m_preferred_cmm_type; }
     Version version() const { return m_version; }
     DeviceClass device_class() const { return m_device_class; }
     ColorSpace data_color_space() const { return m_data_color_space; }
@@ -190,29 +216,50 @@ public:
 
     time_t creation_timestamp() const { return m_creation_timestamp; }
     Flags flags() const { return m_flags; }
+    Optional<DeviceManufacturer> device_manufacturer() const { return m_device_manufacturer; }
+    Optional<DeviceModel> device_model() const { return m_device_model; }
     DeviceAttributes device_attributes() const { return m_device_attributes; }
     RenderingIntent rendering_intent() const { return m_rendering_intent; }
     XYZ const& pcs_illuminant() const { return m_pcs_illuminant; }
+    Optional<Creator> creator() const { return m_creator; }
     Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_id; }
 
     static Crypto::Hash::MD5::DigestType compute_id(ReadonlyBytes);
 
 private:
+    Optional<PreferredCMMType> m_preferred_cmm_type;
     Version m_version;
     DeviceClass m_device_class;
     ColorSpace m_data_color_space;
     ColorSpace m_connection_space;
     time_t m_creation_timestamp;
     Flags m_flags;
+    Optional<DeviceManufacturer> m_device_manufacturer;
+    Optional<DeviceModel> m_device_model;
     DeviceAttributes m_device_attributes;
     RenderingIntent m_rendering_intent;
     XYZ m_pcs_illuminant;
+    Optional<Creator> m_creator;
     Optional<Crypto::Hash::MD5::DigestType> m_id;
 };
 
 }
 
 namespace AK {
+template<Gfx::ICC::FourCCType Type>
+struct Formatter<Gfx::ICC::DistinctFourCC<Type>> : StandardFormatter {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::ICC::DistinctFourCC<Type> const& four_cc)
+    {
+        TRY(builder.put_padding('\'', 1));
+        TRY(builder.put_padding(four_cc.c0(), 1));
+        TRY(builder.put_padding(four_cc.c1(), 1));
+        TRY(builder.put_padding(four_cc.c2(), 1));
+        TRY(builder.put_padding(four_cc.c3(), 1));
+        TRY(builder.put_padding('\'', 1));
+        return {};
+    }
+};
+
 template<>
 struct Formatter<Gfx::ICC::Version> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ICC::Version const& version)
