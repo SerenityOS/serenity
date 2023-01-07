@@ -1512,6 +1512,33 @@ bool TextEditor::write_to_file(Core::File& file)
     return true;
 }
 
+ErrorOr<void> TextEditor::write_to_file(Core::Stream::File& file)
+{
+    off_t file_size = 0;
+    if (line_count() == 1 && line(0).is_empty()) {
+        // Truncate to zero.
+    } else {
+        // Compute the final file size and ftruncate() to make writing fast.
+        // FIXME: Remove this once the kernel is smart enough to do this instead.
+        for (size_t i = 0; i < line_count(); ++i)
+            file_size += line(i).length();
+        file_size += line_count();
+    }
+
+    TRY(file.truncate(file_size));
+
+    if (file_size == 0) {
+        // A size 0 file doesn't need a data copy.
+    } else {
+        for (size_t i = 0; i < line_count(); ++i) {
+            TRY(file.write(line(i).to_utf8().bytes()));
+            TRY(file.write("\n"sv.bytes()));
+        }
+    }
+    document().set_unmodified();
+    return {};
+}
+
 DeprecatedString TextEditor::text() const
 {
     return document().text();
