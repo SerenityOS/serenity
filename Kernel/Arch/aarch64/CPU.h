@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Kernel {
 
-void drop_to_exception_level_1();
+void initialize_exceptions(u32 cpu);
 void init_page_tables();
 
 }
