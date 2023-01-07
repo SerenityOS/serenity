@@ -78,6 +78,8 @@ public:
     virtual void mouseMoveEvent(QMouseEvent*) override;
     virtual void mousePressEvent(QMouseEvent*) override;
     virtual void mouseReleaseEvent(QMouseEvent*) override;
+    virtual void dragEnterEvent(QDragEnterEvent*) override;
+    virtual void dropEvent(QDropEvent*) override;
     virtual void keyPressEvent(QKeyEvent* event) override;
     virtual void keyReleaseEvent(QKeyEvent* event) override;
     virtual void showEvent(QShowEvent*) override;
@@ -159,6 +161,7 @@ signals:
     void navigate_forward();
     void refresh();
     void restore_window();
+    void urls_dropped(QList<QUrl> const&);
     Gfx::IntPoint reposition_window(Gfx::IntPoint);
     Gfx::IntSize resize_window(Gfx::IntSize);
     Gfx::IntRect maximize_window();

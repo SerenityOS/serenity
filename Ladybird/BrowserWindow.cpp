@@ -349,6 +349,14 @@ void BrowserWindow::new_tab(QString const& url, Activate activate)
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 
+    QObject::connect(&tab_ptr->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
+        VERIFY(urls.size());
+        m_current_tab->navigate(urls[0].toString());
+
+        for (qsizetype i = 1; i < urls.size(); ++i)
+            new_tab(urls[i].toString(), Activate::No);
+    });
+
     tab_ptr->view().on_get_all_cookies = [this](auto const& url) {
         return m_cookie_jar.get_all_cookies(url);
     };

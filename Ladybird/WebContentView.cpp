@@ -45,6 +45,7 @@
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
@@ -58,6 +59,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
     : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     setMouseTracking(true);
+    setAcceptDrops(true);
 
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
@@ -310,6 +312,19 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
     client().async_mouse_up(to_content(position), button, buttons, modifiers);
+}
+
+void WebContentView::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void WebContentView::dropEvent(QDropEvent* event)
+{
+    VERIFY(event->mimeData()->hasUrls());
+    emit urls_dropped(event->mimeData()->urls());
+    event->acceptProposedAction();
 }
 
 void WebContentView::keyPressEvent(QKeyEvent* event)
