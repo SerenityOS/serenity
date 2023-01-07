@@ -133,16 +133,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, "Untitled", "gml");
+        auto response = FileSystemAccessClient::Client::the().save_file(window, "Untitled", "gml");
         if (response.is_error())
             return;
 
-        auto file = response.release_value();
-        if (!editor->write_to_file(file)) {
-            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        auto file = response.value().release_stream();
+        if (auto result = editor->write_to_file(*file); result.is_error()) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
-        file_path = file->filename();
+        file_path = response.value().filename().to_deprecated_string();
         update_title();
     });
 
@@ -151,13 +151,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window, file_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window, file_path, Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
         if (response.is_error())
             return;
 
-        auto file = response.release_value();
-        if (!editor->write_to_file(file)) {
-            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        auto file = response.value().release_stream();
+        if (auto result = editor->write_to_file(*file); result.is_error()) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         update_title();
@@ -172,13 +172,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window);
+        auto response = FileSystemAccessClient::Client::the().open_file(window);
         if (response.is_error())
             return;
 
         auto file = response.release_value();
-        file_path = file->filename();
-        editor->set_text(file->read_all());
+        file_path = file.filename().to_deprecated_string();
+        auto buffer_or_error = file.stream().read_until_eof();
+        if (buffer_or_error.is_error())
+            return;
+
+        editor->set_text(buffer_or_error.release_value());
         editor->set_focus(true);
         update_title();
     })));
@@ -296,9 +300,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor->set_cursor(4, 28); // after "...widgets!"
         update_title();
     } else {
-        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, path));
+        auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path));
         file_path = path;
-        editor->set_text(file->read_all());
+        editor->set_text(TRY(file.release_stream()->read_until_eof()));
         update_title();
     }
 
