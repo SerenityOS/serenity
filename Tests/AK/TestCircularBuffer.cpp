@@ -272,6 +272,44 @@ TEST_CASE(offset_of)
     EXPECT(result.has_value());
     EXPECT_EQ(result.value(), 13ul);
 
-    result = circular_buffer.offset_of("!Well"sv, 12);
+    result = circular_buffer.offset_of("!Well"sv, {}, 12);
     EXPECT(!result.has_value());
+
+    result = circular_buffer.offset_of("e"sv, 2);
+    EXPECT(result.has_value());
+    EXPECT_EQ(result.value(), 9ul);
+}
+
+TEST_CASE(offset_of_with_until_and_after)
+{
+    auto const source = "Well Hello Friends!"sv;
+    auto byte_buffer_or_error = ByteBuffer::copy(source.bytes());
+    EXPECT(!byte_buffer_or_error.is_error());
+    auto byte_buffer = byte_buffer_or_error.release_value();
+
+    auto circular_buffer_or_error = CircularBuffer::create_initialized(byte_buffer);
+    EXPECT(!circular_buffer_or_error.is_error());
+    auto circular_buffer = circular_buffer_or_error.release_value();
+
+    auto result = circular_buffer.offset_of("Well Hello Friends!"sv, 0, 19);
+    EXPECT_EQ(result.value_or(42), 0ul);
+
+    result = circular_buffer.offset_of(" Hello"sv, 4, 10);
+    EXPECT_EQ(result.value_or(42), 4ul);
+
+    result = circular_buffer.offset_of("el"sv, 3, 10);
+    EXPECT_EQ(result.value_or(42), 6ul);
+
+    safe_discard(circular_buffer, 5);
+    auto written_bytes = circular_buffer.write(byte_buffer.span().trim(5));
+    EXPECT_EQ(written_bytes, 5ul);
+
+    result = circular_buffer.offset_of("Hello Friends!Well "sv, 0, 19);
+    EXPECT_EQ(result.value_or(42), 0ul);
+
+    result = circular_buffer.offset_of("o Frie"sv, 4, 10);
+    EXPECT_EQ(result.value_or(42), 4ul);
+
+    result = circular_buffer.offset_of("el"sv, 3, 14);
+    EXPECT_EQ(result.value_or(42), 15ul);
 }
