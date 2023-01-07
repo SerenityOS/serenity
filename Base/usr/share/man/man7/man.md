@@ -14,7 +14,7 @@ Note that documentation might cover standardized topics (such as standard POSIX 
 
 There are three ways of accessing the manual pages:
 
--   [`Help`(1)](help://man/1/Help) provides a graphical user interface for the man pages.
+-   [`Help`(1)](help://man/1/Applications/Help) provides a graphical user interface for the man pages.
 -   [`man`(1)](help://man/1/man) implements the standard POSIX utility by accessing the man pages in the terminal.
 -   You can also choose to open the underlying Markdown files (see [Organization](#organization)) directly.
 
@@ -54,4 +54,4 @@ When you open a page via command-line arguments, the section is specified separa
 ## See Also
 
 -   [`man`(1)](help://man/1/man) To read manpages in the terminal
--   [`Help`(1)](help://man/1/Help) To read manpages in a GUI
+-   [`Help`(1)](help://man/1/Applications/Help) To read manpages in a GUI

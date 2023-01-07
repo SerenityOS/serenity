@@ -29,5 +29,4 @@ $ CharacterMap --search "yak"
 
 ## See Also
 
-* [`FontEditor`(1)](help://man/1/FontEditor) To edit the fonts instead of just viewing them.
-
+* [`FontEditor`(1)](help://man/1/Applications/FontEditor) To edit the fonts instead of just viewing them.
