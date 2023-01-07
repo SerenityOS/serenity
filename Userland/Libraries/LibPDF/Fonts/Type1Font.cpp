@@ -7,6 +7,7 @@
 
 #include <LibGfx/Painter.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Fonts/PS1FontProgram.h>
 #include <LibPDF/Fonts/Type1Font.h>
 
 namespace PDF {
@@ -30,8 +31,7 @@ PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRef
         auto length1 = TRY(document->resolve(font_file_dict->get_value(CommonNames::Length1))).get<int>();
         auto length2 = TRY(document->resolve(font_file_dict->get_value(CommonNames::Length2))).get<int>();
 
-        data.font_program = adopt_ref(*new PS1FontProgram());
-        TRY(data.font_program->create(font_file_stream->bytes(), data.encoding, length1, length2));
+        data.font_program = TRY(PS1FontProgram::create(font_file_stream->bytes(), data.encoding, length1, length2));
 
         if (!data.encoding)
             data.encoding = data.font_program->encoding();
