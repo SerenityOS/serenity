@@ -248,7 +248,7 @@ public:
     {
         painter.fill_pixels(
             rect.to_type<int>(), [&](auto point) {
-                return sample_color(location_transform(point.x(), point.y()));
+                return sample_color(location_transform(point.x() * static_cast<float>(rect.width().value()), point.y() * static_cast<float>(rect.height().value())));
             },
             m_requires_blending);
     }

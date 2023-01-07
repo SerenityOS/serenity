@@ -176,21 +176,22 @@ public:
     template<typename TGetPixelCallback>
     void fill_pixels(Gfx::IntRect const& region, TGetPixelCallback callback, bool blend = false)
     {
-        // Note: This function paints physical pixels and therefore does not make sense when
-        // called on a scaled painter. Scaling the region painted may break the caller (this
-        // would be the case for gradients in LibWeb), and if you scale the pixels (to squares)
-        // then this is no longer filling pixels.
-        VERIFY(scale() == 1);
-        auto paint_region = region.translated(translation());
-        auto clipped_region = paint_region.intersected(clip_rect());
+        auto scaled_region = region * scale();
+        auto paint_region = region.translated(translation()) * scale();
+        auto clipped_region = paint_region.intersected(clip_rect()) * scale();
         if (clipped_region.is_empty())
             return;
         auto start_offset = clipped_region.location() - paint_region.location();
-        for (int y = 0; y < clipped_region.height(); y++) {
-            for (int x = 0; x < clipped_region.width(); x++) {
-                auto pixel = callback(IntPoint(x, y).translated(start_offset));
-                set_physical_pixel(clipped_region.location().translated(x, y), pixel, blend);
+        float d_x = 1.0f / scaled_region.width(), d_y = 1.0f / scaled_region.height();
+        float initial_x_pos = start_offset.x() * d_x, x_pos = initial_x_pos, y_pos = start_offset.y() * d_y;
+        for (int y = clipped_region.top(); y <= clipped_region.bottom(); y++) {
+            for (int x = clipped_region.left(); x <= clipped_region.right(); x++) {
+                auto pixel = callback(FloatPoint(x_pos, y_pos));
+                set_physical_pixel({ x, y }, pixel, blend);
+                x_pos += d_x;
             }
+            x_pos = initial_x_pos;
+            y_pos += d_y;
         }
     }
 
