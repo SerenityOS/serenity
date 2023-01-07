@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
     for (size_t i = 0; i < vm.argument_count(); ++i)
         string.append(TRY(vm.argument(i).to_u16(vm)));
 
-    return PrimitiveString::create(vm, Utf16String(move(string)));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         TRY_OR_THROW_OOM(vm, code_point_to_utf16(string, static_cast<u32>(code_point)));
     }
 
-    return PrimitiveString::create(vm, Utf16String(move(string)));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
 }
 
 }

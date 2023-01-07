@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
 static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const& string, StringView unescaped_set)
 {
-    auto utf16_string = Utf16String(string);
+    auto utf16_string = TRY(Utf16String::create(vm, string));
 
     // 1. Let strLen be the length of string.
     auto string_length = utf16_string.length_in_code_units();

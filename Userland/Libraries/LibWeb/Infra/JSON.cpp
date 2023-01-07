@@ -49,7 +49,7 @@ WebIDL::ExceptionOr<DeprecatedString> serialize_javascript_value_to_json_string(
     VERIFY(result.is_string());
 
     // 4. Return result.
-    return result.as_string().deprecated_string();
+    return TRY(result.as_string().deprecated_string());
 }
 
 // https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-json-bytes

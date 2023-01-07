@@ -237,7 +237,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
         return js_undefined();
 
     // 7. Return ? Get(O, ! ToString(𝔽(k))).
-    return PrimitiveString::create(vm, string.substring_view(index.value(), 1));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(index.value(), 1))));
 }
 
 // 22.1.3.2 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
@@ -248,7 +248,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     if (position < 0 || position >= string.length_in_code_units())
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
-    return PrimitiveString::create(vm, string.substring_view(position, 1));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(position, 1))));
 }
 
 // 22.1.3.3 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
@@ -518,7 +518,7 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     if (max_length <= string_length)
         return PrimitiveString::create(vm, move(string));
 
-    Utf16String fill_string(Utf16Data { 0x20 });
+    auto fill_string = TRY(Utf16String::create(vm, Utf16Data { 0x20 }));
     if (!vm.argument(1).is_undefined()) {
         fill_string = TRY(vm.argument(1).to_utf16_string(vm));
         if (fill_string.is_empty())
@@ -736,7 +736,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     if (int_start >= int_end)
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
-    return PrimitiveString::create(vm, string.substring_view(int_start, int_end - int_start));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
 // 22.1.3.22 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
@@ -793,7 +793,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         }
 
         auto segment = string.substring_view(start, position - start);
-        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, segment)));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, segment)))));
         ++array_length;
         if (array_length == limit)
             return array;
@@ -802,7 +802,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     }
 
     auto rest = string.substring_view(start);
-    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, rest)));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, rest)))));
 
     return array;
 }
@@ -867,7 +867,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     size_t to = max(final_start, final_end);
 
     // 10. Return the substring of S from from to to.
-    return PrimitiveString::create(vm, string.substring_view(from, to - from));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(from, to - from))));
 }
 
 enum class TargetCase {
@@ -1111,7 +1111,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 11. Return the substring of S from intStart to intEnd.
-    return PrimitiveString::create(vm, string.substring_view(int_start, int_end - int_start));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
 // B.2.2.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml

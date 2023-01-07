@@ -45,7 +45,7 @@ StringView Segmenter::segmenter_granularity_string() const
 }
 
 // 18.7.1 CreateSegmentDataObject ( segmenter, string, startIndex, endIndex ), https://tc39.es/ecma402/#sec-createsegmentdataobject
-Object* create_segment_data_object(VM& vm, Segmenter const& segmenter, Utf16View const& string, double start_index, double end_index)
+ThrowCompletionOr<NonnullGCPtr<Object>> create_segment_data_object(VM& vm, Segmenter const& segmenter, Utf16View const& string, double start_index, double end_index)
 {
     auto& realm = *vm.current_realm();
 
@@ -68,13 +68,13 @@ Object* create_segment_data_object(VM& vm, Segmenter const& segmenter, Utf16View
     auto segment = string.substring_view(start_index, end_index - start_index);
 
     // 7. Perform ! CreateDataPropertyOrThrow(result, "segment", segment).
-    MUST(result->create_data_property_or_throw(vm.names.segment, PrimitiveString::create(vm, segment)));
+    MUST(result->create_data_property_or_throw(vm.names.segment, PrimitiveString::create(vm, TRY(Utf16String::create(vm, segment)))));
 
     // 8. Perform ! CreateDataPropertyOrThrow(result, "index", 𝔽(startIndex)).
     MUST(result->create_data_property_or_throw(vm.names.index, Value(start_index)));
 
     // 9. Perform ! CreateDataPropertyOrThrow(result, "input", string).
-    MUST(result->create_data_property_or_throw(vm.names.input, PrimitiveString::create(vm, string)));
+    MUST(result->create_data_property_or_throw(vm.names.input, PrimitiveString::create(vm, TRY(Utf16String::create(vm, string)))));
 
     // 10. Let granularity be segmenter.[[SegmenterGranularity]].
     auto granularity = segmenter.segmenter_granularity();

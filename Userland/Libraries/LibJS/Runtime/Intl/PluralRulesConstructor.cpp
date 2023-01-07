@@ -94,14 +94,14 @@ ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plu
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, AK::Array { "cardinal"sv, "ordinal"sv }, "cardinal"sv));
 
     // 7. Set pluralRules.[[Type]] to t.
-    plural_rules.set_type(type.as_string().deprecated_string());
+    plural_rules.set_type(TRY(type.as_string().deprecated_string()));
 
     // 8. Perform ? SetNumberFormatDigitOptions(pluralRules, options, +0𝔽, 3𝔽, "standard").
     TRY(set_number_format_digit_options(vm, plural_rules, *options, 0, 3, NumberFormat::Notation::Standard));
 
     // 9. Let localeData be %PluralRules%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%PluralRules%.[[AvailableLocales]], requestedLocales, opt, %PluralRules%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, {});
+    auto result = TRY(resolve_locale(requested_locales, opt, {}));
 
     // 11. Set pluralRules.[[Locale]] to r.[[locale]].
     plural_rules.set_locale(move(result.locale));
