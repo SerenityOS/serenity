@@ -49,7 +49,7 @@ PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, Nonnu
 Type1Font::Type1Font(Data data)
     : m_data(move(data))
 {
-    m_is_standard_font = data.is_standard_font;
+    m_is_standard_font = m_data.is_standard_font;
 }
 
 u32 Type1Font::char_code_to_code_point(u16 char_code) const
