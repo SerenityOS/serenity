@@ -19,22 +19,8 @@ public:
     static ErrorOr<CircularBuffer> create_empty(size_t size);
     static ErrorOr<CircularBuffer> create_initialized(ByteBuffer);
 
-    CircularBuffer(CircularBuffer&& other)
-    {
-        operator=(move(other));
-    }
-
-    CircularBuffer& operator=(CircularBuffer&& other)
-    {
-        if (&other == this)
-            return *this;
-
-        swap(m_buffer, other.m_buffer);
-        swap(m_reading_head, other.m_reading_head);
-        swap(m_used_space, other.m_used_space);
-
-        return *this;
-    }
+    CircularBuffer(CircularBuffer&& other) = default;
+    CircularBuffer& operator=(CircularBuffer&& other) = default;
 
     ~CircularBuffer() = default;
 
