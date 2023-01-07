@@ -81,6 +81,18 @@ private:
 };
 }
 
+// NOTE: To access global variables while the MMU is not yet enabled, we need
+//       to convert the address of a global variable to a physical address by
+//       subtracting KERNEL_MAPPING_BASE. This is because the kernel is linked
+//       for virtual memory at KERNEL_MAPPING_BASE, so a regular access to global variables
+//       will use the high virtual memory address. This does not work when the MMU is not yet
+//       enabled, so this function must be used for accessing global variables.
+template<typename T>
+inline T* adjust_by_mapping_base(T* ptr)
+{
+    return (T*)((FlatPtr)ptr);
+}
+
 static u64* insert_page_table(PageBumpAllocator& allocator, u64* page_table, VirtualAddress virtual_addr)
 {
     // Each level has 9 bits (512 entries)
@@ -132,7 +144,7 @@ static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_ta
 {
     // FIXME: Rename boot_pd_kernel_pt1023 to quickmap_page_table
     // FIXME: Rename KERNEL_PT1024_BASE to quickmap_page_table_address
-    boot_pd_kernel_pt1023 = (PageTableEntry*)insert_page_table(allocator, root_table, VirtualAddress { KERNEL_PT1024_BASE });
+    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = (PageTableEntry*)insert_page_table(allocator, root_table, VirtualAddress { KERNEL_PT1024_BASE });
 }
 
 static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
@@ -221,26 +233,26 @@ static u64* get_page_directory(u64* root_table, VirtualAddress virtual_addr)
 
 static void setup_kernel_page_directory(u64* root_table)
 {
-    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { kernel_mapping_base });
+    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) });
     if (!kernel_page_directory)
         panic_without_mmu("Could not find kernel page directory!"sv);
 
-    boot_pd_kernel = PhysicalAddress(kernel_page_directory);
+    *adjust_by_mapping_base(&boot_pd_kernel) = PhysicalAddress(kernel_page_directory);
 }
 
 void init_page_tables()
 {
     // We currently identity map the physical memory, so the offset is 0.
-    physical_to_virtual_offset = 0;
-    kernel_mapping_base = 0;
+    *adjust_by_mapping_base(&physical_to_virtual_offset) = 0;
+    *adjust_by_mapping_base(&kernel_mapping_base) = 0;
 
-    PageBumpAllocator allocator((u64*)page_tables_phys_start, (u64*)page_tables_phys_end);
+    PageBumpAllocator allocator(adjust_by_mapping_base((u64*)page_tables_phys_start), adjust_by_mapping_base((u64*)page_tables_phys_end));
     auto root_table = allocator.take_page();
     build_mappings(allocator, root_table);
     setup_quickmap_page_table(allocator, root_table);
     setup_kernel_page_directory(root_table);
 
-    switch_to_page_table(page_tables_phys_start);
+    switch_to_page_table(adjust_by_mapping_base(page_tables_phys_start));
     activate_mmu();
 }
 
