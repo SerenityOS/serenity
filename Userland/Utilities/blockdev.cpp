@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath"));
 
-    char const* device = nullptr;
+    StringView device;
 
     bool flag_get_disk_size = false;
     bool flag_get_block_size = false;
@@ -36,11 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(device, "Device to query", "device");
     args_parser.parse(arguments);
 
-    int fd = open(device, O_RDONLY);
-    if (fd < 0) {
-        perror("open");
-        return 1;
-    }
+    int fd = TRY(Core::System::open(device, O_RDONLY));
 
     if (flag_get_disk_size) {
         TRY(fetch_ioctl(fd, STORAGE_DEVICE_GET_SIZE));
