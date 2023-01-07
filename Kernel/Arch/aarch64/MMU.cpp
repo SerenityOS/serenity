@@ -244,4 +244,25 @@ void init_page_tables()
     activate_mmu();
 }
 
+void unmap_identity_map()
+{
+    auto start_of_physical_memory = FlatPtr(START_OF_NORMAL_MEMORY);
+
+    u64 level0_idx = (start_of_physical_memory >> 39) & 0x1FF;
+    u64 level1_idx = (start_of_physical_memory >> 30) & 0x1FF;
+
+    u64* level1_table = (u64*)page_tables_phys_start;
+
+    auto level2_table = FlatPtr(descriptor_to_pointer(level1_table[level0_idx]));
+    if (!level2_table)
+        panic_without_mmu("Could not find table!"sv);
+
+    // NOTE: The function descriptor_to_pointer returns a physical address, but we want to unmap that range
+    //       so, the pointer must be converted to a virtual address by adding KERNEL_MAPPING_BASE.
+    level2_table += KERNEL_MAPPING_BASE;
+
+    // Unmap the complete identity map
+    ((u64*)level2_table)[level1_idx] = 0;
+}
+
 }
