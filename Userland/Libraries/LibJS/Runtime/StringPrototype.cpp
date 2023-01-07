@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/ThrowableFormat.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
@@ -536,8 +537,8 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     auto filler = filler_builder.build();
 
     auto formatted = placement == PadPlacement::Start
-        ? DeprecatedString::formatted("{}{}", filler, string.view())
-        : DeprecatedString::formatted("{}{}", string.view(), filler);
+        ? TRY(deprecated_format(vm, "{}{}", filler, string.view()))
+        : TRY(deprecated_format(vm, "{}{}", string.view(), filler));
     return PrimitiveString::create(vm, move(formatted));
 }
 
