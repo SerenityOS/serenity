@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Debug.h>
@@ -12,7 +13,6 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/SlavePTY.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 

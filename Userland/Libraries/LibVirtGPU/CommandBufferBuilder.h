@@ -13,7 +13,7 @@
 #include <LibGfx/Size.h>
 #include <LibVirtGPU/Commands.h>
 #include <LibVirtGPU/VirGLProtocol.h>
-#include <sys/ioctl_numbers.h>
+#include <sys/ioctl.h>
 
 namespace VirtGPU {
 

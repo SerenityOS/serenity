@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <Kernel/API/Ioctl.h>
 #include <sys/cdefs.h>
-#include <sys/ioctl_numbers.h>
 
 __BEGIN_DECLS
 

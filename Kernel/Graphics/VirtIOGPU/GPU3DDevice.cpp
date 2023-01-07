@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/API/VirGL.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
@@ -11,7 +12,6 @@
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 #include <Kernel/Random.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 

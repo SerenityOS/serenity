@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <sys/cdefs.h>
-
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct winsize {
     unsigned short ws_row;
@@ -76,7 +76,9 @@ enum ConsoleModes {
     KD_GRAPHICS = 0x01,
 };
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#endif
 
 enum IOCtlNumber {
     TIOCGPGRP,
