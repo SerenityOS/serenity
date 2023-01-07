@@ -217,17 +217,6 @@ ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
     return parse_date_time_number(header.profile_creation_time);
 }
 
-ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
-{
-    // ICC v4, 7.2.14 Device attributes field
-
-    // "4 to 31": "Reserved (set to binary zero)"
-    if (header.device_attributes & 0xffff'fff0)
-        return Error::from_string_literal("ICC::Profile: Device attributes reserved bits not set to 0");
-
-    return DeviceAttributes { header.device_attributes };
-}
-
 ErrorOr<void> parse_file_signature(ICCHeader const& header)
 {
     // ICC v4, 7.2.9 Profile file signature field
@@ -267,6 +256,17 @@ Optional<DeviceModel> parse_device_model(ICCHeader const& header)
     if (header.device_model == 0)
         return {};
     return DeviceModel { header.device_model };
+}
+
+ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
+{
+    // ICC v4, 7.2.14 Device attributes field
+
+    // "4 to 31": "Reserved (set to binary zero)"
+    if (header.device_attributes & 0xffff'fff0)
+        return Error::from_string_literal("ICC::Profile: Device attributes reserved bits not set to 0");
+
+    return DeviceAttributes { header.device_attributes };
 }
 
 ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
