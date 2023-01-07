@@ -408,6 +408,44 @@ void TableFormattingContext::calculate_row_heights()
     }
 }
 
+void TableFormattingContext::position_row_boxes()
+{
+    CSSPixels row_top_offset = 0.0f;
+    for (size_t y = 0; y < m_rows.size(); y++) {
+        auto& row = m_rows[y];
+        auto& row_state = m_state.get_mutable(row.box);
+        CSSPixels row_width = 0.0f;
+        for (auto& column : m_columns) {
+            row_width += column.used_width;
+        }
+
+        row_state.set_content_height(row.used_width);
+        row_state.set_content_width(row_width);
+        row_state.set_content_y(row_top_offset);
+        row_top_offset += row_state.content_height();
+    }
+
+    CSSPixels row_group_top_offset = 0.0f;
+    context_box().for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
+        CSSPixels row_group_height = 0.0f;
+        CSSPixels row_group_width = 0.0f;
+
+        auto& row_group_box_state = m_state.get_mutable(row_group_box);
+        row_group_box_state.set_content_y(row_group_top_offset);
+
+        row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
+            auto const& row_state = m_state.get(row);
+            row_group_height += row_state.border_box_height();
+            row_group_width = max(row_group_width, row_state.border_box_width());
+        });
+
+        row_group_box_state.set_content_height(row_group_height);
+        row_group_box_state.set_content_width(row_group_width);
+
+        row_group_top_offset += row_group_height;
+    });
+}
+
 void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
@@ -438,41 +476,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
     }
 
     calculate_row_heights();
-
-    CSSPixels row_top_offset = 0.0f;
-    for (size_t y = 0; y < m_rows.size(); y++) {
-        auto& row = m_rows[y];
-        auto& row_state = m_state.get_mutable(row.box);
-        CSSPixels row_width = 0.0f;
-        for (auto& column : m_columns) {
-            row_width += column.used_width;
-        }
-
-        row_state.set_content_height(row.used_width);
-        row_state.set_content_width(row_width);
-        row_state.set_content_y(row_top_offset);
-        row_top_offset += row_state.content_height();
-    }
-
-    CSSPixels row_group_top_offset = 0.0f;
-    box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
-        CSSPixels row_group_height = 0.0f;
-        CSSPixels row_group_width = 0.0f;
-
-        auto& row_group_box_state = m_state.get_mutable(row_group_box);
-        row_group_box_state.set_content_y(row_group_top_offset);
-
-        row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-            auto const& row_state = m_state.get(row);
-            row_group_height += row_state.border_box_height();
-            row_group_width = max(row_group_width, row_state.border_box_width());
-        });
-
-        row_group_box_state.set_content_height(row_group_height);
-        row_group_box_state.set_content_width(row_group_width);
-
-        row_group_top_offset += row_group_height;
-    });
+    position_row_boxes();
 
     for (auto& cell : m_cells) {
         auto& cell_state = m_state.get_mutable(cell.box);
