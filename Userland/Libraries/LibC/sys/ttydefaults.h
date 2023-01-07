@@ -44,14 +44,16 @@
 #    else
 #        include <termios.h>
 #    endif
-#    include <sys/cdefs.h>
 
 #    ifdef __clang__
 #        pragma clang diagnostic push
 #        pragma clang diagnostic ignored "-Wc99-designator"
 #    endif
 
-__BEGIN_DECLS
+#    ifdef __cplusplus
+extern "C" {
+#    endif
+
 static const cc_t ttydefchars[NCCS] = {
     [VINTR] = CINTR,
     [VQUIT] = CQUIT,
@@ -76,5 +78,8 @@ static const cc_t ttydefchars[NCCS] = {
 #        pragma clang diagnostic pop
 #    endif
 
-__END_DECLS
+#    ifdef __cplusplus
+}
+#    endif
+
 #endif
