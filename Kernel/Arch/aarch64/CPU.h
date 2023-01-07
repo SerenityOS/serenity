@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/Types.h>
 
 namespace Kernel {
 
-void initialize_exceptions(u32 cpu);
+void initialize_exceptions();
 void init_page_tables();
+void panic_without_mmu(StringView);
+void dbgln_without_mmu(StringView);
 
 }

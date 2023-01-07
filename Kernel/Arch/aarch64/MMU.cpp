@@ -46,17 +46,17 @@ public:
         , m_current(start)
     {
         if (m_start >= m_end) {
-            PANIC("Invalid memory range passed to PageBumpAllocator");
+            panic_without_mmu("Invalid memory range passed to PageBumpAllocator"sv);
         }
         if ((FlatPtr)m_start % PAGE_TABLE_SIZE != 0 || (FlatPtr)m_end % PAGE_TABLE_SIZE != 0) {
-            PANIC("Memory range passed into PageBumpAllocator not aligned to PAGE_TABLE_SIZE");
+            panic_without_mmu("Memory range passed into PageBumpAllocator not aligned to PAGE_TABLE_SIZE"sv);
         }
     }
 
     u64* take_page()
     {
         if (m_current == m_end) {
-            PANIC("Prekernel pagetable memory exhausted");
+            panic_without_mmu("Prekernel pagetable memory exhausted"sv);
         }
 
         u64* page = m_current;
@@ -221,8 +221,11 @@ static u64* get_page_directory(u64* root_table, VirtualAddress virtual_addr)
 
 static void setup_kernel_page_directory(u64* root_table)
 {
-    boot_pd_kernel = PhysicalAddress((PhysicalPtr)get_page_directory(root_table, VirtualAddress { kernel_mapping_base }));
-    VERIFY(!boot_pd_kernel.is_null());
+    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { kernel_mapping_base });
+    if (!kernel_page_directory)
+        panic_without_mmu("Could not find kernel page directory!"sv);
+
+    boot_pd_kernel = PhysicalAddress(kernel_page_directory);
 }
 
 void init_page_tables()
