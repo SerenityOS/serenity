@@ -719,7 +719,7 @@ public:
         Optional<size_t> longest_match;
         size_t match_size = 0;
         for (auto& candidate : candidates) {
-            auto const result = m_buffer.offset_of(candidate, readable_size);
+            auto const result = m_buffer.offset_of(candidate, {}, readable_size);
             if (result.has_value()) {
                 auto previous_match = longest_match.value_or(*result);
                 if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {

@@ -36,7 +36,7 @@ public:
     [[nodiscard]] size_t used_space() const;
     [[nodiscard]] size_t capacity() const;
 
-    Optional<size_t> offset_of(StringView needle, Optional<size_t> until = {}) const;
+    Optional<size_t> offset_of(StringView needle, Optional<size_t> from = {}, Optional<size_t> until = {}) const;
 
     void clear();
 
