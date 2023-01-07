@@ -153,7 +153,7 @@ public:
     void build_filesystem_cache();
 
 private:
-    RefPtr<Threading::BackgroundAction<NonnullRefPtrVector<Result>>> m_fuzzy_match_work;
+    RefPtr<Threading::BackgroundAction<Optional<NonnullRefPtrVector<Result>>>> m_fuzzy_match_work;
     bool m_building_cache { false };
     Vector<DeprecatedString> m_full_path_cache;
     Queue<DeprecatedString> m_work_queue;
