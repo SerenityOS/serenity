@@ -112,16 +112,19 @@ static u64* insert_page_table(PageBumpAllocator& allocator, u64* page_table, Vir
     return descriptor_to_pointer(level3_table[level2_idx]);
 }
 
-static void insert_identity_entries_for_physical_memory_range(PageBumpAllocator& allocator, u64* page_table, FlatPtr start, FlatPtr end, u64 flags)
+static void insert_entries_for_memory_range(PageBumpAllocator& allocator, u64* page_table, VirtualAddress start, VirtualAddress end, PhysicalAddress paddr, u64 flags)
 {
     // Not very efficient, but simple and it works.
-    for (FlatPtr addr = start; addr < end; addr += GRANULE_SIZE) {
-        u64* level4_table = insert_page_table(allocator, page_table, VirtualAddress { addr });
+    for (VirtualAddress addr = start; addr < end;) {
+        u64* level4_table = insert_page_table(allocator, page_table, addr);
 
-        u64 level3_idx = (addr >> 12) & 0x1FF;
+        u64 level3_idx = (addr.get() >> 12) & 0x1FF;
         u64* l4_entry = &level4_table[level3_idx];
-        *l4_entry = addr;
+        *l4_entry = paddr.get();
         *l4_entry |= flags;
+
+        addr = addr.offset(GRANULE_SIZE);
+        paddr = paddr.offset(GRANULE_SIZE);
     }
 }
 
@@ -132,17 +135,27 @@ static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_ta
     boot_pd_kernel_pt1023 = (PageTableEntry*)insert_page_table(allocator, root_table, VirtualAddress { KERNEL_PT1024_BASE });
 }
 
-static void build_identity_map(PageBumpAllocator& allocator, u64* root_table)
+static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
 {
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
     // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
-    FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
-    FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1;
+    auto start_of_kernel_range = VirtualAddress(((FlatPtr)start_of_kernel_image + KERNEL_MAPPING_BASE) & ~(FlatPtr)0x1fffff);
+    auto end_of_kernel_range = VirtualAddress((((FlatPtr)end_of_kernel_image + KERNEL_MAPPING_BASE) & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
+    auto start_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_base_address() + KERNEL_MAPPING_BASE);
+    auto end_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_end_address() + KERNEL_MAPPING_BASE);
 
-    insert_identity_entries_for_physical_memory_range(allocator, root_table, start_of_range, end_of_range, normal_memory_flags);
-    insert_identity_entries_for_physical_memory_range(allocator, root_table, RPi::MMIO::the().peripheral_base_address(), RPi::MMIO::the().peripheral_end_address(), device_memory_flags);
+    auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-KERNEL_MAPPING_BASE);
+    auto start_of_physical_mmio_range = PhysicalAddress(start_of_mmio_range.get()).offset(-KERNEL_MAPPING_BASE);
+
+    // Insert identity mappings
+    insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range.offset(-KERNEL_MAPPING_BASE), end_of_kernel_range.offset(-KERNEL_MAPPING_BASE), start_of_physical_kernel_range, normal_memory_flags);
+    insert_entries_for_memory_range(allocator, root_table, start_of_mmio_range.offset(-KERNEL_MAPPING_BASE), end_of_mmio_range.offset(-KERNEL_MAPPING_BASE), start_of_physical_mmio_range, device_memory_flags);
+
+    // Map kernel and MMIO into high virtual memory
+    insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range, end_of_kernel_range, start_of_physical_kernel_range, normal_memory_flags);
+    insert_entries_for_memory_range(allocator, root_table, start_of_mmio_range, end_of_mmio_range, start_of_physical_mmio_range, device_memory_flags);
 }
 
 static void switch_to_page_table(u8* page_table)
@@ -220,7 +233,7 @@ void init_page_tables()
 
     PageBumpAllocator allocator((u64*)page_tables_phys_start, (u64*)page_tables_phys_end);
     auto root_table = allocator.take_page();
-    build_identity_map(allocator, root_table);
+    build_mappings(allocator, root_table);
     setup_quickmap_page_table(allocator, root_table);
     setup_kernel_page_directory(root_table);
 
