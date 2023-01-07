@@ -32,7 +32,7 @@ CSVImportDialogPage::CSVImportDialogPage(StringView csv)
         "CSV Import Options",
         "Please select the options for the csv file you wish to import");
 
-    m_page->body_widget().try_load_from_gml(csv_import_gml).release_value_but_fixme_should_propagate_errors();
+    m_page->body_widget().load_from_gml(csv_import_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
 
     m_delimiter_comma_radio = m_page->body_widget().find_descendant_of_type_named<GUI::RadioButton>("delimiter_comma_radio");
@@ -254,7 +254,7 @@ Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_
 
         page->on_next_page = [] { return nullptr; };
 
-        page->body_widget().try_load_from_gml(select_format_page_gml).release_value_but_fixme_should_propagate_errors();
+        page->body_widget().load_from_gml(select_format_page_gml).release_value_but_fixme_should_propagate_errors();
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
         Vector<DeprecatedString> supported_formats {

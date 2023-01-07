@@ -45,7 +45,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_re
     auto& tab_widget = main_widget->add<GUI::TabWidget>();
 
     auto& general_tab = tab_widget.add_tab<GUI::Widget>("General");
-    general_tab.try_load_from_gml(properties_window_general_tab_gml).release_value_but_fixme_should_propagate_errors();
+    general_tab.load_from_gml(properties_window_general_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_name = lexical_path.basename();
     m_path = lexical_path.string();

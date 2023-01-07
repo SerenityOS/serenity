@@ -71,7 +71,7 @@ void MonitorSettingsWidget::create_resolution_list()
 
 void MonitorSettingsWidget::create_frame()
 {
-    try_load_from_gml(monitor_settings_window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(monitor_settings_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 

@@ -354,8 +354,8 @@ public:
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
     using UnregisteredChildHandler = ErrorOr<NonnullRefPtr<Core::Object>>(DeprecatedString const&);
-    ErrorOr<void> try_load_from_gml(StringView);
-    ErrorOr<void> try_load_from_gml(StringView, UnregisteredChildHandler);
+    ErrorOr<void> load_from_gml(StringView);
+    ErrorOr<void> load_from_gml(StringView, UnregisteredChildHandler);
 
     // FIXME: remove this when all uses of shrink_to_fit are eliminated
     void set_shrink_to_fit(bool);

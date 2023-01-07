@@ -24,7 +24,7 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, DeprecatedString co
     set_resizable(false);
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    main_widget->try_load_from_gml(edit_guide_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(edit_guide_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto horizontal_radio = main_widget->find_descendant_of_type_named<GUI::RadioButton>("orientation_horizontal_radio");
     auto vertical_radio = main_widget->find_descendant_of_type_named<GUI::RadioButton>("orientation_vertical_radio");

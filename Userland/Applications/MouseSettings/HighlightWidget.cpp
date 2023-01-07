@@ -11,7 +11,7 @@
 
 HighlightWidget::HighlightWidget()
 {
-    try_load_from_gml(highlight_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(highlight_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_highlight_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<MouseSettings::HighlightPreviewWidget>(palette());
 

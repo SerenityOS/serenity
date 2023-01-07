@@ -32,7 +32,7 @@
 
 TerminalSettingsMainWidget::TerminalSettingsMainWidget()
 {
-    try_load_from_gml(terminal_settings_main_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(terminal_settings_main_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& beep_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("beep_bell_radio");
     auto& visual_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
@@ -102,7 +102,7 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
 
 TerminalSettingsViewWidget::TerminalSettingsViewWidget()
 {
-    try_load_from_gml(terminal_settings_view_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(terminal_settings_view_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
     m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv);

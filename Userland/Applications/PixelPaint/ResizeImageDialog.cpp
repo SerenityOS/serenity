@@ -28,7 +28,7 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize suggested_size, GUI::Window* p
     set_icon(parent_window->icon());
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    main_widget->try_load_from_gml(resize_image_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(resize_image_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto width_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("width_spinbox");
     auto height_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("height_spinbox");

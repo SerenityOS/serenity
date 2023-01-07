@@ -212,7 +212,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 
     auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model))));
 
-    TRY(main_widget->try_load_from_gml(theme_editor_gml));
+    TRY(main_widget->load_from_gml(theme_editor_gml));
     main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
     main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
 
@@ -451,7 +451,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
             row_widget->set_fixed_height(22);
             TRY(property.role.visit(
                 [&](Gfx::AlignmentRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(alignment_property_gml));
+                    TRY(row_widget->load_from_gml(alignment_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -468,7 +468,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::ColorRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(color_property_gml));
+                    TRY(row_widget->load_from_gml(color_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -484,7 +484,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::FlagRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(flag_property_gml));
+                    TRY(row_widget->load_from_gml(flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
                     checkbox.set_text(to_string(role));
@@ -498,7 +498,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::MetricRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(metric_property_gml));
+                    TRY(row_widget->load_from_gml(metric_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -514,7 +514,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::PathRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(path_property_gml));
+                    TRY(row_widget->load_from_gml(path_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));

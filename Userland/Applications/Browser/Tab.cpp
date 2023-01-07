@@ -114,7 +114,7 @@ void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_wait
 
 Tab::Tab(BrowserWindow& window)
 {
-    try_load_from_gml(tab_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");

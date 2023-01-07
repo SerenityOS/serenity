@@ -19,7 +19,7 @@ static void update_label_with_font(GUI::Label&, Gfx::Font const&);
 
 FontSettingsWidget::FontSettingsWidget()
 {
-    try_load_from_gml(font_settings_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(font_settings_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& default_font = Gfx::FontDatabase::default_font();
     m_default_font_label = *find_descendant_of_type_named<GUI::Label>("default_font_label");

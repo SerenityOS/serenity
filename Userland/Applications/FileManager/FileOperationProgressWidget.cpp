@@ -23,7 +23,7 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     : m_operation(operation)
     , m_helper_pipe(move(helper_pipe))
 {
-    try_load_from_gml(file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 

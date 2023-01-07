@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(304, 325);
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(main_widget->try_load_from_gml(flood_window_gml));
+    TRY(main_widget->load_from_gml(flood_window_gml));
 
     auto board_widget = TRY(main_widget->find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns));
     board_widget->board()->randomize();

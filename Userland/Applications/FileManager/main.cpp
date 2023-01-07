@@ -580,7 +580,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto was_maximized = Config::read_bool("FileManager"sv, "Window"sv, "Maximized"sv, false);
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(widget->try_load_from_gml(file_manager_window_gml));
+    TRY(widget->load_from_gml(file_manager_window_gml));
 
     auto& toolbar_container = *widget->find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& main_toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("main_toolbar");

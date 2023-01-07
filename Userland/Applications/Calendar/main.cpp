@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(main_widget->try_load_from_gml(calendar_window_gml));
+    TRY(main_widget->load_from_gml(calendar_window_gml));
 
     auto toolbar = main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     auto calendar = main_widget->find_descendant_of_type_named<GUI::Calendar>("calendar");

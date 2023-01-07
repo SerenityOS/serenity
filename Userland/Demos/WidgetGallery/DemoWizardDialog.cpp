@@ -28,7 +28,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
         "Installation location",
         "Choose where Demo Application is installed on your computer.")
                    .release_value_but_fixme_should_propagate_errors();
-    m_page_1->body_widget().try_load_from_gml(demo_wizard_page_1_gml).release_value_but_fixme_should_propagate_errors();
+    m_page_1->body_widget().load_from_gml(demo_wizard_page_1_gml).release_value_but_fixme_should_propagate_errors();
     m_page_1_location_text_box = m_page_1->body_widget().find_descendant_of_type_named<GUI::TextBox>("page_1_location_text_box");
     m_page_1->on_next_page = [&]() {
         return m_page_2;
@@ -39,7 +39,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
         "Installation in progress...",
         "Please wait. Do not turn off your computer.")
                    .release_value_but_fixme_should_propagate_errors();
-    m_page_2->body_widget().try_load_from_gml(demo_wizard_page_2_gml).release_value_but_fixme_should_propagate_errors();
+    m_page_2->body_widget().load_from_gml(demo_wizard_page_2_gml).release_value_but_fixme_should_propagate_errors();
     m_page_2_progressbar = m_page_2->body_widget().find_descendant_of_type_named<GUI::Progressbar>("page_2_progressbar");
     m_page_2_timer = Core::Timer::try_create(this).release_value_but_fixme_should_propagate_errors();
     m_page_2->on_page_enter = [&]() {

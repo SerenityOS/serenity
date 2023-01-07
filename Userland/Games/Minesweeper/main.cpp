@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(139, 177);
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(widget->try_load_from_gml(minesweeper_window_gml));
+    TRY(widget->load_from_gml(minesweeper_window_gml));
 
     auto& separator = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("separator");
     auto& container = *widget->find_descendant_of_type_named<GUI::Widget>("container");

@@ -42,7 +42,7 @@ MailSettingsWidget::MailSettingsWidget()
     m_common_ports.append("143");
     m_common_ports.append("993");
 
-    try_load_from_gml(mail_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(mail_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_server_inputbox = *find_descendant_of_type_named<GUI::TextBox>("server_input");
     m_server_inputbox->set_text(Config::read_string("Mail"sv, "Connection"sv, "Server"sv, ""sv));
