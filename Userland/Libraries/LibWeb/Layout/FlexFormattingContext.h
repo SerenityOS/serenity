@@ -60,8 +60,13 @@ private:
         Optional<float> flex_factor {};
         float scaled_flex_shrink_factor { 0 };
         float desired_flex_fraction { 0 };
-        CSSPixels main_size { 0 };
-        CSSPixels cross_size { 0 };
+
+        // The used main size of this flex item. Empty until determined.
+        Optional<CSSPixels> main_size {};
+
+        // The used cross size of this flex item. Empty until determined.
+        Optional<CSSPixels> cross_size {};
+
         CSSPixels main_offset { 0 };
         CSSPixels cross_offset { 0 };
         DirectionAgnosticMargins margins {};
