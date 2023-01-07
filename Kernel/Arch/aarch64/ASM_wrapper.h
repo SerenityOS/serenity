@@ -68,7 +68,7 @@ inline void wait_cycles(int n)
     }
 }
 
-inline void el1_vector_table_install(void* vector_table)
+inline void load_el1_vector_table(void* vector_table)
 {
     asm("msr VBAR_EL1, %[value]" ::[value] "r"(vector_table));
 }

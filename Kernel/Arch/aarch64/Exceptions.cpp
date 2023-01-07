@@ -9,9 +9,11 @@
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Panic.h>
 
+extern "C" uintptr_t vector_table_el1;
+
 namespace Kernel {
 
-static void drop_to_el2()
+static void drop_el3_to_el2()
 {
     Aarch64::SCR_EL3 secure_configuration_register_el3 = {};
 
@@ -40,7 +42,7 @@ static void drop_to_el2()
     Aarch64::Asm::enter_el2_from_el3();
 }
 
-static void drop_to_el1()
+static void drop_el2_to_el1()
 {
     Aarch64::HCR_EL2 hypervisor_configuration_register_el2 = {};
     hypervisor_configuration_register_el2.RW = 1; // EL1 to use 64-bit mode
@@ -64,7 +66,7 @@ static void drop_to_el1()
     Aarch64::Asm::enter_el1_from_el2();
 }
 
-static void set_up_el1()
+static void setup_el1()
 {
     Aarch64::SCTLR_EL1 system_control_register_el1 = Aarch64::SCTLR_EL1::reset_value();
 
@@ -78,24 +80,34 @@ static void set_up_el1()
     system_control_register_el1.A = 1;    // Enable memory access alignment check
 
     Aarch64::SCTLR_EL1::write(system_control_register_el1);
+
+    Aarch64::Asm::load_el1_vector_table(&vector_table_el1);
 }
 
-void drop_to_exception_level_1()
+void initialize_exceptions(u32 cpu)
 {
-    switch (Aarch64::Asm::get_current_exception_level()) {
-    case Aarch64::Asm::ExceptionLevel::EL3:
-        drop_to_el2();
-        [[fallthrough]];
-    case Aarch64::Asm::ExceptionLevel::EL2:
-        drop_to_el1();
-        [[fallthrough]];
-    case Aarch64::Asm::ExceptionLevel::EL1:
-        set_up_el1();
-        break;
-    default: {
-        PANIC("CPU booted in unsupported exception mode!");
+    auto base_exception_level = Aarch64::Asm::get_current_exception_level();
+
+    if (base_exception_level > Aarch64::Asm::ExceptionLevel::EL3) {
+        PANIC("CPU[{}]: Started in unknown EL{}", cpu, static_cast<u8>(base_exception_level));
+    } else if (base_exception_level < Aarch64::Asm::ExceptionLevel::EL1) {
+        PANIC("CPU[{}]: Started in unsupported EL{}", cpu, static_cast<u8>(base_exception_level));
+    } else {
+        dbgln("CPU[{}]: Started in EL{}", cpu, static_cast<u8>(base_exception_level));
     }
+
+    if (base_exception_level > Aarch64::Asm::ExceptionLevel::EL2) {
+        drop_el3_to_el2();
+        dbgln("CPU[{}]: Dropped to EL2", cpu);
     }
+
+    if (base_exception_level > Aarch64::Asm::ExceptionLevel::EL1) {
+        drop_el2_to_el1();
+        dbgln("CPU[{}]: Dropped to EL1", cpu);
+    }
+
+    setup_el1();
+    dbgln("CPU[{}]: Set up EL1", cpu);
 }
 
 }
