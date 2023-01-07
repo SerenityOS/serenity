@@ -118,18 +118,20 @@ UNMAP_AFTER_INIT ErrorOr<LockRefPtr<RTL8139NetworkAdapter>> RTL8139NetworkAdapte
     if (pci_device_identifier.hardware_id() != rtl8139_id)
         return nullptr;
     u8 irq = pci_device_identifier.interrupt_line().value();
+    auto rx_buffer = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX)), "RTL8139 RX"sv, Memory::Region::Access::ReadWrite));
+    auto packet_buffer = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(PACKET_SIZE_MAX)), "RTL8139 Packet buffer"sv, Memory::Region::Access::ReadWrite));
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), move(interface_name))));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, move(rx_buffer), move(packet_buffer), move(registers_io_window), move(interface_name))));
 }
 
-UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<Memory::Region> rx_buffer, NonnullOwnPtr<Memory::Region> packet_buffer, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
     : NetworkAdapter(move(interface_name))
     , PCI::Device(address)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
-    , m_rx_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX).release_value_but_fixme_should_propagate_errors(), "RTL8139 RX"sv, Memory::Region::Access::ReadWrite).release_value())
-    , m_packet_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(PACKET_SIZE_MAX).release_value_but_fixme_should_propagate_errors(), "RTL8139 Packet buffer"sv, Memory::Region::Access::ReadWrite).release_value())
+    , m_rx_buffer(move(rx_buffer))
+    , m_packet_buffer(move(packet_buffer))
 {
     m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
 
