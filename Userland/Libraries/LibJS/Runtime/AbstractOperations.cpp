@@ -1265,7 +1265,7 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
         } else if (is_ascii_digit(next)) {
             bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_position_string = replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
+            auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8());
             auto capture_position = capture_position_string.to_uint();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
@@ -1295,7 +1295,7 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
                 result.append(curr);
             } else {
                 auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
-                auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
+                auto group_name = TRY_OR_THROW_OOM(vm, group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
 
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
@@ -1311,7 +1311,7 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
         }
     }
 
-    return Utf16String(move(result)).to_utf8();
+    return TRY_OR_THROW_OOM(vm, Utf16View { result }.to_utf8());
 }
 
 }

@@ -81,7 +81,7 @@ u32 Utf16View::decode_surrogate_pair(u16 high_surrogate, u16 low_surrogate)
     return ((high_surrogate - high_surrogate_min) << 10) + (low_surrogate - low_surrogate_min) + first_supplementary_plane_code_point;
 }
 
-DeprecatedString Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const
+ErrorOr<DeprecatedString> Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const
 {
     StringBuilder builder;
 
@@ -92,17 +92,17 @@ DeprecatedString Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_uni
 
                 if ((next < end_ptr()) && is_low_surrogate(*next)) {
                     auto code_point = decode_surrogate_pair(*ptr, *next);
-                    builder.append_code_point(code_point);
+                    TRY(builder.try_append_code_point(code_point));
                     ++ptr;
                     continue;
                 }
             }
 
-            builder.append_code_point(static_cast<u32>(*ptr));
+            TRY(builder.try_append_code_point(static_cast<u32>(*ptr)));
         }
     } else {
         for (auto code_point : *this)
-            builder.append_code_point(code_point);
+            TRY(builder.try_append_code_point(code_point));
     }
 
     return builder.build();
