@@ -11,6 +11,7 @@ set(SOURCES
     Fonts/TrueTypeFont.cpp
     Fonts/Type0Font.cpp
     Fonts/Type1Font.cpp
+    Fonts/Type1FontProgram.cpp
     Interpolation.cpp
     ObjectDerivatives.cpp
     Parser.cpp
