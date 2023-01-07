@@ -1153,7 +1153,7 @@ ErrorOr<void> Widget::try_load_from_gml(StringView gml_string)
     });
 }
 
-ErrorOr<void> Widget::try_load_from_gml(StringView gml_string, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::try_load_from_gml(StringView gml_string, UnregisteredChildHandler unregistered_child_handler)
 {
     auto value = TRY(GML::parse_gml(gml_string));
     return load_from_gml_ast(value, unregistered_child_handler);
@@ -1164,12 +1164,12 @@ bool Widget::load_from_gml(StringView gml_string)
     return !try_load_from_gml(gml_string).is_error();
 }
 
-bool Widget::load_from_gml(StringView gml_string, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
+bool Widget::load_from_gml(StringView gml_string, UnregisteredChildHandler unregistered_child_handler)
 {
     return !try_load_from_gml(gml_string, unregistered_child_handler).is_error();
 }
 
-ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler unregistered_child_handler)
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
