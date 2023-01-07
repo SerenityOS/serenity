@@ -19,9 +19,11 @@
 class ChessWidget final
     : public GUI::Frame
     , public Config::Listener {
-    C_OBJECT(ChessWidget);
+    C_OBJECT_ABSTRACT(ChessWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<ChessWidget>> try_create();
+
     virtual ~ChessWidget() override = default;
 
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -109,7 +111,7 @@ public:
     };
 
 private:
-    ChessWidget();
+    ChessWidget() = default;
 
     virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
     virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;

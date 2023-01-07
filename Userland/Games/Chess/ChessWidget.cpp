@@ -19,9 +19,12 @@
 #include <LibGfx/Path.h>
 #include <unistd.h>
 
-ChessWidget::ChessWidget()
+ErrorOr<NonnullRefPtr<ChessWidget>> ChessWidget::try_create()
 {
-    set_piece_set("stelar7"sv);
+    auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) ChessWidget));
+    widget->set_piece_set("stelar7"sv);
+
+    return widget;
 }
 
 void ChessWidget::paint_event(GUI::PaintEvent& event)
