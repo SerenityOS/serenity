@@ -19,6 +19,8 @@ public:
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
     virtual CSSPixels automatic_content_height() const override;
 
+    TableBox const& table_box() const { return static_cast<TableBox const&>(context_box()); }
+
 private:
     void calculate_row_column_grid(Box const&);
     void compute_table_measures();

@@ -206,12 +206,11 @@ void TableFormattingContext::compute_table_measures()
 
 void TableFormattingContext::compute_table_width()
 {
-    auto const& table_box = context_box();
-    auto& table_box_state = m_state.get_mutable(table_box);
+    auto& table_box_state = m_state.get_mutable(table_box());
 
-    auto& computed_values = table_box.computed_values();
+    auto& computed_values = table_box().computed_values();
 
-    CSSPixels width_of_table_containing_block = m_state.get(*table_box.containing_block()).content_width();
+    CSSPixels width_of_table_containing_block = m_state.get(*table_box().containing_block()).content_width();
 
     // The row/column-grid width minimum (GRIDMIN) width is the sum of the min-content width
     // of all the columns plus cell spacing or borders.
@@ -230,7 +229,7 @@ void TableFormattingContext::compute_table_width()
     // The used min-width of a table is the greater of the resolved min-width, CAPMIN, and GRIDMIN.
     auto used_min_width = grid_min;
     if (!computed_values.min_width().is_auto()) {
-        used_min_width = max(used_min_width, computed_values.min_width().resolved(table_box, CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box));
+        used_min_width = max(used_min_width, computed_values.min_width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box()));
     }
 
     CSSPixels used_width;
@@ -243,7 +242,7 @@ void TableFormattingContext::compute_table_width()
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
         // of resolved-table-width, and the used min-width of the table.
-        CSSPixels resolved_table_width = computed_values.width().resolved(table_box, CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box);
+        CSSPixels resolved_table_width = computed_values.width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box());
         used_width = max(resolved_table_width, used_min_width);
         table_box_state.set_content_width(used_width);
     }
@@ -253,7 +252,7 @@ void TableFormattingContext::distribute_width_to_columns()
 {
     // Implements https://www.w3.org/TR/css-tables-3/#width-distribution-algorithm
 
-    CSSPixels available_width = m_state.get(context_box()).content_width();
+    CSSPixels available_width = m_state.get(table_box()).content_width();
 
     auto columns_total_used_width = [&]() {
         CSSPixels total_used_width = 0;
@@ -346,8 +345,7 @@ void TableFormattingContext::distribute_width_to_columns()
 
 void TableFormattingContext::determine_intrisic_size_of_table_container(AvailableSpace const& available_space)
 {
-    auto const& table_box = context_box();
-    auto& table_box_state = m_state.get_mutable(table_box);
+    auto& table_box_state = m_state.get_mutable(table_box());
 
     if (available_space.width.is_min_content()) {
         // The min-content width of a table is the width required to fit all of its columns min-content widths and its undistributable spaces.
@@ -426,7 +424,7 @@ void TableFormattingContext::position_row_boxes()
     }
 
     CSSPixels row_group_top_offset = 0.0f;
-    context_box().for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
+    table_box().for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
         CSSPixels row_group_height = 0.0f;
         CSSPixels row_group_width = 0.0f;
 
@@ -511,7 +509,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
     position_row_boxes();
     position_cell_boxes();
 
-    m_state.get_mutable(context_box()).set_content_height(total_content_height);
+    m_state.get_mutable(table_box()).set_content_height(total_content_height);
 
     // FIXME: This is a total hack, we should respect the 'height' property.
     m_automatic_content_height = total_content_height;
