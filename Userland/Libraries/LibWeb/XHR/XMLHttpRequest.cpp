@@ -12,6 +12,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
@@ -290,6 +291,8 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(DeprecatedString const& name_string, DeprecatedString const& value_string)
 {
     auto& realm = this->realm();
+    auto& vm = realm.vm();
+
     auto name = name_string.to_byte_buffer();
     auto value = value_string.to_byte_buffer();
 
@@ -316,11 +319,11 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(DeprecatedString co
     };
 
     // 5. If (name, value) is a forbidden request-header, then return.
-    if (TRY_OR_RETURN_OOM(realm, Fetch::Infrastructure::is_forbidden_request_header(header)))
+    if (TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::is_forbidden_request_header(header)))
         return {};
 
     // 6. Combine (name, value) in this’s author request headers.
-    TRY_OR_RETURN_OOM(realm, m_author_request_headers->combine(move(header)));
+    TRY_OR_THROW_OOM(vm, m_author_request_headers->combine(move(header)));
 
     return {};
 }
@@ -465,12 +468,12 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     } else if (body_with_type.has_value()) {
         TRY(body_with_type->body.source().visit(
             [&](ByteBuffer const& buffer) -> WebIDL::ExceptionOr<void> {
-                auto byte_buffer = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(buffer));
+                auto byte_buffer = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(buffer));
                 request.set_body(move(byte_buffer));
                 return {};
             },
             [&](JS::Handle<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<void> {
-                auto byte_buffer = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(blob->bytes()));
+                auto byte_buffer = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(blob->bytes()));
                 request.set_body(move(byte_buffer));
                 return {};
             },

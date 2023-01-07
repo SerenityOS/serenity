@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/URL/URLSearchParams.h>
@@ -29,6 +30,8 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm&
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadableBytes const& object, bool keepalive)
 {
+    auto& vm = realm.vm();
+
     // 1. Let stream be null.
     JS::GCPtr<Streams::ReadableStream> stream;
 
@@ -77,19 +80,19 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
         },
         [&](ReadonlyBytes bytes) -> WebIDL::ExceptionOr<void> {
             // Set source to object.
-            source = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(bytes));
+            source = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(bytes));
             return {};
         },
         [&](JS::Handle<JS::Object> const& buffer_source) -> WebIDL::ExceptionOr<void> {
             // Set source to a copy of the bytes held by object.
-            source = TRY_OR_RETURN_OOM(realm, WebIDL::get_buffer_source_copy(*buffer_source.cell()));
+            source = TRY_OR_THROW_OOM(vm, WebIDL::get_buffer_source_copy(*buffer_source.cell()));
             return {};
         },
         [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> WebIDL::ExceptionOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             source = url_search_params->to_deprecated_string().to_byte_buffer();
             // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
-            type = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
+            type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
             return {};
         },
         [&](DeprecatedString const& scalar_value_string) -> WebIDL::ExceptionOr<void> {
@@ -97,7 +100,7 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             // Set source to the UTF-8 encoding of object.
             source = scalar_value_string.to_byte_buffer();
             // Set type to `text/plain;charset=UTF-8`.
-            type = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
+            type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
             return {};
         },
         [&](JS::Handle<Streams::ReadableStream> const& stream) -> WebIDL::ExceptionOr<void> {

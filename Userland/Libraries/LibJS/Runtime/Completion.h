@@ -11,9 +11,22 @@
 #include <AK/Optional.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
+#include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
+
+#define TRY_OR_THROW_OOM(vm, expression)                                               \
+    ({                                                                                 \
+        /* Ignore -Wshadow to allow nesting the macro. */                              \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                               \
+            auto _temporary_result = (expression));                                    \
+        if (_temporary_result.is_error()) {                                            \
+            VERIFY(_temporary_result.error().code() == ENOMEM);                        \
+            return vm.throw_completion<JS::InternalError>(JS::ErrorType::OutOfMemory); \
+        }                                                                              \
+        _temporary_result.release_value();                                             \
+    })
 
 // 6.2.3 The Completion Record Specification Type, https://tc39.es/ecma262/#sec-completion-record-specification-type
 class [[nodiscard]] Completion {

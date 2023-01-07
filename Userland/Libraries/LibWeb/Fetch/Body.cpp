@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -160,9 +161,9 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
         promise = body->fully_read_as_promise();
 
     // 4. Let steps be to return the result of package data with the first argument given, type, and object’s MIME type.
-    auto steps = [&realm, &object, type](JS::Value value) -> WebIDL::ExceptionOr<JS::Value> {
+    auto steps = [&vm, &realm, &object, type](JS::Value value) -> WebIDL::ExceptionOr<JS::Value> {
         VERIFY(value.is_string());
-        auto bytes = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value.as_string().deprecated_string().bytes()));
+        auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(value.as_string().deprecated_string().bytes()));
         return package_data(realm, move(bytes), type, object.mime_type_impl());
     };
 

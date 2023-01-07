@@ -8,6 +8,7 @@
 #include <AK/TypeCasts.h>
 #include <AK/URLParser.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/Infrastructure/FetchParams.h>
@@ -126,15 +127,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::VM& vm) cons
 {
     // To clone a response response, run these steps:
 
-    auto& realm = *vm.current_realm();
-
     // 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
     if (is<FilteredResponse>(*this)) {
         auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone(vm));
         if (is<BasicFilteredResponse>(*this))
-            return TRY_OR_RETURN_OOM(realm, BasicFilteredResponse::create(vm, internal_response));
+            return TRY_OR_THROW_OOM(vm, BasicFilteredResponse::create(vm, internal_response));
         if (is<CORSFilteredResponse>(*this))
-            return TRY_OR_RETURN_OOM(realm, CORSFilteredResponse::create(vm, internal_response));
+            return TRY_OR_THROW_OOM(vm, CORSFilteredResponse::create(vm, internal_response));
         if (is<OpaqueFilteredResponse>(*this))
             return OpaqueFilteredResponse::create(vm, internal_response);
         if (is<OpaqueRedirectFilteredResponse>(*this))
