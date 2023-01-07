@@ -104,6 +104,15 @@ enum class ColorSpace : u32 {
 StringView data_color_space_name(ColorSpace);
 StringView profile_connection_space_name(ColorSpace);
 
+// ICC v4, 7.2.10 Primary platform field, Table 20 — Primary platforms
+enum class PrimaryPlatform : u32 {
+    Apple = 0x4150504C,           // 'APPL'
+    Microsoft = 0x4D534654,       // 'MSFT'
+    SiliconGraphics = 0x53474920, // 'SGI '
+    Sun = 0x53554E57,             // 'SUNW'
+};
+StringView primary_platform_name(PrimaryPlatform);
+
 // ICC v4, 7.2.15 Rendering intent field
 enum class RenderingIntent {
     Perceptual,
@@ -215,6 +224,7 @@ public:
     ColorSpace connection_space() const { return m_connection_space; }
 
     time_t creation_timestamp() const { return m_creation_timestamp; }
+    PrimaryPlatform primary_platform() const { return m_primary_platform; }
     Flags flags() const { return m_flags; }
     Optional<DeviceManufacturer> device_manufacturer() const { return m_device_manufacturer; }
     Optional<DeviceModel> device_model() const { return m_device_model; }
@@ -233,6 +243,7 @@ private:
     ColorSpace m_data_color_space;
     ColorSpace m_connection_space;
     time_t m_creation_timestamp;
+    PrimaryPlatform m_primary_platform;
     Flags m_flags;
     Optional<DeviceManufacturer> m_device_manufacturer;
     Optional<DeviceModel> m_device_model;
