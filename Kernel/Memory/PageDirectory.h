@@ -67,11 +67,7 @@ private:
     RefPtr<PhysicalPage> m_pml4t;
 #endif
     RefPtr<PhysicalPage> m_directory_table;
-#if ARCH(X86_64)
     RefPtr<PhysicalPage> m_directory_pages[512];
-#else
-    RefPtr<PhysicalPage> m_directory_pages[4];
-#endif
     RecursiveSpinlock<LockRank::None> m_lock {};
 };
 
