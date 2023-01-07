@@ -13,7 +13,6 @@
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Net/NE2000/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
 #include <Kernel/Sections.h>
@@ -99,7 +98,6 @@ struct PCINetworkDriverInitializer {
 
 static constexpr PCINetworkDriverInitializer s_initializers[] = {
     { RTL8168NetworkAdapter::probe, RTL8168NetworkAdapter::create },
-    { NE2000NetworkAdapter::probe, NE2000NetworkAdapter::create },
     { E1000NetworkAdapter::probe, E1000NetworkAdapter::create },
     { E1000ENetworkAdapter::probe, E1000ENetworkAdapter::create },
 };
