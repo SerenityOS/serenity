@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -181,7 +182,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         auto const& rhs_string = TRY(m_rhs->utf16_string());
 
         Utf16Data combined;
-        combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
+        TRY_OR_THROW_OOM(vm, combined.try_ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units()));
         combined.extend(lhs_string.string());
         combined.extend(rhs_string.string());
 
@@ -199,27 +200,27 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
     // NOTE: We traverse the rope tree without using recursion, since we'd run out of
     //       stack space quickly when handling a long sequence of unresolved concatenations.
     Vector<PrimitiveString const*> stack;
-    stack.append(m_rhs);
-    stack.append(m_lhs);
+    TRY_OR_THROW_OOM(vm, stack.try_append(m_rhs));
+    TRY_OR_THROW_OOM(vm, stack.try_append(m_lhs));
     while (!stack.is_empty()) {
-        auto* current = stack.take_last();
+        auto const* current = stack.take_last();
         if (current->m_is_rope) {
-            stack.append(current->m_rhs);
-            stack.append(current->m_lhs);
+            TRY_OR_THROW_OOM(vm, stack.try_append(current->m_rhs));
+            TRY_OR_THROW_OOM(vm, stack.try_append(current->m_lhs));
             continue;
         }
-        pieces.append(current);
+        TRY_OR_THROW_OOM(vm, pieces.try_append(current));
     }
 
     // Now that we have all the pieces, we can concatenate them using a StringBuilder.
-    StringBuilder builder;
+    ThrowableStringBuilder builder(vm);
 
     // We keep track of the previous piece in order to handle surrogate pairs spread across two pieces.
     PrimitiveString const* previous = nullptr;
     for (auto const* current : pieces) {
         if (!previous) {
             // This is the very first piece, just append it and continue.
-            builder.append(TRY(current->deprecated_string()));
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -233,7 +234,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
 
         // Surrogates encoded as UTF-8 are 3 bytes.
         if ((previous_string_as_utf8.length() < 3) || (current_string_as_utf8.length() < 3)) {
-            builder.append(TRY(current->deprecated_string()));
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -241,7 +242,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         // Might the previous string end with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(previous_string_as_utf8[previous_string_as_utf8.length() - 3]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            builder.append(TRY(current->deprecated_string()));
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -249,7 +250,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         // Might the current string begin with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(current_string_as_utf8[0]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            builder.append(TRY(current->deprecated_string()));
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -258,17 +259,17 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         auto low_surrogate = *Utf8View(current_string_as_utf8).begin();
 
         if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate)) {
-            builder.append(TRY(current->deprecated_string()));
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
 
         // Remove 3 bytes from the builder and replace them with the UTF-8 encoded code point.
         builder.trim(3);
-        builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate));
+        TRY(builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate)));
 
         // Append the remaining part of the current string.
-        builder.append(current_string_as_utf8.substring_view(3));
+        TRY(builder.append(current_string_as_utf8.substring_view(3)));
         previous = current;
     }
 
