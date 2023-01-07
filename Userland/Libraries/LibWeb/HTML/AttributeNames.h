@@ -39,6 +39,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(checked)                    \
     __ENUMERATE_HTML_ATTRIBUTE(cite)                       \
     __ENUMERATE_HTML_ATTRIBUTE(class_)                     \
+    __ENUMERATE_HTML_ATTRIBUTE(classid)                    \
     __ENUMERATE_HTML_ATTRIBUTE(clear)                      \
     __ENUMERATE_HTML_ATTRIBUTE(code)                       \
     __ENUMERATE_HTML_ATTRIBUTE(codetype)                   \
