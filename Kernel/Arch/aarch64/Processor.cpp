@@ -30,6 +30,7 @@ Processor* g_current_processor;
 void Processor::initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
+    m_features = detect_cpu_features();
 
     initialize_exceptions(cpu);
 
