@@ -7,6 +7,7 @@
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/Document.h>
@@ -165,15 +166,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
         }
 
         // 3. Append (`Accept`, value) to request’s header list.
-        auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair("Accept"sv, value.bytes()));
-        TRY_OR_RETURN_OOM(realm, request.header_list()->append(move(header)));
+        auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Accept"sv, value.bytes()));
+        TRY_OR_THROW_OOM(vm, request.header_list()->append(move(header)));
     }
 
     // 14. If request’s header list does not contain `Accept-Language`, then user agents should append
     //     (`Accept-Language, an appropriate header value) to request’s header list.
     if (!request.header_list()->contains("Accept-Language"sv.bytes())) {
         auto header = MUST(Infrastructure::Header::from_string_pair("Accept-Language"sv, "*"sv));
-        TRY_OR_RETURN_OOM(realm, request.header_list()->append(move(header)));
+        TRY_OR_THROW_OOM(vm, request.header_list()->append(move(header)));
     }
 
     // 15. If request’s priority is null, then use request’s initiator, destination, and render-blocking appropriately
@@ -325,7 +326,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
             request->use_cors_preflight()
             || (request->unsafe_request()
                 && (!Infrastructure::is_cors_safelisted_method(request->method())
-                    || !TRY_OR_RETURN_OOM(realm, Infrastructure::get_cors_unsafe_header_names(request->header_list())).is_empty()))) {
+                    || !TRY_OR_THROW_OOM(vm, Infrastructure::get_cors_unsafe_header_names(request->header_list())).is_empty()))) {
             // 1. Set request’s response tainting to "cors".
             request->set_response_tainting(Infrastructure::Request::ResponseTainting::CORS);
 
@@ -402,11 +403,11 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                     // -> "basic"
                     case Infrastructure::Request::ResponseTainting::Basic:
                         // basic filtered response
-                        return TRY_OR_RETURN_OOM(realm, Infrastructure::BasicFilteredResponse::create(vm, *response));
+                        return TRY_OR_THROW_OOM(vm, Infrastructure::BasicFilteredResponse::create(vm, *response));
                     // -> "cors"
                     case Infrastructure::Request::ResponseTainting::CORS:
                         // CORS filtered response
-                        return TRY_OR_RETURN_OOM(realm, Infrastructure::CORSFilteredResponse::create(vm, *response));
+                        return TRY_OR_THROW_OOM(vm, Infrastructure::CORSFilteredResponse::create(vm, *response));
                     // -> "opaque"
                     case Infrastructure::Request::ResponseTainting::Opaque:
                         // opaque filtered response
@@ -517,7 +518,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
     //    The user agent may decide to expose `Server-Timing` headers to non-secure contexts requests as well.
     auto* client = fetch_params.request()->client();
     if (!response.is_network_error() && client != nullptr && HTML::is_secure_context(*client)) {
-        auto server_timing_headers = TRY_OR_RETURN_OOM(realm, response.header_list()->get_decode_and_split("Server-Timing"sv.bytes()));
+        auto server_timing_headers = TRY_OR_THROW_OOM(vm, response.header_list()->get_decode_and_split("Server-Timing"sv.bytes()));
         if (server_timing_headers.has_value())
             timing_info->set_server_timing_headers(server_timing_headers.release_value());
     }
@@ -681,7 +682,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
             auto response = Infrastructure::Response::create(vm);
             response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
             auto header = MUST(Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=utf-8"sv));
-            TRY_OR_RETURN_OOM(realm, response->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
             response->set_body(MUST(Infrastructure::byte_sequence_as_body(realm, ""sv.bytes())));
             return PendingResponse::create(vm, request, response);
         }
@@ -697,7 +698,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         auto const& url = request->current_url();
         auto data_or_error = url.data_payload_is_base64()
             ? decode_base64(url.data_payload())
-            : TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(url.data_payload().bytes()));
+            : TRY_OR_THROW_OOM(vm, ByteBuffer::copy(url.data_payload().bytes()));
 
         // 2. If dataURLStruct is failure, then return a network error.
         if (data_or_error.is_error())
@@ -710,8 +711,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         //    body is dataURLStruct’s body as a body.
         auto response = Infrastructure::Response::create(vm);
         response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
-        auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair("Content-Type"sv, mime_type));
-        TRY_OR_RETURN_OOM(realm, response->header_list()->append(move(header)));
+        auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Type"sv, mime_type));
+        TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
         response->set_body(TRY(Infrastructure::byte_sequence_as_body(realm, data_or_error.value().span())));
         return PendingResponse::create(vm, request, response);
     }
@@ -1168,7 +1169,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 .name = MUST(ByteBuffer::copy("Content-Length"sv.bytes())),
                 .value = content_length_header_value.release_value(),
             };
-            TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
         }
 
         // FIXME: 10. If contentLength is non-null and httpRequest’s keepalive is true, then:
@@ -1181,18 +1182,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // 11. If httpRequest’s referrer is a URL, then:
         if (http_request->referrer().has<AK::URL>()) {
             // 1. Let referrerValue be httpRequest’s referrer, serialized and isomorphic encoded.
-            auto referrer_value = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(http_request->referrer().get<AK::URL>().serialize().bytes()));
+            auto referrer_value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(http_request->referrer().get<AK::URL>().serialize().bytes()));
 
             // 2. Append (`Referer`, referrerValue) to httpRequest’s header list.
             auto header = Infrastructure::Header {
                 .name = MUST(ByteBuffer::copy("Referer"sv.bytes())),
                 .value = move(referrer_value),
             };
-            TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
         }
 
         // 12. Append a request `Origin` header for httpRequest.
-        TRY_OR_RETURN_OOM(realm, http_request->add_origin_header());
+        TRY_OR_THROW_OOM(vm, http_request->add_origin_header());
 
         // FIXME: 13. Append the Fetch metadata headers for httpRequest.
 
@@ -1201,9 +1202,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         if (!http_request->header_list()->contains("User-Agent"sv.bytes())) {
             auto header = Infrastructure::Header {
                 .name = MUST(ByteBuffer::copy("User-Agent"sv.bytes())),
-                .value = TRY_OR_RETURN_OOM(realm, Infrastructure::default_user_agent_value()),
+                .value = TRY_OR_THROW_OOM(vm, Infrastructure::default_user_agent_value()),
             };
-            TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
         }
 
         // 15. If httpRequest’s cache mode is "default" and httpRequest’s header list contains `If-Modified-Since`,
@@ -1225,7 +1226,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             && !http_request->prevent_no_cache_cache_control_header_modification()
             && !http_request->header_list()->contains("Cache-Control"sv.bytes())) {
             auto header = MUST(Infrastructure::Header::from_string_pair("Cache-Control"sv, "max-age=0"sv));
-            TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
         }
 
         // 17. If httpRequest’s cache mode is "no-store" or "reload", then:
@@ -1235,14 +1236,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             //    httpRequest’s header list.
             if (!http_request->header_list()->contains("Pragma"sv.bytes())) {
                 auto header = MUST(Infrastructure::Header::from_string_pair("Pragma"sv, "no-cache"sv));
-                TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+                TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
             }
 
             // 2. If httpRequest’s header list does not contain `Cache-Control`, then append
             //    (`Cache-Control`, `no-cache`) to httpRequest’s header list.
             if (!http_request->header_list()->contains("Cache-Control"sv.bytes())) {
                 auto header = MUST(Infrastructure::Header::from_string_pair("Cache-Control"sv, "no-cache"sv));
-                TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+                TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
             }
         }
 
@@ -1252,7 +1253,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         //       Additionally, many servers mistakenly ignore `Range` headers if a non-identity encoding is accepted.
         if (http_request->header_list()->contains("Range"sv.bytes())) {
             auto header = MUST(Infrastructure::Header::from_string_pair("Accept-Encoding"sv, "identity"sv));
-            TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
         }
 
         // 19. Modify httpRequest’s header list per HTTP. Do not append a given header if httpRequest’s header list
@@ -1284,8 +1285,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
                 // 2. If cookies is not the empty string, then append (`Cookie`, cookies) to httpRequest’s header list.
                 if (!cookies.is_empty()) {
-                    auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair("Cookie"sv, cookies));
-                    TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+                    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Cookie"sv, cookies));
+                    TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
                 }
             }
 
@@ -1306,14 +1307,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 else if (http_request->current_url().includes_credentials() && is_authentication_fetch == IsAuthenticationFetch::Yes) {
                     auto const& url = http_request->current_url();
                     auto payload = DeprecatedString::formatted("{}:{}", url.username(), url.password());
-                    authorization_value = TRY_OR_RETURN_OOM(realm, encode_base64(payload.bytes())).to_deprecated_string();
+                    authorization_value = TRY_OR_THROW_OOM(vm, encode_base64(payload.bytes())).to_deprecated_string();
                 }
 
                 // 4. If authorizationValue is non-null, then append (`Authorization`, authorizationValue) to
                 //    httpRequest’s header list.
                 if (authorization_value.has_value()) {
-                    auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair("Authorization"sv, *authorization_value));
-                    TRY_OR_RETURN_OOM(realm, http_request->header_list()->append(move(header)));
+                    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Authorization"sv, *authorization_value));
+                    TRY_OR_THROW_OOM(vm, http_request->header_list()->append(move(header)));
                 }
             }
         }
@@ -1582,11 +1583,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
     if (auto const* body = request->body().get_pointer<Infrastructure::Body>()) {
         TRY(body->source().visit(
             [&](ByteBuffer const& byte_buffer) -> WebIDL::ExceptionOr<void> {
-                load_request.set_body(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(byte_buffer)));
+                load_request.set_body(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(byte_buffer)));
                 return {};
             },
             [&](JS::Handle<FileAPI::Blob> const& blob_handle) -> WebIDL::ExceptionOr<void> {
-                load_request.set_body(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(blob_handle->bytes())));
+                load_request.set_body(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(blob_handle->bytes())));
                 return {};
             },
             [](Empty) -> WebIDL::ExceptionOr<void> {

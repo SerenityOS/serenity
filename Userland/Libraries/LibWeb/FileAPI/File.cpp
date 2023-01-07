@@ -5,6 +5,7 @@
  */
 
 #include <AK/Time.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/File.h>
 
@@ -24,7 +25,7 @@ File::~File() = default;
 WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)
 {
     // 1. Let bytes be the result of processing blob parts given fileBits and options.
-    auto bytes = TRY_OR_RETURN_OOM(realm, process_blob_parts(file_bits, options.has_value() ? static_cast<BlobPropertyBag const&>(*options) : Optional<BlobPropertyBag> {}));
+    auto bytes = TRY_OR_THROW_OOM(realm.vm(), process_blob_parts(file_bits, options.has_value() ? static_cast<BlobPropertyBag const&>(*options) : Optional<BlobPropertyBag> {}));
 
     // 2. Let n be the fileName argument to the constructor.
     //    NOTE: Underlying OS filesystems use differing conventions for file name; with constructed files, mandating UTF-16 lessens ambiquity when file names are converted to byte sequences.

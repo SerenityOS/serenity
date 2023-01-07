@@ -14,18 +14,6 @@
 
 namespace Web::WebIDL {
 
-#define TRY_OR_RETURN_OOM(realm, expression)                                \
-    ({                                                                      \
-        /* Ignore -Wshadow to allow nesting the macro. */                   \
-        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                    \
-            auto _temporary_result = (expression));                         \
-        if (_temporary_result.is_error()) {                                 \
-            VERIFY(_temporary_result.error().code() == ENOMEM);             \
-            return WebIDL::UnknownError::create(realm, "Out of memory."sv); \
-        }                                                                   \
-        _temporary_result.release_value();                                  \
-    })
-
 // The following have a legacy code value but *don't* produce it as
 // DOMException.code value when used as name (and are therefore omitted here):
 // - DOMStringSizeError (DOMSTRING_SIZE_ERR = 2)

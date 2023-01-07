@@ -8,6 +8,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
 #include <LibWeb/Forward.h>
@@ -137,7 +138,7 @@ WebIDL::ExceptionOr<DeprecatedString> WorkerGlobalScope::btoa(DeprecatedString c
 
     // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data,
     // and then must apply forgiving-base64 encode to that byte sequence and return the result.
-    return TRY_OR_RETURN_OOM(realm(), encode_base64(byte_string.span())).to_deprecated_string();
+    return TRY_OR_THROW_OOM(vm(), encode_base64(byte_string.span())).to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob
