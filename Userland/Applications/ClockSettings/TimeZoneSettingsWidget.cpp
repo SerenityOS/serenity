@@ -61,7 +61,7 @@ ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
 
 TimeZoneSettingsWidget::TimeZoneSettingsWidget()
 {
-    load_from_gml(time_zone_settings_widget_gml);
+    try_load_from_gml(time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     static auto time_zones = TimeZone::all_time_zones();
     m_time_zone = TimeZone::system_time_zone();

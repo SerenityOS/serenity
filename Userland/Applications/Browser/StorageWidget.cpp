@@ -18,7 +18,7 @@ namespace Browser {
 
 StorageWidget::StorageWidget()
 {
-    load_from_gml(storage_widget_gml);
+    try_load_from_gml(storage_widget_gml).release_value_but_fixme_should_propagate_errors();
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     m_cookies_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("cookies_tableview");

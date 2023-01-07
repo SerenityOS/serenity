@@ -18,7 +18,7 @@ namespace DisplaySettings {
 
 EffectsSettingsWidget::EffectsSettingsWidget()
 {
-    load_from_gml(effects_settings_gml);
+    try_load_from_gml(effects_settings_gml).release_value_but_fixme_should_propagate_errors();
 
     m_geometry_combobox = find_descendant_of_type_named<ComboBox>("geometry_combobox");
     m_geometry_combobox->set_only_allow_values_from_model(true);

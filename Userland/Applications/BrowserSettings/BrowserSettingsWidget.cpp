@@ -59,7 +59,7 @@ private:
 
 BrowserSettingsWidget::BrowserSettingsWidget()
 {
-    load_from_gml(browser_settings_widget_gml);
+    try_load_from_gml(browser_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
     m_homepage_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, default_homepage_url), GUI::AllowCallback::No);

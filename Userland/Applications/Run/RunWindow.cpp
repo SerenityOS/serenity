@@ -42,7 +42,7 @@ RunWindow::RunWindow()
     set_minimizable(false);
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    main_widget->load_from_gml(run_gml);
+    main_widget->try_load_from_gml(run_gml).release_value_but_fixme_should_propagate_errors();
 
     m_icon_image_widget = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));

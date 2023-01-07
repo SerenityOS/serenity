@@ -61,8 +61,7 @@ static Vector<DeprecatedString> lookup_database_names()
 
 MainWidget::MainWidget()
 {
-    if (!load_from_gml(sql_studio_gml))
-        VERIFY_NOT_REACHED();
+    try_load_from_gml(sql_studio_gml).release_value_but_fixme_should_propagate_errors();
 
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         open_new_script();

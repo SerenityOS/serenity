@@ -100,8 +100,7 @@ FindDialog::FindDialog()
     set_title("Find");
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    if (!main_widget->load_from_gml(find_dialog_gml))
-        VERIFY_NOT_REACHED();
+    main_widget->try_load_from_gml(find_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_text_editor = *main_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");
     m_find_button = *main_widget->find_descendant_of_type_named<GUI::Button>("find_button");

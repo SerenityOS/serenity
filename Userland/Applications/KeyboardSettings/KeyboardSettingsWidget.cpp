@@ -52,8 +52,7 @@ private:
         : Dialog(parent_window)
     {
         auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-        if (!widget->load_from_gml(keymap_dialog_gml))
-            VERIFY_NOT_REACHED();
+        widget->try_load_from_gml(keymap_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
         set_resizable(false);
         resize(190, 54);
@@ -152,7 +151,7 @@ private:
 
 KeyboardSettingsWidget::KeyboardSettingsWidget()
 {
-    load_from_gml(keyboard_widget_gml);
+    try_load_from_gml(keyboard_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     auto proc_keymap = Core::File::construct("/sys/kernel/keymap");
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))

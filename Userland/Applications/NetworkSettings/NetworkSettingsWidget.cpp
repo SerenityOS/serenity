@@ -30,7 +30,7 @@ static int netmask_to_cidr(IPv4Address const& address)
 
 NetworkSettingsWidget::NetworkSettingsWidget()
 {
-    load_from_gml(network_settings_gml);
+    try_load_from_gml(network_settings_gml).release_value_but_fixme_should_propagate_errors();
 
     m_adapters_combobox = *find_descendant_of_type_named<GUI::ComboBox>("adapters_combobox");
     m_enabled_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("enabled_checkbox");

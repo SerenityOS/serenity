@@ -128,7 +128,7 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     set_title("New Font");
 
     m_font_properties_page = GUI::WizardPage::construct("Typeface properties", "Edit details about this font.");
-    m_font_properties_page->body_widget().load_from_gml(new_font_dialog_page_1_gml);
+    m_font_properties_page->body_widget().try_load_from_gml(new_font_dialog_page_1_gml).release_value_but_fixme_should_propagate_errors();
 
     m_name_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("family_textbox");
@@ -156,7 +156,7 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     };
 
     m_glyph_properties_page = GUI::WizardPage::construct("Glyph properties", "Edit details about this font.");
-    m_glyph_properties_page->body_widget().load_from_gml(new_font_dialog_page_2_gml);
+    m_glyph_properties_page->body_widget().try_load_from_gml(new_font_dialog_page_2_gml).release_value_but_fixme_should_propagate_errors();
     m_glyph_properties_page->set_is_final_page(true);
 
     m_glyph_height_spinbox = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("height_spinbox");

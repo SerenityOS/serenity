@@ -21,7 +21,7 @@ constexpr auto time_format_24h_seconds = "%T"sv;
 
 ClockSettingsWidget::ClockSettingsWidget()
 {
-    load_from_gml(clock_settings_widget_gml);
+    try_load_from_gml(clock_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_24_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("24hour_radio");
     auto& twelve_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("12hour_radio");

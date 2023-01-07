@@ -98,7 +98,7 @@ void ThemeModel::invalidate()
 
 ThemeWidget::ThemeWidget()
 {
-    load_from_gml(theme_widget_gml);
+    try_load_from_gml(theme_widget_gml).release_value_but_fixme_should_propagate_errors();
     m_cursors_tableview = find_descendant_of_type_named<GUI::TableView>("cursors_tableview");
     m_cursors_tableview->set_highlight_selected_rows(true);
     m_cursors_tableview->set_alternating_row_colors(false);

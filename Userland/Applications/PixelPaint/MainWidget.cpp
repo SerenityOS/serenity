@@ -37,7 +37,7 @@ IconBag g_icon_bag;
 MainWidget::MainWidget()
     : Widget()
 {
-    load_from_gml(pixel_paint_window_gml);
+    try_load_from_gml(pixel_paint_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_toolbox = find_descendant_of_type_named<PixelPaint::ToolboxWidget>("toolbox");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
