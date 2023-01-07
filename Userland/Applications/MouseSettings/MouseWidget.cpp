@@ -20,7 +20,7 @@ constexpr int double_click_speed_default = 250;
 
 MouseWidget::MouseWidget()
 {
-    try_load_from_gml(mouse_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(mouse_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_speed_label = *find_descendant_of_type_named<GUI::Label>("speed_label");
     m_speed_slider = *find_descendant_of_type_named<GUI::HorizontalSlider>("speed_slider");

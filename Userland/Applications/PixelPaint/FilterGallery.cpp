@@ -22,7 +22,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     set_resizable(true);
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    main_widget->try_load_from_gml(filter_gallery_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(filter_gallery_gml).release_value_but_fixme_should_propagate_errors();
 
     m_filter_tree = main_widget->find_descendant_of_type_named<GUI::TreeView>("tree_view");
     auto apply_button = main_widget->find_descendant_of_type_named<GUI::Button>("apply_button");

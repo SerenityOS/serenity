@@ -27,7 +27,7 @@
 
 CharacterMapWidget::CharacterMapWidget()
 {
-    try_load_from_gml(character_map_window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(character_map_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_font_name_label = find_descendant_of_type_named<GUI::Label>("font_name");

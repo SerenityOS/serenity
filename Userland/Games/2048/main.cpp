@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(315, 336);
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(main_widget->try_load_from_gml(game_window_gml));
+    TRY(main_widget->load_from_gml(game_window_gml));
 
     Game game { board_size, target_tile, evil_ai };
 

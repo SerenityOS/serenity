@@ -38,7 +38,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
         "CSV Export Options",
         "Please select the options for the csv file you wish to export to");
 
-    m_page->body_widget().try_load_from_gml(csv_export_gml).release_value_but_fixme_should_propagate_errors();
+    m_page->body_widget().load_from_gml(csv_export_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
 
     m_delimiter_comma_radio = m_page->body_widget().find_descendant_of_type_named<GUI::RadioButton>("delimiter_comma_radio");
@@ -209,7 +209,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core
 
         page->on_next_page = [] { return nullptr; };
 
-        TRY(page->body_widget().try_load_from_gml(select_format_page_gml));
+        TRY(page->body_widget().load_from_gml(select_format_page_gml));
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
         Vector<DeprecatedString> supported_formats {

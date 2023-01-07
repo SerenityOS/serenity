@@ -108,7 +108,7 @@ void DomainListModel::reset_default_values()
 
 ContentFilterSettingsWidget::ContentFilterSettingsWidget()
 {
-    try_load_from_gml(content_filter_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(content_filter_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
     m_enable_content_filtering_checkbox = find_descendant_of_type_named<GUI::CheckBox>("enable_content_filtering_checkbox");
     m_domain_list_view = find_descendant_of_type_named<GUI::ListView>("domain_list_view");
     m_add_new_domain_button = find_descendant_of_type_named<GUI::Button>("add_new_domain_button");

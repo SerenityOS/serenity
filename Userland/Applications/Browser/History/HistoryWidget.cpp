@@ -11,7 +11,7 @@
 namespace Browser {
 HistoryWidget::HistoryWidget()
 {
-    try_load_from_gml(history_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(history_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_table_view = find_descendant_of_type_named<GUI::TableView>("history_tableview");
     m_textbox = find_descendant_of_type_named<GUI::TextBox>("history_filter_textbox");

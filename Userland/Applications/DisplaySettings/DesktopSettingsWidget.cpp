@@ -23,7 +23,7 @@ DesktopSettingsWidget::DesktopSettingsWidget()
 
 void DesktopSettingsWidget::create_frame()
 {
-    try_load_from_gml(desktop_settings_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(desktop_settings_gml).release_value_but_fixme_should_propagate_errors();
 
     m_workspace_rows_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("workspace_rows_spinbox");
     m_workspace_rows_spinbox->on_change = [&](auto) {

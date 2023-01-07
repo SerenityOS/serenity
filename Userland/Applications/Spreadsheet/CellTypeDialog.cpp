@@ -318,7 +318,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
     }
 
     auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional format");
-    conditional_fmt_tab.try_load_from_gml(cond_fmt_gml).release_value_but_fixme_should_propagate_errors();
+    conditional_fmt_tab.load_from_gml(cond_fmt_gml).release_value_but_fixme_should_propagate_errors();
     {
         auto& view = *conditional_fmt_tab.find_descendant_of_type_named<Spreadsheet::ConditionsView>("conditions_view");
         view.set_formats(&m_conditional_formats);
@@ -391,7 +391,7 @@ CellTypeMetadata CellTypeDialog::metadata() const
 ConditionView::ConditionView(ConditionalFormat& fmt)
     : m_format(fmt)
 {
-    try_load_from_gml(cond_fmt_view_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(cond_fmt_view_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& fg_input = *find_descendant_of_type_named<GUI::ColorInput>("foreground_input");
     auto& bg_input = *find_descendant_of_type_named<GUI::ColorInput>("background_input");

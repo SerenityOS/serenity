@@ -32,12 +32,12 @@
 
 GalleryWidget::GalleryWidget()
 {
-    try_load_from_gml(window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(window_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto basics_tab = tab_widget.try_add_tab<GUI::Widget>("Basics").release_value_but_fixme_should_propagate_errors();
-    basics_tab->try_load_from_gml(basics_tab_gml).release_value_but_fixme_should_propagate_errors();
+    basics_tab->load_from_gml(basics_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_enabled_label = basics_tab->find_descendant_of_type_named<GUI::Label>("enabled_label");
     m_label_frame = basics_tab->find_descendant_of_type_named<GUI::Frame>("label_frame");
@@ -170,7 +170,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto sliders_tab = tab_widget.try_add_tab<GUI::Widget>("Sliders").release_value_but_fixme_should_propagate_errors();
-    sliders_tab->try_load_from_gml(sliders_tab_gml).release_value_but_fixme_should_propagate_errors();
+    sliders_tab->load_from_gml(sliders_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_vertical_progressbar_left = sliders_tab->find_descendant_of_type_named<GUI::VerticalProgressbar>("vertical_progressbar_left");
     m_vertical_progressbar_left->set_value(0);
@@ -231,7 +231,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto wizards_tab = tab_widget.try_add_tab<GUI::Widget>("Wizards").release_value_but_fixme_should_propagate_errors();
-    wizards_tab->try_load_from_gml(wizards_tab_gml).release_value_but_fixme_should_propagate_errors();
+    wizards_tab->load_from_gml(wizards_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_wizard_button = wizards_tab->find_descendant_of_type_named<GUI::Button>("wizard_button");
     m_wizard_output = wizards_tab->find_descendant_of_type_named<GUI::TextEditor>("wizard_output");
@@ -287,7 +287,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto cursors_tab = tab_widget.try_add_tab<GUI::Widget>("Cursors").release_value_but_fixme_should_propagate_errors();
-    cursors_tab->try_load_from_gml(cursors_tab_gml).release_value_but_fixme_should_propagate_errors();
+    cursors_tab->load_from_gml(cursors_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_cursors_tableview = cursors_tab->find_descendant_of_type_named<GUI::TableView>("cursors_tableview");
     m_cursors_tableview->set_highlight_selected_rows(true);
@@ -310,7 +310,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto icons_tab = tab_widget.try_add_tab<GUI::Widget>("Icons").release_value_but_fixme_should_propagate_errors();
-    icons_tab->try_load_from_gml(icons_tab_gml).release_value_but_fixme_should_propagate_errors();
+    icons_tab->load_from_gml(icons_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_icons_tableview = icons_tab->find_descendant_of_type_named<GUI::TableView>("icons_tableview");
     m_icons_tableview->set_highlight_selected_rows(true);

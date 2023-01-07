@@ -46,7 +46,7 @@ RefPtr<GUI::Widget> Median::get_settings_widget()
 {
     if (!m_settings_widget) {
         m_settings_widget = GUI::Widget::construct();
-        m_settings_widget->try_load_from_gml(median_settings_gml).release_value_but_fixme_should_propagate_errors();
+        m_settings_widget->load_from_gml(median_settings_gml).release_value_but_fixme_should_propagate_errors();
         m_settings_widget->find_descendant_of_type_named<GUI::SpinBox>("filter_radius")->on_change = [this](auto value) {
             m_filter_radius = value;
             update_preview();
