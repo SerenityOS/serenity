@@ -376,14 +376,14 @@ static auto& find_key_in_value(T& value, StringView key)
 }
 
 // 9.2.7 ResolveLocale ( availableLocales, requestedLocales, options, relevantExtensionKeys, localeData ), https://tc39.es/ecma402/#sec-resolvelocale
-LocaleResult resolve_locale(Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
+ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
 {
     // 1. Let matcher be options.[[localeMatcher]].
     auto const& matcher = options.locale_matcher;
     MatcherResult matcher_result;
 
     // 2. If matcher is "lookup", then
-    if (matcher.is_string() && (matcher.as_string().deprecated_string() == "lookup"sv)) {
+    if (matcher.is_string() && (TRY(matcher.as_string().deprecated_string()) == "lookup"sv)) {
         // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
         matcher_result = lookup_matcher(requested_locales);
     }
@@ -578,7 +578,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     Vector<DeprecatedString> supported_locales;
 
     // 3. If matcher is "best fit", then
-    if (matcher.as_string().deprecated_string() == "best fit"sv) {
+    if (TRY(matcher.as_string().deprecated_string()) == "best fit"sv) {
         // a. Let supportedLocales be BestFitSupportedLocales(availableLocales, requestedLocales).
         supported_locales = best_fit_supported_locales(requested_locales);
     }

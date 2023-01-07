@@ -3446,7 +3446,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
                 // 4. If supportedAssertions contains key, then
                 if (supported_assertions.contains_slow(property_key.to_string())) {
                     // a. Append { [[Key]]: key, [[Value]]: value } to assertions.
-                    assertions.empend(property_key.to_string(), value.as_string().deprecated_string());
+                    assertions.empend(property_key.to_string(), TRY(value.as_string().deprecated_string()));
                 }
             }
         }

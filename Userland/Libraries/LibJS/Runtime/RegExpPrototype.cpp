@@ -275,7 +275,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
 
     // 27. Let matchedValue be ! GetMatchString(S, match).
     // 28. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
-    MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, match.view.u16_view())));
+    MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, TRY(Utf16String::create(vm, match.view.u16_view())))));
 
     // 29. If R contains any GroupName, then
     //     a. Let groups be OrdinaryObjectCreate(null).
@@ -300,7 +300,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             // ii. Append undefined to indices.
             indices.append({});
             // iii. Append capture to indices.
-            captured_values.append(Utf16String(""sv));
+            captured_values.append(TRY(Utf16String::create(vm)));
         }
         // c. Else,
         else {
@@ -311,7 +311,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             //     2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
             // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]: captureEnd }.
             // v. Let capturedValue be ! GetMatchString(S, capture).
-            auto capture_as_utf16_string = Utf16String(capture.view.u16_view());
+            auto capture_as_utf16_string = TRY(Utf16String::create(vm, capture.view.u16_view()));
             captured_value = PrimitiveString::create(vm, capture_as_utf16_string);
             // vi. Append capture to indices.
             indices.append(Match::create(capture));
@@ -351,7 +351,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
         if (regexp_object.legacy_features_enabled()) {
             // a. Perform UpdateLegacyRegExpStaticProperties(%RegExp%, S, lastIndex, e, capturedValues).
             auto* regexp_constructor = realm.intrinsics().regexp_constructor();
-            update_legacy_regexp_static_properties(*regexp_constructor, string, match_indices.start_index, match_indices.end_index, captured_values);
+            TRY(update_legacy_regexp_static_properties(vm, *regexp_constructor, string, match_indices.start_index, match_indices.end_index, captured_values));
         }
         // ii. Else,
         else {
@@ -998,7 +998,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         auto substring = string.substring_view(last_match_end, next_search_from - last_match_end);
 
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
-        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, substring)));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, substring)))));
 
         // 3. Set lengthA to lengthA + 1.
         ++array_length;
@@ -1045,7 +1045,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto substring = string.substring_view(last_match_end);
 
     // 21. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
-    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, substring)));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, substring)))));
 
     // 22. Return A.
     return array;

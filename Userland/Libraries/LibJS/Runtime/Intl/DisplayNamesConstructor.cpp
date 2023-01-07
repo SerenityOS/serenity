@@ -76,13 +76,13 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
     opt.locale_matcher = matcher;
 
     // 10. Let r be ResolveLocale(%DisplayNames%.[[AvailableLocales]], requestedLocales, opt, %DisplayNames%.[[RelevantExtensionKeys]]).
-    auto result = resolve_locale(requested_locales, opt, {});
+    auto result = TRY(resolve_locale(requested_locales, opt, {}));
 
     // 11. Let style be ? GetOption(options, "style", "string", « "narrow", "short", "long" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv));
 
     // 12. Set displayNames.[[Style]] to style.
-    display_names->set_style(style.as_string().deprecated_string());
+    display_names->set_style(TRY(style.as_string().deprecated_string()));
 
     // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency", "calendar", "dateTimeField" », undefined).
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "language"sv, "region"sv, "script"sv, "currency"sv, "calendar"sv, "dateTimeField"sv }, Empty {}));
@@ -92,13 +92,13 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "options.type"sv);
 
     // 15. Set displayNames.[[Type]] to type.
-    display_names->set_type(type.as_string().deprecated_string());
+    display_names->set_type(TRY(type.as_string().deprecated_string()));
 
     // 16. Let fallback be ? GetOption(options, "fallback", "string", « "code", "none" », "code").
     auto fallback = TRY(get_option(vm, *options, vm.names.fallback, OptionType::String, { "code"sv, "none"sv }, "code"sv));
 
     // 17. Set displayNames.[[Fallback]] to fallback.
-    display_names->set_fallback(fallback.as_string().deprecated_string());
+    display_names->set_fallback(TRY(fallback.as_string().deprecated_string()));
 
     // 18. Set displayNames.[[Locale]] to r.[[locale]].
     display_names->set_locale(move(result.locale));
@@ -119,7 +119,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
     // 26. If type is "language", then
     if (display_names->type() == DisplayNames::Type::Language) {
         // a. Set displayNames.[[LanguageDisplay]] to languageDisplay.
-        display_names->set_language_display(language_display.as_string().deprecated_string());
+        display_names->set_language_display(TRY(language_display.as_string().deprecated_string()));
 
         // b. Let typeFields be typeFields.[[<languageDisplay>]].
         // c. Assert: typeFields is a Record (see 12.4.3).

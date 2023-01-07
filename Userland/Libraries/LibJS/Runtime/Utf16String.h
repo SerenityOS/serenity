@@ -21,10 +21,10 @@ class Utf16StringImpl : public RefCounted<Utf16StringImpl> {
 public:
     ~Utf16StringImpl() = default;
 
-    static NonnullRefPtr<Utf16StringImpl> create();
-    static NonnullRefPtr<Utf16StringImpl> create(Utf16Data);
-    static NonnullRefPtr<Utf16StringImpl> create(StringView);
-    static NonnullRefPtr<Utf16StringImpl> create(Utf16View const&);
+    static ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> create(VM&);
+    static ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> create(VM&, Utf16Data);
+    static ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> create(VM&, StringView);
+    static ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> create(VM&, Utf16View const&);
 
     Utf16Data const& string() const;
     Utf16View view() const;
@@ -40,10 +40,10 @@ private:
 
 class Utf16String {
 public:
-    Utf16String();
-    explicit Utf16String(Utf16Data);
-    explicit Utf16String(StringView);
-    explicit Utf16String(Utf16View const&);
+    static ThrowCompletionOr<Utf16String> create(VM&);
+    static ThrowCompletionOr<Utf16String> create(VM&, Utf16Data);
+    static ThrowCompletionOr<Utf16String> create(VM&, StringView);
+    static ThrowCompletionOr<Utf16String> create(VM&, Utf16View const&);
 
     Utf16Data const& string() const;
     Utf16View view() const;
@@ -57,6 +57,8 @@ public:
     bool is_empty() const;
 
 private:
+    explicit Utf16String(NonnullRefPtr<Detail::Utf16StringImpl>);
+
     NonnullRefPtr<Detail::Utf16StringImpl> m_string;
 };
 

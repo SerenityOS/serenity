@@ -777,9 +777,13 @@ ErrorOr<void> print_intl_segmenter(JS::PrintContext& print_context, JS::Intl::Se
 
 ErrorOr<void> print_intl_segments(JS::PrintContext& print_context, JS::Intl::Segments const& segments, HashTable<JS::Object*>& seen_objects)
 {
+    auto segments_string = JS::Utf16String::create(segments.vm(), segments.segments_string());
+    if (segments_string.is_error())
+        return Error::from_errno(ENOMEM);
+
     TRY(print_type(print_context, "Segments"));
     out("\n  string: ");
-    TRY(print_value(print_context, JS::PrimitiveString::create(segments.vm(), segments.segments_string()), seen_objects));
+    TRY(print_value(print_context, JS::PrimitiveString::create(segments.vm(), segments_string.release_value()), seen_objects));
     out("\n  segmenter: ");
     TRY(print_value(print_context, &segments.segments_segmenter(), seen_objects));
     return {};

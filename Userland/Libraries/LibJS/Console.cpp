@@ -212,7 +212,7 @@ ThrowCompletionOr<Value> Console::assert_()
         // 3. Otherwise:
         else {
             // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = PrimitiveString::create(vm, DeprecatedString::formatted("{}: {}", message->deprecated_string(), first.to_string(vm).value()));
+            auto concat = PrimitiveString::create(vm, DeprecatedString::formatted("{}: {}", TRY(message->deprecated_string()), first.to_string(vm).value()));
             // 2. Set data[0] to concat.
             data[0] = concat;
         }

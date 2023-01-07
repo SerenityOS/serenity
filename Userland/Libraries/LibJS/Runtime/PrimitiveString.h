@@ -8,9 +8,11 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -20,7 +22,6 @@ class PrimitiveString final : public Cell {
     JS_CELL(PrimitiveString, Cell);
 
 public:
-    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16View const&);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16String);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedString);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, PrimitiveString&, PrimitiveString&);
@@ -31,15 +32,16 @@ public:
     PrimitiveString& operator=(PrimitiveString const&) = delete;
 
     bool is_empty() const;
+    u32 hash() const;
 
-    DeprecatedString const& deprecated_string() const;
-    bool has_utf8_string() const { return m_has_utf8_string; }
+    ThrowCompletionOr<DeprecatedString const&> deprecated_string() const;
+    bool has_utf8_string() const { return m_utf8_string.has_value(); }
 
-    Utf16String const& utf16_string() const;
-    Utf16View utf16_string_view() const;
-    bool has_utf16_string() const { return m_has_utf16_string; }
+    ThrowCompletionOr<Utf16String const&> utf16_string() const;
+    ThrowCompletionOr<Utf16View> utf16_string_view() const;
+    bool has_utf16_string() const { return m_utf16_string.has_value(); }
 
-    Optional<Value> get(VM&, PropertyKey const&) const;
+    ThrowCompletionOr<Optional<Value>> get(VM&, PropertyKey const&) const;
 
 private:
     explicit PrimitiveString(PrimitiveString&, PrimitiveString&);
@@ -48,18 +50,15 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    void resolve_rope_if_needed() const;
+    ThrowCompletionOr<void> resolve_rope_if_needed() const;
 
     mutable bool m_is_rope { false };
-    mutable bool m_has_utf8_string { false };
-    mutable bool m_has_utf16_string { false };
 
     mutable PrimitiveString* m_lhs { nullptr };
     mutable PrimitiveString* m_rhs { nullptr };
 
-    mutable DeprecatedString m_utf8_string;
-
-    mutable Utf16String m_utf16_string;
+    mutable Optional<DeprecatedString> m_utf8_string;
+    mutable Optional<Utf16String> m_utf16_string;
 };
 
 }

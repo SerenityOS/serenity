@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     code = PrimitiveString::create(vm, move(code_string));
 
     // 4. Let code be ? CanonicalCodeForDisplayNames(displayNames.[[Type]], code).
-    code = TRY(canonical_code_for_display_names(vm, display_names->type(), code.as_string().deprecated_string()));
+    code = TRY(canonical_code_for_display_names(vm, display_names->type(), TRY(code.as_string().deprecated_string())));
 
     // 5. Let fields be displayNames.[[Fields]].
     // 6. If fields has a field [[<code>]], return fields.[[<code>]].
@@ -57,48 +57,48 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     switch (display_names->type()) {
     case DisplayNames::Type::Language:
         if (display_names->language_display() == DisplayNames::LanguageDisplay::Dialect) {
-            result = ::Locale::get_locale_language_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_language_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             if (result.has_value())
                 break;
         }
 
-        if (auto locale = is_structurally_valid_language_tag(code.as_string().deprecated_string()); locale.has_value())
+        if (auto locale = is_structurally_valid_language_tag(TRY(code.as_string().deprecated_string())); locale.has_value())
             formatted_result = ::Locale::format_locale_for_display(display_names->locale(), locale.release_value());
         break;
     case DisplayNames::Type::Region:
-        result = ::Locale::get_locale_territory_mapping(display_names->locale(), code.as_string().deprecated_string());
+        result = ::Locale::get_locale_territory_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
         break;
     case DisplayNames::Type::Script:
-        result = ::Locale::get_locale_script_mapping(display_names->locale(), code.as_string().deprecated_string());
+        result = ::Locale::get_locale_script_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
         break;
     case DisplayNames::Type::Currency:
         switch (display_names->style()) {
         case ::Locale::Style::Long:
-            result = ::Locale::get_locale_long_currency_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_long_currency_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             break;
         case ::Locale::Style::Short:
-            result = ::Locale::get_locale_short_currency_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_short_currency_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             break;
         case ::Locale::Style::Narrow:
-            result = ::Locale::get_locale_narrow_currency_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_narrow_currency_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             break;
         default:
             VERIFY_NOT_REACHED();
         }
         break;
     case DisplayNames::Type::Calendar:
-        result = ::Locale::get_locale_calendar_mapping(display_names->locale(), code.as_string().deprecated_string());
+        result = ::Locale::get_locale_calendar_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
         break;
     case DisplayNames::Type::DateTimeField:
         switch (display_names->style()) {
         case ::Locale::Style::Long:
-            result = ::Locale::get_locale_long_date_field_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_long_date_field_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             break;
         case ::Locale::Style::Short:
-            result = ::Locale::get_locale_short_date_field_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_short_date_field_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             break;
         case ::Locale::Style::Narrow:
-            result = ::Locale::get_locale_narrow_date_field_mapping(display_names->locale(), code.as_string().deprecated_string());
+            result = ::Locale::get_locale_narrow_date_field_mapping(display_names->locale(), TRY(code.as_string().deprecated_string()));
             break;
         default:
             VERIFY_NOT_REACHED();

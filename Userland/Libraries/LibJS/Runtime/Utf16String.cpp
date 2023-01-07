@@ -11,9 +11,9 @@
 namespace JS {
 namespace Detail {
 
-static NonnullRefPtr<Utf16StringImpl> the_empty_utf16_string()
+static ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> the_empty_utf16_string(VM& vm)
 {
-    static NonnullRefPtr<Utf16StringImpl> empty_string = Utf16StringImpl::create();
+    static NonnullRefPtr<Utf16StringImpl> empty_string = TRY(Utf16StringImpl::create(vm));
     return empty_string;
 }
 
@@ -22,27 +22,27 @@ Utf16StringImpl::Utf16StringImpl(Utf16Data string)
 {
 }
 
-NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create()
+ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> Utf16StringImpl::create(VM& vm)
 {
-    return adopt_ref(*new Utf16StringImpl());
+    return TRY_OR_THROW_OOM(vm, adopt_nonnull_ref_or_enomem(new (nothrow) Utf16StringImpl()));
 }
 
-NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Utf16Data string)
+ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> Utf16StringImpl::create(VM& vm, Utf16Data string)
 {
-    return adopt_ref(*new Utf16StringImpl(move(string)));
+    return TRY_OR_THROW_OOM(vm, adopt_nonnull_ref_or_enomem(new (nothrow) Utf16StringImpl(move(string))));
 }
 
-NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(StringView string)
+ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> Utf16StringImpl::create(VM& vm, StringView string)
 {
-    return create(AK::utf8_to_utf16(string).release_value_but_fixme_should_propagate_errors());
+    return create(vm, TRY_OR_THROW_OOM(vm, utf8_to_utf16(string)));
 }
 
-NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Utf16View const& view)
+ThrowCompletionOr<NonnullRefPtr<Utf16StringImpl>> Utf16StringImpl::create(VM& vm, Utf16View const& view)
 {
     Utf16Data string;
-    string.ensure_capacity(view.length_in_code_units());
-    string.append(view.data(), view.length_in_code_units());
-    return create(move(string));
+    TRY_OR_THROW_OOM(vm, string.try_ensure_capacity(view.length_in_code_units()));
+    string.unchecked_append(view.data(), view.length_in_code_units());
+    return create(vm, move(string));
 }
 
 Utf16Data const& Utf16StringImpl::string() const
@@ -57,23 +57,28 @@ Utf16View Utf16StringImpl::view() const
 
 }
 
-Utf16String::Utf16String()
-    : m_string(Detail::the_empty_utf16_string())
+ThrowCompletionOr<Utf16String> Utf16String::create(VM& vm)
 {
+    return Utf16String { TRY(Detail::the_empty_utf16_string(vm)) };
 }
 
-Utf16String::Utf16String(Utf16Data string)
-    : m_string(Detail::Utf16StringImpl::create(move(string)))
+ThrowCompletionOr<Utf16String> Utf16String::create(VM& vm, Utf16Data string)
 {
+    return Utf16String { TRY(Detail::Utf16StringImpl::create(vm, move(string))) };
 }
 
-Utf16String::Utf16String(StringView string)
-    : m_string(Detail::Utf16StringImpl::create(move(string)))
+ThrowCompletionOr<Utf16String> Utf16String::create(VM& vm, StringView string)
 {
+    return Utf16String { TRY(Detail::Utf16StringImpl::create(vm, string)) };
 }
 
-Utf16String::Utf16String(Utf16View const& string)
-    : m_string(Detail::Utf16StringImpl::create(move(string)))
+ThrowCompletionOr<Utf16String> Utf16String::create(VM& vm, Utf16View const& string)
+{
+    return Utf16String { TRY(Detail::Utf16StringImpl::create(vm, string)) };
+}
+
+Utf16String::Utf16String(NonnullRefPtr<Detail::Utf16StringImpl> string)
+    : m_string(move(string))
 {
 }
 

@@ -146,8 +146,8 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     if (!values.is_empty()) {
         // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        if (!values.contains_slow(value.as_string().deprecated_string()))
-            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value.as_string().deprecated_string(), property.as_string());
+        if (auto const& value_string = TRY(value.as_string().deprecated_string()); !values.contains_slow(value_string))
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
     }
 
     // 9. Return value.
@@ -165,7 +165,7 @@ ThrowCompletionOr<DeprecatedString> to_temporal_overflow(VM& vm, Object const* o
     auto option = TRY(get_option(vm, *options, vm.names.overflow, OptionType::String, { "constrain"sv, "reject"sv }, "constrain"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.5 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
@@ -179,7 +179,7 @@ ThrowCompletionOr<DeprecatedString> to_temporal_disambiguation(VM& vm, Object co
     auto option = TRY(get_option(vm, *options, vm.names.disambiguation, OptionType::String, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, "compatible"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.6 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
@@ -202,7 +202,7 @@ ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM& vm, Object con
         fallback.view()));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.7 NegateTemporalRoundingMode ( roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-negatetemporalroundingmode
@@ -239,7 +239,7 @@ ThrowCompletionOr<DeprecatedString> to_temporal_offset(VM& vm, Object const* opt
     auto option = TRY(get_option(vm, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, fallback.view()));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.9 ToCalendarNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tocalendarnameoption
@@ -249,7 +249,7 @@ ThrowCompletionOr<DeprecatedString> to_calendar_name_option(VM& vm, Object const
     auto option = TRY(get_option(vm, normalized_options, vm.names.calendarName, OptionType::String, { "auto"sv, "always"sv, "never"sv, "critical"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.10 ToTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totimezonenameoption
@@ -259,7 +259,7 @@ ThrowCompletionOr<DeprecatedString> to_time_zone_name_option(VM& vm, Object cons
     auto option = TRY(get_option(vm, normalized_options, vm.names.timeZoneName, OptionType::String, { "auto"sv, "never"sv, "critical"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.11 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
@@ -269,7 +269,7 @@ ThrowCompletionOr<DeprecatedString> to_show_offset_option(VM& vm, Object const& 
     auto option = TRY(get_option(vm, normalized_options, vm.names.offset, OptionType::String, { "auto"sv, "never"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 13.12 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
@@ -530,7 +530,7 @@ ThrowCompletionOr<Optional<DeprecatedString>> get_temporal_unit(VM& vm, Object c
 
     Optional<DeprecatedString> value = option_value.is_undefined()
         ? Optional<DeprecatedString> {}
-        : option_value.as_string().deprecated_string();
+        : TRY(option_value.as_string().deprecated_string());
 
     // 11. If value is listed in the Plural column of Table 13, then
     for (auto const& row : temporal_units) {
