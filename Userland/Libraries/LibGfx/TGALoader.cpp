@@ -51,6 +51,11 @@ union [[gnu::packed]] TGAPixel {
     u32 data;
 };
 
+struct TGAPixelPacket {
+    bool raw;
+    u8 pixels_count;
+};
+
 static_assert(AssertSize<TGAPixel, 4>());
 
 class TGAReader {
@@ -90,6 +95,19 @@ public:
     ALWAYS_INLINE i32 read_i32()
     {
         return read_i16() | read_i16() << 16;
+    }
+
+    ALWAYS_INLINE TGAPixelPacket read_packet_type()
+    {
+        auto pixel_packet_type = read_u8();
+        auto pixel_packet = TGAPixelPacket();
+        pixel_packet.raw = !(pixel_packet_type & 0x80);
+        pixel_packet.pixels_count = (pixel_packet_type & 0x7f);
+
+        // NOTE: Run-length-encoded/Raw pixel packets cannot encode zero pixels,
+        // so value 0 stands for 1 pixel, 1 stands for 2, etc...
+        pixel_packet.pixels_count++;
+        return pixel_packet;
     }
 
     ALWAYS_INLINE TGAPixel read_pixel(u8 bits_per_pixel)
@@ -186,7 +204,7 @@ bool TGAImageDecoderPlugin::decode_tga_header()
 
     auto bytes_remaining = reader->data().size() - reader->index();
 
-    if (bytes_remaining < (m_context->header.width * m_context->header.height * (m_context->header.bits_per_pixel / 8)))
+    if (m_context->header.data_type_code == TGADataType::UncompressedRGB && bytes_remaining < (m_context->header.width * m_context->header.height * (m_context->header.bits_per_pixel / 8)))
         return false;
 
     if (m_context->header.bits_per_pixel < 8 || m_context->header.bits_per_pixel > 32)
@@ -274,9 +292,34 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
         }
         break;
     }
+    case TGADataType::RunLengthEncodedRGB: {
+        size_t pixel_index = 0;
+        size_t pixel_count = height * width;
+        while (pixel_index < pixel_count) {
+            auto packet_type = m_context->reader->read_packet_type();
+            VERIFY(packet_type.pixels_count > 0);
+            TGAPixel pixel = m_context->reader->read_pixel(bits_per_pixel);
+            auto max_pixel_index = min(pixel_index + packet_type.pixels_count, pixel_count);
+            for (size_t current_pixel_index = pixel_index; current_pixel_index < max_pixel_index; ++current_pixel_index) {
+                int row = current_pixel_index / width;
+                int col = current_pixel_index % width;
+                auto actual_row = row;
+                if (y_origin < height)
+                    actual_row = height - 1 - row;
+                auto actual_col = col;
+                if (x_origin > width)
+                    actual_col = width - 1 - col;
+                m_context->bitmap->scanline(actual_row)[actual_col] = pixel.data;
+                if (packet_type.raw && (current_pixel_index + 1) < max_pixel_index)
+                    pixel = m_context->reader->read_pixel(bits_per_pixel);
+            }
+            pixel_index += packet_type.pixels_count;
+        }
+        break;
+    }
     default:
         // FIXME: Implement other TGA data types
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB data type");
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB or CompressedRGB data type");
     }
 
     VERIFY(m_context->bitmap);
