@@ -678,7 +678,7 @@ void ColorField::resize_event(ResizeEvent&)
 ColorSlider::ColorSlider(double value)
     : m_value(value)
 {
-    m_color_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 32, 360 }).release_value_but_fixme_should_propagate_errors();
+    m_color_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 1, 360 }).release_value_but_fixme_should_propagate_errors();
     auto painter = Gfx::Painter(*m_color_bitmap);
 
     for (int h = 0; h < 360; h++) {
@@ -687,7 +687,7 @@ ColorSlider::ColorSlider(double value)
         hsv.saturation = 1.0;
         hsv.value = 1.0;
         Color color = Color::from_hsv(hsv);
-        painter.draw_line({ 0, h }, { 32, h }, color);
+        painter.set_pixel({ 0, h }, color);
     }
 }
 
