@@ -8,7 +8,6 @@ Serenity boots to a graphical desktop on all machines unless otherwise noted.
 
 | Model                                    | Notes                         |
 | ---------------------------------------- | ----------------------------- |
-| RTL8139                                  |                               |
 | Intel 82545XX                            | Also known as e1000           |
 | NE2000 compatible cards                  |                               |
 | Intel 82574L                             | Also known as e1000e          |
