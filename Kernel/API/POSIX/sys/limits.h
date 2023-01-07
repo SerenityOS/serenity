@@ -25,4 +25,6 @@
 
 #define NGROUPS_MAX 32
 
+#define ARG_MAX 65536
+
 #define PTHREAD_STACK_MIN (64 * 1024) // 64KiB

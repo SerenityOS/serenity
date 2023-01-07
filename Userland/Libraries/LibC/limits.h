@@ -62,8 +62,6 @@
 #define LLONG_WIDTH 64
 #define ULLONG_WIDTH 64
 
-#define ARG_MAX 65536
-
 #define SSIZE_MAX LONG_MAX
 
 #define LINK_MAX 4096

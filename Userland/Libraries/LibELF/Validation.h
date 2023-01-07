@@ -8,7 +8,6 @@
 
 #include <AK/StringBuilder.h>
 #include <LibC/elf.h>
-#include <limits.h>
 
 namespace ELF {
 
