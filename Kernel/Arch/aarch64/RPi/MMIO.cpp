@@ -14,7 +14,7 @@ MMIO::MMIO()
 {
     MainIdRegister id;
     if (id.part_num() <= MainIdRegister::RaspberryPi3)
-        m_base_address = 0x3F00'0000;
+        m_base_address = PhysicalAddress(0x3F00'0000);
 }
 
 MMIO& MMIO::the()

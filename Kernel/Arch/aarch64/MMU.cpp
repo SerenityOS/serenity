@@ -143,8 +143,8 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
     // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
     auto start_of_kernel_range = VirtualAddress(((FlatPtr)start_of_kernel_image + KERNEL_MAPPING_BASE) & ~(FlatPtr)0x1fffff);
     auto end_of_kernel_range = VirtualAddress((((FlatPtr)end_of_kernel_image + KERNEL_MAPPING_BASE) & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
-    auto start_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_base_address() + KERNEL_MAPPING_BASE);
-    auto end_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_end_address() + KERNEL_MAPPING_BASE);
+    auto start_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_base_address().offset(KERNEL_MAPPING_BASE).get());
+    auto end_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_end_address().offset(KERNEL_MAPPING_BASE).get());
 
     auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-KERNEL_MAPPING_BASE);
     auto start_of_physical_mmio_range = PhysicalAddress(start_of_mmio_range.get()).offset(-KERNEL_MAPPING_BASE);
