@@ -27,6 +27,7 @@ private:
     void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
     void calculate_row_heights();
     void position_row_boxes();
+    void position_cell_boxes();
 
     CSSPixels m_automatic_content_height { 0 };
 

@@ -446,37 +446,13 @@ void TableFormattingContext::position_row_boxes()
     });
 }
 
-void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
+void TableFormattingContext::position_cell_boxes()
 {
-    m_available_space = available_space;
-
-    CSSPixels total_content_height = 0;
-
-    // Determine the number of rows/columns the table requires.
-    calculate_row_column_grid(box);
-
-    // Compute the minimum width of each column.
-    compute_table_measures();
-
-    if (available_space.width.is_intrinsic_sizing_constraint()) {
-        determine_intrisic_size_of_table_container(available_space);
-        return;
-    }
-
-    // Compute the width of the table.
-    compute_table_width();
-
-    // Distribute the width of the table among columns.
-    distribute_width_to_columns();
-
     CSSPixels left_column_offset = 0;
     for (auto& column : m_columns) {
         column.left_offset = left_column_offset;
         left_column_offset += column.used_width;
     }
-
-    calculate_row_heights();
-    position_row_boxes();
 
     for (auto& cell : m_cells) {
         auto& cell_state = m_state.get_mutable(cell.box);
@@ -506,6 +482,34 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
 
         cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + m_columns[cell.column_index].left_offset, cell_state.border_box_top());
     }
+}
+
+void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
+{
+    m_available_space = available_space;
+
+    CSSPixels total_content_height = 0;
+
+    // Determine the number of rows/columns the table requires.
+    calculate_row_column_grid(box);
+
+    // Compute the minimum width of each column.
+    compute_table_measures();
+
+    if (available_space.width.is_intrinsic_sizing_constraint()) {
+        determine_intrisic_size_of_table_container(available_space);
+        return;
+    }
+
+    // Compute the width of the table.
+    compute_table_width();
+
+    // Distribute the width of the table among columns.
+    distribute_width_to_columns();
+
+    calculate_row_heights();
+    position_row_boxes();
+    position_cell_boxes();
 
     m_state.get_mutable(context_box()).set_content_height(total_content_height);
 
