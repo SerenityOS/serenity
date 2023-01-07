@@ -77,6 +77,8 @@ DeprecatedString guess_mime_type_based_on_filename(StringView path)
         return "text/html";
     if (path.ends_with(".css"sv, CaseSensitivity::CaseInsensitive))
         return "text/css";
+    if (path.ends_with(".icc"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".icm"sv, CaseSensitivity::CaseInsensitive))
+        return "application/vnd.iccprofile";
     if (path.ends_with(".js"sv, CaseSensitivity::CaseInsensitive))
         return "application/javascript";
     if (path.ends_with(".json"sv, CaseSensitivity::CaseInsensitive))
@@ -119,6 +121,7 @@ DeprecatedString guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(gif_87, "image/gif", 0, 6, 'G', 'I', 'F', '8', '7', 'a')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(gif_89, "image/gif", 0, 6, 'G', 'I', 'F', '8', '9', 'a')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(gzip, "application/gzip", 0, 2, 0x1F, 0x8B)                                                                     \
+    __ENUMERATE_MIME_TYPE_HEADER(icc, "application/vnd.iccprofile", 36, 4, 'a', 'c', 's', 'p')                                                   \
     __ENUMERATE_MIME_TYPE_HEADER(iso9660_0, "extra/iso-9660", 0x8001, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
     __ENUMERATE_MIME_TYPE_HEADER(iso9660_1, "extra/iso-9660", 0x8801, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
     __ENUMERATE_MIME_TYPE_HEADER(iso9660_2, "extra/iso-9660", 0x9001, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
