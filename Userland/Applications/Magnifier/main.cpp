@@ -67,17 +67,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
-            auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, "Capture", "png");
+            auto response = FileSystemAccessClient::Client::the().save_file(window, "Capture", "png");
             if (response.is_error())
                 return {};
-            auto file = response.release_value();
-            auto path = AK::LexicalPath(file->filename());
+            auto file = response.value().release_stream();
+            auto path = AK::LexicalPath(response.value().filename().to_deprecated_string());
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
 
-            if (!file->write(encoded.data(), encoded.size())) {
-                return Error::from_errno(file->error());
-            }
+            TRY(file->write(encoded));
             return {};
         };
 
