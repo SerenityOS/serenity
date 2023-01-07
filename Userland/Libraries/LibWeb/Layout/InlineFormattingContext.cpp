@@ -143,8 +143,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         if (width_value.contains_percentage() && !m_available_space->width.is_definite()) {
             // NOTE: We can't resolve percentages yet. We'll have to wait until after inner layout.
         } else {
-            auto container_width = CSS::Length::make_px(m_available_space->width.to_px());
-            unconstrained_width = width_value.resolved(box, container_width).to_px(box);
+            auto inner_width = calculate_inner_width(box, m_available_space->width, width_value);
+            unconstrained_width = inner_width.to_px(box);
         }
     }
 
@@ -157,7 +157,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
 
     auto computed_min_width = box.computed_values().min_width();
     if (!computed_min_width.is_auto()) {
-        auto min_width = computed_min_width.resolved(box, width_of_containing_block).to_px(box);
+        auto min_width = calculate_inner_width(box, m_available_space->width, computed_min_width).to_px(box);
         width = max(width, min_width);
     }
 
@@ -170,8 +170,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         parent().compute_height(box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
     } else {
-        auto container_height = CSS::Length::make_px(m_containing_block_state.content_height());
-        box_state.set_content_height(height_value.resolved(box, container_height).to_px(box));
+        auto inner_height = calculate_inner_height(box, AvailableSize::make_definite(m_containing_block_state.content_height()), height_value);
+        box_state.set_content_height(inner_height.to_px(box));
     }
 
     if (independent_formatting_context)
