@@ -142,17 +142,12 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     }
 
     if (available_width.is_intrinsic_sizing_constraint() || available_height.is_intrinsic_sizing_constraint()) {
-        // We're computing intrinsic size for the flex container.
-        determine_intrinsic_size_of_flex_container();
+        // We're computing intrinsic size for the flex container. This happens at the end of run().
+    } else {
 
-        // Our caller is only interested in the content-width and content-height results,
-        // which have now been set on m_flex_container_state, so there's no need to continue
-        // the main layout algorithm after this point.
-        return;
+        // 4. Determine the main size of the flex container
+        determine_main_size_of_flex_container();
     }
-
-    // 4. Determine the main size of the flex container
-    determine_main_size_of_flex_container();
 
     // 5. Collect flex items into flex lines:
     // After this step no additional items are to be added to flex_lines or any of its items!
@@ -231,6 +226,15 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     //        part of the spec, and simply covering up the fact that our inside layout currently
     //        mutates the height of BFC roots.
     copy_dimensions_from_flex_items_to_boxes();
+
+    if (available_width.is_intrinsic_sizing_constraint() || available_height.is_intrinsic_sizing_constraint()) {
+        // We're computing intrinsic size for the flex container.
+        determine_intrinsic_size_of_flex_container();
+
+        // Our caller is only interested in the content-width and content-height results,
+        // which have now been set on m_flex_container_state, so there's no need to continue
+        // the main layout algorithm after this point.
+    }
 }
 
 void FlexFormattingContext::parent_context_did_dimension_child_root_box()
