@@ -231,6 +231,7 @@ ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
 ErrorOr<void> parse_file_signature(ICCHeader const& header)
 {
     // ICC v4, 7.2.9 Profile file signature field
+    // "The profile file signature field shall contain the value “acsp” (61637370h) as a profile file signature."
     if (header.profile_file_signature != 0x61637370)
         return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
     return {};
