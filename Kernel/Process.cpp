@@ -67,7 +67,7 @@ ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> c
 {
     ErrorOr<void> result {};
     Process::all_instances().with([&](auto const& list) {
-        Process::current().jail().with([&](auto my_jail) {
+        Process::current().jail().with([&](auto const& my_jail) {
             for (auto& process : list) {
                 if (!my_jail) {
                     result = callback(process);
@@ -77,7 +77,7 @@ ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> c
                     if (&Process::current() == &process) {
                         result = callback(process);
                     } else {
-                        process.jail().with([&](auto& their_jail) {
+                        process.jail().with([&](auto const& their_jail) {
                             if (their_jail.ptr() == my_jail.ptr())
                                 result = callback(process);
                         });
@@ -96,7 +96,7 @@ ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Proces
     ProcessID my_pid = pid();
     ErrorOr<void> result {};
     Process::all_instances().with([&](auto const& list) {
-        jail().with([&](auto my_jail) {
+        jail().with([&](auto const& my_jail) {
             for (auto& process : list) {
                 if (!my_jail) {
                     if (process.ppid() == my_pid || process.has_tracee_thread(pid()))
@@ -109,7 +109,7 @@ ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Proces
                     if (&Process::current() == &process && (process.ppid() == my_pid || process.has_tracee_thread(pid()))) {
                         result = callback(process);
                     } else {
-                        process.jail().with([&](auto& their_jail) {
+                        process.jail().with([&](auto const& their_jail) {
                             if ((their_jail.ptr() == my_jail.ptr()) && (process.ppid() == my_pid || process.has_tracee_thread(pid())))
                                 result = callback(process);
                         });
@@ -127,7 +127,7 @@ ErrorOr<void> Process::for_each_in_pgrp_in_same_jail(ProcessGroupID pgid, Functi
 {
     ErrorOr<void> result {};
     Process::all_instances().with([&](auto const& list) {
-        jail().with([&](auto my_jail) {
+        jail().with([&](auto const& my_jail) {
             for (auto& process : list) {
                 if (!my_jail) {
                     if (!process.is_dead() && process.pgid() == pgid)
@@ -138,7 +138,7 @@ ErrorOr<void> Process::for_each_in_pgrp_in_same_jail(ProcessGroupID pgid, Functi
                     if (&Process::current() == &process && !process.is_dead() && process.pgid() == pgid) {
                         result = callback(process);
                     } else {
-                        process.jail().with([&](auto& their_jail) {
+                        process.jail().with([&](auto const& their_jail) {
                             if ((their_jail.ptr() == my_jail.ptr()) && !process.is_dead() && process.pgid() == pgid)
                                 result = callback(process);
                         });
@@ -485,7 +485,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 
 LockRefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
 {
-    return Process::current().jail().with([&](auto& my_jail) -> LockRefPtr<Process> {
+    return Process::current().jail().with([&](auto const& my_jail) -> LockRefPtr<Process> {
         return all_instances().with([&](auto const& list) -> LockRefPtr<Process> {
             if (!my_jail) {
                 for (auto& process : list) {
@@ -496,7 +496,7 @@ LockRefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
             } else {
                 for (auto& process : list) {
                     if (process.pid() == pid) {
-                        return process.jail().with([&](auto& other_process_jail) -> LockRefPtr<Process> {
+                        return process.jail().with([&](auto const& other_process_jail) -> LockRefPtr<Process> {
                             if (other_process_jail.ptr() == my_jail.ptr())
                                 return process;
                             return {};

@@ -23,17 +23,14 @@ struct CSVExportDialogPage {
     explicit CSVExportDialogPage(Sheet const&);
 
     NonnullRefPtr<GUI::WizardPage> page() { return *m_page; }
-    Optional<XSV>& writer() { return m_previously_made_writer; }
-    Result<void, DeprecatedString> move_into(DeprecatedString const& target);
+    ErrorOr<NonnullOwnPtr<XSV>> make_writer(Core::Stream::Handle<Core::Stream::Stream>);
 
 protected:
     void update_preview();
-    Optional<XSV> make_writer();
 
 private:
     Vector<Vector<DeprecatedString>> m_data;
     Vector<DeprecatedString> m_headers;
-    Optional<XSV> m_previously_made_writer;
     RefPtr<GUI::WizardPage> m_page;
     RefPtr<GUI::RadioButton> m_delimiter_comma_radio;
     RefPtr<GUI::RadioButton> m_delimiter_semicolon_radio;
@@ -54,12 +51,10 @@ private:
         "Repeat",
         "Backslash",
     };
-
-    DeprecatedString m_temp_output_file_path;
 };
 
 struct ExportDialog {
-    static Result<void, DeprecatedString> make_and_run_for(StringView mime, Core::File& file, Workbook&);
+    static ErrorOr<void> make_and_run_for(StringView mime, NonnullOwnPtr<Core::Stream::File>, DeprecatedString filename, Workbook&);
 };
 
 }

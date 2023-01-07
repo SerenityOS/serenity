@@ -15,8 +15,8 @@ namespace Writer {
 template<typename ContainerType>
 class CSV : public XSV<ContainerType> {
 public:
-    CSV(OutputStream& output, ContainerType const& data, Vector<StringView> const& headers = {}, WriterBehavior behaviors = default_behaviors())
-        : XSV<ContainerType>(output, data, { ",", "\"", WriterTraits::Repeat }, headers, behaviors)
+    CSV(Core::Stream::Handle<Core::Stream::Stream> output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
+        : XSV<ContainerType>(move(output), data, { ",", "\"", WriterTraits::Repeat }, move(headers), behaviors)
     {
     }
 };

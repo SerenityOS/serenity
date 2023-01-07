@@ -8,7 +8,7 @@
 
 #include "../CSV.h"
 #include "../XSV.h"
-#include <AK/MemoryStream.h>
+#include <LibCore/MemoryStream.h>
 
 TEST_CASE(can_write)
 {
@@ -18,17 +18,17 @@ TEST_CASE(can_write)
         { 7, 8, 9 },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
-    OutputMemoryStream stream { buffer };
-
-    Writer::CSV csv(stream, data);
+    Core::Stream::AllocatingMemoryStream stream;
+    auto csv = Writer::CSV(Core::Stream::Handle<Core::Stream::Stream>(stream), data);
+    MUST(csv.generate());
 
     auto expected_output = R"~(1,2,3
 4,5,6
 7,8,9
-)~";
+)~"sv;
 
-    EXPECT_EQ(StringView { stream.bytes() }, expected_output);
+    auto buffer = MUST(stream.read_until_eof());
+    EXPECT_EQ(StringView { buffer.bytes() }, expected_output);
 }
 
 TEST_CASE(can_write_with_header)
@@ -39,18 +39,18 @@ TEST_CASE(can_write_with_header)
         { 7, 8, 9 },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
-    OutputMemoryStream stream { buffer };
-
-    Writer::CSV csv(stream, data, { "A"sv, "B\""sv, "C"sv });
+    Core::Stream::AllocatingMemoryStream stream;
+    auto csv = Writer::CSV(Core::Stream::Handle<Core::Stream::Stream>(stream), data, { "A"sv, "B\""sv, "C"sv });
+    MUST(csv.generate());
 
     auto expected_output = R"~(A,"B""",C
 1,2,3
 4,5,6
 7,8,9
-)~";
+)~"sv;
 
-    EXPECT_EQ(StringView { stream.bytes() }, expected_output);
+    auto buffer = MUST(stream.read_until_eof());
+    EXPECT_EQ(StringView { buffer.bytes() }, expected_output);
 }
 
 TEST_CASE(can_write_with_different_behaviors)
@@ -60,15 +60,15 @@ TEST_CASE(can_write_with_different_behaviors)
         { "We\"ll", "Hello,", "   Friends" },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
-    OutputMemoryStream stream { buffer };
-
-    Writer::CSV csv(stream, data, { "A"sv, "B\""sv, "C"sv }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders);
+    Core::Stream::AllocatingMemoryStream stream;
+    auto csv = Writer::CSV(Core::Stream::Handle<Core::Stream::Stream>(stream), data, { "A"sv, "B\""sv, "C"sv }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders);
+    MUST(csv.generate());
 
     auto expected_output = R"~(A,B",C
 Well,Hello",Friends
 We"ll,"Hello,",   Friends
-)~";
+)~"sv;
 
-    EXPECT_EQ(StringView { stream.bytes() }, expected_output);
+    auto buffer = MUST(stream.read_until_eof());
+    EXPECT_EQ(StringView { buffer.bytes() }, expected_output);
 }

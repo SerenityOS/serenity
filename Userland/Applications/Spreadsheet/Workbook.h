@@ -18,7 +18,7 @@ public:
     Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window);
 
     Result<bool, DeprecatedString> open_file(Core::File&);
-    Result<bool, DeprecatedString> write_to_file(Core::File&);
+    ErrorOr<void> write_to_file(Core::File&);
 
     Result<bool, DeprecatedString> import_file(Core::File&);
 
