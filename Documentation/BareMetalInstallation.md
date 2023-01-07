@@ -14,7 +14,7 @@ You must be willing to wipe your disk's contents to allow for writing the Sereni
 
 Serenity currently has no support for USB but some machines will emulate PS/2 keyboards and mice in the BIOS via USB. BIOS USB PS/2 emulation can be buggy so having real PS/2 input devices is recommended. A minimum of 256 MB RAM and a x86-64 CPU are required.
 
-At present there is no real GPU support so don't expect OpenGL, Vulkan nor accelerated video playback and encoding support. Serenity currently relies upon VESA BIOS extensions to provide its display output and so it only runs on BIOS-based PCs. There is no WiFi support and the network card chipsets that are currently supported: Novell NE2000 and Intel e1000, Intel e1000e and Realtek 8168. The e1000 driver has only been tested with qemu and VirtualBox although it may work with NICs such as those using the Intel 82545XX, 82540XX, 82546XX or similar chipsets. The sole sound card supported is the Intel AC'97 PCI device.
+At present there is no real GPU support so don't expect OpenGL, Vulkan nor accelerated video playback and encoding support. Serenity currently relies upon VESA BIOS extensions to provide its display output and so it only runs on BIOS-based PCs. There is no WiFi support and the network card chipsets that are currently supported: Intel e1000, Intel e1000e and Realtek 8168. The e1000 driver has only been tested with qemu and VirtualBox although it may work with NICs such as those using the Intel 82545XX, 82540XX, 82546XX or similar chipsets. The sole sound card supported is the Intel AC'97 PCI device.
 
 For more details on known working hardware see the [SerenityOS Hardware Compatibility List](HardwareCompatibility.md).
 
