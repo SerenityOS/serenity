@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 
 #ifdef KERNEL
-#    include <LibC/limits.h>
+#    include <Kernel/API/POSIX/sys/limits.h>
 #else
 #    include <limits.h>
 #endif

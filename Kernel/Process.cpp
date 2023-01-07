@@ -18,6 +18,7 @@
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
 #include <Kernel/API/POSIX/errno.h>
+#include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -38,7 +39,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
-#include <LibC/limits.h>
 
 namespace Kernel {
 
