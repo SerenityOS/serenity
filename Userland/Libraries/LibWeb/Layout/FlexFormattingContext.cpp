@@ -1868,12 +1868,18 @@ CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const&
 
 CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_min_content_height(item.box, m_available_space_for_items->space.width) : calculate_min_content_width(item.box);
+    if (is_row_layout()) {
+        return calculate_min_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : AvailableSize::make_indefinite());
+    }
+    return calculate_min_content_width(item.box);
 }
 
 CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_max_content_height(item.box, m_available_space_for_items->space.width) : calculate_max_content_width(item.box);
+    if (is_row_layout()) {
+        return calculate_max_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : AvailableSize::make_indefinite());
+    }
+    return calculate_max_content_width(item.box);
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#stretched
