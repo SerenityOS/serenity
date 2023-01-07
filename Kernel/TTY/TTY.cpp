@@ -8,11 +8,11 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <Kernel/API/POSIX/errno.h>
+#include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
-#include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 #define TTYDEFCHARS
 #include <LibC/sys/ttydefaults.h>

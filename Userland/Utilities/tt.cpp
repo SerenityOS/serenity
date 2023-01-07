@@ -8,7 +8,7 @@
 #include <LibMain/Main.h>
 #include <errno.h>
 #include <pthread.h>
-#include <signal_numbers.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>

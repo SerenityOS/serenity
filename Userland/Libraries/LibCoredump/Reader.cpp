@@ -13,7 +13,7 @@
 #include <LibCompress/Gzip.h>
 #include <LibCore/File.h>
 #include <LibCoredump/Reader.h>
-#include <signal_numbers.h>
+#include <signal.h>
 #include <string.h>
 #include <unistd.h>
 

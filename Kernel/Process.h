@@ -38,7 +38,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/elf.h>
-#include <LibC/signal_numbers.h>
 
 namespace Kernel {
 
