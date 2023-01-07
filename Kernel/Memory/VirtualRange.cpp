@@ -8,7 +8,6 @@
 #include <AK/Vector.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/VirtualRange.h>
-#include <LibC/limits.h>
 
 namespace Kernel::Memory {
 

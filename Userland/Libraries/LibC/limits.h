@@ -12,21 +12,6 @@
 #include <bits/stdint.h>
 #include <bits/wchar.h>
 
-#ifndef PAGE_SIZE
-#    define PAGE_SIZE 4096
-#endif
-
-#define HOST_NAME_MAX 64
-
-#define PATH_MAX 4096
-#if !defined MAXPATHLEN && defined PATH_MAX
-#    define MAXPATHLEN PATH_MAX
-#endif
-
-#define NAME_MAX 255
-
-#define TTY_NAME_MAX 32
-
 #define PIPE_BUF 4096
 
 #define INT_MAX INT32_MAX

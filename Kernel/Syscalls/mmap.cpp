@@ -20,7 +20,6 @@
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
-#include <LibC/limits.h>
 #include <LibELF/Validation.h>
 
 namespace Kernel {
