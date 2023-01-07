@@ -50,7 +50,7 @@ private:
 
     struct Row {
         Box& box;
-        CSSPixels used_width { 0 };
+        CSSPixels used_height { 0 };
         CSSPixels baseline { 0 };
     };
 
