@@ -40,10 +40,6 @@ private:
 
         switch (event.key()) {
         case KeyCode::Key_Tab:
-        case KeyCode::Key_Left:
-        case KeyCode::Key_Right:
-        case KeyCode::Key_Up:
-        case KeyCode::Key_Down:
         case KeyCode::Key_Return:
             return true;
         default:

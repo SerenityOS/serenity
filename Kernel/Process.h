@@ -238,7 +238,7 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.ppid; });
     }
 
-    SpinlockProtected<RefPtr<Jail>, LockRank::Process>& jail() { return m_attached_jail; }
+    SpinlockProtected<RefPtr<Jail>, LockRank::Process> const& jail() { return m_attached_jail; }
 
     bool is_currently_in_jail() const
     {

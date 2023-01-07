@@ -474,7 +474,7 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     VERIFY(!Processor::in_critical());
     auto main_program_metadata = main_program_description->metadata();
     // NOTE: Don't allow running SUID binaries at all if we are in a jail.
-    TRY(Process::current().jail().with([&](auto& my_jail) -> ErrorOr<void> {
+    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
         if (my_jail && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid())) {
             return Error::from_errno(EPERM);
         }

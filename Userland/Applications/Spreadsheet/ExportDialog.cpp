@@ -11,8 +11,7 @@
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
-#include <LibCore/File.h>
-#include <LibCore/FileStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
@@ -34,21 +33,6 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     : m_data(sheet.to_xsv())
 {
     m_headers.extend(m_data.take_first());
-
-    auto temp_template = DeprecatedString::formatted("{}/spreadsheet-csv-export.{}.XXXXXX", Core::StandardPaths::tempfile_directory(), getpid());
-    auto temp_path = ByteBuffer::create_uninitialized(temp_template.length() + 1).release_value_but_fixme_should_propagate_errors();
-    auto buf = reinterpret_cast<char*>(temp_path.data());
-    auto copy_ok = temp_template.copy_characters_to_buffer(buf, temp_path.size());
-    VERIFY(copy_ok);
-
-    int fd = mkstemp(buf);
-    if (fd < 0) {
-        perror("mkstemp");
-        // Just let the operation fail cleanly later.
-    } else {
-        unlink(buf);
-        m_temp_output_file_path = temp_path;
-    }
 
     m_page = GUI::WizardPage::construct(
         "CSV Export Options",
@@ -104,50 +88,49 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     update_preview();
 }
 
-auto CSVExportDialogPage::make_writer() -> Optional<XSV>
+auto CSVExportDialogPage::make_writer(Core::Stream::Handle<Core::Stream::Stream> stream) -> ErrorOr<NonnullOwnPtr<XSV>>
 {
-    DeprecatedString delimiter;
-    DeprecatedString quote;
-    Writer::WriterTraits::QuoteEscape quote_escape;
+    auto delimiter = TRY([this]() -> ErrorOr<DeprecatedString> {
+        if (m_delimiter_other_radio->is_checked()) {
+            if (m_delimiter_other_text_box->text().is_empty())
+                return Error::from_string_literal("Delimiter unset");
+            return m_delimiter_other_text_box->text();
+        }
+        if (m_delimiter_comma_radio->is_checked())
+            return ",";
+        if (m_delimiter_semicolon_radio->is_checked())
+            return ";";
+        if (m_delimiter_tab_radio->is_checked())
+            return "\t";
+        if (m_delimiter_space_radio->is_checked())
+            return " ";
+        return Error::from_string_literal("Delimiter unset");
+    }());
 
-    // Delimiter
-    if (m_delimiter_other_radio->is_checked())
-        delimiter = m_delimiter_other_text_box->text();
-    else if (m_delimiter_comma_radio->is_checked())
-        delimiter = ",";
-    else if (m_delimiter_semicolon_radio->is_checked())
-        delimiter = ";";
-    else if (m_delimiter_tab_radio->is_checked())
-        delimiter = "\t";
-    else if (m_delimiter_space_radio->is_checked())
-        delimiter = " ";
-    else
-        return {};
+    auto quote = TRY([this]() -> ErrorOr<DeprecatedString> {
+        if (m_quote_other_radio->is_checked()) {
+            if (m_quote_other_text_box->text().is_empty())
+                return Error::from_string_literal("Quote separator unset");
+            return m_quote_other_text_box->text();
+        }
+        if (m_quote_single_radio->is_checked())
+            return "'";
+        if (m_quote_double_radio->is_checked())
+            return "\"";
+        return Error::from_string_literal("Quote separator unset");
+    }());
 
-    // Quote separator
-    if (m_quote_other_radio->is_checked())
-        quote = m_quote_other_text_box->text();
-    else if (m_quote_single_radio->is_checked())
-        quote = "'";
-    else if (m_quote_double_radio->is_checked())
-        quote = "\"";
-    else
-        return {};
-
-    // Quote escape
-    auto index = m_quote_escape_combo_box->selected_index();
-    if (index == 0)
-        quote_escape = Writer::WriterTraits::Repeat;
-    else if (index == 1)
-        quote_escape = Writer::WriterTraits::Backslash;
-    else
-        return {};
+    auto quote_escape = [this]() {
+        auto index = m_quote_escape_combo_box->selected_index();
+        if (index == 0)
+            return Writer::WriterTraits::Repeat;
+        if (index == 1)
+            return Writer::WriterTraits::Backslash;
+        VERIFY_NOT_REACHED();
+    }();
 
     auto should_export_headers = m_export_header_check_box->is_checked();
     auto should_quote_all_fields = m_quote_all_fields_check_box->is_checked();
-
-    if (quote.is_empty() || delimiter.is_empty())
-        return {};
 
     Writer::WriterTraits traits {
         move(delimiter),
@@ -167,129 +150,52 @@ auto CSVExportDialogPage::make_writer() -> Optional<XSV>
     if (should_quote_all_fields)
         behaviors = behaviors | Writer::WriterBehavior::QuoteAll;
 
-    // Note that the stream is used only by the ctor.
-    auto stream = Core::OutputFileStream::open(m_temp_output_file_path);
-    if (stream.is_error()) {
-        dbgln("Cannot open {} for writing: {}", m_temp_output_file_path, stream.error());
-        return {};
-    }
-    XSV writer(stream.value(), m_data, traits, *headers, behaviors);
-
-    if (stream.value().has_any_error()) {
-        dbgln("Write error when making preview");
-        return {};
-    }
-
-    return writer;
+    return try_make<XSV>(move(stream), m_data, move(traits), *headers, behaviors);
 }
 
 void CSVExportDialogPage::update_preview()
-
 {
-    m_previously_made_writer = make_writer();
-    if (!m_previously_made_writer.has_value()) {
-    fail:;
-        m_data_preview_text_editor->set_text({});
-        return;
-    }
-
-    auto file_or_error = Core::File::open(
-        m_temp_output_file_path,
-        Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error())
-        goto fail;
-
-    auto& file = *file_or_error.value();
-    StringBuilder builder;
-    size_t line = 0;
-    while (file.can_read_line()) {
-        if (++line == 8)
-            break;
-
-        builder.append(file.read_line());
-        builder.append('\n');
-    }
-    m_data_preview_text_editor->set_text(builder.string_view());
-    m_data_preview_text_editor->update();
+    auto maybe_error = [this]() -> ErrorOr<void> {
+        Core::Stream::AllocatingMemoryStream memory_stream;
+        auto writer = TRY(make_writer(Core::Stream::Handle<Core::Stream::Stream>(memory_stream)));
+        TRY(writer->generate_preview());
+        auto buffer = TRY(memory_stream.read_until_eof());
+        m_data_preview_text_editor->set_text(StringView(buffer));
+        m_data_preview_text_editor->update();
+        return {};
+    }();
+    if (maybe_error.is_error())
+        m_data_preview_text_editor->set_text(DeprecatedString::formatted("Cannot update preview: {}", maybe_error.error()));
 }
 
-Result<void, DeprecatedString> CSVExportDialogPage::move_into(DeprecatedString const& target)
-{
-    auto& source = m_temp_output_file_path;
-
-    // First, try rename().
-    auto rc = rename(source.characters(), target.characters());
-    if (rc == 0)
-        return {};
-
-    auto saved_errno = errno;
-    if (saved_errno == EXDEV) {
-        // Can't do that, copy it instead.
-        auto result = Core::File::copy_file_or_directory(
-            target, source,
-            Core::File::RecursionMode::Disallowed,
-            Core::File::LinkMode::Disallowed,
-            Core::File::AddDuplicateFileMarker::No);
-
-        if (result.is_error())
-            return DeprecatedString::formatted("{}", static_cast<Error const&>(result.error()));
-
-        return {};
-    }
-
-    perror("rename");
-    return DeprecatedString { strerror(saved_errno) };
-}
-
-Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, Core::File& file, Workbook& workbook)
+ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core::Stream::File> file, DeprecatedString filename, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
     wizard->set_title("File Export Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
-    auto export_xsv = [&]() -> Result<void, DeprecatedString> {
+    auto export_xsv = [&]() -> ErrorOr<void> {
         // FIXME: Prompt for the user to select a specific sheet to export
         //        For now, export the first sheet (if available)
         if (!workbook.has_sheets())
-            return DeprecatedString { "The workbook has no sheets to export!" };
+            return Error::from_string_literal("The workbook has no sheets to export!");
 
         CSVExportDialogPage page { workbook.sheets().first() };
         wizard->replace_page(page.page());
-        auto result = wizard->exec();
+        if (wizard->exec() != GUI::Dialog::ExecResult::OK)
+            return Error::from_string_literal("CSV Export was cancelled");
 
-        if (result == GUI::Dialog::ExecResult::OK) {
-            auto& writer = page.writer();
-            if (!writer.has_value())
-                return DeprecatedString { "CSV Export failed" };
-            if (writer->has_error())
-                return DeprecatedString::formatted("CSV Export failed: {}", writer->error_string());
-
-            // No error, move the temp file to the expected location
-            return page.move_into(file.filename());
-        } else {
-            return DeprecatedString { "CSV Export was cancelled" };
-        }
+        auto writer = TRY(page.make_writer(move(file)));
+        return writer->generate();
     };
 
-    auto export_worksheet = [&]() -> Result<void, DeprecatedString> {
+    auto export_worksheet = [&]() -> ErrorOr<void> {
         JsonArray array;
         for (auto& sheet : workbook.sheets())
             array.append(sheet.to_json());
 
         auto file_content = array.to_deprecated_string();
-        bool result = file.write(file_content);
-        if (!result) {
-            int error_number = errno;
-            auto const* error = strerror(error_number);
-
-            StringBuilder sb;
-            sb.append("Unable to save file. Error: "sv);
-            sb.append({ error, strlen(error) });
-
-            return sb.to_deprecated_string();
-        }
-
-        return {};
+        return file->write_entire_buffer(file_content.bytes());
     };
 
     if (mime == "text/csv") {
@@ -299,7 +205,7 @@ Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, C
     } else {
         auto page = GUI::WizardPage::construct(
             "Export File Format",
-            DeprecatedString::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(file.filename())));
+            DeprecatedString::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(filename)));
 
         page->on_next_page = [] { return nullptr; };
 
@@ -315,7 +221,7 @@ Result<void, DeprecatedString> ExportDialog::make_and_run_for(StringView mime, C
         wizard->push_page(page);
 
         if (wizard->exec() != GUI::Dialog::ExecResult::OK)
-            return DeprecatedString { "Export was cancelled" };
+            return Error::from_string_literal("Export was cancelled");
 
         if (format_combo_box->selected_index() == 0)
             return export_xsv();
