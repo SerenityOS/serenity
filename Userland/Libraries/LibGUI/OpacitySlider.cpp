@@ -40,16 +40,12 @@ void OpacitySlider::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_transparency_grid(painter, inner_rect, palette());
 
     // Alpha gradient
-    for (int pos = inner_rect.first_edge_for_orientation(orientation()); pos <= inner_rect.last_edge_for_orientation(orientation()); ++pos) {
-        float relative_offset = (float)pos / (float)inner_rect.primary_size_for_orientation(orientation());
-        float alpha = relative_offset * 255.0f;
-        Color color = m_base_color.with_alpha(static_cast<u8>(AK::min(alpha, UINT8_MAX)));
-        if (orientation() == Gfx::Orientation::Horizontal) {
-            painter.fill_rect({ pos, inner_rect.top(), 1, inner_rect.height() }, color);
-        } else {
-            painter.fill_rect({ inner_rect.left(), pos, inner_rect.right(), 1 }, color);
-        }
-    }
+    painter.fill_pixels(
+        inner_rect,
+        [&, orientation = orientation()](auto point) {
+            return m_base_color.with_alpha(static_cast<u8>(AK::min(point.primary_offset_for_orientation(orientation) * 255.0f, UINT8_MAX)));
+        },
+        true);
 
     constexpr int notch_size = 3;
     if (orientation() == Gfx::Orientation::Horizontal) {
