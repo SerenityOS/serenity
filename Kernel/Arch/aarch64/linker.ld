@@ -1,5 +1,7 @@
 ENTRY(start)
 
+KERNEL_MAPPING_BASE = 0x2000000000;
+
 /* TODO: Add FLAGS to the program headers */
 PHDRS
 {
@@ -11,17 +13,17 @@ PHDRS
 
 SECTIONS
 {
-    . = 0x00080000;
+    . = KERNEL_MAPPING_BASE + 0x80000;
 
     start_of_kernel_image = .;
 
-    .text ALIGN(4K) : AT (ADDR(.text))
+    .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_MAPPING_BASE)
     {
         *(.text.first)
         *(.text*)
     } :text
 
-    .rodata ALIGN(4K) : AT (ADDR(.rodata))
+    .rodata ALIGN(4K) : AT (ADDR(.rodata) - KERNEL_MAPPING_BASE)
     {
         start_heap_ctors = .;
         *libkernel_heap.a:*(.init_array)
@@ -34,19 +36,19 @@ SECTIONS
         *(.rodata*)
     } :data
 
-    .data ALIGN(4K) : AT (ADDR(.data))
+    .data ALIGN(4K) : AT (ADDR(.data) - KERNEL_MAPPING_BASE)
     {
         *(.data*)
     } :data
 
-    .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
+    .ksyms ALIGN(4K) : AT (ADDR(.ksyms) - KERNEL_MAPPING_BASE)
     {
         start_of_kernel_ksyms = .;
         *(.kernel_symbols)
         end_of_kernel_ksyms = .;
     } :ksyms
 
-    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss))
+    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - KERNEL_MAPPING_BASE)
     {
 	start_of_bss = .;
         *(.bss)

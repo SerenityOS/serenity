@@ -32,6 +32,11 @@ namespace Kernel {
 constexpr u32 START_OF_NORMAL_MEMORY = 0x00000000;
 constexpr u32 END_OF_NORMAL_MEMORY = 0x3EFFFFFF;
 
+// TODO: We should change the RPi drivers to use the MemoryManager to map physical memory,
+//       instead of mapping the complete MMIO region beforehand.
+constexpr u32 START_OF_MMIO_MEMORY = 0x3F000000;
+constexpr u32 END_OF_MMIO_MEMORY = 0x3F000000 + 0x00FFFFFF;
+
 ALWAYS_INLINE static u64* descriptor_to_pointer(FlatPtr descriptor)
 {
     return (u64*)(descriptor & DESCRIPTOR_MASK);
@@ -90,7 +95,7 @@ private:
 template<typename T>
 inline T* adjust_by_mapping_base(T* ptr)
 {
-    return (T*)((FlatPtr)ptr);
+    return (T*)((FlatPtr)ptr - KERNEL_MAPPING_BASE);
 }
 
 static u64* insert_page_table(PageBumpAllocator& allocator, u64* page_table, VirtualAddress virtual_addr)
@@ -144,7 +149,10 @@ static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_ta
 {
     // FIXME: Rename boot_pd_kernel_pt1023 to quickmap_page_table
     // FIXME: Rename KERNEL_PT1024_BASE to quickmap_page_table_address
-    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = (PageTableEntry*)insert_page_table(allocator, root_table, VirtualAddress { KERNEL_PT1024_BASE });
+    auto kernel_pt1024_base = VirtualAddress(*adjust_by_mapping_base(&kernel_mapping_base) + KERNEL_PT1024_OFFSET);
+
+    auto quickmap_page_table = PhysicalAddress((PhysicalPtr)insert_page_table(allocator, root_table, kernel_pt1024_base));
+    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = (PageTableEntry*)quickmap_page_table.offset(KERNEL_MAPPING_BASE).get();
 }
 
 static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
@@ -153,10 +161,10 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
     // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
-    auto start_of_kernel_range = VirtualAddress(((FlatPtr)start_of_kernel_image + KERNEL_MAPPING_BASE) & ~(FlatPtr)0x1fffff);
-    auto end_of_kernel_range = VirtualAddress((((FlatPtr)end_of_kernel_image + KERNEL_MAPPING_BASE) & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
-    auto start_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_base_address().offset(KERNEL_MAPPING_BASE).get());
-    auto end_of_mmio_range = VirtualAddress(RPi::MMIO::the().peripheral_end_address().offset(KERNEL_MAPPING_BASE).get());
+    auto start_of_kernel_range = VirtualAddress((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
+    auto end_of_kernel_range = VirtualAddress(((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
+    auto start_of_mmio_range = VirtualAddress(START_OF_MMIO_MEMORY + KERNEL_MAPPING_BASE);
+    auto end_of_mmio_range = VirtualAddress(END_OF_MMIO_MEMORY + KERNEL_MAPPING_BASE);
 
     auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-KERNEL_MAPPING_BASE);
     auto start_of_physical_mmio_range = PhysicalAddress(start_of_mmio_range.get()).offset(-KERNEL_MAPPING_BASE);
@@ -242,9 +250,8 @@ static void setup_kernel_page_directory(u64* root_table)
 
 void init_page_tables()
 {
-    // We currently identity map the physical memory, so the offset is 0.
-    *adjust_by_mapping_base(&physical_to_virtual_offset) = 0;
-    *adjust_by_mapping_base(&kernel_mapping_base) = 0;
+    *adjust_by_mapping_base(&physical_to_virtual_offset) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&kernel_mapping_base) = KERNEL_MAPPING_BASE;
 
     PageBumpAllocator allocator(adjust_by_mapping_base((u64*)page_tables_phys_start), adjust_by_mapping_base((u64*)page_tables_phys_end));
     auto root_table = allocator.take_page();

@@ -48,6 +48,9 @@ extern "C" [[noreturn]] void pre_init()
         "add sp, sp, x0 \n" ::[base] "r"(kernel_mapping_base)
         : "x0");
 
+    // We can now unmap the identity map as everything is running in high virtual memory at this point.
+    unmap_identity_map();
+
     // Clear the frame pointer (x29) and link register (x30) to make sure the kernel cannot backtrace
     // into this code, and jump to actual init function in the kernel.
     asm volatile(
