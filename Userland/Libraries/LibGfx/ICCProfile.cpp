@@ -99,7 +99,7 @@ struct ICCHeader {
     DateTimeNumber profile_creation_time;
 
     BigEndian<u32> profile_file_signature;
-    BigEndian<u32> primary_platform;
+    BigEndian<PrimaryPlatform> primary_platform;
 
     BigEndian<u32> profile_flags;
     BigEndian<u32> device_manufacturer;
@@ -224,6 +224,19 @@ ErrorOr<void> parse_file_signature(ICCHeader const& header)
     if (header.profile_file_signature != 0x61637370)
         return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
     return {};
+}
+
+ErrorOr<PrimaryPlatform> parse_primary_platform(ICCHeader const& header)
+{
+    // ICC v4, 7.2.10 Primary platform field
+    switch (header.primary_platform) {
+    case PrimaryPlatform::Apple:
+    case PrimaryPlatform::Microsoft:
+    case PrimaryPlatform::SiliconGraphics:
+    case PrimaryPlatform::Sun:
+        return header.primary_platform;
+    }
+    return Error::from_string_literal("ICC::Profile: Invalid primary platform");
 }
 
 Optional<DeviceManufacturer> parse_device_manufacturer(ICCHeader const& header)
@@ -439,6 +452,21 @@ StringView profile_connection_space_name(ColorSpace color_space)
     }
 }
 
+StringView primary_platform_name(PrimaryPlatform primary_platform)
+{
+    switch (primary_platform) {
+    case PrimaryPlatform::Apple:
+        return "Apple"sv;
+    case PrimaryPlatform::Microsoft:
+        return "Microsoft"sv;
+    case PrimaryPlatform::SiliconGraphics:
+        return "Silicon Graphics"sv;
+    case PrimaryPlatform::Sun:
+        return "Sun"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 StringView rendering_intent_name(RenderingIntent rendering_intent)
 {
     switch (rendering_intent) {
@@ -482,6 +510,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_data_color_space = TRY(parse_data_color_space(header));
     profile->m_connection_space = TRY(parse_connection_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
+    profile->m_primary_platform = TRY(parse_primary_platform(header));
     profile->m_flags = Flags { header.profile_flags };
     profile->m_device_manufacturer = parse_device_manufacturer(header);
     profile->m_device_model = parse_device_model(header);
