@@ -48,8 +48,8 @@ public:
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
 
     DeprecatedString get_fen() const;
-    void import_pgn(Core::File&);
-    void export_pgn(Core::File&) const;
+    ErrorOr<void> import_pgn(Core::Stream::File&);
+    ErrorOr<void> export_pgn(Core::Stream::File&) const;
 
     int resign();
     void flip_board();
