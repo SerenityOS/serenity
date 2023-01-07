@@ -13,7 +13,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
-#include <LibELF/AuxiliaryVector.h>
 #include <alloca.h>
 #include <assert.h>
 #include <bits/pthread_cancel.h>
@@ -26,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/auxv.h>
 #include <sys/internals.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>

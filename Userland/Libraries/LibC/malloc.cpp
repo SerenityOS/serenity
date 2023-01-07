@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
-#include <LibELF/AuxiliaryVector.h>
 #include <assert.h>
 #include <errno.h>
 #include <mallocdefs.h>
