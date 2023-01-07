@@ -1119,7 +1119,8 @@ void TextEditor::unindent_line()
     }
 }
 
-void TextEditor::uppercase_selection() {
+void TextEditor::uppercase_selection()
+{
     if (!has_selection())
         return;
     auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
@@ -1131,7 +1132,8 @@ void TextEditor::uppercase_selection() {
     execute<ReplaceAllTextCommand>(selectedText, range, "Uppercase a selection");
 }
 
-void TextEditor::lowercase_selection() {
+void TextEditor::lowercase_selection()
+{
     if (!has_selection())
         return;
     auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
@@ -1143,7 +1145,8 @@ void TextEditor::lowercase_selection() {
     execute<ReplaceAllTextCommand>(selectedText, range, "Lowercase a selection");
 }
 
-void TextEditor::snakecase_selection() {
+void TextEditor::snakecase_selection()
+{
     if (!has_selection())
         return;
     auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
