@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Memory/SharedFramebufferVMObject.h>
-#include <LibC/sys/ioctl_numbers.h>
 #include <LibEDID/EDID.h>
 
 namespace Kernel {

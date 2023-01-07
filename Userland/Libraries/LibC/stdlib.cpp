@@ -28,7 +28,6 @@
 #include <string.h>
 #include <sys/internals.h>
 #include <sys/ioctl.h>
-#include <sys/ioctl_numbers.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>

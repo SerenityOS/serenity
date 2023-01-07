@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -14,7 +15,6 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Directory.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 

@@ -6,11 +6,11 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 #include <Kernel/Panic.h>
 

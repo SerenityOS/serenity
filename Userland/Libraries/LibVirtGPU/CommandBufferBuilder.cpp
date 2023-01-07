@@ -8,7 +8,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/API/VirGL.h>
-#include <sys/ioctl_numbers.h>
+#include <sys/ioctl.h>
 
 #include <LibVirtGPU/CommandBufferBuilder.h>
 #include <LibVirtGPU/Commands.h>

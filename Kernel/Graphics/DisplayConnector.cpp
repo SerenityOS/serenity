@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
