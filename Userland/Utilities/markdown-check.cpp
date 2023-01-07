@@ -204,6 +204,11 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
+            if (url.path().contains("man"sv) && url.path().ends_with(".md"sv)) {
+                warnln("Inter-manpage link without the help:// scheme: {}\nPlease use help URLs of the form 'help://man/<section>/<subsection...>/<page>'", href);
+                m_has_invalid_link = true;
+                return RecursionDecision::Recurse;
+            }
             // TODO: Check more possible links other than icons.
             if (url.path().starts_with("/res/icons/"sv)) {
                 auto file = DeprecatedString::formatted("{}/Base{}", m_serenity_source_directory, url.path());

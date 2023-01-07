@@ -35,4 +35,4 @@ offset fails.
 
 ## See also
 
-* [`mem`(4)](../man4/mem.md)
+* [`mem`(4)](help://man/4/mem)
