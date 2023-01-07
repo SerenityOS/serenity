@@ -31,6 +31,7 @@ public:
     void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) override;
 
     Type type() const override { return PDFFont::Type::Type1; }
+    DeprecatedFlyString base_font_name() const override { return m_data.base_font_name; };
 
 private:
     Data m_data;
