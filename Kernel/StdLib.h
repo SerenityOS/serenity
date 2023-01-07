@@ -51,6 +51,8 @@ void const* memmem(void const* haystack, size_t, void const* needle, size_t);
 [[nodiscard]] inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 }
 
+#define offsetof(type, member) __builtin_offsetof(type, member)
+
 template<typename T>
 [[nodiscard]] inline ErrorOr<void> copy_from_user(T* dest, T const* src)
 {

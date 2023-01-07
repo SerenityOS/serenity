@@ -6,6 +6,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/FuzzyMatch.h>
+#include <string.h>
 
 namespace AK {
 

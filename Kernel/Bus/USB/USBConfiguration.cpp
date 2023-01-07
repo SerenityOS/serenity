@@ -9,6 +9,7 @@
 #include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

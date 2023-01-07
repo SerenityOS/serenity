@@ -10,8 +10,11 @@
 #include <Kernel/API/serenity_limits.h>
 #include <LibC/elf.h>
 #include <LibELF/Validation.h>
-#include <limits.h>
-#include <pthread.h>
+
+#ifndef KERNEL
+#    include <limits.h>
+#    include <pthread.h>
+#endif
 
 namespace ELF {
 

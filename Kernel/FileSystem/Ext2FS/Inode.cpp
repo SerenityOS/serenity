@@ -992,11 +992,11 @@ ErrorOr<void> Ext2FSInode::update_timestamps(Optional<Time> atime, Optional<Time
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
-    if (atime.value_or({}).to_timespec().tv_sec > INT32_MAX)
+    if (atime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max())
         return EINVAL;
-    if (ctime.value_or({}).to_timespec().tv_sec > INT32_MAX)
+    if (ctime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max())
         return EINVAL;
-    if (mtime.value_or({}).to_timespec().tv_sec > INT32_MAX)
+    if (mtime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max())
         return EINVAL;
     if (atime.has_value())
         m_raw_inode.i_atime = atime.value().to_timespec().tv_sec;

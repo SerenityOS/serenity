@@ -11,7 +11,6 @@
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
 #include <AK/StringHash.h>
-#include <string.h>
 
 namespace AK {
 
