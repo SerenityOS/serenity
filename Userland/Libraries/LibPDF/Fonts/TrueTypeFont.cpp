@@ -40,7 +40,7 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> TrueTypeFont::create(Document* document, Nonn
 TrueTypeFont::TrueTypeFont(PDFFont::CommonData data)
     : m_data(data)
 {
-    m_is_standard_font = data.is_standard_font;
+    m_is_standard_font = m_data.is_standard_font;
 }
 
 u32 TrueTypeFont::char_code_to_code_point(u16 char_code) const
