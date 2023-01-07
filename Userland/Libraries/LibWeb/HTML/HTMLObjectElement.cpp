@@ -20,6 +20,14 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
     : BrowsingContextContainer(document, move(qualified_name))
 {
     set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLObjectElement"));
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+    // Whenever one of the following conditions occur:
+    // - the element is created,
+    // ...the user agent must queue an element task on the DOM manipulation task source given
+    // the object element to run the following steps to (re)determine what the object element represents.
+    // This task being queued or actively running must delay the load event of the element's node document.
+    queue_element_task_to_run_object_representation_steps();
 }
 
 HTMLObjectElement::~HTMLObjectElement() = default;
