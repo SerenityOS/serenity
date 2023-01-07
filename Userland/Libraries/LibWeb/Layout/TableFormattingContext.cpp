@@ -403,7 +403,7 @@ void TableFormattingContext::calculate_row_heights()
         cell.baseline = box_baseline(m_state, cell.box);
 
         auto& row = m_rows[cell.row_index];
-        row.used_width = max(row.used_width, cell_state.border_box_height());
+        row.used_height = max(row.used_height, cell_state.border_box_height());
         row.baseline = max(row.baseline, cell.baseline);
     }
 }
@@ -419,7 +419,7 @@ void TableFormattingContext::position_row_boxes()
             row_width += column.used_width;
         }
 
-        row_state.set_content_height(row.used_width);
+        row_state.set_content_height(row.used_height);
         row_state.set_content_width(row_width);
         row_state.set_content_y(row_top_offset);
         row_top_offset += row_state.content_height();
