@@ -213,9 +213,17 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             if (url.path().starts_with("/res/icons/"sv)) {
                 auto file = DeprecatedString::formatted("{}/Base{}", m_serenity_source_directory, url.path());
                 m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
-                return RecursionDecision::Recurse;
+            } else if (url.path().starts_with("/bin"sv)) {
+                StringBuilder builder;
+                link_node.text->render_to_html(builder);
+                auto link_text = builder.string_view();
+                if (link_text != "Open"sv) {
+                    warnln("Binary link named '{}' is not allowed, binary links must be called 'Open'. Linked binary: {}", link_text, href);
+                    m_has_invalid_link = true;
+                }
+            } else {
+                outln("Not checking local link {}", href);
             }
-            outln("Not checking local link {}", href);
             return RecursionDecision::Recurse;
         }
     }
