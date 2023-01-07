@@ -119,7 +119,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     editor->on_change = [&] {
         preview->remove_all_children();
-        preview->load_from_gml(editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
+        // FIXME: Parsing errors happen while the user is typing. What should we do about them?
+        (void)preview->try_load_from_gml(editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
             return UnregisteredWidget::try_create(class_name);
         });
     };

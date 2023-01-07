@@ -22,7 +22,7 @@
 
 WelcomeWidget::WelcomeWidget()
 {
-    load_from_gml(welcome_window_gml);
+    try_load_from_gml(welcome_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->load(URL::create_with_file_scheme(DeprecatedString::formatted("{}/README.md", Core::StandardPaths::home_directory())));

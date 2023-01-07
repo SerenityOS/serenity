@@ -18,7 +18,7 @@
 
 CalculatorWidget::CalculatorWidget()
 {
-    load_from_gml(calculator_gml);
+    try_load_from_gml(calculator_gml).release_value_but_fixme_should_propagate_errors();
 
     m_entry = *find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
     m_entry->set_relative_rect(5, 5, 244, 26);

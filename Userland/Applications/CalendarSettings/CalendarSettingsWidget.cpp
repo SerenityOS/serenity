@@ -31,7 +31,7 @@ void CalendarSettingsWidget::reset_default_values()
 
 CalendarSettingsWidget::CalendarSettingsWidget()
 {
-    load_from_gml(calendar_settings_widget_gml);
+    try_load_from_gml(calendar_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_first_day_of_week_combobox = *find_descendant_of_type_named<GUI::ComboBox>("first_day_of_week");
     m_first_day_of_week_combobox->set_text(Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeek"sv, "Sunday"sv));

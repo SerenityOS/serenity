@@ -21,7 +21,7 @@ namespace DisplaySettings {
 ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     : m_background_settings_changed { background_settings_changed }
 {
-    load_from_gml(themes_settings_gml);
+    try_load_from_gml(themes_settings_gml).release_value_but_fixme_should_propagate_errors();
     m_themes = MUST(Gfx::list_installed_system_themes());
 
     size_t current_theme_index;

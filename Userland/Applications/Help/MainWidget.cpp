@@ -42,7 +42,7 @@ namespace Help {
 
 MainWidget::MainWidget()
 {
-    load_from_gml(help_window_gml);
+    try_load_from_gml(help_window_gml).release_value_but_fixme_should_propagate_errors();
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_search_container = find_descendant_of_type_named<GUI::Widget>("search_container");

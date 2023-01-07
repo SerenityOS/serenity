@@ -19,8 +19,7 @@ LevelsDialog::LevelsDialog(GUI::Window* parent_window, ImageEditor* editor)
     set_icon(parent_window->icon());
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    if (!main_widget->load_from_gml(levels_dialog_gml))
-        VERIFY_NOT_REACHED();
+    main_widget->try_load_from_gml(levels_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     resize(305, 202);
     set_resizable(false);

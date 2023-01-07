@@ -19,7 +19,7 @@ namespace GUI {
 IncrementalSearchBanner::IncrementalSearchBanner(TextEditor& editor)
     : m_editor(editor)
 {
-    load_from_gml(incremental_search_banner_gml);
+    try_load_from_gml(incremental_search_banner_gml).release_value_but_fixme_should_propagate_errors();
     m_index_label = find_descendant_of_type_named<Label>("incremental_search_banner_index_label");
 
     m_wrap_search_button = find_descendant_of_type_named<Button>("incremental_search_banner_wrap_search_button");

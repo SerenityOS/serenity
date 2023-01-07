@@ -66,7 +66,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
     window->center_within(*this->window());
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
-    main_widget->load_from_gml(font_preview_window_gml);
+    TRY(main_widget->try_load_from_gml(font_preview_window_gml));
 
     m_preview_label = find_descendant_of_type_named<GUI::Label>("preview_label");
     m_preview_label->set_font(edited_font());
@@ -420,7 +420,7 @@ ErrorOr<void> MainWidget::create_undo_stack()
 
 MainWidget::MainWidget()
 {
-    load_from_gml(font_editor_window_gml);
+    try_load_from_gml(font_editor_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_font_metadata_groupbox = find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_container = find_descendant_of_type_named<GUI::Widget>("unicode_block_container");

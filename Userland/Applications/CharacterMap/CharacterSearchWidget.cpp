@@ -53,7 +53,7 @@ private:
 
 CharacterSearchWidget::CharacterSearchWidget()
 {
-    load_from_gml(character_search_window_gml);
+    try_load_from_gml(character_search_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_search_input = find_descendant_of_type_named<GUI::TextBox>("search_input");
     m_search_button = find_descendant_of_type_named<GUI::Button>("search_button");

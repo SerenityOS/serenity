@@ -48,8 +48,7 @@ private:
         : Dialog(parent_window)
     {
         auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-        if (!widget->load_from_gml(edit_bookmark_gml))
-            VERIFY_NOT_REACHED();
+        widget->try_load_from_gml(edit_bookmark_gml).release_value_but_fixme_should_propagate_errors();
 
         set_resizable(false);
         resize(260, 85);

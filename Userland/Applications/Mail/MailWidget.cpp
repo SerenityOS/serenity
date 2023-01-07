@@ -24,7 +24,7 @@
 
 MailWidget::MailWidget()
 {
-    load_from_gml(mail_window_gml);
+    try_load_from_gml(mail_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_mailbox_list = *find_descendant_of_type_named<GUI::TreeView>("mailbox_list");
     m_individual_mailbox_view = *find_descendant_of_type_named<GUI::TableView>("individual_mailbox_view");

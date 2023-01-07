@@ -15,7 +15,7 @@ static constexpr StringView default_card_back_image_path = "/res/icons/cards/bug
 
 CardSettingsWidget::CardSettingsWidget()
 {
-    load_from_gml(card_settings_widget_gml);
+    try_load_from_gml(card_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     auto background_color = Gfx::Color::from_string(Config::read_string("Games"sv, "Cards"sv, "BackgroundColor"sv)).value_or(Gfx::Color::from_rgb(0x008000));
 

@@ -42,7 +42,7 @@ BackgroundSettingsWidget::BackgroundSettingsWidget(bool& background_settings_cha
 
 void BackgroundSettingsWidget::create_frame()
 {
-    load_from_gml(background_settings_gml);
+    try_load_from_gml(background_settings_gml).release_value_but_fixme_should_propagate_errors();
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 

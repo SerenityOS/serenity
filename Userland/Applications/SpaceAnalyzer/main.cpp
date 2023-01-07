@@ -322,7 +322,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Load widgets.
     auto mainwidget = TRY(window->set_main_widget<GUI::Widget>());
-    mainwidget->load_from_gml(space_analyzer_gml);
+    TRY(mainwidget->try_load_from_gml(space_analyzer_gml));
     auto& breadcrumbbar = *mainwidget->find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
     auto& treemapwidget = *mainwidget->find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
     auto& statusbar = *mainwidget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");

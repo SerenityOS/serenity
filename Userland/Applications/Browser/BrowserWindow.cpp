@@ -74,7 +74,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     set_title("Browser");
 
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    widget->load_from_gml(browser_window_gml);
+    widget->try_load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
