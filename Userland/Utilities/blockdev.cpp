@@ -8,17 +8,14 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <sys/ioctl.h>
 
-static void fetch_ioctl(int fd, int request)
+static ErrorOr<void> fetch_ioctl(int fd, int request)
 {
     u64 value;
-    if (ioctl(fd, request, &value) < 0) {
-        perror("ioctl");
-        exit(1);
-    }
+    TRY(Core::System::ioctl(fd, request, &value));
     outln("{}", value);
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -46,10 +43,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (flag_get_disk_size) {
-        fetch_ioctl(fd, STORAGE_DEVICE_GET_SIZE);
+        TRY(fetch_ioctl(fd, STORAGE_DEVICE_GET_SIZE));
     }
     if (flag_get_block_size) {
-        fetch_ioctl(fd, STORAGE_DEVICE_GET_BLOCK_SIZE);
+        TRY(fetch_ioctl(fd, STORAGE_DEVICE_GET_BLOCK_SIZE));
     }
 
     return 0;
