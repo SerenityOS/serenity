@@ -238,7 +238,6 @@ set(KERNEL_SOURCES
     Locking/Mutex.cpp
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
-    Net/NE2000/NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
