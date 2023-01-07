@@ -6,6 +6,7 @@
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
+#include <Kernel/Arch/aarch64/Processor.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Panic.h>
 
@@ -84,30 +85,50 @@ static void setup_el1()
     Aarch64::Asm::load_el1_vector_table(&vector_table_el1);
 }
 
-void initialize_exceptions(u32 cpu)
+void initialize_exceptions()
 {
     auto base_exception_level = Aarch64::Asm::get_current_exception_level();
 
     if (base_exception_level > Aarch64::Asm::ExceptionLevel::EL3) {
-        PANIC("CPU[{}]: Started in unknown EL{}", cpu, static_cast<u8>(base_exception_level));
+        panic_without_mmu("Started in unknown EL (Greater than EL3)"sv);
     } else if (base_exception_level < Aarch64::Asm::ExceptionLevel::EL1) {
-        PANIC("CPU[{}]: Started in unsupported EL{}", cpu, static_cast<u8>(base_exception_level));
+        panic_without_mmu("Started in unsupported EL (Less than EL1)"sv);
     } else {
-        dbgln("CPU[{}]: Started in EL{}", cpu, static_cast<u8>(base_exception_level));
+        if (base_exception_level == Aarch64::Asm::ExceptionLevel::EL1)
+            dbgln_without_mmu("Started in EL1"sv);
+        else if (base_exception_level == Aarch64::Asm::ExceptionLevel::EL2)
+            dbgln_without_mmu("Started in EL2"sv);
+        else if (base_exception_level == Aarch64::Asm::ExceptionLevel::EL3)
+            dbgln_without_mmu("Started in EL3"sv);
     }
 
     if (base_exception_level > Aarch64::Asm::ExceptionLevel::EL2) {
         drop_el3_to_el2();
-        dbgln("CPU[{}]: Dropped to EL2", cpu);
+        dbgln_without_mmu("Dropped to EL2"sv);
     }
 
     if (base_exception_level > Aarch64::Asm::ExceptionLevel::EL1) {
         drop_el2_to_el1();
-        dbgln("CPU[{}]: Dropped to EL1", cpu);
+        dbgln_without_mmu("Dropped to EL1"sv);
     }
 
     setup_el1();
-    dbgln("CPU[{}]: Set up EL1", cpu);
+    dbgln_without_mmu("Set up EL1"sv);
+}
+
+// NOTE: The normal PANIC macro cannot be used early in the boot process when the MMU is disabled,
+//       as it will access global variables, which will cause a crash since they aren't mapped yet.
+void panic_without_mmu(StringView message)
+{
+    (void)message;
+    // FIXME: Print out message to early boot console.
+    Processor::halt();
+}
+
+void dbgln_without_mmu(StringView message)
+{
+    (void)message;
+    // FIXME: Print out message to early boot console.
 }
 
 }
