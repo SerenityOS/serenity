@@ -11,12 +11,11 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
-// Kernel and Userspace pull in the definitions from different places.
-// Avoid trying to figure out which one.
-struct timeval;
-struct timespec;
-
-#if defined(AK_OS_WINDOWS)
+#if defined(AK_OS_SERENITY) && defined(KERNEL)
+#    include <Kernel/API/POSIX/sys/time.h>
+#    include <Kernel/API/POSIX/time.h>
+#else
+#    include <sys/time.h>
 #    include <time.h>
 #endif
 

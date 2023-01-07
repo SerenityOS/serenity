@@ -10,7 +10,9 @@
 #include <AK/Try.h>
 #include <LibEDID/EDID.h>
 
-#ifndef KERNEL
+#ifdef KERNEL
+#    include <Kernel/StdLib.h>
+#else
 #    include <AK/ScopeGuard.h>
 #    include <Kernel/API/Graphics.h>
 #    include <fcntl.h>

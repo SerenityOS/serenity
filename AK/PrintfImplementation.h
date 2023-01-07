@@ -10,10 +10,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <stdarg.h>
-#include <wchar.h>
 
 #ifndef KERNEL
 #    include <math.h>
+#    include <wchar.h>
 #endif
 
 #ifdef AK_OS_SERENITY

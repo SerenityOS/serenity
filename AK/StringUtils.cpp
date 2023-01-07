@@ -14,9 +14,12 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-#ifndef KERNEL
+#ifdef KERNEL
+#    include <Kernel/StdLib.h>
+#else
 #    include <AK/DeprecatedString.h>
 #    include <AK/FloatingPointStringConversions.h>
+#    include <string.h>
 #endif
 
 namespace AK {
