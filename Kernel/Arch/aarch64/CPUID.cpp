@@ -8,6 +8,12 @@
 
 namespace Kernel {
 
+CPUFeature::Type detect_cpu_features()
+{
+    auto features = CPUFeature::Type(0u);
+    return features;
+}
+
 // https://developer.arm.com/downloads/-/exploration-tools/feature-names-for-a-profile
 StringView cpu_feature_to_name(CPUFeature::Type const& feature)
 {
@@ -1002,6 +1008,23 @@ StringView cpu_feature_to_description(CPUFeature::Type const& feature)
         return "Scalable Matrix Extension"sv;
 
     VERIFY_NOT_REACHED();
+}
+
+NonnullOwnPtr<KString> build_cpu_feature_names(CPUFeature::Type const& features)
+{
+    StringBuilder builder;
+    bool first = true;
+    for (auto feature = CPUFeature::Type(1u); feature != CPUFeature::__End; feature <<= 1u) {
+        if (features.has_flag(feature)) {
+            if (first)
+                first = false;
+            else
+                MUST(builder.try_append(' '));
+            auto name = cpu_feature_to_name(feature);
+            MUST(builder.try_append(name));
+        }
+    }
+    return KString::must_create(builder.string_view());
 }
 
 }

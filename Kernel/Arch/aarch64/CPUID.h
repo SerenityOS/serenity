@@ -7,8 +7,11 @@
 #pragma once
 
 #include <AK/ArbitrarySizedEnum.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
 #include <AK/UFixedBigInt.h>
+#include <Kernel/Arch/aarch64/Registers.h>
+#include <Kernel/KString.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_AARCH64()
@@ -250,26 +253,28 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
     GICv3 = CPUFeature(1u) << 223u,         // Generic Interrupt Controller version 3
     GICv3p1 = CPUFeature(1u) << 224u,       // Generic Interrupt Controller version 3.1
     // Note: cf. https://developer.arm.com/documentation/ihi0069/h/?lang=en
-    GICv3_LEGACY = CPUFeature(1u) << 225u,  // Support for GICv2 legacy operation
-    GICv3_TDIR = CPUFeature(1u) << 226u,    // Trapping Non-secure EL1 writes to ICV_DIR
-    GICv4 = CPUFeature(1u) << 227u,         // Generic Interrupt Controller version 4
-    GICv4p1 = CPUFeature(1u) << 228u,       // Generic Interrupt Controller version 4.1
-    PMUv3 = CPUFeature(1u) << 229u,         // PMU extension version 3
-    ETE = CPUFeature(1u) << 230u,           // Embedded Trace Extension
-    ETEv1p1 = CPUFeature(1u) << 231u,       // Embedded Trace Extension, version 1.1
-    SVE2 = CPUFeature(1u) << 232u,          // SVE version 2
-    SVE_AES = CPUFeature(1u) << 233u,       // SVE AES instructions
-    SVE_PMULL128 = CPUFeature(1u) << 234u,  // SVE PMULL instructions; SVE2-AES is split into AES and PMULL support
-    SVE_BitPerm = CPUFeature(1u) << 235u,   // SVE Bit Permute
-    SVE_SHA3 = CPUFeature(1u) << 236u,      // SVE SHA-3 instructions
-    SVE_SM4 = CPUFeature(1u) << 237u,       // SVE SM4 instructions
-    TME = CPUFeature(1u) << 238u,           // Transactional Memory Extension
-    TRBE = CPUFeature(1u) << 239u,          // Trace Buffer Extension
-    SME = CPUFeature(1u) << 240u,           // Scalable Matrix Extension
+    GICv3_LEGACY = CPUFeature(1u) << 225u, // Support for GICv2 legacy operation
+    GICv3_TDIR = CPUFeature(1u) << 226u,   // Trapping Non-secure EL1 writes to ICV_DIR
+    GICv4 = CPUFeature(1u) << 227u,        // Generic Interrupt Controller version 4
+    GICv4p1 = CPUFeature(1u) << 228u,      // Generic Interrupt Controller version 4.1
+    PMUv3 = CPUFeature(1u) << 229u,        // PMU extension version 3
+    ETE = CPUFeature(1u) << 230u,          // Embedded Trace Extension
+    ETEv1p1 = CPUFeature(1u) << 231u,      // Embedded Trace Extension, version 1.1
+    SVE2 = CPUFeature(1u) << 232u,         // SVE version 2
+    SVE_AES = CPUFeature(1u) << 233u,      // SVE AES instructions
+    SVE_PMULL128 = CPUFeature(1u) << 234u, // SVE PMULL instructions; SVE2-AES is split into AES and PMULL support
+    SVE_BitPerm = CPUFeature(1u) << 235u,  // SVE Bit Permute
+    SVE_SHA3 = CPUFeature(1u) << 236u,     // SVE SHA-3 instructions
+    SVE_SM4 = CPUFeature(1u) << 237u,      // SVE SM4 instructions
+    TME = CPUFeature(1u) << 238u,          // Transactional Memory Extension
+    TRBE = CPUFeature(1u) << 239u,         // Trace Buffer Extension
+    SME = CPUFeature(1u) << 240u,          // Scalable Matrix Extension
 
     __End = CPUFeature(1u) << 255u);
 
+CPUFeature::Type detect_cpu_features();
 StringView cpu_feature_to_name(CPUFeature::Type const&);
 StringView cpu_feature_to_description(CPUFeature::Type const&);
+NonnullOwnPtr<KString> build_cpu_feature_names(CPUFeature::Type const&);
 
 }

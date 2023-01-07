@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
+#include <Kernel/Arch/aarch64/CPUID.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/VirtualAddress.h>
 
@@ -134,6 +135,11 @@ public:
     ALWAYS_INLINE bool has_pat() const
     {
         return false;
+    }
+
+    ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
+    {
+        return m_features.has_flag(feature);
     }
 
     ALWAYS_INLINE static FlatPtr current_in_irq()
@@ -276,6 +282,8 @@ public:
 
 private:
     Processor(Processor const&) = delete;
+
+    CPUFeature::Type m_features;
 
     Thread* m_current_thread;
     Thread* m_idle_thread;
