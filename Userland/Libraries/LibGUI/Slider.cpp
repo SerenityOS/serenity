@@ -23,6 +23,7 @@ Slider::Slider(Orientation orientation)
     REGISTER_ENUM_PROPERTY("knob_size_mode", knob_size_mode, set_knob_size_mode, KnobSizeMode,
         { KnobSizeMode::Fixed, "Fixed" },
         { KnobSizeMode::Proportional, "Proportional" });
+    REGISTER_BOOL_PROPERTY("jump_to_cursor", jump_to_cursor, set_jump_to_cursor);
 }
 
 void Slider::paint_event(PaintEvent& event)
