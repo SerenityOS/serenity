@@ -11,5 +11,5 @@ depends=("libogg")
 post_install() {
     # Fix up broken libtool paths
     # FIXME: apply a proper libtool fix
-    sed -i "s# /usr/local# ${SERENITY_INSTALL_ROOT}/usr/local#g" "${SERENITY_INSTALL_ROOT}"/usr/local/lib/libvorbis*.la
+    sed_in_place "s# /usr/local# ${SERENITY_INSTALL_ROOT}/usr/local#g" "${SERENITY_INSTALL_ROOT}"/usr/local/lib/libvorbis*.la
 }
