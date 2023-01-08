@@ -171,7 +171,6 @@ extern "C" [[noreturn]] void init()
 
     dmesgln("Starting SerenityOS...");
 
-    dmesgln("Initialize MMU");
     Memory::MemoryManager::initialize(0);
     DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
