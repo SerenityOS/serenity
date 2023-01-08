@@ -145,7 +145,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     auto& regs = *trap->regs;
     auto* current_thread = Thread::current();
-    VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
+    VERIFY(current_thread->previous_mode() == ExecutionMode::User);
     auto& process = current_thread->process();
     if (process.is_dying()) {
         // It's possible this thread is just about to make a syscall while another is
@@ -205,7 +205,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     current_thread->check_dispatch_pending_signal();
 
     // If the previous mode somehow changed something is seriously messed up...
-    VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
+    VERIFY(current_thread->previous_mode() == ExecutionMode::User);
 
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();

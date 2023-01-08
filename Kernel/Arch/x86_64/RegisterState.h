@@ -11,6 +11,7 @@
 
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/x86_64/ASM_wrapper.h>
+#include <Kernel/ExecutionMode.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()
@@ -67,6 +68,11 @@ struct [[gnu::packed]] RegisterState {
         arg2 = rdi;
         arg3 = rbx;
         arg4 = rsi;
+    }
+
+    ExecutionMode previous_mode() const
+    {
+        return ((cs & 3) != 0) ? ExecutionMode::User : ExecutionMode::Kernel;
     }
 };
 

@@ -631,7 +631,7 @@ void Thread::update_time_scheduled(u64 current_scheduler_time, bool is_kernel, b
 
 bool Thread::tick()
 {
-    if (previous_mode() == PreviousMode::KernelMode) {
+    if (previous_mode() == ExecutionMode::Kernel) {
         ++m_process->m_ticks_in_kernel;
         ++m_ticks_in_kernel;
     } else {

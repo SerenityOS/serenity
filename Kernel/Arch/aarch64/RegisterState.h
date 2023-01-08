@@ -8,6 +8,8 @@
 
 #include <LibC/sys/arch/aarch64/regs.h>
 
+#include <Kernel/ExecutionMode.h>
+
 #include <AK/Platform.h>
 VALIDATE_IS_AARCH64()
 
@@ -33,6 +35,11 @@ struct RegisterState {
         TODO_AARCH64();
     }
     FlatPtr bp() const { TODO_AARCH64(); }
+
+    ExecutionMode previous_mode() const
+    {
+        return ((spsr_el1 & 0b1111) == 0) ? ExecutionMode::User : ExecutionMode::Kernel;
+    }
 };
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)

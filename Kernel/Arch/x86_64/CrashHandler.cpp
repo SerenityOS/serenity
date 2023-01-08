@@ -19,7 +19,7 @@ void handle_crash(Kernel::RegisterState const& regs, char const* description, in
     if (!current_thread)
         PANIC("{} with !Thread::current()", description);
 
-    auto crashed_in_kernel = (regs.cs & 3) == 0;
+    auto crashed_in_kernel = regs.previous_mode() == ExecutionMode::Kernel;
     if (!crashed_in_kernel && current_thread->has_signal_handler(signal) && !current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
         current_thread->send_urgent_signal_to_self(signal);
         return;
@@ -31,7 +31,7 @@ void handle_crash(Kernel::RegisterState const& regs, char const* description, in
     // make sure we switch back to the right page tables.
     Memory::MemoryManager::enter_process_address_space(process);
 
-    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
+    dmesgln("CRASH: CPU #{} {} in {}", Processor::current_id(), description, regs.previous_mode() == ExecutionMode::Kernel ? "kernel"sv : "userspace"sv);
     dump_registers(regs);
 
     if (crashed_in_kernel) {
