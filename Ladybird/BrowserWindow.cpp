@@ -304,7 +304,9 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         debug_request("same-origin-policy", state ? "on" : "off");
     });
 
-    QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
+    QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
+        new_tab("about:blank", Activate::Yes);
+    });
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
         new SettingsDialog(this);
     });
@@ -317,7 +319,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
-    new_tab();
+    // We need to load *something* to make the JS console usable.
+    new_tab("about:blank", Activate::Yes);
 
     setCentralWidget(m_tabs_container);
 }
@@ -329,7 +332,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
     m_current_tab->debug_request(request, argument);
 }
 
-void BrowserWindow::new_tab()
+void BrowserWindow::new_tab(QString const& url, Activate activate)
 {
     auto tab = make<Tab>(this, m_webdriver_content_ipc_path);
     auto tab_ptr = tab.ptr();
@@ -340,7 +343,8 @@ void BrowserWindow::new_tab()
     }
 
     m_tabs_container->addTab(tab_ptr, "New Tab");
-    m_tabs_container->setCurrentWidget(tab_ptr);
+    if (activate == Activate::Yes)
+        m_tabs_container->setCurrentWidget(tab_ptr);
 
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
@@ -367,12 +371,11 @@ void BrowserWindow::new_tab()
 
     tab_ptr->focus_location_editor();
 
-    // This is a hack to make the JS console usable in new windows.
-    // Note we *don't* load the initial page if we are connected to a WebDriver, as the Set URL command may come in very
+    // We *don't* load the initial page if we are connected to a WebDriver, as the Set URL command may come in very
     // quickly, and become replaced by this load.
     if (m_webdriver_content_ipc_path.is_empty()) {
         // We make it HistoryNavigation so that the initial page doesn't get added to the history.
-        tab_ptr->navigate("about:blank", Tab::LoadType::HistoryNavigation);
+        tab_ptr->navigate(url, Tab::LoadType::HistoryNavigation);
     }
 }
 

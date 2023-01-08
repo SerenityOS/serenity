@@ -32,10 +32,15 @@ public:
 
     int tab_index(Tab*);
 
+    enum class Activate {
+        Yes,
+        No,
+    };
+
 public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
-    void new_tab();
+    void new_tab(QString const&, Activate);
     void close_tab(int index);
     void close_current_tab();
     void open_next_tab();
