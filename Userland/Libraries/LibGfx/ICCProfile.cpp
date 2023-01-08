@@ -116,6 +116,22 @@ struct ICCHeader {
 };
 static_assert(sizeof(ICCHeader) == 128);
 
+ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
+{
+    // ICC v4, 7.2.2 Profile size field
+    // "The value in the profile size field shall be the exact size obtained by combining the profile header,
+    // the tag table, and the tagged element data, including the pad bytes for the last tag."
+
+    // Valid files have enough data for profile header and tag table entry count.
+    if (header.profile_size < sizeof(ICCHeader) + sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: Profile size too small");
+
+    if (header.profile_size > icc_bytes.size())
+        return Error::from_string_literal("ICC::Profile: Profile size larger than input data");
+
+    return header.profile_size;
+}
+
 Optional<PreferredCMMType> parse_preferred_cmm_type(ICCHeader const& header)
 {
     // ICC v4, 7.2.3 Preferred CMM type field
@@ -504,6 +520,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     auto header = *bit_cast<ICCHeader const*>(bytes.data());
 
     TRY(parse_file_signature(header));
+    profile->m_on_disk_size = TRY(parse_size(header, bytes));
     profile->m_preferred_cmm_type = parse_preferred_cmm_type(header);
     profile->m_version = TRY(parse_version(header));
     profile->m_device_class = TRY(parse_device_class(header));
@@ -520,6 +537,10 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_creator = parse_profile_creator(header);
     profile->m_id = TRY(parse_profile_id(header, bytes));
     TRY(parse_reserved(header));
+
+    bytes = bytes.trim(header.profile_size);
+    bytes = bytes.slice(sizeof(ICCHeader));
+    // FIXME: Read tag table.
 
     return profile;
 }

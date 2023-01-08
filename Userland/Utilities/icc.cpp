@@ -67,5 +67,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     out_optional("creator", profile->creator());
     out_optional("id", profile->id());
 
+    size_t profile_disk_size = icc_file->size();
+    if (profile_disk_size != profile->on_disk_size()) {
+        VERIFY(profile_disk_size > profile->on_disk_size());
+        outln("{} trailing bytes after profile data", profile_disk_size - profile->on_disk_size());
+    }
+
     return 0;
 }
