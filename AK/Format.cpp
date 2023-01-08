@@ -886,10 +886,8 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 
 #ifdef AK_OS_SERENITY
 #    ifdef KERNEL
-    if (Kernel::Processor::is_initialized()) {
-        struct timespec ts = {};
-        if (TimeManagement::is_initialized())
-            ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
+    if (Kernel::Processor::is_initialized() && TimeManagement::is_initialized()) {
+        struct timespec ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
         if (Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
             builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, Kernel::Processor::current_id(), thread.process().name(), thread.pid().value(), thread.tid().value());
@@ -940,14 +938,17 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 #    ifdef AK_OS_SERENITY
     struct timespec ts = {};
 
-    if (TimeManagement::is_initialized())
+    if (TimeManagement::is_initialized()) {
         ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
 
-    if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
-        auto& thread = *Kernel::Thread::current();
-        builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, thread.process().name(), thread.pid().value(), thread.tid().value());
+        if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
+            auto& thread = *Kernel::Thread::current();
+            builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, thread.process().name(), thread.pid().value(), thread.tid().value());
+        } else {
+            builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000);
+        }
     } else {
-        builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000);
+        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
     }
 #    endif
 
