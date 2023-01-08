@@ -7,14 +7,14 @@ Whilst it is possible to run Serenity on physical x86-compatible hardware, it is
 
 ## Hardware support and requirements
 
-Storage-wise Serenity requires a >= 2 GB parallel ATA or SATA IDE disk. Some older SATA chipsets already operate in IDE mode whilst some newer ones will depend upon adjusting a BIOS option to run your SATA controller in IDE (sometimes referred to as Legacy or PATA) mode. SATA AHCI is supported, but may not work on every controller due to bugs in the implementation.
+Storage-wise Serenity requires a >= 2 GB parallel ATA or SATA disk for IDE/AHCI. Some older SATA chipsets already operate in IDE mode whilst some newer ones will depend upon adjusting a BIOS option to run your SATA controller in IDE (sometimes referred to as Legacy or PATA) mode. SATA AHCI is supported, but may not work on every controller due to bugs in the implementation.
 NVMe drives are supported but it is recommended to use `nvme_poll` boot parameter in newer hardwares as we lack MSI(X) support at the moment. SCSI, SAS and eMMC HBAs are all presently unsupported.
 
 You must be willing to wipe your disk's contents to allow for writing the Serenity image so be sure to back up any important data on your disk first! Serenity uses the GRUB2 bootloader so it should be possible to multiboot it with any other OS that can be booted from GRUB2 post-installation.
 
-Serenity currently has no support for USB but some machines will emulate PS/2 keyboards and mice in the BIOS via USB. BIOS USB PS/2 emulation can be buggy so having real PS/2 input devices is recommended. A minimum of 128 MB RAM and a Pentium III class CPU are required.
+Serenity currently has no support for USB but some machines will emulate PS/2 keyboards and mice in the BIOS via USB. BIOS USB PS/2 emulation can be buggy so having real PS/2 input devices is recommended. A minimum of 256 MB RAM and a x86-64 CPU are required.
 
-At present there is no real GPU support so don't expect OpenGL, Vulkan nor accelerated video playback and encoding support. Serenity currently relies upon VESA BIOS extensions to provide its display output and so it only runs on BIOS-based PCs. There is no WiFi support and the only three network card chipsets are currently supported: Novell NE2000 and Intel e1000. The e1000 driver has only been tested with qemu and VirtualBox although it may work with NICs such as those using the Intel 82545XX, 82540XX, 82546XX or similar chipsets. The sole sound card supported is the SoundBlaster 16 ISA.
+At present there is no real GPU support so don't expect OpenGL, Vulkan nor accelerated video playback and encoding support. Serenity currently relies upon VESA BIOS extensions to provide its display output and so it only runs on BIOS-based PCs. There is no WiFi support and the network card chipsets that are currently supported: Novell NE2000 and Intel e1000, Intel e1000e and Realtek 8168. The e1000 driver has only been tested with qemu and VirtualBox although it may work with NICs such as those using the Intel 82545XX, 82540XX, 82546XX or similar chipsets. The sole sound card supported is the Intel AC'97 PCI device.
 
 For more details on known working hardware see the [SerenityOS Hardware Compatibility List](HardwareCompatibility.md).
 
