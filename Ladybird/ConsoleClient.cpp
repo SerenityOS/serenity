@@ -168,7 +168,7 @@ JS::ThrowCompletionOr<JS::Value> ConsoleClient::printer(JS::Console::LogLevel lo
         return JS::js_undefined();
     }
 
-    auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+    auto output = TRY(generically_format_values(arguments.get<JS::MarkedVector<JS::Value>>()));
     m_console.output_debug_message(log_level, output);
 
     StringBuilder html;

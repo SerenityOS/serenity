@@ -58,7 +58,7 @@ JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::
         return JS::js_undefined();
     }
 
-    auto output = TRY_OR_THROW_OOM(vm, String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>()));
+    auto output = TRY(generically_format_values(arguments.get<JS::MarkedVector<JS::Value>>()));
     m_console.output_debug_message(log_level, output);
 
     switch (log_level) {

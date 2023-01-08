@@ -6,8 +6,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
 #include <LibJS/Console.h>
+#include <LibJS/Print.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
@@ -667,6 +670,22 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
 
     // 8. Return Formatter(result).
     return formatter(result);
+}
+
+ThrowCompletionOr<String> ConsoleClient::generically_format_values(MarkedVector<Value> const& values)
+{
+    AllocatingMemoryStream stream;
+    auto& vm = m_console.realm().vm();
+    PrintContext ctx { vm, stream, true };
+    bool first = true;
+    for (auto const& value : values) {
+        if (!first)
+            TRY_OR_THROW_OOM(vm, stream.write(" "sv.bytes()));
+        TRY_OR_THROW_OOM(vm, JS::print(value, ctx));
+        first = false;
+    }
+    // FIXME: Is it possible we could end up serializing objects to invalid UTF-8?
+    return TRY_OR_THROW_OOM(vm, String::from_stream(stream, stream.used_buffer_size()));
 }
 
 }

@@ -116,6 +116,8 @@ public:
     virtual void clear() = 0;
     virtual void end_group() = 0;
 
+    ThrowCompletionOr<String> generically_format_values(MarkedVector<Value> const&);
+
 protected:
     virtual ~ConsoleClient() = default;
 
