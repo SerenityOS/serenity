@@ -663,7 +663,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     auto position = string_index_of(string.view(), search_string.view(), 0);
 
     while (position.has_value()) {
-        match_positions.append(*position);
+        TRY_OR_THROW_OOM(vm, match_positions.try_append(*position));
         position = string_index_of(string.view(), search_string.view(), *position + advance_by);
     }
 
