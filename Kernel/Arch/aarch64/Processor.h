@@ -284,6 +284,7 @@ public:
 private:
     Processor(Processor const&) = delete;
 
+    u32 m_cpu;
     CPUFeature::Type m_features;
 
     Thread* m_current_thread;
