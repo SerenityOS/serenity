@@ -32,5 +32,5 @@ post_install() {
     timidity_cfg_path="${SERENITY_INSTALL_ROOT}/etc/timidity.cfg"
     mkdir -p "$(dirname ${timidity_cfg_path})"
     cp "${eaw_pats_host_dir}/timidity.cfg" "${timidity_cfg_path}"
-    sed -i "s#^dir .*#dir ${eaw_pats_dir}#g" "${timidity_cfg_path}"
+    sed_in_place "s#^dir .*#dir ${eaw_pats_dir}#g" "${timidity_cfg_path}"
 }
