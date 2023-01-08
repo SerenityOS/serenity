@@ -20,9 +20,11 @@
 namespace VideoPlayer {
 
 class VideoPlayerWidget final : public GUI::Widget {
-    C_OBJECT(VideoPlayerWidget)
+    C_OBJECT_ABSTRACT(VideoPlayerWidget)
 
 public:
+    static ErrorOr<NonnullRefPtr<VideoPlayerWidget>> try_create();
+    virtual ~VideoPlayerWidget() override = default;
     void close_file();
     void open_file(StringView filename);
     void resume_playback();
@@ -37,8 +39,8 @@ public:
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
 private:
-    VideoPlayerWidget(GUI::Window&);
-
+    VideoPlayerWidget() = default;
+    ErrorOr<void> setup_interface();
     void update_play_pause_icon();
     void update_seek_slider_max();
     void set_current_timestamp(Time);
@@ -51,14 +53,10 @@ private:
 
     void event(Core::Event&) override;
 
-    GUI::Window& m_window;
-
     DeprecatedString m_path;
 
     RefPtr<VideoFrameWidget> m_video_display;
     RefPtr<GUI::HorizontalSlider> m_seek_slider;
-
-    RefPtr<GUI::Toolbar> m_toolbar;
 
     RefPtr<Gfx::Bitmap> m_play_icon;
     RefPtr<Gfx::Bitmap> m_pause_icon;
