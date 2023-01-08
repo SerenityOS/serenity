@@ -24,10 +24,8 @@ namespace Core::Stream {
 
 ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
 {
-    VERIFY(buffer.size());
-
     size_t nread = 0;
-    do {
+    while (nread < buffer.size()) {
         if (is_eof())
             return Error::from_string_literal("Reached end-of-file before filling the entire buffer");
 
@@ -41,7 +39,7 @@ ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
         }
 
         nread += result.value().size();
-    } while (nread < buffer.size());
+    }
 
     return {};
 }
@@ -93,10 +91,8 @@ ErrorOr<void> Stream::discard(size_t discarded_bytes)
 
 ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
 {
-    VERIFY(buffer.size());
-
     size_t nwritten = 0;
-    do {
+    while (nwritten < buffer.size()) {
         auto result = write(buffer.slice(nwritten));
         if (result.is_error()) {
             if (result.error().is_errno() && result.error().code() == EINTR) {
@@ -107,7 +103,7 @@ ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
         }
 
         nwritten += result.value();
-    } while (nwritten < buffer.size());
+    }
 
     return {};
 }
