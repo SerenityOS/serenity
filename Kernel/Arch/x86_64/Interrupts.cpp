@@ -263,9 +263,9 @@ void page_fault_handler(TrapFrame* trap)
         }
 
         dbgln("Unrecoverable page fault, {}{}{} address {}",
-            regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
-            regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
-            regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
+            fault.is_reserved_bit_violation() ? "reserved bit violation / " : "",
+            fault.is_instruction_fetch() ? "instruction fetch / " : "",
+            fault.is_write() ? "write to" : "read from",
             VirtualAddress(fault_address));
         constexpr FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
