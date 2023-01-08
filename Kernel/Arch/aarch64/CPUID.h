@@ -277,4 +277,6 @@ StringView cpu_feature_to_name(CPUFeature::Type const&);
 StringView cpu_feature_to_description(CPUFeature::Type const&);
 NonnullOwnPtr<KString> build_cpu_feature_names(CPUFeature::Type const&);
 
+u8 detect_physical_address_bit_width();
+
 }

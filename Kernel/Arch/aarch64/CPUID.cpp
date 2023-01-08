@@ -1478,4 +1478,30 @@ NonnullOwnPtr<KString> build_cpu_feature_names(CPUFeature::Type const& features)
     return KString::must_create(builder.string_view());
 }
 
+u8 detect_physical_address_bit_width()
+{
+    auto memory_model_feature_register_0 = Aarch64::ID_AA64MMFR0_EL1::read();
+
+    switch (memory_model_feature_register_0.PARange) {
+    case 0b0000:
+        return 32; // 4GB
+    case 0b0001:
+        return 36; // 64GB
+    case 0b0010:
+        return 40; // 1TB
+    case 0b0011:
+        return 42; // 4TB
+    case 0b0100:
+        return 44; // 16TB
+    case 0b0101:
+        return 48; // 256TB
+    case 0b0110:
+        return 52; // 4PB (applies for FEAT_LPA or FEAT_LPA2)
+    case 0b0111:
+        return 56; // 64PB (applies for FEAT_D128)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 }
