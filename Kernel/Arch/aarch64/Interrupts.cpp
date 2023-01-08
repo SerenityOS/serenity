@@ -5,12 +5,14 @@
  */
 
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/InterruptManagement.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {
@@ -53,10 +55,35 @@ static void dump_exception_syndrome_register(Aarch64::ESR_EL1 const& esr_el1)
         dbgln("Data Fault Status Code: {}", Aarch64::data_fault_status_code_to_string(esr_el1.ISS));
 }
 
-extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame);
-extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
+static PageFault page_fault_from_exception_syndrome_register(VirtualAddress fault_address, Aarch64::ESR_EL1 esr_el1)
 {
+    PageFault fault { fault_address };
+
+    u8 data_fault_status_code = esr_el1.ISS & 0x3f;
+    if (data_fault_status_code >= 0b001100 && data_fault_status_code <= 0b001111) {
+        fault.set_type(PageFault::Type::ProtectionViolation);
+    } else if (data_fault_status_code >= 0b000100 && data_fault_status_code <= 0b000111) {
+        fault.set_type(PageFault::Type::PageNotPresent);
+    } else {
+        PANIC("Unknown DFSC: {}", data_fault_status_code);
+    }
+
+    fault.set_access((esr_el1.ISS & (1 << 6)) == (1 << 6) ? PageFault::Access::Write : PageFault::Access::Read);
+
+    // FIXME: Set correct mode
+    fault.set_mode(ExecutionMode::Kernel);
+
+    return fault;
+}
+
+extern "C" void exception_common(Kernel::TrapFrame* trap_frame);
+extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
+{
+    Processor::current().enter_trap(*trap_frame, false);
+
     auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
+    auto fault_address = Aarch64::FAR_EL1::read().virtual_address;
+    Processor::enable_interrupts();
 
     constexpr bool print_state = true;
     if constexpr (print_state) {
@@ -65,7 +92,17 @@ extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
         dump_exception_syndrome_register(esr_el1);
     }
 
-    Kernel::Processor::halt();
+    if (Aarch64::exception_class_is_data_abort(esr_el1.EC)) {
+        auto page_fault = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
+        page_fault.handle(*trap_frame->regs);
+    } else {
+        dump_registers(*trap_frame->regs);
+        dump_exception_syndrome_register(esr_el1);
+        PANIC("Unexpected exception!");
+    }
+
+    Processor::disable_interrupts();
+    Processor::current().exit_trap(*trap_frame);
 }
 
 static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
