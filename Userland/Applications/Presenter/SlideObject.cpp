@@ -5,23 +5,20 @@
  */
 
 #include "SlideObject.h"
+#include "Presentation.h"
 #include <AK/JsonObject.h>
-#include <AK/RefPtr.h>
-#include <LibCore/Object.h>
-#include <LibCore/Stream.h>
-#include <LibGUI/Margins.h>
-#include <LibGfx/Font/FontDatabase.h>
-#include <LibGfx/Forward.h>
-#include <LibGfx/Orientation.h>
-#include <LibGfx/Painter.h>
-#include <LibGfx/Size.h>
-#include <LibGfx/TextWrapping.h>
-#include <LibImageDecoderClient/Client.h>
+#include <AK/URL.h>
+#include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Rect.h>
 
-ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window)
+static DeprecatedString to_css_length(float design_value, Presentation const& presentation)
 {
-    auto image_decoder_client = TRY(ImageDecoderClient::Client::try_create());
+    float length_in_vw = design_value / static_cast<float>(presentation.normative_size().width()) * 100.0f;
+    return DeprecatedString::formatted("{}vw", length_in_vw);
+}
 
+ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json)
+{
     auto const& maybe_type = slide_object_json.get("type"sv);
     if (!maybe_type.is_string())
         return Error::from_string_view("Slide object must have a type"sv);
@@ -31,127 +28,131 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
     if (type == "text"sv)
         object = TRY(try_make_ref_counted<Text>());
     else if (type == "image"sv)
-        object = TRY(try_make_ref_counted<Image>(image_decoder_client, window));
+        object = TRY(try_make_ref_counted<Image>());
     else
         return Error::from_string_view("Unsupported slide object type"sv);
 
     slide_object_json.for_each_member([&](auto const& key, auto const& value) {
-        if (key == "type"sv)
-            return;
-        auto successful = object->set_property(key, value);
-        if (!successful)
-            dbgln("Storing {:15} = {:20} on slide object type {:8} failed, ignoring.", key, value, type);
+        object->set_property(key, value);
     });
 
     return object.release_nonnull();
 }
 
-SlideObject::SlideObject()
+void SlideObject::set_property(StringView name, JsonValue value)
 {
-    REGISTER_RECT_PROPERTY("rect", rect, set_rect);
-}
-
-// FIXME: Consider drawing a placeholder box instead.
-void SlideObject::paint(Gfx::Painter&, Gfx::FloatSize) const { }
-
-Gfx::IntRect SlideObject::transformed_bounding_box(Gfx::IntRect clip_rect, Gfx::FloatSize display_scale) const
-{
-    return m_rect.to_type<float>().scaled(display_scale.width(), display_scale.height()).to_rounded<int>().translated(clip_rect.top_left());
-}
-
-GraphicsObject::GraphicsObject()
-{
-    register_property(
-        "color", [this]() { return this->color().to_deprecated_string(); },
-        [this](auto& value) {
-            auto color = Color::from_string(value.to_deprecated_string());
-            if (color.has_value()) {
-                this->set_color(color.value());
-                return true;
-            }
-            return false;
-        });
-}
-
-Text::Text()
-{
-    REGISTER_STRING_PROPERTY("text", text, set_text);
-    REGISTER_FONT_WEIGHT_PROPERTY("font-weight", font_weight, set_font_weight);
-    REGISTER_TEXT_ALIGNMENT_PROPERTY("text-alignment", text_alignment, set_text_alignment);
-    REGISTER_INT_PROPERTY("font-size", font_size, set_font_size);
-    REGISTER_STRING_PROPERTY("font", font, set_font);
-}
-
-void Text::paint(Gfx::Painter& painter, Gfx::FloatSize display_scale) const
-{
-    auto scaled_bounding_box = this->transformed_bounding_box(painter.clip_rect(), display_scale);
-
-    auto scaled_font_size = display_scale.height() * static_cast<float>(m_font_size);
-    auto font = Gfx::FontDatabase::the().get(m_font, scaled_font_size, m_font_weight, 0, Gfx::Font::AllowInexactSizeMatch::Yes);
-    if (font.is_null())
-        font = Gfx::FontDatabase::default_font();
-
-    painter.draw_text(scaled_bounding_box, m_text.view(), *font, m_text_alignment, m_color, Gfx::TextElision::None, Gfx::TextWrapping::Wrap);
-}
-
-Image::Image(NonnullRefPtr<ImageDecoderClient::Client> client, NonnullRefPtr<GUI::Window> window)
-    : m_client(move(client))
-    , m_window(move(window))
-{
-    REGISTER_STRING_PROPERTY("path", image_path, set_image_path);
-    REGISTER_ENUM_PROPERTY("scaling", scaling, set_scaling, ImageScaling,
-        { ImageScaling::FitSmallest, "fit-smallest" },
-        { ImageScaling::FitLargest, "fit-largest" },
-        { ImageScaling::Stretch, "stretch" }, );
-    REGISTER_ENUM_PROPERTY("scaling-mode", scaling_mode, set_scaling_mode, Gfx::Painter::ScalingMode,
-        { Gfx::Painter::ScalingMode::SmoothPixels, "smooth-pixels" },
-        { Gfx::Painter::ScalingMode::NearestNeighbor, "nearest-neighbor" },
-        { Gfx::Painter::ScalingMode::BilinearBlend, "bilinear-blend" }, );
-}
-
-// FIXME: Should run on another thread and report errors.
-ErrorOr<void> Image::reload_image()
-{
-    auto file = TRY(Core::Stream::File::open(m_image_path, Core::Stream::OpenMode::Read));
-    auto data = TRY(file->read_until_eof());
-    auto maybe_decoded = m_client->decode_image(data);
-    if (!maybe_decoded.has_value() || maybe_decoded.value().frames.size() < 1)
-        return Error::from_string_view("Could not decode image"sv);
-    // FIXME: Handle multi-frame images.
-    m_currently_loaded_image = maybe_decoded.value().frames.first().bitmap;
-    return {};
-}
-
-void Image::paint(Gfx::Painter& painter, Gfx::FloatSize display_scale) const
-{
-    if (!m_currently_loaded_image)
-        return;
-
-    auto transformed_bounding_box = this->transformed_bounding_box(painter.clip_rect(), display_scale);
-
-    auto image_size = m_currently_loaded_image->size();
-    auto image_aspect_ratio = image_size.aspect_ratio();
-
-    auto image_box = transformed_bounding_box;
-    if (m_scaling != ImageScaling::Stretch) {
-        auto width_corresponding_to_height = image_box.height() * image_aspect_ratio;
-        auto direction_to_preserve_for_fit = width_corresponding_to_height > image_box.width() ? Orientation::Horizontal : Orientation::Vertical;
-        // Fit largest and fit smallest are the same, except with inverted preservation conditions.
-        if (m_scaling == ImageScaling::FitLargest)
-            direction_to_preserve_for_fit = direction_to_preserve_for_fit == Orientation::Vertical ? Orientation::Horizontal : Orientation::Vertical;
-
-        image_box.set_size(image_box.size().match_aspect_ratio(image_aspect_ratio, direction_to_preserve_for_fit));
+    if (name == "rect"sv) {
+        if (value.is_array() && value.as_array().size() == 4) {
+            Gfx::IntRect rect;
+            rect.set_x(value.as_array()[0].to_i32());
+            rect.set_y(value.as_array()[1].to_i32());
+            rect.set_width(value.as_array()[2].to_i32());
+            rect.set_height(value.as_array()[3].to_i32());
+            m_rect = rect;
+        }
     }
+    m_properties.set(name, move(value));
+}
 
-    image_box = image_box.centered_within(transformed_bounding_box);
+void GraphicsObject::set_property(StringView name, JsonValue value)
+{
+    if (name == "color"sv) {
+        if (auto color = Gfx::Color::from_string(value.to_deprecated_string()); color.has_value()) {
+            m_color = color.release_value();
+        }
+    }
+    SlideObject::set_property(name, move(value));
+}
 
-    auto original_clip_rect = painter.clip_rect();
-    painter.clear_clip_rect();
-    painter.add_clip_rect(image_box);
+void Text::set_property(StringView name, JsonValue value)
+{
+    if (name == "text"sv) {
+        m_text = value.to_deprecated_string();
+    } else if (name == "font"sv) {
+        m_font_family = value.to_deprecated_string();
+    } else if (name == "font-weight"sv) {
+        m_font_weight = Gfx::name_to_weight(value.to_deprecated_string());
+    } else if (name == "font-size"sv) {
+        m_font_size_in_pt = value.to_float();
+    } else if (name == "text-alignment"sv) {
+        m_text_align = value.to_deprecated_string();
+    }
+    GraphicsObject::set_property(name, move(value));
+}
 
-    // FIXME: Allow to set the scaling mode.
-    painter.draw_scaled_bitmap(image_box, *m_currently_loaded_image, m_currently_loaded_image->rect(), 1.0f, m_scaling_mode);
+void Image::set_property(StringView name, JsonValue value)
+{
+    if (name == "path"sv) {
+        m_src = value.to_deprecated_string();
+    } else if (name == "scaling-mode"sv) {
+        if (value.to_deprecated_string() == "nearest-neighbor"sv)
+            m_image_rendering = "crisp-edges"sv;
+        else if (value.to_deprecated_string() == "smooth-pixels"sv)
+            m_image_rendering = "pixelated"sv;
+    }
+    SlideObject::set_property(name, move(value));
+}
 
-    painter.clear_clip_rect();
-    painter.add_clip_rect(original_clip_rect);
+ErrorOr<HTMLElement> Text::render(Presentation const& presentation) const
+{
+    HTMLElement div;
+    div.tag_name = "div"sv;
+    div.style.set("color"sv, m_color.to_deprecated_string());
+    div.style.set("font-family"sv, DeprecatedString::formatted("'{}'", m_font_family));
+    div.style.set("font-size"sv, to_css_length(m_font_size_in_pt * 1.33333333f, presentation));
+    div.style.set("font-weight"sv, DeprecatedString::number(m_font_weight));
+    div.style.set("text-align"sv, m_text_align);
+    div.style.set("white-space"sv, "pre-wrap"sv);
+    div.style.set("width"sv, to_css_length(m_rect.width(), presentation));
+    div.style.set("height"sv, to_css_length(m_rect.height(), presentation));
+    div.style.set("position"sv, "absolute"sv);
+    div.style.set("left"sv, to_css_length(m_rect.left(), presentation));
+    div.style.set("top"sv, to_css_length(m_rect.top(), presentation));
+    div.inner_text = m_text;
+    return div;
+}
+
+ErrorOr<HTMLElement> Image::render(Presentation const& presentation) const
+{
+    HTMLElement img;
+    img.tag_name = "img"sv;
+    img.attributes.set("src"sv, URL::create_with_file_scheme(m_src).to_deprecated_string());
+    img.style.set("image-rendering"sv, m_image_rendering);
+    if (m_rect.width() > m_rect.height())
+        img.style.set("height"sv, "100%"sv);
+    else
+        img.style.set("width"sv, "100%"sv);
+
+    HTMLElement image_wrapper;
+    image_wrapper.tag_name = "div"sv;
+    image_wrapper.children.append(move(img));
+    image_wrapper.style.set("position"sv, "absolute"sv);
+    image_wrapper.style.set("left"sv, to_css_length(m_rect.left(), presentation));
+    image_wrapper.style.set("top"sv, to_css_length(m_rect.top(), presentation));
+    image_wrapper.style.set("width"sv, to_css_length(m_rect.width(), presentation));
+    image_wrapper.style.set("height"sv, to_css_length(m_rect.height(), presentation));
+    image_wrapper.style.set("text-align"sv, "center"sv);
+    return image_wrapper;
+}
+
+ErrorOr<void> HTMLElement::serialize(StringBuilder& builder) const
+{
+    TRY(builder.try_appendff("<{}", tag_name));
+    for (auto const& [key, value] : attributes) {
+        // FIXME: Escape the value string as necessary.
+        TRY(builder.try_appendff(" {}='{}'", key, value));
+    }
+    TRY(builder.try_append(" style=\""sv));
+    for (auto const& [key, value] : style) {
+        // FIXME: Escape the value string as necessary.
+        TRY(builder.try_appendff(" {}: {};", key, value));
+    }
+    TRY(builder.try_append("\">"sv));
+    if (!inner_text.is_empty())
+        TRY(builder.try_append(inner_text));
+    for (auto const& child : children) {
+        TRY(child.serialize(builder));
+    }
+    TRY(builder.try_appendff("</{}>", tag_name));
+    return {};
 }

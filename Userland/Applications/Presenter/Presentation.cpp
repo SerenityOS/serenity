@@ -1,15 +1,14 @@
 /*
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Presentation.h"
-#include <AK/Forward.h>
 #include <AK/JsonObject.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Forward.h>
 #include <errno_codes.h>
 
 Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
@@ -66,7 +65,7 @@ void Presentation::go_to_first_slide()
     m_current_slide = 0;
 }
 
-ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView file_name, NonnullRefPtr<GUI::Window> window)
+ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView file_name)
 {
     if (file_name.is_empty())
         return ENOENT;
@@ -104,7 +103,7 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
             return Error::from_string_view("Slides must be objects"sv);
         auto const& slide_object = maybe_slide.as_object();
 
-        auto slide = TRY(Slide::parse_slide(slide_object, window));
+        auto slide = TRY(Slide::parse_slide(slide_object));
         presentation->append_slide(move(slide));
     }
 
@@ -147,15 +146,45 @@ ErrorOr<Gfx::IntSize> Presentation::parse_presentation_size(JsonObject const& me
     };
 }
 
-void Presentation::paint(Gfx::Painter& painter) const
+ErrorOr<DeprecatedString> Presentation::render()
 {
-    auto display_area = painter.clip_rect();
-    // These two should be the same, but better be safe than sorry.
-    auto width_scale = static_cast<double>(display_area.width()) / static_cast<double>(m_normative_size.width());
-    auto height_scale = static_cast<double>(display_area.height()) / static_cast<double>(m_normative_size.height());
-    auto scale = Gfx::FloatSize { static_cast<float>(width_scale), static_cast<float>(height_scale) };
+    HTMLElement main_element;
+    main_element.tag_name = "main"sv;
+    for (size_t i = 0; i < m_slides.size(); ++i) {
+        HTMLElement slide_div;
+        slide_div.tag_name = "div"sv;
+        TRY(slide_div.style.try_set("display"sv, "none"sv));
+        TRY(slide_div.attributes.try_set("id"sv, DeprecatedString::formatted("slide{}", i)));
+        TRY(slide_div.attributes.try_set("class"sv, "slide"));
+        auto& slide = m_slides[i];
+        TRY(slide_div.children.try_append(TRY(slide.render(*this))));
+        main_element.children.append(move(slide_div));
+    }
 
-    // FIXME: Fill the background with a color depending on the color scheme
-    painter.clear_rect(painter.clip_rect(), Color::White);
-    current_slide().paint(painter, m_current_frame_in_slide.value(), scale);
+    StringBuilder builder;
+    TRY(builder.try_append(R"(
+<!DOCTYPE html><html><head><style>
+    .slide {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style><script>
+    function goto(slideIndex, frameIndex) {
+        // FIXME: Honor the frameIndex.
+        let slide;
+        for (slide of document.getElementsByClassName("slide")) {
+            slide.style.display = "none";
+        }
+        if (slide = document.getElementById(`slide${slideIndex}`))
+            slide.style.display = "block";
+    }
+    window.onload = function() { goto(0, 0) }
+</script><body>
+)"sv));
+    TRY(main_element.serialize(builder));
+    TRY(builder.try_append("</body></html>"sv));
+    return builder.to_deprecated_string();
 }

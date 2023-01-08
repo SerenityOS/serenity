@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,11 +9,9 @@
 
 #include "Slide.h"
 #include <AK/DeprecatedString.h>
-#include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/Size.h>
 
 static constexpr int const PRESENTATION_FORMAT_VERSION = 1;
@@ -23,8 +22,7 @@ class Presentation {
 public:
     ~Presentation() = default;
 
-    // We can't pass this class directly in an ErrorOr because some of the components are not properly moveable under these conditions.
-    static ErrorOr<NonnullOwnPtr<Presentation>> load_from_file(StringView file_name, NonnullRefPtr<GUI::Window> window);
+    static ErrorOr<NonnullOwnPtr<Presentation>> load_from_file(StringView file_name);
 
     StringView title() const;
     StringView author() const;
@@ -38,8 +36,7 @@ public:
     void previous_frame();
     void go_to_first_slide();
 
-    // This assumes that the caller has clipped the painter to exactly the display area.
-    void paint(Gfx::Painter& painter) const;
+    ErrorOr<DeprecatedString> render();
 
 private:
     static HashMap<DeprecatedString, DeprecatedString> parse_metadata(JsonObject const& metadata_object);
