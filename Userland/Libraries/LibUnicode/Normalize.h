@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
@@ -28,6 +29,6 @@ enum class NormalizationForm {
 NormalizationForm normalization_form_from_string(StringView form);
 StringView normalization_form_to_string(NormalizationForm form);
 
-[[nodiscard]] DeprecatedString normalize(StringView string, NormalizationForm form);
+ErrorOr<DeprecatedString> normalize(StringView string, NormalizationForm form);
 
 }
