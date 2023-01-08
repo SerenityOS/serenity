@@ -9,9 +9,13 @@
 #include <AK/Concepts.h>
 #include <AK/Math.h>
 #include <AK/QuickSelect.h>
+#include <AK/QuickSort.h>
 #include <AK/Vector.h>
 
 namespace AK {
+
+static constexpr int ODD_NAIVE_MEDIAN_CUTOFF = 200;
+static constexpr int EVEN_NAIVE_MEDIAN_CUTOFF = 350;
 
 template<Arithmetic T = float>
 class Statistics {
@@ -75,7 +79,13 @@ public:
             return 0;
 
         // If the number of values is even, the median is the arithmetic mean of the two middle values
-        if (size() % 2 == 0) {
+        if (size() <= EVEN_NAIVE_MEDIAN_CUTOFF && size() % 2 == 0) {
+            quick_sort(m_values);
+            return (m_values.at(size() / 2) + m_values.at(size() / 2 - 1)) / 2;
+        } else if (size() <= ODD_NAIVE_MEDIAN_CUTOFF && size() % 2 == 1) {
+            quick_sort(m_values);
+            return m_values.at(m_values.size() / 2);
+        } else if (size() % 2 == 0) {
             auto index = size() / 2;
             auto median1 = m_values.at(AK::quickselect_inplace(m_values, index));
             auto median2 = m_values.at(AK::quickselect_inplace(m_values, index - 1));

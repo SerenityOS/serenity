@@ -11,6 +11,9 @@
 #include <AK/StdLibExtras.h>
 
 namespace AK {
+
+static constexpr int MEDIAN_OF_MEDIAN_CUTOFF = 4500;
+
 // FIXME: Stole and adapted these two functions from `Userland/Demos/Tubes/Tubes.cpp` we really need something like this in `AK/Random.h`
 static inline double random_double()
 {
@@ -161,9 +164,13 @@ size_t quickselect_inplace(Collection& collection, size_t k, PivotFn pivot_fn)
 template<typename Collection>
 size_t quickselect_inplace(Collection& collection, size_t k)
 {
-    // By default, lets use middle_element to match `quicksort`
-    return quickselect_inplace(
-        collection, 0, collection.size() - 1, k, [](auto collection, size_t left, size_t right, auto less_than) { return PivotFunctions::middle_element(collection, left, right, less_than); }, [](auto& a, auto& b) { return a < b; });
+    if (collection.size() >= MEDIAN_OF_MEDIAN_CUTOFF)
+        return quickselect_inplace(
+            collection, 0, collection.size() - 1, k, [](auto collection, size_t left, size_t right, auto less_than) { return PivotFunctions::median_of_medians(collection, left, right, less_than); }, [](auto& a, auto& b) { return a < b; });
+
+    else
+        return quickselect_inplace(
+            collection, 0, collection.size() - 1, k, [](auto collection, size_t left, size_t right, auto less_than) { return PivotFunctions::random_element(collection, left, right, less_than); }, [](auto& a, auto& b) { return a < b; });
 }
 
 }
