@@ -40,6 +40,11 @@ constexpr u32 INNER_SHAREABLE = (3 << 8);
 constexpr u32 NORMAL_MEMORY = (0 << 2);
 constexpr u32 DEVICE_MEMORY = (1 << 2);
 
+constexpr u32 ACCESS_PERMISSION_READWRITE = (0b00 << 6);
+constexpr u32 ACCESS_PERMISSION_READWRITE_EL0 = (0b01 << 6);
+constexpr u32 ACCESS_PERMISSION_READONLY = (0b10 << 6);
+constexpr u32 ACCESS_PERMISSION_READONLY_EL0 = (0b11 << 6);
+
 // Figure D5-15 of Arm Architecture Reference Manual Armv8 - page D5-2588
 class PageDirectoryEntry {
 public:
@@ -120,18 +125,13 @@ public:
     };
 
     bool is_present() const { return (raw() & Present) == Present; }
-    void set_present(bool) { }
+    void set_present(bool b) { set_bit(Present, b); }
 
     bool is_user_allowed() const { TODO_AARCH64(); }
     void set_user_allowed(bool) { }
 
-    bool is_writable() const
-    {
-        dbgln("FIXME: PageTableEntry: Actually check if the entry is writable!");
-        return true;
-    }
-
-    void set_writable(bool) { }
+    bool is_writable() const { return !((raw() & ACCESS_PERMISSION_READONLY) == ACCESS_PERMISSION_READONLY); }
+    void set_writable(bool b) { set_bit(ACCESS_PERMISSION_READONLY, !b); }
 
     bool is_write_through() const { TODO_AARCH64(); }
     void set_write_through(bool) { }
