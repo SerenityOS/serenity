@@ -244,7 +244,7 @@ private:
     DeviceClass m_device_class;
     ColorSpace m_data_color_space;
     ColorSpace m_connection_space;
-    time_t m_creation_timestamp;
+    time_t m_creation_timestamp { 0 };
     PrimaryPlatform m_primary_platform;
     Flags m_flags;
     Optional<DeviceManufacturer> m_device_manufacturer;
