@@ -20,7 +20,7 @@ public:
         DeprecatedString path;
     };
 
-    static void load_from_json(DeprecatedString const& json_path);
+    static ErrorOr<void> load_from_json(StringView json_path);
     static Vector<CommonLocation> const& common_locations();
 };
 
