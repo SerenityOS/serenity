@@ -39,8 +39,8 @@ Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
 u32 to_unicode_lowercase(u32 code_point);
 u32 to_unicode_uppercase(u32 code_point);
 
-DeprecatedString to_unicode_lowercase_full(StringView, Optional<StringView> locale = {});
-DeprecatedString to_unicode_uppercase_full(StringView, Optional<StringView> locale = {});
+ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView, Optional<StringView> locale = {});
+ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView, Optional<StringView> locale = {});
 
 Optional<GeneralCategory> general_category_from_string(StringView);
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);

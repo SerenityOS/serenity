@@ -916,13 +916,13 @@ static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView str
     // 9. If targetCase is lower, then
     case TargetCase::Lower:
         // a. Let newCodePoints be a List whose elements are the result of a lowercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = Unicode::to_unicode_lowercase_full(string, *locale);
+        new_code_points = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_lowercase_full(string, *locale));
         break;
     // 10. Else,
     case TargetCase::Upper:
         // a. Assert: targetCase is upper.
         // b. Let newCodePoints be a List whose elements are the result of an uppercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = Unicode::to_unicode_uppercase_full(string, *locale);
+        new_code_points = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_uppercase_full(string, *locale));
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -964,7 +964,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
     auto string = TRY(ak_string_from(vm));
-    auto lowercase = Unicode::to_unicode_lowercase_full(string);
+    auto lowercase = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_lowercase_full(string));
     return PrimitiveString::create(vm, move(lowercase));
 }
 
@@ -978,7 +978,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
     auto string = TRY(ak_string_from(vm));
-    auto uppercase = Unicode::to_unicode_uppercase_full(string);
+    auto uppercase = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_uppercase_full(string));
     return PrimitiveString::create(vm, move(uppercase));
 }
 
