@@ -366,6 +366,14 @@ void BrowserWindow::new_tab()
     };
 
     tab_ptr->focus_location_editor();
+
+    // This is a hack to make the JS console usable in new windows.
+    // Note we *don't* load the initial page if we are connected to a WebDriver, as the Set URL command may come in very
+    // quickly, and become replaced by this load.
+    if (m_webdriver_content_ipc_path.is_empty()) {
+        // We make it HistoryNavigation so that the initial page doesn't get added to the history.
+        tab_ptr->navigate("about:blank", Tab::LoadType::HistoryNavigation);
+    }
 }
 
 void BrowserWindow::close_tab(int index)
