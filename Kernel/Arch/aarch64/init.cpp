@@ -100,28 +100,35 @@ void init_stage2(void*)
     Process::register_new(Process::current());
 
     // This thread is created to show that kernel scheduling is working!
-    LockRefPtr<Thread> more_work_thread;
-    (void)Process::create_kernel_process(more_work_thread, MUST(KString::try_create("More Work Thread"sv)), [] {
-        dmesgln("Enter loop (more work):");
-        for (int i = 0; i < 500; i++) {
+    LockRefPtr<Thread> some_work_thread;
+    (void)Process::create_kernel_process(some_work_thread, MUST(KString::try_create("Some Work Thread"sv)), [] {
+        Aarch64::Asm::wait_cycles(50000000);
+        dmesgln("Starting \033[0;31msome work\033[0m:");
+        for (int i = 1; i <= 500; i++) {
             if (i % 20 == 0)
-                dmesgln("    Hello from more_work: {}", i);
+                dmesgln("    Working on \033[0;31msome work\033[0m: {}", i);
 
-            Aarch64::Asm::wait_cycles(1000000);
+            Aarch64::Asm::wait_cycles(400000);
         }
-        dmesgln("Finished the work!");
+        dmesgln("Finished \033[0;31msome work\033[0m!");
     });
 
     auto firmware_version = query_firmware_version();
     dmesgln("Firmware version: {}", firmware_version);
 
-    dmesgln("Enter loop");
-    for (int i = 0;; i++) {
-        if (i % 20 == 0)
-            dmesgln("Hello from init_stage2: {}", i);
+    LockRefPtr<Thread> more_work_thread;
+    (void)Process::create_kernel_process(more_work_thread, MUST(KString::try_create("More Work Thread"sv)), [] {
+        dmesgln("Starting \033[0;34mmore work\033[0m:");
+        for (int i = 1; i <= 300; i++) {
+            if (i % 20 == 0)
+                dmesgln("    Working on \033[0;34mmore work\033[0m: {}", i);
 
-        Aarch64::Asm::wait_cycles(1000000);
-    }
+            Aarch64::Asm::wait_cycles(1000000);
+        }
+        dmesgln("Finished \033[0;34mmore work\033[0m!");
+    });
+
+    dmesgln("Finished init stage");
 }
 
 extern "C" [[noreturn]] void init()
