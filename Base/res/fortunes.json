@@ -3,27 +3,27 @@
     "quote": "add some quotes, problem solved?",
     "author": "linusg",
     "utc_time": 1596660175,
-    "url": "https://freenode.logbot.info/serenityos/20200805#c4651652",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-83277.html",
     "context": "About a different kind of quote, but that's good enough for me! :)"
   },
   {
     "quote": "BenW: i'm sure it's fine lol",
     "author": "kling",
     "utc_time": 1605364559,
-    "url": "https://freenode.logbot.info/serenityos/20201114#c5825428"
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-100995.html"
   },
   {
     "quote": "dammit fuzzer, what madman would write '?~x/'?",
     "author": "CxByte",
     "utc_time": 1606653374,
-    "url": "https://freenode.logbot.info/serenityos/20201129#c5999293",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-104142.html",
     "context": "Fuzzers are even worse than users."
   },
   {
     "quote": "I'd totally implement that",
     "author": "nooga",
     "utc_time": 1611335335,
-    "url": "https://freenode.logbot.info/serenityos/20210122#c6624263"
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-119659.html"
   },
   {
     "quote": "No need to dereference the nullptr!",
@@ -35,35 +35,35 @@
     "quote": "We can't not have the quotes under VC, that's a sin",
     "author": "CxByte",
     "utc_time": 1612035713,
-    "url": "https://freenode.logbot.info/serenityos/20210130#c6726388",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-122663.html",
     "context": "A quote about putting quotes in VC, in VC."
   },
   {
     "quote": "\"We really should start a \\\"Quotes\\\" page.\" - BenW",
     "author": "kling",
     "utc_time": 1612900961,
-    "url": "https://freenode.logbot.info/serenityos/20210209#c6854420",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-125770.html",
     "context": "Apparently I said that once too often."
   },
   {
     "quote": "if your port uses textrels, it likely uses other things that we don't want near serenity",
     "author": "thakis",
     "utc_time": 1612900918,
-    "url": "https://freenode.logbot.info/serenityos/20210209#c6854410",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-125768.html",
     "context": "\"jk but only a little bit jk\""
   },
   {
     "quote": "I'm afraid of where pulling that string will take me.",
     "author": "boricj",
     "utc_time": 1612954860,
-    "url": "https://freenode.logbot.info/serenityos/20210210#c6866141",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-125894.html",
     "context": "C++ templates will lead you down the rabbithole."
   },
   {
     "quote": "$commitdescription ($user opened: The build failed.)",
     "author": "SerenityBot",
     "utc_time": 1613906220,
-    "url": "https://freenode.logbot.info/serenityos/20210221#c6989891",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-128669.html",
     "context": "The IRC notifications are a little bit harsh sometimes, especially if they all seem to spell failure."
   },
   {
@@ -76,7 +76,7 @@
     "quote": "Does your code contain unexpected integer overflow? of course it does! contact BenW to find out why!",
     "author": "CxByte",
     "utc_time": 1615228585,
-    "url": "https://freenode.logbot.info/serenityos/20210308#c7177736",
+    "url": "https://benwiederhake.github.io/freenode-serenity-archive/quote-132827.html",
     "context": "Overflow-correct code is deviously hard. https://github.com/SerenityOS/serenity/commit/183b2e71ba8d85293db493cab27b8adb4af54981"
   },
   {
