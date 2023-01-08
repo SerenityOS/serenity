@@ -27,7 +27,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __a
 
 Processor* g_current_processor;
 
-void Processor::initialize(u32 cpu)
+void Processor::install(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
     m_features = detect_cpu_features();
@@ -35,6 +35,10 @@ void Processor::initialize(u32 cpu)
     initialize_exceptions(cpu);
 
     g_current_processor = this;
+}
+
+void Processor::initialize()
+{
 }
 
 [[noreturn]] void Processor::halt()

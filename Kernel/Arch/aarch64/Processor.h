@@ -44,7 +44,8 @@ class Processor {
 public:
     Processor() = default;
 
-    void initialize(u32 cpu);
+    void install(u32 cpu);
+    void initialize();
 
     template<typename T>
     T* get_specific()

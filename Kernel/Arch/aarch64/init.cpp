@@ -147,7 +147,7 @@ extern "C" [[noreturn]] void init()
     CommandLine::early_initialize("");
 
     new (&bootstrap_processor()) Processor();
-    bootstrap_processor().initialize(0);
+    bootstrap_processor().install(0);
 
     // We want to enable the MMU as fast as possible to make the boot faster.
     init_page_tables();
@@ -158,6 +158,8 @@ extern "C" [[noreturn]] void init()
     for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
         (*ctor)();
     kmalloc_init();
+
+    bootstrap_processor().initialize();
 
     load_kernel_symbol_table();
 
