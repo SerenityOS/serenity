@@ -26,7 +26,11 @@ public:
 
     WebContentView& view() { return *m_view; }
 
-    void navigate(QString);
+    enum class LoadType {
+        Normal,
+        HistoryNavigation,
+    };
+    void navigate(QString, LoadType = LoadType::Normal);
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
