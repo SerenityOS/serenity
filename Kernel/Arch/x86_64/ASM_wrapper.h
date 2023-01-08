@@ -128,7 +128,7 @@ ALWAYS_INLINE u64 read_tsc()
     return ((u64)msw << 32) | lsw;
 }
 
-ALWAYS_INLINE u32 rdrand()
+ALWAYS_INLINE u32 read_rdrand()
 {
     u32 value;
     asm volatile(
@@ -139,7 +139,7 @@ ALWAYS_INLINE u32 rdrand()
     return value;
 }
 
-ALWAYS_INLINE u32 rdseed()
+ALWAYS_INLINE u32 read_rdseed()
 {
     u32 value;
     asm volatile(
