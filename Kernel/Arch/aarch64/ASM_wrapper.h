@@ -91,6 +91,19 @@ inline void enter_el1_from_el2()
                      : "x0");
 }
 
+inline u64 read_rndrrs()
+{
+    u64 value = 0;
+
+    asm volatile(
+        "retry:\n"
+        "mrs %[value], s3_3_c2_c4_1 \n" // encoded RNDRRS register
+        "b.eq retry\n"
+        : [value] "=r"(value));
+
+    return value;
+}
+
 }
 
 namespace Kernel {

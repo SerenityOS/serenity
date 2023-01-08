@@ -10,6 +10,8 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Time/HPET.h>
 #    include <Kernel/Arch/x86_64/Time/RTC.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #endif
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
@@ -58,6 +60,15 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             current_time *= 0x574au;
             current_time += 0x40b2u;
         }
+    }
+#elif ARCH(AARCH64)
+    if (Processor::current().has_feature(CPUFeature::RNG)) {
+        dmesgln("KernelRng: Using RNDRRS as entropy source");
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            add_random_event(Aarch64::Asm::read_rndrrs(), i % 32);
+        }
+    } else {
+        dmesgln("KernelRng: No entropy source available!");
     }
 #else
     dmesgln("KernelRng: No entropy source available!");

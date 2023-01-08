@@ -44,6 +44,8 @@ void Processor::initialize()
     dmesgln("CPU[{}]: Supports {}", m_cpu, build_cpu_feature_names(m_features));
     dmesgln("CPU[{}]: Physical address bit width: {}", m_cpu, m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", m_cpu, m_virtual_address_bit_width);
+    if (!has_feature(CPUFeature::RNG))
+        dmesgln("CPU[{}]: {} not detected, randomness will be poor", m_cpu, cpu_feature_to_description(CPUFeature::RNG));
 }
 
 [[noreturn]] void Processor::halt()
