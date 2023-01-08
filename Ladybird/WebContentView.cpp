@@ -1049,11 +1049,11 @@ Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
 
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = Core::File::open(path, Core::OpenMode::ReadOnly);
+    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else
-        client().async_handle_file_return(0, IPC::File(file.value()->leak_fd()), request_id);
+        client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
 }
 
 void WebContentView::request_repaint()
