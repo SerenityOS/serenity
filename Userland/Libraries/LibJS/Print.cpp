@@ -188,29 +188,45 @@ ErrorOr<void> print_array(JS::PrintContext& print_context, JS::Array const& arra
 
 ErrorOr<void> print_object(JS::PrintContext& print_context, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
-    TRY(js_out(print_context, "{{"));
+    TRY(js_out(print_context, "{}{{", object.class_name()));
     bool first = true;
-    for (auto& entry : object.indexed_properties()) {
-        TRY(print_separator(print_context, first));
-        TRY(js_out(print_context, "\"\033[33;1m{}\033[0m\": ", entry.index()));
-        auto value_or_error = object.get(entry.index());
-        // The V8 repl doesn't throw an exception here, and instead just
+    static constexpr size_t max_number_of_new_objects = 20; // Arbitrary limit
+    size_t original_num_seen_objects = seen_objects.size();
+
+    auto maybe_completion = object.enumerate_object_properties([&](JS::Value property_key) -> Optional<JS::Completion> {
+        // The V8 repl doesn't throw an exception on accessing properties, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error
+        auto error = print_separator(print_context, first);
+        if (error.is_error())
+            return JS::js_undefined();
+        error = js_out(print_context, "\033[33;1m");
+        if (error.is_error())
+            return JS::js_undefined();
+        error = print_value(print_context, property_key, seen_objects);
+        // NOTE: Ignore this error to always print out "reset" ANSI sequence
+        error = js_out(print_context, "\033[0m: ");
+        if (error.is_error())
+            return JS::js_undefined();
+        auto maybe_property_key = JS::PropertyKey::from_value(print_context.vm, property_key);
+        if (maybe_property_key.is_error())
+            return JS::js_undefined();
+        auto value_or_error = object.get(maybe_property_key.value());
         if (value_or_error.is_error())
-            return {};
+            return JS::js_undefined();
         auto value = value_or_error.release_value();
-        TRY(print_value(print_context, value, seen_objects));
-    }
-    for (auto& it : object.shape().property_table_ordered()) {
-        TRY(print_separator(print_context, first));
-        if (it.key.is_string()) {
-            TRY(js_out(print_context, "\"\033[33;1m{}\033[0m\": ", it.key.to_display_string()));
-        } else {
-            TRY(js_out(print_context, "[\033[33;1m{}\033[0m]: ", it.key.to_display_string()));
-        }
-        TRY(print_value(print_context, object.get_direct(it.value.offset), seen_objects));
-    }
+        error = print_value(print_context, value, seen_objects);
+        // FIXME: Come up with a better way to structure the data so that we don't care about this limit
+        if (seen_objects.size() > original_num_seen_objects + max_number_of_new_objects)
+            return JS::js_undefined(); // Stop once we've seen a ton of objects, to prevent spamming the console.
+        if (error.is_error())
+            return JS::js_undefined();
+        return {};
+    });
+    // Swallow Error/undefined from printing properties
+    if (maybe_completion.has_value())
+        return {};
+
     if (!first)
         TRY(js_out(print_context, " "));
     TRY(js_out(print_context, "}}"));
