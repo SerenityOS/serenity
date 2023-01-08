@@ -558,7 +558,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = TRY_OR_THROW_OOM(*g_vm, String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>()));
+        auto output = TRY(generically_format_values(arguments.get<JS::MarkedVector<JS::Value>>()));
 #ifdef AK_OS_SERENITY
         m_console.output_debug_message(log_level, output);
 #endif
