@@ -238,11 +238,11 @@ u64 generate_secure_seed()
         seed ^= read_tsc();
 
     if (processor_info.ecx() & (1 << 30)) // RDRAND
-        seed ^= rdrand();
+        seed ^= read_rdrand();
 
     CPUID extended_features(0x7);
     if (extended_features.ebx() & (1 << 18)) // RDSEED
-        seed ^= rdseed();
+        seed ^= read_rdseed();
 #else
 #    warning No native randomness source available for this architecture
 #endif

@@ -33,13 +33,13 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
         dmesgln("KernelRng: Using RDSEED as entropy source");
 
         for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
-            add_random_event(Kernel::rdseed(), i % 32);
+            add_random_event(Kernel::read_rdseed(), i % 32);
         }
     } else if (Processor::current().has_feature(CPUFeature::RDRAND)) {
         dmesgln("KernelRng: Using RDRAND as entropy source");
 
         for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
-            add_random_event(Kernel::rdrand(), i % 32);
+            add_random_event(Kernel::read_rdrand(), i % 32);
         }
     } else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
