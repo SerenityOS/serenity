@@ -83,6 +83,11 @@ u32 Utf16View::decode_surrogate_pair(u16 high_surrogate, u16 low_surrogate)
 
 ErrorOr<DeprecatedString> Utf16View::to_deprecated_string(AllowInvalidCodeUnits allow_invalid_code_units) const
 {
+    return TRY(to_utf8(allow_invalid_code_units)).to_deprecated_string();
+}
+
+ErrorOr<String> Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const
+{
     StringBuilder builder;
 
     if (allow_invalid_code_units == AllowInvalidCodeUnits::Yes) {
@@ -105,7 +110,7 @@ ErrorOr<DeprecatedString> Utf16View::to_deprecated_string(AllowInvalidCodeUnits 
             TRY(builder.try_append_code_point(code_point));
     }
 
-    return builder.build();
+    return builder.to_string();
 }
 
 size_t Utf16View::length_in_code_points() const
