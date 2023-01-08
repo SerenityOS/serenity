@@ -32,7 +32,7 @@ static bool is_all_whitespace(StringView string)
     return true;
 }
 
-static DeprecatedString apply_text_transform(DeprecatedString const& string, CSS::TextTransform text_transform)
+static ErrorOr<DeprecatedString> apply_text_transform(DeprecatedString const& string, CSS::TextTransform text_transform)
 {
     if (text_transform == CSS::TextTransform::Uppercase)
         return Unicode::to_unicode_uppercase_full(string);
@@ -44,7 +44,7 @@ static DeprecatedString apply_text_transform(DeprecatedString const& string, CSS
 // NOTE: This collapses whitespace into a single ASCII space if collapse is true.
 void TextNode::compute_text_for_rendering(bool collapse)
 {
-    auto data = apply_text_transform(dom_node().data(), computed_values().text_transform());
+    auto data = apply_text_transform(dom_node().data(), computed_values().text_transform()).release_value_but_fixme_should_propagate_errors();
 
     if (dom_node().is_password_input()) {
         m_text_for_rendering = DeprecatedString::repeated('*', data.length());

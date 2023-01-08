@@ -221,7 +221,7 @@ u32 __attribute__((weak)) to_unicode_uppercase(u32 code_point)
     return to_ascii_uppercase(code_point);
 }
 
-DeprecatedString to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
+ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
     Utf8View view { string };
@@ -236,12 +236,12 @@ DeprecatedString to_unicode_lowercase_full(StringView string, [[maybe_unused]] O
 
         auto const* special_casing = find_matching_special_case(code_point, view, locale, index, byte_length);
         if (!special_casing) {
-            builder.append_code_point(to_unicode_lowercase(code_point));
+            TRY(builder.try_append_code_point(to_unicode_lowercase(code_point)));
             continue;
         }
 
         for (size_t i = 0; i < special_casing->lowercase_mapping_size; ++i)
-            builder.append_code_point(special_casing->lowercase_mapping[i]);
+            TRY(builder.try_append_code_point(special_casing->lowercase_mapping[i]));
     }
 
     return builder.build();
@@ -250,7 +250,7 @@ DeprecatedString to_unicode_lowercase_full(StringView string, [[maybe_unused]] O
 #endif
 }
 
-DeprecatedString to_unicode_uppercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
+ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
     Utf8View view { string };
@@ -265,12 +265,12 @@ DeprecatedString to_unicode_uppercase_full(StringView string, [[maybe_unused]] O
 
         auto const* special_casing = find_matching_special_case(code_point, view, locale, index, byte_length);
         if (!special_casing) {
-            builder.append_code_point(to_unicode_uppercase(code_point));
+            TRY(builder.try_append_code_point(to_unicode_uppercase(code_point)));
             continue;
         }
 
         for (size_t i = 0; i < special_casing->uppercase_mapping_size; ++i)
-            builder.append_code_point(special_casing->uppercase_mapping[i]);
+            TRY(builder.try_append_code_point(special_casing->uppercase_mapping[i]));
     }
 
     return builder.build();
