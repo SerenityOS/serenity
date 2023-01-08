@@ -58,6 +58,7 @@ set(AK_TEST_SOURCES
     TestOwnPtr.cpp
     TestPrint.cpp
     TestQueue.cpp
+    TestQuickSelect.cpp
     TestQuickSort.cpp
     TestRedBlackTree.cpp
     TestRefPtr.cpp
