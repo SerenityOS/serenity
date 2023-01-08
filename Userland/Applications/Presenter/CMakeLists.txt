@@ -2,7 +2,7 @@ serenity_component(
     Presenter
     RECOMMENDED
     TARGETS Presenter
-    DEPENDS ImageDecoder FileSystemAccessServer
+    DEPENDS FileSystemAccessServer
 )
 
 
@@ -14,4 +14,4 @@ set(SOURCES
     SlideObject.cpp
 )
 serenity_app(Presenter ICON app-display-settings)
-target_link_libraries(Presenter PRIVATE LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibCore LibMain)
+target_link_libraries(Presenter PRIVATE LibWebView LibGUI LibGfx LibFileSystemAccessClient LibCore LibMain)
