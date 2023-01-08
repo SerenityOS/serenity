@@ -372,7 +372,7 @@ void HexEditorWidget::update_inspector_values(size_t position)
         if (valid_code_units == 0)
             value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
         else
-            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_utf8().release_value_but_fixme_should_propagate_errors());
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_deprecated_string().release_value_but_fixme_should_propagate_errors());
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
     }

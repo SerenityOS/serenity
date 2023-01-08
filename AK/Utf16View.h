@@ -75,7 +75,7 @@ public:
         No,
     };
 
-    ErrorOr<DeprecatedString> to_utf8(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
+    ErrorOr<DeprecatedString> to_deprecated_string(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
 
     bool is_null() const { return m_code_units.is_null(); }
     bool is_empty() const { return m_code_units.is_empty(); }

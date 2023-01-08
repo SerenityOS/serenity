@@ -104,7 +104,7 @@ Utf16View Utf16String::substring_view(size_t code_unit_offset) const
 
 ThrowCompletionOr<DeprecatedString> Utf16String::to_utf8(VM& vm) const
 {
-    return TRY_OR_THROW_OOM(vm, view().to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+    return TRY_OR_THROW_OOM(vm, view().to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes));
 }
 
 u16 Utf16String::code_unit_at(size_t index) const

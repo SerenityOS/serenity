@@ -56,14 +56,14 @@ TEST_CASE(encode_utf8)
         DeprecatedString utf8_string("Привет, мир! 😀 γειά σου κόσμος こんにちは世界");
         auto string = MUST(AK::utf8_to_utf16(utf8_string));
         Utf16View view { string };
-        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), utf8_string);
-        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), utf8_string);
+        EXPECT_EQ(MUST(view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes)), utf8_string);
+        EXPECT_EQ(MUST(view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::No)), utf8_string);
     }
     {
         auto encoded = Array { (u16)0xd83d };
         Utf16View view { encoded };
-        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), "\xed\xa0\xbd"sv);
-        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
+        EXPECT_EQ(MUST(view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes)), "\xed\xa0\xbd"sv);
+        EXPECT_EQ(MUST(view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
     }
 }
 
@@ -269,14 +269,14 @@ TEST_CASE(substring_view)
         view = view.substring_view(7, 2);
 
         EXPECT(view.length_in_code_units() == 2);
-        EXPECT_EQ(MUST(view.to_utf8()), "😀"sv);
+        EXPECT_EQ(MUST(view.to_deprecated_string()), "😀"sv);
     }
     {
         Utf16View view { string };
         view = view.substring_view(7, 1);
 
         EXPECT(view.length_in_code_units() == 1);
-        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), "\xed\xa0\xbd"sv);
-        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
+        EXPECT_EQ(MUST(view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes)), "\xed\xa0\xbd"sv);
+        EXPECT_EQ(MUST(view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
     }
 }
