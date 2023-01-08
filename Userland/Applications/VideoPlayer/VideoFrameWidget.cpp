@@ -9,10 +9,13 @@
 
 #include "VideoFrameWidget.h"
 
+REGISTER_WIDGET(VideoPlayer, VideoFrameWidget);
+
 namespace VideoPlayer {
 
 VideoFrameWidget::VideoFrameWidget()
 {
+    REGISTER_BOOL_PROPERTY("auto_resize", auto_resize, set_auto_resize);
     set_auto_resize(true);
 }
 
