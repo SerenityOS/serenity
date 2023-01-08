@@ -283,36 +283,36 @@ void VideoPlayerWidget::update_seek_mode()
     m_playback_manager->set_seek_mode(seek_mode());
 }
 
-void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
+ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
-    // FIXME: This should return ErrorOr and use try_... functions.
-
     // File menu
-    auto& file_menu = window.add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    auto file_menu = TRY(window.try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
         if (path.has_value())
             open_file(path.value());
-    }));
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    })));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         window.close();
-    }));
+    })));
 
     // Playback menu
-    auto& playback_menu = window.add_menu("&Playback");
+    auto playback_menu = TRY(window.try_add_menu("&Playback"));
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
     m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {
         update_seek_mode();
     });
-    playback_menu.add_action(*m_use_fast_seeking);
+    TRY(playback_menu->try_add_action(*m_use_fast_seeking));
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 
     // Help menu
-    auto& help_menu = window.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Video Player", GUI::Icon::default_icon("app-video-player"sv), &window));
+    auto help_menu = TRY(window.try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Video Player", TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window)));
+
+    return {};
 }
 
 }
