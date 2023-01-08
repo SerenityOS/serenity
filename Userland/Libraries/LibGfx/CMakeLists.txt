@@ -21,6 +21,7 @@ set(SOURCES
     Font/OpenType/Cmap.cpp
     Font/OpenType/Font.cpp
     Font/OpenType/Glyf.cpp
+    Font/OpenType/Hinting/Opcodes.cpp
     Font/PathRasterizer.cpp
     Font/ScaledFont.cpp
     Font/Typeface.cpp
