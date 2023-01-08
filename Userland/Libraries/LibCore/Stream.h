@@ -743,15 +743,14 @@ public:
         // remove from the buffer after copying up to the delimiter to the
         // user buffer.
 
-        auto const find_candidates = [this, &candidates, &longest_candidate](Optional<size_t> max_offset = {}) -> Optional<Match> {
+        auto const find_candidates = [this, &candidates, &longest_candidate](size_t min_offset, Optional<size_t> max_offset = {}) -> Optional<Match> {
+            auto const corrected_minimum_offset = *longest_candidate > min_offset ? 0 : min_offset - *longest_candidate;
             max_offset = max_offset.value_or(m_buffer.used_space());
 
             Optional<size_t> longest_match;
             size_t match_size = 0;
             for (auto& candidate : candidates) {
-                // FIXME: This currently searches through the buffer from the start,
-                //        even if we just appended a small number of bytes at the end.
-                auto const result = m_buffer.offset_of(candidate, {}, *max_offset);
+                auto const result = m_buffer.offset_of(candidate, corrected_minimum_offset, *max_offset);
 
                 if (result.has_value()) {
                     auto previous_match = longest_match.value_or(*result);
@@ -768,16 +767,19 @@ public:
             return {};
         };
 
-        if (auto first_find = find_candidates(max_offset); first_find.has_value())
+        if (auto first_find = find_candidates(0, max_offset); first_find.has_value())
             return first_find;
+
+        auto last_size = m_buffer.used_space();
 
         while (m_buffer.used_space() < max_offset.value_or(m_buffer.capacity())) {
             auto const read_bytes = TRY(populate_read_buffer());
             if (read_bytes == 0)
                 break;
 
-            if (auto first_find = find_candidates(max_offset); first_find.has_value())
+            if (auto first_find = find_candidates(last_size, max_offset); first_find.has_value())
                 return first_find;
+            last_size = m_buffer.used_space();
         }
 
         return Optional<Match> {};
