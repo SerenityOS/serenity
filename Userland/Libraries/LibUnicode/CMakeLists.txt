@@ -5,6 +5,7 @@ set(SOURCES
     CurrencyCode.cpp
     Emoji.cpp
     Normalize.cpp
+    String.cpp
     UnicodeUtils.cpp
     ${UNICODE_DATA_SOURCES}
 )

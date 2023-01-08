@@ -9,6 +9,7 @@
 #include <AK/Concepts.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
 #include <AK/StringView.h>
@@ -42,6 +43,11 @@ public:
 
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
+
+    // Creates a new String by transforming this String to lower- or uppercase. Using these methods
+    // require linking LibUnicode into your application.
+    ErrorOr<String> to_lowercase(Optional<StringView> const& locale = {}) const;
+    ErrorOr<String> to_uppercase(Optional<StringView> const& locale = {}) const;
 
     // Creates a substring with a deep copy of the specified data window.
     ErrorOr<String> substring_from_byte_offset(size_t start, size_t byte_count) const;

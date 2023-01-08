@@ -107,3 +107,41 @@ TEST_CASE(replace)
         EXPECT_EQ(result, "anon@courage:~"sv);
     }
 }
+
+TEST_CASE(to_lowercase)
+{
+    {
+        auto string = MUST(String::from_utf8("Aa"sv));
+        auto result = MUST(string.to_lowercase());
+        EXPECT_EQ(result, "aa"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("Ωω"sv));
+        auto result = MUST(string.to_lowercase());
+        EXPECT_EQ(result, "ωω"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("İi̇"sv));
+        auto result = MUST(string.to_lowercase());
+        EXPECT_EQ(result, "i̇i̇"sv);
+    }
+}
+
+TEST_CASE(to_uppercase)
+{
+    {
+        auto string = MUST(String::from_utf8("Aa"sv));
+        auto result = MUST(string.to_uppercase());
+        EXPECT_EQ(result, "AA"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("Ωω"sv));
+        auto result = MUST(string.to_uppercase());
+        EXPECT_EQ(result, "ΩΩ"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("ŉ"sv));
+        auto result = MUST(string.to_uppercase());
+        EXPECT_EQ(result, "ʼN"sv);
+    }
+}
