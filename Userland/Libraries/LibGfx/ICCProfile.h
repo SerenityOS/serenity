@@ -223,6 +223,7 @@ public:
     // For non-DeviceLink profiles, always PCSXYZ or PCSLAB.
     ColorSpace connection_space() const { return m_connection_space; }
 
+    u32 on_disk_size() const { return m_on_disk_size; }
     time_t creation_timestamp() const { return m_creation_timestamp; }
     PrimaryPlatform primary_platform() const { return m_primary_platform; }
     Flags flags() const { return m_flags; }
@@ -237,6 +238,7 @@ public:
     static Crypto::Hash::MD5::DigestType compute_id(ReadonlyBytes);
 
 private:
+    u32 m_on_disk_size { 0 };
     Optional<PreferredCMMType> m_preferred_cmm_type;
     Version m_version;
     DeviceClass m_device_class;
