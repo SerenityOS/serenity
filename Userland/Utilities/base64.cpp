@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto encoded = encode_base64(buffer);
+    auto encoded = TRY(encode_base64(buffer));
     outln("{}", encoded);
     return 0;
 }
