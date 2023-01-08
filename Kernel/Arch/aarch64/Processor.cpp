@@ -252,9 +252,9 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     saved_program_status_register_el1.I = 0;
     saved_program_status_register_el1.F = 0;
 
-    // Set exception origin mode to EL1t, so when the context is restored, we'll be executing in EL1 with SP_EL0
+    // Set exception origin mode to EL1h, so when the context is restored, we'll be executing in EL1 with SP_EL1
     // FIXME: This must be EL0t when aarch64 supports userspace applications.
-    saved_program_status_register_el1.M = Aarch64::SPSR_EL1::Mode::EL1t;
+    saved_program_status_register_el1.M = Aarch64::SPSR_EL1::Mode::EL1h;
     memcpy(&eretframe.spsr_el1, &saved_program_status_register_el1, sizeof(u64));
 
     // Push a TrapFrame onto the stack
