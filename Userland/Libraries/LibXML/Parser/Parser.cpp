@@ -78,7 +78,7 @@ void Parser::append_node(NonnullOwnPtr<Node> node)
     }
 }
 
-void Parser::append_text(DeprecatedString text)
+void Parser::append_text(StringView text)
 {
     if (m_listener) {
         m_listener->text(text);
@@ -111,7 +111,7 @@ void Parser::append_text(DeprecatedString text)
         });
 }
 
-void Parser::append_comment(DeprecatedString text)
+void Parser::append_comment(StringView text)
 {
     if (m_listener) {
         m_listener->comment(text);
@@ -125,7 +125,7 @@ void Parser::append_comment(DeprecatedString text)
 
     m_entered_node->content.visit(
         [&](Node::Element& node) {
-            node.children.append(make<Node>(Node::Comment { move(text) }));
+            node.children.append(make<Node>(Node::Comment { text }));
         },
         [&](auto&) {
             // Can't enter a text or comment node.

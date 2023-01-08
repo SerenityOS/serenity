@@ -123,7 +123,7 @@ void XMLDocumentBuilder::element_end(const XML::Name& name)
     m_current_node = m_current_node->parent_node();
 }
 
-void XMLDocumentBuilder::text(DeprecatedString const& data)
+void XMLDocumentBuilder::text(StringView data)
 {
     if (m_has_error)
         return;
@@ -135,16 +135,22 @@ void XMLDocumentBuilder::text(DeprecatedString const& data)
         text_node.set_data(text_builder.to_deprecated_string());
         text_builder.clear();
     } else {
-        auto node = m_document.create_text_node(data);
+        auto string = DeprecatedString::empty();
+        if (!data.is_null())
+            string = data.to_deprecated_string();
+        auto node = m_document.create_text_node(string);
         MUST(m_current_node->append_child(node));
     }
 }
 
-void XMLDocumentBuilder::comment(DeprecatedString const& data)
+void XMLDocumentBuilder::comment(StringView data)
 {
     if (m_has_error)
         return;
-    MUST(m_document.append_child(m_document.create_comment(data)));
+    auto string = DeprecatedString::empty();
+    if (!data.is_null())
+        string = data.to_deprecated_string();
+    MUST(m_document.append_child(m_document.create_comment(string)));
 }
 
 void XMLDocumentBuilder::document_end()
