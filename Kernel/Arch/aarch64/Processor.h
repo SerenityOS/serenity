@@ -89,8 +89,7 @@ public:
 
     ALWAYS_INLINE u8 virtual_address_bit_width() const
     {
-        TODO_AARCH64();
-        return 0;
+        return m_virtual_address_bit_width;
     }
 
     ALWAYS_INLINE static bool is_initialized()
@@ -286,6 +285,7 @@ private:
     u32 m_cpu;
     CPUFeature::Type m_features;
     u8 m_physical_address_bit_width;
+    u8 m_virtual_address_bit_width;
 
     Thread* m_current_thread;
     Thread* m_idle_thread;

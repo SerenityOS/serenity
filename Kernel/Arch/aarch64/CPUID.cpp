@@ -1504,4 +1504,20 @@ u8 detect_physical_address_bit_width()
     }
 }
 
+u8 detect_virtual_address_bit_width()
+{
+    auto memory_model_feature_register_2 = Aarch64::ID_AA64MMFR2_EL1::read();
+
+    switch (memory_model_feature_register_2.VARange) {
+    case 0b0000:
+        return 48; // 256TB
+    case 0b0001:
+        return 52; // 4PB (only for 64KB translation granule)
+    case 0b0010:
+        return 56; // 64PB (applies for FEAT_D128)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 }

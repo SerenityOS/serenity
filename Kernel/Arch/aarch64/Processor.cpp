@@ -34,6 +34,7 @@ void Processor::install(u32 cpu)
     m_cpu = cpu;
     m_features = detect_cpu_features();
     m_physical_address_bit_width = detect_physical_address_bit_width();
+    m_virtual_address_bit_width = detect_virtual_address_bit_width();
 
     initialize_exceptions(cpu);
 
@@ -44,6 +45,7 @@ void Processor::initialize()
 {
     dmesgln("CPU[{}]: Supports {}", m_cpu, build_cpu_feature_names(m_features));
     dmesgln("CPU[{}]: Physical address bit width: {}", m_cpu, m_physical_address_bit_width);
+    dmesgln("CPU[{}]: Virtual address bit width: {}", m_cpu, m_virtual_address_bit_width);
 }
 
 [[noreturn]] void Processor::halt()
