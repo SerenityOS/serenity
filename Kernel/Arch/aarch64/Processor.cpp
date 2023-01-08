@@ -292,10 +292,9 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
         auto& current_trap = current_thread->current_trap();
         trap.next_trap = current_trap;
         current_trap = &trap;
-        // FIXME: Determine PreviousMode from TrapFrame when userspace programs can run on aarch64
-        auto new_previous_mode = Thread::PreviousMode::KernelMode;
+        auto new_previous_mode = trap.regs->previous_mode();
         if (current_thread->set_previous_mode(new_previous_mode)) {
-            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == Thread::PreviousMode::KernelMode, false);
+            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == ExecutionMode::Kernel, false);
         }
     } else {
         trap.next_trap = nullptr;
@@ -321,15 +320,14 @@ void Processor::exit_trap(TrapFrame& trap)
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
-        Thread::PreviousMode new_previous_mode;
+        ExecutionMode new_previous_mode;
         if (current_trap) {
             VERIFY(current_trap->regs);
-            // FIXME: Determine PreviousMode from TrapFrame when userspace programs can run on aarch64
-            new_previous_mode = Thread::PreviousMode::KernelMode;
+            new_previous_mode = current_trap->regs->previous_mode();
         } else {
             // If we don't have a higher level trap then we're back in user mode.
             // Which means that the previous mode prior to being back in user mode was kernel mode
-            new_previous_mode = Thread::PreviousMode::KernelMode;
+            new_previous_mode = ExecutionMode::Kernel;
         }
 
         if (current_thread->set_previous_mode(new_previous_mode))

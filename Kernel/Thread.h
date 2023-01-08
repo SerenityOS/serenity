@@ -987,12 +987,8 @@ public:
     u64 time_in_user() const { return m_total_time_scheduled_user.load(AK::MemoryOrder::memory_order_relaxed); }
     u64 time_in_kernel() const { return m_total_time_scheduled_kernel.load(AK::MemoryOrder::memory_order_relaxed); }
 
-    enum class PreviousMode : u8 {
-        KernelMode = 0,
-        UserMode
-    };
-    PreviousMode previous_mode() const { return m_previous_mode; }
-    bool set_previous_mode(PreviousMode mode)
+    ExecutionMode previous_mode() const { return m_previous_mode; }
+    bool set_previous_mode(ExecutionMode mode)
     {
         if (m_previous_mode == mode)
             return false;
@@ -1215,7 +1211,7 @@ private:
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };
-    PreviousMode m_previous_mode { PreviousMode::KernelMode }; // We always start out in kernel mode
+    ExecutionMode m_previous_mode { ExecutionMode::Kernel }; // We always start out in kernel mode
 
     unsigned m_syscall_count { 0 };
     unsigned m_inode_faults { 0 };

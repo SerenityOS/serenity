@@ -427,7 +427,7 @@ void Scheduler::timer_tick(RegisterState const& regs)
         current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), true, false);
     }
 
-    if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
+    if (current_thread->previous_mode() == ExecutionMode::User && current_thread->should_die() && !current_thread->is_blocked()) {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
         current_thread->set_state(Thread::State::Dying);
