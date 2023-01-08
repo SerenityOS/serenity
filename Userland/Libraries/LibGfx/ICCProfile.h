@@ -27,7 +27,7 @@ enum class FourCCType {
 
 template<FourCCType type>
 struct DistinctFourCC {
-    u32 value;
+    u32 value { 0 };
 
     char c0() const { return value >> 24; }
     char c1() const { return (value >> 16) & 0xff; }
