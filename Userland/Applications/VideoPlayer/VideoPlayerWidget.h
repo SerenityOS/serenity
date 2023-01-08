@@ -34,7 +34,7 @@ public:
     Video::PlaybackManager::SeekMode seek_mode();
     void set_seek_mode(Video::PlaybackManager::SeekMode seek_mode);
 
-    void initialize_menubar(GUI::Window&);
+    ErrorOr<void> initialize_menubar(GUI::Window&);
 
 private:
     VideoPlayerWidget(GUI::Window&);

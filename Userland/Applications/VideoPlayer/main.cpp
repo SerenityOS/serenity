@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto main_widget = TRY(window->set_main_widget<VideoPlayer::VideoPlayerWidget>(window));
     main_widget->update_title();
-    main_widget->initialize_menubar(window);
+    TRY(main_widget->initialize_menubar(window));
 
     if (!filename.is_empty())
         main_widget->open_file(filename);
