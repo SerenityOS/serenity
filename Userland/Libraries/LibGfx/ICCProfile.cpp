@@ -22,7 +22,7 @@ struct DateTimeNumber {
     BigEndian<u16> year;
     BigEndian<u16> month;
     BigEndian<u16> day;
-    BigEndian<u16> hour;
+    BigEndian<u16> hours;
     BigEndian<u16> minutes;
     BigEndian<u16> seconds;
 };
@@ -55,8 +55,8 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
         return Error::from_string_literal("ICC::Profile: dateTimeNumber day out of bounds");
 
     // "Number of hours (0 to 23)"
-    if (date_time.hour > 23)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber hour out of bounds");
+    if (date_time.hours > 23)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber hours out of bounds");
 
     // "Number of minutes (0 to 59)"
     if (date_time.minutes > 59)
@@ -71,7 +71,7 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
     tm.tm_year = date_time.year - 1900;
     tm.tm_mon = date_time.month - 1;
     tm.tm_mday = date_time.day;
-    tm.tm_hour = date_time.hour;
+    tm.tm_hour = date_time.hours;
     tm.tm_min = date_time.minutes;
     tm.tm_sec = date_time.seconds;
     // timegm() doesn't read tm.tm_isdst, tm.tm_wday, and tm.tm_yday, no need to fill them in.
