@@ -81,7 +81,7 @@ u32 Utf16View::decode_surrogate_pair(u16 high_surrogate, u16 low_surrogate)
     return ((high_surrogate - high_surrogate_min) << 10) + (low_surrogate - low_surrogate_min) + first_supplementary_plane_code_point;
 }
 
-ErrorOr<DeprecatedString> Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const
+ErrorOr<DeprecatedString> Utf16View::to_deprecated_string(AllowInvalidCodeUnits allow_invalid_code_units) const
 {
     StringBuilder builder;
 

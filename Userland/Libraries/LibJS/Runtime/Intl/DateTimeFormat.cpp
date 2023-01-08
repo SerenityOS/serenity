@@ -718,7 +718,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 if (formatted_value.length() > 2) {
                     auto utf16_formatted_value = TRY(Utf16String::create(vm, formatted_value));
                     if (utf16_formatted_value.length_in_code_units() > 2)
-                        formatted_value = TRY_OR_THROW_OOM(vm, utf16_formatted_value.substring_view(utf16_formatted_value.length_in_code_units() - 2).to_utf8());
+                        formatted_value = TRY_OR_THROW_OOM(vm, utf16_formatted_value.substring_view(utf16_formatted_value.length_in_code_units() - 2).to_deprecated_string());
                 }
 
                 break;
