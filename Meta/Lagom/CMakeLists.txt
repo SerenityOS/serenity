@@ -488,6 +488,9 @@ if (BUILD_LAGOM)
         add_executable(icc ../../Userland/Utilities/icc.cpp)
         target_link_libraries(icc LibCore LibGfx LibMain)
 
+        add_executable(ttfdisasm ../../Userland/Utilities/ttfdisasm.cpp)
+        target_link_libraries(ttfdisasm LibGfx LibMain)
+
         add_executable(js ../../Userland/Utilities/js.cpp)
         target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
         if (EMSCRIPTEN)
