@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -231,12 +231,6 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
     m_throw_type_error_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, ""), 0);
     MUST(m_throw_type_error_function->internal_prevent_extensions());
 
-#define __JS_ENUMERATE(ClassName, snake_name) \
-    VERIFY(!m_##snake_name##_object);         \
-    m_##snake_name##_object = heap().allocate<ClassName>(realm, realm);
-    JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
-#undef __JS_ENUMERATE
-
     initialize_constructor(vm, vm.names.Error, *m_error_constructor, m_error_prototype);
     initialize_constructor(vm, vm.names.Function, *m_function_constructor, m_function_prototype);
     initialize_constructor(vm, vm.names.Object, *m_object_constructor, m_object_prototype);
@@ -330,6 +324,16 @@ JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
 #undef __JS_ENUMERATE_INNER
+
+#define __JS_ENUMERATE(ClassName, snake_name)                                       \
+    ClassName* Intrinsics::snake_name##_object()                                    \
+    {                                                                               \
+        if (!m_##snake_name##_object)                                               \
+            m_##snake_name##_object = heap().allocate<ClassName>(m_realm, m_realm); \
+        return m_##snake_name##_object;                                             \
+    }
+JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
+#undef __JS_ENUMERATE
 
 void Intrinsics::visit_edges(Visitor& visitor)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -78,10 +78,7 @@ public:
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
-    ClassName* snake_name##_object()          \
-    {                                         \
-        return m_##snake_name##_object;       \
-    }
+    ClassName* snake_name##_object();
     JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
 #undef __JS_ENUMERATE
 
