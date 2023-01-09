@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/Box.h>
 
 namespace Web::Layout {
 
-class TableRowGroupBox final : public BlockContainer {
-    JS_CELL(TableRowGroupBox, BlockContainer);
+class TableRowGroupBox final : public Box {
+    JS_CELL(TableRowGroupBox, Box);
 
 public:
     TableRowGroupBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
