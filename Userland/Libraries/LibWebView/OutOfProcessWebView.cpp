@@ -106,7 +106,10 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
     if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr()) {
         painter.add_clip_rect(frame_inner_rect());
         painter.translate(frame_thickness(), frame_thickness());
-        painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
+        if (m_content_scales_to_viewport)
+            painter.draw_scaled_bitmap(rect(), *bitmap, bitmap->rect());
+        else
+            painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
         return;
     }
 
@@ -839,6 +842,11 @@ void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedStr
 {
     if (on_get_accessibility_tree)
         on_get_accessibility_tree(accessibility_tree);
+}
+
+void OutOfProcessWebView::set_content_scales_to_viewport(bool b)
+{
+    m_content_scales_to_viewport = b;
 }
 
 }
