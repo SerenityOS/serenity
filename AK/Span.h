@@ -212,6 +212,16 @@ public:
         return this->m_values[index];
     }
 
+    [[nodiscard]] ALWAYS_INLINE constexpr T const& first() const
+    {
+        return this->at(0);
+    }
+
+    [[nodiscard]] ALWAYS_INLINE constexpr T& first()
+    {
+        return this->at(0);
+    }
+
     [[nodiscard]] ALWAYS_INLINE constexpr T const& last() const
     {
         return this->at(this->size() - 1);
