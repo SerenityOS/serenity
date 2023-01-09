@@ -56,7 +56,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
     m_home_action = make<QAction>(QIcon(home_icon_path), "Home");
     m_reload_action = make<QAction>(QIcon(reload_icon_path), "Reload");
-    m_reload_action->setShortcuts({ QKeySequence("Ctrl+R"), QKeySequence::StandardKey::Refresh });
+    m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
 
     m_toolbar->addAction(m_back_action);
     m_toolbar->addAction(m_forward_action);
