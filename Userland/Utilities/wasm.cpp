@@ -9,6 +9,7 @@
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/MemoryStream.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
@@ -396,13 +397,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         StringBuilder argument_builder;
                         bool first = true;
                         for (auto& argument : arguments) {
-                            DuplexMemoryStream stream;
-                            Wasm::Printer { stream }.print(argument);
+                            Core::Stream::AllocatingMemoryStream stream;
+                            Core::Stream::WrapInAKOutputStream wrapped_stream { stream };
+                            Wasm::Printer { wrapped_stream }.print(argument);
                             if (first)
                                 first = false;
                             else
                                 argument_builder.append(", "sv);
-                            ByteBuffer buffer = stream.copy_into_contiguous_buffer();
+                            auto buffer = ByteBuffer::create_uninitialized(stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
+                            stream.read_entire_buffer(buffer).release_value_but_fixme_should_propagate_errors();
                             argument_builder.append(StringView(buffer).trim_whitespace());
                         }
                         dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_deprecated_string());
