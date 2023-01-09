@@ -108,6 +108,22 @@ public:
         return !write_entire_buffer(buffer).is_error();
     }
 
+    template<typename T>
+    requires(IsTriviallyDestructible<T>)
+    ErrorOr<T> read_trivial_value()
+    {
+        alignas(T) u8 buffer[sizeof(T)] = {};
+        TRY(read_entire_buffer(buffer));
+        return *bit_cast<T>(buffer);
+    }
+
+    template<typename T>
+    requires(IsTriviallyDestructible<T>)
+    ErrorOr<void> write_trivial_value(T const& value)
+    {
+        return write_entire_buffer({ &value, sizeof(value) });
+    }
+
     /// Returns whether the stream has reached the end of file. For sockets,
     /// this most likely means that the protocol has disconnected (in the case
     /// of TCP). For seekable streams, this means the end of the file. Note that
