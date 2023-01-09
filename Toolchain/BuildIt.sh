@@ -400,7 +400,8 @@ pushd "$DIR/Build/$ARCH"
                 -e "s@$SRC_ROOT/AK/@AK/@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" \
                 -e "s@$SRC_ROOT/Kernel/@Kernel/@")
-            buildstep "system_headers" $INSTALL -D "$header" "Root/usr/include/$target"
+            buildstep "system_headers" mkdir -p "$(dirname "Root/usr/include/$target")"
+            buildstep "system_headers" $INSTALL "$header" "Root/usr/include/$target"
         done
         unset SRC_ROOT
     popd
