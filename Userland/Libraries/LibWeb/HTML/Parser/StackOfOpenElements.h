@@ -36,21 +36,21 @@ public:
     const DOM::Element& current_node() const { return *m_elements.last(); }
     DOM::Element& current_node() { return *m_elements.last(); }
 
-    bool has_in_scope(FlyString const& tag_name) const;
-    bool has_in_button_scope(FlyString const& tag_name) const;
-    bool has_in_table_scope(FlyString const& tag_name) const;
-    bool has_in_list_item_scope(FlyString const& tag_name) const;
-    bool has_in_select_scope(FlyString const& tag_name) const;
+    bool has_in_scope(DeprecatedFlyString const& tag_name) const;
+    bool has_in_button_scope(DeprecatedFlyString const& tag_name) const;
+    bool has_in_table_scope(DeprecatedFlyString const& tag_name) const;
+    bool has_in_list_item_scope(DeprecatedFlyString const& tag_name) const;
+    bool has_in_select_scope(DeprecatedFlyString const& tag_name) const;
 
     bool has_in_scope(const DOM::Element&) const;
 
     bool contains(const DOM::Element&) const;
-    bool contains(FlyString const& tag_name) const;
+    bool contains(DeprecatedFlyString const& tag_name) const;
 
     auto const& elements() const { return m_elements; }
     auto& elements() { return m_elements; }
 
-    void pop_until_an_element_with_tag_name_has_been_popped(FlyString const&);
+    void pop_until_an_element_with_tag_name_has_been_popped(DeprecatedFlyString const&);
 
     JS::GCPtr<DOM::Element> topmost_special_node_below(DOM::Element const&);
 
@@ -58,14 +58,14 @@ public:
         JS::GCPtr<DOM::Element> element;
         ssize_t index;
     };
-    LastElementResult last_element_with_tag_name(FlyString const&);
+    LastElementResult last_element_with_tag_name(DeprecatedFlyString const&);
     JS::GCPtr<DOM::Element> element_immediately_above(DOM::Element const&);
 
     void visit_edges(JS::Cell::Visitor&);
 
 private:
-    bool has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const&) const;
-    bool has_in_scope_impl(const DOM::Element& target_node, Vector<FlyString> const&) const;
+    bool has_in_scope_impl(DeprecatedFlyString const& tag_name, Vector<DeprecatedFlyString> const&) const;
+    bool has_in_scope_impl(const DOM::Element& target_node, Vector<DeprecatedFlyString> const&) const;
 
     Vector<JS::NonnullGCPtr<DOM::Element>> m_elements;
 };

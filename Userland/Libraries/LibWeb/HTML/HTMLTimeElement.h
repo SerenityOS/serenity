@@ -18,7 +18,7 @@ public:
     virtual ~HTMLTimeElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-time
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::time; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::time; }
 
 private:
     HTMLTimeElement(DOM::Document&, DOM::QualifiedName);

@@ -92,7 +92,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     for (size_t i = 0; i < indent; ++i)
         builder.append("  "sv);
 
-    FlyString tag_name;
+    DeprecatedFlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
     else if (is<DOM::Element>(layout_node.dom_node()))

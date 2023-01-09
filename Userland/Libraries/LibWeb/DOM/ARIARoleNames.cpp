@@ -8,7 +8,7 @@
 
 namespace Web::DOM::ARIARoleNames {
 
-#define __ENUMERATE_ARIA_ROLE(name) FlyString name;
+#define __ENUMERATE_ARIA_ROLE(name) DeprecatedFlyString name;
 ENUMERATE_ARIA_ROLES
 #undef __ENUMERATE_ARIA_ROLE
 
@@ -28,7 +28,7 @@ ENUMERATE_ARIA_ROLES
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#abstract_roles
-bool is_abstract_aria_role(FlyString const& role)
+bool is_abstract_aria_role(DeprecatedFlyString const& role)
 {
     return role.is_one_of(
         ARIARoleNames::command,
@@ -46,7 +46,7 @@ bool is_abstract_aria_role(FlyString const& role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#widget_roles
-bool is_widget_aria_role(FlyString const& role)
+bool is_widget_aria_role(DeprecatedFlyString const& role)
 {
     return role.to_lowercase().is_one_of(
         ARIARoleNames::button,
@@ -80,7 +80,7 @@ bool is_widget_aria_role(FlyString const& role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#document_structure_roles
-bool is_document_structure_aria_role(FlyString const& role)
+bool is_document_structure_aria_role(DeprecatedFlyString const& role)
 {
     return role.to_lowercase().is_one_of(
         ARIARoleNames::application,
@@ -123,7 +123,7 @@ bool is_document_structure_aria_role(FlyString const& role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#landmark_roles
-bool is_landmark_aria_role(FlyString const& role)
+bool is_landmark_aria_role(DeprecatedFlyString const& role)
 {
     return role.to_lowercase().is_one_of(
         ARIARoleNames::banner,
@@ -137,7 +137,7 @@ bool is_landmark_aria_role(FlyString const& role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#live_region_roles
-bool is_live_region_aria_role(FlyString const& role)
+bool is_live_region_aria_role(DeprecatedFlyString const& role)
 {
     return role.to_lowercase().is_one_of(
         ARIARoleNames::alert,
@@ -148,14 +148,14 @@ bool is_live_region_aria_role(FlyString const& role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#window_roles
-bool is_windows_aria_role(FlyString const& role)
+bool is_windows_aria_role(DeprecatedFlyString const& role)
 {
     return role.to_lowercase().is_one_of(
         ARIARoleNames::alertdialog,
         ARIARoleNames::dialog);
 }
 
-bool is_non_abstract_aria_role(FlyString const& role)
+bool is_non_abstract_aria_role(DeprecatedFlyString const& role)
 {
     return is_widget_aria_role(role)
         || is_document_structure_aria_role(role)

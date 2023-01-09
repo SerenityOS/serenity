@@ -27,7 +27,7 @@ JS::GCPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS:
     return heap().allocate_without_realm<Layout::FrameBox>(document(), *this, move(style));
 }
 
-void HTMLIFrameElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLIFrameElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::src)

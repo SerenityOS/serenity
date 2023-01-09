@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
@@ -132,9 +132,9 @@ public:
     virtual WebIDL::ExceptionOr<void> set_aria_value_text(DeprecatedString const&) = 0;
 
     // https://www.w3.org/TR/html-aria/#docconformance
-    virtual FlyString default_role() const { return {}; };
+    virtual DeprecatedFlyString default_role() const { return {}; };
 
-    FlyString role_or_default() const;
+    DeprecatedFlyString role_or_default() const;
 
     // https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion
     virtual bool exclude_from_accessibility_tree() const = 0;

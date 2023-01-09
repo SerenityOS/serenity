@@ -17,7 +17,7 @@ SVGCircleElement::SVGCircleElement(DOM::Document& document, DOM::QualifiedName q
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGCircleElement"));
 }
 
-void SVGCircleElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGCircleElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

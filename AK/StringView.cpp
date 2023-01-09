@@ -13,8 +13,8 @@
 #include <AK/Vector.h>
 
 #ifndef KERNEL
+#    include <AK/DeprecatedFlyString.h>
 #    include <AK/DeprecatedString.h>
-#    include <AK/FlyString.h>
 #    include <AK/String.h>
 #endif
 
@@ -33,7 +33,7 @@ StringView::StringView(DeprecatedString const& string)
 {
 }
 
-StringView::StringView(FlyString const& string)
+StringView::StringView(DeprecatedFlyString const& string)
     : m_characters(string.characters())
     , m_length(string.length())
 {

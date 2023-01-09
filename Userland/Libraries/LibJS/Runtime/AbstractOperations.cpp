@@ -201,7 +201,7 @@ ThrowCompletionOr<Realm*> get_function_realm(VM& vm, FunctionObject const& funct
 }
 
 // 8.5.2.1 InitializeBoundName ( name, value, environment ), https://tc39.es/ecma262/#sec-initializeboundname
-ThrowCompletionOr<void> initialize_bound_name(VM& vm, FlyString const& name, Value value, Environment* environment)
+ThrowCompletionOr<void> initialize_bound_name(VM& vm, DeprecatedFlyString const& name, Value value, Environment* environment)
 {
     // 1. If environment is not undefined, then
     if (environment) {
@@ -794,7 +794,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     // 9. Let declaredFunctionNames be a new empty List.
-    HashTable<FlyString> declared_function_names;
+    HashTable<DeprecatedFlyString> declared_function_names;
 
     // 10. For each element d of varDeclarations, in reverse List order, do
     TRY(program.for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
@@ -835,7 +835,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     if (!strict) {
         // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
         // The spec here uses 'declaredVarNames' but that has not been declared yet.
-        HashTable<FlyString> hoisted_functions;
+        HashTable<DeprecatedFlyString> hoisted_functions;
 
         // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within body, do
         TRY(program.for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
@@ -926,7 +926,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     }
 
     // 12. Let declaredVarNames be a new empty List.
-    HashTable<FlyString> declared_var_names;
+    HashTable<DeprecatedFlyString> declared_var_names;
 
     // 13. For each element d of varDeclarations, do
     TRY(program.for_each_var_scoped_variable_declaration([&](VariableDeclaration const& declaration) {
@@ -1119,14 +1119,14 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     MUST(object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true }));
 
     // 17. Let mappedNames be a new empty List.
-    HashTable<FlyString> mapped_names;
+    HashTable<DeprecatedFlyString> mapped_names;
 
     // 18. Set index to numberOfParameters - 1.
     // 19. Repeat, while index ≥ 0,
     VERIFY(formals.size() <= NumericLimits<i32>::max());
     for (i32 index = static_cast<i32>(formals.size()) - 1; index >= 0; --index) {
         // a. Let name be parameterNames[index].
-        auto const& name = formals[index].binding.get<FlyString>();
+        auto const& name = formals[index].binding.get<DeprecatedFlyString>();
 
         // b. If name is not an element of mappedNames, then
         if (mapped_names.contains(name))

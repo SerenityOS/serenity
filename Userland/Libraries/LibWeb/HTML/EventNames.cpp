@@ -8,7 +8,7 @@
 
 namespace Web::HTML::EventNames {
 
-#define __ENUMERATE_HTML_EVENT(name) FlyString name;
+#define __ENUMERATE_HTML_EVENT(name) DeprecatedFlyString name;
 ENUMERATE_HTML_EVENTS
 #undef __ENUMERATE_HTML_EVENT
 

@@ -23,7 +23,7 @@ public:
 
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
 private:
     HTMLBaseElement(DOM::Document&, DOM::QualifiedName);

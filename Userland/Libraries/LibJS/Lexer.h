@@ -79,7 +79,7 @@ private:
 
     Optional<size_t> m_hit_invalid_unicode;
 
-    static HashMap<FlyString, TokenType> s_keywords;
+    static HashMap<DeprecatedFlyString, TokenType> s_keywords;
     static HashMap<DeprecatedString, TokenType> s_three_char_tokens;
     static HashMap<DeprecatedString, TokenType> s_two_char_tokens;
     static HashMap<char, TokenType> s_single_char_tokens;
@@ -87,7 +87,7 @@ private:
     struct ParsedIdentifiers : public RefCounted<ParsedIdentifiers> {
         // Resolved identifiers must be kept alive for the duration of the parsing stage, otherwise
         // the only references to these strings are deleted by the Token destructor.
-        HashTable<FlyString> identifiers;
+        HashTable<DeprecatedFlyString> identifiers;
     };
 
     RefPtr<ParsedIdentifiers> m_parsed_identifiers;

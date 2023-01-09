@@ -8,7 +8,7 @@
 
 namespace Web::SVG::AttributeNames {
 
-#define __ENUMERATE_SVG_ATTRIBUTE(name) FlyString name;
+#define __ENUMERATE_SVG_ATTRIBUTE(name) DeprecatedFlyString name;
 ENUMERATE_SVG_ATTRIBUTES(__ENUMERATE_SVG_ATTRIBUTE)
 #undef __ENUMERATE_SVG_ATTRIBUTE
 

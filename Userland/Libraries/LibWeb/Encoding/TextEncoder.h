@@ -26,7 +26,7 @@ public:
 
     JS::Uint8Array* encode(DeprecatedString const& input) const;
 
-    static FlyString const& encoding();
+    static DeprecatedFlyString const& encoding();
 
 protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder

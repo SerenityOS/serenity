@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Encoding/TextDecoder.h>
@@ -12,7 +12,7 @@
 
 namespace Web::Encoding {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(JS::Realm& realm, FlyString encoding)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(JS::Realm& realm, DeprecatedFlyString encoding)
 {
     auto decoder = TextCodec::decoder_for(encoding);
     if (!decoder)
@@ -22,7 +22,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(J
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder
-TextDecoder::TextDecoder(JS::Realm& realm, TextCodec::Decoder& decoder, FlyString encoding, bool fatal, bool ignore_bom)
+TextDecoder::TextDecoder(JS::Realm& realm, TextCodec::Decoder& decoder, DeprecatedFlyString encoding, bool fatal, bool ignore_bom)
     : PlatformObject(realm)
     , m_decoder(decoder)
     , m_encoding(move(encoding))

@@ -302,7 +302,7 @@ JS::Value LegacyPlatformObject::item_value(size_t) const
     return JS::js_undefined();
 }
 
-JS::Value LegacyPlatformObject::named_item_value(FlyString const&) const
+JS::Value LegacyPlatformObject::named_item_value(DeprecatedFlyString const&) const
 {
     return JS::js_undefined();
 }

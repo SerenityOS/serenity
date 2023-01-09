@@ -53,7 +53,7 @@ public:
         size_t match_length_minimum;
         Error error;
         Token error_token;
-        Vector<FlyString> capture_groups;
+        Vector<DeprecatedFlyString> capture_groups;
         AllOptions options;
     };
 
@@ -111,7 +111,7 @@ protected:
         size_t repetition_mark_count { 0 };
         AllOptions regex_options;
         HashMap<int, size_t> capture_group_minimum_lengths;
-        HashMap<FlyString, NamedCaptureGroup> named_capture_groups;
+        HashMap<DeprecatedFlyString, NamedCaptureGroup> named_capture_groups;
 
         explicit ParserState(Lexer& lexer)
             : lexer(lexer)
@@ -234,7 +234,7 @@ private:
     };
     StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1, int min_count = -1);
     Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1, int min_count = -1);
-    FlyString read_capture_group_specifier(bool take_starting_angle_bracket = false);
+    DeprecatedFlyString read_capture_group_specifier(bool take_starting_angle_bracket = false);
 
     struct Script {
         Unicode::Script script {};

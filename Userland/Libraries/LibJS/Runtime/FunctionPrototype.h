@@ -18,7 +18,7 @@ public:
     virtual ~FunctionPrototype() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
-    virtual FlyString const& name() const override { return m_name; }
+    virtual DeprecatedFlyString const& name() const override { return m_name; }
 
 private:
     explicit FunctionPrototype(Realm&);
@@ -31,7 +31,7 @@ private:
 
     // Totally unnecessary, but sadly still necessary.
     // TODO: Get rid of the pointless name() method.
-    FlyString m_name { "FunctionPrototype" };
+    DeprecatedFlyString m_name { "FunctionPrototype" };
 };
 
 }

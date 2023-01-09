@@ -29,7 +29,7 @@ public:
     JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> legacy_platform_object_get_own_property_for_set_slot(JS::PropertyKey const&) const;
 
     virtual JS::Value item_value(size_t index) const;
-    virtual JS::Value named_item_value(FlyString const& name) const;
+    virtual JS::Value named_item_value(DeprecatedFlyString const& name) const;
     virtual Vector<DeprecatedString> supported_property_names() const;
     virtual bool is_supported_property_index(u32) const;
 

@@ -43,7 +43,7 @@ public:
     WebIDL::ExceptionOr<void> delete_row(long index);
 
     // https://www.w3.org/TR/html-aria/#el-table
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::table; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::table; }
 
 private:
     HTMLTableElement(DOM::Document&, DOM::QualifiedName);

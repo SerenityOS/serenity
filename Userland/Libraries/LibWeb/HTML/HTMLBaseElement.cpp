@@ -38,7 +38,7 @@ void HTMLBaseElement::removed_from(Node* parent)
     document().update_base_element({});
 }
 
-void HTMLBaseElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLBaseElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 

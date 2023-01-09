@@ -95,7 +95,7 @@ static Value get_match_index_par(VM& vm, Utf16View const& string, Match const& m
 }
 
 // 22.2.5.2.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
-static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
+static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<DeprecatedFlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -268,7 +268,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     Vector<Utf16String> captured_values;
 
     // 25. Let groupNames be a new empty List.
-    HashMap<FlyString, Match> group_names;
+    HashMap<DeprecatedFlyString, Match> group_names;
 
     // 26. Add match as the last element of indices.
     indices.append(move(match_indices));

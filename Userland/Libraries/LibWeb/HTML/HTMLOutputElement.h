@@ -45,7 +45,7 @@ public:
     virtual void reset_algorithm() override;
 
     // https://www.w3.org/TR/html-aria/#el-output
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::status; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::status; }
 
 private:
     HTMLOutputElement(DOM::Document&, DOM::QualifiedName);

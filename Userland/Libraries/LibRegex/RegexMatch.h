@@ -9,8 +9,8 @@
 #include "Forward.h"
 #include "RegexOptions.h"
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/MemMem.h>
 #include <AK/RedBlackTree.h>
@@ -558,7 +558,7 @@ private:
 
 class Match final {
 private:
-    Optional<FlyString> string;
+    Optional<DeprecatedFlyString> string;
 
 public:
     Match() = default;
@@ -603,7 +603,7 @@ public:
     }
 
     RegexStringView view {};
-    Optional<FlyString> capture_group_name {};
+    Optional<DeprecatedFlyString> capture_group_name {};
     size_t line { 0 };
     size_t column { 0 };
     size_t global_offset { 0 };

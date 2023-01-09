@@ -78,7 +78,7 @@ public:
     unsigned case_insensitive_hash() const;
 
     bool is_fly() const { return m_fly; }
-    void set_fly(Badge<FlyString>, bool fly) const { m_fly = fly; }
+    void set_fly(Badge<DeprecatedFlyString>, bool fly) const { m_fly = fly; }
 
 private:
     enum ConstructTheEmptyStringImplTag {

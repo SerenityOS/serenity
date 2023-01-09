@@ -15,11 +15,11 @@ class MutationRecord : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationRecord, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<MutationRecord> create(JS::Realm&, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
+    static JS::NonnullGCPtr<MutationRecord> create(JS::Realm&, DeprecatedFlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
 
     virtual ~MutationRecord() override;
 
-    FlyString const& type() const { return m_type; }
+    DeprecatedFlyString const& type() const { return m_type; }
     Node const* target() const { return m_target; }
     NodeList const* added_nodes() const { return m_added_nodes; }
     NodeList const* removed_nodes() const { return m_removed_nodes; }
@@ -30,10 +30,10 @@ public:
     DeprecatedString const& old_value() const { return m_old_value; }
 
 private:
-    MutationRecord(JS::Realm& realm, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
+    MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
     virtual void visit_edges(Cell::Visitor&) override;
 
-    FlyString m_type;
+    DeprecatedFlyString m_type;
     JS::GCPtr<Node> m_target;
     JS::GCPtr<NodeList> m_added_nodes;
     JS::GCPtr<NodeList> m_removed_nodes;

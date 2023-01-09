@@ -85,7 +85,7 @@ static void print_indent(int indent)
     out("{}", DeprecatedString::repeated(' ', indent * 2));
 }
 
-static void update_function_name(Value value, FlyString const& name)
+static void update_function_name(Value value, DeprecatedFlyString const& name)
 {
     if (!value.is_function())
         return;
@@ -116,7 +116,7 @@ Completion ScopeNode::evaluate_statements(Interpreter& interpreter) const
 
 // 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
 // BreakableStatement : IterationStatement
-static Completion labelled_evaluation(Interpreter& interpreter, IterationStatement const& statement, Vector<FlyString> const& label_set)
+static Completion labelled_evaluation(Interpreter& interpreter, IterationStatement const& statement, Vector<DeprecatedFlyString> const& label_set)
 {
     // 1. Let stmtResult be Completion(LoopEvaluation of IterationStatement with argument labelSet).
     auto result = statement.loop_evaluation(interpreter, label_set);
@@ -137,7 +137,7 @@ static Completion labelled_evaluation(Interpreter& interpreter, IterationStateme
 
 // 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
 // BreakableStatement : SwitchStatement
-static Completion labelled_evaluation(Interpreter& interpreter, SwitchStatement const& statement, Vector<FlyString> const&)
+static Completion labelled_evaluation(Interpreter& interpreter, SwitchStatement const& statement, Vector<DeprecatedFlyString> const&)
 {
     // 1. Let stmtResult be the result of evaluating SwitchStatement.
     auto result = statement.execute_impl(interpreter);
@@ -158,7 +158,7 @@ static Completion labelled_evaluation(Interpreter& interpreter, SwitchStatement 
 
 // 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
 // LabelledStatement : LabelIdentifier : LabelledItem
-static Completion labelled_evaluation(Interpreter& interpreter, LabelledStatement const& statement, Vector<FlyString> const& label_set)
+static Completion labelled_evaluation(Interpreter& interpreter, LabelledStatement const& statement, Vector<DeprecatedFlyString> const& label_set)
 {
     auto const& labelled_item = *statement.labelled_item();
 
@@ -167,7 +167,7 @@ static Completion labelled_evaluation(Interpreter& interpreter, LabelledStatemen
 
     // 2. Let newLabelSet be the list-concatenation of labelSet and « label ».
     // Optimization: Avoid vector copy if possible.
-    Optional<Vector<FlyString>> new_label_set;
+    Optional<Vector<DeprecatedFlyString>> new_label_set;
     if (is<IterationStatement>(labelled_item) || is<SwitchStatement>(labelled_item) || is<LabelledStatement>(labelled_item)) {
         new_label_set = label_set;
         new_label_set->append(label);
@@ -298,7 +298,7 @@ Completion FunctionExpression::execute(Interpreter& interpreter) const
 }
 
 // 15.2.5 Runtime Semantics: InstantiateOrdinaryFunctionExpression, https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression
-Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& interpreter, FlyString given_name) const
+Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& interpreter, DeprecatedFlyString given_name) const
 {
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
@@ -637,7 +637,7 @@ Completion WithStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.1.1 LoopContinues ( completion, labelSet ), https://tc39.es/ecma262/#sec-loopcontinues
-static bool loop_continues(Completion const& completion, Vector<FlyString> const& label_set)
+static bool loop_continues(Completion const& completion, Vector<DeprecatedFlyString> const& label_set)
 {
     // 1. If completion.[[Type]] is normal, return true.
     if (completion.type() == Completion::Type::Normal)
@@ -669,7 +669,7 @@ Completion WhileStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.3.2 Runtime Semantics: WhileLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-whileloopevaluation
-Completion WhileStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
+Completion WhileStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
@@ -711,7 +711,7 @@ Completion DoWhileStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.2.2 Runtime Semantics: DoWhileLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-dowhileloopevaluation
-Completion DoWhileStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
+Completion DoWhileStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
@@ -753,7 +753,7 @@ Completion ForStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.4.2 Runtime Semantics: ForLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forloopevaluation
-Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
+Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
@@ -1055,7 +1055,7 @@ Completion ForInStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
-Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
+Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
@@ -1121,7 +1121,7 @@ Completion ForOfStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
-Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
+Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
@@ -1185,7 +1185,7 @@ Completion ForAwaitOfStatement::execute(Interpreter& interpreter) const
 }
 
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
-Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
+Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
@@ -1653,7 +1653,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 // 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
 class ClassFieldInitializerStatement : public Statement {
 public:
-    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression> expression, FlyString field_name)
+    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression> expression, DeprecatedFlyString field_name)
         : Statement(source_range)
         , m_expression(move(expression))
         , m_class_field_identifier_name(move(field_name))
@@ -1687,7 +1687,7 @@ public:
 
 private:
     NonnullRefPtr<Expression> m_expression;
-    FlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
+    DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
 };
 
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
@@ -1722,19 +1722,19 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     };
 }
 
-static Optional<FlyString> nullopt_or_private_identifier_description(Expression const& expression)
+static Optional<DeprecatedFlyString> nullopt_or_private_identifier_description(Expression const& expression)
 {
     if (is<PrivateIdentifier>(expression))
         return static_cast<PrivateIdentifier const&>(expression).string();
     return {};
 }
 
-Optional<FlyString> ClassField::private_bound_identifier() const
+Optional<DeprecatedFlyString> ClassField::private_bound_identifier() const
 {
     return nullopt_or_private_identifier_description(*m_key);
 }
 
-Optional<FlyString> ClassMethod::private_bound_identifier() const
+Optional<DeprecatedFlyString> ClassMethod::private_bound_identifier() const
 {
     return nullopt_or_private_identifier_description(*m_key);
 }
@@ -1834,7 +1834,7 @@ Completion ClassDeclaration::execute(Interpreter& interpreter) const
 }
 
 // 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
-ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(Interpreter& interpreter, FlyString const& binding_name, FlyString const& class_name) const
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(Interpreter& interpreter, DeprecatedFlyString const& binding_name, DeprecatedFlyString const& class_name) const
 {
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
@@ -2201,7 +2201,7 @@ void ClassDeclaration::dump(int indent) const
     m_class_expression->dump(indent + 1);
 }
 
-ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const
+ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     if (m_class_expression->name().is_empty())
         return {};
@@ -2331,7 +2331,7 @@ bool BindingPattern::contains_expression() const
     return false;
 }
 
-ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const
+ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto const& entry : entries) {
         auto const& alias = entry.alias;
@@ -2411,7 +2411,7 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
             if (parameter.is_rest)
                 out("...");
             parameter.binding.visit(
-                [&](FlyString const& name) {
+                [&](DeprecatedFlyString const& name) {
                     outln("{}", name);
                 },
                 [&](BindingPattern const& pattern) {
@@ -2431,7 +2431,7 @@ void FunctionDeclaration::dump(int indent) const
     FunctionNode::dump(indent, class_name());
 }
 
-ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const
+ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     if (name().is_empty())
         return {};
@@ -2975,7 +2975,7 @@ Completion VariableDeclarator::execute(Interpreter& interpreter) const
     VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const
+ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto const& entry : declarations()) {
         TRY(entry.target().visit(
@@ -3808,7 +3808,7 @@ void CatchClause::dump(int indent) const
 {
     print_indent(indent);
     m_parameter.visit(
-        [&](FlyString const& parameter) {
+        [&](DeprecatedFlyString const& parameter) {
             if (parameter.is_null())
                 outln("CatchClause");
             else
@@ -3845,7 +3845,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
         auto catch_environment = new_declarative_environment(*old_environment);
 
         m_handler->parameter().visit(
-            [&](FlyString const& parameter) {
+            [&](DeprecatedFlyString const& parameter) {
                 // 3. For each element argName of the BoundNames of CatchParameter, do
                 // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
                 MUST(catch_environment->create_mutable_binding(vm, parameter, false));
@@ -3863,7 +3863,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
 
         // 5. Let status be Completion(BindingInitialization of CatchParameter with arguments thrownValue and catchEnv).
         auto status = m_handler->parameter().visit(
-            [&](FlyString const& parameter) {
+            [&](DeprecatedFlyString const& parameter) {
                 return catch_environment->initialize_binding(vm, parameter, thrown_value);
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) {
@@ -4333,7 +4333,7 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_scoped_declaration(ThrowCo
     return {};
 }
 
-ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const
+ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto const& declaration : m_lexical_declarations) {
         TRY(declaration.for_each_bound_name([&](auto const& name) {
@@ -4343,7 +4343,7 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowComplet
     return {};
 }
 
-ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrVoidCallback<FlyString const&>&& callback) const
+ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto& declaration : m_var_declarations) {
         TRY(declaration.for_each_bound_name([&](auto const& name) {
@@ -4407,7 +4407,7 @@ Completion ImportStatement::execute(Interpreter& interpreter) const
     return Optional<Value> {};
 }
 
-FlyString ExportStatement::local_name_for_default = "*default*";
+DeprecatedFlyString ExportStatement::local_name_for_default = "*default*";
 
 // 16.2.3.7 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation
 Completion ExportStatement::execute(Interpreter& interpreter) const
@@ -4557,7 +4557,7 @@ void ImportStatement::dump(int indent) const
     }
 }
 
-bool ExportStatement::has_export(FlyString const& export_name) const
+bool ExportStatement::has_export(DeprecatedFlyString const& export_name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         // Make sure that empty exported names does not overlap with anything
@@ -4567,7 +4567,7 @@ bool ExportStatement::has_export(FlyString const& export_name) const
     });
 }
 
-bool ImportStatement::has_bound_name(FlyString const& name) const
+bool ImportStatement::has_bound_name(DeprecatedFlyString const& name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         return entry.local_name == name;
@@ -4613,7 +4613,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
     // 2. Let varNames be the VarDeclaredNames of script.
     // 3. For each element name of lexNames, do
-    TRY(for_each_lexically_declared_name([&](FlyString const& name) -> ThrowCompletionOr<void> {
+    TRY(for_each_lexically_declared_name([&](DeprecatedFlyString const& name) -> ThrowCompletionOr<void> {
         // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_var_declaration(name))
             return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
@@ -4646,7 +4646,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     // 7. Let declaredFunctionNames be a new empty List.
-    HashTable<FlyString> declared_function_names;
+    HashTable<DeprecatedFlyString> declared_function_names;
 
     // 8. For each element d of varDeclarations, in reverse List order, do
 
@@ -4681,7 +4681,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     }));
 
     // 9. Let declaredVarNames be a new empty List.
-    HashTable<FlyString> declared_var_names;
+    HashTable<DeprecatedFlyString> declared_var_names;
 
     // 10. For each element d of varDeclarations, do
     TRY(for_each_var_scoped_variable_declaration([&](Declaration const& declaration) {
@@ -4808,7 +4808,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     return {};
 }
 
-ModuleRequest::ModuleRequest(FlyString module_specifier_, Vector<Assertion> assertions_)
+ModuleRequest::ModuleRequest(DeprecatedFlyString module_specifier_, Vector<Assertion> assertions_)
     : module_specifier(move(module_specifier_))
     , assertions(move(assertions_))
 {

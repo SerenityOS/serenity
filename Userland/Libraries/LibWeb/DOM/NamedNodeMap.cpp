@@ -301,7 +301,7 @@ JS::Value NamedNodeMap::item_value(size_t index) const
     return node;
 }
 
-JS::Value NamedNodeMap::named_item_value(FlyString const& name) const
+JS::Value NamedNodeMap::named_item_value(DeprecatedFlyString const& name) const
 {
     auto const* node = get_named_item(name);
     if (!node)

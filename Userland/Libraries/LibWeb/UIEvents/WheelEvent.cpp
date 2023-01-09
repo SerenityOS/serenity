@@ -11,7 +11,7 @@
 
 namespace Web::UIEvents {
 
-WheelEvent::WheelEvent(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init)
+WheelEvent::WheelEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, WheelEventInit const& event_init)
     : MouseEvent(realm, event_name, event_init)
     , m_delta_x(event_init.delta_x)
     , m_delta_y(event_init.delta_y)
@@ -23,12 +23,12 @@ WheelEvent::WheelEvent(JS::Realm& realm, FlyString const& event_name, WheelEvent
 
 WheelEvent::~WheelEvent() = default;
 
-WheelEvent* WheelEvent::create(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init)
+WheelEvent* WheelEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, WheelEventInit const& event_init)
 {
     return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init);
 }
 
-WheelEvent* WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, double delta_x, double delta_y, unsigned buttons, unsigned button)
+WheelEvent* WheelEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, double delta_x, double delta_y, unsigned buttons, unsigned button)
 {
     WheelEventInit event_init {};
     event_init.offset_x = static_cast<double>(offset_x.value());

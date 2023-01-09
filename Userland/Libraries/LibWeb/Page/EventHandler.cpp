@@ -661,7 +661,7 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
     return code_point == 0 || code_point == 27;
 }
 
-bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
+bool EventHandler::fire_keyboard_event(DeprecatedFlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
 {
     JS::NonnullGCPtr<DOM::Document> document = *browsing_context.active_document();
     if (!document)

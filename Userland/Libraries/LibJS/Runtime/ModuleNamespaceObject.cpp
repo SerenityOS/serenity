@@ -10,14 +10,14 @@
 
 namespace JS {
 
-ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vector<FlyString> exports)
+ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vector<DeprecatedFlyString> exports)
     : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
     , m_module(module)
     , m_exports(move(exports))
 {
     // Note: We just perform step 6 of 10.4.6.12 ModuleNamespaceCreate ( module, exports ), https://tc39.es/ecma262/#sec-modulenamespacecreate
     // 6. Let sortedExports be a List whose elements are the elements of exports ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using undefined as comparefn.
-    quick_sort(m_exports, [&](FlyString const& lhs, FlyString const& rhs) {
+    quick_sort(m_exports, [&](DeprecatedFlyString const& lhs, DeprecatedFlyString const& rhs) {
         return lhs.view() < rhs.view();
     });
 }

@@ -62,7 +62,7 @@ Element* HTMLCollection::item(size_t index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem-key
-Element* HTMLCollection::named_item(FlyString const& name) const
+Element* HTMLCollection::named_item(DeprecatedFlyString const& name) const
 {
     // 1. If key is the empty string, return null.
     if (name.is_empty())
@@ -130,7 +130,7 @@ JS::Value HTMLCollection::item_value(size_t index) const
     return const_cast<Element*>(element);
 }
 
-JS::Value HTMLCollection::named_item_value(FlyString const& index) const
+JS::Value HTMLCollection::named_item_value(DeprecatedFlyString const& index) const
 {
     auto* element = named_item(index);
     if (!element)

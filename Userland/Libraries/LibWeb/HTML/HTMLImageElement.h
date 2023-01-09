@@ -24,7 +24,7 @@ class HTMLImageElement final
 public:
     virtual ~HTMLImageElement() override;
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     DeprecatedString alt() const { return attribute(HTML::AttributeNames::alt); }
     DeprecatedString src() const { return attribute(HTML::AttributeNames::src); }
@@ -43,7 +43,7 @@ public:
     // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-complete
     bool complete() const;
 
-    virtual FlyString default_role() const override;
+    virtual DeprecatedFlyString default_role() const override;
 
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);

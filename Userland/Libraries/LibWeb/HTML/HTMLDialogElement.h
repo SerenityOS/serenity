@@ -18,7 +18,7 @@ public:
     virtual ~HTMLDialogElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-dialog
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::dialog; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::dialog; }
 
 private:
     HTMLDialogElement(DOM::Document&, DOM::QualifiedName);

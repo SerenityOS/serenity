@@ -20,17 +20,17 @@ class HTMLBodyElement final
 public:
     virtual ~HTMLBodyElement() override;
 
-    virtual void parse_attribute(FlyString const&, DeprecatedString const&) override;
+    virtual void parse_attribute(DeprecatedFlyString const&, DeprecatedString const&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-body
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::generic; };
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::generic; };
 
 private:
     HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
 
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) override;
+    virtual EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const& event_name) override;
 
     // ^HTML::WindowEventHandlers
     virtual EventTarget& window_event_handlers_to_event_target() override;

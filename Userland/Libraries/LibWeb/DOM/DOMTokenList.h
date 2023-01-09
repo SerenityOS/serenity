@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -23,7 +23,7 @@ class DOMTokenList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
 
 public:
-    static DOMTokenList* create(Element const& associated_element, FlyString associated_attribute);
+    static DOMTokenList* create(Element const& associated_element, DeprecatedFlyString associated_attribute);
     ~DOMTokenList() = default;
 
     void associated_attribute_changed(StringView value);
@@ -43,7 +43,7 @@ public:
     void set_value(DeprecatedString value);
 
 private:
-    DOMTokenList(Element const& associated_element, FlyString associated_attribute);
+    DOMTokenList(Element const& associated_element, DeprecatedFlyString associated_attribute);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -51,7 +51,7 @@ private:
     void run_update_steps();
 
     JS::NonnullGCPtr<Element> m_associated_element;
-    FlyString m_associated_attribute;
+    DeprecatedFlyString m_associated_attribute;
     Vector<DeprecatedString> m_token_set;
 };
 

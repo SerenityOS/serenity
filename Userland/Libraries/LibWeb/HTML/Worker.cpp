@@ -17,7 +17,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
-Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
     : DOM::EventTarget(document.realm())
     , m_script_url(script_url)
     , m_options(options)
@@ -40,7 +40,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 

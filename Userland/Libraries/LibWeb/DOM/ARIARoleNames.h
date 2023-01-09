@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 
 namespace Web::DOM::ARIARoleNames {
 
@@ -106,17 +106,17 @@ namespace Web::DOM::ARIARoleNames {
     __ENUMERATE_ARIA_ROLE(widget)           \
     __ENUMERATE_ARIA_ROLE(window)
 
-#define __ENUMERATE_ARIA_ROLE(name) extern FlyString name;
+#define __ENUMERATE_ARIA_ROLE(name) extern DeprecatedFlyString name;
 ENUMERATE_ARIA_ROLES
 #undef __ENUMERATE_ARIA_ROLE
 
-bool is_abstract_aria_role(FlyString const&);
-bool is_widget_aria_role(FlyString const&);
-bool is_document_structure_aria_role(FlyString const&);
-bool is_landmark_aria_role(FlyString const&);
-bool is_live_region_aria_role(FlyString const&);
-bool is_windows_aria_role(FlyString const&);
+bool is_abstract_aria_role(DeprecatedFlyString const&);
+bool is_widget_aria_role(DeprecatedFlyString const&);
+bool is_document_structure_aria_role(DeprecatedFlyString const&);
+bool is_landmark_aria_role(DeprecatedFlyString const&);
+bool is_live_region_aria_role(DeprecatedFlyString const&);
+bool is_windows_aria_role(DeprecatedFlyString const&);
 
-bool is_non_abstract_aria_role(FlyString const&);
+bool is_non_abstract_aria_role(DeprecatedFlyString const&);
 
 }

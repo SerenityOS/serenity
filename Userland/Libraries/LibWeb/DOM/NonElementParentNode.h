@@ -17,7 +17,7 @@ namespace Web::DOM {
 template<typename NodeType>
 class NonElementParentNode {
 public:
-    JS::GCPtr<Element> get_element_by_id(FlyString const& id) const
+    JS::GCPtr<Element> get_element_by_id(DeprecatedFlyString const& id) const
     {
         JS::GCPtr<Element> found_element;
         static_cast<NodeType const*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
@@ -29,7 +29,7 @@ public:
         });
         return found_element;
     }
-    JS::GCPtr<Element> get_element_by_id(FlyString const& id)
+    JS::GCPtr<Element> get_element_by_id(DeprecatedFlyString const& id)
     {
         return const_cast<NonElementParentNode const*>(this)->get_element_by_id(id);
     }

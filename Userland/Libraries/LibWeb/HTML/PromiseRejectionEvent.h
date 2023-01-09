@@ -23,8 +23,8 @@ class PromiseRejectionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PromiseRejectionEvent, DOM::Event);
 
 public:
-    static PromiseRejectionEvent* create(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
-    static PromiseRejectionEvent* construct_impl(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
+    static PromiseRejectionEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
+    static PromiseRejectionEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
     virtual ~PromiseRejectionEvent() override;
 
@@ -33,7 +33,7 @@ public:
     JS::Value reason() const { return m_reason; }
 
 private:
-    PromiseRejectionEvent(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
+    PromiseRejectionEvent(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

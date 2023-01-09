@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Diagnostics.h>
-#include <AK/FlyString.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -79,7 +79,7 @@ namespace Web::WebIDL {
     __ENUMERATE(OperationError)                      \
     __ENUMERATE(NotAllowedError)
 
-static u16 get_legacy_code_for_name(FlyString const& name)
+static u16 get_legacy_code_for_name(DeprecatedFlyString const& name)
 {
 #define __ENUMERATE(ErrorName, code) \
     if (name == #ErrorName)          \
@@ -94,33 +94,33 @@ class DOMException final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMException, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& name, FlyString const& message);
+    static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, DeprecatedFlyString const& name, DeprecatedFlyString const& message);
 
     // JS constructor has message first, name second
     // FIXME: This is a completely pointless footgun, let's use the same order for both factories.
-    static JS::NonnullGCPtr<DOMException> construct_impl(JS::Realm& realm, FlyString const& message, FlyString const& name);
+    static JS::NonnullGCPtr<DOMException> construct_impl(JS::Realm& realm, DeprecatedFlyString const& message, DeprecatedFlyString const& name);
 
     virtual ~DOMException() override;
 
-    FlyString const& name() const { return m_name; }
-    FlyString const& message() const { return m_message; }
+    DeprecatedFlyString const& name() const { return m_name; }
+    DeprecatedFlyString const& message() const { return m_message; }
     u16 code() const { return get_legacy_code_for_name(m_name); }
 
 protected:
-    DOMException(JS::Realm&, FlyString const& name, FlyString const& message);
+    DOMException(JS::Realm&, DeprecatedFlyString const& name, DeprecatedFlyString const& message);
 
 private:
-    FlyString m_name;
-    FlyString m_message;
+    DeprecatedFlyString m_name;
+    DeprecatedFlyString m_message;
 };
 
-#define __ENUMERATE(ErrorName)                                                                   \
-    class ErrorName final {                                                                      \
-    public:                                                                                      \
-        static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& message) \
-        {                                                                                        \
-            return DOMException::create(realm, #ErrorName, message);                             \
-        }                                                                                        \
+#define __ENUMERATE(ErrorName)                                                                             \
+    class ErrorName final {                                                                                \
+    public:                                                                                                \
+        static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, DeprecatedFlyString const& message) \
+        {                                                                                                  \
+            return DOMException::create(realm, #ErrorName, message);                                       \
+        }                                                                                                  \
     };
 ENUMERATE_DOM_EXCEPTION_ERROR_NAMES
 #undef __ENUMERATE

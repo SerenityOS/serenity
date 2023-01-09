@@ -10,7 +10,7 @@ namespace Web {
 namespace HTML {
 namespace AttributeNames {
 
-#define __ENUMERATE_HTML_ATTRIBUTE(name) FlyString name;
+#define __ENUMERATE_HTML_ATTRIBUTE(name) DeprecatedFlyString name;
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
@@ -41,7 +41,7 @@ ENUMERATE_HTML_ATTRIBUTES
 }
 
 // https://html.spec.whatwg.org/#boolean-attribute
-bool is_boolean_attribute(FlyString const& attribute)
+bool is_boolean_attribute(DeprecatedFlyString const& attribute)
 {
     // NOTE: This is the list of attributes from https://html.spec.whatwg.org/#attributes-3
     //       with a Value column value of "Boolean attribute".

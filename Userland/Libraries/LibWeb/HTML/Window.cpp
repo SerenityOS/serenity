@@ -780,7 +780,7 @@ float Window::scroll_y() const
 }
 
 // https://html.spec.whatwg.org/#fire-a-page-transition-event
-void Window::fire_a_page_transition_event(FlyString const& event_name, bool persisted)
+void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted)
 {
     // To fire a page transition event named eventName at a Window window with a boolean persisted,
     // fire an event named eventName at window, using PageTransitionEvent,

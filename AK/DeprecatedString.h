@@ -93,7 +93,7 @@ public:
     {
     }
 
-    DeprecatedString(FlyString const&);
+    DeprecatedString(DeprecatedFlyString const&);
 
     [[nodiscard]] static DeprecatedString repeated(char, size_t count);
     [[nodiscard]] static DeprecatedString repeated(StringView, size_t count);
@@ -212,7 +212,7 @@ public:
 
     bool operator==(StringView) const;
 
-    bool operator==(FlyString const&) const;
+    bool operator==(DeprecatedFlyString const&) const;
 
     bool operator<(DeprecatedString const&) const;
     bool operator<(char const*) const;

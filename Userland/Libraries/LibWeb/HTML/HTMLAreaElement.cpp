@@ -18,7 +18,7 @@ HTMLAreaElement::HTMLAreaElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLAreaElement::~HTMLAreaElement() = default;
 
-void HTMLAreaElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLAreaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -43,7 +43,7 @@ i32 HTMLAreaElement::default_tab_index_value() const
     return 0;
 }
 
-FlyString HTMLAreaElement::default_role() const
+DeprecatedFlyString HTMLAreaElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-area-no-href
     if (!href().is_null())

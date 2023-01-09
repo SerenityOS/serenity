@@ -55,7 +55,7 @@ public:
     virtual bool is_labelable() const override { return true; }
 
     // https://www.w3.org/TR/html-aria/#el-button
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::button; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::button; }
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);

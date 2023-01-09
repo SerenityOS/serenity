@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
@@ -121,7 +121,7 @@ public:
             SelectorList argument_selector_list {};
 
             // Used for :lang(en-gb,dk)
-            Vector<FlyString> languages {};
+            Vector<DeprecatedFlyString> languages {};
         };
 
         struct Attribute {
@@ -140,20 +140,20 @@ public:
                 CaseInsensitiveMatch,
             };
             MatchType match_type;
-            FlyString name {};
+            DeprecatedFlyString name {};
             DeprecatedString value {};
             CaseType case_type;
         };
 
         struct Name {
-            Name(FlyString n)
+            Name(DeprecatedFlyString n)
                 : name(move(n))
                 , lowercase_name(name.to_lowercase())
             {
             }
 
-            FlyString name;
-            FlyString lowercase_name;
+            DeprecatedFlyString name;
+            DeprecatedFlyString lowercase_name;
         };
 
         Type type;
@@ -166,10 +166,10 @@ public:
         PseudoElement const& pseudo_element() const { return value.get<PseudoElement>(); }
         PseudoElement& pseudo_element() { return value.get<PseudoElement>(); }
 
-        FlyString const& name() const { return value.get<Name>().name; }
-        FlyString& name() { return value.get<Name>().name; }
-        FlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
-        FlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
+        DeprecatedFlyString const& name() const { return value.get<Name>().name; }
+        DeprecatedFlyString& name() { return value.get<Name>().name; }
+        DeprecatedFlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
+        DeprecatedFlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
 
         DeprecatedString serialize() const;
     };

@@ -9,17 +9,17 @@
 
 namespace Web::HTML {
 
-CloseEvent* CloseEvent::create(JS::Realm& realm, FlyString const& event_name, CloseEventInit const& event_init)
+CloseEvent* CloseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, CloseEventInit const& event_init)
 {
     return realm.heap().allocate<CloseEvent>(realm, realm, event_name, event_init);
 }
 
-CloseEvent* CloseEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, CloseEventInit const& event_init)
+CloseEvent* CloseEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, CloseEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-CloseEvent::CloseEvent(JS::Realm& realm, FlyString const& event_name, CloseEventInit const& event_init)
+CloseEvent::CloseEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, CloseEventInit const& event_init)
     : DOM::Event(realm, event_name, event_init)
     , m_was_clean(event_init.was_clean)
     , m_code(event_init.code)

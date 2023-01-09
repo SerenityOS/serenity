@@ -34,7 +34,7 @@ public:
     bool using_system_appearance() const;
 
     // https://www.w3.org/TR/html-aria/#el-progress
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::progressbar; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::progressbar; }
 
 private:
     HTMLProgressElement(DOM::Document&, DOM::QualifiedName);

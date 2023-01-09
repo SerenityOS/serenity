@@ -15,33 +15,33 @@ PDFErrorOr<NonnullRefPtr<Object>> ArrayObject::get_object_at(Document* document,
     return document->resolve_to<Object>(at(index));
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> DictObject::get_object(Document* document, FlyString const& key) const
+PDFErrorOr<NonnullRefPtr<Object>> DictObject::get_object(Document* document, DeprecatedFlyString const& key) const
 {
     return document->resolve_to<Object>(get_value(key));
 }
 
-#define DEFINE_ACCESSORS(class_name, snake_name)                                                                       \
-    PDFErrorOr<NonnullRefPtr<class_name>> ArrayObject::get_##snake_name##_at(Document* document, size_t index) const   \
-    {                                                                                                                  \
-        if (index >= m_elements.size())                                                                                \
-            return Error { Error::Type::Internal, "Out of bounds array access" };                                      \
-        return document->resolve_to<class_name>(m_elements[index]);                                                    \
-    }                                                                                                                  \
-                                                                                                                       \
-    NonnullRefPtr<class_name> ArrayObject::get_##snake_name##_at(size_t index) const                                   \
-    {                                                                                                                  \
-        VERIFY(index < m_elements.size());                                                                             \
-        return cast_to<class_name>(m_elements[index]);                                                                 \
-    }                                                                                                                  \
-                                                                                                                       \
-    PDFErrorOr<NonnullRefPtr<class_name>> DictObject::get_##snake_name(Document* document, FlyString const& key) const \
-    {                                                                                                                  \
-        return document->resolve_to<class_name>(get_value(key));                                                       \
-    }                                                                                                                  \
-                                                                                                                       \
-    NonnullRefPtr<class_name> DictObject::get_##snake_name(FlyString const& key) const                                 \
-    {                                                                                                                  \
-        return cast_to<class_name>(get_value(key));                                                                    \
+#define DEFINE_ACCESSORS(class_name, snake_name)                                                                                 \
+    PDFErrorOr<NonnullRefPtr<class_name>> ArrayObject::get_##snake_name##_at(Document* document, size_t index) const             \
+    {                                                                                                                            \
+        if (index >= m_elements.size())                                                                                          \
+            return Error { Error::Type::Internal, "Out of bounds array access" };                                                \
+        return document->resolve_to<class_name>(m_elements[index]);                                                              \
+    }                                                                                                                            \
+                                                                                                                                 \
+    NonnullRefPtr<class_name> ArrayObject::get_##snake_name##_at(size_t index) const                                             \
+    {                                                                                                                            \
+        VERIFY(index < m_elements.size());                                                                                       \
+        return cast_to<class_name>(m_elements[index]);                                                                           \
+    }                                                                                                                            \
+                                                                                                                                 \
+    PDFErrorOr<NonnullRefPtr<class_name>> DictObject::get_##snake_name(Document* document, DeprecatedFlyString const& key) const \
+    {                                                                                                                            \
+        return document->resolve_to<class_name>(get_value(key));                                                                 \
+    }                                                                                                                            \
+                                                                                                                                 \
+    NonnullRefPtr<class_name> DictObject::get_##snake_name(DeprecatedFlyString const& key) const                                 \
+    {                                                                                                                            \
+        return cast_to<class_name>(get_value(key));                                                                              \
     }
 
 ENUMERATE_OBJECT_TYPES(DEFINE_ACCESSORS)

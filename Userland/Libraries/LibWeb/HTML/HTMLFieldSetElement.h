@@ -36,7 +36,7 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::group; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::group; }
 
 private:
     HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);

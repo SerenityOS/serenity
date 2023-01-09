@@ -32,8 +32,8 @@ public:
         Global,
     };
 
-    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, FlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
-    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, FlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
 
     virtual void initialize(Realm&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
@@ -46,8 +46,8 @@ public:
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
     Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; };
 
-    virtual FlyString const& name() const override { return m_name; };
-    void set_name(FlyString const& name);
+    virtual DeprecatedFlyString const& name() const override { return m_name; };
+    void set_name(DeprecatedFlyString const& name);
 
     void set_is_class_constructor() { m_is_class_constructor = true; };
 
@@ -93,7 +93,7 @@ protected:
     virtual Completion ordinary_call_evaluate_body();
 
 private:
-    ECMAScriptFunctionObject(FlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
+    ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
 
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
@@ -105,7 +105,7 @@ private:
 
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 
-    FlyString m_name;
+    DeprecatedFlyString m_name;
     OwnPtr<Bytecode::Executable> m_bytecode_executable;
     Vector<OwnPtr<Bytecode::Executable>> m_default_parameter_bytecode_executables;
     i32 m_function_length { 0 };

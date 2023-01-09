@@ -18,7 +18,7 @@ public:
     virtual ~HTMLDetailsElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-details
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::group; };
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::group; };
 
 private:
     HTMLDetailsElement(DOM::Document&, DOM::QualifiedName);

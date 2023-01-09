@@ -26,7 +26,7 @@ HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLOptionElement::~HTMLOptionElement() = default;
 
-void HTMLOptionElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLOptionElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -39,7 +39,7 @@ void HTMLOptionElement::parse_attribute(FlyString const& name, DeprecatedString 
     }
 }
 
-void HTMLOptionElement::did_remove_attribute(FlyString const& name)
+void HTMLOptionElement::did_remove_attribute(DeprecatedFlyString const& name)
 {
     HTMLElement::did_remove_attribute(name);
 
@@ -141,7 +141,7 @@ bool HTMLOptionElement::disabled() const
         || (parent() && is<HTMLOptGroupElement>(parent()) && static_cast<HTMLOptGroupElement const&>(*parent()).has_attribute(AttributeNames::disabled));
 }
 
-FlyString HTMLOptionElement::default_role() const
+DeprecatedFlyString HTMLOptionElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-option
     // TODO: Only an option element that is in a list of options or that represents a suggestion in a datalist should return option

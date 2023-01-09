@@ -8,7 +8,7 @@
 
 namespace Web::DOM::MutationType {
 
-#define __ENUMERATE_MUTATION_TYPE(name) FlyString name;
+#define __ENUMERATE_MUTATION_TYPE(name) DeprecatedFlyString name;
 ENUMERATE_MUTATION_TYPES
 #undef __ENUMERATE_MUTATION_TYPE
 

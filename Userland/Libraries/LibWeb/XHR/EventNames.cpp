@@ -8,7 +8,7 @@
 
 namespace Web::XHR::EventNames {
 
-#define __ENUMERATE_XHR_EVENT(name) FlyString name;
+#define __ENUMERATE_XHR_EVENT(name) DeprecatedFlyString name;
 ENUMERATE_XHR_EVENTS
 #undef __ENUMERATE_XHR_EVENT
 

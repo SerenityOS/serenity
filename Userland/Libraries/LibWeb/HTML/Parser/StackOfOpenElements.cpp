@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-static Vector<FlyString> s_base_list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
+static Vector<DeprecatedFlyString> s_base_list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
 
 StackOfOpenElements::~StackOfOpenElements() = default;
 
@@ -20,7 +20,7 @@ void StackOfOpenElements::visit_edges(JS::Cell::Visitor& visitor)
         visitor.visit(element);
 }
 
-bool StackOfOpenElements::has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const& list) const
+bool StackOfOpenElements::has_in_scope_impl(DeprecatedFlyString const& tag_name, Vector<DeprecatedFlyString> const& list) const
 {
     for (auto const& element : m_elements.in_reverse()) {
         if (element->local_name() == tag_name)
@@ -31,12 +31,12 @@ bool StackOfOpenElements::has_in_scope_impl(FlyString const& tag_name, Vector<Fl
     VERIFY_NOT_REACHED();
 }
 
-bool StackOfOpenElements::has_in_scope(FlyString const& tag_name) const
+bool StackOfOpenElements::has_in_scope(DeprecatedFlyString const& tag_name) const
 {
     return has_in_scope_impl(tag_name, s_base_list);
 }
 
-bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, Vector<FlyString> const& list) const
+bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, Vector<DeprecatedFlyString> const& list) const
 {
     for (auto& element : m_elements.in_reverse()) {
         if (element.ptr() == &target_node)
@@ -52,19 +52,19 @@ bool StackOfOpenElements::has_in_scope(const DOM::Element& target_node) const
     return has_in_scope_impl(target_node, s_base_list);
 }
 
-bool StackOfOpenElements::has_in_button_scope(FlyString const& tag_name) const
+bool StackOfOpenElements::has_in_button_scope(DeprecatedFlyString const& tag_name) const
 {
     auto list = s_base_list;
     list.append("button");
     return has_in_scope_impl(tag_name, list);
 }
 
-bool StackOfOpenElements::has_in_table_scope(FlyString const& tag_name) const
+bool StackOfOpenElements::has_in_table_scope(DeprecatedFlyString const& tag_name) const
 {
     return has_in_scope_impl(tag_name, { "html", "table", "template" });
 }
 
-bool StackOfOpenElements::has_in_list_item_scope(FlyString const& tag_name) const
+bool StackOfOpenElements::has_in_list_item_scope(DeprecatedFlyString const& tag_name) const
 {
     auto list = s_base_list;
     list.append("ol");
@@ -78,7 +78,7 @@ bool StackOfOpenElements::has_in_list_item_scope(FlyString const& tag_name) cons
 // - optgroup in the HTML namespace
 // - option in the HTML namespace
 // NOTE: In this case it's "all element types _except_"
-bool StackOfOpenElements::has_in_select_scope(FlyString const& tag_name) const
+bool StackOfOpenElements::has_in_select_scope(DeprecatedFlyString const& tag_name) const
 {
     // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
     // 1. Initialize node to be the current node (the bottommost node of the stack).
@@ -106,7 +106,7 @@ bool StackOfOpenElements::contains(const DOM::Element& element) const
     return false;
 }
 
-bool StackOfOpenElements::contains(FlyString const& tag_name) const
+bool StackOfOpenElements::contains(DeprecatedFlyString const& tag_name) const
 {
     for (auto& element_on_stack : m_elements) {
         if (element_on_stack->local_name() == tag_name)
@@ -115,7 +115,7 @@ bool StackOfOpenElements::contains(FlyString const& tag_name) const
     return false;
 }
 
-void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(FlyString const& tag_name)
+void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(DeprecatedFlyString const& tag_name)
 {
     while (m_elements.last()->local_name() != tag_name)
         (void)pop();
@@ -134,7 +134,7 @@ JS::GCPtr<DOM::Element> StackOfOpenElements::topmost_special_node_below(DOM::Ele
     return found_element.ptr();
 }
 
-StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_tag_name(FlyString const& tag_name)
+StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_tag_name(DeprecatedFlyString const& tag_name)
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];

@@ -11,39 +11,39 @@
 
 namespace AK {
 
-class FlyString {
+class DeprecatedFlyString {
 public:
-    FlyString() = default;
-    FlyString(FlyString const& other)
+    DeprecatedFlyString() = default;
+    DeprecatedFlyString(DeprecatedFlyString const& other)
         : m_impl(other.impl())
     {
     }
-    FlyString(FlyString&& other)
+    DeprecatedFlyString(DeprecatedFlyString&& other)
         : m_impl(move(other.m_impl))
     {
     }
-    FlyString(DeprecatedString const&);
-    FlyString(StringView);
-    FlyString(char const* string)
-        : FlyString(static_cast<DeprecatedString>(string))
+    DeprecatedFlyString(DeprecatedString const&);
+    DeprecatedFlyString(StringView);
+    DeprecatedFlyString(char const* string)
+        : DeprecatedFlyString(static_cast<DeprecatedString>(string))
     {
     }
 
-    static FlyString from_fly_impl(NonnullRefPtr<StringImpl> impl)
+    static DeprecatedFlyString from_fly_impl(NonnullRefPtr<StringImpl> impl)
     {
         VERIFY(impl->is_fly());
-        FlyString string;
+        DeprecatedFlyString string;
         string.m_impl = move(impl);
         return string;
     }
 
-    FlyString& operator=(FlyString const& other)
+    DeprecatedFlyString& operator=(DeprecatedFlyString const& other)
     {
         m_impl = other.m_impl;
         return *this;
     }
 
-    FlyString& operator=(FlyString&& other)
+    DeprecatedFlyString& operator=(DeprecatedFlyString&& other)
     {
         m_impl = move(other.m_impl);
         return *this;
@@ -52,7 +52,7 @@ public:
     bool is_empty() const { return !m_impl || !m_impl->length(); }
     bool is_null() const { return !m_impl; }
 
-    bool operator==(FlyString const& other) const { return m_impl == other.m_impl; }
+    bool operator==(DeprecatedFlyString const& other) const { return m_impl == other.m_impl; }
 
     bool operator==(DeprecatedString const&) const;
 
@@ -67,7 +67,7 @@ public:
     ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
     ALWAYS_INLINE StringView view() const { return m_impl ? m_impl->view() : StringView {}; }
 
-    FlyString to_lowercase() const;
+    DeprecatedFlyString to_lowercase() const;
 
     template<typename T = int>
     Optional<T> to_int(TrimWhitespace = TrimWhitespace::Yes) const;
@@ -95,12 +95,12 @@ private:
 };
 
 template<>
-struct Traits<FlyString> : public GenericTraits<FlyString> {
-    static unsigned hash(FlyString const& s) { return s.hash(); }
+struct Traits<DeprecatedFlyString> : public GenericTraits<DeprecatedFlyString> {
+    static unsigned hash(DeprecatedFlyString const& s) { return s.hash(); }
 };
 
 }
 
 #if USING_AK_GLOBALLY
-using AK::FlyString;
+using AK::DeprecatedFlyString;
 #endif

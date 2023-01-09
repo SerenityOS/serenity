@@ -9,17 +9,17 @@
 
 namespace Web::HTML {
 
-PageTransitionEvent* PageTransitionEvent::create(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
+PageTransitionEvent* PageTransitionEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init)
 {
     return realm.heap().allocate<PageTransitionEvent>(realm, realm, event_name, event_init);
 }
 
-PageTransitionEvent* PageTransitionEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
+PageTransitionEvent* PageTransitionEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
+PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init)
     : DOM::Event(realm, event_name, event_init)
     , m_persisted(event_init.persisted)
 {

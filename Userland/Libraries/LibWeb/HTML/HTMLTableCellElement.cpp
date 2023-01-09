@@ -69,7 +69,7 @@ void HTMLTableCellElement::set_row_span(unsigned int value)
     MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
 }
 
-FlyString HTMLTableCellElement::default_role() const
+DeprecatedFlyString HTMLTableCellElement::default_role() const
 {
     // TODO: For td:
     //       role=cell if the ancestor table element is exposed as a role=table

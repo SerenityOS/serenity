@@ -38,7 +38,7 @@ public:
     unsigned length() const;
 
     // https://www.w3.org/TR/html-aria/#el-form
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::form; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::form; }
 
 private:
     HTMLFormElement(DOM::Document&, DOM::QualifiedName);

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/Node.h>
 
@@ -22,7 +22,7 @@ public:
 
     virtual ~DocumentType() override = default;
 
-    virtual FlyString node_name() const override { return "#doctype"; }
+    virtual DeprecatedFlyString node_name() const override { return "#doctype"; }
 
     DeprecatedString const& name() const { return m_name; }
     void set_name(DeprecatedString const& name) { m_name = name; }

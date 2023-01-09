@@ -90,7 +90,7 @@ SVGPathElement::SVGPathElement(DOM::Document& document, DOM::QualifiedName quali
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPathElement"));
 }
 
-void SVGPathElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGPathElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

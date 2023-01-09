@@ -19,7 +19,7 @@ HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLQuoteElement::~HTMLQuoteElement() = default;
 
-FlyString HTMLQuoteElement::default_role() const
+DeprecatedFlyString HTMLQuoteElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-blockquote
     if (local_name() == TagNames::blockquote)

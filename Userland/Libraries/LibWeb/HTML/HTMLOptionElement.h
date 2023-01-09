@@ -30,7 +30,7 @@ public:
 
     bool disabled() const;
 
-    virtual FlyString default_role() const override;
+    virtual DeprecatedFlyString default_role() const override;
 
 private:
     friend class Bindings::OptionConstructor;
@@ -38,8 +38,8 @@ private:
 
     HTMLOptionElement(DOM::Document&, DOM::QualifiedName);
 
-    void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
-    void did_remove_attribute(FlyString const& name) override;
+    void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    void did_remove_attribute(DeprecatedFlyString const& name) override;
 
     void ask_for_a_reset();
 
