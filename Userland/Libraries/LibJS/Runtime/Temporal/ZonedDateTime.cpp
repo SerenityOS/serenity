@@ -592,11 +592,11 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(VM& vm, Differe
 
         // b. Assert: The following steps cannot fail due to overflow in the Number domain because abs(differenceNs) ≤ 2 × nsMaxInstant.
 
-        // c. Let balanceResult be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, settings.[[LargestUnit]]).
-        auto balance_result = MUST(balance_duration(vm, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), settings.largest_unit));
+        // c. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, settings.[[LargestUnit]]).
+        auto result = MUST(balance_duration(vm, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), settings.largest_unit));
 
-        // d. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × balanceResult.[[Hours]], sign × balanceResult.[[Minutes]], sign × balanceResult.[[Seconds]], sign × balanceResult.[[Milliseconds]], sign × balanceResult.[[Microseconds]], sign × balanceResult.[[Nanoseconds]]).
-        return MUST(create_temporal_duration(vm, 0, 0, 0, 0, sign * balance_result.hours, sign * balance_result.minutes, sign * balance_result.seconds, sign * balance_result.milliseconds, sign * balance_result.microseconds, sign * balance_result.nanoseconds));
+        // d. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
+        return MUST(create_temporal_duration(vm, 0, 0, 0, 0, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
     }
 
     // 6. If ? TimeZoneEquals(zonedDateTime.[[TimeZone]], other.[[TimeZone]]) is false, then
