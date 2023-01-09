@@ -78,8 +78,15 @@ float Type1Font::get_char_width(u16 char_code) const
 
 void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color)
 {
-    if (!m_data.font_program)
+    if (!m_data.font_program) {
+        if (m_data.font) {
+            // Account for the reversed font baseline
+            auto position = point.translated(0, -m_data.font->baseline());
+            painter.draw_glyph(position, char_code, *m_data.font, color);
+        }
         return;
+    }
+
     auto translation = m_data.font_program->glyph_translation(char_code, width);
     point = point.translated(translation);
 
