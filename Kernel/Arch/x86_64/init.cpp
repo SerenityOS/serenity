@@ -193,6 +193,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     kmalloc_init();
 
     dmesgln("Multiboot version {} (0x{:x})", boot_info.multiboot_magic == MULTIBOOT_BOOTLOADER_MAGIC ? 1 : 2, boot_info.multiboot_magic);
+    dmesgln("mmap: {:p} {}", boot_info.multiboot_memory_map, boot_info.multiboot_memory_map_count);
 
     load_kernel_symbol_table();
 

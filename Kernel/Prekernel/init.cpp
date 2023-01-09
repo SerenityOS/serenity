@@ -233,13 +233,19 @@ extern "C" [[noreturn]] void init()
         info.multiboot_flags = 0;
         info.multiboot_modules_count = 0;
 
+        auto mmap = reinterpret_cast<multiboot2_tag_mmap_t*>(multiboot2_find_tag((FlatPtr)multiboot_info_ptr, MULTIBOOT2_TAG_TYPE_MMAP));
+        info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)&mmap->entries);
+        // info.multiboot_memory_map_count = (uintptr_t)mmap->entries / (uintptr_t)mmap + mmap->size;
+
         auto framebuffer = reinterpret_cast<multiboot2_tag_framebuffer_t*>(multiboot2_find_tag((FlatPtr)multiboot_info_ptr, MULTIBOOT2_TAG_TYPE_FRAMEBUFFER));
-        info.multiboot_framebuffer_addr = framebuffer->addr;
-        info.multiboot_framebuffer_pitch = framebuffer->pitch;
-        info.multiboot_framebuffer_width = framebuffer->width;
-        info.multiboot_framebuffer_height = framebuffer->height;
-        info.multiboot_framebuffer_bpp = framebuffer->bpp;
-        info.multiboot_framebuffer_type = framebuffer->type;
+        if (framebuffer) {
+            info.multiboot_framebuffer_addr = framebuffer->addr;
+            info.multiboot_framebuffer_pitch = framebuffer->pitch;
+            info.multiboot_framebuffer_width = framebuffer->width;
+            info.multiboot_framebuffer_height = framebuffer->height;
+            info.multiboot_framebuffer_bpp = framebuffer->bpp;
+            info.multiboot_framebuffer_type = framebuffer->type;
+        }
     }
 
     asm(
