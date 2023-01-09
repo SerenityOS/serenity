@@ -19,7 +19,7 @@
 namespace Web::Bindings {
 
 WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::Realm& realm, size_t index)
-    : Object(ConstructWithPrototypeTag::Tag, Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssemblyInstancePrototype"))
+    : Object(ConstructWithPrototypeTag::Tag, Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssembly.Instance"))
     , m_index(index)
 {
 }

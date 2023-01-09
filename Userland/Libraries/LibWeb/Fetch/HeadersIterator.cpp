@@ -10,6 +10,17 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Fetch/HeadersIterator.h>
 
+namespace Web::Bindings {
+
+template<>
+void Intrinsics::create_web_prototype_and_constructor<HeadersIteratorPrototype>(JS::Realm& realm)
+{
+    auto prototype = heap().allocate<HeadersIteratorPrototype>(realm, realm);
+    m_prototypes.set("HeadersIterator"sv, prototype);
+}
+
+}
+
 namespace Web::Fetch {
 
 JS::NonnullGCPtr<HeadersIterator> HeadersIterator::create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
