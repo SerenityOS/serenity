@@ -85,12 +85,12 @@ ErrorOr<void> generate_implementation_file(JsonArray& identifier_data, Core::Str
 
     generator.append(R"~~~(
 #include <AK/Assertions.h>
+#include <AK/HashMap.h>
 #include <LibWeb/CSS/ValueID.h>
 
 namespace Web::CSS {
 
-ValueID value_id_from_string(StringView string)
-{
+HashMap<StringView, ValueID, AK::CaseInsensitiveStringViewTraits> g_stringview_to_value_id_map {
 )~~~");
 
     identifier_data.for_each([&](auto& name) {
@@ -98,13 +98,17 @@ ValueID value_id_from_string(StringView string)
         member_generator.set("name", name.to_deprecated_string());
         member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
         member_generator.append(R"~~~(
-    if (string.equals_ignoring_case("@name@"sv))
-        return ValueID::@name:titlecase@;
+    {"@name@"sv, ValueID::@name:titlecase@},
 )~~~");
     });
 
     generator.append(R"~~~(
-    return ValueID::Invalid;
+};
+
+ValueID value_id_from_string(StringView string)
+{
+    auto maybe_value_id = g_stringview_to_value_id_map.get(string);
+    return maybe_value_id.value_or(ValueID::Invalid);
 }
 
 StringView string_from_value_id(ValueID value_id) {
