@@ -33,6 +33,14 @@ TEST_CASE(equality_operator)
     EXPECT_EQ(d == d, true);
 }
 
+BENCHMARK_CASE(append)
+{
+    ByteBuffer bb;
+    for (size_t i = 0; i < 1000000; ++i) {
+        bb.append(static_cast<u8>(i));
+    }
+}
+
 /*
  * FIXME: These `negative_*` tests should cause precisely one compilation error
  * each, and always for the specified reason. Currently we do not have a harness
