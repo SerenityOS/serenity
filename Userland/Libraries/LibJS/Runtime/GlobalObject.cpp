@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -167,12 +167,12 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.WeakSet, attr, [](auto& realm) -> Value { return realm.intrinsics().weak_set_constructor(); });
 
     // 19.4 Other Properties of the Global Object, https://tc39.es/ecma262/#sec-other-properties-of-the-global-object
-    global.define_direct_property(vm.names.Atomics, vm.heap().allocate<AtomicsObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Intl, vm.heap().allocate<Intl::Intl>(realm, realm), attr);
-    global.define_direct_property(vm.names.JSON, vm.heap().allocate<JSONObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Math, vm.heap().allocate<MathObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Reflect, vm.heap().allocate<ReflectObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Temporal, vm.heap().allocate<Temporal::Temporal>(realm, realm), attr);
+    global.define_intrinsic_accessor(vm.names.Atomics, attr, [](auto& realm) -> Value { return realm.intrinsics().atomics_object(); });
+    global.define_intrinsic_accessor(vm.names.Intl, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_object(); });
+    global.define_intrinsic_accessor(vm.names.JSON, attr, [](auto& realm) -> Value { return realm.intrinsics().json_object(); });
+    global.define_intrinsic_accessor(vm.names.Math, attr, [](auto& realm) -> Value { return realm.intrinsics().math_object(); });
+    global.define_intrinsic_accessor(vm.names.Reflect, attr, [](auto& realm) -> Value { return realm.intrinsics().reflect_object(); });
+    global.define_intrinsic_accessor(vm.names.Temporal, attr, [](auto& realm) -> Value { return realm.intrinsics().temporal_object(); });
 
     // B.2.1 Additional Properties of the Global Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-global-object
     global.define_direct_property(vm.names.escape, realm.intrinsics().escape_function(), attr);
