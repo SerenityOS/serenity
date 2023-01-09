@@ -75,15 +75,15 @@ void Name::randomize_case()
     m_name = builder.to_deprecated_string();
 }
 
-OutputStream& operator<<(OutputStream& stream, Name const& name)
+ErrorOr<void> Name::write_to_stream(Core::Stream::Stream& stream) const
 {
-    auto parts = name.as_string().split_view('.');
+    auto parts = as_string().split_view('.');
     for (auto& part : parts) {
-        stream << (u8)part.length();
-        stream << part.bytes();
+        TRY(stream.write_trivial_value<u8>(part.length()));
+        TRY(stream.write_entire_buffer(part.bytes()));
     }
-    stream << '\0';
-    return stream;
+    TRY(stream.write_trivial_value('\0'));
+    return {};
 }
 
 unsigned Name::Traits::hash(Name const& name)

@@ -234,7 +234,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
         name_in_question.randomize_case();
     request.add_question({ name_in_question, record_type, RecordClass::IN, false });
 
-    auto buffer = request.to_byte_buffer();
+    auto buffer = TRY(request.to_byte_buffer());
 
     auto udp_socket = TRY(Core::Stream::UDPSocket::connect(nameserver, 53, Time::from_seconds(1)));
     TRY(udp_socket->set_blocking(true));

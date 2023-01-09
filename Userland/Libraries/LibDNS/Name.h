@@ -9,6 +9,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
+#include <LibCore/Stream.h>
 
 namespace DNS {
 
@@ -21,6 +22,7 @@ public:
 
     size_t serialized_size() const;
     DeprecatedString const& as_string() const { return m_name; }
+    ErrorOr<void> write_to_stream(Core::Stream::Stream&) const;
 
     void randomize_case();
 
@@ -35,8 +37,6 @@ public:
 private:
     DeprecatedString m_name;
 };
-
-OutputStream& operator<<(OutputStream& stream, Name const&);
 
 }
 

@@ -110,7 +110,7 @@ void MulticastDNS::announce()
 
 ErrorOr<size_t> MulticastDNS::emit_packet(Packet const& packet, sockaddr_in const* destination)
 {
-    auto buffer = packet.to_byte_buffer();
+    auto buffer = TRY(packet.to_byte_buffer());
     if (!destination)
         destination = &mdns_addr;
 
