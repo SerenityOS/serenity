@@ -83,6 +83,8 @@ u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
         return glyph_id_for_code_point_table_0(code_point);
     case Format::SegmentToDelta:
         return glyph_id_for_code_point_table_4(code_point);
+    case Format::TrimmedTable:
+        return glyph_id_for_code_point_table_6(code_point);
     case Format::SegmentedCoverage:
         return glyph_id_for_code_point_table_12(code_point);
     default:
@@ -127,6 +129,20 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_4(u32 code_point) const
     u32 glyph_offset = (u32)Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (code_point - start_code_point) * 2;
     VERIFY(glyph_offset + 2 <= m_slice.size());
     return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
+}
+
+u32 Cmap::Subtable::glyph_id_for_code_point_table_6(u32 code_point) const
+{
+    u32 first_code = be_u16(m_slice.offset_pointer((u32)Table6Offsets::FirstCode));
+    if (code_point < first_code)
+        return 0;
+
+    u32 entry_count = be_u16(m_slice.offset_pointer((u32)Table6Offsets::EntryCount));
+    u32 code_offset = code_point - first_code;
+    if (code_offset > entry_count)
+        return 0;
+
+    return be_u16(m_slice.offset_pointer((u32)Table6Offsets::GlyphIdArray + code_offset * 2));
 }
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_12(u32 code_point) const

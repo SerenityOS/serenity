@@ -67,6 +67,11 @@ public:
             Constant = 16,
             NonConstMultiplier = 4,
         };
+        enum class Table6Offsets {
+            FirstCode = 6,
+            EntryCount = 8,
+            GlyphIdArray = 10
+        };
         enum class Table12Offsets {
             NumGroups = 12,
             Record_StartCode = 16,
@@ -80,6 +85,7 @@ public:
 
         u32 glyph_id_for_code_point_table_0(u32 code_point) const;
         u32 glyph_id_for_code_point_table_4(u32 code_point) const;
+        u32 glyph_id_for_code_point_table_6(u32 code_point) const;
         u32 glyph_id_for_code_point_table_12(u32 code_point) const;
 
         ReadonlyBytes m_slice;
