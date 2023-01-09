@@ -37,7 +37,7 @@ namespace Web::HTML {
 
 static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
-    dbgln("Parse error! {}", location);
+    dbgln_if(HTML_PARSER_DEBUG, "Parse error! {}", location);
 }
 
 static Vector<FlyString> s_quirks_public_ids = {
