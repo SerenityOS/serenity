@@ -926,15 +926,10 @@ StringView Board::result_to_points_string(Result result, Color turn)
     case Result::BlackResign:
         return "1-0"sv;
     case Result::StaleMate:
-        return "1/2-1/2"sv;
     case Chess::Board::Result::FiftyMoveRule:
-        return "1/2-1/2"sv;
     case Chess::Board::Result::SeventyFiveMoveRule:
-        return "1/2-1/2"sv;
     case Chess::Board::Result::ThreeFoldRepetition:
-        return "1/2-1/2"sv;
     case Chess::Board::Result::FiveFoldRepetition:
-        return "1/2-1/2"sv;
     case Chess::Board::Result::InsufficientMaterial:
         return "1/2-1/2"sv;
     case Chess::Board::Result::NotFinished:
