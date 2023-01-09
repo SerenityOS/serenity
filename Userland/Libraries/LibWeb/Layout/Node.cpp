@@ -674,6 +674,7 @@ void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_valu
     CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
     mutable_computed_values.set_position(CSS::Position::Static);
     mutable_computed_values.set_float(CSS::Float::None);
+    mutable_computed_values.set_clear(CSS::Clear::None);
     mutable_computed_values.set_inset({ CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() });
     mutable_computed_values.set_margin({ CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) });
 }
