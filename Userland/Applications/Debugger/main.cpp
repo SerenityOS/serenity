@@ -72,7 +72,7 @@ static bool handle_disassemble_command(DeprecatedString const& command, FlatPtr 
         auto value = g_debug_session->peek(first_instruction + i * sizeof(u32));
         if (!value.has_value())
             break;
-        if (code.try_append(&value, sizeof(u32)).is_error())
+        if (code.try_extend({ &value, sizeof(u32) }).is_error())
             break;
     }
 

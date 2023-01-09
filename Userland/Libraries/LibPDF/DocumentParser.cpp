@@ -243,8 +243,8 @@ PDFErrorOr<void> DocumentParser::initialize_hint_tables()
         if (buffer_result.is_error())
             return Error { Error::Type::Internal, "Failed to allocate hint stream buffer" };
         possible_merged_stream_buffer = buffer_result.release_value();
-        MUST(possible_merged_stream_buffer.try_append(primary_hint_stream->bytes()));
-        MUST(possible_merged_stream_buffer.try_append(overflow_hint_stream->bytes()));
+        MUST(possible_merged_stream_buffer.try_extend(primary_hint_stream->bytes()));
+        MUST(possible_merged_stream_buffer.try_extend(overflow_hint_stream->bytes()));
         hint_stream_bytes = possible_merged_stream_buffer.bytes();
     } else {
         hint_stream_bytes = primary_hint_stream->bytes();

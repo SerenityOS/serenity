@@ -260,14 +260,14 @@ ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
     auto range_value = MUST(ByteBuffer::copy("bytes"sv.bytes()));
 
     // 3. Serialize and isomorphic encode first, and append the result to rangeValue.
-    TRY(range_value.try_append(DeprecatedString::number(first).bytes()));
+    TRY(range_value.try_extend(DeprecatedString::number(first).bytes()));
 
     // 4. Append 0x2D (-) to rangeValue.
     TRY(range_value.try_append('-'));
 
     // 5. If last is given, then serialize and isomorphic encode it, and append the result to rangeValue.
     if (last.has_value())
-        TRY(range_value.try_append(DeprecatedString::number(*last).bytes()));
+        TRY(range_value.try_extend(DeprecatedString::number(*last).bytes()));
 
     // 6. Append (`Range`, rangeValue) to request’s header list.
     auto header = Header {

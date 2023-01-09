@@ -256,7 +256,7 @@ ErrorOr<void> Client::send_next_command()
     buffer.append(command_type.data(), command_type.size());
 
     for (auto& arg : command.args) {
-        buffer.append(" ", 1);
+        buffer.append(' ');
         buffer.append(arg.bytes().data(), arg.length());
     }
 

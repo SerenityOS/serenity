@@ -87,16 +87,16 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
 
                 // NOTE: The AK::DeprecatedString is always UTF-8.
                 // 3. Append the result of UTF-8 encoding s to bytes.
-                return bytes.try_append(s.to_byte_buffer());
+                return bytes.try_extend(s.to_byte_buffer());
             },
             // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
             [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
                 auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source.cell()));
-                return bytes.try_append(data_buffer.bytes());
+                return bytes.try_extend(data_buffer.bytes());
             },
             // 3. If element is a Blob, append the bytes it represents to bytes.
             [&](JS::Handle<Blob> const& blob) -> ErrorOr<void> {
-                return bytes.try_append(blob->bytes());
+                return bytes.try_extend(blob->bytes());
             }));
     }
     // 3. Return bytes.

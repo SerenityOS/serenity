@@ -24,7 +24,7 @@ static ErrorOr<bool> format_file(StringView path, bool inplace)
     }
     auto formatted_gml = formatted_gml_or_error.release_value();
     if (inplace && !read_from_stdin) {
-        if (formatted_gml == contents)
+        if (formatted_gml.bytes() == contents.bytes())
             return true;
         TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
         TRY(file->truncate(0));
@@ -32,7 +32,7 @@ static ErrorOr<bool> format_file(StringView path, bool inplace)
     } else {
         out("{}", formatted_gml);
     }
-    return formatted_gml == contents;
+    return formatted_gml.bytes() == contents.bytes();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments args)

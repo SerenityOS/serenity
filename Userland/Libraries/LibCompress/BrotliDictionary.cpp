@@ -220,32 +220,32 @@ ErrorOr<ByteBuffer> BrotliDictionary::lookup_word(size_t index, size_t length)
 
     auto transformation = transformations[transform_id];
     ByteBuffer bb;
-    bb.append(transformation.prefix.bytes());
+    TRY(bb.try_extend(transformation.prefix.bytes()));
     size_t prefix_length = bb.size();
 
     switch (transformation.operation) {
     case TransformationOperation::Identity:
-        bb.append(base_word);
+        TRY(bb.try_extend(base_word));
         break;
     case TransformationOperation::FermentFirst:
-        bb.append(base_word);
+        TRY(bb.try_extend(base_word));
         ferment_first(bb.bytes().slice(prefix_length));
         break;
     case TransformationOperation::FermentAll:
-        bb.append(base_word);
+        TRY(bb.try_extend(base_word));
         ferment_all(bb.bytes().slice(prefix_length));
         break;
     case TransformationOperation::OmitFirst:
         if (transformation.operation_data < base_word.size())
-            bb.append(base_word.slice(transformation.operation_data));
+            TRY(bb.try_extend(base_word.slice(transformation.operation_data)));
         break;
     case TransformationOperation::OmitLast:
         if (transformation.operation_data < base_word.size())
-            bb.append(base_word.slice(0, base_word.size() - transformation.operation_data));
+            TRY(bb.try_extend(base_word.slice(0, base_word.size() - transformation.operation_data)));
         break;
     }
 
-    bb.append(transformation.suffix.bytes());
+    TRY(bb.try_extend(transformation.suffix.bytes()));
     return bb;
 }
 

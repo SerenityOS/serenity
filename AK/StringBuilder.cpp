@@ -52,7 +52,7 @@ ErrorOr<void> StringBuilder::try_append(StringView string)
     if (string.is_empty())
         return {};
     TRY(will_append(string.length()));
-    TRY(m_buffer.try_append(string.characters_without_null_termination(), string.length()));
+    TRY(m_buffer.try_extend(string.bytes()));
     return {};
 }
 

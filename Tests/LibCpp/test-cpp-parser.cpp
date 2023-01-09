@@ -62,7 +62,7 @@ TEST_CASE(test_regression)
 
         ByteBuffer buffer;
         while (!feof(input_stream)) {
-            char chunk[4096];
+            u8 chunk[4096];
             size_t size = fread(chunk, sizeof(char), sizeof(chunk), input_stream);
             if (size == 0)
                 break;

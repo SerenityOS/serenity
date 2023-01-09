@@ -128,7 +128,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                     warnln("invalid memory index {} (not found)", args[2]);
                     continue;
                 }
-                warnln("{:>32hex-dump}", mem->data().bytes());
+                warnln("{:>32hex-dump}", mem->data().span());
                 continue;
             }
             if (what.is_one_of("i", "instr", "instruction")) {

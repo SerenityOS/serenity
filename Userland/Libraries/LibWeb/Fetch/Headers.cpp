@@ -256,7 +256,7 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
         else {
             TRY_OR_THROW_OOM(vm, temporary_value->try_append(0x2c));
             TRY_OR_THROW_OOM(vm, temporary_value->try_append(0x20));
-            TRY_OR_THROW_OOM(vm, temporary_value->try_append(value));
+            TRY_OR_THROW_OOM(vm, temporary_value->try_extend(value));
         }
 
         auto temporary_header = Infrastructure::Header {

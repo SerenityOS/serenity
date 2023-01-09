@@ -230,7 +230,7 @@ ErrorOr<void> HexDocumentUndoCommand::try_add_changed_byte(u8 old_value, u8 new_
 
 ErrorOr<void> HexDocumentUndoCommand::try_add_changed_bytes(ByteBuffer old_values, ByteBuffer new_values)
 {
-    TRY(m_old.try_append(move(old_values)));
-    TRY(m_new.try_append(move(new_values)));
+    TRY(m_old.try_extend(move(old_values)));
+    TRY(m_new.try_extend(move(new_values)));
     return {};
 }

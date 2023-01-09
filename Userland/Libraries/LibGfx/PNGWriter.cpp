@@ -61,7 +61,7 @@ PNGChunk::PNGChunk(DeprecatedString type)
 
 ErrorOr<void> PNGChunk::store_type()
 {
-    TRY(m_data.try_append(type().bytes()));
+    TRY(m_data.try_extend(type().bytes()));
     return {};
 }
 
@@ -80,7 +80,7 @@ u32 PNGChunk::crc()
 template<Unsigned T>
 ErrorOr<void> PNGChunk::add(T data)
 {
-    TRY(m_data.try_append(&data, sizeof(T)));
+    TRY(m_data.try_extend({ &data, sizeof(T) }));
     return {};
 }
 
@@ -261,7 +261,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
             best_filter = paeth_filter;
 
         TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
-        TRY(uncompressed_block_data.try_append(best_filter.buffer));
+        TRY(uncompressed_block_data.try_extend(best_filter.buffer));
     }
 
     auto zlib_buffer = TRY(Compress::ZlibCompressor::compress_all(uncompressed_block_data, Compress::ZlibCompressionLevel::Best));

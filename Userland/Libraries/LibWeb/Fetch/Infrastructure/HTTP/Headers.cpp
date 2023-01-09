@@ -81,7 +81,7 @@ ErrorOr<Optional<ByteBuffer>> HeaderList::get(ReadonlyBytes name) const
             TRY(buffer.try_append(0x2c));
             TRY(buffer.try_append(0x20));
         }
-        TRY(buffer.try_append(header.value));
+        TRY(buffer.try_extend(header.value));
     }
     return buffer;
 }
@@ -237,7 +237,7 @@ ErrorOr<void> HeaderList::combine(Header header)
         });
         TRY(matching_header->value.try_append(0x2c));
         TRY(matching_header->value.try_append(0x20));
-        TRY(matching_header->value.try_append(value));
+        TRY(matching_header->value.try_extend(value));
     }
     // 2. Otherwise, append (name, value) to list.
     else {
@@ -681,7 +681,9 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header
     // FIXME: 1. If parsing header’s value, per the ABNF for header’s name, fails, then return failure.
     // FIXME: 2. Return one or more values resulting from parsing header’s value, per the ABNF for header’s name.
     // This always ignores the ABNF rules for now and returns the header value as a single list item.
-    return Vector { TRY(ByteBuffer::copy(header.value)) };
+    Vector<ByteBuffer> vec;
+    vec.append(TRY(ByteBuffer::copy(header.value)));
+    return vec;
 }
 
 // https://fetch.spec.whatwg.org/#extract-header-list-values

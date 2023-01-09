@@ -240,7 +240,7 @@ ErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
             break;
         }
         if (length < 128) {
-            TRY(buffer.try_append(bytes.slice(0, length + 1)));
+            TRY(buffer.try_extend(bytes.slice(0, length + 1)));
             bytes = bytes.slice(length + 1);
         } else {
             VERIFY(bytes.size() > 1);

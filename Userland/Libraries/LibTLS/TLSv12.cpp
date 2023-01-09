@@ -37,7 +37,7 @@ void TLSv12::consume(ReadonlyBytes record)
 
     dbgln_if(TLS_DEBUG, "Consuming {} bytes", record.size());
 
-    if (m_context.message_buffer.try_append(record).is_error()) {
+    if (m_context.message_buffer.try_extend(record).is_error()) {
         dbgln("Not enough space in message buffer, dropping the record");
         return;
     }

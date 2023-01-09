@@ -124,7 +124,7 @@ ErrorOr<ByteBuffer> Ed25519::sign(ReadonlyBytes public_key, ReadonlyBytes privat
     // 6.  Form the signature of the concatenation of R (32 octets) and the little-endian encoding of S
     // (32 octets; the three most significant bits of the final octet are always zero).
     auto signature = TRY(ByteBuffer::copy(R));
-    signature.append(reduced_s);
+    TRY(signature.try_extend(reduced_s));
 
     return signature;
 }

@@ -12,13 +12,7 @@
 
 namespace AK {
 
-namespace Detail {
-template<size_t inline_capacity>
-class ByteBuffer;
-}
-
 class Bitmap;
-using ByteBuffer = Detail::ByteBuffer<32>;
 class CircularBuffer;
 class Error;
 class GenericLexer;
@@ -147,6 +141,13 @@ requires(!IsRvalueReference<T>) class Vector;
 
 template<typename T, typename ErrorType = Error>
 class [[nodiscard]] ErrorOr;
+
+namespace Detail {
+template<size_t inline_capacity>
+using ByteBuffer = Vector<u8, inline_capacity>;
+}
+
+using ByteBuffer = Detail::ByteBuffer<32>;
 
 }
 
