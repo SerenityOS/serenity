@@ -457,19 +457,16 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         auto& row_group_box_state = m_state.get_mutable(row_group_box);
         row_group_box_state.set_content_y(row_group_top_offset);
 
-        CSSPixels row_top_offset = 0.0f;
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-            auto& row_state = m_state.get_mutable(row);
-            row_state.set_content_y(row_top_offset);
+            auto const& row_state = m_state.get(row);
             row_group_height += row_state.border_box_height();
             row_group_width = max(row_group_width, row_state.border_box_width());
-            row_top_offset += row_state.border_box_height();
         });
-
-        row_group_top_offset += row_top_offset;
 
         row_group_box_state.set_content_height(row_group_height);
         row_group_box_state.set_content_width(row_group_width);
+
+        row_group_top_offset += row_group_height;
     });
 
     for (auto& cell : m_cells) {
