@@ -62,7 +62,7 @@ ErrorOr<void> DNSServer::handle_client()
     else
         response.set_code(Packet::Code::NOERROR);
 
-    buffer = response.to_byte_buffer();
+    buffer = TRY(response.to_byte_buffer());
 
     TRY(send(buffer, client_address));
     return {};
