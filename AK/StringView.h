@@ -348,6 +348,7 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
             return 0;
         return case_insensitive_string_hash(s.characters_without_null_termination(), s.length());
     }
+    static bool equals(StringView const& a, StringView const& b) { return a.equals_ignoring_case(b); }
 };
 
 }
