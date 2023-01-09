@@ -85,9 +85,9 @@ void AbstractThemePreview::set_theme(Core::AnonymousBuffer const& theme_buffer)
     set_preview_palette(m_preview_palette);
 }
 
-ErrorOr<void> AbstractThemePreview::set_theme_from_file(Core::File& file)
+ErrorOr<void> AbstractThemePreview::set_theme_from_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
 {
-    auto config_file = TRY(Core::ConfigFile::open(file.filename(), file.leak_fd()));
+    auto config_file = TRY(Core::ConfigFile::open(path, move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
 
     m_preview_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
