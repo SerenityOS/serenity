@@ -376,7 +376,7 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
     update();
 }
 
-static DeprecatedString set_path = DeprecatedString("/res/icons/chess/sets/");
+static constexpr StringView set_path = "/res/icons/chess/sets/"sv;
 
 static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
 {
@@ -444,11 +444,11 @@ void ChessWidget::set_board_theme(StringView name)
     // FIXME: Add some kind of themes.json
     // The following Colors have been taken from lichess.org, but i'm pretty sure they took them from chess.com.
     if (name == "Beige") {
-        m_board_theme = { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
+        m_board_theme = { "Beige"sv, Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
     } else if (name == "Green") {
-        m_board_theme = { "Green", Color::from_rgb(0x86a666), Color::from_rgb(0xffffdd) };
+        m_board_theme = { "Green"sv, Color::from_rgb(0x86a666), Color::from_rgb(0xffffdd) };
     } else if (name == "Blue") {
-        m_board_theme = { "Blue", Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) };
+        m_board_theme = { "Blue"sv, Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) };
     } else {
         set_board_theme("Beige"sv);
     }
@@ -643,7 +643,7 @@ ErrorOr<void> ChessWidget::export_pgn(Core::Stream::File& file) const
     TRY(file.write(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2).bytes()));
     TRY(file.write(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2).bytes()));
 
-    TRY(file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn())).bytes()));
+    TRY(file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn())).bytes()));
     TRY(file.write("[WhiteElo \"?\"]\n"sv.bytes()));
     TRY(file.write("[BlackElo \"?\"]\n"sv.bytes()));
     TRY(file.write("[Variant \"Standard\"]\n"sv.bytes()));
@@ -664,9 +664,9 @@ ErrorOr<void> ChessWidget::export_pgn(Core::Stream::File& file) const
     }
 
     TRY(file.write("{ "sv.bytes()));
-    TRY(file.write(Chess::Board::result_to_deprecated_string(m_board.game_result(), m_board.turn()).bytes()));
+    TRY(file.write(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()).bytes()));
     TRY(file.write(" } "sv.bytes()));
-    TRY(file.write(Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn()).bytes()));
+    TRY(file.write(Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn()).bytes()));
     TRY(file.write("\n"sv.bytes()));
 
     return {};
@@ -698,7 +698,7 @@ int ChessWidget::resign()
 
     set_drag_enabled(false);
     update();
-    const DeprecatedString msg = Chess::Board::result_to_deprecated_string(m_board.game_result(), m_board.turn());
+    auto const msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;
