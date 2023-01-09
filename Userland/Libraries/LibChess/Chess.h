@@ -25,7 +25,7 @@ enum class Type : u8 {
     None,
 };
 
-DeprecatedString char_for_piece(Type type);
+StringView char_for_piece(Type type);
 Chess::Type piece_for_char_promotion(StringView str);
 
 enum class Color : u8 {
@@ -145,8 +145,8 @@ public:
         NotFinished,
     };
 
-    static DeprecatedString result_to_deprecated_string(Result, Color turn);
-    static DeprecatedString result_to_points_deprecated_string(Result, Color turn);
+    static StringView result_to_string(Result, Color turn);
+    static StringView result_to_points_string(Result, Color turn);
 
     template<typename Callback>
     void generate_moves(Callback callback, Color color = Color::None) const;

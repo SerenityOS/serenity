@@ -13,22 +13,22 @@
 
 namespace Chess {
 
-DeprecatedString char_for_piece(Chess::Type type)
+StringView char_for_piece(Chess::Type type)
 {
     switch (type) {
     case Type::Knight:
-        return "N";
+        return "N"sv;
     case Type::Bishop:
-        return "B";
+        return "B"sv;
     case Type::Rook:
-        return "R";
+        return "R"sv;
     case Type::Queen:
-        return "Q";
+        return "Q"sv;
     case Type::King:
-        return "K";
+        return "K"sv;
     case Type::Pawn:
     default:
-        return "";
+        return ""sv;
     }
 }
 
@@ -97,7 +97,7 @@ DeprecatedString Move::to_long_algebraic() const
     StringBuilder builder;
     builder.append(from.to_algebraic());
     builder.append(to.to_algebraic());
-    builder.append(char_for_piece(promote_to).to_lowercase());
+    builder.append(DeprecatedString(char_for_piece(promote_to)).to_lowercase());
     return builder.to_deprecated_string();
 }
 
@@ -286,11 +286,11 @@ DeprecatedString Board::to_fen() const
                 builder.append(DeprecatedString::number(empty));
                 empty = 0;
             }
-            DeprecatedString piece = char_for_piece(p.type);
-            if (piece == "")
-                piece = "P";
-
-            builder.append(p.color == Color::Black ? piece.to_lowercase() : piece);
+            auto const piece = char_for_piece(p.type);
+            if (p.color == Color::Black)
+                builder.append(DeprecatedString(piece).to_lowercase());
+            else
+                builder.append(piece);
         }
         if (empty > 0) {
             builder.append(DeprecatedString::number(empty));
@@ -886,59 +886,59 @@ void Board::set_resigned(Chess::Color c)
     m_resigned = c;
 }
 
-DeprecatedString Board::result_to_deprecated_string(Result result, Color turn)
+StringView Board::result_to_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
         VERIFY(turn != Chess::Color::None);
-        return turn == Chess::Color::White ? "Black wins by Checkmate" : "White wins by Checkmate";
+        return turn == Chess::Color::White ? "Black wins by Checkmate"sv : "White wins by Checkmate"sv;
     case Result::WhiteResign:
-        return "Black wins by Resignation";
+        return "Black wins by Resignation"sv;
     case Result::BlackResign:
-        return "White wins by Resignation";
+        return "White wins by Resignation"sv;
     case Result::StaleMate:
-        return "Draw by Stalemate";
+        return "Draw by Stalemate"sv;
     case Chess::Board::Result::FiftyMoveRule:
-        return "Draw by 50 move rule";
+        return "Draw by 50 move rule"sv;
     case Chess::Board::Result::SeventyFiveMoveRule:
-        return "Draw by 75 move rule";
+        return "Draw by 75 move rule"sv;
     case Chess::Board::Result::ThreeFoldRepetition:
-        return "Draw by threefold repetition";
+        return "Draw by threefold repetition"sv;
     case Chess::Board::Result::FiveFoldRepetition:
-        return "Draw by fivefold repetition";
+        return "Draw by fivefold repetition"sv;
     case Chess::Board::Result::InsufficientMaterial:
-        return "Draw by insufficient material";
+        return "Draw by insufficient material"sv;
     case Chess::Board::Result::NotFinished:
-        return "Game not finished";
+        return "Game not finished"sv;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-DeprecatedString Board::result_to_points_deprecated_string(Result result, Color turn)
+StringView Board::result_to_points_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
         VERIFY(turn != Chess::Color::None);
-        return turn == Chess::Color::White ? "0-1" : "1-0";
+        return turn == Chess::Color::White ? "0-1"sv : "1-0"sv;
     case Result::WhiteResign:
-        return "0-1";
+        return "0-1"sv;
     case Result::BlackResign:
-        return "1-0";
+        return "1-0"sv;
     case Result::StaleMate:
-        return "1/2-1/2";
+        return "1/2-1/2"sv;
     case Chess::Board::Result::FiftyMoveRule:
-        return "1/2-1/2";
+        return "1/2-1/2"sv;
     case Chess::Board::Result::SeventyFiveMoveRule:
-        return "1/2-1/2";
+        return "1/2-1/2"sv;
     case Chess::Board::Result::ThreeFoldRepetition:
-        return "1/2-1/2";
+        return "1/2-1/2"sv;
     case Chess::Board::Result::FiveFoldRepetition:
-        return "1/2-1/2";
+        return "1/2-1/2"sv;
     case Chess::Board::Result::InsufficientMaterial:
-        return "1/2-1/2";
+        return "1/2-1/2"sv;
     case Chess::Board::Result::NotFinished:
-        return "*";
+        return "*"sv;
     default:
         VERIFY_NOT_REACHED();
     }
