@@ -49,6 +49,9 @@ elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     NPROC="sysctl -n hw.ncpu"
     export with_gmp=/usr/local
     export with_mpfr=/usr/local
+elif [ "$SYSTEM_NAME" = "Darwin" ]; then
+    MD5SUM="md5 -q"
+    NPROC="sysctl -n hw.ncpu"
 fi
 
 # On at least OpenBSD, the path must exist to call realpath(3) on it
