@@ -1,11 +1,15 @@
+/Kernel/Devices/Audio @GMTA
 /Userland/Applications/CrashReporter @linusg
 /Userland/Applications/Spreadsheet @alimpfard
 /Userland/Libraries/LibCrypto @alimpfard
+/Userland/Libraries/LibGL @GMTA
+/Userland/Libraries/LibGPU @GMTA
 /Userland/Libraries/LibHTTP @alimpfard
 /Userland/Libraries/LibJS @linusg
 /Userland/Libraries/LibJS/Runtime/Intl @trflynn89
 /Userland/Libraries/LibLocale @trflynn89
 /Userland/Libraries/LibRegex @alimpfard
+/Userland/Libraries/LibSoftGPU @GMTA
 /Userland/Libraries/LibSQL @trflynn89
 /Userland/Libraries/LibTLS @alimpfard
 /Userland/Libraries/LibTimeZone @trflynn89
