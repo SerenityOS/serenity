@@ -201,7 +201,14 @@ TEST_CASE(doctype)
 //       If that changes, or something is added to the test HTML, the hash needs to be adjusted.
 TEST_CASE(regression)
 {
-    auto file = MUST(Core::Stream::File::open("/usr/Tests/LibWeb/tokenizer-test.html"sv, Core::Stream::OpenMode::Read));
+    // This makes sure that the tests will run both on target and in Lagom.
+#ifdef AK_OS_SERENITY
+    StringView path = "/usr/Tests/LibWeb/tokenizer-test.html"sv;
+#else
+    StringView path = "tokenizer-test.html"sv;
+#endif
+
+    auto file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     MUST(file->read(content.bytes()));

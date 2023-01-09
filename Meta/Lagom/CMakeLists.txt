@@ -662,6 +662,16 @@ if (BUILD_LAGOM)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibVideo)
         endforeach()
 
+        # Web
+        if (ENABLE_LAGOM_LIBWEB)
+            file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibWeb/tokenizer-test.html" DESTINATION "./")
+            file(GLOB LIBWEB_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibWeb/*.cpp")
+            foreach(source ${LIBWEB_TEST_SOURCES})
+                lagom_test(${source} LIBS LibWeb
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibWeb)
+            endforeach()
+        endif()
+
         # JavaScriptTestRunner + LibTest tests
         # test-js
         add_executable(test-js
