@@ -183,6 +183,8 @@ public:
 
     JS::NonnullGCPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
+    void reset_table_box_computed_values_used_by_wrapper_to_init_values();
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);

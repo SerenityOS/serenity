@@ -13,6 +13,7 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
@@ -664,6 +665,17 @@ JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
     wrapper->m_font = m_font;
     wrapper->m_line_height = m_line_height;
     return *wrapper;
+}
+
+void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_values()
+{
+    VERIFY(is<TableBox>(*this));
+
+    CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
+    mutable_computed_values.set_position(CSS::Position::Static);
+    mutable_computed_values.set_float(CSS::Float::None);
+    mutable_computed_values.set_inset({ CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() });
+    mutable_computed_values.set_margin({ CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) });
 }
 
 void Node::set_paintable(RefPtr<Painting::Paintable> paintable)
