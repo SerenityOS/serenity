@@ -36,7 +36,7 @@ struct Traits<GridPosition> : public GenericTraits<GridPosition> {
 
 namespace Web::Layout {
 
-TableFormattingContext::TableFormattingContext(LayoutState& state, BlockContainer const& root, FormattingContext* parent)
+TableFormattingContext::TableFormattingContext(LayoutState& state, TableBox const& root, FormattingContext* parent)
     : FormattingContext(Type::Table, state, root, parent)
 {
 }
