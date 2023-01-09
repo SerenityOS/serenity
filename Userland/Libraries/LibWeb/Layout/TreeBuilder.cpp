@@ -594,6 +594,7 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
         mutable_wrapper_computed_values.set_position(table_box->computed_values().position());
         mutable_wrapper_computed_values.set_inset(table_box->computed_values().inset());
         mutable_wrapper_computed_values.set_float(table_box->computed_values().float_());
+        mutable_wrapper_computed_values.set_clear(table_box->computed_values().clear());
         mutable_wrapper_computed_values.set_margin(table_box->computed_values().margin());
         table_box->reset_table_box_computed_values_used_by_wrapper_to_init_values();
 
