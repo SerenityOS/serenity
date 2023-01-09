@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>
@@ -83,8 +84,7 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     if (subtype == "TrueType")
         return TRY(TrueTypeFont::create(document, dict, font_size));
 
-    dbgln("Unknown font subtype: {}", subtype);
-    TODO();
+    return Error(Error::Type::Internal, TRY(String::formatted("Unhandled font subtype: {}", subtype)).to_deprecated_string());
 }
 
 Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_latin_font(StringView name)
