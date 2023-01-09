@@ -24,7 +24,7 @@ private:
     HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
 
     // ^DOM::Element
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual i32 default_tab_index_value() const override;
 
     // ^HTML::HTMLHyperlinkElementUtils
@@ -40,7 +40,7 @@ private:
         queue_an_element_task(source, move(steps));
     }
 
-    virtual FlyString default_role() const override;
+    virtual DeprecatedFlyString default_role() const override;
 };
 
 }

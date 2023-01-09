@@ -14,24 +14,24 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
+JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
 {
     return realm.heap().allocate<Event>(realm, realm, event_name, event_init);
 }
 
-JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
+JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-Event::Event(JS::Realm& realm, FlyString const& type)
+Event::Event(JS::Realm& realm, DeprecatedFlyString const& type)
     : PlatformObject(Bindings::cached_web_prototype(realm, "Event"))
     , m_type(type)
     , m_initialized(true)
 {
 }
 
-Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_init)
+Event::Event(JS::Realm& realm, DeprecatedFlyString const& type, EventInit const& event_init)
     : PlatformObject(Bindings::cached_web_prototype(realm, "Event"))
     , m_type(type)
     , m_bubbles(event_init.bubbles)

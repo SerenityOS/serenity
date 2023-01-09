@@ -32,7 +32,7 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLObjectElement::~HTMLObjectElement() = default;
 
-void HTMLObjectElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLObjectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     BrowsingContextContainer::parse_attribute(name, value);
 

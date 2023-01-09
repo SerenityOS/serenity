@@ -17,7 +17,7 @@ SVGPolygonElement::SVGPolygonElement(DOM::Document& document, DOM::QualifiedName
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPolygonElement"));
 }
 
-void SVGPolygonElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGPolygonElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

@@ -25,7 +25,7 @@ public:
     WebIDL::ExceptionOr<void> delete_cell(i32 index);
 
     // https://www.w3.org/TR/html-aria/#el-tr
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::row; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::row; }
 
 private:
     HTMLTableRowElement(DOM::Document&, DOM::QualifiedName);

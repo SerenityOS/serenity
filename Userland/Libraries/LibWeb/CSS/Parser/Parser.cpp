@@ -561,7 +561,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                 return ParseError::SyntaxError;
             }
             // FIXME: Support multiple, comma-separated, language ranges.
-            Vector<FlyString> languages;
+            Vector<DeprecatedFlyString> languages;
             languages.append(pseudo_function.values().first().token().to_deprecated_string());
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
@@ -1518,7 +1518,7 @@ NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     // NOTE: We create the Rule fully initialized when we return it instead.
-    FlyString at_rule_name = ((Token)name_ident).at_keyword();
+    DeprecatedFlyString at_rule_name = ((Token)name_ident).at_keyword();
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
 
@@ -1801,7 +1801,7 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
     // NOTE: We create the Function fully initialized when we return it instead.
-    FlyString function_name = ((Token)name_ident).function();
+    DeprecatedFlyString function_name = ((Token)name_ident).function();
     Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
@@ -1856,7 +1856,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
     // NOTE: We create a fully-initialized Declaration just before returning it instead.
-    FlyString declaration_name = ((Token)token).ident();
+    DeprecatedFlyString declaration_name = ((Token)token).ident();
     Vector<ComponentValue> declaration_values;
     Important declaration_important = Important::No;
 
@@ -5289,7 +5289,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
 
-    Optional<FlyString> font_family;
+    Optional<DeprecatedFlyString> font_family;
     Vector<FontFace::Source> src;
     Vector<UnicodeRange> unicode_range;
 
@@ -5412,7 +5412,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
         if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
-            Optional<FlyString> format;
+            Optional<DeprecatedFlyString> format;
 
             source_tokens.skip_whitespace();
             if (!source_tokens.has_next_token()) {

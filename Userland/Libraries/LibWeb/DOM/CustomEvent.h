@@ -20,8 +20,8 @@ class CustomEvent : public Event {
     WEB_PLATFORM_OBJECT(CustomEvent, Event);
 
 public:
-    static CustomEvent* create(JS::Realm&, FlyString const& event_name, CustomEventInit const& event_init = {});
-    static CustomEvent* construct_impl(JS::Realm&, FlyString const& event_name, CustomEventInit const& event_init);
+    static CustomEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init = {});
+    static CustomEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init);
 
     virtual ~CustomEvent() override;
 
@@ -33,7 +33,7 @@ public:
     void init_custom_event(DeprecatedString const& type, bool bubbles, bool cancelable, JS::Value detail);
 
 private:
-    CustomEvent(JS::Realm&, FlyString const& event_name, CustomEventInit const& event_init);
+    CustomEvent(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init);
 
     // https://dom.spec.whatwg.org/#dom-customevent-initcustomevent-type-bubbles-cancelable-detail-detail
     JS::Value m_detail { JS::js_null() };

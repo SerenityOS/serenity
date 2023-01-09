@@ -20,7 +20,7 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-p
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::paragraph; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::paragraph; }
 
 private:
     HTMLParagraphElement(DOM::Document&, DOM::QualifiedName);

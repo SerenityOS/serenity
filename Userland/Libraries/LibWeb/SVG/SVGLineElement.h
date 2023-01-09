@@ -17,7 +17,7 @@ class SVGLineElement final : public SVGGeometryElement {
 public:
     virtual ~SVGLineElement() override = default;
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     virtual Gfx::Path& get_path() override;
 

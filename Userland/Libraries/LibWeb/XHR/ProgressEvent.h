@@ -23,8 +23,8 @@ class ProgressEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(ProgressEvent, DOM::Event);
 
 public:
-    static ProgressEvent* create(JS::Realm&, FlyString const& event_name, ProgressEventInit const& event_init);
-    static ProgressEvent* construct_impl(JS::Realm&, FlyString const& event_name, ProgressEventInit const& event_init);
+    static ProgressEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
+    static ProgressEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
 
     virtual ~ProgressEvent() override;
 
@@ -33,7 +33,7 @@ public:
     u64 total() const { return m_total; }
 
 private:
-    ProgressEvent(JS::Realm&, FlyString const& event_name, ProgressEventInit const& event_init);
+    ProgressEvent(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
 
     bool m_length_computable { false };
     u64 m_loaded { 0 };

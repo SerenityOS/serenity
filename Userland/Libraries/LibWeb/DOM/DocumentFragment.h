@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -23,7 +23,7 @@ public:
 
     virtual ~DocumentFragment() override = default;
 
-    virtual FlyString node_name() const override { return "#document-fragment"; }
+    virtual DeprecatedFlyString node_name() const override { return "#document-fragment"; }
 
     Element* host() { return m_host.ptr(); }
     Element const* host() const { return m_host.ptr(); }

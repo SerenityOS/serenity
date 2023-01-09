@@ -183,7 +183,7 @@ bool DOMStringMap::delete_existing_named_property(DeprecatedString const& name)
     return true;
 }
 
-JS::Value DOMStringMap::named_item_value(FlyString const& name) const
+JS::Value DOMStringMap::named_item_value(DeprecatedFlyString const& name) const
 {
     return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name));
 }

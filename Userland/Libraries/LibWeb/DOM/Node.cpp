@@ -126,7 +126,7 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
     return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
-const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(FlyString const& attribute) const
+const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(DeprecatedFlyString const& attribute) const
 {
     for (auto* node = this; node; node = node->parent()) {
         if (is<HTML::HTMLElement>(*node) && verify_cast<HTML::HTMLElement>(*node).has_attribute(attribute))
@@ -1375,7 +1375,7 @@ Painting::PaintableBox const* Node::paint_box() const
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
 {
     // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
     // FIXME: This is a total hack.

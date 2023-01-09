@@ -10,7 +10,7 @@
 
 namespace Web::CSS::Parser {
 
-Function::Function(FlyString name, Vector<ComponentValue>&& values)
+Function::Function(DeprecatedFlyString name, Vector<ComponentValue>&& values)
     : m_name(move(name))
     , m_values(move(values))
 {

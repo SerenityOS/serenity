@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>

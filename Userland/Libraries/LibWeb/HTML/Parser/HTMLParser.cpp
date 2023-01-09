@@ -40,7 +40,7 @@ static inline void log_parse_error(SourceLocation const& location = SourceLocati
     dbgln_if(HTML_PARSER_DEBUG, "Parse error! {}", location);
 }
 
-static Vector<FlyString> s_quirks_public_ids = {
+static Vector<DeprecatedFlyString> s_quirks_public_ids = {
     "+//Silmaril//dtd html Pro v0r11 19970101//",
     "-//AS//DTD HTML 3.0 asWedit + extensions//",
     "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//",
@@ -616,7 +616,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
-JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, FlyString const& namespace_, DOM::Node const& intended_parent)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, DeprecatedFlyString const& namespace_, DOM::Node const& intended_parent)
 {
     // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
     // FIXME: 2. Otherwise, optionally create a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
@@ -681,7 +681,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, FlyString const& namespace_)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, DeprecatedFlyString const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -1041,7 +1041,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLParser::generate_implied_end_tags(FlyString const& exception)
+void HTMLParser::generate_implied_end_tags(DeprecatedFlyString const& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         (void)m_stack_of_open_elements.pop();
@@ -1365,7 +1365,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
     }
 }
 
-bool HTMLParser::is_special_tag(FlyString const& tag_name, FlyString const& namespace_)
+bool HTMLParser::is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedFlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(

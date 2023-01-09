@@ -199,7 +199,7 @@ PDFErrorOr<void> Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObj
     return {};
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<DictObject> tree, FlyString name)
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<DictObject> tree, DeprecatedFlyString name)
 {
     if (tree->contains(CommonNames::Kids)) {
         return find_in_name_tree_nodes(tree->get_array(CommonNames::Kids), name);
@@ -210,7 +210,7 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<Dict
     return find_in_key_value_array(key_value_names_array, name);
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, FlyString name)
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, DeprecatedFlyString name)
 {
     for (size_t i = 0; i < siblings->size(); i++) {
         auto sibling = TRY(resolve_to<DictObject>(siblings->at(i)));
@@ -226,7 +226,7 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPt
     return Error { Error::Type::MalformedPDF, DeprecatedString::formatted("Didn't find node in name tree containing name {}", name) };
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, FlyString name)
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, DeprecatedFlyString name)
 {
     if (key_value_array->size() % 2 == 1)
         return Error { Error::Type::MalformedPDF, "key/value array has dangling key" };
@@ -306,7 +306,7 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
     return Destination { type, page_number_by_index_ref.get(page_ref.as_ref_index()), parameters };
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject> object)
+PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(DeprecatedFlyString const& name, NonnullRefPtr<DictObject> object)
 {
     if (!object->contains(name)) {
         auto parent = TRY(object->get_dict(this, CommonNames::Parent));
@@ -352,7 +352,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
             auto dest_arr = dest_obj->cast<ArrayObject>();
             outline_item->dest = TRY(create_destination_from_parameters(dest_arr, page_number_by_index_ref));
         } else if (dest_obj->is<NameObject>() || dest_obj->is<StringObject>()) {
-            FlyString dest_name;
+            DeprecatedFlyString dest_name;
             if (dest_obj->is<NameObject>())
                 dest_name = dest_obj->cast<NameObject>()->name();
             else

@@ -18,7 +18,7 @@ public:
     virtual ~HTMLDivElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-div
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::generic; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::generic; }
 
 private:
     HTMLDivElement(DOM::Document&, DOM::QualifiedName);

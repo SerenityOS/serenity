@@ -18,7 +18,7 @@ public:
     virtual ~HTMLOListElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-ol
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::list; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::list; }
 
 private:
     HTMLOListElement(DOM::Document&, DOM::QualifiedName);

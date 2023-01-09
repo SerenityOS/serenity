@@ -18,7 +18,7 @@ HTMLModElement::HTMLModElement(DOM::Document& document, DOM::QualifiedName quali
 
 HTMLModElement::~HTMLModElement() = default;
 
-FlyString HTMLModElement::default_role() const
+DeprecatedFlyString HTMLModElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-del
     if (local_name() == TagNames::del)

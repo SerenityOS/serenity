@@ -14,7 +14,7 @@
 
 namespace PDF {
 
-static bool is_standard_latin_font(FlyString const& font)
+static bool is_standard_latin_font(DeprecatedFlyString const& font)
 {
     return font.is_one_of(
         "Times-Roman", "TimesNewRoman",

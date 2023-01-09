@@ -404,7 +404,7 @@ void HTMLInputElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
 }
 
-void HTMLInputElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::checked) {
@@ -434,7 +434,7 @@ HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(Stri
     return HTMLInputElement::TypeAttributeState::Text;
 }
 
-void HTMLInputElement::did_remove_attribute(FlyString const& name)
+void HTMLInputElement::did_remove_attribute(DeprecatedFlyString const& name)
 {
     HTMLElement::did_remove_attribute(name);
     if (name == HTML::AttributeNames::checked) {
@@ -866,7 +866,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 e
     return {};
 }
 
-FlyString HTMLInputElement::default_role() const
+DeprecatedFlyString HTMLInputElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-input-button
     if (type_state() == TypeAttributeState::Button)

@@ -51,7 +51,7 @@ NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& allocating_realm, Saf
     return function;
 }
 
-NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& realm, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)> function)
+NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& realm, DeprecatedFlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)> function)
 {
     return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.intrinsics().function_prototype());
 }
@@ -73,7 +73,7 @@ NativeFunction::NativeFunction(Object& prototype)
 {
 }
 
-NativeFunction::NativeFunction(FlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, Object& prototype)
+NativeFunction::NativeFunction(DeprecatedFlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_native_function(move(native_function))
@@ -81,7 +81,7 @@ NativeFunction::NativeFunction(FlyString name, SafeFunction<ThrowCompletionOr<Va
 {
 }
 
-NativeFunction::NativeFunction(FlyString name, Object& prototype)
+NativeFunction::NativeFunction(DeprecatedFlyString name, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_realm(&prototype.shape().realm())

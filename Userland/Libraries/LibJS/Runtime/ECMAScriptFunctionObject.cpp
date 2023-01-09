@@ -28,7 +28,7 @@
 
 namespace JS {
 
-NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, FlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -48,12 +48,12 @@ NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& r
     return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
-NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, FlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
     return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> formal_parameters, i32 function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> formal_parameters, i32 function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_function_length(function_length)
@@ -91,7 +91,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, DeprecatedStr
             return false;
         if (parameter.default_value)
             return false;
-        if (!parameter.binding.template has<FlyString>())
+        if (!parameter.binding.template has<DeprecatedFlyString>())
             return false;
         return true;
     });
@@ -338,13 +338,13 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     // FIXME: Maybe compute has duplicates at parse time? (We need to anyway since it's an error in some cases)
 
     bool has_duplicates = false;
-    HashTable<FlyString> parameter_names;
+    HashTable<DeprecatedFlyString> parameter_names;
     for (auto& parameter : m_formal_parameters) {
         if (parameter.default_value)
             has_parameter_expressions = true;
 
         parameter.binding.visit(
-            [&](FlyString const& name) {
+            [&](DeprecatedFlyString const& name) {
                 if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                     has_duplicates = true;
             },
@@ -367,7 +367,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (parameter_names.contains(vm.names.arguments.as_string()))
         arguments_object_needed = false;
 
-    HashTable<FlyString> function_names;
+    HashTable<DeprecatedFlyString> function_names;
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     if (scope_body) {
@@ -463,7 +463,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
-                if constexpr (IsSame<FlyString const&, decltype(param)>) {
+                if constexpr (IsSame<DeprecatedFlyString const&, decltype(param)>) {
                     Reference reference = TRY(vm.resolve_binding(param, used_environment));
                     // Here the difference from hasDuplicates is important
                     if (has_duplicates)
@@ -479,7 +479,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     GCPtr<Environment> var_environment;
 
-    HashTable<FlyString> instantiated_var_names;
+    HashTable<DeprecatedFlyString> instantiated_var_names;
     if (scope_body)
         instantiated_var_names.ensure_capacity(scope_body->var_declaration_count());
 
@@ -911,7 +911,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     VERIFY_NOT_REACHED();
 }
 
-void ECMAScriptFunctionObject::set_name(FlyString const& name)
+void ECMAScriptFunctionObject::set_name(DeprecatedFlyString const& name)
 {
     VERIFY(!name.is_null());
     auto& vm = this->vm();

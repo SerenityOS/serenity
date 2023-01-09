@@ -21,7 +21,7 @@ class NativeFunction : public FunctionObject {
 
 public:
     static NonnullGCPtr<NativeFunction> create(Realm&, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NonnullGCPtr<NativeFunction> create(Realm&, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
+    static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
 
     virtual void initialize(Realm&) override { }
     virtual ~NativeFunction() override = default;
@@ -34,25 +34,25 @@ public:
     virtual ThrowCompletionOr<Value> call();
     virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target);
 
-    virtual FlyString const& name() const override { return m_name; };
+    virtual DeprecatedFlyString const& name() const override { return m_name; };
     virtual bool is_strict_mode() const override;
     virtual bool has_constructor() const override { return false; }
     virtual Realm* realm() const override { return m_realm; }
 
-    Optional<FlyString> const& initial_name() const { return m_initial_name; }
-    void set_initial_name(Badge<FunctionObject>, FlyString initial_name) { m_initial_name = move(initial_name); }
+    Optional<DeprecatedFlyString> const& initial_name() const { return m_initial_name; }
+    void set_initial_name(Badge<FunctionObject>, DeprecatedFlyString initial_name) { m_initial_name = move(initial_name); }
 
 protected:
-    NativeFunction(FlyString name, Object& prototype);
+    NativeFunction(DeprecatedFlyString name, Object& prototype);
     NativeFunction(SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object* prototype, Realm& realm);
-    NativeFunction(FlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
+    NativeFunction(DeprecatedFlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
     explicit NativeFunction(Object& prototype);
 
 private:
     virtual bool is_native_function() const final { return true; }
 
-    FlyString m_name;
-    Optional<FlyString> m_initial_name; // [[InitialName]]
+    DeprecatedFlyString m_name;
+    Optional<DeprecatedFlyString> m_initial_name; // [[InitialName]]
     SafeFunction<ThrowCompletionOr<Value>(VM&)> m_native_function;
     Realm* m_realm { nullptr };
 };

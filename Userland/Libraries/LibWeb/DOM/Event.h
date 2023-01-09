@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
 
@@ -45,17 +45,17 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static JS::NonnullGCPtr<Event> create(JS::Realm&, FlyString const& event_name, EventInit const& event_init = {});
-    static JS::NonnullGCPtr<Event> construct_impl(JS::Realm&, FlyString const& event_name, EventInit const& event_init);
+    static JS::NonnullGCPtr<Event> create(JS::Realm&, DeprecatedFlyString const& event_name, EventInit const& event_init = {});
+    static JS::NonnullGCPtr<Event> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, EventInit const& event_init);
 
-    Event(JS::Realm&, FlyString const& type);
-    Event(JS::Realm&, FlyString const& type, EventInit const& event_init);
+    Event(JS::Realm&, DeprecatedFlyString const& type);
+    Event(JS::Realm&, DeprecatedFlyString const& type, EventInit const& event_init);
 
     virtual ~Event() = default;
 
     double time_stamp() const;
 
-    FlyString const& type() const { return m_type; }
+    DeprecatedFlyString const& type() const { return m_type; }
     void set_type(StringView type) { m_type = type; }
 
     JS::GCPtr<EventTarget> target() const { return m_target; }
@@ -148,7 +148,7 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
-    FlyString m_type;
+    DeprecatedFlyString m_type;
     JS::GCPtr<EventTarget> m_target;
     JS::GCPtr<EventTarget> m_related_target;
     JS::GCPtr<EventTarget> m_current_target;

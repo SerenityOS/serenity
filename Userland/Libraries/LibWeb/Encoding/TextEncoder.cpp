@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Encoding/TextEncoder.h>
@@ -44,9 +44,9 @@ JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encoding
-FlyString const& TextEncoder::encoding()
+DeprecatedFlyString const& TextEncoder::encoding()
 {
-    static FlyString encoding = "utf-8"sv;
+    static DeprecatedFlyString encoding = "utf-8"sv;
     return encoding;
 }
 

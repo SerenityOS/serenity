@@ -14,7 +14,7 @@ inline namespace {
 extern char const* s_xhtml_unified_dtd;
 }
 
-static FlyString s_html_namespace = "http://www.w3.org/1999/xhtml";
+static DeprecatedFlyString s_html_namespace = "http://www.w3.org/1999/xhtml";
 
 namespace Web {
 

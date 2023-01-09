@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Optional.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
@@ -40,7 +40,7 @@ public:
         Throw,
     };
 
-    ALWAYS_INLINE Completion(Type type, Optional<Value> value, Optional<FlyString> target)
+    ALWAYS_INLINE Completion(Type type, Optional<Value> value, Optional<DeprecatedFlyString> target)
         : m_type(type)
         , m_value(move(value))
         , m_target(move(target))
@@ -81,8 +81,8 @@ public:
     }
     [[nodiscard]] Optional<Value>& value() { return m_value; }
     [[nodiscard]] Optional<Value> const& value() const { return m_value; }
-    [[nodiscard]] Optional<FlyString>& target() { return m_target; }
-    [[nodiscard]] Optional<FlyString> const& target() const { return m_target; }
+    [[nodiscard]] Optional<DeprecatedFlyString>& target() { return m_target; }
+    [[nodiscard]] Optional<DeprecatedFlyString> const& target() const { return m_target; }
 
     // "abrupt completion refers to any completion with a [[Type]] value other than normal"
     [[nodiscard]] bool is_abrupt() const { return m_type != Type::Normal; }
@@ -127,9 +127,9 @@ private:
         return m_type == Type::Empty;
     }
 
-    Type m_type { Type::Normal }; // [[Type]]
-    Optional<Value> m_value;      // [[Value]]
-    Optional<FlyString> m_target; // [[Target]]
+    Type m_type { Type::Normal };           // [[Type]]
+    Optional<Value> m_value;                // [[Value]]
+    Optional<DeprecatedFlyString> m_target; // [[Target]]
 };
 
 }

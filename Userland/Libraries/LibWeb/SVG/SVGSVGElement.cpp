@@ -52,7 +52,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 }
 
-void SVGSVGElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGSVGElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGraphicsElement::parse_attribute(name, value);
 

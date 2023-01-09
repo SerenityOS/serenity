@@ -73,7 +73,7 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLImageElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -198,7 +198,7 @@ bool HTMLImageElement::complete() const
     return false;
 }
 
-FlyString HTMLImageElement::default_role() const
+DeprecatedFlyString HTMLImageElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-img
     // https://www.w3.org/TR/html-aria/#el-img-no-alt

@@ -11,7 +11,7 @@
 namespace Web::DOM {
 
 // https://www.w3.org/TR/wai-aria-1.2/#introroles
-FlyString ARIAMixin::role_or_default() const
+DeprecatedFlyString ARIAMixin::role_or_default() const
 {
     // 1. Use the rules of the host language to detect that an element has a role attribute and to identify the attribute value string for it.
     auto role_string = role();

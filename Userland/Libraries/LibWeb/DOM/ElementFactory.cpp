@@ -95,7 +95,7 @@
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#concept-create-element
-JS::NonnullGCPtr<Element> create_element(Document& document, FlyString local_name, FlyString namespace_, FlyString prefix)
+JS::NonnullGCPtr<Element> create_element(Document& document, DeprecatedFlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix)
 {
     // 1. If prefix was not given, let prefix be null.
     // NOTE: This is already taken care of by `prefix` having a default value.

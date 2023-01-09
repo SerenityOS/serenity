@@ -51,7 +51,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
         execution_context.this_value = &m_realm.global_object();
-        static FlyString global_execution_context_name = "(*BC* global execution context)";
+        static DeprecatedFlyString global_execution_context_name = "(*BC* global execution context)";
         execution_context.function_name = global_execution_context_name;
         execution_context.lexical_environment = &m_realm.global_environment();
         execution_context.variable_environment = &m_realm.global_environment();

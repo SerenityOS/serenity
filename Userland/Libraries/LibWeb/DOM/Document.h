@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -127,7 +127,7 @@ public:
 
     CSS::StyleSheetList* style_sheets_for_bindings() { return &style_sheets(); }
 
-    virtual FlyString node_name() const override { return "#document"; }
+    virtual DeprecatedFlyString node_name() const override { return "#document"; }
 
     void set_hovered_node(Node*);
     Node* hovered_node() { return m_hovered_node.ptr(); }
@@ -203,7 +203,7 @@ public:
     void schedule_layout_update();
 
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(DeprecatedString const&);
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
 
     JS::NonnullGCPtr<HTMLCollection> applets();
     JS::NonnullGCPtr<HTMLCollection> anchors();
@@ -222,7 +222,7 @@ public:
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(FlyString const& local_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(DeprecatedFlyString const& local_name);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name);
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
     JS::NonnullGCPtr<Text> create_text_node(DeprecatedString const& data);
@@ -371,8 +371,8 @@ public:
     static bool is_valid_name(DeprecatedString const&);
 
     struct PrefixAndTagName {
-        FlyString prefix;
-        FlyString tag_name;
+        DeprecatedFlyString prefix;
+        DeprecatedFlyString tag_name;
     };
     static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Realm&, DeprecatedString const& qualified_name);
 
@@ -456,7 +456,7 @@ private:
     Document(JS::Realm&, AK::URL const&);
 
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }
+    virtual EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const&) final { return *this; }
 
     void tear_down_layout_tree();
 

@@ -17,7 +17,7 @@ SVGPolylineElement::SVGPolylineElement(DOM::Document& document, DOM::QualifiedNa
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPolylineElement"));
 }
 
-void SVGPolylineElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGPolylineElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

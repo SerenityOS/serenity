@@ -12,7 +12,7 @@
 
 namespace PDF {
 
-ErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, FlyString const& encoding_type, RefPtr<DictObject> decode_parms)
+ErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
 {
     int predictor = 1;
     int columns = 1;

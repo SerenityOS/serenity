@@ -80,7 +80,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-DeprecatedString Element::get_attribute(FlyString const& name) const
+DeprecatedString Element::get_attribute(DeprecatedFlyString const& name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -94,14 +94,14 @@ DeprecatedString Element::get_attribute(FlyString const& name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
-JS::GCPtr<Attr> Element::get_attribute_node(FlyString const& name) const
+JS::GCPtr<Attr> Element::get_attribute_node(DeprecatedFlyString const& name) const
 {
     // The getAttributeNode(qualifiedName) method steps are to return the result of getting an attribute given qualifiedName and this.
     return m_attributes->get_attribute(name);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattribute
-WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -136,7 +136,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, Deprecat
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyString namespace_, FlyString qualified_name)
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.is_empty())
@@ -146,7 +146,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyStr
     TRY(Document::validate_qualified_name(realm, qualified_name));
 
     // 3. Let prefix be null.
-    FlyString prefix = {};
+    DeprecatedFlyString prefix = {};
 
     // 4. Let localName be qualifiedName.
     auto local_name = qualified_name;
@@ -179,7 +179,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyStr
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
-WebIDL::ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
@@ -191,7 +191,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_,
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
-void Element::remove_attribute(FlyString const& name)
+void Element::remove_attribute(DeprecatedFlyString const& name)
 {
     m_attributes->remove_attribute(name);
 
@@ -201,13 +201,13 @@ void Element::remove_attribute(FlyString const& name)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
-bool Element::has_attribute(FlyString const& name) const
+bool Element::has_attribute(DeprecatedFlyString const& name) const
 {
     return m_attributes->get_attribute(name) != nullptr;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-toggleattribute
-WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional<bool> force)
+WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -264,7 +264,7 @@ Vector<DeprecatedString> Element::get_attribute_names() const
     return names;
 }
 
-bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
+bool Element::has_class(DeprecatedFlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
     if (case_sensitivity == CaseSensitivity::CaseSensitive) {
         return any_of(m_classes, [&](auto& it) {
@@ -330,7 +330,7 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
     return m_inline_style.ptr();
 }
 
-void Element::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void Element::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(Infra::is_ascii_whitespace);
@@ -350,7 +350,7 @@ void Element::parse_attribute(FlyString const& name, DeprecatedString const& val
     }
 }
 
-void Element::did_remove_attribute(FlyString const& name)
+void Element::did_remove_attribute(DeprecatedFlyString const& name)
 {
     if (name == HTML::AttributeNames::style) {
         if (m_inline_style) {
@@ -516,9 +516,9 @@ bool Element::is_active() const
     return document().active_element() == this;
 }
 
-JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_names)
+JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
-    Vector<FlyString> list_of_class_names;
+    Vector<DeprecatedFlyString> list_of_class_names;
     for (auto& name : class_names.view().split_view_if(Infra::is_ascii_whitespace)) {
         list_of_class_names.append(name);
     }
@@ -1258,7 +1258,7 @@ ErrorOr<void> Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOpt
     // FIXME: 8. Optionally perform some other action that brings the element to the user’s attention.
 }
 
-void Element::invalidate_style_after_attribute_change(FlyString const& attribute_name)
+void Element::invalidate_style_after_attribute_change(DeprecatedFlyString const& attribute_name)
 {
     // FIXME: Only invalidate if the attribute can actually affect style.
     (void)attribute_name;

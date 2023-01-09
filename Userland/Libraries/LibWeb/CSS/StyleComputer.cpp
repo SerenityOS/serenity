@@ -43,7 +43,7 @@ StyleComputer::~StyleComputer() = default;
 
 class StyleComputer::FontLoader : public ResourceClient {
 public:
-    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, AK::URL url)
+    explicit FontLoader(StyleComputer& style_computer, DeprecatedFlyString family_name, AK::URL url)
         : m_style_computer(style_computer)
         , m_family_name(move(family_name))
     {
@@ -105,7 +105,7 @@ private:
     }
 
     StyleComputer& m_style_computer;
-    FlyString m_family_name;
+    DeprecatedFlyString m_family_name;
     RefPtr<Gfx::VectorFont> m_vector_font;
 
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
@@ -571,7 +571,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
+static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, DeprecatedFlyString const& custom_property_name)
 {
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
         if (auto it = current_element->custom_properties().find(custom_property_name); it != current_element->custom_properties().end())
@@ -580,7 +580,7 @@ static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlySt
     return nullptr;
 }
 
-bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
+bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
 {
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
@@ -761,7 +761,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     Parser::TokenStream unresolved_values_without_variables_expanded { unresolved.values() };
     Vector<Parser::ComponentValue> values_with_variables_expanded;
 
-    HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
+    HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_variables(element, string_from_property_id(property_id), dependencies, unresolved_values_without_variables_expanded, values_with_variables_expanded))
         return {};
 
@@ -817,7 +817,7 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Vector<Mat
     if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style()))
         needed_capacity += inline_style->custom_properties().size();
 
-    HashMap<FlyString, StyleProperty> custom_properties;
+    HashMap<DeprecatedFlyString, StyleProperty> custom_properties;
     TRY(custom_properties.try_ensure_capacity(needed_capacity));
 
     for (auto const& matching_rule : matching_rules) {
@@ -1444,7 +1444,7 @@ CSSPixelRect StyleComputer::viewport_rect() const
     return {};
 }
 
-void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
+void StyleComputer::did_load_font([[maybe_unused]] DeprecatedFlyString const& family_name)
 {
     document().invalidate_layout();
 }

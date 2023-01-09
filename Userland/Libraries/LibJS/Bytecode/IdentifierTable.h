@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DistinctNumeric.h>
-#include <AK/FlyString.h>
 #include <AK/Vector.h>
 
 namespace JS::Bytecode {
@@ -21,13 +21,13 @@ class IdentifierTable {
 public:
     IdentifierTable() = default;
 
-    IdentifierTableIndex insert(FlyString);
-    FlyString const& get(IdentifierTableIndex) const;
+    IdentifierTableIndex insert(DeprecatedFlyString);
+    DeprecatedFlyString const& get(IdentifierTableIndex) const;
     void dump() const;
     bool is_empty() const { return m_identifiers.is_empty(); }
 
 private:
-    Vector<FlyString> m_identifiers;
+    Vector<DeprecatedFlyString> m_identifiers;
 };
 
 }

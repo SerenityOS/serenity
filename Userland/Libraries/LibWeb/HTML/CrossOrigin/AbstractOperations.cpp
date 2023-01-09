@@ -59,7 +59,7 @@ Vector<CrossOriginProperty> cross_origin_properties(Variant<Bindings::LocationOb
 bool is_cross_origin_accessible_window_property_name(JS::PropertyKey const& property_key)
 {
     // A JavaScript property name P is a cross-origin accessible window property name if it is "window", "self", "location", "close", "closed", "focus", "blur", "frames", "length", "top", "opener", "parent", "postMessage", or an array index property name.
-    static Array<FlyString, 13> property_names {
+    static Array<DeprecatedFlyString, 13> property_names {
         "window"sv, "self"sv, "location"sv, "close"sv, "closed"sv, "focus"sv, "blur"sv, "frames"sv, "length"sv, "top"sv, "opener"sv, "parent"sv, "postMessage"sv
     };
     return (property_key.is_string() && any_of(property_names, [&](auto const& name) { return property_key.as_string() == name; })) || property_key.is_number();

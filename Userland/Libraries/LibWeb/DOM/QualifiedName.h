@@ -7,28 +7,28 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 
 namespace Web::DOM {
 
 class QualifiedName {
 public:
-    QualifiedName(FlyString const& local_name, FlyString const& prefix, FlyString const& namespace_);
+    QualifiedName(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_);
 
-    FlyString const& local_name() const { return m_impl->local_name; }
-    FlyString const& prefix() const { return m_impl->prefix; }
-    FlyString const& namespace_() const { return m_impl->namespace_; }
+    DeprecatedFlyString const& local_name() const { return m_impl->local_name; }
+    DeprecatedFlyString const& prefix() const { return m_impl->prefix; }
+    DeprecatedFlyString const& namespace_() const { return m_impl->namespace_; }
 
     DeprecatedString const& as_string() const { return m_impl->as_string; }
 
     struct Impl : public RefCounted<Impl> {
-        Impl(FlyString const& local_name, FlyString const& prefix, FlyString const& namespace_);
+        Impl(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_);
         ~Impl();
 
         void make_internal_string();
-        FlyString local_name;
-        FlyString prefix;
-        FlyString namespace_;
+        DeprecatedFlyString local_name;
+        DeprecatedFlyString prefix;
+        DeprecatedFlyString namespace_;
         DeprecatedString as_string;
     };
 

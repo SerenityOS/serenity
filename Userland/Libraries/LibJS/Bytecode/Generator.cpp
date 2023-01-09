@@ -113,7 +113,7 @@ void Generator::end_variable_scope()
     }
 }
 
-void Generator::begin_continuable_scope(Label continue_target, Vector<FlyString> const& language_label_set)
+void Generator::begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set)
 {
     m_continuable_scopes.append({ continue_target, language_label_set });
     start_boundary(BlockBoundaryType::Continue);
@@ -130,7 +130,7 @@ Label Generator::nearest_breakable_scope() const
     return m_breakable_scopes.last().bytecode_target;
 }
 
-void Generator::begin_breakable_scope(Label breakable_target, Vector<FlyString> const& language_label_set)
+void Generator::begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set)
 {
     m_breakable_scopes.append({ breakable_target, language_label_set });
     start_boundary(BlockBoundaryType::Break);
@@ -262,7 +262,7 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
     return {};
 }
 
-Label Generator::perform_needed_unwinds_for_labelled_break_and_return_target_block(FlyString const& break_label)
+Label Generator::perform_needed_unwinds_for_labelled_break_and_return_target_block(DeprecatedFlyString const& break_label)
 {
     size_t current_boundary = m_boundaries.size();
     for (auto& breakable_scope : m_breakable_scopes.in_reverse()) {
@@ -294,7 +294,7 @@ Label Generator::perform_needed_unwinds_for_labelled_break_and_return_target_blo
     VERIFY_NOT_REACHED();
 }
 
-Label Generator::perform_needed_unwinds_for_labelled_continue_and_return_target_block(FlyString const& continue_label)
+Label Generator::perform_needed_unwinds_for_labelled_continue_and_return_target_block(DeprecatedFlyString const& continue_label)
 {
     size_t current_boundary = m_boundaries.size();
     for (auto& continuable_scope : m_continuable_scopes.in_reverse()) {

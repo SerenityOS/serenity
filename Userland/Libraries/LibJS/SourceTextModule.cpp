@@ -260,7 +260,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
 }
 
 // 16.2.1.6.2 GetExportedNames ( [ exportStarSet ] ), https://tc39.es/ecma262/#sec-getexportednames
-ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm, Vector<Module*> export_star_set)
+ThrowCompletionOr<Vector<DeprecatedFlyString>> SourceTextModule::get_exported_names(VM& vm, Vector<Module*> export_star_set)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] get_export_names of {}", filename());
     // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
@@ -272,14 +272,14 @@ ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm
         // FIXME: How do we check that?
 
         // b. Return a new empty List.
-        return Vector<FlyString> {};
+        return Vector<DeprecatedFlyString> {};
     }
 
     // 3. Append module to exportStarSet.
     export_star_set.append(this);
 
     // 4. Let exportedNames be a new empty List.
-    Vector<FlyString> exported_names;
+    Vector<DeprecatedFlyString> exported_names;
 
     // 5. For each ExportEntry Record e of module.[[LocalExportEntries]], do
     for (auto& entry : m_local_export_entries) {
@@ -432,7 +432,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // Note: We just loop through them in step 21.
 
     // 20. Let declaredVarNames be a new empty List.
-    Vector<FlyString> declared_var_names;
+    Vector<DeprecatedFlyString> declared_var_names;
 
     // 21. For each element d of varDeclarations, do
     // a. For each element dn of the BoundNames of d, do
@@ -459,7 +459,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // 24. For each element d of lexDeclarations, do
     m_ecmascript_code->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // a. For each element dn of the BoundNames of d, do
-        declaration.for_each_bound_name([&](FlyString const& name) {
+        declaration.for_each_bound_name([&](DeprecatedFlyString const& name) {
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ! env.CreateImmutableBinding(dn, true).
@@ -479,7 +479,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 // 1. Let fo be InstantiateFunctionObject of d with arguments env and privateEnv.
                 // NOTE: Special case if the function is a default export of an anonymous function
                 //       it has name "*default*" but internally should have name "default".
-                FlyString function_name = function_declaration.name();
+                DeprecatedFlyString function_name = function_declaration.name();
                 if (function_name == ExportStatement::local_name_for_default)
                     function_name = "default"sv;
                 auto function = ECMAScriptFunctionObject::create(realm(), function_name, function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
@@ -518,7 +518,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
 }
 
 // 16.2.1.6.3 ResolveExport ( exportName [ , resolveSet ] ), https://tc39.es/ecma262/#sec-resolveexport
-ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyString const& export_name, Vector<ResolvedBinding> resolve_set)
+ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, DeprecatedFlyString const& export_name, Vector<ResolvedBinding> resolve_set)
 {
     // 1. If resolveSet is not present, set resolveSet to a new empty List.
     // Note: This is done by the default argument.

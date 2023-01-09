@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 
 namespace Web {
 namespace HTML {
@@ -229,13 +229,13 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(width)                      \
     __ENUMERATE_HTML_ATTRIBUTE(wrap)
 
-#define __ENUMERATE_HTML_ATTRIBUTE(name) extern FlyString name;
+#define __ENUMERATE_HTML_ATTRIBUTE(name) extern DeprecatedFlyString name;
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
 }
 
-bool is_boolean_attribute(FlyString const& attribute);
+bool is_boolean_attribute(DeprecatedFlyString const& attribute);
 
 }
 }

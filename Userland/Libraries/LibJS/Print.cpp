@@ -102,7 +102,7 @@ ErrorOr<void> js_out(JS::PrintContext& print_context, CheckedFormatString<Args..
     return {};
 }
 
-ErrorOr<void> print_type(JS::PrintContext& print_context, FlyString const& name)
+ErrorOr<void> print_type(JS::PrintContext& print_context, DeprecatedFlyString const& name)
 {
     return js_out(print_context, "[\033[36;1m{}\033[0m]", name);
 }

@@ -234,7 +234,7 @@ private:
 
     Token next_token(size_t steps = 1) const;
 
-    void check_identifier_name_for_assignment_validity(FlyString const&, bool force_strict = false);
+    void check_identifier_name_for_assignment_validity(DeprecatedFlyString const&, bool force_strict = false);
 
     bool try_parse_arrow_function_expression_failed_at_position(Position const&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(Position const&, bool);
@@ -244,7 +244,7 @@ private:
     bool parse_directive(ScopeNode& body);
     void parse_statement_list(ScopeNode& output_node, AllowLabelledFunction allow_labelled_functions = AllowLabelledFunction::No);
 
-    FlyString consume_string_value();
+    DeprecatedFlyString consume_string_value();
     ModuleRequest parse_module_request();
 
     struct RulePosition {
@@ -320,7 +320,7 @@ private:
     NonnullRefPtr<SourceCode> m_source_code;
     Vector<Position> m_rule_starts;
     ParserState m_state;
-    FlyString m_filename;
+    DeprecatedFlyString m_filename;
     Vector<ParserState> m_saved_state;
     HashMap<Position, TokenMemoization, PositionKeyTraits> m_token_memoizations;
     Program::Type m_program_type;

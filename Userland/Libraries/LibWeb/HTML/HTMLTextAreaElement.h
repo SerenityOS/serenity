@@ -52,7 +52,7 @@ public:
     virtual void reset_algorithm() override;
 
     // https://www.w3.org/TR/html-aria/#el-textarea
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::textbox; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::textbox; }
 
 private:
     HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);

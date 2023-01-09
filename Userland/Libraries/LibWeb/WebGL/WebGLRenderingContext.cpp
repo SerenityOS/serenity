@@ -13,7 +13,7 @@
 namespace Web::WebGL {
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#fire-a-webgl-context-event
-static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, FlyString const& type)
+static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, DeprecatedFlyString const& type)
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.

@@ -16,7 +16,7 @@
 
 namespace JS {
 
-HashMap<FlyString, TokenType> Lexer::s_keywords;
+HashMap<DeprecatedFlyString, TokenType> Lexer::s_keywords;
 HashMap<DeprecatedString, TokenType> Lexer::s_three_char_tokens;
 HashMap<DeprecatedString, TokenType> Lexer::s_two_char_tokens;
 HashMap<char, TokenType> Lexer::s_single_char_tokens;
@@ -574,7 +574,7 @@ Token Lexer::next()
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
     DeprecatedString token_message;
 
-    Optional<FlyString> identifier;
+    Optional<DeprecatedFlyString> identifier;
     size_t identifier_length = 0;
 
     if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && is_ascii_alpha(m_current_char) && !did_consume_whitespace_or_comments) {

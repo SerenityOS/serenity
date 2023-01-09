@@ -109,7 +109,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
         Vector<FunctionDeclaration const&> functions_to_initialize;
 
         // 7. Let declaredFunctionNames be a new empty List.
-        HashTable<FlyString> declared_function_names;
+        HashTable<DeprecatedFlyString> declared_function_names;
 
         // 8. For each element d of varDeclarations, in reverse List order, do
         (void)for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
@@ -135,7 +135,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
         });
 
         // 9. Let declaredVarNames be a new empty List.
-        HashTable<FlyString> declared_var_names;
+        HashTable<DeprecatedFlyString> declared_var_names;
 
         // 10. For each element d of varDeclarations, do
         (void)for_each_var_scoped_variable_declaration([&](Declaration const& declaration) {
@@ -803,7 +803,7 @@ Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_bytecode(Bytec
 
 // 14.13.4 Runtime Semantics: LabelledEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-labelledevaluation
 // LabelledStatement : LabelIdentifier : LabelledItem
-Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     // Convert the m_labelled_item NNRP to a reference early so we don't have to do it every single time we want to use it.
     auto const& labelled_item = *m_labelled_item;
@@ -853,7 +853,7 @@ Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_labelled_evalu
     return {};
 }
 
-Bytecode::CodeGenerationErrorOr<void> IterationStatement::generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const
+Bytecode::CodeGenerationErrorOr<void> IterationStatement::generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const
 {
     return Bytecode::CodeGenerationError {
         this,
@@ -866,7 +866,7 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_bytecode(Bytecode
     return generate_labelled_evaluation(generator, {});
 }
 
-Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     // test
     // jump if_false (true) end (false) body
@@ -916,7 +916,7 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_bytecode(Byteco
     return generate_labelled_evaluation(generator, {});
 }
 
-Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     // jump always (true) body
     // test
@@ -967,7 +967,7 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
     return generate_labelled_evaluation(generator, {});
 }
 
-Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     // init
     // jump always (true) test
@@ -2215,7 +2215,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
         generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
         TRY(m_handler->parameter().visit(
-            [&](FlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](DeprecatedFlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
                 if (!parameter.is_empty()) {
                     auto parameter_identifier = generator.intern_identifier(parameter);
                     generator.register_binding(parameter_identifier);
@@ -2283,7 +2283,7 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecod
     return generate_labelled_evaluation(generator, {});
 }
 
-Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     auto discriminant_reg = generator.allocate_register();
     TRY(m_discriminant->generate_bytecode(generator));
@@ -2516,7 +2516,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
 }
 
 // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
-static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Vector<FlyString> const& label_set, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update)
+static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Vector<DeprecatedFlyString> const& label_set, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update)
 {
     auto iterator_register = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(iterator_register);
@@ -2719,7 +2719,7 @@ Bytecode::CodeGenerationErrorOr<void> ForInStatement::generate_bytecode(Bytecode
 }
 
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
-Bytecode::CodeGenerationErrorOr<void> ForInStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> ForInStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     auto& loop_end = generator.make_block();
     auto& loop_update = generator.make_block();
@@ -2736,7 +2736,7 @@ Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_bytecode(Bytecode
     return generate_labelled_evaluation(generator, {});
 }
 
-Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<FlyString> const& label_set) const
+Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
     auto& loop_end = generator.make_block();
     auto& loop_update = generator.make_block();

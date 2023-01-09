@@ -418,7 +418,7 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
         return error("Expected dict to start with \"<<\"");
 
     m_reader.consume_whitespace();
-    HashMap<FlyString, Value> map;
+    HashMap<DeprecatedFlyString, Value> map;
 
     while (!m_reader.done()) {
         if (m_reader.matches(">>"))
@@ -479,7 +479,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
         m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
 
     if (dict->contains(CommonNames::Filter)) {
-        Vector<FlyString> filters;
+        Vector<DeprecatedFlyString> filters;
 
         // We may either get a single filter or an array of cascading filters
         auto filter_object = TRY(dict->get_object(m_document, CommonNames::Filter));

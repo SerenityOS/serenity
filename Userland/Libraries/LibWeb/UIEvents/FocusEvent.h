@@ -18,12 +18,12 @@ class FocusEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(FocusEvent, UIEvent);
 
 public:
-    static FocusEvent* construct_impl(JS::Realm&, FlyString const& event_name, FocusEventInit const& event_init);
+    static FocusEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const& event_init);
 
     virtual ~FocusEvent() override;
 
 private:
-    FocusEvent(JS::Realm&, FlyString const& event_name, FocusEventInit const&);
+    FocusEvent(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const&);
 };
 
 }

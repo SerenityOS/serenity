@@ -22,7 +22,7 @@ HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
 
-void HTMLAnchorElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLAnchorElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -85,7 +85,7 @@ i32 HTMLAnchorElement::default_tab_index_value() const
     return 0;
 }
 
-FlyString HTMLAnchorElement::default_role() const
+DeprecatedFlyString HTMLAnchorElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-a-no-href
     if (!href().is_null())

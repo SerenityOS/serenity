@@ -453,7 +453,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                            \
     }                                                                                                                            \
                                                                                                                                  \
-    FlyString const& ClassName::element_name() const                                                                             \
+    DeprecatedFlyString const& ClassName::element_name() const                                                                   \
     {                                                                                                                            \
         return vm().names.ClassName.as_string();                                                                                 \
     }                                                                                                                            \

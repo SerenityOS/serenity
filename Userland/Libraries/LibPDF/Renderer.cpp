@@ -773,7 +773,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     auto width = image_dict->get_value(CommonNames::Width).get<int>();
     auto height = image_dict->get_value(CommonNames::Height).get<int>();
 
-    auto is_filter = [&](FlyString const& name) {
+    auto is_filter = [&](DeprecatedFlyString const& name) {
         if (filter_object->is<NameObject>())
             return filter_object->cast<NameObject>()->name() == name;
         auto filters = filter_object->cast<ArrayObject>();

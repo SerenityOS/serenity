@@ -138,7 +138,7 @@ void LineProgram::append_to_line_info()
     full_path.append('/');
     full_path.append(m_source_files[m_file_index].name);
 
-    m_lines.append({ m_address, FlyString { full_path.string_view() }, m_line });
+    m_lines.append({ m_address, DeprecatedFlyString { full_path.string_view() }, m_line });
 }
 
 void LineProgram::reset_registers()

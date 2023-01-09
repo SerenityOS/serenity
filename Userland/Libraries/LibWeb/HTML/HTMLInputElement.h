@@ -96,8 +96,8 @@ public:
     virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
     // ^HTMLElement
-    virtual void parse_attribute(FlyString const&, DeprecatedString const&) override;
-    virtual void did_remove_attribute(FlyString const&) override;
+    virtual void parse_attribute(DeprecatedFlyString const&, DeprecatedString const&) override;
+    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
@@ -120,7 +120,7 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
-    virtual FlyString default_role() const override;
+    virtual DeprecatedFlyString default_role() const override;
 
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);

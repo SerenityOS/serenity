@@ -6,14 +6,14 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 
 struct FontSelector {
-    FlyString family;
+    DeprecatedFlyString family;
     float point_size { 0 };
     int weight { 0 };
     int slope { 0 };

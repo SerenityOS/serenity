@@ -25,7 +25,7 @@ public:
     // https://www.w3.org/TR/html-aria/#el-tbody
     // https://www.w3.org/TR/html-aria/#el-tfoot
     // https://www.w3.org/TR/html-aria/#el-thead
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::rowgroup; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::rowgroup; }
 
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);

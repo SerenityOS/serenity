@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <cstring>
@@ -145,18 +145,18 @@ TEST_CASE(to_uppercase)
 TEST_CASE(flystring)
 {
     {
-        FlyString a("foo");
-        FlyString b("foo");
+        DeprecatedFlyString a("foo");
+        DeprecatedFlyString b("foo");
         EXPECT_EQ(a.impl(), b.impl());
     }
 
     {
         DeprecatedString a = "foo";
-        FlyString b = a;
+        DeprecatedFlyString b = a;
         StringBuilder builder;
         builder.append('f');
         builder.append("oo"sv);
-        FlyString c = builder.to_deprecated_string();
+        DeprecatedFlyString c = builder.to_deprecated_string();
         EXPECT_EQ(a.impl(), b.impl());
         EXPECT_EQ(a.impl(), c.impl());
     }

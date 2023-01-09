@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
@@ -35,12 +35,12 @@ public:
 
     size_t length();
     Element* item(size_t index) const;
-    Element* named_item(FlyString const& name) const;
+    Element* named_item(DeprecatedFlyString const& name) const;
 
     JS::MarkedVector<Element*> collect_matching_elements() const;
 
     virtual JS::Value item_value(size_t index) const override;
-    virtual JS::Value named_item_value(FlyString const& name) const override;
+    virtual JS::Value named_item_value(DeprecatedFlyString const& name) const override;
     virtual Vector<DeprecatedString> supported_property_names() const override;
     virtual bool is_supported_property_index(u32) const override;
 

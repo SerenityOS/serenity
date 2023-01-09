@@ -20,7 +20,7 @@ public:
     bool should_use_body_background_properties() const;
 
     // https://www.w3.org/TR/html-aria/#el-html
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::document; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::document; }
 
 private:
     HTMLHtmlElement(DOM::Document&, DOM::QualifiedName);

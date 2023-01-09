@@ -18,7 +18,7 @@ public:
     virtual ~HTMLMenuElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-menu
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::list; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::list; }
 
 private:
     HTMLMenuElement(DOM::Document&, DOM::QualifiedName);

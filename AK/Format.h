@@ -461,7 +461,7 @@ template<>
 struct Formatter<DeprecatedString> : Formatter<StringView> {
 };
 template<>
-struct Formatter<FlyString> : Formatter<StringView> {
+struct Formatter<DeprecatedFlyString> : Formatter<StringView> {
 };
 
 template<typename T>

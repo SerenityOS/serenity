@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 
 namespace Web::HTML::EventNames {
 
@@ -60,7 +60,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(unload)                  \
     __ENUMERATE_HTML_EVENT(visibilitychange)
 
-#define __ENUMERATE_HTML_EVENT(name) extern FlyString name;
+#define __ENUMERATE_HTML_EVENT(name) extern DeprecatedFlyString name;
 ENUMERATE_HTML_EVENTS
 #undef __ENUMERATE_HTML_EVENT
 
