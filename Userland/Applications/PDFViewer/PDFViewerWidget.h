@@ -26,13 +26,13 @@ public:
     ~PDFViewerWidget() override = default;
 
     void initialize_menubar(GUI::Window&);
-    void open_file(Core::File&);
+    void open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file);
 
 private:
     PDFViewerWidget();
 
     void initialize_toolbar(GUI::Toolbar&);
-    PDF::PDFErrorOr<void> try_open_file(Core::File&);
+    PDF::PDFErrorOr<void> try_open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file);
 
     RefPtr<PDFViewer> m_viewer;
     RefPtr<SidebarWidget> m_sidebar;
