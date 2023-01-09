@@ -10,6 +10,17 @@
 #include <LibWeb/Bindings/URLSearchParamsIteratorPrototype.h>
 #include <LibWeb/URL/URLSearchParamsIterator.h>
 
+namespace Web::Bindings {
+
+template<>
+void Intrinsics::create_web_prototype_and_constructor<URLSearchParamsIteratorPrototype>(JS::Realm& realm)
+{
+    auto prototype = heap().allocate<URLSearchParamsIteratorPrototype>(realm, realm);
+    m_prototypes.set("URLSearchParamsIterator"sv, prototype);
+}
+
+}
+
 namespace Web::URL {
 
 JS::NonnullGCPtr<URLSearchParamsIterator> URLSearchParamsIterator::create(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)

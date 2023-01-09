@@ -85,7 +85,7 @@ void WebAssemblyTableConstructor::initialize(JS::Realm& realm)
     auto& vm = this->vm();
 
     NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssemblyTablePrototype"), 0);
+    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }
 
