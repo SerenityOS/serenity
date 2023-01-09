@@ -289,6 +289,12 @@ private:
 
     NEVER_INLINE ErrorOr<void> try_ensure_capacity_slowpath(size_t new_capacity)
     {
+        // When we are asked to raise the capacity by very small amounts,
+        // the caller is perhaps appending very little data in many calls.
+        // To avoid copying the entire ByteBuffer every single time,
+        // we raise the capacity exponentially, by a factor of roughly 1.5.
+        // This is most noticable in Lagom, where kmalloc_good_size is just a no-op.
+        new_capacity = max(new_capacity, (capacity() * 3) / 2);
         new_capacity = kmalloc_good_size(new_capacity);
         auto* new_buffer = (u8*)kmalloc(new_capacity);
         if (!new_buffer)
