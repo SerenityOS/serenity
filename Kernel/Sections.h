@@ -15,6 +15,8 @@
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
 
+#define KERNEL_MAPPING_BASE 0x2000000000
+
 #define KERNEL_PD_END (kernel_mapping_base + KERNEL_PD_SIZE)
 #define KERNEL_PT1024_BASE (kernel_mapping_base + 0x3FE00000)
 

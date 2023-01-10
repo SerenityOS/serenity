@@ -15,6 +15,10 @@
 #define MAX_KERNEL_SIZE 0x4000000
 #define KERNEL_PD_SIZE 0x31000000
 
+// FIXME: This should be using the define from Sections.h, but that currently is not possible
+//        and causes linker errors, because Sections.h includes BootInfo.h.
+#define KERNEL_MAPPING_BASE 0x2000000000
+
 #ifdef __cplusplus
 namespace Kernel {
 
