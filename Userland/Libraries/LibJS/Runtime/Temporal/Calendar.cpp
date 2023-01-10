@@ -652,20 +652,18 @@ ThrowCompletionOr<Object*> consolidate_calendars(VM& vm, Object& one, Object& tw
 // 12.2.31 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
 u8 iso_days_in_month(i32 year, u8 month)
 {
-    // 1. Assert: year is an integer.
-
-    // 2. Assert: month is an integer, month ≥ 1, and month ≤ 12.
-    VERIFY(month >= 1 && month <= 12);
-
-    // 3. If month is 1, 3, 5, 7, 8, 10, or 12, return 31.
+    // 1. If month is 1, 3, 5, 7, 8, 10, or 12, return 31.
     if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
         return 31;
 
-    // 4. If month is 4, 6, 9, or 11, return 30.
+    // 2. If month is 4, 6, 9, or 11, return 30.
     if (month == 4 || month == 6 || month == 9 || month == 11)
         return 30;
 
-    // 5. Return 28 + ℝ(InLeapYear(TimeFromYear(𝔽(year)))).
+    // 3. Assert: month is 2.
+    VERIFY(month == 2);
+
+    // 4. Return 28 + ℝ(InLeapYear(TimeFromYear(𝔽(year)))).
     return 28 + JS::in_leap_year(time_from_year(year));
 }
 
