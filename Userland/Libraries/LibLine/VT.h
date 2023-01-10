@@ -7,18 +7,19 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibCore/Stream.h>
 #include <LibLine/Style.h>
 
 namespace Line {
 namespace VT {
 
-void save_cursor(OutputStream&);
-void restore_cursor(OutputStream&);
-void clear_to_end_of_line(OutputStream&);
-void clear_lines(size_t count_above, size_t count_below, OutputStream&);
-void move_relative(int x, int y, OutputStream&);
-void move_absolute(u32 x, u32 y, OutputStream&);
-void apply_style(Style const&, OutputStream&, bool is_starting = true);
+void save_cursor(Core::Stream::Stream&);
+void restore_cursor(Core::Stream::Stream&);
+void clear_to_end_of_line(Core::Stream::Stream&);
+void clear_lines(size_t count_above, size_t count_below, Core::Stream::Stream&);
+void move_relative(int x, int y, Core::Stream::Stream&);
+void move_absolute(u32 x, u32 y, Core::Stream::Stream&);
+void apply_style(Style const&, Core::Stream::Stream&, bool is_starting = true);
 
 }
 }
