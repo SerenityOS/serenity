@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/StringView.h>
+#include <AK/Utf8View.h>
 
 namespace GUI {
 
@@ -57,11 +57,11 @@ public:
     Vector<IniToken> lex();
 
 private:
-    char peek(size_t offset = 0) const;
-    char consume();
+    u32 peek(size_t offset = 0) const;
+    u32 consume();
 
-    StringView m_input;
-    size_t m_index { 0 };
+    Utf8View m_input;
+    Utf8CodePointIterator m_iterator;
     IniPosition m_position { 0, 0 };
 };
 
