@@ -36,6 +36,7 @@ public:
 protected:
     AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<Node> m_start_container;

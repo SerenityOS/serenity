@@ -18,9 +18,15 @@ MediaList* MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&&
 }
 
 MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
-    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"))
+    : Bindings::LegacyPlatformObject(realm)
     , m_media(move(media))
 {
+}
+
+void MediaList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"));
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext

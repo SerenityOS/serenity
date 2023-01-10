@@ -52,9 +52,15 @@ StyleSheetList* StyleSheetList::create(DOM::Document& document)
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)
-    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(document.realm(), "StyleSheetList"))
+    : Bindings::LegacyPlatformObject(document.realm())
     , m_document(document)
 {
+}
+
+void StyleSheetList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(realm, "StyleSheetList"));
 }
 
 void StyleSheetList::visit_edges(Cell::Visitor& visitor)

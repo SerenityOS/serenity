@@ -34,7 +34,7 @@ public:
     virtual bool is_supported_property_index(u32) const;
 
 protected:
-    explicit LegacyPlatformObject(JS::Object& prototype);
+    explicit LegacyPlatformObject(JS::Realm& realm);
 };
 
 }

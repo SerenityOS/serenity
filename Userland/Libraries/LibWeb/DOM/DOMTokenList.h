@@ -45,6 +45,7 @@ public:
 private:
     DOMTokenList(Element const& associated_element, DeprecatedFlyString associated_attribute);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     WebIDL::ExceptionOr<void> validate_token(StringView token) const;

@@ -56,6 +56,7 @@ public:
 private:
     explicit NamedNodeMap(Element&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     Element& associated_element() { return *m_element; }

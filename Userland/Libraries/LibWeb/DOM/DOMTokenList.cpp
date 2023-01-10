@@ -60,12 +60,18 @@ DOMTokenList* DOMTokenList::create(Element const& associated_element, Deprecated
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2
 DOMTokenList::DOMTokenList(Element const& associated_element, DeprecatedFlyString associated_attribute)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(associated_element.realm(), "DOMTokenList"))
+    : Bindings::LegacyPlatformObject(associated_element.realm())
     , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {
     auto value = associated_element.get_attribute(m_associated_attribute);
     associated_attribute_changed(value);
+}
+
+void DOMTokenList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMTokenListPrototype>(realm, "DOMTokenList"));
 }
 
 void DOMTokenList::visit_edges(Cell::Visitor& visitor)

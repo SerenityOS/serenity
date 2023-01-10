@@ -47,6 +47,8 @@ public:
 protected:
     HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter);
 
+    virtual void initialize(JS::Realm&) override;
+
     JS::NonnullGCPtr<ParentNode> root() { return *m_root; }
 
 private:
