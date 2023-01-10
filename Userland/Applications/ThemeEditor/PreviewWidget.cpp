@@ -149,35 +149,4 @@ void PreviewWidget::resize_event(GUI::ResizeEvent&)
     update_preview_window_locations();
 }
 
-void PreviewWidget::drag_enter_event(GUI::DragEvent& event)
-{
-    auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/uri-list"))
-        event.accept();
-}
-
-void PreviewWidget::drop_event(GUI::DropEvent& event)
-{
-    event.accept();
-    window()->move_to_front();
-
-    if (event.mime_data().has_urls()) {
-        auto urls = event.mime_data().urls();
-        if (urls.is_empty())
-            return;
-        if (urls.size() > 1) {
-            GUI::MessageBox::show(window(), "ThemeEditor can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
-        if (response.is_error())
-            return;
-
-        auto set_theme_from_file_result = set_theme_from_file(response.release_value());
-        if (set_theme_from_file_result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Setting theme from file has failed: {}", set_theme_from_file_result.error()));
-    }
-}
-
 }

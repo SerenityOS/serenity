@@ -91,6 +91,9 @@ public:
 private:
     explicit MainWidget(NonnullRefPtr<AlignmentModel>);
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
+
     void save_to_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file);
     ErrorOr<Core::AnonymousBuffer> encode();
     void set_path(DeprecatedString);
