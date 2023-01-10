@@ -666,6 +666,8 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             GUI::MessageBox::show(window(), "ThemeEditor can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
             return;
         }
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
 
         auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
         if (response.is_error())
