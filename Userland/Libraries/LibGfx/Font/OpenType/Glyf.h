@@ -69,6 +69,8 @@ public:
         int ascender() const { return m_ymax; }
         int descender() const { return m_ymin; }
 
+        ReadonlyBytes program() const;
+
     private:
         enum class Type {
             Simple,

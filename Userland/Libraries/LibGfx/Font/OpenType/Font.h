@@ -38,6 +38,10 @@ public:
     virtual u8 slope() const override;
     virtual bool is_fixed_width() const override;
 
+    Optional<ReadonlyBytes> font_program() const;
+    Optional<ReadonlyBytes> control_value_program() const;
+    Optional<ReadonlyBytes> glyph_program(u32 glyph_id) const;
+
 private:
     enum class Offsets {
         NumTables = 4,
