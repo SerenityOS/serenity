@@ -15,6 +15,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
 #include <LibRegex/Regex.h>
+#include <LibUnicode/CharacterTypes.h>
 
 namespace GUI {
 
@@ -499,14 +500,27 @@ TextRange TextDocument::find_next(StringView needle, TextPosition const& start, 
     TextPosition start_of_potential_match;
     size_t needle_index = 0;
 
+    Utf8View unicode_needle(needle);
+    Vector<u32> needle_code_points;
+    for (u32 code_point : unicode_needle)
+        needle_code_points.append(code_point);
+
     do {
         auto ch = code_point_at(position);
-        // FIXME: This is not the right way to use a Unicode needle!
-        if (match_case ? ch == (u32)needle[needle_index] : tolower(ch) == tolower((u32)needle[needle_index])) {
+
+        bool code_point_matches = false;
+        if (needle_index >= needle_code_points.size())
+            code_point_matches = false;
+        else if (match_case)
+            code_point_matches = ch == needle_code_points[needle_index];
+        else
+            code_point_matches = Unicode::to_unicode_lowercase(ch) == Unicode::to_unicode_lowercase(needle_code_points[needle_index]);
+
+        if (code_point_matches) {
             if (needle_index == 0)
                 start_of_potential_match = position;
             ++needle_index;
-            if (needle_index >= needle.length())
+            if (needle_index >= needle_code_points.size())
                 return { start_of_potential_match, next_position_after(position, should_wrap) };
         } else {
             if (needle_index > 0)
@@ -580,22 +594,35 @@ TextRange TextDocument::find_previous(StringView needle, TextPosition const& sta
         return {};
     TextPosition original_position = position;
 
+    Utf8View unicode_needle(needle);
+    Vector<u32> needle_code_points;
+    for (u32 code_point : unicode_needle)
+        needle_code_points.append(code_point);
+
     TextPosition end_of_potential_match;
-    size_t needle_index = needle.length() - 1;
+    size_t needle_index = needle_code_points.size() - 1;
 
     do {
         auto ch = code_point_at(position);
-        // FIXME: This is not the right way to use a Unicode needle!
-        if (match_case ? ch == (u32)needle[needle_index] : tolower(ch) == tolower((u32)needle[needle_index])) {
-            if (needle_index == needle.length() - 1)
+
+        bool code_point_matches = false;
+        if (needle_index >= needle_code_points.size())
+            code_point_matches = false;
+        else if (match_case)
+            code_point_matches = ch == needle_code_points[needle_index];
+        else
+            code_point_matches = Unicode::to_unicode_lowercase(ch) == Unicode::to_unicode_lowercase(needle_code_points[needle_index]);
+
+        if (code_point_matches) {
+            if (needle_index == needle_code_points.size() - 1)
                 end_of_potential_match = position;
             if (needle_index == 0)
                 return { position, next_position_after(end_of_potential_match, should_wrap) };
             --needle_index;
         } else {
-            if (needle_index < needle.length() - 1)
+            if (needle_index < needle_code_points.size() - 1)
                 position = end_of_potential_match;
-            needle_index = needle.length() - 1;
+            needle_index = needle_code_points.size() - 1;
         }
         position = previous_position_before(position, should_wrap);
     } while (position.is_valid() && position != original_position);
