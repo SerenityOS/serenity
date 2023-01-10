@@ -21,7 +21,9 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> str
 
 Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::try_create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    // FIXME: Similar to the other audio loaders, this should be a buffered file.
+    //        However, making the file buffered currently results in data reading and playback consistency issues.
+    auto stream = LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto loader = make<MP3LoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
