@@ -38,8 +38,6 @@ private:
     virtual void paint_preview(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
-    virtual void drag_enter_event(GUI::DragEvent&) override;
-    virtual void drop_event(GUI::DropEvent&) override;
     virtual void palette_changed() override;
 
     void paint_hightlight_window();
