@@ -12,7 +12,7 @@
 namespace Web::DOM {
 
 class CDATASection final : public Text {
-    WEB_PLATFORM_OBJECT(Text, CDATASection);
+    WEB_PLATFORM_OBJECT(CDATASection, Text);
 
 public:
     virtual ~CDATASection() override;
