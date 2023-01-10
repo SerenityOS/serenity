@@ -235,47 +235,7 @@ void Painter::fill_rect_with_gradient(Orientation orientation, IntRect const& a_
         fill_rect(a_rect, gradient_start);
         return;
     }
-
-    auto rect = to_physical(a_rect);
-    auto clipped_rect = IntRect::intersection(rect, clip_rect() * scale());
-    if (clipped_rect.is_empty())
-        return;
-
-    int offset = clipped_rect.primary_offset_for_orientation(orientation) - rect.primary_offset_for_orientation(orientation);
-
-    ARGB32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
-
-    float increment = (1.0 / ((rect.primary_size_for_orientation(orientation))));
-    float alpha_increment = increment * ((float)gradient_end.alpha() - (float)gradient_start.alpha());
-
-    if (orientation == Orientation::Horizontal) {
-        for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            float c = offset * increment;
-            float c_alpha = gradient_start.alpha() + offset * alpha_increment;
-            for (int j = 0; j < clipped_rect.width(); ++j) {
-                auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
-                color.set_alpha(c_alpha);
-                dst[j] = Color::from_argb(dst[j]).blend(color).value();
-                c_alpha += alpha_increment;
-                c += increment;
-            }
-            dst += dst_skip;
-        }
-    } else {
-        float c = offset * increment;
-        float c_alpha = gradient_start.alpha() + offset * alpha_increment;
-        for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
-            color.set_alpha(c_alpha);
-            for (int j = 0; j < clipped_rect.width(); ++j) {
-                dst[j] = Color::from_argb(dst[j]).blend(color).value();
-            }
-            c_alpha += alpha_increment;
-            c += increment;
-            dst += dst_skip;
-        }
-    }
+    return fill_rect_with_linear_gradient(a_rect, Array { ColorStop { gradient_start, 0 }, ColorStop { gradient_end, 1 } }, orientation == Orientation::Horizontal ? 90.0f : 0.0f);
 }
 
 void Painter::fill_rect_with_gradient(IntRect const& a_rect, Color gradient_start, Color gradient_end)
