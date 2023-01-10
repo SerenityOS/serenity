@@ -302,6 +302,7 @@ set(SOURCES
     HTML/WorkerNavigator.cpp
     HighResolutionTime/Performance.cpp
     HighResolutionTime/TimeOrigin.cpp
+    Infra/Base64.cpp
     Infra/ByteSequences.cpp
     Infra/JSON.cpp
     Infra/Strings.cpp
