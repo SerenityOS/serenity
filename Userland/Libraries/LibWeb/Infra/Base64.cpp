@@ -8,9 +8,11 @@
 #include <AK/ByteBuffer.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Error.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibWeb/Infra/Base64.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 
 namespace Web::Infra {
 
@@ -18,7 +20,13 @@ namespace Web::Infra {
 ErrorOr<ByteBuffer> decode_forgiving_base64(StringView input)
 {
     // 1. Remove all ASCII whitespace from data.
-    auto data = input.trim_whitespace();
+    // FIXME: It is possible to avoid copying input here, it's just a bit tricky to remove the equal signs
+    StringBuilder builder;
+    for (auto character : input) {
+        if (!is_ascii_whitespace(character))
+            TRY(builder.try_append(character));
+    }
+    auto data = builder.string_view();
 
     // 2. If data’s code point length divides by 4 leaving no remainder, then:
     if (data.length() % 4 == 0) {
