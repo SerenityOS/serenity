@@ -60,6 +60,7 @@ static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
 static bool flag_hide_group = false;
 static bool flag_human_readable = false;
+static bool flag_human_readable_si = false;
 static bool flag_sort_by_timestamp = false;
 static bool flag_reverse_sort = false;
 static bool flag_disable_hyperlinks = false;
@@ -113,6 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
     args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
+    args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 0);
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R');
     args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1');
@@ -357,6 +359,8 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
     } else {
         if (flag_human_readable) {
             printf(" %10s ", human_readable_size(st.st_size).characters());
+        } else if (flag_human_readable_si) {
+            printf(" %10s ", human_readable_size(st.st_size, AK::HumanReadableBasedOn::Base10).characters());
         } else {
             printf(" %10" PRIu64 " ", (uint64_t)st.st_size);
         }
