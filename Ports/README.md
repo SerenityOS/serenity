@@ -11,6 +11,17 @@ environment.
 
 A list of all available ports can be found [here](AvailablePorts.md).
 
+## External ports
+
+Third party ports might need additional dependencies from another location.
+In this case, you can point the `SERENITY_PORT_DIRS` variable to a local ports directory.
+
+For example:
+
+```bash
+export SERENITY_PORT_DIRS="/path/to/port/dir/:/other/path/"
+```
+
 ## Using ports scripts
 
 Each port has a script called `package.sh` which defines a name and version,
