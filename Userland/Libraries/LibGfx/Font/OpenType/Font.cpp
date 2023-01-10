@@ -703,4 +703,25 @@ bool OS2::use_typographic_metrics() const
     return header().fs_selection & 0x80;
 }
 
+Optional<ReadonlyBytes> Font::font_program() const
+{
+    if (m_fpgm.has_value())
+        return m_fpgm->program_data();
+    return {};
+}
+
+Optional<ReadonlyBytes> Font::control_value_program() const
+{
+    if (m_prep.has_value())
+        return m_prep->program_data();
+    return {};
+}
+
+Optional<ReadonlyBytes> Font::glyph_program(u32 glyph_id) const
+{
+    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
+    auto glyph = m_glyf.glyph(glyph_offset);
+    return glyph.program();
+}
+
 }

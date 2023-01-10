@@ -250,6 +250,13 @@ static void get_ttglyph_offsets(ReadonlyBytes slice, u32 num_points, u32 flags_o
     *y_offset = *x_offset + x_size;
 }
 
+ReadonlyBytes Glyf::Glyph::program() const
+{
+    auto instructions_start = m_num_contours * 2;
+    u16 num_instructions = be_u16(m_slice.offset_pointer(instructions_start));
+    return m_slice.slice(instructions_start + 2, num_instructions);
+}
+
 void Glyf::Glyph::rasterize_impl(Gfx::PathRasterizer& rasterizer, Gfx::AffineTransform const& transform) const
 {
     // Get offset for flags, x, and y.
