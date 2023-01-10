@@ -667,13 +667,13 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
         if (response.is_error())
             return;
 
-        auto set_theme_from_file_result = m_preview_widget->set_theme_from_file(response.release_value());
-        if (set_theme_from_file_result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Setting theme from file has failed: {}", set_theme_from_file_result.error()));
+        auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
+        if (load_from_file_result.is_error())
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
     }
 }
 
