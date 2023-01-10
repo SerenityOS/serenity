@@ -20,9 +20,15 @@ JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(element.realm(), "NamedNodeMap"))
+    : Bindings::LegacyPlatformObject(element.realm())
     , m_element(element)
 {
+}
+
+void NamedNodeMap::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NamedNodeMapPrototype>(realm, "NamedNodeMap"));
 }
 
 void NamedNodeMap::visit_edges(Cell::Visitor& visitor)

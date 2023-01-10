@@ -10,8 +10,8 @@
 
 namespace Web::Bindings {
 
-LegacyPlatformObject::LegacyPlatformObject(JS::Object& prototype)
-    : PlatformObject(prototype)
+LegacyPlatformObject::LegacyPlatformObject(JS::Realm& realm)
+    : PlatformObject(realm)
 {
 }
 

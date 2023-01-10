@@ -39,6 +39,7 @@ public:
 private:
     explicit TreeWalker(Node& root);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     enum class ChildTraversalType {

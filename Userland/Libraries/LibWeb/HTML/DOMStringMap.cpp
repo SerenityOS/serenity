@@ -19,12 +19,18 @@ JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)
-    : LegacyPlatformObject(Bindings::cached_web_prototype(element.realm(), "DOMStringMap"))
+    : LegacyPlatformObject(element.realm())
     , m_associated_element(element)
 {
 }
 
 DOMStringMap::~DOMStringMap() = default;
+
+void DOMStringMap::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMStringMapPrototype>(realm, "DOMStringMap"));
+}
 
 void DOMStringMap::visit_edges(Cell::Visitor& visitor)
 {

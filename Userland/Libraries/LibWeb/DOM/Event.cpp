@@ -25,20 +25,26 @@ JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, DeprecatedFlyStr
 }
 
 Event::Event(JS::Realm& realm, DeprecatedFlyString const& type)
-    : PlatformObject(Bindings::cached_web_prototype(realm, "Event"))
+    : PlatformObject(realm)
     , m_type(type)
     , m_initialized(true)
 {
 }
 
 Event::Event(JS::Realm& realm, DeprecatedFlyString const& type, EventInit const& event_init)
-    : PlatformObject(Bindings::cached_web_prototype(realm, "Event"))
+    : PlatformObject(realm)
     , m_type(type)
     , m_bubbles(event_init.bubbles)
     , m_cancelable(event_init.cancelable)
     , m_composed(event_init.composed)
     , m_initialized(true)
 {
+}
+
+void Event::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::EventPrototype>(realm, "Event"));
 }
 
 void Event::visit_edges(Visitor& visitor)

@@ -35,6 +35,7 @@ public:
 private:
     FileList(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     Vector<JS::NonnullGCPtr<File>> m_files;

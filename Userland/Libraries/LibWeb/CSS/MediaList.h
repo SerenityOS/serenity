@@ -39,6 +39,8 @@ public:
 private:
     MediaList(JS::Realm&, NonnullRefPtrVector<MediaQuery>&&);
 
+    virtual void initialize(JS::Realm&) override;
+
     NonnullRefPtrVector<MediaQuery> m_media;
 };
 

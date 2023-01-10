@@ -17,12 +17,18 @@ JS::NonnullGCPtr<FileList> FileList::create(JS::Realm& realm, Vector<JS::Nonnull
 }
 
 FileList::FileList(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(realm, "FileList"))
+    : Bindings::LegacyPlatformObject(realm)
     , m_files(move(files))
 {
 }
 
 FileList::~FileList() = default;
+
+void FileList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FileListPrototype>(realm, "FileList"));
+}
 
 // https://w3c.github.io/FileAPI/#dfn-item
 bool FileList::is_supported_property_index(u32 index) const

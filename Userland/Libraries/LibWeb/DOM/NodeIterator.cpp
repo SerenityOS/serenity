@@ -12,7 +12,7 @@
 namespace Web::DOM {
 
 NodeIterator::NodeIterator(Node& root)
-    : PlatformObject(Bindings::cached_web_prototype(root.realm(), "NodeIterator"))
+    : PlatformObject(root.realm())
     , m_root(root)
     , m_reference({ root })
 {
@@ -20,6 +20,12 @@ NodeIterator::NodeIterator(Node& root)
 }
 
 NodeIterator::~NodeIterator() = default;
+
+void NodeIterator::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeIteratorPrototype>(realm, "NodeIterator"));
+}
 
 void NodeIterator::finalize()
 {

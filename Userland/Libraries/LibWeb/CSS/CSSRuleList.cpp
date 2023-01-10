@@ -26,13 +26,19 @@ CSSRuleList* CSSRuleList::create(JS::Realm& realm, JS::MarkedVector<CSSRule*> co
 }
 
 CSSRuleList::CSSRuleList(JS::Realm& realm)
-    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"))
+    : Bindings::LegacyPlatformObject(realm)
 {
 }
 
 CSSRuleList* CSSRuleList::create_empty(JS::Realm& realm)
 {
     return realm.heap().allocate<CSSRuleList>(realm, realm);
+}
+
+void CSSRuleList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"));
 }
 
 void CSSRuleList::visit_edges(Cell::Visitor& visitor)

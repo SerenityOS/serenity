@@ -20,12 +20,18 @@ JS::NonnullGCPtr<DOMRectList> DOMRectList::create(JS::Realm& realm, Vector<JS::H
 }
 
 DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rects)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(realm, "DOMRectList"))
+    : Bindings::LegacyPlatformObject(realm)
     , m_rects(move(rects))
 {
 }
 
 DOMRectList::~DOMRectList() = default;
+
+void DOMRectList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectListPrototype>(realm, "DOMRectList"));
+}
 
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length
 u32 DOMRectList::length() const
