@@ -27,10 +27,15 @@ ErrorEvent::ErrorEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, 
     , m_colno(event_init.colno)
     , m_error(event_init.error)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ErrorEvent"));
 }
 
 ErrorEvent::~ErrorEvent() = default;
+
+void ErrorEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ErrorEventPrototype>(realm, "ErrorEvent"));
+}
 
 void ErrorEvent::visit_edges(Cell::Visitor& visitor)
 {

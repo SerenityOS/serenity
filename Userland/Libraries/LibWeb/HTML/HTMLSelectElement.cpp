@@ -16,10 +16,15 @@ namespace Web::HTML {
 HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLSelectElement"));
 }
 
 HTMLSelectElement::~HTMLSelectElement() = default;
+
+void HTMLSelectElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSelectElementPrototype>(realm, "HTMLSelectElement"));
+}
 
 void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
 {

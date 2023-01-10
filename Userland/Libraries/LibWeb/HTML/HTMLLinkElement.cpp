@@ -22,10 +22,15 @@ namespace Web::HTML {
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLLinkElement"));
 }
 
 HTMLLinkElement::~HTMLLinkElement() = default;
+
+void HTMLLinkElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLinkElementPrototype>(realm, "HTMLLinkElement"));
+}
 
 void HTMLLinkElement::inserted()
 {

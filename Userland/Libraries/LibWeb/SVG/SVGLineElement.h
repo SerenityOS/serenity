@@ -29,6 +29,8 @@ public:
 private:
     SVGLineElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     Optional<Gfx::Path> m_path;
 
     Optional<float> m_x1;

@@ -15,10 +15,15 @@ namespace Web::HTML {
 HTMLBodyElement::HTMLBodyElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLBodyElement"));
 }
 
 HTMLBodyElement::~HTMLBodyElement() = default;
+
+void HTMLBodyElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBodyElementPrototype>(realm, "HTMLBodyElement"));
+}
 
 void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

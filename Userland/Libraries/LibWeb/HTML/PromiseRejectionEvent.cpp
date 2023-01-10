@@ -24,7 +24,6 @@ PromiseRejectionEvent::PromiseRejectionEvent(JS::Realm& realm, DeprecatedFlyStri
     , m_promise(const_cast<JS::Promise*>(event_init.promise.cell()))
     , m_reason(event_init.reason)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "PromiseRejectionEvent"));
 }
 
 PromiseRejectionEvent::~PromiseRejectionEvent() = default;
@@ -34,6 +33,12 @@ void PromiseRejectionEvent::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_promise);
     visitor.visit(m_reason);
+}
+
+void PromiseRejectionEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PromiseRejectionEventPrototype>(realm, "PromiseRejectionEvent"));
 }
 
 }

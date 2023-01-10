@@ -20,6 +20,11 @@ CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& sup
     : CSSConditionRule(realm, rules)
     , m_supports(move(supports))
 {
+}
+
+void CSSSupportsRule::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSSupportsRulePrototype>(realm, "CSSSupportsRule"));
 }
 

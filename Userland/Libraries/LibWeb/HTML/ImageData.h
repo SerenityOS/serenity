@@ -31,6 +31,7 @@ public:
 private:
     ImageData(JS::Realm&, NonnullRefPtr<Gfx::Bitmap>, JS::NonnullGCPtr<JS::Uint8ClampedArray>);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;

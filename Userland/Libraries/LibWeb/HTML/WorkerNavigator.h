@@ -28,6 +28,8 @@ public:
 
 private:
     explicit WorkerNavigator(WorkerGlobalScope&);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

@@ -87,7 +87,12 @@ namespace Web::SVG {
 SVGPathElement::SVGPathElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPathElement"));
+}
+
+void SVGPathElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPathElementPrototype>(realm, "SVGPathElement"));
 }
 
 void SVGPathElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

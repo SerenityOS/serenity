@@ -25,10 +25,15 @@ Request::Request(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> req
     : PlatformObject(realm)
     , m_request(request)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Request"));
 }
 
 Request::~Request() = default;
+
+void Request::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::RequestPrototype>(realm, "Request"));
+}
 
 void Request::visit_edges(Cell::Visitor& visitor)
 {

@@ -24,11 +24,16 @@ MouseEvent::MouseEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, 
     , m_button(event_init.button)
     , m_buttons(event_init.buttons)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MouseEvent"));
     set_event_characteristics();
 }
 
 MouseEvent::~MouseEvent() = default;
+
+void MouseEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"));
+}
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button
 static i16 determine_button(unsigned mouse_button)

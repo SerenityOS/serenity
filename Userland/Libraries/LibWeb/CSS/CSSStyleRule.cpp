@@ -21,6 +21,11 @@ CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& sel
     , m_selectors(move(selectors))
     , m_declaration(declaration)
 {
+}
+
+void CSSStyleRule::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleRulePrototype>(realm, "CSSStyleRule"));
 }
 

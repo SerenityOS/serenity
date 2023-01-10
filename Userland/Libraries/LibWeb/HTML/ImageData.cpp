@@ -36,10 +36,15 @@ ImageData::ImageData(JS::Realm& realm, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::No
     , m_bitmap(move(bitmap))
     , m_data(move(data))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ImageData"));
 }
 
 ImageData::~ImageData() = default;
+
+void ImageData::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ImageDataPrototype>(realm, "ImageData"));
+}
 
 void ImageData::visit_edges(Cell::Visitor& visitor)
 {

@@ -39,6 +39,8 @@ public:
 private:
     HTMLProgressElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     void progress_position_updated();
 
     bool is_determinate() const { return has_attribute(HTML::AttributeNames::value); }

@@ -14,7 +14,12 @@ namespace Web::SVG {
 SVGPolylineElement::SVGPolylineElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPolylineElement"));
+}
+
+void SVGPolylineElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolylineElementPrototype>(realm, "SVGPolylineElement"));
 }
 
 void SVGPolylineElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

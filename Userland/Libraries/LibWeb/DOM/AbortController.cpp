@@ -21,10 +21,15 @@ AbortController::AbortController(JS::Realm& realm, JS::NonnullGCPtr<AbortSignal>
     : PlatformObject(realm)
     , m_signal(move(signal))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "AbortController"));
 }
 
 AbortController::~AbortController() = default;
+
+void AbortController::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortControllerPrototype>(realm, "AbortController"));
+}
 
 void AbortController::visit_edges(Cell::Visitor& visitor)
 {

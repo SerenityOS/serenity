@@ -17,13 +17,17 @@ namespace Web::DOM {
 Text::Text(Document& document, DeprecatedString const& data)
     : CharacterData(document, NodeType::TEXT_NODE, data)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "Text"));
 }
 
 Text::Text(Document& document, NodeType type, DeprecatedString const& data)
     : CharacterData(document, type, data)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "Text"));
+}
+
+void Text::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextPrototype>(realm, "Text"));
 }
 
 void Text::visit_edges(Cell::Visitor& visitor)

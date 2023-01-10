@@ -12,10 +12,15 @@ namespace Web::HTML {
 HTMLTableCaptionElement::HTMLTableCaptionElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableCaptionElement"));
 }
 
 HTMLTableCaptionElement::~HTMLTableCaptionElement() = default;
+
+void HTMLTableCaptionElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCaptionElementPrototype>(realm, "HTMLTableCaptionElement"));
+}
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2
 void HTMLTableCaptionElement::apply_presentational_hints(CSS::StyleProperties& style) const

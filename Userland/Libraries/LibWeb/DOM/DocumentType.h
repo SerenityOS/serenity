@@ -36,6 +36,8 @@ public:
 private:
     explicit DocumentType(Document&);
 
+    virtual void initialize(JS::Realm&) override;
+
     DeprecatedString m_name;
     DeprecatedString m_public_id;
     DeprecatedString m_system_id;

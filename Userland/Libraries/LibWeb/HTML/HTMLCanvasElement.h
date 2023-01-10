@@ -40,6 +40,7 @@ public:
 private:
     HTMLCanvasElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

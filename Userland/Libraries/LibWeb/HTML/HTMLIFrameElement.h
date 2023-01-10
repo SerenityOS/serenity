@@ -28,6 +28,8 @@ public:
 private:
     HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     // ^DOM::Element
     virtual void inserted() override;
     virtual void removed_from(Node*) override;

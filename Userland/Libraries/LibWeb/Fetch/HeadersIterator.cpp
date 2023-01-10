@@ -33,10 +33,15 @@ HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKin
     , m_headers(headers)
     , m_iteration_kind(iteration_kind)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(headers.realm(), "HeadersIterator"));
 }
 
 HeadersIterator::~HeadersIterator() = default;
+
+void HeadersIterator::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(realm, "HeadersIterator"));
+}
 
 void HeadersIterator::visit_edges(JS::Cell::Visitor& visitor)
 {

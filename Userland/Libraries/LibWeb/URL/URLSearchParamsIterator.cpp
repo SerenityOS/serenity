@@ -33,10 +33,15 @@ URLSearchParamsIterator::URLSearchParamsIterator(URLSearchParams const& url_sear
     , m_url_search_params(url_search_params)
     , m_iteration_kind(iteration_kind)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(url_search_params.realm(), "URLSearchParamsIterator"));
 }
 
 URLSearchParamsIterator::~URLSearchParamsIterator() = default;
+
+void URLSearchParamsIterator::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(realm, "URLSearchParamsIterator"));
+}
 
 void URLSearchParamsIterator::visit_edges(JS::Cell::Visitor& visitor)
 {

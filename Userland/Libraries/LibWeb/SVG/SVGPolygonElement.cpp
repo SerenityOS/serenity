@@ -14,7 +14,12 @@ namespace Web::SVG {
 SVGPolygonElement::SVGPolygonElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPolygonElement"));
+}
+
+void SVGPolygonElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolygonElementPrototype>(realm, "SVGPolygonElement"));
 }
 
 void SVGPolygonElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

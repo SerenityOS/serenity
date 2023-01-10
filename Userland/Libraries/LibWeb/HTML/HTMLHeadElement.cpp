@@ -12,8 +12,14 @@ namespace Web::HTML {
 HTMLHeadElement::HTMLHeadElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLHeadElement"));
 }
 
 HTMLHeadElement::~HTMLHeadElement() = default;
+
+void HTMLHeadElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHeadElementPrototype>(realm, "HTMLHeadElement"));
+}
+
 }

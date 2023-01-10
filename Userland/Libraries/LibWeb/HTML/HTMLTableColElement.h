@@ -18,6 +18,8 @@ public:
 
 private:
     HTMLTableColElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

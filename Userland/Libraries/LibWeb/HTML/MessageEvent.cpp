@@ -25,10 +25,15 @@ MessageEvent::MessageEvent(JS::Realm& realm, DeprecatedFlyString const& event_na
     , m_origin(event_init.origin)
     , m_last_event_id(event_init.last_event_id)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MessageEvent"));
 }
 
 MessageEvent::~MessageEvent() = default;
+
+void MessageEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessageEventPrototype>(realm, "MessageEvent"));
+}
 
 void MessageEvent::visit_edges(Cell::Visitor& visitor)
 {

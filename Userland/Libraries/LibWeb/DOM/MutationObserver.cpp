@@ -21,7 +21,6 @@ MutationObserver::MutationObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackT
     : PlatformObject(realm)
     , m_callback(move(callback))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MutationObserver"));
 
     // 1. Set this’s callback to callback.
 
@@ -31,6 +30,12 @@ MutationObserver::MutationObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackT
 }
 
 MutationObserver::~MutationObserver() = default;
+
+void MutationObserver::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationObserverPrototype>(realm, "MutationObserver"));
+}
 
 void MutationObserver::visit_edges(Cell::Visitor& visitor)
 {

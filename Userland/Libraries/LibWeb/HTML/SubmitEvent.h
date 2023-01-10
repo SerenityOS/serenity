@@ -29,6 +29,7 @@ public:
 private:
     SubmitEvent(JS::Realm&, DeprecatedFlyString const& event_name, SubmitEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<HTMLElement> m_submitter;

@@ -12,8 +12,14 @@ namespace Web::HTML {
 HTMLAudioElement::HTMLAudioElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLMediaElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLAudioElement"));
 }
 
 HTMLAudioElement::~HTMLAudioElement() = default;
+
+void HTMLAudioElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAudioElementPrototype>(realm, "HTMLAudioElement"));
+}
+
 }

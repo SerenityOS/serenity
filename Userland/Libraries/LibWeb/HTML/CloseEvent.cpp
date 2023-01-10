@@ -25,9 +25,14 @@ CloseEvent::CloseEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, 
     , m_code(event_init.code)
     , m_reason(event_init.reason)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "CloseEvent"));
 }
 
 CloseEvent::~CloseEvent() = default;
+
+void CloseEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CloseEventPrototype>(realm, "CloseEvent"));
+}
 
 }

@@ -29,8 +29,6 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_value(DeprecatedString::empty())
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLInputElement"));
-
     activation_behavior = [this](auto&) {
         // The activation behavior for input elements are these steps:
 
@@ -42,6 +40,12 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
 }
 
 HTMLInputElement::~HTMLInputElement() = default;
+
+void HTMLInputElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLInputElementPrototype>(realm, "HTMLInputElement"));
+}
 
 void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
 {

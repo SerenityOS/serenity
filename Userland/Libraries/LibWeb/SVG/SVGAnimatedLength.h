@@ -25,6 +25,7 @@ public:
 private:
     SVGAnimatedLength(JS::Realm&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<SVGLength> m_base_val;

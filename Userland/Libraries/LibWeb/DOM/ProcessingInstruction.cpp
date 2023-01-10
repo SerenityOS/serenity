@@ -15,7 +15,12 @@ ProcessingInstruction::ProcessingInstruction(Document& document, DeprecatedStrin
     : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, data)
     , m_target(target)
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "ProcessingInstruction"));
+}
+
+void ProcessingInstruction::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ProcessingInstructionPrototype>(realm, "ProcessingInstruction"));
 }
 
 }

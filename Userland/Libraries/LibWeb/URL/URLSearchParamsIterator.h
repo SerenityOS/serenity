@@ -24,6 +24,7 @@ public:
 private:
     URLSearchParamsIterator(URLSearchParams const&, JS::Object::PropertyKind iteration_kind);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     URLSearchParams const& m_url_search_params;

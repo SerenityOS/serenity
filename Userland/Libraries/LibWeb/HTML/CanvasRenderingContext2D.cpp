@@ -33,10 +33,15 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasE
     , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
     , m_element(element)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "CanvasRenderingContext2D"));
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
+
+void CanvasRenderingContext2D::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>(realm, "CanvasRenderingContext2D"));
+}
 
 void CanvasRenderingContext2D::visit_edges(Cell::Visitor& visitor)
 {

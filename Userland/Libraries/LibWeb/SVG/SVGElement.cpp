@@ -14,7 +14,12 @@ SVGElement::SVGElement(DOM::Document& document, DOM::QualifiedName qualified_nam
     : Element(document, move(qualified_name))
     , m_dataset(HTML::DOMStringMap::create(*this))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGElement"));
+}
+
+void SVGElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGElementPrototype>(realm, "SVGElement"));
 }
 
 void SVGElement::visit_edges(Cell::Visitor& visitor)

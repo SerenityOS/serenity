@@ -22,10 +22,15 @@ Response::Response(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> 
     : PlatformObject(realm)
     , m_response(response)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Response"));
 }
 
 Response::~Response() = default;
+
+void Response::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResponsePrototype>(realm, "Response"));
+}
 
 void Response::visit_edges(Cell::Visitor& visitor)
 {

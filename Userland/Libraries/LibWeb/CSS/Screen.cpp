@@ -22,7 +22,12 @@ Screen::Screen(HTML::Window& window)
     : PlatformObject(window.realm())
     , m_window(window)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ScreenPrototype>(window.realm(), "Screen"));
+}
+
+void Screen::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ScreenPrototype>(realm, "Screen"));
 }
 
 void Screen::visit_edges(Cell::Visitor& visitor)

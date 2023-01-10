@@ -14,10 +14,15 @@ namespace Web::HTML {
 HTMLFontElement::HTMLFontElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLFontElement"));
 }
 
 HTMLFontElement::~HTMLFontElement() = default;
+
+void HTMLFontElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFontElementPrototype>(realm, "HTMLFontElement"));
+}
 
 void HTMLFontElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

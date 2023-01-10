@@ -23,10 +23,15 @@ SubmitEvent::SubmitEvent(JS::Realm& realm, DeprecatedFlyString const& event_name
     : DOM::Event(realm, event_name, event_init)
     , m_submitter(event_init.submitter)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "SubmitEvent"));
 }
 
 SubmitEvent::~SubmitEvent() = default;
+
+void SubmitEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SubmitEventPrototype>(realm, "SubmitEvent"));
+}
 
 void SubmitEvent::visit_edges(Cell::Visitor& visitor)
 {

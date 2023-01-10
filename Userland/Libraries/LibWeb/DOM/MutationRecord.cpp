@@ -29,10 +29,15 @@ MutationRecord::MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type
     , m_attribute_namespace(attribute_namespace)
     , m_old_value(old_value)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MutationRecord"));
 }
 
 MutationRecord::~MutationRecord() = default;
+
+void MutationRecord::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationRecordPrototype>(realm, "MutationRecord"));
+}
 
 void MutationRecord::visit_edges(Cell::Visitor& visitor)
 {

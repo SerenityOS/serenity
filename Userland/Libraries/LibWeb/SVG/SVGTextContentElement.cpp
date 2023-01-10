@@ -15,7 +15,12 @@ namespace Web::SVG {
 SVGTextContentElement::SVGTextContentElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGTextContentElement"));
+}
+
+void SVGTextContentElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextContentElementPrototype>(realm, "SVGTextContentElement"));
 }
 
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars

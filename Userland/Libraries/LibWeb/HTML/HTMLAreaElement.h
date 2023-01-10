@@ -23,6 +23,8 @@ public:
 private:
     HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     // ^DOM::Element
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual i32 default_tab_index_value() const override;

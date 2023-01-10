@@ -22,6 +22,7 @@ public:
     JS::ThrowCompletionOr<JS::Object*> next();
 
 private:
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     HeadersIterator(Headers const&, JS::Object::PropertyKind iteration_kind);

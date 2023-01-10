@@ -24,6 +24,8 @@ public:
 private:
     IdleDeadline(JS::Realm&, bool did_timeout);
 
+    virtual void initialize(JS::Realm&) override;
+
     bool m_did_timeout { false };
 };
 

@@ -43,10 +43,15 @@ CanvasGradient::CanvasGradient(JS::Realm& realm, Type type)
     : PlatformObject(realm)
     , m_type(type)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "CanvasGradient"));
 }
 
 CanvasGradient::~CanvasGradient() = default;
+
+void CanvasGradient::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasGradientPrototype>(realm, "CanvasGradient"));
+}
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvasgradient-addcolorstop
 WebIDL::ExceptionOr<void> CanvasGradient::add_color_stop(double offset, DeprecatedString const& color)

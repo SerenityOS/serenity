@@ -23,6 +23,8 @@ public:
 private:
     SVGPolylineElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     Optional<Gfx::Path> m_path;
 
     Vector<Gfx::FloatPoint> m_points;

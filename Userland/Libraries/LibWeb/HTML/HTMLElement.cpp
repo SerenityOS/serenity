@@ -36,7 +36,6 @@ namespace Web::HTML {
 HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLElement"));
 }
 
 HTMLElement::~HTMLElement() = default;
@@ -44,6 +43,8 @@ HTMLElement::~HTMLElement() = default;
 void HTMLElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
+
     m_dataset = DOMStringMap::create(*this);
 }
 

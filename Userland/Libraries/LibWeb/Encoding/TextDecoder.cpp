@@ -29,10 +29,15 @@ TextDecoder::TextDecoder(JS::Realm& realm, TextCodec::Decoder& decoder, Deprecat
     , m_fatal(fatal)
     , m_ignore_bom(ignore_bom)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "TextDecoder"));
 }
 
 TextDecoder::~TextDecoder() = default;
+
+void TextDecoder::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextDecoderPrototype>(realm, "TextDecoder"));
+}
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode
 WebIDL::ExceptionOr<DeprecatedString> TextDecoder::decode(JS::Handle<JS::Object> const& input) const

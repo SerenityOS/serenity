@@ -24,6 +24,8 @@ public:
 
 private:
     FocusEvent(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const&);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

@@ -23,8 +23,6 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLImageElement"));
-
     m_image_loader.on_load = [this] {
         set_needs_style_update(true);
         this->document().set_needs_layout();
@@ -49,6 +47,12 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
 }
 
 HTMLImageElement::~HTMLImageElement() = default;
+
+void HTMLImageElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"));
+}
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

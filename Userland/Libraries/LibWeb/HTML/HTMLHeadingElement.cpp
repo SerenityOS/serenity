@@ -12,10 +12,15 @@ namespace Web::HTML {
 HTMLHeadingElement::HTMLHeadingElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLHeadingElement"));
 }
 
 HTMLHeadingElement::~HTMLHeadingElement() = default;
+
+void HTMLHeadingElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHeadingElementPrototype>(realm, "HTMLHeadingElement"));
+}
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2
 void HTMLHeadingElement::apply_presentational_hints(CSS::StyleProperties& style) const

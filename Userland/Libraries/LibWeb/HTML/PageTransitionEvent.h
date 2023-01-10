@@ -28,6 +28,8 @@ public:
     bool persisted() const { return m_persisted; }
 
 private:
+    virtual void initialize(JS::Realm&) override;
+
     bool m_persisted { false };
 };
 

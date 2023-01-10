@@ -29,6 +29,8 @@ public:
 private:
     HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const& event_name) override;
 

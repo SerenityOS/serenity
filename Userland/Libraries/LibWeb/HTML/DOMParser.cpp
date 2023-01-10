@@ -21,10 +21,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::construct_impl(JS::R
 DOMParser::DOMParser(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "DOMParser"));
 }
 
 DOMParser::~DOMParser() = default;
+
+void DOMParser::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMParserPrototype>(realm, "DOMParser"));
+}
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
 JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString const& string, Bindings::DOMParserSupportedType type)

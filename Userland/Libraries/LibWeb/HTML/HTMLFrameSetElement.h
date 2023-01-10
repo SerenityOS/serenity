@@ -23,9 +23,9 @@ public:
 private:
     HTMLFrameSetElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void parse_attribute(DeprecatedFlyString const&, DeprecatedString const&) override;
 
-private:
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const& event_name) override;
 

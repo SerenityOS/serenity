@@ -21,6 +21,11 @@ CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)
     : CSSRule(realm)
     , m_font_face(move(font_face))
 {
+}
+
+void CSSFontFaceRule::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSFontFaceRulePrototype>(realm, "CSSFontFaceRule"));
 }
 

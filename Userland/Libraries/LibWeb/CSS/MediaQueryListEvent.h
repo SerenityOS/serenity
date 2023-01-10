@@ -29,6 +29,8 @@ public:
 private:
     MediaQueryListEvent(JS::Realm&, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
+
     DeprecatedString m_media;
     bool m_matches;
 };

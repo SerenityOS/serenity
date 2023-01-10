@@ -26,6 +26,8 @@ public:
 
 protected:
     CSSConditionRule(JS::Realm&, CSSRuleList&);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

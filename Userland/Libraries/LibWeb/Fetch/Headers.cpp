@@ -33,10 +33,15 @@ Headers::Headers(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::HeaderList> 
     : PlatformObject(realm)
     , m_header_list(header_list)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Headers"));
 }
 
 Headers::~Headers() = default;
+
+void Headers::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersPrototype>(realm, "Headers"));
+}
 
 void Headers::visit_edges(JS::Cell::Visitor& visitor)
 {

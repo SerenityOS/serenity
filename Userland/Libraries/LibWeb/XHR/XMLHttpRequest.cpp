@@ -55,10 +55,15 @@ XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::Head
     , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)
 {
     set_overrides_must_survive_garbage_collection(true);
-    set_prototype(&Bindings::cached_web_prototype(window.realm(), "XMLHttpRequest"));
 }
 
 XMLHttpRequest::~XMLHttpRequest() = default;
+
+void XMLHttpRequest::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLHttpRequestPrototype>(realm, "XMLHttpRequest"));
+}
 
 void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
 {

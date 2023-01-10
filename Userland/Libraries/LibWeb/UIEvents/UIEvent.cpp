@@ -22,7 +22,6 @@ UIEvent* UIEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& ev
 UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name)
     : Event(realm, event_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "UIEvent"));
 }
 
 UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, UIEventInit const& event_init)
@@ -30,10 +29,15 @@ UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, UIEven
     , m_view(event_init.view)
     , m_detail(event_init.detail)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "UIEvent"));
 }
 
 UIEvent::~UIEvent() = default;
+
+void UIEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::UIEventPrototype>(realm, "UIEvent"));
+}
 
 void UIEvent::visit_edges(Cell::Visitor& visitor)
 {

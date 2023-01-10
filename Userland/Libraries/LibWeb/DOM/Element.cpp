@@ -56,7 +56,6 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Element"));
     make_html_uppercased_qualified_name();
 }
 
@@ -65,6 +64,8 @@ Element::~Element() = default;
 void Element::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
+
     m_attributes = NamedNodeMap::create(*this);
 }
 

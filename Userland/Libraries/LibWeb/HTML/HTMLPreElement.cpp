@@ -12,10 +12,15 @@ namespace Web::HTML {
 HTMLPreElement::HTMLPreElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLPreElement"));
 }
 
 HTMLPreElement::~HTMLPreElement() = default;
+
+void HTMLPreElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLPreElementPrototype>(realm, "HTMLPreElement"));
+}
 
 void HTMLPreElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

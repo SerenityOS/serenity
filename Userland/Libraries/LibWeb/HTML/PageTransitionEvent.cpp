@@ -23,9 +23,14 @@ PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, DeprecatedFlyString c
     : DOM::Event(realm, event_name, event_init)
     , m_persisted(event_init.persisted)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "PageTransitionEvent"));
 }
 
 PageTransitionEvent::~PageTransitionEvent() = default;
+
+void PageTransitionEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PageTransitionEventPrototype>(realm, "PageTransitionEvent"));
+}
 
 }

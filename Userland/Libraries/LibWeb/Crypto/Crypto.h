@@ -26,11 +26,11 @@ public:
     DeprecatedString random_uuid() const;
 
 protected:
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
     explicit Crypto(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
 
     JS::GCPtr<SubtleCrypto> m_subtle;
 };

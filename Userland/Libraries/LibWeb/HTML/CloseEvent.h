@@ -33,6 +33,8 @@ public:
 private:
     CloseEvent(JS::Realm&, DeprecatedFlyString const& event_name, CloseEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
+
     bool m_was_clean { false };
     u16 m_code { 0 };
     DeprecatedString m_reason;

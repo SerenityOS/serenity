@@ -20,10 +20,15 @@ Selection::Selection(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Do
     : PlatformObject(realm)
     , m_document(document)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Selection"));
 }
 
 Selection::~Selection() = default;
+
+void Selection::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SelectionPrototype>(realm, "Selection"));
+}
 
 // https://w3c.github.io/selection-api/#dfn-empty
 bool Selection::is_empty() const

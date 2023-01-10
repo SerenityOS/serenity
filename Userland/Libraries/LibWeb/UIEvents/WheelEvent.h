@@ -42,6 +42,8 @@ public:
 private:
     WheelEvent(JS::Realm&, DeprecatedFlyString const& event_name, WheelEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
+
     void set_event_characteristics();
 
     double m_delta_x { 0 };

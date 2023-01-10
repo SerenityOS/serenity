@@ -46,6 +46,8 @@ public:
 private:
     HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     bool has_ancestor_media_element_or_object_element_not_showing_fallback_content() const;

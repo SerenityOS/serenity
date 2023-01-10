@@ -32,6 +32,8 @@ public:
 private:
     HTMLAnchorElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     void run_activation_behavior(Web::DOM::Event const&);
 
     // ^DOM::Element

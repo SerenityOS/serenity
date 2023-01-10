@@ -21,6 +21,11 @@ CSSMediaRule::CSSMediaRule(JS::Realm& realm, MediaList& media, CSSRuleList& rule
     : CSSConditionRule(realm, rules)
     , m_media(media)
 {
+}
+
+void CSSMediaRule::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSMediaRulePrototype>(realm, "CSSMediaRule"));
 }
 

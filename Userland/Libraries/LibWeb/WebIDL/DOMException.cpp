@@ -24,9 +24,14 @@ DOMException::DOMException(JS::Realm& realm, DeprecatedFlyString const& name, De
     , m_name(name)
     , m_message(message)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "DOMException"));
 }
 
 DOMException::~DOMException() = default;
+
+void DOMException::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMExceptionPrototype>(realm, "DOMException"));
+}
 
 }

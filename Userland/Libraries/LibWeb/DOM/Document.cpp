@@ -297,8 +297,6 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Document"));
-
     HTML::main_thread_event_loop().register_document({}, *this);
 
     m_style_update_timer = Platform::Timer::create_single_shot(0, [this] {
@@ -313,6 +311,12 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
 Document::~Document()
 {
     HTML::main_thread_event_loop().unregister_document({}, *this);
+}
+
+void Document::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
 }
 
 void Document::visit_edges(Cell::Visitor& visitor)
