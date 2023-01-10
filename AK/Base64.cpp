@@ -15,29 +15,6 @@
 
 namespace AK {
 
-static constexpr Array alphabet = {
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-    'w', 'x', 'y', 'z', '0', '1', '2', '3',
-    '4', '5', '6', '7', '8', '9', '+', '/'
-};
-
-static consteval auto make_lookup_table()
-{
-    Array<i16, 256> table;
-    table.fill(-1);
-    for (size_t i = 0; i < alphabet.size(); ++i) {
-        table[alphabet[i]] = static_cast<i16>(i);
-    }
-    return table;
-}
-
-static constexpr auto alphabet_lookup_table = make_lookup_table();
-
 size_t calculate_base64_decoded_length(StringView input)
 {
     return input.length() * 3 / 4;
@@ -50,6 +27,8 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
 
 ErrorOr<ByteBuffer> decode_base64(StringView input)
 {
+    auto alphabet_lookup_table = base64_lookup_table();
+
     auto get = [&](size_t& offset, bool* is_padding, bool& parsed_something) -> ErrorOr<u8> {
         while (offset < input.length() && is_ascii_space(input[offset]))
             ++offset;
@@ -128,10 +107,10 @@ ErrorOr<String> encode_base64(ReadonlyBytes input)
         const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
         const u8 index3 = in2 & 0x3f;
 
-        char const out0 = alphabet[index0];
-        char const out1 = alphabet[index1];
-        char const out2 = is_16bit ? '=' : alphabet[index2];
-        char const out3 = is_8bit ? '=' : alphabet[index3];
+        char const out0 = base64_alphabet[index0];
+        char const out1 = base64_alphabet[index1];
+        char const out2 = is_16bit ? '=' : base64_alphabet[index2];
+        char const out3 = is_8bit ? '=' : base64_alphabet[index3];
 
         TRY(output.try_append(out0));
         TRY(output.try_append(out1));
@@ -201,6 +180,8 @@ ErrorOr<ByteBuffer> decode_forgiving_base64(StringView input)
         buffer = 0;
         accumulated_bits = 0;
     };
+
+    auto alphabet_lookup_table = base64_lookup_table();
 
     // 7. Let position be a position variable for data, initially pointing at the start of data.
     // 8. While position does not point past the end of data:
