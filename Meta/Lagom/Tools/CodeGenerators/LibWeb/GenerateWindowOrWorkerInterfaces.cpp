@@ -166,7 +166,7 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
 namespace Web::Bindings {
 )~~~");
 
-    auto add_interface = [&](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor, bool attach_to_global) {
+    auto add_interface = [&](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
         gen.set("interface_name", name);
         gen.set("prototype_class", prototype_class);
         gen.set("constructor_class", constructor_class);
@@ -182,15 +182,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 
     auto constructor = heap().allocate<@constructor_class@>(realm, realm);
     m_constructors.set("@interface_name@"sv, constructor);
-)~~~");
 
-        if (attach_to_global) {
-            gen.append(R"~~~(
-    auto& global = realm.global_object();
-    global.define_direct_property("@interface_name@", constructor.ptr(), JS::Attribute::Writable | JS::Attribute::Configurable);)~~~");
-        }
-
-        gen.append(R"~~~(
     prototype->define_direct_property(vm.names.constructor, constructor.ptr(), JS::Attribute::Writable | JS::Attribute::Configurable);
     constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@interface_name@"sv), JS::Attribute::Configurable);
 )~~~");
@@ -201,14 +193,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
             gen.append(R"~~~(
     auto legacy_constructor = heap().allocate<@legacy_constructor_class@>(realm, realm);
     m_constructors.set("@legacy_interface_name@"sv, legacy_constructor);
-)~~~");
 
-            if (attach_to_global) {
-                gen.append(R"~~~(
-    global.define_direct_property("@legacy_interface_name@", legacy_constructor.ptr(), JS::Attribute::Writable | JS::Attribute::Configurable);)~~~");
-            }
-
-            gen.append(R"~~~(
     legacy_constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@legacy_interface_name@"sv), JS::Attribute::Configurable);)~~~");
         }
 
@@ -219,23 +204,23 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
-        add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface), true);
+        add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
     }
 
     // FIXME: Special case window. We should convert Window and Location to use IDL
     {
         auto gen = generator.fork();
-        add_interface(gen, "Window"sv, "WindowPrototype"sv, "WindowConstructor"sv, {}, true);
-        add_interface(gen, "Location"sv, "LocationPrototype"sv, "LocationConstructor"sv, {}, true);
+        add_interface(gen, "Window"sv, "WindowPrototype"sv, "WindowConstructor"sv, {});
+        add_interface(gen, "Location"sv, "LocationPrototype"sv, "LocationConstructor"sv, {});
     }
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
     {
         auto gen = generator.fork();
-        add_interface(gen, "WebAssembly.Memory"sv, "WebAssemblyMemoryPrototype"sv, "WebAssemblyMemoryConstructor"sv, {}, false);
-        add_interface(gen, "WebAssembly.Instance"sv, "WebAssemblyInstancePrototype"sv, "WebAssemblyInstanceConstructor"sv, {}, false);
-        add_interface(gen, "WebAssembly.Module"sv, "WebAssemblyModulePrototype"sv, "WebAssemblyModuleConstructor"sv, {}, false);
-        add_interface(gen, "WebAssembly.Table"sv, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {}, false);
+        add_interface(gen, "WebAssembly.Memory"sv, "WebAssemblyMemoryPrototype"sv, "WebAssemblyMemoryConstructor"sv, {});
+        add_interface(gen, "WebAssembly.Instance"sv, "WebAssemblyInstancePrototype"sv, "WebAssemblyInstanceConstructor"sv, {});
+        add_interface(gen, "WebAssembly.Module"sv, "WebAssemblyModulePrototype"sv, "WebAssemblyModuleConstructor"sv, {});
+        add_interface(gen, "WebAssembly.Table"sv, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
     }
 
     generator.append(R"~~~(
@@ -262,7 +247,7 @@ static ErrorOr<void> generate_exposed_interface_header(StringView class_name, St
 
 namespace Web::Bindings {
 
-void add_@global_object_snake_name@_exposed_interfaces(JS::Object&, JS::Realm&);
+void add_@global_object_snake_name@_exposed_interfaces(JS::Object&);
 
 }
 
@@ -284,7 +269,6 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
     generator.set("global_object_snake_name", DeprecatedString(class_name).to_snakecase());
 
     generator.append(R"~~~(
-#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/@global_object_name@ExposedInterfaces.h>
@@ -317,15 +301,9 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
     generator.append(R"~~~(
 namespace Web::Bindings {
 
-void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::Realm& realm)
+void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
 {
-    auto& vm = global.vm();
-    // FIXME: Should we use vm.current_realm() here?
-
-    // NOTE: Temporarily disable garbage collection to prevent GC from triggering while a not-fully-constructed
-    //       prototype or constructor object has been allocated. This is a hack.
-    // FIXME: Find a nicer way to solve this.
-    JS::DeferGC defer_gc(vm.heap());
+    static constexpr u8 attr = JS::Attribute::Writable | JS::Attribute::Configurable;
 )~~~");
 
     auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class) {
@@ -333,7 +311,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::R
         gen.set("prototype_class", prototype_class);
 
         gen.append(R"~~~(
-    (void)ensure_web_prototype<@prototype_class@>(realm, "@interface_name@"sv);)~~~"); };
+    global.define_intrinsic_accessor("@interface_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@interface_name@"sv); });)~~~"); };
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();

@@ -1061,7 +1061,7 @@ HTML::BrowsingContext* Window::browsing_context()
 void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     auto& realm = this->realm();
-    add_window_exposed_interfaces(*this, realm);
+    add_window_exposed_interfaces(*this);
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 

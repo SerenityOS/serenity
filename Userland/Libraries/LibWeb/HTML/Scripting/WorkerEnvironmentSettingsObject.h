@@ -35,7 +35,7 @@ public:
         realm->set_host_defined(move(host_defined));
 
         // FIXME: Shared workers should use the shared worker method
-        Bindings::add_dedicated_worker_exposed_interfaces(realm->global_object(), *realm);
+        Bindings::add_dedicated_worker_exposed_interfaces(realm->global_object());
 
         return settings_object;
     }
