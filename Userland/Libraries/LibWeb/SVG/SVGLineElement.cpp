@@ -14,7 +14,12 @@ namespace Web::SVG {
 SVGLineElement::SVGLineElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGLineElement"));
+}
+
+void SVGLineElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLineElementPrototype>(realm, "SVGLineElement"));
 }
 
 void SVGLineElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

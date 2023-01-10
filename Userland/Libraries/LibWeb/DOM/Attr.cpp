@@ -29,7 +29,12 @@ Attr::Attr(Document& document, QualifiedName qualified_name, DeprecatedString va
     , m_value(move(value))
     , m_owner_element(owner_element)
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Attr"));
+}
+
+void Attr::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AttrPrototype>(realm, "Attr"));
 }
 
 void Attr::visit_edges(Cell::Visitor& visitor)

@@ -12,10 +12,15 @@ PerformanceTiming::PerformanceTiming(HTML::Window& window)
     : PlatformObject(window.realm())
     , m_window(window)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "PerformanceTiming"));
 }
 
 PerformanceTiming::~PerformanceTiming() = default;
+
+void PerformanceTiming::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformanceTimingPrototype>(realm, "PerformanceTiming"));
+}
 
 void PerformanceTiming::visit_edges(Cell::Visitor& visitor)
 {

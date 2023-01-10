@@ -41,6 +41,7 @@ public:
 private:
     explicit ReadableStream(JS::Realm&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://streams.spec.whatwg.org/#readablestream-controller

@@ -19,13 +19,17 @@ SVGAnimatedLength::SVGAnimatedLength(JS::Realm& realm, JS::NonnullGCPtr<SVGLengt
     , m_base_val(move(base_val))
     , m_anim_val(move(anim_val))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "SVGAnimatedLength"));
-
     // The object referenced by animVal will always be distinct from the one referenced by baseVal, even when the attribute is not animated.
     VERIFY(m_base_val.ptr() != m_anim_val.ptr());
 }
 
 SVGAnimatedLength::~SVGAnimatedLength() = default;
+
+void SVGAnimatedLength::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGAnimatedLengthPrototype>(realm, "SVGAnimatedLength"));
+}
 
 void SVGAnimatedLength::visit_edges(Cell::Visitor& visitor)
 {

@@ -28,7 +28,12 @@ Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const option
     , m_interpreter_scope(*m_interpreter)
     , m_implicit_port(MessagePort::create(document.realm()))
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Worker"));
+}
+
+void Worker::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"));
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)

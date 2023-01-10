@@ -23,10 +23,15 @@ JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::construct_impl(JS::
 IntersectionObserver::IntersectionObserver(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "IntersectionObserver"));
 }
 
 IntersectionObserver::~IntersectionObserver() = default;
+
+void IntersectionObserver::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverPrototype>(realm, "IntersectionObserver"));
+}
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-observe
 void IntersectionObserver::observe(DOM::Element& target)

@@ -22,7 +22,6 @@ DOMPointReadOnly::DOMPointReadOnly(JS::Realm& realm, double x, double y, double 
     , m_z(z)
     , m_w(w)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "DOMPointReadOnly"));
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dompointreadonly-frompoint
@@ -33,5 +32,11 @@ JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::from_point(JS::VM& vm, DOMP
 }
 
 DOMPointReadOnly::~DOMPointReadOnly() = default;
+
+void DOMPointReadOnly::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMPointReadOnlyPrototype>(realm, "DOMPointReadOnly"));
+}
 
 }

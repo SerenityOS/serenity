@@ -41,6 +41,7 @@ protected:
     UIEvent(JS::Realm&, DeprecatedFlyString const& event_name);
     UIEvent(JS::Realm&, DeprecatedFlyString const& event_name, UIEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<HTML::Window> m_view;

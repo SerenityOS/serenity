@@ -39,6 +39,8 @@ public:
 protected:
     DOMPointReadOnly(JS::Realm&, double x, double y, double z, double w);
 
+    virtual void initialize(JS::Realm&) override;
+
     double m_x;
     double m_y;
     double m_z;

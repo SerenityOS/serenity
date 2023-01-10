@@ -12,9 +12,14 @@ namespace Web::HTML {
 HTMLTableColElement::HTMLTableColElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableColElement"));
 }
 
 HTMLTableColElement::~HTMLTableColElement() = default;
+
+void HTMLTableColElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableColElementPrototype>(realm, "HTMLTableColElement"));
+}
 
 }

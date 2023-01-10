@@ -23,9 +23,14 @@ WebGLContextEvent::WebGLContextEvent(JS::Realm& realm, DeprecatedFlyString const
     : DOM::Event(realm, type, event_init)
     , m_status_message(event_init.status_message)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "WebGLContextEvent"));
 }
 
 WebGLContextEvent::~WebGLContextEvent() = default;
+
+void WebGLContextEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLContextEventPrototype>(realm, "WebGLContextEvent"));
+}
 
 }

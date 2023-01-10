@@ -55,6 +55,7 @@ private:
 
     [[nodiscard]] bool is_empty() const;
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://w3c.github.io/selection-api/#dfn-empty

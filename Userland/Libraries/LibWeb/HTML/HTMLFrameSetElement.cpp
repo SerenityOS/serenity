@@ -13,10 +13,15 @@ namespace Web::HTML {
 HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLFrameSetElement"));
 }
 
 HTMLFrameSetElement::~HTMLFrameSetElement() = default;
+
+void HTMLFrameSetElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>(realm, "HTMLFrameSetElement"));
+}
 
 void HTMLFrameSetElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {

@@ -58,6 +58,8 @@ public:
 protected:
     MouseEvent(JS::Realm&, DeprecatedFlyString const& event_name, MouseEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
+
 private:
     void set_event_characteristics();
 

@@ -12,8 +12,14 @@ namespace Web::HTML {
 HTMLDialogElement::HTMLDialogElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLDialogElement"));
 }
 
 HTMLDialogElement::~HTMLDialogElement() = default;
+
+void HTMLDialogElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDialogElementPrototype>(realm, "HTMLDialogElement"));
+}
+
 }

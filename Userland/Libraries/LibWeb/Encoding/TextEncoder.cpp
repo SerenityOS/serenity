@@ -19,10 +19,15 @@ JS::NonnullGCPtr<TextEncoder> TextEncoder::construct_impl(JS::Realm& realm)
 TextEncoder::TextEncoder(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "TextEncoder"));
 }
 
 TextEncoder::~TextEncoder() = default;
+
+void TextEncoder::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextEncoderPrototype>(realm, "TextEncoder"));
+}
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode
 JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const

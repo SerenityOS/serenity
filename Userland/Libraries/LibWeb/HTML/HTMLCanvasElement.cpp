@@ -21,10 +21,15 @@ static constexpr auto max_canvas_area = 16384 * 16384;
 HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLCanvasElement"));
 }
 
 HTMLCanvasElement::~HTMLCanvasElement() = default;
+
+void HTMLCanvasElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLCanvasElementPrototype>(realm, "HTMLCanvasElement"));
+}
 
 void HTMLCanvasElement::visit_edges(Cell::Visitor& visitor)
 {

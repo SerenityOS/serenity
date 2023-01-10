@@ -22,8 +22,6 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, Deprecated
     : PlatformObject(realm)
     , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Path2D"));
-
     // 1. Let output be a new Path2D object.
     // 2. If path is not given, then return output.
     if (!path.has_value())
@@ -55,5 +53,11 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, Deprecated
 }
 
 Path2D::~Path2D() = default;
+
+void Path2D::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::Path2DPrototype>(realm, "Path2D"));
+}
 
 }

@@ -12,10 +12,15 @@ namespace Web::HTML {
 HTMLBaseElement::HTMLBaseElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLBaseElement"));
 }
 
 HTMLBaseElement::~HTMLBaseElement() = default;
+
+void HTMLBaseElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBaseElementPrototype>(realm, "HTMLBaseElement"));
+}
 
 void HTMLBaseElement::inserted()
 {

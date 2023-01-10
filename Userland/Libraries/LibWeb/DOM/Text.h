@@ -38,6 +38,7 @@ protected:
     Text(Document&, DeprecatedString const&);
     Text(Document&, NodeType, DeprecatedString const&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:

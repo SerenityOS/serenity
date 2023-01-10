@@ -35,6 +35,7 @@ public:
 private:
     PromiseRejectionEvent(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::Promise* m_promise { nullptr };

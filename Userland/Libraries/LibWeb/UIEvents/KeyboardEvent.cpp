@@ -128,9 +128,14 @@ KeyboardEvent::KeyboardEvent(JS::Realm& realm, DeprecatedFlyString const& event_
     , m_key_code(event_init.key_code)
     , m_char_code(event_init.char_code)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "KeyboardEvent"));
 }
 
 KeyboardEvent::~KeyboardEvent() = default;
+
+void KeyboardEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::KeyboardEventPrototype>(realm, "KeyboardEvent"));
+}
 
 }

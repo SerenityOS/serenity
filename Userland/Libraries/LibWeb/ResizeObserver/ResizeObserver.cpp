@@ -21,10 +21,15 @@ JS::NonnullGCPtr<ResizeObserver> ResizeObserver::construct_impl(JS::Realm& realm
 ResizeObserver::ResizeObserver(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ResizeObserver"));
 }
 
 ResizeObserver::~ResizeObserver() = default;
+
+void ResizeObserver::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResizeObserverPrototype>(realm, "ResizeObserver"));
+}
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-observe
 void ResizeObserver::observe(DOM::Element& target, ResizeObserverOptions options)

@@ -13,14 +13,18 @@ namespace Web::HTML {
 HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLAnchorElement"));
-
     activation_behavior = [this](auto const& event) {
         run_activation_behavior(event);
     };
 }
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
+
+void HTMLAnchorElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"));
+}
 
 void HTMLAnchorElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {

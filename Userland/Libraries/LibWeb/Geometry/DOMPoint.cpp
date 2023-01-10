@@ -18,7 +18,6 @@ JS::NonnullGCPtr<DOMPoint> DOMPoint::construct_impl(JS::Realm& realm, double x, 
 DOMPoint::DOMPoint(JS::Realm& realm, double x, double y, double z, double w)
     : DOMPointReadOnly(realm, x, y, z, w)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "DOMPoint"));
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dompoint-frompoint
@@ -29,5 +28,11 @@ JS::NonnullGCPtr<DOMPoint> DOMPoint::from_point(JS::VM& vm, DOMPointInit const& 
 }
 
 DOMPoint::~DOMPoint() = default;
+
+void DOMPoint::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMPointPrototype>(realm, "DOMPoint"));
+}
 
 }

@@ -45,6 +45,8 @@ public:
 
 private:
     explicit Navigator(JS::Realm&);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

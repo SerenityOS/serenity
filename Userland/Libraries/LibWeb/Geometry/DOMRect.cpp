@@ -22,9 +22,14 @@ JS::NonnullGCPtr<DOMRect> DOMRect::create(JS::Realm& realm, Gfx::FloatRect const
 DOMRect::DOMRect(JS::Realm& realm, double x, double y, double width, double height)
     : DOMRectReadOnly(realm, x, y, width, height)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "DOMRect"));
 }
 
 DOMRect::~DOMRect() = default;
+
+void DOMRect::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectPrototype>(realm, "DOMRect"));
+}
 
 }

@@ -19,8 +19,6 @@ namespace Web::HTML {
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : BrowsingContextContainer(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLObjectElement"));
-
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
     // Whenever one of the following conditions occur:
     // - the element is created,
@@ -31,6 +29,12 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
 }
 
 HTMLObjectElement::~HTMLObjectElement() = default;
+
+void HTMLObjectElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLObjectElementPrototype>(realm, "HTMLObjectElement"));
+}
 
 void HTMLObjectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {

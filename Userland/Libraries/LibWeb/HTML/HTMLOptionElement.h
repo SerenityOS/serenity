@@ -38,6 +38,8 @@ private:
 
     HTMLOptionElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     void did_remove_attribute(DeprecatedFlyString const& name) override;
 

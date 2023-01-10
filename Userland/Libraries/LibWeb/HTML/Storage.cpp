@@ -18,10 +18,15 @@ JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
 Storage::Storage(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Storage"));
 }
 
 Storage::~Storage() = default;
+
+void Storage::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::StoragePrototype>(realm, "Storage"));
+}
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-length
 size_t Storage::length() const

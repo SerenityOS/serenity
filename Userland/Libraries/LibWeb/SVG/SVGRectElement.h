@@ -31,6 +31,8 @@ public:
 private:
     SVGRectElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     Gfx::FloatPoint calculate_used_corner_radius_values();
 
     Optional<Gfx::Path> m_path;

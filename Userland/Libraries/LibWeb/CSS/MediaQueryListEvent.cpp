@@ -20,9 +20,14 @@ MediaQueryListEvent::MediaQueryListEvent(JS::Realm& realm, DeprecatedFlyString c
     , m_media(event_init.media)
     , m_matches(event_init.matches)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListEventPrototype>(realm, "MediaQueryListEvent"));
 }
 
 MediaQueryListEvent::~MediaQueryListEvent() = default;
+
+void MediaQueryListEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListEventPrototype>(realm, "MediaQueryListEvent"));
+}
 
 }

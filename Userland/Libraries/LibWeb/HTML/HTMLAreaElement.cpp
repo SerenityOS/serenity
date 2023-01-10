@@ -13,10 +13,15 @@ namespace Web::HTML {
 HTMLAreaElement::HTMLAreaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLAreaElement"));
 }
 
 HTMLAreaElement::~HTMLAreaElement() = default;
+
+void HTMLAreaElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAreaElementPrototype>(realm, "HTMLAreaElement"));
+}
 
 void HTMLAreaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {

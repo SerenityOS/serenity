@@ -25,9 +25,14 @@ ProgressEvent::ProgressEvent(JS::Realm& realm, DeprecatedFlyString const& event_
     , m_loaded(event_init.loaded)
     , m_total(event_init.total)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ProgressEvent"));
 }
 
 ProgressEvent::~ProgressEvent() = default;
+
+void ProgressEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ProgressEventPrototype>(realm, "ProgressEvent"));
+}
 
 }

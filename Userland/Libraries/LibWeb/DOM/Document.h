@@ -450,6 +450,7 @@ public:
     DeprecatedString dump_accessibility_tree_as_json();
 
 protected:
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:

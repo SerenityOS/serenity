@@ -28,10 +28,15 @@ JS::NonnullGCPtr<XMLSerializer> XMLSerializer::construct_impl(JS::Realm& realm)
 XMLSerializer::XMLSerializer(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "XMLSerializer"));
 }
 
 XMLSerializer::~XMLSerializer() = default;
+
+void XMLSerializer::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLSerializerPrototype>(realm, "XMLSerializer"));
+}
 
 // https://w3c.github.io/DOM-Parsing/#dom-xmlserializer-serializetostring
 WebIDL::ExceptionOr<DeprecatedString> XMLSerializer::serialize_to_string(JS::NonnullGCPtr<DOM::Node> root)

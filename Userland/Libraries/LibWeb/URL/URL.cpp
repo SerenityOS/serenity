@@ -57,10 +57,15 @@ URL::URL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
     , m_url(move(url))
     , m_query(move(query))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "URL"));
 }
 
 URL::~URL() = default;
+
+void URL::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLPrototype>(realm, "URL"));
+}
 
 void URL::visit_edges(Cell::Visitor& visitor)
 {

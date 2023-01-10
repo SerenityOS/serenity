@@ -57,6 +57,7 @@ public:
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element

@@ -12,10 +12,15 @@ namespace Web::HTML {
 HTMLParagraphElement::HTMLParagraphElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLParagraphElement"));
 }
 
 HTMLParagraphElement::~HTMLParagraphElement() = default;
+
+void HTMLParagraphElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLParagraphElementPrototype>(realm, "HTMLParagraphElement"));
+}
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2
 void HTMLParagraphElement::apply_presentational_hints(CSS::StyleProperties& style) const

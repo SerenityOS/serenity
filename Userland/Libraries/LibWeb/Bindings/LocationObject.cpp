@@ -24,7 +24,6 @@ namespace Web::Bindings {
 LocationObject::LocationObject(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&cached_web_prototype(realm, "Location"));
 }
 
 LocationObject::~LocationObject() = default;
@@ -41,6 +40,8 @@ void LocationObject::initialize(JS::Realm& realm)
     auto& vm = this->vm();
 
     Object::initialize(realm);
+    set_prototype(&ensure_web_prototype<LocationPrototype>(realm, "Location"));
+
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_accessor(realm, "href", href_getter, href_setter, attr);
     define_native_accessor(realm, "host", host_getter, {}, attr);

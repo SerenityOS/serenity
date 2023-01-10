@@ -13,10 +13,15 @@ namespace Web::HTML {
 HTMLModElement::HTMLModElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLModElement"));
 }
 
 HTMLModElement::~HTMLModElement() = default;
+
+void HTMLModElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"));
+}
 
 DeprecatedFlyString HTMLModElement::default_role() const
 {

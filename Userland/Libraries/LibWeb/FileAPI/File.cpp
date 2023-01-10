@@ -16,7 +16,12 @@ File::File(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString file_name,
     , m_name(move(file_name))
     , m_last_modified(last_modified)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "File"));
+}
+
+void File::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FilePrototype>(realm, "File"));
 }
 
 File::~File() = default;

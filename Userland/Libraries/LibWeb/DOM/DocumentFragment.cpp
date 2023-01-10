@@ -12,7 +12,12 @@ namespace Web::DOM {
 DocumentFragment::DocumentFragment(Document& document)
     : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "DocumentFragment"));
+}
+
+void DocumentFragment::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentFragmentPrototype>(realm, "DocumentFragment"));
 }
 
 void DocumentFragment::visit_edges(Cell::Visitor& visitor)

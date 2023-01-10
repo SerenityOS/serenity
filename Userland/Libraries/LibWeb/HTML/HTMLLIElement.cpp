@@ -12,8 +12,14 @@ namespace Web::HTML {
 HTMLLIElement::HTMLLIElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLLIElement"));
 }
 
 HTMLLIElement::~HTMLLIElement() = default;
+
+void HTMLLIElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLIElementPrototype>(realm, "HTMLLIElement"));
+}
+
 }

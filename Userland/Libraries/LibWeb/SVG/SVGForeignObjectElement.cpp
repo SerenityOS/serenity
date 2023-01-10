@@ -17,7 +17,6 @@ namespace Web::SVG {
 SVGForeignObjectElement::SVGForeignObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGForeignObjectElement"));
 }
 
 SVGForeignObjectElement::~SVGForeignObjectElement() = default;
@@ -25,6 +24,7 @@ SVGForeignObjectElement::~SVGForeignObjectElement() = default;
 void SVGForeignObjectElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGForeignObjectElementPrototype>(realm, "SVGForeignObjectElement"));
 
     // FIXME: These never actually get updated!
     m_x = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));

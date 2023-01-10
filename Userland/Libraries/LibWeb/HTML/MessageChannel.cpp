@@ -19,8 +19,6 @@ JS::NonnullGCPtr<MessageChannel> MessageChannel::construct_impl(JS::Realm& realm
 MessageChannel::MessageChannel(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MessageChannel"));
-
     // 1. Set this's port 1 to a new MessagePort in this's relevant Realm.
     m_port1 = MessagePort::create(realm);
 
@@ -38,6 +36,12 @@ void MessageChannel::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_port1.ptr());
     visitor.visit(m_port2.ptr());
+}
+
+void MessageChannel::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessageChannelPrototype>(realm, "MessageChannel"));
 }
 
 MessagePort* MessageChannel::port1()

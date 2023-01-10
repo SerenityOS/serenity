@@ -17,11 +17,16 @@ WheelEvent::WheelEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, 
     , m_delta_y(event_init.delta_y)
     , m_delta_mode(event_init.delta_mode)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "WheelEvent"));
     set_event_characteristics();
 }
 
 WheelEvent::~WheelEvent() = default;
+
+void WheelEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WheelEventPrototype>(realm, "WheelEvent"));
+}
 
 WheelEvent* WheelEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, WheelEventInit const& event_init)
 {

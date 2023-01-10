@@ -14,10 +14,15 @@ namespace Web::HTML {
 HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLQuoteElement"));
 }
 
 HTMLQuoteElement::~HTMLQuoteElement() = default;
+
+void HTMLQuoteElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLQuoteElementPrototype>(realm, "HTMLQuoteElement"));
+}
 
 DeprecatedFlyString HTMLQuoteElement::default_role() const
 {
