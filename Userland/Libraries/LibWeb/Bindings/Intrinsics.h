@@ -25,8 +25,6 @@ public:
     {
     }
 
-    JS::Object& cached_web_prototype(DeprecatedString const& class_name);
-
     template<typename PrototypeType>
     JS::Object& ensure_web_prototype(DeprecatedString const& class_name)
     {
@@ -73,11 +71,6 @@ template<typename T>
 [[nodiscard]] JS::NativeFunction& ensure_web_constructor(JS::Realm& realm, DeprecatedString const& class_name)
 {
     return host_defined_intrinsics(realm).ensure_web_constructor<T>(class_name);
-}
-
-[[nodiscard]] inline JS::Object& cached_web_prototype(JS::Realm& realm, DeprecatedString const& class_name)
-{
-    return host_defined_intrinsics(realm).cached_web_prototype(class_name);
 }
 
 }
