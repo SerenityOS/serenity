@@ -267,6 +267,8 @@ JS_ENUMERATE_TYPED_ARRAYS
     {                                                                                                                                                    \
         auto& vm = this->vm();                                                                                                                           \
                                                                                                                                                          \
+        VERIFY(!m_##snake_namespace##snake_name##_prototype);                                                                                            \
+        VERIFY(!m_##snake_namespace##snake_name##_constructor);                                                                                          \
         if constexpr (IsTypedArrayConstructor<Namespace::ConstructorName>) {                                                                             \
             m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, *typed_array_prototype());                  \
             m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm, *typed_array_constructor());   \
