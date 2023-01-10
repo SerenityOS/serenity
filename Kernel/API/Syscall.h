@@ -81,6 +81,7 @@ enum class NeedsBigProcessLock {
     S(futex, NeedsBigProcessLock::Yes)                      \
     S(get_dir_entries, NeedsBigProcessLock::Yes)            \
     S(get_process_name, NeedsBigProcessLock::Yes)           \
+    S(get_root_session_id, NeedsBigProcessLock::No)         \
     S(get_stack_bounds, NeedsBigProcessLock::No)            \
     S(get_thread_name, NeedsBigProcessLock::Yes)            \
     S(getcwd, NeedsBigProcessLock::No)                      \
