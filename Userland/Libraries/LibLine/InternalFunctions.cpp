@@ -5,12 +5,10 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/FileStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
-#include <LibCore/File.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
 #include <sys/wait.h>
@@ -343,13 +341,13 @@ void Editor::enter_search()
         auto& search_string = search_string_result.value();
 
         // Manually cleanup the search line.
-        OutputFileStream stderr_stream { stderr };
-        reposition_cursor(stderr_stream);
+        auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+        reposition_cursor(*stderr_stream);
         auto search_metrics = actual_rendered_string_metrics(search_string, {});
         auto metrics = actual_rendered_string_metrics(search_prompt, {});
-        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1, stderr_stream);
+        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1, *stderr_stream);
 
-        reposition_cursor(stderr_stream);
+        reposition_cursor(*stderr_stream);
 
         m_refresh_needed = true;
         m_cached_prompt_valid = false;
@@ -435,8 +433,8 @@ void Editor::go_end()
 void Editor::clear_screen()
 {
     warn("\033[3J\033[H\033[2J");
-    OutputFileStream stream { stderr };
-    VT::move_absolute(1, 1, stream);
+    auto stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+    VT::move_absolute(1, 1, *stream);
     set_origin(1, 1);
     m_refresh_needed = true;
     m_cached_prompt_valid = false;
@@ -530,12 +528,12 @@ void Editor::edit_in_external_editor()
 
     {
         auto write_fd = dup(fd);
-        OutputFileStream stream { write_fd };
+        auto stream = Core::Stream::File::adopt_fd(write_fd, Core::Stream::OpenMode::Write).release_value_but_fixme_should_propagate_errors();
         StringBuilder builder;
         builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
         auto bytes = builder.string_view().bytes();
         while (!bytes.is_empty()) {
-            auto nwritten = stream.write(bytes);
+            auto nwritten = stream->write(bytes).release_value_but_fixme_should_propagate_errors();
             bytes = bytes.slice(nwritten);
         }
         lseek(fd, 0, SEEK_SET);
@@ -571,12 +569,12 @@ void Editor::edit_in_external_editor()
     }
 
     {
-        auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::Stream::File::open({ file_path, strlen(file_path) }, Core::Stream::OpenMode::Read);
         if (file_or_error.is_error())
             return;
 
         auto file = file_or_error.release_value();
-        auto contents = file->read_all();
+        auto contents = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
         StringView data { contents };
         while (data.ends_with('\n'))
             data = data.substring_view(0, data.length() - 1);
