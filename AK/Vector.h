@@ -74,6 +74,16 @@ public:
     {
         if constexpr (inline_capacity > 0) {
             if (!m_outline_buffer) {
+#if defined(AK_COMPILER_GCC)
+                // Starting with gcc 12, stringop warnings are overzealous. In this particular case, gcc will in
+                // several places calculate an exact (and correct!) value for m_size, and *at the same time* assume
+                // that m_outline_buffer has never been set.
+                // FIXME: Make this check more version-specific, once it is fixed upstream.
+                // If you are here because of FIXME-roulette, feel free to fix upstream :^)
+                // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108366
+                if (m_size > inline_capacity)
+                    __builtin_unreachable();
+#endif
                 TypedTransfer<T>::move(inline_buffer(), other.inline_buffer(), m_size);
                 TypedTransfer<T>::delete_(other.inline_buffer(), m_size);
             }
@@ -879,8 +889,19 @@ public:
     requires(IsSame<T, u8>)
     {
         auto buffer = TRY(create_uninitialized(size));
-        if (size != 0)
+        if (size != 0) {
+#if defined(AK_COMPILER_GCC)
+            // Starting with gcc 12, stringop warnings are overzealous. In this particular case, gcc will in
+            // several places calculate an exact (and correct!) value for m_size, and *at the same time* assume
+            // that m_outline_buffer has never been set.
+            // FIXME: Make this check more version-specific, once it is fixed upstream.
+            // If you are here because of FIXME-roulette, feel free to fix upstream :^)
+            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108366
+            if (size > buffer.size())
+                __builtin_unreachable();
+#endif
             __builtin_memcpy(buffer.data(), data, size);
+        }
         return { move(buffer) };
     }
     [[nodiscard]] static ErrorOr<ByteBuffer> copy(ReadonlyBytes bytes)
