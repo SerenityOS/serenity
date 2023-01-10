@@ -90,7 +90,7 @@ extern "C" [[noreturn]] void init()
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
     FlatPtr kernel_physical_base = 0x200000;
-    FlatPtr default_kernel_load_base = 0x2000200000;
+    FlatPtr default_kernel_load_base = KERNEL_MAPPING_BASE + 0x200000;
 
     FlatPtr kernel_load_base = default_kernel_load_base;
 
