@@ -11,7 +11,6 @@
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <ImageDecoder/ImageDecoderServerEndpoint.h>
 #include <LibIPC/ConnectionFromClient.h>
-#include <LibWeb/Forward.h>
 
 namespace ImageDecoder {
 
