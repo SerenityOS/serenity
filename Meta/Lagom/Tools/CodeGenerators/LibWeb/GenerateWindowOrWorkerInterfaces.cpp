@@ -306,23 +306,30 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
     static constexpr u8 attr = JS::Attribute::Writable | JS::Attribute::Configurable;
 )~~~");
 
-    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class) {
+    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, Optional<LegacyConstructor> const& legacy_constructor) {
         gen.set("interface_name", name);
         gen.set("prototype_class", prototype_class);
 
         gen.append(R"~~~(
-    global.define_intrinsic_accessor("@interface_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@interface_name@"sv); });)~~~"); };
+    global.define_intrinsic_accessor("@interface_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@interface_name@"sv); });)~~~");
+
+        if (legacy_constructor.has_value()) {
+            gen.set("legacy_interface_name", legacy_constructor->name);
+            gen.append(R"~~~(
+    global.define_intrinsic_accessor("@legacy_interface_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_constructor<@prototype_class@>(realm, "@legacy_interface_name@"sv); });)~~~");
+        }
+    };
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
-        add_interface(gen, interface.name, interface.prototype_class);
+        add_interface(gen, interface.name, interface.prototype_class, lookup_legacy_constructor(interface));
     }
 
     // FIXME: Special case window. We should convert Window and Location to use IDL
     if (class_name == "Window"sv) {
         auto gen = generator.fork();
-        add_interface(gen, "Window"sv, "WindowPrototype"sv);
-        add_interface(gen, "Location"sv, "LocationPrototype"sv);
+        add_interface(gen, "Window"sv, "WindowPrototype"sv, {});
+        add_interface(gen, "Location"sv, "LocationPrototype"sv, {});
     }
 
     generator.append(R"~~~(
