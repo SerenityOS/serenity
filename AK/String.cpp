@@ -5,6 +5,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -59,6 +60,9 @@ public:
         return m_hash;
     }
 
+    bool is_fly_string() const { return m_is_fly_string; }
+    void set_fly_string(bool is_fly_string) { m_is_fly_string = is_fly_string; }
+
 private:
     explicit StringData(size_t byte_count);
     StringData(StringData const& superstring, size_t start, size_t byte_count);
@@ -69,6 +73,7 @@ private:
     mutable unsigned m_hash { 0 };
     mutable bool m_has_hash { false };
     bool m_substring { false };
+    bool m_is_fly_string { false };
 
     u8 m_bytes_or_substring_data[0];
 };
@@ -95,6 +100,8 @@ StringData::StringData(StringData const& superstring, size_t start, size_t byte_
 
 StringData::~StringData()
 {
+    if (m_is_fly_string)
+        FlyString::did_destroy_fly_string_data({}, bytes_as_string_view());
     if (m_substring)
         substring_data().superstring->unref();
 }
@@ -255,6 +262,13 @@ bool String::operator==(String const& other) const
     return bytes_as_string_view() == other.bytes_as_string_view();
 }
 
+bool String::operator==(FlyString const& other) const
+{
+    if (reinterpret_cast<uintptr_t>(m_data) == other.data({}))
+        return true;
+    return bytes_as_string_view() == other.bytes_as_string_view();
+}
+
 bool String::operator==(StringView other) const
 {
     return bytes_as_string_view() == other;
@@ -307,7 +321,7 @@ ErrorOr<String> String::replace(StringView needle, StringView replacement, Repla
 
 bool String::is_short_string() const
 {
-    return reinterpret_cast<uintptr_t>(m_data) & SHORT_STRING_FLAG;
+    return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));
 }
 
 ReadonlyBytes String::ShortString::bytes() const
@@ -323,6 +337,55 @@ size_t String::ShortString::byte_count() const
 unsigned Traits<String>::hash(String const& string)
 {
     return string.hash();
+}
+
+String String::fly_string_data_to_string(Badge<FlyString>, uintptr_t const& data)
+{
+    if (has_short_string_bit(data))
+        return String { *reinterpret_cast<ShortString const*>(&data) };
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    return String { NonnullRefPtr<Detail::StringData>(*string_data) };
+}
+
+StringView String::fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const& data)
+{
+    if (has_short_string_bit(data)) {
+        auto const* short_string = reinterpret_cast<ShortString const*>(&data);
+        return short_string->bytes();
+    }
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    return string_data->bytes_as_string_view();
+}
+
+uintptr_t String::to_fly_string_data(Badge<FlyString>) const
+{
+    return reinterpret_cast<uintptr_t>(m_data);
+}
+
+void String::ref_fly_string_data(Badge<FlyString>, uintptr_t data)
+{
+    if (has_short_string_bit(data))
+        return;
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    string_data->ref();
+}
+
+void String::unref_fly_string_data(Badge<FlyString>, uintptr_t data)
+{
+    if (has_short_string_bit(data))
+        return;
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    string_data->unref();
+}
+
+void String::did_create_fly_string(Badge<FlyString>) const
+{
+    VERIFY(!is_short_string());
+    m_data->set_fly_string(true);
 }
 
 DeprecatedString String::to_deprecated_string() const

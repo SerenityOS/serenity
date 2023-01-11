@@ -73,6 +73,9 @@ public:
     [[nodiscard]] bool operator==(String const&) const;
     [[nodiscard]] bool operator!=(String const& other) const { return !(*this == other); }
 
+    [[nodiscard]] bool operator==(FlyString const&) const;
+    [[nodiscard]] bool operator!=(FlyString const& other) const { return !(*this == other); }
+
     [[nodiscard]] bool operator==(StringView) const;
     [[nodiscard]] bool operator!=(StringView other) const { return !(*this == other); }
 
@@ -102,6 +105,14 @@ public:
     // NOTE: This is primarily interesting to unit tests.
     [[nodiscard]] bool is_short_string() const;
 
+    [[nodiscard]] static String fly_string_data_to_string(Badge<FlyString>, uintptr_t const&);
+    [[nodiscard]] static StringView fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const&);
+    [[nodiscard]] uintptr_t to_fly_string_data(Badge<FlyString>) const;
+
+    static void ref_fly_string_data(Badge<FlyString>, uintptr_t);
+    static void unref_fly_string_data(Badge<FlyString>, uintptr_t);
+    void did_create_fly_string(Badge<FlyString>) const;
+
     // FIXME: Remove these once all code has been ported to String
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
     static ErrorOr<String> from_deprecated_string(DeprecatedString const&);
@@ -109,6 +120,11 @@ public:
 private:
     // NOTE: If the least significant bit of the pointer is set, this is a short string.
     static constexpr uintptr_t SHORT_STRING_FLAG = 1;
+
+    static constexpr bool has_short_string_bit(uintptr_t data)
+    {
+        return (data & SHORT_STRING_FLAG) != 0;
+    }
 
     struct ShortString {
         ReadonlyBytes bytes() const;
