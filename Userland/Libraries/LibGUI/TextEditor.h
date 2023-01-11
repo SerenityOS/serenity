@@ -163,6 +163,9 @@ public:
     void indent_selection();
     void unindent_selection();
     void unindent_line();
+    void uppercase_selection();
+    void lowercase_selection();
+    void snakecase_selection();
 
     Function<void()> on_change;
     Function<void(bool modified)> on_modified_change;

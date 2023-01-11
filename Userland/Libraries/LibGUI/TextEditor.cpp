@@ -1052,6 +1052,15 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
+    if (event.shift() && event.ctrl() && !event.alt() && event.key() == KeyCode::Key_U)
+        uppercase_selection();
+
+    if (event.shift() && event.ctrl() && !event.alt() && event.key() == KeyCode::Key_L)
+        lowercase_selection();
+
+    if (event.shift() && event.ctrl() && !event.alt() && event.key() == KeyCode::Key_N)
+        snakecase_selection();
+
     event.ignore();
 }
 
@@ -1109,6 +1118,36 @@ void TextEditor::unindent_line()
 
         set_cursor({ m_cursor.line(), temp_column <= unindent_size ? 0 : temp_column - unindent_size });
     }
+}
+
+void TextEditor::uppercase_selection()
+{
+    if (!has_selection())
+        return;
+
+    execute<ReplaceAllTextCommand>(selected_text().to_uppercase(), selection().normalized(), "Uppercase a selection");
+}
+
+void TextEditor::lowercase_selection()
+{
+    if (!has_selection())
+        return;
+
+    execute<ReplaceAllTextCommand>(selected_text().to_lowercase(), selection().normalized(), "Lowercase a selection");
+}
+
+void TextEditor::snakecase_selection()
+{
+    if (!has_selection())
+        return;
+
+    auto old_length = selected_text().length();
+    auto snake_text = selected_text().to_snakecase();
+    auto new_range_end = snake_text.length() - old_length;
+    execute<ReplaceAllTextCommand>(snake_text, selection().normalized(), "Snake case a selection");
+    auto new_range = selection().normalized();
+    new_range.end().set_column(new_range.end().column() + new_range_end);
+    set_selection(new_range);
 }
 
 void TextEditor::delete_previous_word()
