@@ -14,6 +14,8 @@ void Paintable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_layout_node);
+    if (m_containing_block.has_value())
+        visitor.visit(m_containing_block.value());
 }
 
 Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)

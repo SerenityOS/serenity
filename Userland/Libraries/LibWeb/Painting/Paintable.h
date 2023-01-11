@@ -141,7 +141,7 @@ protected:
 
 private:
     JS::NonnullGCPtr<Layout::Node> m_layout_node;
-    Optional<Layout::BlockContainer*> mutable m_containing_block;
+    Optional<JS::GCPtr<Layout::BlockContainer>> mutable m_containing_block;
 };
 
 inline DOM::Node* HitTestResult::dom_node()
