@@ -1120,3 +1120,13 @@ void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString c
 {
     dbgln("TODO: support accessibility tree in Ladybird");
 }
+
+DeprecatedString WebContentView::selected_text()
+{
+    return client().get_selected_text();
+}
+
+void WebContentView::select_all()
+{
+    client().async_select_all();
+}

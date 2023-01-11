@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Matthew Costa <ucosty@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
@@ -18,6 +18,8 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
 #include <QActionGroup>
+#include <QClipboard>
+#include <QGuiApplication>
 #include <QInputDialog>
 #include <QPlainTextEdit>
 
@@ -52,6 +54,18 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* quit_action = new QAction("&Quit", this);
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
+
+    auto* edit_menu = menuBar()->addMenu("&Edit");
+
+    auto* copy_action = new QAction("&Copy", this);
+    copy_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
+    edit_menu->addAction(copy_action);
+    QObject::connect(copy_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
+
+    auto* select_all_action = new QAction("Select &All", this);
+    select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
+    edit_menu->addAction(select_all_action);
+    QObject::connect(select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
 
     auto* view_menu = menuBar()->addMenu("&View");
 
@@ -454,4 +468,19 @@ void BrowserWindow::reset_zoom()
 {
     if (m_current_tab)
         m_current_tab->view().reset_zoom();
+}
+
+void BrowserWindow::select_all()
+{
+    if (auto* tab = m_current_tab)
+        tab->view().select_all();
+}
+
+void BrowserWindow::copy_selected_text()
+{
+    if (auto* tab = m_current_tab) {
+        auto text = tab->view().selected_text();
+        auto* clipboard = QGuiApplication::clipboard();
+        clipboard->setText(qstring_from_ak_deprecated_string(text));
+    }
 }
