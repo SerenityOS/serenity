@@ -92,8 +92,6 @@ ErrorOr<void> AbstractThemePreview::set_theme_from_file(Core::File& file)
 
     m_preview_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
     set_preview_palette(m_preview_palette);
-    if (on_theme_load_from_file)
-        on_theme_load_from_file(file.filename());
     return {};
 }
 
