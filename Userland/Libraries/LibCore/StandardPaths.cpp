@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/StandardPaths.h>
@@ -108,6 +110,23 @@ ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
 DeprecatedString StandardPaths::tempfile_directory()
 {
     return "/tmp";
+}
+
+ErrorOr<Vector<String>> StandardPaths::font_directories()
+{
+    return Vector { {
+#if defined(AK_OS_SERENITY)
+        TRY(String::from_utf8("/res/fonts"sv)),
+#elif defined(AK_OS_MACOS)
+        TRY(String::from_utf8("/System/Library/Fonts"sv)),
+        TRY(String::from_utf8("/Library/Fonts"sv)),
+        TRY(String::formatted("{}/Library/Fonts"sv, home_directory())),
+#else
+        TRY(String::from_utf8("/usr/share/fonts"sv)),
+        TRY(String::from_utf8("/usr/local/share/fonts"sv)),
+        TRY(String::formatted("{}/.local/share/fonts"sv, home_directory())),
+#endif
+    } };
 }
 
 }
