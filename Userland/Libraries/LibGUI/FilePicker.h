@@ -8,8 +8,11 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/Dialog.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Model.h>
 
@@ -28,7 +31,7 @@ public:
         Save
     };
 
-    static Optional<DeprecatedString> get_open_filepath(Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    static Optional<DeprecatedString> get_open_filepath(Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent, Optional<Vector<FileTypeFilter>> allowed_file_types = {});
     static Optional<DeprecatedString> get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
 
     virtual ~FilePicker() override;
@@ -43,7 +46,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent, Optional<Vector<FileTypeFilter>> allowed_file_types = {});
 
     static DeprecatedString ok_button_name(Mode mode)
     {
@@ -67,6 +70,9 @@ private:
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
     DeprecatedString m_selected_file;
+
+    Vector<DeprecatedString> m_allowed_file_types_names;
+    Optional<Vector<FileTypeFilter>> m_allowed_file_types;
 
     RefPtr<GUI::Label> m_error_label;
 
