@@ -874,9 +874,16 @@ public:
     [[nodiscard]] static ErrorOr<ByteBuffer> create_uninitialized(size_t size)
     requires(IsSame<T, u8>)
     {
-        // FIXME: Optimize for uninitialized memory again
-        return create_zeroed(size);
+        auto buffer = Vector();
+        TRY(buffer.try_ensure_capacity(size));
+        buffer.m_size = size;
+        // FIXME: gcc can see that the allocation is uninitialized, and refuses the call to memmove that happens in move-contruct and move-assign.
+        // Therefore, we initialize the allocation here, despite the name.
+        // This used to be no problem in ByteBuffer, presumably because
+        __builtin_memset(buffer.data(), 0, size);
+        return { move(buffer) };
     }
+
     [[nodiscard]] static ErrorOr<ByteBuffer> create_zeroed(size_t size)
     requires(IsSame<T, u8>)
     {
