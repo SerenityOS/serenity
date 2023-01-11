@@ -327,7 +327,6 @@ set(SOURCES
     Layout/InlineNode.cpp
     Layout/Label.cpp
     Layout/LabelableNode.cpp
-    Layout/LayoutPosition.cpp
     Layout/LayoutState.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp

@@ -8,7 +8,6 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Layout/LayoutPosition.h>
 #include <LibWeb/Selection/Selection.h>
 
 namespace Web::Layout {
