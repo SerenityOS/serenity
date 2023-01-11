@@ -12,7 +12,7 @@ namespace IMAP {
 ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
 {
     if (m_incomplete) {
-        m_buffer += buffer;
+        m_buffer.extend(buffer);
         m_incomplete = false;
     } else {
         m_buffer = move(buffer);

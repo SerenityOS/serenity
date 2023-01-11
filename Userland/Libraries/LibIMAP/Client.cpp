@@ -251,7 +251,7 @@ ErrorOr<void> Client::send_next_command()
     auto command = m_command_queue.take_first();
     ByteBuffer buffer;
     auto tag = AK::DeprecatedString::formatted("A{} ", m_current_command);
-    buffer += tag.to_byte_buffer();
+    buffer.extend(tag.to_byte_buffer());
     auto command_type = command_byte_buffer(command.type);
     buffer.append(command_type.data(), command_type.size());
 

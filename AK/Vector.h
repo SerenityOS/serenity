@@ -956,12 +956,6 @@ public:
         TRY(try_resize(old_size + length));
         return Bytes { data() + old_size, length };
     }
-
-    void operator+=(ByteBuffer const& other)
-    requires(IsSame<T, u8>)
-    {
-        MUST(try_append(other.data(), other.size()));
-    }
 };
 
 template<class... Args>
