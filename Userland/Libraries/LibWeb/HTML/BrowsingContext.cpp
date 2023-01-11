@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
@@ -468,51 +469,41 @@ void BrowsingContext::set_cursor_position(DOM::Position position)
     reset_cursor_blink_cycle();
 }
 
-DeprecatedString BrowsingContext::selected_text() const
+static DeprecatedString visible_text_in_range(DOM::Range const& range)
 {
+    // NOTE: This is an adaption of Range stringification, but we skip over DOM nodes that don't have a corresponding layout node.
     StringBuilder builder;
-    if (!active_document())
-        return {};
-    auto* layout_root = active_document()->layout_node();
-    if (!layout_root)
-        return {};
-    if (!layout_root->selection().is_valid())
-        return {};
 
-    auto selection = layout_root->selection().normalized();
-
-    if (selection.start().layout_node.ptr() == selection.end().layout_node) {
-        if (!is<Layout::TextNode>(*selection.start().layout_node))
-            return "";
-        return verify_cast<Layout::TextNode>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
+    if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
+        if (!range.start_container()->layout_node())
+            return ""sv;
+        return static_cast<DOM::Text const&>(*range.start_container()).data().substring(range.start_offset(), range.end_offset() - range.start_offset());
     }
 
-    // Start node
-    auto layout_node = selection.start().layout_node;
-    if (is<Layout::TextNode>(*layout_node)) {
-        auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
-        builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
+    if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
+        builder.append(static_cast<DOM::Text const&>(*range.start_container()).data().substring_view(range.start_offset()));
+
+    for (DOM::Node const* node = range.start_container(); node != range.end_container()->next_sibling(); node = node->next_in_pre_order()) {
+        if (is<DOM::Text>(*node) && range.contains_node(*node) && node->layout_node())
+            builder.append(static_cast<DOM::Text const&>(*node).data());
     }
 
-    // Middle nodes
-    layout_node = layout_node->next_in_pre_order();
-    while (layout_node && layout_node.ptr() != selection.end().layout_node) {
-        if (is<Layout::TextNode>(*layout_node))
-            builder.append(verify_cast<Layout::TextNode>(*layout_node).text_for_rendering());
-        else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockContainer>(*layout_node))
-            builder.append('\n');
-
-        layout_node = layout_node->next_in_pre_order();
-    }
-
-    // End node
-    VERIFY(layout_node.ptr() == selection.end().layout_node);
-    if (is<Layout::TextNode>(*layout_node)) {
-        auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
-        builder.append(text.substring(0, selection.end().index_in_node));
-    }
+    if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
+        builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().substring_view(0, range.end_offset()));
 
     return builder.to_deprecated_string();
+}
+
+DeprecatedString BrowsingContext::selected_text() const
+{
+    auto* document = active_document();
+    if (!document)
+        return ""sv;
+    auto selection = const_cast<DOM::Document&>(*document).get_selection();
+    auto range = selection->range();
+    if (!range)
+        return ""sv;
+    return visible_text_in_range(*range);
 }
 
 void BrowsingContext::select_all()

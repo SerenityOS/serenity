@@ -84,6 +84,8 @@ public:
 
     JS::NonnullGCPtr<Geometry::DOMRect> get_bounding_client_rect() const;
 
+    bool contains_node(Node const&) const;
+
 private:
     explicit Range(Document&);
     Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
@@ -105,7 +107,6 @@ private:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> clone_the_contents();
     WebIDL::ExceptionOr<void> insert(JS::NonnullGCPtr<Node>);
 
-    bool contains_node(Node const&) const;
     bool partially_contains_node(Node const&) const;
 };
 
