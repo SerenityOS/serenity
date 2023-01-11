@@ -453,9 +453,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto modified_state_check_timer = Core::Timer::create_repeating(500, [&] {
+    auto modified_state_check_timer = TRY(Core::Timer::create_repeating(500, [&] {
         window->set_modified(tty_has_foreground_process() || shell_child_process_count() > 0);
-    });
+    }));
 
     listener.on_confirm_close_changed = [&](bool confirm_close) {
         if (confirm_close) {

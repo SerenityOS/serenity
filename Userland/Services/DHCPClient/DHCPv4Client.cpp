@@ -139,7 +139,8 @@ DHCPv4Client::DHCPv4Client(Vector<DeprecatedString> interfaces_with_dhcp_enabled
     }
 
     m_check_timer = Core::Timer::create_repeating(
-        1000, [this] { try_discover_ifs(); }, this);
+        1000, [this] { try_discover_ifs(); }, this)
+                        .release_value_but_fixme_should_propagate_errors();
 
     m_check_timer->start();
 

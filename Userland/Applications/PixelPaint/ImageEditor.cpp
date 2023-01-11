@@ -51,7 +51,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
         m_marching_ants_offset %= (marching_ant_length * 2);
         if (!m_image->selection().is_empty() || m_image->selection().in_interactive_selection())
             update();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_marching_ants_timer->start();
 }
 

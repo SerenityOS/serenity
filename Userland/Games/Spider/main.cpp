@@ -158,11 +158,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     uint64_t seconds_elapsed = 0;
 
-    auto timer = Core::Timer::create_repeating(1000, [&]() {
+    auto timer = TRY(Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
 
         statusbar.set_text(2, DeprecatedString::formatted("Time: {}", format_seconds(seconds_elapsed)));
-    });
+    }));
 
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
