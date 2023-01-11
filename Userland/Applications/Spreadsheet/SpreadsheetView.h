@@ -64,8 +64,8 @@ public:
 
 private:
     InfinitelyScrollableTableView()
-        : m_horizontal_scroll_end_timer(Core::Timer::construct())
-        , m_vertical_scroll_end_timer(Core::Timer::construct())
+        : m_horizontal_scroll_end_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
+        , m_vertical_scroll_end_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
     {
     }
     virtual void did_scroll() override;
