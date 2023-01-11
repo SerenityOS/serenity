@@ -46,6 +46,8 @@ public slots:
     void zoom_in();
     void zoom_out();
     void reset_zoom();
+    void select_all();
+    void copy_selected_text();
 
 private:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
