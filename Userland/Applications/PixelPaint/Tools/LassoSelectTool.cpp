@@ -37,8 +37,8 @@ void LassoSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
     m_most_recent_position = layer_event.position();
     m_top_left = m_start_position;
     m_bottom_right = m_start_position;
-    m_preview_path.clear();
-    m_preview_path.move_to(editor_stroke_position(m_most_recent_position, 1).to_type<float>());
+    m_preview_coords.clear();
+    m_preview_coords.append(m_most_recent_position);
     m_selection_bitmap->set_pixel(m_most_recent_position, Gfx::Color::Black);
 
     m_selecting = true;
@@ -69,8 +69,7 @@ void LassoSelectTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (new_position.y() > m_bottom_right.y())
         m_bottom_right.set_y(new_position.y());
 
-    auto preview_end = editor_stroke_position(new_position, 1);
-    m_preview_path.line_to(preview_end.to_type<float>());
+    m_preview_coords.append(new_position);
 
     auto selection_painter = Gfx::Painter(*m_selection_bitmap);
     selection_painter.draw_line(m_most_recent_position, new_position, Gfx::Color::Black);
@@ -138,15 +137,23 @@ void LassoSelectTool::flood_lasso_selection(Gfx::Bitmap& lasso_bitmap, Gfx::IntP
 
 void LassoSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
-    if (!m_selecting)
+    if (!m_selecting || m_preview_coords.size() < 2)
         return;
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
     if (layer)
         painter.translate(editor_layer_location(*layer));
-    // FIXME: Find a way to draw this in a single call
-    painter.stroke_path(m_preview_path, Gfx::Color::Black, 3);
-    painter.stroke_path(m_preview_path, Gfx::Color::White, 1);
+
+    auto draw_preview_lines = [&](auto color, auto thickness) {
+        for (size_t i = 0; i < m_preview_coords.size() - 1; i++) {
+            auto preview_start = editor_stroke_position(m_preview_coords.at(i), 1);
+            auto preview_end = editor_stroke_position(m_preview_coords.at(i + 1), 1);
+            painter.draw_line(preview_start, preview_end, color, thickness);
+        }
+    };
+
+    draw_preview_lines(Gfx::Color::Black, 3);
+    draw_preview_lines(Gfx::Color::White, 1);
 }
 
 bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
@@ -156,7 +163,7 @@ bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
         if (m_selecting) {
             m_selecting = false;
             m_selection_bitmap.clear();
-            m_preview_path.clear();
+            m_preview_coords.clear();
             return true;
         }
     }
