@@ -16,7 +16,7 @@ NonnullRefPtr<TimerSerenity> TimerSerenity::create()
 }
 
 TimerSerenity::TimerSerenity()
-    : m_timer(Core::Timer::construct())
+    : m_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
 {
     m_timer->on_timeout = [this] {
         if (on_timeout)

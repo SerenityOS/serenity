@@ -24,7 +24,7 @@
 namespace ImageViewer {
 
 ViewWidget::ViewWidget()
-    : m_timer(Core::Timer::construct())
+    : m_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
 {
     set_fill_with_background_color(false);
 }
