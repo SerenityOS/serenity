@@ -36,11 +36,9 @@ TextTool::TextTool()
     m_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     m_selected_font = Gfx::FontDatabase::default_font();
     m_text_editor->set_font(m_selected_font);
-    m_cursor_blink_timer = Core::Timer::construct();
-    m_cursor_blink_timer->on_timeout = [&]() {
+    m_cursor_blink_timer = Core::Timer::create_repeating(500, [&]() {
         m_cursor_blink_state = !m_cursor_blink_state;
-    };
-    m_cursor_blink_timer->set_interval(500);
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 void TextTool::on_tool_deactivation()

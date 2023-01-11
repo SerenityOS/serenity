@@ -41,25 +41,27 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
                    .release_value_but_fixme_should_propagate_errors();
     m_page_2->body_widget().load_from_gml(demo_wizard_page_2_gml).release_value_but_fixme_should_propagate_errors();
     m_page_2_progressbar = m_page_2->body_widget().find_descendant_of_type_named<GUI::Progressbar>("page_2_progressbar");
-    m_page_2_timer = Core::Timer::try_create(this).release_value_but_fixme_should_propagate_errors();
+    m_page_2_timer = Core::Timer::create_repeating(
+        100, [&]() {
+            if (m_page_2_progress_value < 100)
+                m_page_2_progress_value++;
+            m_page_2_progressbar->set_value(m_page_2_progress_value);
+
+            // Go to final page on progress completion
+            if (m_page_2_progress_value == 100) {
+                m_page_2_progress_value = 0;
+                replace_page(*m_back_page);
+            }
+        },
+        this)
+                         .release_value_but_fixme_should_propagate_errors();
     m_page_2->on_page_enter = [&]() {
         m_page_2_progress_value = 0;
-        m_page_2_timer->restart(100);
+        m_page_2_timer->restart();
     };
     m_page_2->on_page_leave = [&]() {
         m_page_2_progress_value = 0;
         m_page_2_timer->stop();
-    };
-    m_page_2_timer->on_timeout = [&]() {
-        if (m_page_2_progress_value < 100)
-            m_page_2_progress_value++;
-        m_page_2_progressbar->set_value(m_page_2_progress_value);
-
-        // Go to final page on progress completion
-        if (m_page_2_progress_value == 100) {
-            m_page_2_progress_value = 0;
-            replace_page(*m_back_page);
-        }
     };
     // Don't set a on_next_page handler for page 2 as we automatically navigate to the final page on progress completion
 
