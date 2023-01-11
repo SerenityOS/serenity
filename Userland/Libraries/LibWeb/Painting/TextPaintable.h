@@ -10,7 +10,7 @@
 
 namespace Web::Painting {
 
-class TextPaintable : public Paintable {
+class TextPaintable final : public Paintable {
     JS_CELL(TextPaintable, Paintable);
 
 public:

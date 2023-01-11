@@ -163,7 +163,7 @@ private:
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 };
 
-class PaintableWithLines : public PaintableBox {
+class PaintableWithLines final : public PaintableBox {
     JS_CELL(PaintableWithLines, PaintableBox);
 
 public:

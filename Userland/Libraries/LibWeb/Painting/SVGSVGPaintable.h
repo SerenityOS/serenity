@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class SVGSVGPaintable : public PaintableBox {
+class SVGSVGPaintable final : public PaintableBox {
     JS_CELL(SVGSVGPaintable, PaintableBox);
 
 public:

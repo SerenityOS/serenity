@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class SVGGeometryPaintable : public SVGGraphicsPaintable {
+class SVGGeometryPaintable final : public SVGGraphicsPaintable {
     JS_CELL(SVGGeometryPaintable, SVGGraphicsPaintable);
 
 public:
