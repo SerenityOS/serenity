@@ -82,8 +82,10 @@ ThreadStackWidget::ThreadStackWidget()
 void ThreadStackWidget::show_event(GUI::ShowEvent&)
 {
     refresh();
-    if (!m_timer)
+    if (!m_timer) {
         m_timer = add<Core::Timer>(1000, [this] { refresh(); });
+        m_timer->start();
+    }
 }
 
 void ThreadStackWidget::hide_event(GUI::HideEvent&)

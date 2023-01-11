@@ -328,6 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     update_stats();
     auto& refresh_timer = window->add<Core::Timer>(frequency * 1000, move(update_stats));
+    refresh_timer.start();
 
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())

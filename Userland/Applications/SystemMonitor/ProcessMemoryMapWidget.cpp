@@ -110,6 +110,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
 
     m_table_view->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
     m_timer = add<Core::Timer>(1000, [this] { refresh(); });
+    m_timer->start();
 }
 
 void ProcessMemoryMapWidget::set_pid(pid_t pid)

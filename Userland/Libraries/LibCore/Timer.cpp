@@ -17,8 +17,8 @@ Timer::Timer(Object* parent)
 Timer::Timer(int interval_ms, Function<void()>&& timeout_handler, Object* parent)
     : Object(parent)
     , on_timeout(move(timeout_handler))
+    , m_interval_ms(interval_ms)
 {
-    start(interval_ms);
 }
 
 void Timer::start()

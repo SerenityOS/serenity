@@ -16,7 +16,6 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer> connec
             return;
         next_buffer();
     });
-    m_timer->stop();
     m_device_sample_rate = connection->get_sample_rate();
 }
 

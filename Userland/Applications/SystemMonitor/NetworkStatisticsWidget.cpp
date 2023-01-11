@@ -132,6 +132,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
             1000, [this] {
                 update_models();
             });
+        m_update_timer->start();
 
         update_models();
     };

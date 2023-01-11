@@ -35,6 +35,7 @@ ClockWidget::ClockWidget()
             set_tooltip(Core::DateTime::now().to_deprecated_string("%Y-%m-%d"sv));
         }
     });
+    m_timer->start();
 
     m_calendar_window = add<GUI::Window>(window());
     m_calendar_window->set_window_type(GUI::WindowType::Popup);
