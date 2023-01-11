@@ -53,6 +53,9 @@ public:
     // Non-standard convenience accessor for the selection's range.
     JS::GCPtr<DOM::Range> range() const;
 
+    // Non-standard accessor for the selection's document.
+    JS::NonnullGCPtr<DOM::Document> document() const;
+
 private:
     Selection(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);
 
@@ -60,6 +63,8 @@ private:
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+
+    void set_range(JS::GCPtr<DOM::Range>);
 
     // https://w3c.github.io/selection-api/#dfn-empty
     JS::GCPtr<DOM::Range> m_range;

@@ -17,6 +17,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 
 namespace Web::DOM {
 
@@ -69,6 +70,28 @@ void Range::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::RangePrototype>(realm, "Range"));
+}
+
+void Range::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_associated_selection);
+}
+
+void Range::set_associated_selection(Badge<Selection::Selection>, JS::GCPtr<Selection::Selection> selection)
+{
+    m_associated_selection = selection;
+    update_associated_selection();
+}
+
+void Range::update_associated_selection()
+{
+    if (!m_associated_selection)
+        return;
+    if (auto* layout_root = m_associated_selection->document()->layout_node()) {
+        layout_root->recompute_selection_states();
+        layout_root->set_needs_display();
+    }
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root
@@ -173,6 +196,7 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
         m_end_offset = offset;
     }
 
+    update_associated_selection();
     return {};
 }
 
@@ -353,6 +377,7 @@ WebIDL::ExceptionOr<void> Range::select(Node& node)
     m_end_container = *parent;
     m_end_offset = index + 1;
 
+    update_associated_selection();
     return {};
 }
 
@@ -370,11 +395,11 @@ void Range::collapse(bool to_start)
     if (to_start) {
         m_end_container = m_start_container;
         m_end_offset = m_start_offset;
-        return;
+    } else {
+        m_start_container = m_end_container;
+        m_start_offset = m_end_offset;
     }
-
-    m_start_container = m_end_container;
-    m_start_offset = m_end_offset;
+    update_associated_selection();
 }
 
 // https://dom.spec.whatwg.org/#dom-range-selectnodecontents
@@ -395,6 +420,7 @@ WebIDL::ExceptionOr<void> Range::select_node_contents(Node const& node)
     m_end_container = node;
     m_end_offset = length;
 
+    update_associated_selection();
     return {};
 }
 

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/PaintableBox.h>
@@ -17,6 +18,11 @@ InitialContainingBlock::InitialContainingBlock(DOM::Document& document, NonnullR
 }
 
 InitialContainingBlock::~InitialContainingBlock() = default;
+
+JS::GCPtr<Selection::Selection> InitialContainingBlock::selection() const
+{
+    return const_cast<DOM::Document&>(document()).get_selection();
+}
 
 void InitialContainingBlock::build_stacking_context_tree_if_needed()
 {
@@ -56,40 +62,52 @@ void InitialContainingBlock::paint_all_phases(PaintContext& context)
 
 void InitialContainingBlock::recompute_selection_states()
 {
-    SelectionState state = SelectionState::None;
-
-    auto selection = this->selection().normalized();
-
+    // 1. Start by resetting the selection state of all layout nodes to None.
     for_each_in_inclusive_subtree([&](auto& layout_node) {
-        if (!selection.is_valid()) {
-            // Everything gets SelectionState::None.
-        } else if (&layout_node == selection.start().layout_node && &layout_node == selection.end().layout_node) {
-            state = SelectionState::StartAndEnd;
-        } else if (&layout_node == selection.start().layout_node) {
-            state = SelectionState::Start;
-        } else if (&layout_node == selection.end().layout_node) {
-            state = SelectionState::End;
-        } else {
-            if (state == SelectionState::Start)
-                state = SelectionState::Full;
-            else if (state == SelectionState::End || state == SelectionState::StartAndEnd)
-                state = SelectionState::None;
-        }
-        layout_node.set_selection_state(state);
+        layout_node.set_selection_state(SelectionState::None);
         return IterationDecision::Continue;
     });
-}
 
-void InitialContainingBlock::set_selection(LayoutRange const& selection)
-{
-    m_selection = selection;
-    recompute_selection_states();
-}
+    // 2. If there is no active Selection or selected Range, return.
+    auto selection = document().get_selection();
+    if (!selection)
+        return;
+    auto range = selection->range();
+    if (!range)
+        return;
 
-void InitialContainingBlock::set_selection_end(LayoutPosition const& position)
-{
-    m_selection.set_end(position);
-    recompute_selection_states();
+    auto* start_container = range->start_container();
+    auto* end_container = range->end_container();
+
+    // 3. If the selection starts and ends in the same text node, mark it as StartAndEnd and return.
+    if (start_container == end_container && is<DOM::Text>(*start_container)) {
+        if (auto* layout_node = start_container->layout_node()) {
+            layout_node->set_selection_state(SelectionState::StartAndEnd);
+        }
+        return;
+    }
+
+    // 4. Mark the selection start node as Start (if text) or Full (if anything else).
+    if (auto* layout_node = start_container->layout_node()) {
+        if (is<DOM::Text>(*start_container))
+            layout_node->set_selection_state(SelectionState::Start);
+        else
+            layout_node->set_selection_state(SelectionState::Full);
+    }
+
+    // 5. Mark the selection end node as End (if text) or Full (if anything else).
+    if (auto* layout_node = end_container->layout_node()) {
+        if (is<DOM::Text>(*end_container))
+            layout_node->set_selection_state(SelectionState::End);
+        else
+            layout_node->set_selection_state(SelectionState::Full);
+    }
+
+    // 6. Mark the nodes between start node and end node (in tree order) as Full.
+    for (auto* node = start_container->next_in_pre_order(); node && node != end_container; node = node->next_in_pre_order()) {
+        if (auto* layout_node = node->layout_node())
+            layout_node->set_selection_state(SelectionState::Full);
+    }
 }
 
 }

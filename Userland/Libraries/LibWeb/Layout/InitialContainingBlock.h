@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/LayoutPosition.h>
+#include <LibWeb/Selection/Selection.h>
 
 namespace Web::Layout {
 
@@ -23,9 +24,7 @@ public:
 
     void paint_all_phases(PaintContext&);
 
-    LayoutRange const& selection() const { return m_selection; }
-    void set_selection(LayoutRange const&);
-    void set_selection_end(LayoutPosition const&);
+    JS::GCPtr<Selection::Selection> selection() const;
 
     void build_stacking_context_tree_if_needed();
     void recompute_selection_states();
@@ -33,8 +32,6 @@ public:
 private:
     void build_stacking_context_tree();
     virtual bool is_initial_containing_block_box() const override { return true; }
-
-    LayoutRange m_selection;
 };
 
 template<>
