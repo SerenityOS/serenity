@@ -177,7 +177,8 @@ void Mixer::request_setting_sync()
                 if (auto result = m_config->sync(); result.is_error())
                     dbgln("Failed to write audio mixer config: {}", result.error());
             },
-            this);
+            this)
+                                   .release_value_but_fixme_should_propagate_errors();
         m_config_write_timer->start();
     }
 }
