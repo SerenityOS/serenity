@@ -155,10 +155,10 @@ private:
     NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
     Optional<FrameQueueItem> m_next_frame;
 
-    NonnullRefPtr<Core::Timer> m_present_timer;
+    RefPtr<Core::Timer> m_present_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
-    NonnullRefPtr<Core::Timer> m_decode_timer;
+    RefPtr<Core::Timer> m_decode_timer;
 
     u64 m_skipped_frames;
 };

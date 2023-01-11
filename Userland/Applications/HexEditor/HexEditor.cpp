@@ -31,8 +31,7 @@
 #include <unistd.h>
 
 HexEditor::HexEditor()
-    : m_blink_timer(Core::Timer::construct())
-    , m_document(make<HexDocumentMemory>(ByteBuffer::create_zeroed(0).release_value_but_fixme_should_propagate_errors()))
+    : m_document(make<HexDocumentMemory>(ByteBuffer::create_zeroed(0).release_value_but_fixme_should_propagate_errors()))
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -42,11 +41,10 @@ HexEditor::HexEditor()
     set_foreground_role(ColorRole::BaseText);
     vertical_scrollbar().set_step(line_height());
 
-    m_blink_timer->set_interval(500);
-    m_blink_timer->on_timeout = [this]() {
+    m_blink_timer = Core::Timer::create_repeating(500, [this]() {
         m_cursor_blink_active = !m_cursor_blink_active;
         update();
-    };
+    }).release_value_but_fixme_should_propagate_errors();
     m_blink_timer->start();
 }
 

@@ -85,7 +85,7 @@ private:
     size_t m_position { 0 };
     bool m_cursor_at_low_nibble { false };
     EditMode m_edit_mode { Hex };
-    NonnullRefPtr<Core::Timer> m_blink_timer;
+    RefPtr<Core::Timer> m_blink_timer;
     bool m_cursor_blink_active { false };
     NonnullOwnPtr<HexDocument> m_document;
     GUI::UndoStack m_undo_stack;

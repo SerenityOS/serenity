@@ -948,12 +948,12 @@ void WindowFrame::handle_menu_mouse_event(Menu& menu, MouseEvent const& event)
 void WindowFrame::start_flash_animation()
 {
     if (!m_flash_timer) {
-        m_flash_timer = Core::Timer::construct(100, [this] {
+        m_flash_timer = Core::Timer::create_repeating(100, [this] {
             VERIFY(m_flash_counter);
             invalidate_titlebar();
             if (!--m_flash_counter)
                 m_flash_timer->stop();
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     m_flash_counter = 8;
     m_flash_timer->start();

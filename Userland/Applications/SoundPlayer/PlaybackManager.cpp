@@ -11,11 +11,11 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer> connec
     : m_connection(connection)
 {
     // FIXME: The buffer enqueuing should happen on a wholly independent second thread.
-    m_timer = Core::Timer::construct(PlaybackManager::update_rate_ms, [&]() {
+    m_timer = Core::Timer::create_repeating(PlaybackManager::update_rate_ms, [&]() {
         if (!m_loader)
             return;
         next_buffer();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_device_sample_rate = connection->get_sample_rate();
 }
 
