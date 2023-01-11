@@ -29,7 +29,6 @@ public:
 
     void paint_window(StringView title, Gfx::IntRect const& rect, Gfx::WindowTheme::WindowState, Gfx::Bitmap const& icon, int button_count = 3);
 
-    Function<void(DeprecatedString const&)> on_theme_load_from_file;
     Function<void()> on_palette_change;
 
     struct Window {
