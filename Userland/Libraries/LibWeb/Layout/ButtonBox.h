@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-class ButtonBox : public FormAssociatedLabelableNode {
+class ButtonBox final : public FormAssociatedLabelableNode {
     JS_CELL(ButtonBox, FormAssociatedLabelableNode);
 
 public:

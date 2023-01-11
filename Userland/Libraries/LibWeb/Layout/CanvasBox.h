@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-class CanvasBox : public ReplacedBox {
+class CanvasBox final : public ReplacedBox {
     JS_CELL(CanvasBox, ReplacedBox);
 
 public:

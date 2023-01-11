@@ -10,7 +10,7 @@
 
 namespace Web::Layout {
 
-class InlineNode : public NodeWithStyleAndBoxModelMetrics {
+class InlineNode final : public NodeWithStyleAndBoxModelMetrics {
     JS_CELL(InlineNode, NodeWithStyleAndBoxModelMetrics);
 
 public:

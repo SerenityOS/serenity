@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-class CheckBox : public FormAssociatedLabelableNode {
+class CheckBox final : public FormAssociatedLabelableNode {
     JS_CELL(CheckBox, FormAssociatedLabelableNode);
 
 public:

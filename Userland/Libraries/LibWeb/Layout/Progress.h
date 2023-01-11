@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-class Progress : public LabelableNode {
+class Progress final : public LabelableNode {
     JS_CELL(Progress, LabelableNode);
 
 public:
