@@ -508,47 +508,16 @@ DeprecatedString BrowsingContext::selected_text() const
 
 void BrowsingContext::select_all()
 {
-    if (!active_document())
+    auto* document = active_document();
+    if (!document)
         return;
-    auto* layout_root = active_document()->layout_node();
-    if (!layout_root)
+    auto* body = document->body();
+    if (!body)
         return;
-
-    Layout::Node const* first_layout_node = layout_root;
-
-    for (;;) {
-        auto* next = first_layout_node->next_in_pre_order();
-        if (!next)
-            break;
-        first_layout_node = next;
-        if (is<Layout::TextNode>(*first_layout_node))
-            break;
-    }
-
-    Layout::Node const* last_layout_node = first_layout_node;
-
-    for (Layout::Node const* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
-        if (is<Layout::TextNode>(*layout_node))
-            last_layout_node = layout_node;
-    }
-
-    VERIFY(first_layout_node);
-    VERIFY(last_layout_node);
-
-    int last_layout_node_index_in_node = 0;
-    if (is<Layout::TextNode>(*last_layout_node)) {
-        auto const& text_for_rendering = verify_cast<Layout::TextNode>(*last_layout_node).text_for_rendering();
-        if (!text_for_rendering.is_empty())
-            last_layout_node_index_in_node = text_for_rendering.length() - 1;
-    }
-
-    auto start = Layout::LayoutPosition {
-        JS::make_handle(const_cast<Layout::Node*>(first_layout_node)), 0
-    };
-    auto end = Layout::LayoutPosition {
-        JS::make_handle(const_cast<Layout::Node*>(last_layout_node)), last_layout_node_index_in_node
-    };
-    layout_root->set_selection({ move(start), move(end) });
+    auto selection = document->get_selection();
+    if (!selection)
+        return;
+    (void)selection->select_all_children(*document->body());
 }
 
 void BrowsingContext::register_viewport_client(ViewportClient& client)
