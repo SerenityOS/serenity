@@ -16,7 +16,9 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FilePickerDialogGML.h>
 #include <LibGUI/FileSystemModel.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
@@ -25,6 +27,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/Tray.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
@@ -32,9 +35,9 @@
 
 namespace GUI {
 
-Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position)
+Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position, Optional<Vector<FileTypeFilter>> allowed_file_types)
 {
-    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position);
+    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position, move(allowed_file_types));
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -65,9 +68,10 @@ Optional<DeprecatedString> FilePicker::get_save_filepath(Window* parent_window, 
     return {};
 }
 
-FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, StringView path, ScreenPosition screen_position)
+FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, StringView path, ScreenPosition screen_position, Optional<Vector<FileTypeFilter>> allowed_file_types)
     : Dialog(parent_window, screen_position)
     , m_model(FileSystemModel::create(path))
+    , m_allowed_file_types(move(allowed_file_types))
     , m_mode(mode)
 {
     switch (m_mode) {
@@ -111,6 +115,36 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_location_textbox->on_return_pressed = [this] {
         set_path(m_location_textbox->text());
     };
+
+    auto* file_types_filters_combo = widget->find_descendant_of_type_named<GUI::ComboBox>("allowed_file_type_filters_combo");
+
+    if (m_allowed_file_types.has_value()) {
+        for (auto& filter : *m_allowed_file_types) {
+            if (!filter.extensions.has_value()) {
+                m_allowed_file_types_names.append(filter.name);
+                continue;
+            }
+
+            StringBuilder extension_list;
+            extension_list.join("; "sv, *filter.extensions);
+            m_allowed_file_types_names.append(DeprecatedString::formatted("{} ({})", filter.name, extension_list.to_deprecated_string()));
+        }
+
+        file_types_filters_combo->set_model(*GUI::ItemListModel<DeprecatedString, Vector<DeprecatedString>>::create(m_allowed_file_types_names));
+        file_types_filters_combo->on_change = [this](DeprecatedString const&, GUI::ModelIndex const& index) {
+            m_model->set_allowed_file_extensions((*m_allowed_file_types)[index.row()].extensions);
+        };
+        file_types_filters_combo->set_selected_index(0);
+    } else {
+        auto* file_types_filter_label = widget->find_descendant_of_type_named<GUI::Label>("allowed_file_types_label");
+        auto& spacer = file_types_filter_label->parent_widget()->add<GUI::Widget>();
+        spacer.set_fixed_height(22);
+        file_types_filter_label->remove_from_parent();
+
+        file_types_filters_combo->parent_widget()->insert_child_before(GUI::Widget::construct(), *file_types_filters_combo);
+
+        file_types_filters_combo->remove_from_parent();
+    }
 
     auto open_parent_directory_action = Action::create(
         "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
