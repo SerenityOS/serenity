@@ -429,4 +429,9 @@ DeprecatedString Selection::to_deprecated_string() const
     return m_range->to_deprecated_string();
 }
 
+JS::GCPtr<DOM::Range> Selection::range() const
+{
+    return m_range;
+}
+
 }
