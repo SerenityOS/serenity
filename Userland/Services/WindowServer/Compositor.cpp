@@ -386,6 +386,10 @@ void Compositor::compose()
                 });
             }
 
+            auto update_window_rect = window_rect.intersected(rect);
+            if (update_window_rect.is_empty())
+                return;
+
             auto clear_window_rect = [&](const Gfx::IntRect& clear_rect) {
                 auto fill_color = wm.palette().window();
                 if (!window.is_opaque())
@@ -394,7 +398,7 @@ void Compositor::compose()
             };
 
             if (!backing_store) {
-                clear_window_rect(window_rect.intersected(rect));
+                clear_window_rect(update_window_rect);
                 return;
             }
 
@@ -407,7 +411,7 @@ void Compositor::compose()
             // it was previously, and fill the rest of the window with its
             // background color.
             Gfx::IntRect backing_rect;
-            backing_rect.set_size(backing_store->size());
+            backing_rect.set_size(window.backing_store_visible_size());
             switch (WindowManager::the().resize_direction_of_window(window)) {
             case ResizeDirection::None:
             case ResizeDirection::Right:
@@ -434,8 +438,7 @@ void Compositor::compose()
                 break;
             }
 
-            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window_rect)
-                                                                 .intersected(backing_rect)
+            Gfx::IntRect dirty_rect_in_backing_coordinates = update_window_rect.intersected(backing_rect)
                                                                  .translated(-backing_rect.location());
 
             if (!dirty_rect_in_backing_coordinates.is_empty()) {
@@ -459,7 +462,7 @@ void Compositor::compose()
                 }
             }
 
-            for (auto background_rect : window_rect.shatter(backing_rect))
+            for (auto background_rect : update_window_rect.shatter(backing_rect))
                 clear_window_rect(background_rect);
         };
 

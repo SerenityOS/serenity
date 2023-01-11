@@ -733,7 +733,7 @@ void ConnectionFromClient::did_finish_painting(i32 window_id, Vector<Gfx::IntRec
 
 void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unused]] i32 bpp,
     [[maybe_unused]] i32 pitch, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
-    Gfx::IntSize size, bool flush_immediately)
+    Gfx::IntSize size, Gfx::IntSize visible_size, bool flush_immediately)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -761,6 +761,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
         }
         window.set_backing_store(backing_store_or_error.release_value(), serial);
     }
+    window.set_backing_store_visible_size(visible_size);
 
     if (flush_immediately)
         window.invalidate(false);

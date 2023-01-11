@@ -153,6 +153,7 @@ void Window::set_rect(Gfx::IntRect const& rect)
     } else if (is_internal() && (!m_backing_store || old_rect.size() != rect.size())) {
         auto format = has_alpha_channel() ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
         m_backing_store = Gfx::Bitmap::try_create(format, m_rect.size()).release_value_but_fixme_should_propagate_errors();
+        m_backing_store_visible_size = m_rect.size();
     }
 
     if (m_floating_rect.is_empty())

@@ -242,6 +242,9 @@ public:
         m_backing_store_serial = serial;
     }
 
+    Gfx::IntSize backing_store_visible_size() const { return m_backing_store_visible_size; }
+    void set_backing_store_visible_size(Gfx::IntSize visible_size) { m_backing_store_visible_size = visible_size; }
+
     void swap_backing_stores()
     {
         swap(m_backing_store, m_last_backing_store);
@@ -434,6 +437,7 @@ private:
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
+    Gfx::IntSize m_backing_store_visible_size {};
     i32 m_backing_store_serial { -1 };
     i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };

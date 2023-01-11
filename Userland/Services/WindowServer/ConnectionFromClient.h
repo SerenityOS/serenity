@@ -121,7 +121,7 @@ private:
     virtual void did_finish_painting(i32, Vector<Gfx::IntRect> const&) override;
     virtual void set_global_mouse_tracking(bool) override;
     virtual void set_window_opacity(i32, float) override;
-    virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize, bool) override;
+    virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize, Gfx::IntSize, bool) override;
     virtual void set_window_has_alpha_channel(i32, bool) override;
     virtual void set_window_alpha_hit_threshold(i32, float) override;
     virtual void move_window_to_front(i32) override;

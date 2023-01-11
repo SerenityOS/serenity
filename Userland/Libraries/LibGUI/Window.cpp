@@ -39,6 +39,7 @@ public:
     explicit WindowBackingStore(NonnullRefPtr<Gfx::Bitmap> bitmap)
         : m_bitmap(move(bitmap))
         , m_serial(++s_next_backing_store_serial)
+        , m_visible_size(m_bitmap->size())
     {
     }
 
@@ -49,9 +50,13 @@ public:
 
     i32 serial() const { return m_serial; }
 
+    Gfx::IntSize visible_size() const { return m_visible_size; }
+    void set_visible_size(Gfx::IntSize visible_size) { m_visible_size = visible_size; }
+
 private:
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
     const i32 m_serial;
+    Gfx::IntSize m_visible_size;
 };
 
 static NeverDestroyed<HashTable<Window*>> all_windows;
@@ -395,6 +400,15 @@ void Window::handle_mouse_event(MouseEvent& event)
     result.widget->dispatch_event(local_event, this);
 }
 
+Gfx::IntSize Window::backing_store_size(Gfx::IntSize window_size) const
+{
+    if (!m_resizing)
+        return window_size;
+
+    int const backing_margin_during_resize = 64;
+    return { window_size.width() + backing_margin_during_resize, window_size.height() + backing_margin_during_resize };
+}
+
 void Window::handle_multi_paint_event(MultiPaintEvent& event)
 {
     if (!is_visible())
@@ -409,16 +423,22 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         rects.extend(move(m_pending_paint_event_rects));
     }
     VERIFY(!rects.is_empty());
-    if (m_back_store && m_back_store->size() != event.window_size()) {
-        // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
-        // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
-        // effort on painting into an undersized bitmap that will be thrown away anyway.
+
+    // Throw away our backing store if its size is different, and we've stopped resizing or double buffering is disabled.
+    // This ensures that we shrink the backing store after a resize, and that we do not get flickering artifacts when
+    // directly painting into a shared active backing store.
+    if (m_back_store && (!m_resizing || !m_double_buffering_enabled) && m_back_store->size() != event.window_size())
         m_back_store = nullptr;
-    }
-    bool created_new_backing_store = !m_back_store;
+
+    // Discard our backing store if it's unable to contain the new window size. Smaller is fine though, that prevents
+    // lots of backing store allocations during a resize.
+    if (m_back_store && !m_back_store->size().contains(event.window_size()))
+        m_back_store = nullptr;
+
+    bool created_new_backing_store = false;
     if (!m_back_store) {
-        m_back_store = create_backing_store(event.window_size());
-        VERIFY(m_back_store);
+        m_back_store = create_backing_store(backing_store_size(event.window_size())).release_value_but_fixme_should_propagate_errors();
+        created_new_backing_store = true;
     } else if (m_double_buffering_enabled) {
         bool was_purged = false;
         bool bitmap_has_memory = m_back_store->bitmap().set_nonvolatile(was_purged);
@@ -439,8 +459,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         }
     }
 
-    auto rect = rects.first();
-    if (rect.is_empty() || created_new_backing_store) {
+    if (created_new_backing_store) {
         rects.clear();
         rects.append({ {}, event.window_size() });
     }
@@ -449,6 +468,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         PaintEvent paint_event(rect);
         m_main_widget->dispatch_event(paint_event, this);
     }
+    m_back_store->set_visible_size(event.window_size());
 
     if (m_double_buffering_enabled)
         flip(rects);
@@ -519,8 +539,10 @@ void Window::handle_key_event(KeyEvent& event)
 void Window::handle_resize_event(ResizeEvent& event)
 {
     auto new_size = event.size();
-    if (m_back_store && m_back_store->size() != new_size)
-        m_back_store = nullptr;
+
+    // When the user is done resizing, we receive a last resize event with our actual size.
+    m_resizing = new_size != m_rect_when_windowless.size();
+
     if (!m_pending_paint_event_rects.is_empty()) {
         m_pending_paint_event_rects.clear_with_capacity();
         m_pending_paint_event_rects.append({ {}, new_size });
@@ -895,10 +917,19 @@ void Window::set_hovered_widget(Widget* widget)
         update();
 }
 
-void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
+void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately) const
 {
     auto& bitmap = backing_store.bitmap();
-    ConnectionToWindowServer::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    ConnectionToWindowServer::the().set_window_backing_store(
+        m_window_id,
+        32,
+        bitmap.pitch(),
+        bitmap.anonymous_buffer().fd(),
+        backing_store.serial(),
+        bitmap.has_alpha_channel(),
+        bitmap.size(),
+        backing_store.visible_size(),
+        flush_immediately);
 }
 
 void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
@@ -908,8 +939,7 @@ void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
     set_current_backing_store(*m_front_store);
 
     if (!m_back_store || m_back_store->size() != m_front_store->size()) {
-        m_back_store = create_backing_store(m_front_store->size());
-        VERIFY(m_back_store);
+        m_back_store = create_backing_store(m_front_store->size()).release_value_but_fixme_should_propagate_errors();
         memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
         m_back_store->bitmap().set_volatile();
         return;
@@ -923,7 +953,7 @@ void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
     m_back_store->bitmap().set_volatile();
 }
 
-OwnPtr<WindowBackingStore> Window::create_backing_store(Gfx::IntSize size)
+ErrorOr<NonnullOwnPtr<WindowBackingStore>> Window::create_backing_store(Gfx::IntSize size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
 
@@ -931,20 +961,11 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(Gfx::IntSize size)
     size_t pitch = Gfx::Bitmap::minimum_pitch(size.width(), format);
     size_t size_in_bytes = size.height() * pitch;
 
-    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes, PAGE_SIZE));
-    if (buffer_or_error.is_error()) {
-        perror("anon_create");
-        return {};
-    }
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes, PAGE_SIZE)));
 
     // FIXME: Plumb scale factor here eventually.
-    auto bitmap_or_error = Gfx::Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, 1, {});
-    if (bitmap_or_error.is_error()) {
-        VERIFY(size.width() <= INT16_MAX);
-        VERIFY(size.height() <= INT16_MAX);
-        return {};
-    }
-    return make<WindowBackingStore>(bitmap_or_error.release_value());
+    auto bitmap = TRY(Gfx::Bitmap::try_create_with_anonymous_buffer(format, buffer, size, 1, {}));
+    return make<WindowBackingStore>(bitmap);
 }
 
 void Window::wm_event(WMEvent&)

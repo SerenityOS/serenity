@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Function.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
@@ -262,8 +264,9 @@ private:
 
     void server_did_destroy();
 
-    OwnPtr<WindowBackingStore> create_backing_store(Gfx::IntSize);
-    void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false);
+    ErrorOr<NonnullOwnPtr<WindowBackingStore>> create_backing_store(Gfx::IntSize);
+    Gfx::IntSize backing_store_size(Gfx::IntSize) const;
+    void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false) const;
     void flip(Vector<Gfx::IntRect, 32> const& dirty_rects);
     void force_update();
 
@@ -312,6 +315,7 @@ private:
     bool m_visible { false };
     bool m_moved_by_client { false };
     bool m_blocks_emoji_input { false };
+    bool m_resizing { false };
 };
 
 }
