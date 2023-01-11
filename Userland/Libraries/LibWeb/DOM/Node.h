@@ -52,9 +52,6 @@ public:
 
     virtual ~Node();
 
-    // FIXME: Move cleanup to the regular destructor.
-    void removed_last_ref();
-
     NodeType type() const { return m_type; }
     bool is_element() const { return type() == NodeType::ELEMENT_NODE; }
     bool is_text() const { return type() == NodeType::TEXT_NODE; }
