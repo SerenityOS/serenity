@@ -37,10 +37,10 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
     m_cursor_params = Gfx::CursorParams::parse_from_filename(cursor_path, m_cursor_bitmap->rect().center()).constrained(*m_cursor_bitmap);
     // Setup cursor animation:
     if (m_cursor_params.frames() > 1 && m_cursor_params.frame_ms() > 0) {
-        m_frame_timer = Core::Timer::create_repeating(m_cursor_params.frame_ms(), [&] {
+        m_frame_timer = TRY(Core::Timer::create_repeating(m_cursor_params.frame_ms(), [&] {
             m_cursor_frame = (m_cursor_frame + 1) % m_cursor_params.frames();
             update();
-        });
+        }));
         m_frame_timer->start();
     } else {
         m_frame_timer = nullptr;

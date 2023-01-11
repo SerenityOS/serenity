@@ -89,7 +89,7 @@ ClockSettingsWidget::ClockSettingsWidget()
 
     m_clock_preview_update_timer = Core::Timer::create_repeating(1000, [&]() {
         update_clock_preview();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_clock_preview_update_timer->start();
     update_clock_preview();
 }

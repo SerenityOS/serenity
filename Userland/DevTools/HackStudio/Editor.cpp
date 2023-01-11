@@ -786,7 +786,7 @@ void Editor::create_tokens_info_timer()
     m_tokens_info_timer = Core::Timer::create_repeating((int)token_info_timer_interval_ms, [this] {
         on_token_info_timer_tick();
         m_tokens_info_timer->stop();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_tokens_info_timer->start();
 }
 

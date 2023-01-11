@@ -250,7 +250,7 @@ void MonitorSettingsWidget::apply_settings()
                 if (seconds_until_revert <= 0) {
                     box->close();
                 }
-            });
+            }).release_value_but_fixme_should_propagate_errors();
             revert_timer->start();
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
