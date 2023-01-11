@@ -48,7 +48,6 @@ Compositor::Compositor()
         1000 / 60, [this] {
             notify_display_links();
         });
-    m_display_link_notify_timer->stop();
 
     m_compose_timer = Core::Timer::create_single_shot(
         1000 / 60,
@@ -57,6 +56,7 @@ Compositor::Compositor()
         },
         this)
                           .release_value_but_fixme_should_propagate_errors();
+    m_compose_timer->start();
 
     m_immediate_compose_timer = Core::Timer::create_single_shot(
         0,
@@ -65,6 +65,7 @@ Compositor::Compositor()
         },
         this)
                                     .release_value_but_fixme_should_propagate_errors();
+    m_compose_timer->start();
 
     init_bitmaps();
 }
