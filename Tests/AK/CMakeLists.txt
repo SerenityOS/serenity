@@ -30,6 +30,7 @@ set(AK_TEST_SOURCES
     TestFixedPoint.cpp
     TestFloatingPoint.cpp
     TestFloatingPointParsing.cpp
+    TestFlyString.cpp
     TestFormat.cpp
     TestGenericLexer.cpp
     TestHashFunctions.cpp

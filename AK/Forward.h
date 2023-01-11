@@ -21,6 +21,7 @@ class Bitmap;
 using ByteBuffer = Detail::ByteBuffer<32>;
 class CircularBuffer;
 class Error;
+class FlyString;
 class GenericLexer;
 class IPv4Address;
 class JsonArray;

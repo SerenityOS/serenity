@@ -5,6 +5,7 @@ set(AK_SOURCES
     DeprecatedFlyString.cpp
     DeprecatedString.cpp
     FloatingPointStringConversions.cpp
+    FlyString.cpp
     Format.cpp
     FuzzyMatch.cpp
     GenericLexer.cpp
