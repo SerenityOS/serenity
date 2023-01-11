@@ -203,6 +203,7 @@ public:
 
     bool should_autocomplete_automatically() const { return m_autocomplete_timer; }
     void set_should_autocomplete_automatically(bool);
+    void hide_autocomplete();
 
     Optional<u32> const& substitution_code_point() const { return m_substitution_code_point; }
     void set_substitution_code_point(Optional<u32> code_point);
@@ -320,7 +321,6 @@ private:
     void try_update_autocomplete(Function<void()> callback = {});
     void force_update_autocomplete(Function<void()> callback = {});
     void hide_autocomplete_if_needed();
-    void hide_autocomplete();
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
