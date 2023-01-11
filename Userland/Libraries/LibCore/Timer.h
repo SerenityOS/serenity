@@ -22,9 +22,9 @@ public:
         timer->stop();
         return timer;
     }
-    static NonnullRefPtr<Timer> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)
+    static ErrorOr<NonnullRefPtr<Timer>> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)
     {
-        auto timer = adopt_ref(*new Timer(interval_ms, move(timeout_handler), parent));
+        auto timer = TRY(adopt_nonnull_ref_or_enomem(new Timer(interval_ms, move(timeout_handler), parent)));
         timer->set_single_shot(true);
         timer->stop();
         return timer;

@@ -144,7 +144,7 @@ void TLSv12::setup_connection()
                     // Extend the timer, we are too slow.
                     m_handshake_timeout_timer->restart(m_max_wait_time_for_handshake_in_seconds * 1000);
                 }
-            });
+            }).release_value_but_fixme_should_propagate_errors();
         auto packet = build_hello();
         write_packet(packet);
         write_into_socket();

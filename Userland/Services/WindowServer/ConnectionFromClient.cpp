@@ -240,7 +240,7 @@ void ConnectionFromClient::flash_menubar_menu(i32 window_id, i32 menu_id)
                 return;
             weak_window->menubar().flash_menu(nullptr);
             weak_window->frame().invalidate_menubar();
-        });
+        }).release_value_but_fixme_should_propagate_errors();
         m_flashed_menu_timer->start();
     } else if (m_flashed_menu_timer) {
         m_flashed_menu_timer->restart();
@@ -1134,7 +1134,7 @@ void ConnectionFromClient::may_have_become_unresponsive()
     async_ping();
     m_ping_timer = Core::Timer::create_single_shot(1000, [this] {
         set_unresponsive(true);
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_ping_timer->start();
 }
 

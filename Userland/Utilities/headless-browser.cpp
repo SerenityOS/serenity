@@ -700,7 +700,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             MUST(output_file->write(image_buffer.bytes()));
 
             exit(0);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
 
     timer->start();
 }

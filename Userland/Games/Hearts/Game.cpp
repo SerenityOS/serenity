@@ -28,7 +28,7 @@ Game::Game()
     m_delay_timer = Core::Timer::create_single_shot(0, [this] {
         dbgln_if(HEARTS_DEBUG, "Continuing game after delay...");
         advance_game();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 
     constexpr int card_overlap = 20;
     constexpr int outer_border_size = 15;
@@ -155,7 +155,7 @@ void Game::show_score_card(bool game_over)
     if (!m_players[0].is_human) {
         close_timer = Core::Timer::create_single_shot(2000, [&] {
             score_dialog->close();
-        });
+        }).release_value_but_fixme_should_propagate_errors();
         close_timer->start();
     }
 
@@ -236,7 +236,7 @@ void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, F
     m_animation_delay_timer = Core::Timer::create_single_shot(initial_delay_ms, [&] {
         m_animation_playing = true;
         start_timer(10);
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_animation_delay_timer->start();
 }
 

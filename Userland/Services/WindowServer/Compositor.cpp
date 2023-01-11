@@ -55,14 +55,16 @@ Compositor::Compositor()
         [this] {
             compose();
         },
-        this);
+        this)
+                          .release_value_but_fixme_should_propagate_errors();
 
     m_immediate_compose_timer = Core::Timer::create_single_shot(
         0,
         [this] {
             compose();
         },
-        this);
+        this)
+                                    .release_value_but_fixme_should_propagate_errors();
 
     init_bitmaps();
 }
@@ -1589,7 +1591,8 @@ void Compositor::start_window_stack_switch_overlay_timer()
         [this] {
             remove_window_stack_switch_overlays();
         },
-        this);
+        this)
+                                       .release_value_but_fixme_should_propagate_errors();
     m_stack_switch_overlay_timer->start();
 }
 

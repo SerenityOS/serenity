@@ -2265,7 +2265,7 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
         m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] {
             if (m_autocomplete_box && !m_autocomplete_box->is_visible())
                 try_show_autocomplete(UserRequestedAutocomplete::No);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
         return;
     }
 

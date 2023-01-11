@@ -95,11 +95,11 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
 
     m_tooltip_show_timer = Core::Timer::create_single_shot(700, [this] {
         request_tooltip_show();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 
     m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [this] {
         tooltip_hide_timer_did_fire();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 static bool s_in_teardown;

@@ -261,7 +261,8 @@ void DHCPv4Client::handle_ack(DHCPv4Packet const& packet, ParsedDHCPv4Options co
             transaction->has_ip = false;
             dhcp_discover(interface);
         },
-        this);
+        this)
+        .release_value_but_fixme_should_propagate_errors();
 
     Optional<IPv4Address> gateway;
     if (auto routers = options.get_many<IPv4Address>(DHCPOption::Router, 1); !routers.is_empty())
@@ -288,7 +289,8 @@ void DHCPv4Client::handle_nak(DHCPv4Packet const& packet, ParsedDHCPv4Options co
         [this, iface = InterfaceDescriptor { iface }] {
             dhcp_discover(iface);
         },
-        this);
+        this)
+        .release_value_but_fixme_should_propagate_errors();
 }
 
 void DHCPv4Client::process_incoming(DHCPv4Packet const& packet)
