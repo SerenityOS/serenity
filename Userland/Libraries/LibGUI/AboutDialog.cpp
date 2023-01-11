@@ -71,7 +71,7 @@ AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const*
     if (m_name != "SerenityOS")
         make_label("SerenityOS"sv);
     make_label(m_version_string);
-    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2022"sv);
+    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2023"sv);
 
     right_container.layout()->add_spacer();
 
