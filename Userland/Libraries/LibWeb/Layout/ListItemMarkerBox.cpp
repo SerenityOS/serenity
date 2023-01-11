@@ -51,7 +51,7 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
 
 ListItemMarkerBox::~ListItemMarkerBox() = default;
 
-RefPtr<Painting::Paintable> ListItemMarkerBox::create_paintable() const
+JS::GCPtr<Painting::Paintable> ListItemMarkerBox::create_paintable() const
 {
     return Painting::MarkerPaintable::create(*this);
 }

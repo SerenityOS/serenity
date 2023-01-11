@@ -16,6 +16,8 @@ namespace Web::Painting {
 // FIXME: Splinter this into FormAssociatedLabelablePaintable once
 //        ProgressPaintable switches over to this.
 class LabelablePaintable : public PaintableBox {
+    JS_CELL(LabelablePaintable, PaintableBox);
+
 public:
     Layout::FormAssociatedLabelableNode const& layout_box() const;
     Layout::FormAssociatedLabelableNode& layout_box();

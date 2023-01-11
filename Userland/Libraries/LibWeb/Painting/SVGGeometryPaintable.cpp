@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<SVGGeometryPaintable> SVGGeometryPaintable::create(Layout::SVGGeometryBox const& layout_box)
+JS::NonnullGCPtr<SVGGeometryPaintable> SVGGeometryPaintable::create(Layout::SVGGeometryBox const& layout_box)
 {
-    return adopt_ref(*new SVGGeometryPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<SVGGeometryPaintable>(layout_box);
 }
 
 SVGGeometryPaintable::SVGGeometryPaintable(Layout::SVGGeometryBox const& layout_box)

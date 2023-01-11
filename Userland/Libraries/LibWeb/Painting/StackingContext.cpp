@@ -578,7 +578,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // 1. the background and borders of the element forming the stacking context.
     if (paintable().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
         return HitTestResult {
-            .paintable = paintable(),
+            .paintable = const_cast<PaintableBox&>(paintable()),
         };
     }
 

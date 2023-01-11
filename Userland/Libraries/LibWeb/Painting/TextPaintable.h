@@ -11,8 +11,10 @@
 namespace Web::Painting {
 
 class TextPaintable : public Paintable {
+    JS_CELL(TextPaintable, Paintable);
+
 public:
-    static NonnullRefPtr<TextPaintable> create(Layout::TextNode const&);
+    static JS::NonnullGCPtr<TextPaintable> create(Layout::TextNode const&);
 
     Layout::TextNode const& layout_node() const { return static_cast<Layout::TextNode const&>(Paintable::layout_node()); }
 

@@ -23,7 +23,7 @@ void CanvasBox::prepare_for_replaced_layout()
     set_intrinsic_height(dom_node().height());
 }
 
-RefPtr<Painting::Paintable> CanvasBox::create_paintable() const
+JS::GCPtr<Painting::Paintable> CanvasBox::create_paintable() const
 {
     return Painting::CanvasPaintable::create(*this);
 }

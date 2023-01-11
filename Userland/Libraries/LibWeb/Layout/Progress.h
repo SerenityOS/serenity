@@ -21,7 +21,7 @@ public:
     const HTML::HTMLProgressElement& dom_node() const { return static_cast<const HTML::HTMLProgressElement&>(LabelableNode::dom_node()); }
     HTML::HTMLProgressElement& dom_node() { return static_cast<HTML::HTMLProgressElement&>(LabelableNode::dom_node()); }
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

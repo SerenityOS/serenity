@@ -12,8 +12,10 @@
 namespace Web::Painting {
 
 class RadioButtonPaintable final : public LabelablePaintable {
+    JS_CELL(RadioButtonPaintable, LabelablePaintable);
+
 public:
-    static NonnullRefPtr<RadioButtonPaintable> create(Layout::RadioButton const&);
+    static JS::NonnullGCPtr<RadioButtonPaintable> create(Layout::RadioButton const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

@@ -12,8 +12,10 @@
 namespace Web::Painting {
 
 class ButtonPaintable final : public LabelablePaintable {
+    JS_CELL(ButtonPaintable, LabelablePaintable);
+
 public:
-    static NonnullRefPtr<ButtonPaintable> create(Layout::ButtonBox const&);
+    static JS::NonnullGCPtr<ButtonPaintable> create(Layout::ButtonBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

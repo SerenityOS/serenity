@@ -10,6 +10,12 @@
 
 namespace Web::Painting {
 
+void Paintable::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_layout_node);
+}
+
 Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
@@ -48,7 +54,7 @@ Optional<HitTestResult> Paintable::hit_test(CSSPixelPoint, HitTestType) const
 
 Paintable const* Paintable::first_child() const
 {
-    auto* layout_child = m_layout_node.first_child();
+    auto* layout_child = m_layout_node->first_child();
     for (; layout_child && !layout_child->paintable(); layout_child = layout_child->next_sibling())
         ;
     return layout_child ? layout_child->paintable() : nullptr;
@@ -56,7 +62,7 @@ Paintable const* Paintable::first_child() const
 
 Paintable const* Paintable::next_sibling() const
 {
-    auto* layout_node = m_layout_node.next_sibling();
+    auto* layout_node = m_layout_node->next_sibling();
     for (; layout_node && !layout_node->paintable(); layout_node = layout_node->next_sibling())
         ;
     return layout_node ? layout_node->paintable() : nullptr;
@@ -64,7 +70,7 @@ Paintable const* Paintable::next_sibling() const
 
 Paintable const* Paintable::last_child() const
 {
-    auto* layout_child = m_layout_node.last_child();
+    auto* layout_child = m_layout_node->last_child();
     for (; layout_child && !layout_child->paintable(); layout_child = layout_child->previous_sibling())
         ;
     return layout_child ? layout_child->paintable() : nullptr;
@@ -72,7 +78,7 @@ Paintable const* Paintable::last_child() const
 
 Paintable const* Paintable::previous_sibling() const
 {
-    auto* layout_node = m_layout_node.previous_sibling();
+    auto* layout_node = m_layout_node->previous_sibling();
     for (; layout_node && !layout_node->paintable(); layout_node = layout_node->previous_sibling())
         ;
     return layout_node ? layout_node->paintable() : nullptr;

@@ -50,7 +50,7 @@ public:
 
     void compute_text_for_rendering(bool collapse);
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_text_node() const final { return true; }

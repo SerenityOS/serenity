@@ -8,9 +8,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<CanvasPaintable> CanvasPaintable::create(Layout::CanvasBox const& layout_box)
+JS::NonnullGCPtr<CanvasPaintable> CanvasPaintable::create(Layout::CanvasBox const& layout_box)
 {
-    return adopt_ref(*new CanvasPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<CanvasPaintable>(layout_box);
 }
 
 CanvasPaintable::CanvasPaintable(Layout::CanvasBox const& layout_box)

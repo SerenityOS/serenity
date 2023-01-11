@@ -14,8 +14,10 @@
 namespace Web::Painting {
 
 class PaintableBox : public Paintable {
+    JS_CELL(PaintableBox, Paintable);
+
 public:
-    static NonnullRefPtr<PaintableBox> create(Layout::Box const&);
+    static JS::NonnullGCPtr<PaintableBox> create(Layout::Box const&);
     virtual ~PaintableBox();
 
     virtual void paint(PaintContext&, PaintPhase) const override;
@@ -162,11 +164,10 @@ private:
 };
 
 class PaintableWithLines : public PaintableBox {
+    JS_CELL(PaintableWithLines, PaintableBox);
+
 public:
-    static NonnullRefPtr<PaintableWithLines> create(Layout::BlockContainer const& block_container)
-    {
-        return adopt_ref(*new PaintableWithLines(block_container));
-    }
+    static JS::NonnullGCPtr<PaintableWithLines> create(Layout::BlockContainer const&);
     virtual ~PaintableWithLines() override;
 
     Layout::BlockContainer const& layout_box() const;

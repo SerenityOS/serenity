@@ -36,6 +36,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_dom_node);
+    visitor.visit(m_paintable);
     visitor.visit(m_browsing_context);
     TreeNode::visit_edges(visitor);
 }
@@ -679,12 +680,12 @@ void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_valu
     mutable_computed_values.set_margin({ CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) });
 }
 
-void Node::set_paintable(RefPtr<Painting::Paintable> paintable)
+void Node::set_paintable(JS::GCPtr<Painting::Paintable> paintable)
 {
     m_paintable = move(paintable);
 }
 
-RefPtr<Painting::Paintable> Node::create_paintable() const
+JS::GCPtr<Painting::Paintable> Node::create_paintable() const
 {
     return nullptr;
 }

@@ -13,9 +13,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<ButtonPaintable> ButtonPaintable::create(Layout::ButtonBox const& layout_box)
+JS::NonnullGCPtr<ButtonPaintable> ButtonPaintable::create(Layout::ButtonBox const& layout_box)
 {
-    return adopt_ref(*new ButtonPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<ButtonPaintable>(layout_box);
 }
 
 ButtonPaintable::ButtonPaintable(Layout::ButtonBox const& layout_box)

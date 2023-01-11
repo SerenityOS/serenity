@@ -27,7 +27,7 @@ public:
 
     bool renders_as_alt_text() const;
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
     auto const& image_loader() const { return m_image_loader; }
 

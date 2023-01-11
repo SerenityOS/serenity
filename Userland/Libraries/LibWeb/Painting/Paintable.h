@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,7 +28,7 @@ enum class PaintPhase {
 };
 
 struct HitTestResult {
-    NonnullRefPtr<Painting::Paintable> paintable;
+    JS::Handle<Painting::Paintable> paintable;
     int index_in_node { 0 };
 
     enum InternalPosition {
@@ -48,9 +48,8 @@ enum class HitTestType {
     TextCursor, // Clicking past the right/bottom edge of text will still hit the text
 };
 
-class Paintable : public RefCounted<Paintable> {
-    AK_MAKE_NONMOVABLE(Paintable);
-    AK_MAKE_NONCOPYABLE(Paintable);
+class Paintable : public JS::Cell {
+    JS_CELL(Paintable, Cell);
 
 public:
     virtual ~Paintable() = default;
@@ -108,24 +107,24 @@ public:
     virtual bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
 
     Layout::Node const& layout_node() const { return m_layout_node; }
-    Layout::Node& layout_node() { return const_cast<Layout::Node&>(m_layout_node); }
+    Layout::Node& layout_node() { return const_cast<Layout::Node&>(*m_layout_node); }
 
     DOM::Node* dom_node() { return layout_node().dom_node(); }
     DOM::Node const* dom_node() const { return layout_node().dom_node(); }
 
-    auto const& computed_values() const { return m_layout_node.computed_values(); }
+    auto const& computed_values() const { return m_layout_node->computed_values(); }
 
     bool visible_for_hit_testing() const { return computed_values().pointer_events() != CSS::PointerEvents::None; }
 
-    HTML::BrowsingContext const& browsing_context() const { return m_layout_node.browsing_context(); }
+    HTML::BrowsingContext const& browsing_context() const { return m_layout_node->browsing_context(); }
     HTML::BrowsingContext& browsing_context() { return layout_node().browsing_context(); }
 
-    void set_needs_display() const { const_cast<Layout::Node&>(m_layout_node).set_needs_display(); }
+    void set_needs_display() const { const_cast<Layout::Node&>(*m_layout_node).set_needs_display(); }
 
     Layout::BlockContainer const* containing_block() const
     {
         if (!m_containing_block.has_value())
-            m_containing_block = const_cast<Layout::Node&>(m_layout_node).containing_block();
+            m_containing_block = m_layout_node->containing_block();
         return *m_containing_block;
     }
 
@@ -138,8 +137,10 @@ protected:
     {
     }
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
-    Layout::Node const& m_layout_node;
+    JS::NonnullGCPtr<Layout::Node> m_layout_node;
     Optional<Layout::BlockContainer*> mutable m_containing_block;
 };
 
@@ -154,6 +155,6 @@ inline DOM::Node const* HitTestResult::dom_node() const
 }
 
 template<>
-inline bool Paintable::fast_is<PaintableBox>() const { return m_layout_node.is_box(); }
+inline bool Paintable::fast_is<PaintableBox>() const { return m_layout_node->is_box(); }
 
 }

@@ -19,9 +19,14 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
+JS::NonnullGCPtr<PaintableWithLines> PaintableWithLines::create(Layout::BlockContainer const& block_container)
 {
-    return adopt_ref(*new PaintableBox(layout_box));
+    return block_container.heap().allocate_without_realm<PaintableWithLines>(block_container);
+}
+
+JS::NonnullGCPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
+{
+    return layout_box.heap().allocate_without_realm<PaintableBox>(layout_box);
 }
 
 PaintableBox::PaintableBox(Layout::Box const& layout_box)
@@ -679,7 +684,7 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
             continue;
         return result;
     }
-    return HitTestResult { *this };
+    return HitTestResult { const_cast<PaintableBox&>(*this) };
 }
 
 Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
@@ -700,7 +705,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
             if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
-                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())), fragment.text_index_at(position.x()) };
             }
 
             // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
@@ -709,14 +714,14 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
             // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
             // If we knew the direction of selection, we could make a better choice.
             if (fragment_absolute_rect.bottom() <= position.y()) { // fully below the fragment
-                last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() + fragment.length() };
+                last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
             } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
                 if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
                     if (!last_good_candidate.has_value()) {            // first fragment of the line
-                        last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() };
+                        last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() };
                     }
                 } else { // right of the fragment
-                    last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() + fragment.length() };
+                    last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
                 }
             }
         }
@@ -725,7 +730,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
     if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
-        return HitTestResult { *this };
+        return HitTestResult { const_cast<PaintableWithLines&>(*this) };
     return {};
 }
 

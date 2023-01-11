@@ -188,7 +188,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::It
     return {};
 }
 
-RefPtr<Painting::Paintable> TextNode::create_paintable() const
+JS::GCPtr<Painting::Paintable> TextNode::create_paintable() const
 {
     return Painting::TextPaintable::create(*this);
 }
