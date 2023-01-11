@@ -50,6 +50,9 @@ public:
 
     DeprecatedString to_deprecated_string() const;
 
+    // Non-standard convenience accessor for the selection's range.
+    JS::GCPtr<DOM::Range> range() const;
+
 private:
     Selection(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);
 
