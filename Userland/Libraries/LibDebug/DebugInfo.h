@@ -29,7 +29,7 @@ public:
     ELF::Image const& elf() const { return m_elf; }
 
     struct SourcePosition {
-        FlyString file_path;
+        DeprecatedFlyString file_path;
         size_t line_number { 0 };
         Optional<FlatPtr> address_of_first_statement;
 

@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -25,20 +26,19 @@ PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
 }
 
 PrimitiveString::PrimitiveString(DeprecatedString string)
-    : m_has_utf8_string(true)
-    , m_utf8_string(move(string))
+    : m_utf8_string(move(string))
 {
 }
 
 PrimitiveString::PrimitiveString(Utf16String string)
-    : m_has_utf16_string(true)
-    , m_utf16_string(move(string))
+    : m_utf16_string(move(string))
 {
 }
 
 PrimitiveString::~PrimitiveString()
 {
-    vm().string_cache().remove(m_utf8_string);
+    if (has_utf8_string())
+        vm().string_cache().remove(*m_utf8_string);
 }
 
 void PrimitiveString::visit_edges(Cell::Visitor& visitor)
@@ -57,61 +57,60 @@ bool PrimitiveString::is_empty() const
         return false;
     }
 
-    if (m_has_utf16_string)
-        return m_utf16_string.is_empty();
-    if (m_has_utf8_string)
-        return m_utf8_string.is_empty();
+    if (has_utf16_string())
+        return m_utf16_string->is_empty();
+    if (has_utf8_string())
+        return m_utf8_string->is_empty();
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString const& PrimitiveString::deprecated_string() const
+ThrowCompletionOr<DeprecatedString const&> PrimitiveString::deprecated_string() const
 {
-    resolve_rope_if_needed();
-    if (!m_has_utf8_string) {
-        m_utf8_string = m_utf16_string.to_utf8();
-        m_has_utf8_string = true;
+    TRY(resolve_rope_if_needed());
+
+    if (!has_utf8_string()) {
+        VERIFY(has_utf16_string());
+        m_utf8_string = TRY(m_utf16_string->to_utf8(vm()));
     }
-    return m_utf8_string;
+
+    return *m_utf8_string;
 }
 
-Utf16String const& PrimitiveString::utf16_string() const
+ThrowCompletionOr<Utf16String const&> PrimitiveString::utf16_string() const
 {
-    resolve_rope_if_needed();
-    if (!m_has_utf16_string) {
-        m_utf16_string = Utf16String(m_utf8_string);
-        m_has_utf16_string = true;
+    TRY(resolve_rope_if_needed());
+
+    if (!has_utf16_string()) {
+        VERIFY(has_utf8_string());
+        m_utf16_string = TRY(Utf16String::create(vm(), *m_utf8_string));
     }
-    return m_utf16_string;
+
+    return *m_utf16_string;
 }
 
-Utf16View PrimitiveString::utf16_string_view() const
+ThrowCompletionOr<Utf16View> PrimitiveString::utf16_string_view() const
 {
-    return utf16_string().view();
+    return TRY(utf16_string()).view();
 }
 
-Optional<Value> PrimitiveString::get(VM& vm, PropertyKey const& property_key) const
+ThrowCompletionOr<Optional<Value>> PrimitiveString::get(VM& vm, PropertyKey const& property_key) const
 {
     if (property_key.is_symbol())
-        return {};
+        return Optional<Value> {};
     if (property_key.is_string()) {
         if (property_key.as_string() == vm.names.length.as_string()) {
-            auto length = utf16_string().length_in_code_units();
+            auto length = TRY(utf16_string()).length_in_code_units();
             return Value(static_cast<double>(length));
         }
     }
     auto index = canonical_numeric_index_string(property_key, CanonicalIndexMode::IgnoreNumericRoundtrip);
     if (!index.is_index())
-        return {};
-    auto str = utf16_string_view();
+        return Optional<Value> {};
+    auto str = TRY(utf16_string_view());
     auto length = str.length_in_code_units();
     if (length <= index.as_index())
-        return {};
-    return create(vm, str.substring_view(index.as_index(), 1));
-}
-
-NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16View const& view)
-{
-    return create(vm, Utf16String(view));
+        return Optional<Value> {};
+    return create(vm, TRY(Utf16String::create(vm, str.substring_view(index.as_index(), 1))));
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16String string)
@@ -169,28 +168,29 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, PrimitiveString& l
     return vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
 }
 
-void PrimitiveString::resolve_rope_if_needed() const
+ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
 {
     if (!m_is_rope)
-        return;
+        return {};
+
+    auto& vm = this->vm();
 
     // NOTE: Special case for two concatenated UTF-16 strings.
     //       This is here as an optimization, although I'm unsure how valuable it is.
     if (m_lhs->has_utf16_string() && m_rhs->has_utf16_string()) {
-        auto const& lhs_string = m_lhs->utf16_string();
-        auto const& rhs_string = m_rhs->utf16_string();
+        auto const& lhs_string = TRY(m_lhs->utf16_string());
+        auto const& rhs_string = TRY(m_rhs->utf16_string());
 
-        Vector<u16, 1> combined;
-        combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
+        Utf16Data combined;
+        TRY_OR_THROW_OOM(vm, combined.try_ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units()));
         combined.extend(lhs_string.string());
         combined.extend(rhs_string.string());
 
-        m_utf16_string = Utf16String(move(combined));
-        m_has_utf16_string = true;
+        m_utf16_string = TRY(Utf16String::create(vm, move(combined)));
         m_is_rope = false;
         m_lhs = nullptr;
         m_rhs = nullptr;
-        return;
+        return {};
     }
 
     // This vector will hold all the pieces of the rope that need to be assembled
@@ -200,41 +200,41 @@ void PrimitiveString::resolve_rope_if_needed() const
     // NOTE: We traverse the rope tree without using recursion, since we'd run out of
     //       stack space quickly when handling a long sequence of unresolved concatenations.
     Vector<PrimitiveString const*> stack;
-    stack.append(m_rhs);
-    stack.append(m_lhs);
+    TRY_OR_THROW_OOM(vm, stack.try_append(m_rhs));
+    TRY_OR_THROW_OOM(vm, stack.try_append(m_lhs));
     while (!stack.is_empty()) {
-        auto* current = stack.take_last();
+        auto const* current = stack.take_last();
         if (current->m_is_rope) {
-            stack.append(current->m_rhs);
-            stack.append(current->m_lhs);
+            TRY_OR_THROW_OOM(vm, stack.try_append(current->m_rhs));
+            TRY_OR_THROW_OOM(vm, stack.try_append(current->m_lhs));
             continue;
         }
-        pieces.append(current);
+        TRY_OR_THROW_OOM(vm, pieces.try_append(current));
     }
 
     // Now that we have all the pieces, we can concatenate them using a StringBuilder.
-    StringBuilder builder;
+    ThrowableStringBuilder builder(vm);
 
     // We keep track of the previous piece in order to handle surrogate pairs spread across two pieces.
     PrimitiveString const* previous = nullptr;
     for (auto const* current : pieces) {
         if (!previous) {
             // This is the very first piece, just append it and continue.
-            builder.append(current->deprecated_string());
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
 
         // Get the UTF-8 representations for both strings.
-        auto const& previous_string_as_utf8 = previous->deprecated_string();
-        auto const& current_string_as_utf8 = current->deprecated_string();
+        auto const& previous_string_as_utf8 = TRY(previous->deprecated_string());
+        auto const& current_string_as_utf8 = TRY(current->deprecated_string());
 
         // NOTE: Now we need to look at the end of the previous string and the start
         //       of the current string, to see if they should be combined into a surrogate.
 
         // Surrogates encoded as UTF-8 are 3 bytes.
         if ((previous_string_as_utf8.length() < 3) || (current_string_as_utf8.length() < 3)) {
-            builder.append(current->deprecated_string());
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -242,7 +242,7 @@ void PrimitiveString::resolve_rope_if_needed() const
         // Might the previous string end with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(previous_string_as_utf8[previous_string_as_utf8.length() - 3]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            builder.append(current->deprecated_string());
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -250,7 +250,7 @@ void PrimitiveString::resolve_rope_if_needed() const
         // Might the current string begin with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(current_string_as_utf8[0]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            builder.append(current->deprecated_string());
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
@@ -259,25 +259,25 @@ void PrimitiveString::resolve_rope_if_needed() const
         auto low_surrogate = *Utf8View(current_string_as_utf8).begin();
 
         if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate)) {
-            builder.append(current->deprecated_string());
+            TRY(builder.append(TRY(current->deprecated_string())));
             previous = current;
             continue;
         }
 
         // Remove 3 bytes from the builder and replace them with the UTF-8 encoded code point.
         builder.trim(3);
-        builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate));
+        TRY(builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate)));
 
         // Append the remaining part of the current string.
-        builder.append(current_string_as_utf8.substring_view(3));
+        TRY(builder.append(current_string_as_utf8.substring_view(3)));
         previous = current;
     }
 
     m_utf8_string = builder.to_deprecated_string();
-    m_has_utf8_string = true;
     m_is_rope = false;
     m_lhs = nullptr;
     m_rhs = nullptr;
+    return {};
 }
 
 }

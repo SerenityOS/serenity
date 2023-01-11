@@ -5,6 +5,7 @@
  */
 
 #include <AK/URLParser.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/Enums.h>
@@ -21,10 +22,15 @@ Response::Response(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> 
     : PlatformObject(realm)
     , m_response(response)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Response"));
 }
 
 Response::~Response() = default;
+
+void Response::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResponsePrototype>(realm, "Response"));
+}
 
 void Response::visit_edges(Cell::Visitor& visitor)
 {
@@ -82,6 +88,8 @@ JS::NonnullGCPtr<Response> Response::create(JS::Realm& realm, JS::NonnullGCPtr<I
 // https://fetch.spec.whatwg.org/#initialize-a-response
 WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init, Optional<Infrastructure::BodyWithType> const& body)
 {
+    auto& vm = this->vm();
+
     // 1. If init["status"] is not in the range 200 to 599, inclusive, then throw a RangeError.
     if (init.status < 200 || init.status > 599)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Status must be in range 200-599"sv };
@@ -92,7 +100,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
     m_response->set_status(init.status);
 
     // 4. Set response’s response’s status message to init["statusText"].
-    m_response->set_status_message(TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(init.status_text.bytes())));
+    m_response->set_status_message(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(init.status_text.bytes())));
 
     // 5. If init["headers"] exists, then fill response’s headers with init["headers"].
     if (init.headers.has_value())
@@ -111,9 +119,9 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
         if (body->type.has_value() && m_response->header_list()->contains("Content-Type"sv.bytes())) {
             auto header = Infrastructure::Header {
                 .name = MUST(ByteBuffer::copy("Content-Type"sv.bytes())),
-                .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(body->type->span())),
+                .value = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(body->type->span())),
             };
-            TRY_OR_RETURN_OOM(realm(), m_response->header_list()->append(move(header)));
+            TRY_OR_THROW_OOM(vm, m_response->header_list()->append(move(header)));
         }
     }
 
@@ -185,8 +193,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, D
     auto value = parsed_url.serialize();
 
     // 7. Append (`Location`, value) to responseObject’s response’s header list.
-    auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair("Location"sv, value));
-    TRY_OR_RETURN_OOM(realm, response_object->response()->header_list()->append(move(header)));
+    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Location"sv, value));
+    TRY_OR_THROW_OOM(vm, response_object->response()->header_list()->append(move(header)));
 
     // 8. Return responseObject.
     return response_object;
@@ -210,7 +218,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::VM& vm, JS::V
     // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
     auto body_with_type = Infrastructure::BodyWithType {
         .body = move(body),
-        .type = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("application/json"sv.bytes()))
+        .type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("application/json"sv.bytes()))
     };
     TRY(response_object->initialize_response(init, move(body_with_type)));
 

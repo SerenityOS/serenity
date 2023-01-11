@@ -142,6 +142,14 @@ run_replace_in_file() {
     fi
 }
 
+sed_in_place() {
+    if [ "$(uname -s)" = "Darwin" ]; then
+        sed -i '' "${@}"
+    else
+        sed -i "${@}"
+    fi
+}
+
 get_new_config_sub() {
     config_sub="${1:-config.sub}"
     if [ ! -f "$workdir/$config_sub" ]; then

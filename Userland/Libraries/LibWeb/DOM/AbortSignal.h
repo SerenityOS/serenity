@@ -43,6 +43,7 @@ public:
 private:
     explicit AbortSignal(JS::Realm&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://dom.spec.whatwg.org/#abortsignal-abort-reason

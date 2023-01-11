@@ -10,7 +10,7 @@
 
 namespace Web::CSS::Parser {
 
-Rule::Rule(Rule::Type type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
+Rule::Rule(Rule::Type type, DeprecatedFlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
     : m_type(type)
     , m_at_rule_name(move(name))
     , m_prelude(move(prelude))

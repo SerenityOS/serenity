@@ -12,6 +12,8 @@
 namespace Web::Painting {
 
 class SVGGraphicsPaintable : public SVGPaintable {
+    JS_CELL(SVGGraphicsPaintable, SVGPaintable);
+
 public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
 

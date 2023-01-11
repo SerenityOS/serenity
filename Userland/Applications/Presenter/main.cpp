@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to ImageDecoder and WindowServer.
+    // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to WindowServer and WebContent.
     TRY(Core::System::pledge("stdio rpath unix sendfd recvfd"));
 
     DeprecatedString file_to_load;

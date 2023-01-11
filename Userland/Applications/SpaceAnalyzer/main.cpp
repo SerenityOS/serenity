@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Tree.h"
 #include "TreeMapWidget.h"
 #include <AK/Error.h>
 #include <AK/LexicalPath.h>
@@ -13,7 +14,6 @@
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/Stream.h>
@@ -31,55 +31,9 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 static constexpr auto APP_NAME = "Space Analyzer"sv;
-static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
-
-struct TreeNode : public SpaceAnalyzer::TreeMapNode {
-    TreeNode(DeprecatedString name)
-        : m_name(move(name)) {};
-
-    virtual DeprecatedString name() const override { return m_name; }
-    virtual i64 area() const override { return m_area; }
-    virtual size_t num_children() const override
-    {
-        if (m_children) {
-            return m_children->size();
-        }
-        return 0;
-    }
-    virtual TreeNode const& child_at(size_t i) const override { return m_children->at(i); }
-    virtual void sort_children_by_area() const override
-    {
-        if (m_children) {
-            Vector<TreeNode>* children = const_cast<Vector<TreeNode>*>(m_children.ptr());
-            quick_sort(*children, [](auto& a, auto& b) { return b.m_area < a.m_area; });
-        }
-    }
-
-    DeprecatedString m_name;
-    i64 m_area { 0 };
-    OwnPtr<Vector<TreeNode>> m_children;
-};
-
-struct Tree : public SpaceAnalyzer::TreeMap {
-    Tree(DeprecatedString root_name)
-        : m_root(move(root_name)) {};
-    virtual ~Tree() {};
-    TreeNode m_root;
-    virtual SpaceAnalyzer::TreeMapNode const& root() const override
-    {
-        return m_root;
-    };
-};
-
-struct MountInfo {
-    DeprecatedString mount_point;
-    DeprecatedString source;
-};
 
 static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
 {
@@ -99,36 +53,6 @@ static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
     }));
 
     return {};
-}
-
-static MountInfo* find_mount_for_path(DeprecatedString path, Vector<MountInfo>& mounts)
-{
-    MountInfo* result = nullptr;
-    size_t length = 0;
-    for (auto& mount_info : mounts) {
-        DeprecatedString& mount_point = mount_info.mount_point;
-        if (path.starts_with(mount_point)) {
-            if (!result || mount_point.length() > length) {
-                result = &mount_info;
-                length = mount_point.length();
-            }
-        }
-    }
-    return result;
-}
-
-static long long int update_totals(TreeNode& node)
-{
-    long long int result = 0;
-    if (node.m_children) {
-        for (auto& child : *node.m_children) {
-            result += update_totals(child);
-        }
-        node.m_area = result;
-    } else {
-        result = node.m_area;
-    }
-    return result;
 }
 
 static NonnullRefPtr<GUI::Window> create_progress_window()
@@ -163,78 +87,6 @@ static void update_progress_label(GUI::Label& progresslabel, size_t files_encoun
     Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
 }
 
-struct QueueEntry {
-    QueueEntry(DeprecatedString path, TreeNode* node)
-        : path(move(path))
-        , node(node) {};
-    DeprecatedString path;
-    TreeNode* node { nullptr };
-};
-
-static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
-{
-    VERIFY(!root.m_name.ends_with('/'));
-
-    Queue<QueueEntry> queue;
-    queue.enqueue(QueueEntry(root.m_name, &root));
-    size_t files_encountered_count = 0;
-
-    StringBuilder builder = StringBuilder();
-    builder.append(root.m_name);
-    builder.append('/');
-    MountInfo* root_mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
-    if (!root_mount_info) {
-        return;
-    }
-    while (!queue.is_empty()) {
-        QueueEntry queue_entry = queue.dequeue();
-
-        builder.clear();
-        builder.append(queue_entry.path);
-        builder.append('/');
-
-        MountInfo* mount_info = find_mount_for_path(builder.to_deprecated_string(), mounts);
-        if (!mount_info || (mount_info != root_mount_info && mount_info->source != root_mount_info->source)) {
-            continue;
-        }
-
-        Core::DirIterator dir_iterator(builder.to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
-        if (dir_iterator.has_error()) {
-            int error_sum = error_accumulator.get(dir_iterator.error()).value_or(0);
-            error_accumulator.set(dir_iterator.error(), error_sum + 1);
-        } else {
-            queue_entry.node->m_children = make<Vector<TreeNode>>();
-            while (dir_iterator.has_next()) {
-                queue_entry.node->m_children->append(TreeNode(dir_iterator.next_path()));
-            }
-            for (auto& child : *queue_entry.node->m_children) {
-                files_encountered_count += 1;
-                if (!(files_encountered_count % FILES_ENCOUNTERED_UPDATE_STEP_SIZE))
-                    update_progress_label(progresslabel, files_encountered_count);
-
-                DeprecatedString& name = child.m_name;
-                int name_len = name.length();
-                builder.append(name);
-                struct stat st;
-                int stat_result = fstatat(dir_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW);
-                if (stat_result < 0) {
-                    int error_sum = error_accumulator.get(errno).value_or(0);
-                    error_accumulator.set(errno, error_sum + 1);
-                } else {
-                    if (S_ISDIR(st.st_mode)) {
-                        queue.enqueue(QueueEntry(builder.to_deprecated_string(), &child));
-                    } else {
-                        child.m_area = st.st_size;
-                    }
-                }
-                builder.trim(name_len);
-            }
-        }
-    }
-
-    update_totals(root);
-}
-
 static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
     statusbar.set_text("");
@@ -246,27 +98,27 @@ static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& tr
 
     // Build an in-memory tree mirroring the filesystem and for each node
     // calculate the sum of the file size for all its descendants.
-    TreeNode* root = &tree->m_root;
     Vector<MountInfo> mounts;
     TRY(fill_mounts(mounts));
-    HashMap<int, int> error_accumulator;
-    populate_filesize_tree(*root, mounts, error_accumulator, progresslabel);
+    auto errors = tree->root().populate_filesize_tree(mounts, [&](size_t processed_file_count) {
+        update_progress_label(progresslabel, processed_file_count);
+    });
 
     progress_window->close();
 
     // Display an error summary in the statusbar.
-    if (!error_accumulator.is_empty()) {
+    if (!errors.is_empty()) {
         StringBuilder builder;
         bool first = true;
         builder.append("Some directories were not analyzed: "sv);
-        for (auto& key : error_accumulator.keys()) {
+        for (auto& key : errors.keys()) {
             if (!first) {
                 builder.append(", "sv);
             }
             auto const* error = strerror(key);
             builder.append({ error, strlen(error) });
             builder.append(" ("sv);
-            int value = error_accumulator.get(key).value();
+            int value = errors.get(key).value();
             builder.append(DeprecatedString::number(value));
             if (value == 1) {
                 builder.append(" time"sv);
@@ -301,7 +153,7 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
         if (k != 0) {
             path_builder.append('/');
         }
-        SpaceAnalyzer::TreeMapNode const* node = treemapwidget.path_node(k);
+        TreeNode const* node = treemapwidget.path_node(k);
         path_builder.append(node->name());
     }
     return path_builder.build();
@@ -331,7 +183,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Analyze", [&](auto&) {
-        if (auto result = analyze(tree, treemapwidget, statusbar); result.is_error()) {
+        // FIXME: Just modify the tree in memory instead of traversing the entire file system
+        // FIXME: Dispose of the old tree
+        auto new_tree = adopt_ref(*new Tree(""));
+        if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     }));
@@ -385,9 +240,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        // TODO: Refreshing data always causes resetting the viewport back to "/".
-        // It would be great if we found a way to preserve viewport across refreshes.
-        if (auto result = analyze(tree, treemapwidget, statusbar); result.is_error()) {
+        // FIXME: Dispose of the old tree
+        auto new_tree = adopt_ref(*new Tree(""));
+        if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     });
@@ -416,7 +271,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
-            const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
+            const TreeNode* node = treemapwidget.path_node(k);
 
             builder.append('/');
             builder.append(node->name());

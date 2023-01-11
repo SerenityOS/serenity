@@ -20,7 +20,7 @@ enum class VideoSizingMode : u8 {
     Sentinel
 };
 
-class VideoFrameWidget : public GUI::Frame {
+class VideoFrameWidget final : public GUI::Frame {
     C_OBJECT(VideoFrameWidget)
 public:
     virtual ~VideoFrameWidget() override = default;

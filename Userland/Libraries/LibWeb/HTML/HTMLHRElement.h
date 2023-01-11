@@ -18,10 +18,12 @@ public:
     virtual ~HTMLHRElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-hr
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::separator; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::separator; }
 
 private:
     HTMLHRElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

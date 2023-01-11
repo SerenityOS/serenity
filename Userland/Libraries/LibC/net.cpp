@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibC/errno.h>
-#include <LibC/net/if.h>
-#include <LibC/netinet/in.h>
+#include <errno.h>
+#include <net/if.h>
+#include <netinet/in.h>
 
 const in6_addr in6addr_any = IN6ADDR_ANY_INIT;
 const in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;

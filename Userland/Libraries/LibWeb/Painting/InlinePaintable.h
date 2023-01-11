@@ -12,8 +12,10 @@
 namespace Web::Painting {
 
 class InlinePaintable final : public Paintable {
+    JS_CELL(InlinePaintable, Paintable);
+
 public:
-    static NonnullRefPtr<InlinePaintable> create(Layout::InlineNode const&);
+    static JS::NonnullGCPtr<InlinePaintable> create(Layout::InlineNode const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

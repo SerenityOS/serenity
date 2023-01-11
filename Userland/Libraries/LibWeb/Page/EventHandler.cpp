@@ -160,7 +160,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
 
     bool handled_event = false;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
@@ -208,7 +208,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
 
     bool handled_event = false;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
@@ -327,7 +327,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
     JS::GCPtr<DOM::Node> node;
 
     {
-        RefPtr<Painting::Paintable> paintable;
+        JS::GCPtr<Painting::Paintable> paintable;
         if (m_mouse_event_tracking_layout_node) {
             paintable = m_mouse_event_tracking_layout_node->paintable();
         } else {
@@ -422,7 +422,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
     bool is_hovering_link = false;
     Gfx::StandardCursor hovered_node_cursor = Gfx::StandardCursor::None;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     Optional<int> start_index;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
@@ -530,7 +530,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     if (!paint_root())
         return false;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
@@ -661,7 +661,7 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
     return code_point == 0 || code_point == 27;
 }
 
-bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
+bool EventHandler::fire_keyboard_event(DeprecatedFlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
 {
     JS::NonnullGCPtr<DOM::Document> document = *browsing_context.active_document();
     if (!document)

@@ -126,7 +126,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& cale
 
     Vector<DeprecatedString> result;
     for (auto& value : list)
-        result.append(value.as_string().deprecated_string());
+        result.append(TRY(value.as_string().deprecated_string()));
     return result;
 }
 
@@ -652,20 +652,18 @@ ThrowCompletionOr<Object*> consolidate_calendars(VM& vm, Object& one, Object& tw
 // 12.2.31 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
 u8 iso_days_in_month(i32 year, u8 month)
 {
-    // 1. Assert: year is an integer.
-
-    // 2. Assert: month is an integer, month ≥ 1, and month ≤ 12.
-    VERIFY(month >= 1 && month <= 12);
-
-    // 3. If month is 1, 3, 5, 7, 8, 10, or 12, return 31.
+    // 1. If month is 1, 3, 5, 7, 8, 10, or 12, return 31.
     if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
         return 31;
 
-    // 4. If month is 4, 6, 9, or 11, return 30.
+    // 2. If month is 4, 6, 9, or 11, return 30.
     if (month == 4 || month == 6 || month == 9 || month == 11)
         return 30;
 
-    // 5. Return 28 + ℝ(InLeapYear(TimeFromYear(𝔽(year)))).
+    // 3. Assert: month is 2.
+    VERIFY(month == 2);
+
+    // 4. Return 28 + ℝ(InLeapYear(TimeFromYear(𝔽(year)))).
     return 28 + JS::in_leap_year(time_from_year(year));
 }
 
@@ -781,7 +779,7 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
 
     // 6. Assert: Type(monthCode) is String.
     VERIFY(month_code.is_string());
-    auto& month_code_string = month_code.as_string().deprecated_string();
+    auto const& month_code_string = TRY(month_code.as_string().deprecated_string());
 
     // 7. If the length of monthCode is not 3, throw a RangeError exception.
     auto month_length = month_code_string.length();
@@ -943,7 +941,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     // 3. For each element key of fieldsKeys, do
     for (auto& key : fields_keys) {
         // a. If key is not "month" or "monthCode", then
-        if (key.as_string().deprecated_string() != vm.names.month.as_string() && key.as_string().deprecated_string() != vm.names.monthCode.as_string()) {
+        if (!TRY(key.as_string().deprecated_string()).is_one_of(vm.names.month.as_string(), vm.names.monthCode.as_string())) {
             auto property_key = MUST(PropertyKey::from_value(vm, key));
 
             // i. Let propValue be ? Get(fields, key).
@@ -977,7 +975,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
         }
 
         // See comment above.
-        additional_fields_keys_contains_month_or_month_code_property |= key.as_string().deprecated_string() == vm.names.month.as_string() || key.as_string().deprecated_string() == vm.names.monthCode.as_string();
+        additional_fields_keys_contains_month_or_month_code_property |= TRY(key.as_string().deprecated_string()) == vm.names.month.as_string() || TRY(key.as_string().deprecated_string()) == vm.names.monthCode.as_string();
     }
 
     // 6. If additionalFieldsKeys does not contain either "month" or "monthCode", then

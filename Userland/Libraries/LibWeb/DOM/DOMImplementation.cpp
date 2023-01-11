@@ -24,12 +24,18 @@ JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document
 }
 
 DOMImplementation::DOMImplementation(Document& document)
-    : PlatformObject(Bindings::cached_web_prototype(document.realm(), "DOMImplementation"))
+    : PlatformObject(document.realm())
     , m_document(document)
 {
 }
 
 DOMImplementation::~DOMImplementation() = default;
+
+void DOMImplementation::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMImplementationPrototype>(realm, "DOMImplementation"));
+}
 
 void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 {

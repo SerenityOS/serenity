@@ -50,14 +50,14 @@ public:
 #ifndef KERNEL
     StringView(String const&);
     StringView(DeprecatedString const&);
-    StringView(FlyString const&);
+    StringView(DeprecatedFlyString const&);
 #endif
 
     explicit StringView(ByteBuffer&&) = delete;
 #ifndef KERNEL
     explicit StringView(String&&) = delete;
     explicit StringView(DeprecatedString&&) = delete;
-    explicit StringView(FlyString&&) = delete;
+    explicit StringView(DeprecatedFlyString&&) = delete;
 #endif
 
     [[nodiscard]] constexpr bool is_null() const

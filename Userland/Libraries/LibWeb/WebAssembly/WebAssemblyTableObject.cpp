@@ -11,7 +11,7 @@
 namespace Web::Bindings {
 
 WebAssemblyTableObject::WebAssemblyTableObject(JS::Realm& realm, Wasm::TableAddress address)
-    : Object(ConstructWithPrototypeTag::Tag, Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssemblyTablePrototype"))
+    : Object(ConstructWithPrototypeTag::Tag, Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"))
     , m_address(address)
 {
 }

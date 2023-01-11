@@ -30,7 +30,7 @@ void ButtonBox::prepare_for_replaced_layout()
     }
 }
 
-RefPtr<Painting::Paintable> ButtonBox::create_paintable() const
+JS::GCPtr<Painting::Paintable> ButtonBox::create_paintable() const
 {
     return Painting::ButtonPaintable::create(*this);
 }

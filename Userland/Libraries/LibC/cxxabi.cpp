@@ -9,9 +9,9 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/NeverDestroyed.h>
-#include <LibC/bits/pthread_integration.h>
-#include <LibC/mallocdefs.h>
 #include <assert.h>
+#include <bits/pthread_integration.h>
+#include <mallocdefs.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

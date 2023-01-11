@@ -27,6 +27,8 @@ public:
 
 private:
     explicit DOMParser(JS::Realm&);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

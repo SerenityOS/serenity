@@ -32,6 +32,8 @@ public:
 private:
     CanvasGradient(JS::Realm&, Type);
 
+    virtual void initialize(JS::Realm&) override;
+
     Type m_type {};
 
     struct ColorStop {

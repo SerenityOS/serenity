@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/Forward.h>
+
 namespace Web {
 class XMLDocumentBuilder;
 }

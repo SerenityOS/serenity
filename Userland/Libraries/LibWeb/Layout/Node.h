@@ -51,9 +51,9 @@ public:
 
     Painting::Paintable* paintable() { return m_paintable; }
     Painting::Paintable const* paintable() const { return m_paintable; }
-    void set_paintable(RefPtr<Painting::Paintable>);
+    void set_paintable(JS::GCPtr<Painting::Paintable>);
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const;
 
     DOM::Document& document();
     DOM::Document const& document() const;
@@ -150,7 +150,7 @@ private:
     friend class NodeWithStyle;
 
     JS::NonnullGCPtr<DOM::Node> m_dom_node;
-    RefPtr<Painting::Paintable> m_paintable;
+    JS::GCPtr<Painting::Paintable> m_paintable;
 
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
 
@@ -182,6 +182,8 @@ public:
     const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }
 
     JS::NonnullGCPtr<NodeWithStyle> create_anonymous_wrapper() const;
+
+    void reset_table_box_computed_values_used_by_wrapper_to_init_values();
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);

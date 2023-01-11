@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/ThrowableFormat.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
@@ -237,7 +238,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
         return js_undefined();
 
     // 7. Return ? Get(O, ! ToString(𝔽(k))).
-    return PrimitiveString::create(vm, string.substring_view(index.value(), 1));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(index.value(), 1))));
 }
 
 // 22.1.3.2 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
@@ -248,7 +249,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     if (position < 0 || position >= string.length_in_code_units())
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
-    return PrimitiveString::create(vm, string.substring_view(position, 1));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(position, 1))));
 }
 
 // 22.1.3.3 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
@@ -498,7 +499,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
     auto unicode_form = Unicode::normalization_form_from_string(form);
-    auto ns = Unicode::normalize(string, unicode_form);
+    auto ns = TRY_OR_THROW_OOM(vm, Unicode::normalize(string, unicode_form));
 
     // 7. return ns.
     return PrimitiveString::create(vm, move(ns));
@@ -518,7 +519,7 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     if (max_length <= string_length)
         return PrimitiveString::create(vm, move(string));
 
-    Utf16String fill_string(Vector<u16, 1> { 0x20 });
+    auto fill_string = TRY(Utf16String::create(vm, Utf16Data { 0x20 }));
     if (!vm.argument(1).is_undefined()) {
         fill_string = TRY(vm.argument(1).to_utf16_string(vm));
         if (fill_string.is_empty())
@@ -536,8 +537,8 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     auto filler = filler_builder.build();
 
     auto formatted = placement == PadPlacement::Start
-        ? DeprecatedString::formatted("{}{}", filler, string.view())
-        : DeprecatedString::formatted("{}{}", string.view(), filler);
+        ? TRY(deprecated_format(vm, "{}{}", filler, string.view()))
+        : TRY(deprecated_format(vm, "{}{}", string.view(), filler));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -662,7 +663,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     auto position = string_index_of(string.view(), search_string.view(), 0);
 
     while (position.has_value()) {
-        match_positions.append(*position);
+        TRY_OR_THROW_OOM(vm, match_positions.try_append(*position));
         position = string_index_of(string.view(), search_string.view(), *position + advance_by);
     }
 
@@ -736,7 +737,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     if (int_start >= int_end)
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
-    return PrimitiveString::create(vm, string.substring_view(int_start, int_end - int_start));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
 // 22.1.3.22 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
@@ -793,7 +794,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         }
 
         auto segment = string.substring_view(start, position - start);
-        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, segment)));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, segment)))));
         ++array_length;
         if (array_length == limit)
             return array;
@@ -802,7 +803,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     }
 
     auto rest = string.substring_view(start);
-    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, rest)));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, rest)))));
 
     return array;
 }
@@ -867,7 +868,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     size_t to = max(final_start, final_end);
 
     // 10. Return the substring of S from from to to.
-    return PrimitiveString::create(vm, string.substring_view(from, to - from));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(from, to - from))));
 }
 
 enum class TargetCase {
@@ -915,13 +916,13 @@ static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView str
     // 9. If targetCase is lower, then
     case TargetCase::Lower:
         // a. Let newCodePoints be a List whose elements are the result of a lowercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = Unicode::to_unicode_lowercase_full(string, *locale);
+        new_code_points = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_lowercase_full(string, *locale));
         break;
     // 10. Else,
     case TargetCase::Upper:
         // a. Assert: targetCase is upper.
         // b. Let newCodePoints be a List whose elements are the result of an uppercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = Unicode::to_unicode_uppercase_full(string, *locale);
+        new_code_points = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_uppercase_full(string, *locale));
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -963,7 +964,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
     auto string = TRY(ak_string_from(vm));
-    auto lowercase = Unicode::to_unicode_lowercase_full(string);
+    auto lowercase = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_lowercase_full(string));
     return PrimitiveString::create(vm, move(lowercase));
 }
 
@@ -977,7 +978,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
     auto string = TRY(ak_string_from(vm));
-    auto uppercase = Unicode::to_unicode_uppercase_full(string);
+    auto uppercase = TRY_OR_THROW_OOM(vm, Unicode::to_unicode_uppercase_full(string));
     return PrimitiveString::create(vm, move(uppercase));
 }
 
@@ -1111,7 +1112,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
         return PrimitiveString::create(vm, DeprecatedString::empty());
 
     // 11. Return the substring of S from intStart to intEnd.
-    return PrimitiveString::create(vm, string.substring_view(int_start, int_end - int_start));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
 // B.2.2.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml

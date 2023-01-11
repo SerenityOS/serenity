@@ -19,7 +19,7 @@ public:
     virtual ~RadioButton() override;
 
 private:
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringOrSymbol.h>
@@ -61,18 +61,18 @@ public:
 
     PropertyKey(char const* chars)
         : m_type(Type::String)
-        , m_string(FlyString(chars))
+        , m_string(DeprecatedFlyString(chars))
     {
     }
 
     PropertyKey(DeprecatedString const& string)
         : m_type(Type::String)
-        , m_string(FlyString(string))
+        , m_string(DeprecatedFlyString(string))
     {
         VERIFY(!m_string.is_null());
     }
 
-    PropertyKey(FlyString string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
+    PropertyKey(DeprecatedFlyString string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
         : m_string_may_be_number(string_may_be_number == StringMayBeNumber::Yes)
         , m_type(Type::String)
         , m_string(move(string))
@@ -152,7 +152,7 @@ public:
         return m_number;
     }
 
-    FlyString const& as_string() const
+    DeprecatedFlyString const& as_string() const
     {
         VERIFY(is_string());
         return m_string;
@@ -186,7 +186,7 @@ private:
     bool m_string_may_be_number { true };
     Type m_type { Type::Invalid };
     u32 m_number { 0 };
-    FlyString m_string;
+    DeprecatedFlyString m_string;
     Handle<Symbol> m_symbol;
 };
 

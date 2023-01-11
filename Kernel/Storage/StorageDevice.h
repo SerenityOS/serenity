@@ -88,7 +88,7 @@ protected:
     virtual StringView class_name() const override;
 
 private:
-    virtual void after_inserting() override;
+    virtual ErrorOr<void> after_inserting() override;
     virtual void will_be_destroyed() override;
 
     mutable IntrusiveListNode<StorageDevice, LockRefPtr<StorageDevice>> m_list_node;

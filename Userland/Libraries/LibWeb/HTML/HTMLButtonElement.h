@@ -26,6 +26,8 @@ class HTMLButtonElement final
 public:
     virtual ~HTMLButtonElement() override;
 
+    virtual void initialize(JS::Realm&) override;
+
     enum class TypeAttributeState {
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(_, state) state,
         ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTES
@@ -55,7 +57,7 @@ public:
     virtual bool is_labelable() const override { return true; }
 
     // https://www.w3.org/TR/html-aria/#el-button
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::button; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::button; }
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);

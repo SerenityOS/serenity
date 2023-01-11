@@ -17,17 +17,22 @@ namespace Web::HTML {
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : BrowsingContextContainer(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLIFrameElement"));
 }
 
 HTMLIFrameElement::~HTMLIFrameElement() = default;
+
+void HTMLIFrameElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLIFrameElementPrototype>(realm, "HTMLIFrameElement"));
+}
 
 JS::GCPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     return heap().allocate_without_realm<Layout::FrameBox>(document(), *this, move(style));
 }
 
-void HTMLIFrameElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLIFrameElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::src)

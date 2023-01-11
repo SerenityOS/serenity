@@ -8,7 +8,7 @@
 
 namespace Web::CSS {
 
-FontFace::FontFace(FlyString font_family, Vector<Source> sources, Vector<UnicodeRange> unicode_ranges)
+FontFace::FontFace(DeprecatedFlyString font_family, Vector<Source> sources, Vector<UnicodeRange> unicode_ranges)
     : m_font_family(move(font_family))
     , m_sources(move(sources))
     , m_unicode_ranges(move(unicode_ranges))

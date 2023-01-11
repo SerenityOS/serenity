@@ -25,6 +25,7 @@ public:
 private:
     explicit Performance(HTML::Window&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<HTML::Window> m_window;

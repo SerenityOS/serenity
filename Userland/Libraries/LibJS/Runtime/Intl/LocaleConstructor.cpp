@@ -33,10 +33,10 @@ static ThrowCompletionOr<Optional<DeprecatedString>> get_string_option(VM& vm, O
     if (option.is_undefined())
         return Optional<DeprecatedString> {};
 
-    if (validator && !validator(option.as_string().deprecated_string()))
+    if (validator && !validator(TRY(option.as_string().deprecated_string())))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
 
-    return option.as_string().deprecated_string();
+    return TRY(option.as_string().deprecated_string());
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag

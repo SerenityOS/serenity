@@ -448,6 +448,7 @@ public:
     ErrorOr<FlatPtr> sys$map_time_page();
     ErrorOr<FlatPtr> sys$jail_create(Userspace<Syscall::SC_jail_create_params*> user_params);
     ErrorOr<FlatPtr> sys$jail_attach(Userspace<Syscall::SC_jail_attach_params const*> user_params);
+    ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
 
     template<bool sockname, typename Params>
     ErrorOr<void> get_sock_or_peer_name(Params const&);

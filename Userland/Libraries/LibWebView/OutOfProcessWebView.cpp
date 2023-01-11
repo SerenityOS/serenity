@@ -106,7 +106,10 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
     if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr()) {
         painter.add_clip_rect(frame_inner_rect());
         painter.translate(frame_thickness(), frame_thickness());
-        painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
+        if (m_content_scales_to_viewport)
+            painter.draw_scaled_bitmap(rect(), *bitmap, bitmap->rect());
+        else
+            painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
         return;
     }
 
@@ -522,11 +525,11 @@ Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
 
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window(), path);
+    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), path);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else
-        client().async_handle_file_return(0, IPC::File(file.value()->leak_fd()), request_id);
+        client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
 }
 
 void OutOfProcessWebView::did_scroll()
@@ -839,6 +842,11 @@ void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedStr
 {
     if (on_get_accessibility_tree)
         on_get_accessibility_tree(accessibility_tree);
+}
+
+void OutOfProcessWebView::set_content_scales_to_viewport(bool b)
+{
+    m_content_scales_to_viewport = b;
 }
 
 }

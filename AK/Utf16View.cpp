@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Concepts.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Utf16View.h>
@@ -20,45 +21,46 @@ static constexpr u16 low_surrogate_max = 0xdfff;
 static constexpr u32 replacement_code_point = 0xfffd;
 static constexpr u32 first_supplementary_plane_code_point = 0x10000;
 
-template<typename UtfViewType>
-static Vector<u16, 1> to_utf16_impl(UtfViewType const& view)
-requires(IsSame<UtfViewType, Utf8View> || IsSame<UtfViewType, Utf32View>)
+template<OneOf<Utf8View, Utf32View> UtfViewType>
+static ErrorOr<Utf16Data> to_utf16_impl(UtfViewType const& view)
 {
-    Vector<u16, 1> utf16_data;
-    utf16_data.ensure_capacity(view.length());
+    Utf16Data utf16_data;
+    TRY(utf16_data.try_ensure_capacity(view.length()));
 
     for (auto code_point : view)
-        code_point_to_utf16(utf16_data, code_point);
+        TRY(code_point_to_utf16(utf16_data, code_point));
 
     return utf16_data;
 }
 
-Vector<u16, 1> utf8_to_utf16(StringView utf8_view)
+ErrorOr<Utf16Data> utf8_to_utf16(StringView utf8_view)
 {
     return to_utf16_impl(Utf8View { utf8_view });
 }
 
-Vector<u16, 1> utf8_to_utf16(Utf8View const& utf8_view)
+ErrorOr<Utf16Data> utf8_to_utf16(Utf8View const& utf8_view)
 {
     return to_utf16_impl(utf8_view);
 }
 
-Vector<u16, 1> utf32_to_utf16(Utf32View const& utf32_view)
+ErrorOr<Utf16Data> utf32_to_utf16(Utf32View const& utf32_view)
 {
     return to_utf16_impl(utf32_view);
 }
 
-void code_point_to_utf16(Vector<u16, 1>& string, u32 code_point)
+ErrorOr<void> code_point_to_utf16(Utf16Data& string, u32 code_point)
 {
     VERIFY(is_unicode(code_point));
 
     if (code_point < first_supplementary_plane_code_point) {
-        string.append(static_cast<u16>(code_point));
+        TRY(string.try_append(static_cast<u16>(code_point)));
     } else {
         code_point -= first_supplementary_plane_code_point;
-        string.append(static_cast<u16>(high_surrogate_min | (code_point >> 10)));
-        string.append(static_cast<u16>(low_surrogate_min | (code_point & 0x3ff)));
+        TRY(string.try_append(static_cast<u16>(high_surrogate_min | (code_point >> 10))));
+        TRY(string.try_append(static_cast<u16>(low_surrogate_min | (code_point & 0x3ff))));
     }
+
+    return {};
 }
 
 bool Utf16View::is_high_surrogate(u16 code_unit)
@@ -79,7 +81,12 @@ u32 Utf16View::decode_surrogate_pair(u16 high_surrogate, u16 low_surrogate)
     return ((high_surrogate - high_surrogate_min) << 10) + (low_surrogate - low_surrogate_min) + first_supplementary_plane_code_point;
 }
 
-DeprecatedString Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const
+ErrorOr<DeprecatedString> Utf16View::to_deprecated_string(AllowInvalidCodeUnits allow_invalid_code_units) const
+{
+    return TRY(to_utf8(allow_invalid_code_units)).to_deprecated_string();
+}
+
+ErrorOr<String> Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_units) const
 {
     StringBuilder builder;
 
@@ -90,20 +97,20 @@ DeprecatedString Utf16View::to_utf8(AllowInvalidCodeUnits allow_invalid_code_uni
 
                 if ((next < end_ptr()) && is_low_surrogate(*next)) {
                     auto code_point = decode_surrogate_pair(*ptr, *next);
-                    builder.append_code_point(code_point);
+                    TRY(builder.try_append_code_point(code_point));
                     ++ptr;
                     continue;
                 }
             }
 
-            builder.append_code_point(static_cast<u32>(*ptr));
+            TRY(builder.try_append_code_point(static_cast<u32>(*ptr)));
         }
     } else {
         for (auto code_point : *this)
-            builder.append_code_point(code_point);
+            TRY(builder.try_append_code_point(code_point));
     }
 
-    return builder.build();
+    return builder.to_string();
 }
 
 size_t Utf16View::length_in_code_points() const

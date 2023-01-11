@@ -13,6 +13,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Gradients.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -20,7 +21,6 @@
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextElision.h>
 #include <LibGfx/TextWrapping.h>
-
 namespace Gfx {
 
 class Painter {
@@ -50,6 +50,9 @@ public:
     void fill_rect_with_checkerboard(IntRect const&, IntSize, Color color_dark, Color color_light);
     void fill_rect_with_gradient(Orientation, IntRect const&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(IntRect const&, Color gradient_start, Color gradient_end);
+    void fill_rect_with_linear_gradient(IntRect const&, Span<ColorStop const> const&, float angle, Optional<float> repeat_length = {});
+    void fill_rect_with_conic_gradient(IntRect const&, Span<ColorStop const> const&, IntPoint center, float start_angle, Optional<float> repeat_length = {});
+    void fill_rect_with_radial_gradient(IntRect const&, Span<ColorStop const> const&, IntPoint center, IntSize size, Optional<float> repeat_length = {});
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
     void fill_ellipse(IntRect const&, Color);
@@ -173,28 +176,9 @@ public:
 
     int scale() const { return state().scale; }
 
-    template<typename TGetPixelCallback>
-    void fill_pixels(Gfx::IntRect const& region, TGetPixelCallback callback, bool blend = false)
-    {
-        // Note: This function paints physical pixels and therefore does not make sense when
-        // called on a scaled painter. Scaling the region painted may break the caller (this
-        // would be the case for gradients in LibWeb), and if you scale the pixels (to squares)
-        // then this is no longer filling pixels.
-        VERIFY(scale() == 1);
-        auto paint_region = region.translated(translation());
-        auto clipped_region = paint_region.intersected(clip_rect());
-        if (clipped_region.is_empty())
-            return;
-        auto start_offset = clipped_region.location() - paint_region.location();
-        for (int y = 0; y < clipped_region.height(); y++) {
-            for (int x = 0; x < clipped_region.width(); x++) {
-                auto pixel = callback(IntPoint(x, y).translated(start_offset));
-                set_physical_pixel(clipped_region.location().translated(x, y), pixel, blend);
-            }
-        }
-    }
-
 protected:
+    friend GradientLine;
+
     IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
     IntPoint to_physical(IntPoint p) const { return p.translated(translation()) * scale(); }
     void set_physical_pixel_with_draw_op(u32& pixel, Color);

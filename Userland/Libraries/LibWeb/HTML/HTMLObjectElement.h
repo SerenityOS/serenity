@@ -32,7 +32,7 @@ class HTMLObjectElement final
 public:
     virtual ~HTMLObjectElement() override;
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     DeprecatedString data() const;
     void set_data(DeprecatedString const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
@@ -45,6 +45,8 @@ public:
 
 private:
     HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 

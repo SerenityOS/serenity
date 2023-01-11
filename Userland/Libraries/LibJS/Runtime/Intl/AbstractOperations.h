@@ -86,7 +86,7 @@ bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM&, Value locales);
 Optional<DeprecatedString> best_available_locale(StringView locale);
 DeprecatedString insert_unicode_extension_and_canonicalize(::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
-LocaleResult resolve_locale(Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
+ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
 Vector<DeprecatedString> lookup_supported_locales(Vector<DeprecatedString> const& requested_locales);
 Vector<DeprecatedString> best_fit_supported_locales(Vector<DeprecatedString> const& requested_locales);
 ThrowCompletionOr<Array*> supported_locales(VM&, Vector<DeprecatedString> const& requested_locales, Value options);

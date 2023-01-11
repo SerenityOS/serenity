@@ -35,7 +35,7 @@ UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer() = default;
 
 UNMAP_AFTER_INIT void PTYMultiplexer::initialize()
 {
-    the().after_inserting();
+    MUST(the().after_inserting());
 }
 
 ErrorOr<NonnullLockRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)

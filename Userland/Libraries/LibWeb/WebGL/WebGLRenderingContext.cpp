@@ -13,7 +13,7 @@
 namespace Web::WebGL {
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#fire-a-webgl-context-event
-static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, FlyString const& type)
+static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, DeprecatedFlyString const& type)
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
@@ -52,9 +52,14 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
 WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
     : WebGLRenderingContextBase(realm, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "WebGLRenderingContext"));
 }
 
 WebGLRenderingContext::~WebGLRenderingContext() = default;
+
+void WebGLRenderingContext::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>(realm, "WebGLRenderingContext"));
+}
 
 }

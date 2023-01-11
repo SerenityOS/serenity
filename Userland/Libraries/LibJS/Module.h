@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Realm.h>
@@ -37,7 +37,7 @@ struct ResolvedBinding {
 
     Type type { Null };
     Module* module { nullptr };
-    FlyString export_name;
+    DeprecatedFlyString export_name;
 
     bool is_valid() const
     {
@@ -76,8 +76,8 @@ public:
     virtual ThrowCompletionOr<void> link(VM& vm) = 0;
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) = 0;
 
-    virtual ThrowCompletionOr<Vector<FlyString>> get_exported_names(VM& vm, Vector<Module*> export_star_set = {}) = 0;
-    virtual ThrowCompletionOr<ResolvedBinding> resolve_export(VM& vm, FlyString const& export_name, Vector<ResolvedBinding> resolve_set = {}) = 0;
+    virtual ThrowCompletionOr<Vector<DeprecatedFlyString>> get_exported_names(VM& vm, Vector<Module*> export_star_set = {}) = 0;
+    virtual ThrowCompletionOr<ResolvedBinding> resolve_export(VM& vm, DeprecatedFlyString const& export_name, Vector<ResolvedBinding> resolve_set = {}) = 0;
 
     virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index);
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index);
@@ -93,7 +93,7 @@ protected:
     }
 
 private:
-    Object* module_namespace_create(VM& vm, Vector<FlyString> unambiguous_names);
+    Object* module_namespace_create(VM& vm, Vector<DeprecatedFlyString> unambiguous_names);
 
     // These handles are only safe as long as the VM they live in is valid.
     // But evaluated modules SHOULD be stored in the VM so unless you intentionally

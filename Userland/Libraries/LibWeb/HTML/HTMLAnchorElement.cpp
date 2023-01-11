@@ -13,8 +13,6 @@ namespace Web::HTML {
 HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLAnchorElement"));
-
     activation_behavior = [this](auto const& event) {
         run_activation_behavior(event);
     };
@@ -22,7 +20,13 @@ HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
 
-void HTMLAnchorElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLAnchorElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"));
+}
+
+void HTMLAnchorElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -85,7 +89,7 @@ i32 HTMLAnchorElement::default_tab_index_value() const
     return 0;
 }
 
-FlyString HTMLAnchorElement::default_role() const
+DeprecatedFlyString HTMLAnchorElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-a-no-href
     if (!href().is_null())

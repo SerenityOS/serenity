@@ -8,7 +8,7 @@
 
 namespace Web::Namespace {
 
-#define __ENUMERATE_NAMESPACE(name, namespace_) FlyString name;
+#define __ENUMERATE_NAMESPACE(name, namespace_) DeprecatedFlyString name;
 ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 

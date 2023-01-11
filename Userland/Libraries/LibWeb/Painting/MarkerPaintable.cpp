@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<MarkerPaintable> MarkerPaintable::create(Layout::ListItemMarkerBox const& layout_box)
+JS::NonnullGCPtr<MarkerPaintable> MarkerPaintable::create(Layout::ListItemMarkerBox const& layout_box)
 {
-    return adopt_ref(*new MarkerPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<MarkerPaintable>(layout_box);
 }
 
 MarkerPaintable::MarkerPaintable(Layout::ListItemMarkerBox const& layout_box)

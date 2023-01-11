@@ -52,19 +52,23 @@ JS::NonnullGCPtr<Range> Range::construct_impl(JS::Realm& realm)
 Range::Range(Document& document)
     : Range(document, 0, document, 0)
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Range"));
 }
 
 Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&Bindings::cached_web_prototype(start_container.realm(), "Range"));
     live_ranges().set(this);
 }
 
 Range::~Range()
 {
     live_ranges().remove(this);
+}
+
+void Range::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::RangePrototype>(realm, "Range"));
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root

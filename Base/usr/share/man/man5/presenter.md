@@ -4,7 +4,7 @@ presenter - Presenter slide presentation format (.presenter)
 
 ## Description
 
-The presenter file format is a format for specifying slides and presentations in a JSON-based format. It is intentionally simple, allowing it to be written by hand. It is the native format of [Presenter](help://man/1/Presenter).
+The presenter file format is a format for specifying slides and presentations in a JSON-based format. It is intentionally simple, allowing it to be written by hand. It is the native format of [Presenter](help://man/1/Applications/Presenter).
 
 This manpage specifies version 1 of the presenter file format.
 
@@ -72,4 +72,4 @@ The following types with their own special properties exist:
 
 ## See also
 
--   [Presenter(1)](help://man/1/Presenter)
+-   [Presenter(1)](help://man/1/Applications/Presenter)

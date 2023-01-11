@@ -35,7 +35,7 @@ private:
     ShadowRoot(Document&, Element&);
 
     // ^Node
-    virtual FlyString node_name() const override { return "#shadow-root"; }
+    virtual DeprecatedFlyString node_name() const override { return "#shadow-root"; }
     virtual bool is_shadow_root() const final { return true; }
 
     // NOTE: The specification doesn't seem to specify a default value for closed. Assuming false for now.

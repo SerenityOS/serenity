@@ -17,7 +17,6 @@ namespace Web::DOM {
 StaticRange::StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&Bindings::cached_web_prototype(start_container.realm(), "StaticRange"));
 }
 
 StaticRange::~StaticRange() = default;
@@ -34,6 +33,12 @@ WebIDL::ExceptionOr<StaticRange*> StaticRange::construct_impl(JS::Realm& realm, 
 
     // 2. Set this’s start to (init["startContainer"], init["startOffset"]) and end to (init["endContainer"], init["endOffset"]).
     return realm.heap().allocate<StaticRange>(realm, *init.start_container, init.start_offset, *init.end_container, init.end_offset).ptr();
+}
+
+void StaticRange::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::StaticRangePrototype>(realm, "StaticRange"));
 }
 
 }

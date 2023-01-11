@@ -319,7 +319,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
             return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, value(0));
         break;
     default:
-        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", CSS::TransformationStyleValue::create(transformation.function, {})->to_deprecated_string());
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", CSS::TransformationStyleValue::create(transformation.function, {})->to_string());
     }
     return Gfx::FloatMatrix4x4::identity();
 }
@@ -578,7 +578,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // 1. the background and borders of the element forming the stacking context.
     if (paintable().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
         return HitTestResult {
-            .paintable = paintable(),
+            .paintable = const_cast<PaintableBox&>(paintable()),
         };
     }
 

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibC/errno.h>
-#include <LibC/ifaddrs.h>
+#include <errno.h>
+#include <ifaddrs.h>
 
 int getifaddrs(struct ifaddrs**)
 {

@@ -8,8 +8,9 @@
 #include "PromotionDialog.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Random.h>
+#include <AK/String.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -527,11 +528,11 @@ DeprecatedString ChessWidget::get_fen() const
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
 
-void ChessWidget::import_pgn(Core::File& file)
+ErrorOr<void> ChessWidget::import_pgn(Core::Stream::File& file)
 {
     m_board = Chess::Board();
 
-    ByteBuffer bytes = file.read_all();
+    ByteBuffer bytes = TRY(file.read_until_eof());
     StringView content = bytes;
     auto lines = content.lines();
     StringView line;
@@ -620,29 +621,31 @@ void ChessWidget::import_pgn(Core::File& file)
     m_playback_move_number = m_board_playback.moves().size();
     m_playback = true;
     update();
+
+    return {};
 }
 
-void ChessWidget::export_pgn(Core::File& file) const
+ErrorOr<void> ChessWidget::export_pgn(Core::Stream::File& file) const
 {
     // Tag Pair Section
-    file.write("[Event \"Casual Game\"]\n"sv);
-    file.write("[Site \"SerenityOS Chess\"]\n"sv);
-    file.write(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)));
-    file.write("[Round \"1\"]\n"sv);
+    TRY(file.write("[Event \"Casual Game\"]\n"sv.bytes()));
+    TRY(file.write("[Site \"SerenityOS Chess\"]\n"sv.bytes()));
+    TRY(file.write(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)).bytes()));
+    TRY(file.write("[Round \"1\"]\n"sv.bytes()));
 
     DeprecatedString username(getlogin());
-    const DeprecatedString player1 = (!username.is_empty() ? username.view() : "?"sv);
-    const DeprecatedString player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv : "?"sv);
-    file.write(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
-    file.write(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
+    auto const player1 = (!username.is_empty() ? username.view() : "?"sv.bytes());
+    auto const player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv.bytes() : "?"sv.bytes());
+    TRY(file.write(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2).bytes()));
+    TRY(file.write(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2).bytes()));
 
-    file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn())));
-    file.write("[WhiteElo \"?\"]\n"sv);
-    file.write("[BlackElo \"?\"]\n"sv);
-    file.write("[Variant \"Standard\"]\n"sv);
-    file.write("[TimeControl \"-\"]\n"sv);
-    file.write("[Annotator \"SerenityOS Chess\"]\n"sv);
-    file.write("\n"sv);
+    TRY(file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn())).bytes()));
+    TRY(file.write("[WhiteElo \"?\"]\n"sv.bytes()));
+    TRY(file.write("[BlackElo \"?\"]\n"sv.bytes()));
+    TRY(file.write("[Variant \"Standard\"]\n"sv.bytes()));
+    TRY(file.write("[TimeControl \"-\"]\n"sv.bytes()));
+    TRY(file.write("[Annotator \"SerenityOS Chess\"]\n"sv.bytes()));
+    TRY(file.write("\n"sv.bytes()));
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
@@ -650,17 +653,19 @@ void ChessWidget::export_pgn(Core::File& file) const
 
         if (i + 1 < m_board.moves().size()) {
             const DeprecatedString black = m_board.moves().at(i + 1).to_algebraic();
-            file.write(DeprecatedString::formatted("{}. {} {} ", move_no, white, black));
+            TRY(file.write(DeprecatedString::formatted("{}. {} {} ", move_no, white, black).bytes()));
         } else {
-            file.write(DeprecatedString::formatted("{}. {} ", move_no, white));
+            TRY(file.write(DeprecatedString::formatted("{}. {} ", move_no, white).bytes()));
         }
     }
 
-    file.write("{ "sv);
-    file.write(Chess::Board::result_to_deprecated_string(m_board.game_result(), m_board.turn()));
-    file.write(" } "sv);
-    file.write(Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn()));
-    file.write("\n"sv);
+    TRY(file.write("{ "sv.bytes()));
+    TRY(file.write(Chess::Board::result_to_deprecated_string(m_board.game_result(), m_board.turn()).bytes()));
+    TRY(file.write(" } "sv.bytes()));
+    TRY(file.write(Chess::Board::result_to_points_deprecated_string(m_board.game_result(), m_board.turn()).bytes()));
+    TRY(file.write("\n"sv.bytes()));
+
+    return {};
 }
 
 void ChessWidget::flip_board()

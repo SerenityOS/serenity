@@ -24,8 +24,8 @@ class ErrorEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(ErrorEvent, DOM::Event);
 
 public:
-    static ErrorEvent* create(JS::Realm&, FlyString const& event_name, ErrorEventInit const& event_init = {});
-    static ErrorEvent* construct_impl(JS::Realm&, FlyString const& event_name, ErrorEventInit const& event_init);
+    static ErrorEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init = {});
+    static ErrorEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init);
 
     virtual ~ErrorEvent() override;
 
@@ -45,8 +45,9 @@ public:
     JS::Value error() const { return m_error; }
 
 private:
-    ErrorEvent(JS::Realm&, FlyString const& event_name, ErrorEventInit const& event_init);
+    ErrorEvent(JS::Realm&, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     DeprecatedString m_message { "" };

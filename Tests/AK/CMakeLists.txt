@@ -86,3 +86,5 @@ set(AK_TEST_SOURCES
 foreach(source IN LISTS AK_TEST_SOURCES)
     serenity_test("${source}" AK)
 endforeach()
+
+target_link_libraries(TestString PRIVATE LibUnicode)

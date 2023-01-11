@@ -142,8 +142,8 @@ public:
                 return 0;
             }
             case UTF16: {
-                auto utf16_view = Utf16View(utf8_to_utf16(m_values.at(index.row())));
-                if (utf16_view.validate())
+                auto utf16_data = utf8_to_utf16(m_values.at(index.row())).release_value_but_fixme_should_propagate_errors();
+                if (Utf16View utf16_view { utf16_data }; utf16_view.validate())
                     return static_cast<i32>(utf16_view.length_in_code_units() * 2);
                 return 0;
             }

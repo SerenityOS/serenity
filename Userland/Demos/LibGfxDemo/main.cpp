@@ -139,9 +139,11 @@ void Canvas::draw()
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "Center"sv, Gfx::TextAlignment::Center, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "CenterRight"sv, Gfx::TextAlignment::CenterRight, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "TopLeft"sv, Gfx::TextAlignment::TopLeft, Color::White);
+    painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "TopCenter"sv, Gfx::TextAlignment::TopCenter, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "TopRight"sv, Gfx::TextAlignment::TopRight, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "BottomLeft"sv, Gfx::TextAlignment::BottomLeft, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "BottomRight"sv, Gfx::TextAlignment::BottomRight, Color::White);
+    painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "BottomCenter"sv, Gfx::TextAlignment::BottomCenter, Color::White);
 
     painter.draw_rect({ 520, 360, 240, 30 }, Color::DarkGray);
     painter.draw_text(Gfx::IntRect { 520, 360, 240, 30 }, "Emojis! 🙂😂🐞🦄"sv, Gfx::TextAlignment::Center, Color::White);

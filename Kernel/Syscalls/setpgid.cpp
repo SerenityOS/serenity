@@ -139,4 +139,25 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     });
 }
 
+ErrorOr<FlatPtr> Process::sys$get_root_session_id(pid_t force_sid)
+{
+    pid_t sid = (force_sid == -1) ? this->sid().value() : force_sid;
+    if (sid == 0)
+        return 0;
+    while (true) {
+        auto sid_process = Process::from_pid_in_same_jail(sid);
+        if (!sid_process)
+            return ESRCH;
+        auto parent_pid = sid_process->ppid().value();
+        auto parent_process = Process::from_pid_in_same_jail(parent_pid);
+        if (!parent_process)
+            return ESRCH;
+        pid_t parent_sid = parent_process->sid().value();
+        if (parent_sid == 0)
+            break;
+        sid = parent_sid;
+    }
+    return sid;
+}
+
 }

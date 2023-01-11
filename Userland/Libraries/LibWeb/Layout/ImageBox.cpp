@@ -97,7 +97,7 @@ void ImageBox::browsing_context_did_set_viewport_rect(CSSPixelRect const& viewpo
     m_image_loader.set_visible_in_viewport(paint_box() && viewport_rect.intersects(paint_box()->absolute_rect()));
 }
 
-RefPtr<Painting::Paintable> ImageBox::create_paintable() const
+JS::GCPtr<Painting::Paintable> ImageBox::create_paintable() const
 {
     return Painting::ImagePaintable::create(*this);
 }

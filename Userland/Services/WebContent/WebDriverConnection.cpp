@@ -1065,7 +1065,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
         auto property = Web::CSS::property_id_from_string(name);
 
         if (auto* computed_values = element->computed_css_values())
-            computed_value = computed_values->property(property)->to_deprecated_string();
+            computed_value = computed_values->property(property)->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     }
     // -> Otherwise
     else {

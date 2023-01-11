@@ -558,6 +558,7 @@ if (BUILD_LAGOM)
         foreach(source ${AK_TEST_SOURCES})
             lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
         endforeach()
+        target_link_libraries(TestString LibUnicode)
 
         # LibAudio
         file(GLOB LIBAUDIO_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibAudio/*.cpp")

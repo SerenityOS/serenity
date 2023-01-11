@@ -21,10 +21,15 @@ JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::Paren
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
     : DOM::HTMLCollection(root, move(filter))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLOptionsCollection"));
 }
 
 HTMLOptionsCollection::~HTMLOptionsCollection() = default;
+
+void HTMLOptionsCollection::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>(realm, "HTMLOptionsCollection"));
+}
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add
 WebIDL::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)

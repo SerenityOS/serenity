@@ -14,13 +14,19 @@
 namespace Web::DOM {
 
 TreeWalker::TreeWalker(Node& root)
-    : PlatformObject(Bindings::cached_web_prototype(root.realm(), "TreeWalker"))
+    : PlatformObject(root.realm())
     , m_root(root)
     , m_current(root)
 {
 }
 
 TreeWalker::~TreeWalker() = default;
+
+void TreeWalker::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TreeWalkerPrototype>(realm, "TreeWalker"));
+}
 
 void TreeWalker::visit_edges(Cell::Visitor& visitor)
 {

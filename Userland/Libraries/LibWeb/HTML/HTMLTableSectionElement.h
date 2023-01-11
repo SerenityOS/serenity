@@ -25,11 +25,12 @@ public:
     // https://www.w3.org/TR/html-aria/#el-tbody
     // https://www.w3.org/TR/html-aria/#el-tfoot
     // https://www.w3.org/TR/html-aria/#el-thead
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::rowgroup; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::rowgroup; }
 
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<DOM::HTMLCollection> mutable m_rows;

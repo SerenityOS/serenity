@@ -50,6 +50,7 @@
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/Infra/Base64.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
@@ -780,7 +781,7 @@ float Window::scroll_y() const
 }
 
 // https://html.spec.whatwg.org/#fire-a-page-transition-event
-void Window::fire_a_page_transition_event(FlyString const& event_name, bool persisted)
+void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted)
 {
     // To fire a page transition event named eventName at a Window window with a boolean persisted,
     // fire an event named eventName at window, using PageTransitionEvent,
@@ -1061,7 +1062,7 @@ HTML::BrowsingContext* Window::browsing_context()
 void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     auto& realm = this->realm();
-    add_window_exposed_interfaces(*this, realm);
+    add_window_exposed_interfaces(*this);
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
@@ -1410,7 +1411,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 
     // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data
     // and then must apply forgiving-base64 encode to that byte sequence and return the result.
-    auto decoded = AK::decode_forgiving_base64(StringView(deprecated_string));
+    auto decoded = Infra::decode_forgiving_base64(StringView(deprecated_string));
     if (decoded.is_error())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidFormat, "Base64");
 

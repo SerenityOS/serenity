@@ -89,7 +89,11 @@ ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView
     if (unicode && unicode_sets)
         return ParseRegexPatternError { DeprecatedString::formatted(ErrorType::RegExpObjectIncompatibleFlags.message(), 'u', 'v') };
 
-    auto utf16_pattern = AK::utf8_to_utf16(pattern);
+    auto utf16_pattern_result = AK::utf8_to_utf16(pattern);
+    if (utf16_pattern_result.is_error())
+        return ParseRegexPatternError { "Out of memory"sv };
+
+    auto utf16_pattern = utf16_pattern_result.release_value();
     Utf16View utf16_pattern_view { utf16_pattern };
     StringBuilder builder;
 

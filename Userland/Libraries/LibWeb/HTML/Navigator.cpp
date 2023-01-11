@@ -23,10 +23,15 @@ JS::NonnullGCPtr<Navigator> Navigator::create(JS::Realm& realm)
 Navigator::Navigator(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Navigator"));
 }
 
 Navigator::~Navigator() = default;
+
+void Navigator::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigatorPrototype>(realm, "Navigator"));
+}
 
 // https://w3c.github.io/webdriver/#dfn-webdriver
 bool Navigator::webdriver() const

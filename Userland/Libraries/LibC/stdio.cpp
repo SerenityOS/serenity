@@ -11,9 +11,9 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
-#include <LibC/bits/mutex_locker.h>
-#include <LibC/bits/stdio_file_implementation.h>
 #include <assert.h>
+#include <bits/mutex_locker.h>
+#include <bits/stdio_file_implementation.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>

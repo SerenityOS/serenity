@@ -16,10 +16,15 @@ namespace Web::HTML {
 HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLSelectElement"));
 }
 
 HTMLSelectElement::~HTMLSelectElement() = default;
+
+void HTMLSelectElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSelectElementPrototype>(realm, "HTMLSelectElement"));
+}
 
 void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
 {
@@ -57,7 +62,7 @@ DOM::Element* HTMLSelectElement::item(size_t index)
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-nameditem
-DOM::Element* HTMLSelectElement::named_item(FlyString const& name)
+DOM::Element* HTMLSelectElement::named_item(DeprecatedFlyString const& name)
 {
     // The namedItem(name) method must return the value returned by the method of the same name on the options collection, when invoked with the same argument.
     return const_cast<HTMLOptionsCollection&>(*options()).named_item(name);
@@ -156,7 +161,7 @@ DeprecatedString const& HTMLSelectElement::type() const
     return select_multiple;
 }
 
-FlyString HTMLSelectElement::default_role() const
+DeprecatedFlyString HTMLSelectElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-select-multiple-or-size-greater-1
     if (has_attribute("multiple"))

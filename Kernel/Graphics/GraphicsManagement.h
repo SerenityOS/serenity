@@ -50,7 +50,7 @@ public:
 private:
     void enable_vga_text_mode_console_cursor();
 
-    bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
+    ErrorOr<void> determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
 
     void initialize_preset_resolution_generic_display_connector();
 

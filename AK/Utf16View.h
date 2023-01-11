@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,19 +7,23 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
-Vector<u16, 1> utf8_to_utf16(StringView);
-Vector<u16, 1> utf8_to_utf16(Utf8View const&);
-Vector<u16, 1> utf32_to_utf16(Utf32View const&);
-void code_point_to_utf16(Vector<u16, 1>&, u32);
+using Utf16Data = Vector<u16, 1>;
+
+ErrorOr<Utf16Data> utf8_to_utf16(StringView);
+ErrorOr<Utf16Data> utf8_to_utf16(Utf8View const&);
+ErrorOr<Utf16Data> utf32_to_utf16(Utf32View const&);
+ErrorOr<void> code_point_to_utf16(Utf16Data&, u32);
 
 class Utf16View;
 
@@ -72,7 +76,8 @@ public:
         No,
     };
 
-    DeprecatedString to_utf8(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
+    ErrorOr<DeprecatedString> to_deprecated_string(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
+    ErrorOr<String> to_utf8(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
 
     bool is_null() const { return m_code_units.is_null(); }
     bool is_empty() const { return m_code_units.is_empty(); }
@@ -126,5 +131,6 @@ struct AK::Formatter<AK::Utf16View> : Formatter<FormatString> {
 };
 
 #if USING_AK_GLOBALLY
+using AK::Utf16Data;
 using AK::Utf16View;
 #endif

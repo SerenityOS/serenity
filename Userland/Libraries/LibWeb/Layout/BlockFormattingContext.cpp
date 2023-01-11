@@ -413,10 +413,6 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
 
             auto const& child_box_state = m_state.get(*child_box);
 
-            // Ignore anonymous block containers with no lines. These don't count as in-flow block boxes.
-            if (child_box->is_anonymous() && child_box->is_block_container() && child_box_state.line_boxes.is_empty())
-                continue;
-
             if (margins_collapse_through(*child_box, m_state)) {
                 continue;
             }
@@ -474,7 +470,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         margin_top = 0;
     }
 
-    place_block_level_element_in_normal_flow_vertically(box, current_y + box_state.border_box_top() + margin_top);
+    place_block_level_element_in_normal_flow_vertically(box, current_y + margin_top);
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
     OwnPtr<FormattingContext> independent_formatting_context;
@@ -629,6 +625,8 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floats);
 
+    y += box_state.border_box_top();
+
     box_state.set_content_offset(CSSPixelPoint { box_state.offset.x(), y.value() });
 }
 
@@ -716,7 +714,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         auto y = line_builder->y_for_float_to_be_inserted_here(box);
         box_state.set_content_y(y + box_state.margin_box_top());
     } else {
-        place_block_level_element_in_normal_flow_vertically(box, y + box_state.margin_box_top());
+        place_block_level_element_in_normal_flow_vertically(box, y + box_state.margin_top);
         place_block_level_element_in_normal_flow_horizontally(box, available_space);
     }
 

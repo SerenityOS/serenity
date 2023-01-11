@@ -12,8 +12,14 @@ namespace Web::HTML {
 HTMLDetailsElement::HTMLDetailsElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLDetailsElement"));
 }
 
 HTMLDetailsElement::~HTMLDetailsElement() = default;
+
+void HTMLDetailsElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDetailsElementPrototype>(realm, "HTMLDetailsElement"));
+}
+
 }

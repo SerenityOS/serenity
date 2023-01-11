@@ -39,7 +39,7 @@ public:
 
     virtual void did_set_rect() { }
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);

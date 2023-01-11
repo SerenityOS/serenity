@@ -9,17 +9,17 @@
 
 namespace Web::HTML {
 
-ErrorEvent* ErrorEvent::create(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent* ErrorEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init)
 {
     return realm.heap().allocate<ErrorEvent>(realm, realm, event_name, event_init);
 }
 
-ErrorEvent* ErrorEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent* ErrorEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-ErrorEvent::ErrorEvent(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent::ErrorEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init)
     : DOM::Event(realm, event_name)
     , m_message(event_init.message)
     , m_filename(event_init.filename)
@@ -27,10 +27,15 @@ ErrorEvent::ErrorEvent(JS::Realm& realm, FlyString const& event_name, ErrorEvent
     , m_colno(event_init.colno)
     , m_error(event_init.error)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ErrorEvent"));
 }
 
 ErrorEvent::~ErrorEvent() = default;
+
+void ErrorEvent::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ErrorEventPrototype>(realm, "ErrorEvent"));
+}
 
 void ErrorEvent::visit_edges(Cell::Visitor& visitor)
 {

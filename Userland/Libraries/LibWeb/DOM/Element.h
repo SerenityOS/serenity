@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -50,31 +50,31 @@ public:
 
     DeprecatedString const& qualified_name() const { return m_qualified_name.as_string(); }
     DeprecatedString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
-    virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
-    FlyString const& local_name() const { return m_qualified_name.local_name(); }
+    virtual DeprecatedFlyString node_name() const final { return html_uppercased_qualified_name(); }
+    DeprecatedFlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
     DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
 
-    FlyString const& prefix() const { return m_qualified_name.prefix(); }
-    FlyString const& namespace_() const { return m_qualified_name.namespace_(); }
+    DeprecatedFlyString const& prefix() const { return m_qualified_name.prefix(); }
+    DeprecatedFlyString const& namespace_() const { return m_qualified_name.namespace_(); }
 
     // NOTE: This is for the JS bindings
-    FlyString const& namespace_uri() const { return namespace_(); }
+    DeprecatedFlyString const& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(FlyString const& name) const;
+    bool has_attribute(DeprecatedFlyString const& name) const;
     bool has_attributes() const { return !m_attributes->is_empty(); }
-    DeprecatedString attribute(FlyString const& name) const { return get_attribute(name); }
-    DeprecatedString get_attribute(FlyString const& name) const;
-    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, DeprecatedString const& value);
-    WebIDL::ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, DeprecatedString const& value);
-    void remove_attribute(FlyString const& name);
-    WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
+    DeprecatedString attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
+    DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
+    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value);
+    void remove_attribute(DeprecatedFlyString const& name);
+    WebIDL::ExceptionOr<bool> toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
     Vector<DeprecatedString> get_attribute_names() const;
 
-    JS::GCPtr<Attr> get_attribute_node(FlyString const& name) const;
+    JS::GCPtr<Attr> get_attribute_node(DeprecatedFlyString const& name) const;
 
     DOMTokenList* class_list();
 
@@ -95,12 +95,12 @@ public:
         }
     }
 
-    bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    Vector<FlyString> const& class_names() const { return m_classes; }
+    bool has_class(DeprecatedFlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    Vector<DeprecatedFlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value);
-    virtual void did_remove_attribute(FlyString const&);
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    virtual void did_remove_attribute(DeprecatedFlyString const&);
 
     enum class NeedsRelayout {
         No = 0,
@@ -129,14 +129,14 @@ public:
     bool is_focused() const;
     bool is_active() const;
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root.ptr(); }
     ShadowRoot const* shadow_root() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
-    void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
-    HashMap<FlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    void set_custom_properties(HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
+    HashMap<DeprecatedFlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
 
     void queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
@@ -261,7 +261,7 @@ protected:
 private:
     void make_html_uppercased_qualified_name();
 
-    void invalidate_style_after_attribute_change(FlyString const& attribute_name);
+    void invalidate_style_after_attribute_change(DeprecatedFlyString const& attribute_name);
 
     WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node);
 
@@ -274,9 +274,9 @@ private:
     JS::GCPtr<ShadowRoot> m_shadow_root;
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
-    HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
+    HashMap<DeprecatedFlyString, CSS::StyleProperty> m_custom_properties;
 
-    Vector<FlyString> m_classes;
+    Vector<DeprecatedFlyString> m_classes;
 
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 };
@@ -284,6 +284,6 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, FlyString namespace_, FlyString qualified_name);
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name);
 
 }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 
 namespace Web::CSS {
 
@@ -36,7 +37,7 @@ public:
     Type type() const { return m_type; }
     DeprecatedString line_name() const { return m_line_name; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridTrackPlacement const& other) const
     {
         return m_type == other.type() && m_span_count_or_position == other.raw_value();

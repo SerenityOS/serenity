@@ -297,8 +297,6 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Document"));
-
     HTML::main_thread_event_loop().register_document({}, *this);
 
     m_style_update_timer = Platform::Timer::create_single_shot(0, [this] {
@@ -313,6 +311,12 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
 Document::~Document()
 {
     HTML::main_thread_event_loop().unregister_document({}, *this);
+}
+
+void Document::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
 }
 
 void Document::visit_edges(Cell::Visitor& visitor)
@@ -1018,9 +1022,9 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString
     });
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_names)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
-    Vector<FlyString> list_of_class_names;
+    Vector<DeprecatedFlyString> list_of_class_names;
     for (auto& name : class_names.view().split_view(' ')) {
         list_of_class_names.append(name);
     }
@@ -1180,7 +1184,7 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString const& a_local_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(DeprecatedFlyString const& a_local_name)
 {
     auto local_name = a_local_name;
 
@@ -1196,7 +1200,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyStrin
     // FIXME: 4. If options is a dictionary and options["is"] exists, then set is to it.
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
-    FlyString namespace_;
+    DeprecatedFlyString namespace_;
     if (document_type() == Type::HTML || content_type() == "application/xhtml+xml"sv)
         namespace_ = Namespace::HTML;
 

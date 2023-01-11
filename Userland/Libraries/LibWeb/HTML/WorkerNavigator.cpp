@@ -19,9 +19,14 @@ JS::NonnullGCPtr<WorkerNavigator> WorkerNavigator::create(WorkerGlobalScope& glo
 WorkerNavigator::WorkerNavigator(WorkerGlobalScope& global_scope)
     : PlatformObject(global_scope.realm())
 {
-    set_prototype(&Bindings::cached_web_prototype(global_scope.realm(), "WorkerNavigator"));
 }
 
 WorkerNavigator::~WorkerNavigator() = default;
+
+void WorkerNavigator::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerNavigatorPrototype>(realm, "WorkerNavigator"));
+}
 
 }

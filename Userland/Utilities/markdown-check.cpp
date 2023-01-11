@@ -204,13 +204,26 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
+            if (url.path().contains("man"sv) && url.path().ends_with(".md"sv)) {
+                warnln("Inter-manpage link without the help:// scheme: {}\nPlease use help URLs of the form 'help://man/<section>/<subsection...>/<page>'", href);
+                m_has_invalid_link = true;
+                return RecursionDecision::Recurse;
+            }
             // TODO: Check more possible links other than icons.
             if (url.path().starts_with("/res/icons/"sv)) {
                 auto file = DeprecatedString::formatted("{}/Base{}", m_serenity_source_directory, url.path());
                 m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
-                return RecursionDecision::Recurse;
+            } else if (url.path().starts_with("/bin"sv)) {
+                StringBuilder builder;
+                link_node.text->render_to_html(builder);
+                auto link_text = builder.string_view();
+                if (link_text != "Open"sv) {
+                    warnln("Binary link named '{}' is not allowed, binary links must be called 'Open'. Linked binary: {}", link_text, href);
+                    m_has_invalid_link = true;
+                }
+            } else {
+                outln("Not checking local link {}", href);
             }
-            outln("Not checking local link {}", href);
             return RecursionDecision::Recurse;
         }
     }

@@ -31,6 +31,8 @@ public:
 private:
     File(JS::Realm&, ByteBuffer, DeprecatedString file_name, DeprecatedString type, i64 last_modified);
 
+    virtual void initialize(JS::Realm&) override;
+
     DeprecatedString m_name;
     i64 m_last_modified { 0 };
 };

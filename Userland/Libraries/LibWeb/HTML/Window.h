@@ -102,7 +102,7 @@ public:
     float scroll_x() const;
     float scroll_y() const;
 
-    void fire_a_page_transition_event(FlyString const& event_name, bool persisted);
+    void fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted);
 
     float device_pixel_ratio() const;
 
@@ -142,7 +142,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const&) override { return *this; }
 
     // ^HTML::WindowEventHandlers
     virtual DOM::EventTarget& window_event_handlers_to_event_target() override { return *this; }

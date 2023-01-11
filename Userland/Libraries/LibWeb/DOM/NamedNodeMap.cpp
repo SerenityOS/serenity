@@ -20,9 +20,15 @@ JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(element.realm(), "NamedNodeMap"))
+    : Bindings::LegacyPlatformObject(element.realm())
     , m_element(element)
 {
+}
+
+void NamedNodeMap::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NamedNodeMapPrototype>(realm, "NamedNodeMap"));
 }
 
 void NamedNodeMap::visit_edges(Cell::Visitor& visitor)
@@ -301,7 +307,7 @@ JS::Value NamedNodeMap::item_value(size_t index) const
     return node;
 }
 
-JS::Value NamedNodeMap::named_item_value(FlyString const& name) const
+JS::Value NamedNodeMap::named_item_value(DeprecatedFlyString const& name) const
 {
     auto const* node = get_named_item(name);
     if (!node)

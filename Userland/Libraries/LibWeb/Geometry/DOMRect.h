@@ -32,6 +32,8 @@ public:
 
 private:
     DOMRect(JS::Realm&, double x, double y, double width, double height);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

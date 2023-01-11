@@ -1178,6 +1178,9 @@ void HackStudioWidget::set_current_editor_tab_widget(RefPtr<GUI::TabWidget> tab_
 
 void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_wrapper)
 {
+    if (m_current_editor_wrapper)
+        m_current_editor_wrapper->editor().hide_autocomplete();
+
     m_current_editor_wrapper = editor_wrapper;
     update_window_title();
     update_current_editor_title();

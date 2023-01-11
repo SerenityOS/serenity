@@ -19,12 +19,18 @@ JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)
-    : LegacyPlatformObject(Bindings::cached_web_prototype(element.realm(), "DOMStringMap"))
+    : LegacyPlatformObject(element.realm())
     , m_associated_element(element)
 {
 }
 
 DOMStringMap::~DOMStringMap() = default;
+
+void DOMStringMap::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMStringMapPrototype>(realm, "DOMStringMap"));
+}
 
 void DOMStringMap::visit_edges(Cell::Visitor& visitor)
 {
@@ -183,7 +189,7 @@ bool DOMStringMap::delete_existing_named_property(DeprecatedString const& name)
     return true;
 }
 
-JS::Value DOMStringMap::named_item_value(FlyString const& name) const
+JS::Value DOMStringMap::named_item_value(DeprecatedFlyString const& name) const
 {
     return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name));
 }

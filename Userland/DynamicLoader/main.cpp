@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibC/sys/internals.h>
-#include <LibC/unistd.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/Relocation.h>
+#include <sys/internals.h>
+#include <unistd.h>
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
 

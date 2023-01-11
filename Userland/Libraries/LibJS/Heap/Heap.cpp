@@ -208,7 +208,12 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
 class MarkingVisitor final : public Cell::Visitor {
 public:
-    MarkingVisitor() = default;
+    explicit MarkingVisitor(HashTable<Cell*> const& roots)
+    {
+        for (auto* root : roots) {
+            visit(root);
+        }
+    }
 
     virtual void visit_impl(Cell& cell) override
     {
@@ -217,17 +222,26 @@ public:
         dbgln_if(HEAP_DEBUG, "  ! {}", &cell);
 
         cell.set_marked(true);
-        cell.visit_edges(*this);
+        m_work_queue.append(cell);
     }
+
+    void mark_all_live_cells()
+    {
+        while (!m_work_queue.is_empty()) {
+            m_work_queue.take_last().visit_edges(*this);
+        }
+    }
+
+private:
+    Vector<Cell&> m_work_queue;
 };
 
 void Heap::mark_live_cells(HashTable<Cell*> const& roots)
 {
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
-    MarkingVisitor visitor;
-    for (auto* root : roots)
-        visitor.visit(root);
+    MarkingVisitor visitor(roots);
+    visitor.mark_all_live_cells();
 
     for (auto& inverse_root : m_uprooted_cells)
         inverse_root->set_marked(false);

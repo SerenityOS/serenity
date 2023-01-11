@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
@@ -24,8 +24,8 @@ public:
     {
     }
 
-    FlyString const& family() const { return m_family; }
-    FlyString const& variant() const { return m_variant; }
+    DeprecatedFlyString const& family() const { return m_family; }
+    DeprecatedFlyString const& variant() const { return m_variant; }
     unsigned weight() const;
     u8 slope() const;
 
@@ -39,8 +39,8 @@ public:
     RefPtr<Font> get_font(float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No) const;
 
 private:
-    FlyString m_family;
-    FlyString m_variant;
+    DeprecatedFlyString m_family;
+    DeprecatedFlyString m_variant;
 
     Vector<RefPtr<BitmapFont>> m_bitmap_fonts;
     RefPtr<VectorFont> m_vector_font;

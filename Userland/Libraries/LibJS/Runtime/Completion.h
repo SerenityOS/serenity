@@ -7,13 +7,26 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Optional.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
+#include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
+
+#define TRY_OR_THROW_OOM(vm, expression)                                               \
+    ({                                                                                 \
+        /* Ignore -Wshadow to allow nesting the macro. */                              \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                               \
+            auto _temporary_result = (expression));                                    \
+        if (_temporary_result.is_error()) {                                            \
+            VERIFY(_temporary_result.error().code() == ENOMEM);                        \
+            return vm.throw_completion<JS::InternalError>(JS::ErrorType::OutOfMemory); \
+        }                                                                              \
+        _temporary_result.release_value();                                             \
+    })
 
 // 6.2.3 The Completion Record Specification Type, https://tc39.es/ecma262/#sec-completion-record-specification-type
 class [[nodiscard]] Completion {
@@ -27,7 +40,7 @@ public:
         Throw,
     };
 
-    ALWAYS_INLINE Completion(Type type, Optional<Value> value, Optional<FlyString> target)
+    ALWAYS_INLINE Completion(Type type, Optional<Value> value, Optional<DeprecatedFlyString> target)
         : m_type(type)
         , m_value(move(value))
         , m_target(move(target))
@@ -68,8 +81,8 @@ public:
     }
     [[nodiscard]] Optional<Value>& value() { return m_value; }
     [[nodiscard]] Optional<Value> const& value() const { return m_value; }
-    [[nodiscard]] Optional<FlyString>& target() { return m_target; }
-    [[nodiscard]] Optional<FlyString> const& target() const { return m_target; }
+    [[nodiscard]] Optional<DeprecatedFlyString>& target() { return m_target; }
+    [[nodiscard]] Optional<DeprecatedFlyString> const& target() const { return m_target; }
 
     // "abrupt completion refers to any completion with a [[Type]] value other than normal"
     [[nodiscard]] bool is_abrupt() const { return m_type != Type::Normal; }
@@ -114,9 +127,9 @@ private:
         return m_type == Type::Empty;
     }
 
-    Type m_type { Type::Normal }; // [[Type]]
-    Optional<Value> m_value;      // [[Value]]
-    Optional<FlyString> m_target; // [[Target]]
+    Type m_type { Type::Normal };           // [[Type]]
+    Optional<Value> m_value;                // [[Value]]
+    Optional<DeprecatedFlyString> m_target; // [[Target]]
 };
 
 }
@@ -140,7 +153,7 @@ public:
     }
 
     Optional(Optional&& other)
-        : m_value(other.m_value)
+        : m_value(move(other.m_value))
     {
     }
 

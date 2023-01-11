@@ -22,10 +22,15 @@ JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
 SubtleCrypto::SubtleCrypto(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "SubtleCrypto"));
 }
 
 SubtleCrypto::~SubtleCrypto() = default;
+
+void SubtleCrypto::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SubtleCryptoPrototype>(realm, "SubtleCrypto"));
+}
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
 JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<JS::Object> const& data)

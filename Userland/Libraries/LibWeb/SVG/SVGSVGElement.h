@@ -28,9 +28,11 @@ public:
 private:
     SVGSVGElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     virtual bool is_svg_svg_element() const override { return true; }
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     Optional<ViewBox> m_view_box;
 };

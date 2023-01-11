@@ -17,11 +17,16 @@ Performance::Performance(HTML::Window& window)
     : DOM::EventTarget(window.realm())
     , m_window(window)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "Performance"));
     m_timer.start();
 }
 
 Performance::~Performance() = default;
+
+void Performance::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformancePrototype>(realm, "Performance"));
+}
 
 void Performance::visit_edges(Cell::Visitor& visitor)
 {

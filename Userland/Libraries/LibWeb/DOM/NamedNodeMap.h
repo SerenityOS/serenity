@@ -28,7 +28,7 @@ public:
     virtual bool is_supported_property_index(u32 index) const override;
     virtual Vector<DeprecatedString> supported_property_names() const override;
     virtual JS::Value item_value(size_t index) const override;
-    virtual JS::Value named_item_value(FlyString const& name) const override;
+    virtual JS::Value named_item_value(DeprecatedFlyString const& name) const override;
 
     size_t length() const { return m_attributes.size(); }
     bool is_empty() const { return m_attributes.is_empty(); }
@@ -56,6 +56,7 @@ public:
 private:
     explicit NamedNodeMap(Element&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     Element& associated_element() { return *m_element; }

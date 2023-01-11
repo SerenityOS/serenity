@@ -71,7 +71,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     // 9. Let localeData be %Segmenter%.[[LocaleData]].
 
     // 10. Let r be ResolveLocale(%Segmenter%.[[AvailableLocales]], requestedLocales, opt, %Segmenter%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, {});
+    auto result = TRY(resolve_locale(requested_locales, opt, {}));
 
     // 11. Set segmenter.[[Locale]] to r.[[locale]].
     segmenter->set_locale(move(result.locale));
@@ -80,7 +80,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     auto granularity = TRY(get_option(vm, *options, vm.names.granularity, OptionType::String, { "grapheme"sv, "word"sv, "sentence"sv }, "grapheme"sv));
 
     // 13. Set segmenter.[[SegmenterGranularity]] to granularity.
-    segmenter->set_segmenter_granularity(granularity.as_string().deprecated_string());
+    segmenter->set_segmenter_granularity(TRY(granularity.as_string().deprecated_string()));
 
     // 14. Return segmenter.
     return segmenter;

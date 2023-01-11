@@ -19,10 +19,15 @@ History::History(JS::Realm& realm, DOM::Document& document)
     : PlatformObject(realm)
     , m_associated_document(document)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "History"));
 }
 
 History::~History() = default;
+
+void History::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HistoryPrototype>(realm, "History"));
+}
 
 void History::visit_edges(Cell::Visitor& visitor)
 {

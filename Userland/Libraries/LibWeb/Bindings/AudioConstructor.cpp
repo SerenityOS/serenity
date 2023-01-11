@@ -23,7 +23,7 @@ void AudioConstructor::initialize(JS::Realm& realm)
     auto& vm = this->vm();
     NativeFunction::initialize(realm);
 
-    define_direct_property(vm.names.prototype, &cached_web_prototype(realm, "HTMLAudioElement"), 0);
+    define_direct_property(vm.names.prototype, &ensure_web_prototype<Bindings::HTMLAudioElementPrototype>(realm, "HTMLAudioElement"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 

@@ -14,10 +14,15 @@ namespace Web::HTML {
 HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableCellElement"));
 }
 
 HTMLTableCellElement::~HTMLTableCellElement() = default;
+
+void HTMLTableCellElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"));
+}
 
 void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
@@ -69,7 +74,7 @@ void HTMLTableCellElement::set_row_span(unsigned int value)
     MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
 }
 
-FlyString HTMLTableCellElement::default_role() const
+DeprecatedFlyString HTMLTableCellElement::default_role() const
 {
     // TODO: For td:
     //       role=cell if the ancestor table element is exposed as a role=table

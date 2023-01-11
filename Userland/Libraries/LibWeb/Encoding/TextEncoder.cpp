@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Encoding/TextEncoder.h>
@@ -19,10 +19,15 @@ JS::NonnullGCPtr<TextEncoder> TextEncoder::construct_impl(JS::Realm& realm)
 TextEncoder::TextEncoder(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "TextEncoder"));
 }
 
 TextEncoder::~TextEncoder() = default;
+
+void TextEncoder::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextEncoderPrototype>(realm, "TextEncoder"));
+}
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode
 JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const
@@ -44,9 +49,9 @@ JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encoding
-FlyString const& TextEncoder::encoding()
+DeprecatedFlyString const& TextEncoder::encoding()
 {
-    static FlyString encoding = "utf-8"sv;
+    static DeprecatedFlyString encoding = "utf-8"sv;
     return encoding;
 }
 

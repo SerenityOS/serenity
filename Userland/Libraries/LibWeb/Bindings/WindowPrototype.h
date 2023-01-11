@@ -16,10 +16,10 @@ class WindowPrototype final : public JS::Object {
     JS_OBJECT(WindowPrototype, JS::Object);
 
 public:
-    explicit WindowPrototype(JS::Realm& realm)
-        : JS::Object(ConstructWithPrototypeTag::Tag, cached_web_prototype(realm, "EventTarget"))
-    {
-    }
+    explicit WindowPrototype(JS::Realm& realm);
+
+private:
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

@@ -20,10 +20,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_
 ReadableStream::ReadableStream(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ReadableStream"));
 }
 
 ReadableStream::~ReadableStream() = default;
+
+void ReadableStream::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamPrototype>(realm, "ReadableStream"));
+}
 
 void ReadableStream::visit_edges(Cell::Visitor& visitor)
 {

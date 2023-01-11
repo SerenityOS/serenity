@@ -52,10 +52,12 @@ public:
     virtual void reset_algorithm() override;
 
     // https://www.w3.org/TR/html-aria/#el-textarea
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::textbox; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::textbox; }
 
 private:
     HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;

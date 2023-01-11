@@ -76,6 +76,23 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
         // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
         new_mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
             mounted_count++;
+
+            // When this is the first time this FileSystem is mounted,
+            // begin managing the FileSystem by adding it to the list of
+            // managed file systems. This is symmetric with
+            // VirtualFileSystem::unmount()'s `remove()` calls (which remove
+            // the FileSystem once it is no longer mounted).
+            if (mounted_count == 1) {
+                m_file_systems_list.with([&](auto& fs_list) {
+                    fs_list.append(fs);
+                });
+                if (fs.is_file_backed()) {
+                    auto& file_backed_fs = static_cast<FileBackedFileSystem&>(fs);
+                    m_file_backed_file_systems_list.with([&](auto& fs_list) {
+                        fs_list.append(file_backed_fs);
+                    });
+                }
+            }
         });
 
         // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
@@ -329,11 +346,12 @@ ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already
             }
         }
         auto fs = TRY(callback(description));
-        VERIFY(fs->is_file_backed());
-        list.append(static_cast<FileBackedFileSystem&>(*fs));
-        m_file_systems_list.with([&](auto& fs_list) {
-            fs_list.append(*fs);
-        });
+
+        // The created FileSystem is only added to the file_systems_lists
+        // when the FS has been successfully initialized and mounted
+        // (in VirtualFileSystem::mount()). This prevents file systems which
+        // fail to initialize or mount from existing in the list when the
+        // FileSystem is destroyed after failure.
         return static_ptr_cast<FileBackedFileSystem>(fs);
     }));
 }

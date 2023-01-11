@@ -142,34 +142,34 @@ TarOutputStream::TarOutputStream(Core::Stream::Handle<Core::Stream::Stream> stre
 {
 }
 
-ErrorOr<void> TarOutputStream::add_directory(DeprecatedString const& path, mode_t mode)
+ErrorOr<void> TarOutputStream::add_directory(StringView path, mode_t mode)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
-    header.set_size(0);
-    header.set_filename_and_prefix(DeprecatedString::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
+    TRY(header.set_size(0));
+    header.set_filename_and_prefix(TRY(String::formatted("{}/", path))); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
-    header.set_mode(mode);
+    TRY(header.set_mode(mode));
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
-    header.calculate_checksum();
+    TRY(header.calculate_checksum());
     TRY(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
     TRY(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
     return {};
 }
 
-ErrorOr<void> TarOutputStream::add_file(DeprecatedString const& path, mode_t mode, ReadonlyBytes bytes)
+ErrorOr<void> TarOutputStream::add_file(StringView path, mode_t mode, ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
-    header.set_size(bytes.size());
+    TRY(header.set_size(bytes.size()));
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::NormalFile);
-    header.set_mode(mode);
+    TRY(header.set_mode(mode));
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
-    header.calculate_checksum();
+    TRY(header.calculate_checksum());
     TRY(m_stream->write_entire_buffer(ReadonlyBytes { &header, sizeof(header) }));
     constexpr Array<u8, block_size> padding { 0 };
     TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - sizeof(header) }));
@@ -181,18 +181,18 @@ ErrorOr<void> TarOutputStream::add_file(DeprecatedString const& path, mode_t mod
     return {};
 }
 
-ErrorOr<void> TarOutputStream::add_link(DeprecatedString const& path, mode_t mode, StringView link_name)
+ErrorOr<void> TarOutputStream::add_link(StringView path, mode_t mode, StringView link_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
-    header.set_size(0);
+    TRY(header.set_size(0));
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::SymLink);
-    header.set_mode(mode);
+    TRY(header.set_mode(mode));
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.set_link_name(link_name);
-    header.calculate_checksum();
+    TRY(header.calculate_checksum());
     TRY(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
     TRY(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));

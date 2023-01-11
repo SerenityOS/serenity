@@ -231,7 +231,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(finalization_registry);
 }
 
-ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, FlyString const& name)
+ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)
 {
     // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition
     // And 8.3.5 Runtime Semantics: NamedEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-namedevaluation
@@ -260,7 +260,7 @@ ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<Bi
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment)
+ThrowCompletionOr<void> VM::binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment)
 {
     // 1. Let name be StringValue of Identifier.
     // 2. Return ? InitializeBoundName(name, value, environment).
@@ -541,7 +541,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
-ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, FlyString name, bool strict, size_t hops)
+ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, DeprecatedFlyString name, bool strict, size_t hops)
 {
     // 1. If env is the value null, then
     if (!environment) {
@@ -575,7 +575,7 @@ ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environme
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
-ThrowCompletionOr<Reference> VM::resolve_binding(FlyString const& name, Environment* environment)
+ThrowCompletionOr<Reference> VM::resolve_binding(DeprecatedFlyString const& name, Environment* environment)
 {
     // 1. If env is not present or if env is undefined, then
     if (!environment) {

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/MarkedVector.h>
@@ -43,7 +43,7 @@ public:
     Cell* context_owner { nullptr };
 
     ASTNode const* current_node { nullptr };
-    FlyString function_name;
+    DeprecatedFlyString function_name;
     Value this_value;
     MarkedVector<Value> arguments;
     bool is_strict_mode { false };

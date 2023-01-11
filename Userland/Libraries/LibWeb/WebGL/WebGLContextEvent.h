@@ -19,15 +19,17 @@ class WebGLContextEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(WebGLContextEvent, DOM::Event);
 
 public:
-    static WebGLContextEvent* create(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
-    static WebGLContextEvent* construct_impl(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
+    static WebGLContextEvent* create(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
+    static WebGLContextEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
 
     virtual ~WebGLContextEvent() override;
 
     DeprecatedString const& status_message() const { return m_status_message; }
 
 private:
-    WebGLContextEvent(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
+    WebGLContextEvent(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
+
+    virtual void initialize(JS::Realm&) override;
 
     DeprecatedString m_status_message { DeprecatedString::empty() };
 };

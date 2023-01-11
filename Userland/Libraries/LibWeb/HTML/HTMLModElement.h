@@ -17,10 +17,12 @@ class HTMLModElement final : public HTMLElement {
 public:
     virtual ~HTMLModElement() override;
 
-    virtual FlyString default_role() const override;
+    virtual DeprecatedFlyString default_role() const override;
 
 private:
     HTMLModElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

@@ -22,10 +22,15 @@ JS::NonnullGCPtr<MessagePort> MessagePort::create(JS::Realm& realm)
 MessagePort::MessagePort(JS::Realm& realm)
     : DOM::EventTarget(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MessagePort"));
 }
 
 MessagePort::~MessagePort() = default;
+
+void MessagePort::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessagePortPrototype>(realm, "MessagePort"));
+}
 
 void MessagePort::visit_edges(Cell::Visitor& visitor)
 {

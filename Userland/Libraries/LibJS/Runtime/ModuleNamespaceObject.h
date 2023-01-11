@@ -32,11 +32,11 @@ public:
     virtual void initialize(Realm&) override;
 
 private:
-    ModuleNamespaceObject(Realm&, Module* module, Vector<FlyString> exports);
+    ModuleNamespaceObject(Realm&, Module* module, Vector<DeprecatedFlyString> exports);
 
     // FIXME: UHHH how do we want to store this to avoid cycles but be safe??
-    Module* m_module;            // [[Module]]
-    Vector<FlyString> m_exports; // [[Exports]]
+    Module* m_module;                      // [[Module]]
+    Vector<DeprecatedFlyString> m_exports; // [[Exports]]
 };
 
 }

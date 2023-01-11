@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <string.h>
 #include <sys/types.h>
@@ -82,9 +82,10 @@ static void set_field(char (&field)[N], TSource&& source)
 }
 
 template<class TSource, size_t N>
-static void set_octal_field(char (&field)[N], TSource&& source)
+static ErrorOr<void> set_octal_field(char (&field)[N], TSource&& source)
 {
-    set_field(field, DeprecatedString::formatted("{:o}", forward<TSource>(source)));
+    set_field(field, TRY(String::formatted("{:o}", forward<TSource>(source))).bytes_as_string_view());
+    return {};
 }
 
 class [[gnu::packed]] TarFileHeader {
@@ -109,11 +110,11 @@ public:
     StringView prefix() const { return get_field_as_string_view(m_prefix); }
 
     void set_filename(StringView filename) { set_field(m_filename, filename); }
-    void set_mode(mode_t mode) { set_octal_field(m_mode, mode); }
-    void set_uid(uid_t uid) { set_octal_field(m_uid, uid); }
-    void set_gid(gid_t gid) { set_octal_field(m_gid, gid); }
-    void set_size(size_t size) { set_octal_field(m_size, size); }
-    void set_timestamp(time_t timestamp) { set_octal_field(m_timestamp, timestamp); }
+    ErrorOr<void> set_mode(mode_t mode) { return set_octal_field(m_mode, mode); }
+    ErrorOr<void> set_uid(uid_t uid) { return set_octal_field(m_uid, uid); }
+    ErrorOr<void> set_gid(gid_t gid) { return set_octal_field(m_gid, gid); }
+    ErrorOr<void> set_size(size_t size) { return set_octal_field(m_size, size); }
+    ErrorOr<void> set_timestamp(time_t timestamp) { return set_octal_field(m_timestamp, timestamp); }
     void set_type_flag(TarFileType type) { m_type_flag = to_underlying(type); }
     void set_link_name(StringView link_name) { set_field(m_link_name, link_name); }
     // magic doesn't necessarily include a null byte
@@ -122,12 +123,12 @@ public:
     void set_version(StringView version) { set_field(m_version, version); }
     void set_owner_name(StringView owner_name) { set_field(m_owner_name, owner_name); }
     void set_group_name(StringView group_name) { set_field(m_group_name, group_name); }
-    void set_major(int major) { set_octal_field(m_major, major); }
-    void set_minor(int minor) { set_octal_field(m_minor, minor); }
+    ErrorOr<void> set_major(int major) { return set_octal_field(m_major, major); }
+    ErrorOr<void> set_minor(int minor) { return set_octal_field(m_minor, minor); }
     void set_prefix(StringView prefix) { set_field(m_prefix, prefix); }
 
     unsigned expected_checksum() const;
-    void calculate_checksum();
+    ErrorOr<void> calculate_checksum();
 
     bool is_zero_block() const;
     bool content_is_like_extended_header() const;

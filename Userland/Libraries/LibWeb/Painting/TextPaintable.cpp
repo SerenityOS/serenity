@@ -12,9 +12,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<TextPaintable> TextPaintable::create(Layout::TextNode const& layout_node)
+JS::NonnullGCPtr<TextPaintable> TextPaintable::create(Layout::TextNode const& layout_node)
 {
-    return adopt_ref(*new TextPaintable(layout_node));
+    return layout_node.heap().allocate_without_realm<TextPaintable>(layout_node);
 }
 
 TextPaintable::TextPaintable(Layout::TextNode const& layout_node)

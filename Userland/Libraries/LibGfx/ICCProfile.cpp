@@ -22,7 +22,7 @@ struct DateTimeNumber {
     BigEndian<u16> year;
     BigEndian<u16> month;
     BigEndian<u16> day;
-    BigEndian<u16> hour;
+    BigEndian<u16> hours;
     BigEndian<u16> minutes;
     BigEndian<u16> seconds;
 };
@@ -55,8 +55,8 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
         return Error::from_string_literal("ICC::Profile: dateTimeNumber day out of bounds");
 
     // "Number of hours (0 to 23)"
-    if (date_time.hour > 23)
-        return Error::from_string_literal("ICC::Profile: dateTimeNumber hour out of bounds");
+    if (date_time.hours > 23)
+        return Error::from_string_literal("ICC::Profile: dateTimeNumber hours out of bounds");
 
     // "Number of minutes (0 to 59)"
     if (date_time.minutes > 59)
@@ -71,7 +71,7 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
     tm.tm_year = date_time.year - 1900;
     tm.tm_mon = date_time.month - 1;
     tm.tm_mday = date_time.day;
-    tm.tm_hour = date_time.hour;
+    tm.tm_hour = date_time.hours;
     tm.tm_min = date_time.minutes;
     tm.tm_sec = date_time.seconds;
     // timegm() doesn't read tm.tm_isdst, tm.tm_wday, and tm.tm_yday, no need to fill them in.
@@ -99,7 +99,7 @@ struct ICCHeader {
     DateTimeNumber profile_creation_time;
 
     BigEndian<u32> profile_file_signature;
-    BigEndian<u32> primary_platform;
+    BigEndian<PrimaryPlatform> primary_platform;
 
     BigEndian<u32> profile_flags;
     BigEndian<u32> device_manufacturer;
@@ -115,6 +115,22 @@ struct ICCHeader {
     u8 reserved[28];
 };
 static_assert(sizeof(ICCHeader) == 128);
+
+ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
+{
+    // ICC v4, 7.2.2 Profile size field
+    // "The value in the profile size field shall be the exact size obtained by combining the profile header,
+    // the tag table, and the tagged element data, including the pad bytes for the last tag."
+
+    // Valid files have enough data for profile header and tag table entry count.
+    if (header.profile_size < sizeof(ICCHeader) + sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: Profile size too small");
+
+    if (header.profile_size > icc_bytes.size())
+        return Error::from_string_literal("ICC::Profile: Profile size larger than input data");
+
+    return header.profile_size;
+}
 
 Optional<PreferredCMMType> parse_preferred_cmm_type(ICCHeader const& header)
 {
@@ -217,17 +233,6 @@ ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
     return parse_date_time_number(header.profile_creation_time);
 }
 
-ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
-{
-    // ICC v4, 7.2.14 Device attributes field
-
-    // "4 to 31": "Reserved (set to binary zero)"
-    if (header.device_attributes & 0xffff'fff0)
-        return Error::from_string_literal("ICC::Profile: Device attributes reserved bits not set to 0");
-
-    return DeviceAttributes { header.device_attributes };
-}
-
 ErrorOr<void> parse_file_signature(ICCHeader const& header)
 {
     // ICC v4, 7.2.9 Profile file signature field
@@ -235,6 +240,19 @@ ErrorOr<void> parse_file_signature(ICCHeader const& header)
     if (header.profile_file_signature != 0x61637370)
         return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
     return {};
+}
+
+ErrorOr<PrimaryPlatform> parse_primary_platform(ICCHeader const& header)
+{
+    // ICC v4, 7.2.10 Primary platform field
+    switch (header.primary_platform) {
+    case PrimaryPlatform::Apple:
+    case PrimaryPlatform::Microsoft:
+    case PrimaryPlatform::SiliconGraphics:
+    case PrimaryPlatform::Sun:
+        return header.primary_platform;
+    }
+    return Error::from_string_literal("ICC::Profile: Invalid primary platform");
 }
 
 Optional<DeviceManufacturer> parse_device_manufacturer(ICCHeader const& header)
@@ -267,6 +285,17 @@ Optional<DeviceModel> parse_device_model(ICCHeader const& header)
     if (header.device_model == 0)
         return {};
     return DeviceModel { header.device_model };
+}
+
+ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
+{
+    // ICC v4, 7.2.14 Device attributes field
+
+    // "4 to 31": "Reserved (set to binary zero)"
+    if (header.device_attributes & 0xffff'fff0)
+        return Error::from_string_literal("ICC::Profile: Device attributes reserved bits not set to 0");
+
+    return DeviceAttributes { header.device_attributes };
 }
 
 ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
@@ -439,6 +468,21 @@ StringView profile_connection_space_name(ColorSpace color_space)
     }
 }
 
+StringView primary_platform_name(PrimaryPlatform primary_platform)
+{
+    switch (primary_platform) {
+    case PrimaryPlatform::Apple:
+        return "Apple"sv;
+    case PrimaryPlatform::Microsoft:
+        return "Microsoft"sv;
+    case PrimaryPlatform::SiliconGraphics:
+        return "Silicon Graphics"sv;
+    case PrimaryPlatform::Sun:
+        return "Sun"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 StringView rendering_intent_name(RenderingIntent rendering_intent)
 {
     switch (rendering_intent) {
@@ -476,12 +520,14 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     auto header = *bit_cast<ICCHeader const*>(bytes.data());
 
     TRY(parse_file_signature(header));
+    profile->m_on_disk_size = TRY(parse_size(header, bytes));
     profile->m_preferred_cmm_type = parse_preferred_cmm_type(header);
     profile->m_version = TRY(parse_version(header));
     profile->m_device_class = TRY(parse_device_class(header));
     profile->m_data_color_space = TRY(parse_data_color_space(header));
     profile->m_connection_space = TRY(parse_connection_space(header));
     profile->m_creation_timestamp = TRY(parse_creation_date_time(header));
+    profile->m_primary_platform = TRY(parse_primary_platform(header));
     profile->m_flags = Flags { header.profile_flags };
     profile->m_device_manufacturer = parse_device_manufacturer(header);
     profile->m_device_model = parse_device_model(header);
@@ -491,6 +537,10 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     profile->m_creator = parse_profile_creator(header);
     profile->m_id = TRY(parse_profile_id(header, bytes));
     TRY(parse_reserved(header));
+
+    bytes = bytes.trim(header.profile_size);
+    bytes = bytes.slice(sizeof(ICCHeader));
+    // FIXME: Read tag table.
 
     return profile;
 }

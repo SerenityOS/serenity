@@ -18,10 +18,12 @@ public:
     virtual ~HTMLOptGroupElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-optgroup
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::group; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::group; }
 
 private:
     HTMLOptGroupElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

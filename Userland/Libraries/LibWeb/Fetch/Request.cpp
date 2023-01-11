@@ -5,6 +5,7 @@
  */
 
 #include <AK/URLParser.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/RequestPrototype.h>
 #include <LibWeb/DOM/AbortSignal.h>
@@ -24,10 +25,15 @@ Request::Request(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> req
     : PlatformObject(realm)
     , m_request(request)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Request"));
 }
 
 Request::~Request() = default;
+
+void Request::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::RequestPrototype>(realm, "Request"));
+}
 
 void Request::visit_edges(Cell::Visitor& visitor)
 {
@@ -174,13 +180,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // method
     //     request’s method.
-    request->set_method(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(input_request->method())));
+    request->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(input_request->method())));
 
     // header list
     //     A copy of request’s header list.
     auto header_list_copy = Infrastructure::HeaderList::create(vm);
     for (auto& header : *input_request->header_list())
-        TRY_OR_RETURN_OOM(realm, header_list_copy->append(header));
+        TRY_OR_THROW_OOM(vm, header_list_copy->append(header));
     request->set_header_list(header_list_copy);
 
     // unsafe-request flag
@@ -365,7 +371,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be one of CONNECT, TRACE, or TRACK"sv };
 
         // 3. Normalize method.
-        method = TRY_OR_RETURN_OOM(realm, Infrastructure::normalize_method(method.bytes()));
+        method = TRY_OR_THROW_OOM(vm, Infrastructure::normalize_method(method.bytes()));
 
         // 4. Set request’s method to method.
         request->set_method(MUST(ByteBuffer::copy(method.bytes())));

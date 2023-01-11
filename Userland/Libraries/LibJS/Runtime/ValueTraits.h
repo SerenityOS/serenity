@@ -16,8 +16,10 @@ struct ValueTraits : public Traits<Value> {
     static unsigned hash(Value value)
     {
         VERIFY(!value.is_empty());
-        if (value.is_string())
-            return value.as_string().deprecated_string().hash();
+        if (value.is_string()) {
+            // FIXME: Propagate this error.
+            return value.as_string().deprecated_string().release_value().hash();
+        }
 
         if (value.is_bigint())
             return value.as_bigint().big_integer().hash();

@@ -30,6 +30,7 @@ public:
 private:
     History(JS::Realm&, DOM::Document&);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     enum class IsPush {

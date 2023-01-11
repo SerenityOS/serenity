@@ -80,6 +80,10 @@ public:
     Gfx::ShareableBitmap take_screenshot() const;
     Gfx::ShareableBitmap take_document_screenshot();
 
+    // This is a hint that tells OOPWV that the content will scale to the viewport size.
+    // In practice, this means that OOPWV may render scaled stale versions of the content while resizing.
+    void set_content_scales_to_viewport(bool);
+
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
@@ -225,6 +229,8 @@ private:
 
     bool m_is_awaiting_response_for_input_event { false };
     Queue<InputEvent> m_pending_input_events;
+
+    bool m_content_scales_to_viewport { false };
 };
 
 }

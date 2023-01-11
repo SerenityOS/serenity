@@ -17,7 +17,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
-Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
     : DOM::EventTarget(document.realm())
     , m_script_url(script_url)
     , m_options(options)
@@ -28,7 +28,12 @@ Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Do
     , m_interpreter_scope(*m_interpreter)
     , m_implicit_port(MessagePort::create(document.realm()))
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Worker"));
+}
+
+void Worker::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"));
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)
@@ -40,7 +45,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 

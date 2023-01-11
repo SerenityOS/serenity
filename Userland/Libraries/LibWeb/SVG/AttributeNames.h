@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 
 namespace Web::SVG::AttributeNames {
 
@@ -87,7 +87,7 @@ namespace Web::SVG::AttributeNames {
     E(yChannelSelector)             \
     E(zoomAndPan)
 
-#define __ENUMERATE_SVG_ATTRIBUTE(name) extern FlyString name;
+#define __ENUMERATE_SVG_ATTRIBUTE(name) extern DeprecatedFlyString name;
 ENUMERATE_SVG_ATTRIBUTES(__ENUMERATE_SVG_ATTRIBUTE)
 #undef __ENUMERATE_SVG_ATTRIBUTE
 

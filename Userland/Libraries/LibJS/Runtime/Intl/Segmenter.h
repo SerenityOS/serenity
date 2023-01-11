@@ -37,7 +37,7 @@ private:
     SegmenterGranularity m_segmenter_granularity { SegmenterGranularity::Grapheme }; // [[SegmenterGranularity]]
 };
 
-Object* create_segment_data_object(VM&, Segmenter const&, Utf16View const&, double start_index, double end_index);
+ThrowCompletionOr<NonnullGCPtr<Object>> create_segment_data_object(VM&, Segmenter const&, Utf16View const&, double start_index, double end_index);
 enum class Direction {
     Before,
     After,

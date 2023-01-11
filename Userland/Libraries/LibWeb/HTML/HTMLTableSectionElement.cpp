@@ -17,10 +17,15 @@ namespace Web::HTML {
 HTMLTableSectionElement::HTMLTableSectionElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableSectionElement"));
 }
 
 HTMLTableSectionElement::~HTMLTableSectionElement() = default;
+
+void HTMLTableSectionElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableSectionElementPrototype>(realm, "HTMLTableSectionElement"));
+}
 
 void HTMLTableSectionElement::visit_edges(Cell::Visitor& visitor)
 {

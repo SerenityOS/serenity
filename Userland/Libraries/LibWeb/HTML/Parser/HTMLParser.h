@@ -67,7 +67,7 @@ public:
 
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
-    static bool is_special_tag(FlyString const& tag_name, FlyString const& namespace_);
+    static bool is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedFlyString const& namespace_);
 
     HTMLTokenizer& tokenizer() { return m_tokenizer; }
 
@@ -117,9 +117,9 @@ private:
 
     void stop_parsing() { m_stop_parsing = true; }
 
-    void generate_implied_end_tags(FlyString const& exception = {});
+    void generate_implied_end_tags(DeprecatedFlyString const& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    JS::NonnullGCPtr<DOM::Element> create_element_for(HTMLToken const&, FlyString const& namespace_, DOM::Node const& intended_parent);
+    JS::NonnullGCPtr<DOM::Element> create_element_for(HTMLToken const&, DeprecatedFlyString const& namespace_, DOM::Node const& intended_parent);
 
     struct AdjustedInsertionLocation {
         JS::GCPtr<DOM::Node> parent;
@@ -130,7 +130,7 @@ private:
 
     DOM::Text* find_character_insertion_node();
     void flush_character_insertions();
-    JS::NonnullGCPtr<DOM::Element> insert_foreign_element(HTMLToken const&, FlyString const&);
+    JS::NonnullGCPtr<DOM::Element> insert_foreign_element(HTMLToken const&, DeprecatedFlyString const&);
     JS::NonnullGCPtr<DOM::Element> insert_html_element(HTMLToken const&);
     DOM::Element& current_node();
     DOM::Element& adjusted_current_node();

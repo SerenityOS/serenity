@@ -12,8 +12,10 @@
 namespace Web::Painting {
 
 class CanvasPaintable final : public PaintableBox {
+    JS_CELL(CanvasPaintable, PaintableBox);
+
 public:
-    static NonnullRefPtr<CanvasPaintable> create(Layout::CanvasBox const&);
+    static JS::NonnullGCPtr<CanvasPaintable> create(Layout::CanvasBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

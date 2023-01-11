@@ -20,16 +20,18 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT LockRefPtr<VMWareGraphicsAdapter> VMWareGraphicsAdapter::try_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<bool> VMWareGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     PCI::HardwareID id = pci_device_identifier.hardware_id();
-    VERIFY(id.vendor_id == PCI::VendorID::VMWare);
     // Note: We only support VMWare SVGA II adapter
-    if (id.device_id != 0x0405)
-        return {};
-    auto registers_io_window = MUST(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto adapter = MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier, move(registers_io_window))));
-    MUST(adapter->initialize_adapter());
+    return id.vendor_id == PCI::VendorID::VMWare && id.device_id == 0x0405;
+}
+
+ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VMWareGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier, move(registers_io_window))));
+    TRY(adapter->initialize_adapter());
     return adapter;
 }
 

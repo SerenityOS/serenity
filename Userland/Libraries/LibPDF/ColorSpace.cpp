@@ -16,7 +16,7 @@ namespace PDF {
 ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE);
 #undef ENUMERATE
 
-PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(FlyString const& family_name)
+PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& family_name)
 {
 #define ENUMERATE(f_name, ever_needs_parameters) \
     if (family_name == f_name.name()) {          \
@@ -27,7 +27,7 @@ PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(FlyString const& family_name)
     return Error(Error::Type::MalformedPDF, DeprecatedString::formatted("Unknown ColorSpace family {}", family_name));
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(FlyString const& name)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -305,7 +305,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
 
     auto dict = param.get<NonnullRefPtr<Object>>()->cast<StreamObject>()->dict();
 
-    FlyString name;
+    DeprecatedFlyString name;
     if (!dict->contains(CommonNames::Alternate)) {
         auto number_of_components = dict->get_value(CommonNames::N).to_int();
         if (number_of_components == 1)

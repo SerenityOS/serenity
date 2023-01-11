@@ -781,6 +781,8 @@ struct CodePointDecomposition {
 
 Optional<Locale> locale_from_string(StringView locale);
 
+Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
+
 }
 )~~~");
 

@@ -40,7 +40,7 @@ bool Box::is_body() const
     return dom_node() && dom_node() == document().body();
 }
 
-RefPtr<Painting::Paintable> Box::create_paintable() const
+JS::GCPtr<Painting::Paintable> Box::create_paintable() const
 {
     return Painting::PaintableBox::create(*this);
 }

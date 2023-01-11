@@ -52,9 +52,6 @@ public:
 
     virtual ~Node();
 
-    // FIXME: Move cleanup to the regular destructor.
-    void removed_last_ref();
-
     NodeType type() const { return m_type; }
     bool is_element() const { return type() == NodeType::ELEMENT_NODE; }
     bool is_text() const { return type() == NodeType::TEXT_NODE; }
@@ -108,7 +105,7 @@ public:
     JS::NonnullGCPtr<NodeList> child_nodes();
     Vector<JS::Handle<Node>> children_as_vector() const;
 
-    virtual FlyString node_name() const = 0;
+    virtual DeprecatedFlyString node_name() const = 0;
 
     DeprecatedString base_uri() const;
 
@@ -126,7 +123,7 @@ public:
 
     const HTML::HTMLAnchorElement* enclosing_link_element() const;
     const HTML::HTMLElement* enclosing_html_element() const;
-    const HTML::HTMLElement* enclosing_html_element_with_attribute(FlyString const&) const;
+    const HTML::HTMLElement* enclosing_html_element_with_attribute(DeprecatedFlyString const&) const;
 
     DeprecatedString child_text_content() const;
 
@@ -223,7 +220,7 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
-    void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+    void queue_mutation_record(DeprecatedFlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>

@@ -13,10 +13,15 @@ namespace Web::HTML {
 HTMLBRElement::HTMLBRElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLBRElement"));
 }
 
 HTMLBRElement::~HTMLBRElement() = default;
+
+void HTMLBRElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBRElementPrototype>(realm, "HTMLBRElement"));
+}
 
 JS::GCPtr<Layout::Node> HTMLBRElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {

@@ -17,10 +17,15 @@ URLSearchParams::URLSearchParams(JS::Realm& realm, Vector<QueryParam> list)
     : PlatformObject(realm)
     , m_list(move(list))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "URLSearchParams"));
 }
 
 URLSearchParams::~URLSearchParams() = default;
+
+void URLSearchParams::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsPrototype>(realm, "URLSearchParams"));
+}
 
 void URLSearchParams::visit_edges(Cell::Visitor& visitor)
 {

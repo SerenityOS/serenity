@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
@@ -18,7 +18,7 @@ namespace Web::CSS::Parser {
 
 class Function : public RefCounted<Function> {
 public:
-    static NonnullRefPtr<Function> create(FlyString name, Vector<ComponentValue>&& values)
+    static NonnullRefPtr<Function> create(DeprecatedFlyString name, Vector<ComponentValue>&& values)
     {
         return adopt_ref(*new Function(move(name), move(values)));
     }
@@ -31,9 +31,9 @@ public:
     DeprecatedString to_deprecated_string() const;
 
 private:
-    Function(FlyString name, Vector<ComponentValue>&& values);
+    Function(DeprecatedFlyString name, Vector<ComponentValue>&& values);
 
-    FlyString m_name;
+    DeprecatedFlyString m_name;
     Vector<ComponentValue> m_values;
 };
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Vector.h>
 
 namespace JS {
@@ -20,20 +20,20 @@ struct ModuleRequest {
 
     ModuleRequest() = default;
 
-    explicit ModuleRequest(FlyString specifier)
+    explicit ModuleRequest(DeprecatedFlyString specifier)
         : module_specifier(move(specifier))
     {
     }
 
-    ModuleRequest(FlyString module_specifier, Vector<Assertion> assertions);
+    ModuleRequest(DeprecatedFlyString module_specifier, Vector<Assertion> assertions);
 
     void add_assertion(DeprecatedString key, DeprecatedString value)
     {
         assertions.empend(move(key), move(value));
     }
 
-    FlyString module_specifier;   // [[Specifier]]
-    Vector<Assertion> assertions; // [[Assertions]]
+    DeprecatedFlyString module_specifier; // [[Specifier]]
+    Vector<Assertion> assertions;         // [[Assertions]]
 };
 
 }

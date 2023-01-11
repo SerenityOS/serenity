@@ -25,7 +25,7 @@ struct ImplTraits : public Traits<QualifiedName::Impl*> {
 
 static HashTable<QualifiedName::Impl*, ImplTraits> impls;
 
-static NonnullRefPtr<QualifiedName::Impl> ensure_impl(FlyString const& local_name, FlyString const& prefix, FlyString const& namespace_)
+static NonnullRefPtr<QualifiedName::Impl> ensure_impl(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
 {
     auto hash = pair_int_hash(local_name.hash(), pair_int_hash(prefix.hash(), namespace_.hash()));
     auto it = impls.find(hash, [&](QualifiedName::Impl* entry) {
@@ -38,12 +38,12 @@ static NonnullRefPtr<QualifiedName::Impl> ensure_impl(FlyString const& local_nam
     return adopt_ref(*new QualifiedName::Impl(local_name, prefix, namespace_));
 }
 
-QualifiedName::QualifiedName(FlyString const& local_name, FlyString const& prefix, FlyString const& namespace_)
+QualifiedName::QualifiedName(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
     : m_impl(ensure_impl(local_name, prefix, namespace_))
 {
 }
 
-QualifiedName::Impl::Impl(FlyString const& a_local_name, FlyString const& a_prefix, FlyString const& a_namespace)
+QualifiedName::Impl::Impl(DeprecatedFlyString const& a_local_name, DeprecatedFlyString const& a_prefix, DeprecatedFlyString const& a_namespace)
     : local_name(a_local_name)
     , prefix(a_prefix)
     , namespace_(a_namespace)

@@ -36,6 +36,8 @@ public:
 protected:
     CharacterData(Document&, NodeType, DeprecatedString const&);
 
+    virtual void initialize(JS::Realm&) override;
+
 private:
     DeprecatedString m_data;
 };

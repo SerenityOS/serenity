@@ -14,10 +14,15 @@ namespace Web::HTML {
 HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLStyleElement"));
 }
 
 HTMLStyleElement::~HTMLStyleElement() = default;
+
+void HTMLStyleElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLStyleElementPrototype>(realm, "HTMLStyleElement"));
+}
 
 void HTMLStyleElement::visit_edges(Cell::Visitor& visitor)
 {

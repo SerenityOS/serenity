@@ -52,6 +52,7 @@ public:
 private:
     MutationObserver(JS::Realm&, JS::GCPtr<WebIDL::CallbackType>);
 
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://dom.spec.whatwg.org/#concept-mo-callback
@@ -81,6 +82,7 @@ public:
 
 protected:
     RegisteredObserver(MutationObserver& observer, MutationObserverInit const& options);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
@@ -100,6 +102,7 @@ public:
 
 private:
     TransientRegisteredObserver(MutationObserver& observer, MutationObserverInit const& options, RegisteredObserver& source);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<RegisteredObserver> m_source;

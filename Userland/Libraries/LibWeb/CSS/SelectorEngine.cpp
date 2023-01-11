@@ -25,9 +25,9 @@
 namespace Web::SelectorEngine {
 
 // https://drafts.csswg.org/selectors-4/#the-lang-pseudo
-static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector<FlyString> const& languages)
+static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector<DeprecatedFlyString> const& languages)
 {
-    FlyString element_language;
+    DeprecatedFlyString element_language;
     for (auto const* e = &element; e; e = e->parent_element()) {
         auto lang = e->attribute(HTML::AttributeNames::lang);
         if (!lang.is_null()) {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
@@ -118,7 +118,7 @@ Font& FontDatabase::default_fixed_width_font()
 
 struct FontDatabase::Private {
     HashMap<DeprecatedString, NonnullRefPtr<Gfx::Font>> full_name_to_font_map;
-    HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>> typefaces;
+    HashMap<DeprecatedFlyString, Vector<NonnullRefPtr<Typeface>>> typefaces;
 };
 
 void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
@@ -214,7 +214,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     auto it = m_private->typefaces.find(family);
     if (it == m_private->typefaces.end())
@@ -226,7 +226,7 @@ RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, u
     return nullptr;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, DeprecatedFlyString const& variant, float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     auto it = m_private->typefaces.find(family);
     if (it == m_private->typefaces.end())

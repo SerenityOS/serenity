@@ -76,14 +76,12 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
 
 private:
-    ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream>, ZlibCompressionLevel);
+    ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream);
     ErrorOr<void> write_header(ZlibCompressionMethod, ZlibCompressionLevel);
 
     bool m_finished { false };
-    // FIXME: Remove this once DeflateCompressor is ported to Core::Stream.
-    NonnullOwnPtr<Core::Stream::WrapInAKOutputStream> m_ak_output_stream;
     Core::Stream::Handle<Core::Stream::Stream> m_output_stream;
-    NonnullOwnPtr<OutputStream> m_compressor;
+    NonnullOwnPtr<Core::Stream::Stream> m_compressor;
     Crypto::Checksum::Adler32 m_adler32_checksum;
 };
 

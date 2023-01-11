@@ -14,9 +14,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
+JS::NonnullGCPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
 {
-    return adopt_ref(*new InlinePaintable(layout_node));
+    return layout_node.heap().allocate_without_realm<InlinePaintable>(layout_node);
 }
 
 InlinePaintable::InlinePaintable(Layout::InlineNode const& layout_node)

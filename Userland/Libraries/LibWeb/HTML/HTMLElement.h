@@ -54,19 +54,19 @@ public:
 
     void blur();
 
-    bool fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted);
+    bool fire_a_synthetic_pointer_event(DeprecatedFlyString const& type, DOM::Element& target, bool not_trusted);
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const { return false; }
 
-    virtual FlyString default_role() const override;
+    virtual DeprecatedFlyString default_role() const override;
 
 protected:
     HTMLElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -74,7 +74,7 @@ private:
     virtual bool is_html_element() const final { return true; }
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const&) override { return *this; }
 
     enum class ContentEditableState {
         True,

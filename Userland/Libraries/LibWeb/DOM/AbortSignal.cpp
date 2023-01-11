@@ -20,7 +20,12 @@ JS::NonnullGCPtr<AbortSignal> AbortSignal::construct_impl(JS::Realm& realm)
 AbortSignal::AbortSignal(JS::Realm& realm)
     : EventTarget(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "AbortSignal"));
+}
+
+void AbortSignal::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortSignalPrototype>(realm, "AbortSignal"));
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add

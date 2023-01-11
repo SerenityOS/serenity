@@ -11,11 +11,17 @@
 namespace Web::DOM {
 
 NodeList::NodeList(JS::Realm& realm)
-    : LegacyPlatformObject(Bindings::cached_web_prototype(realm, "NodeList"))
+    : LegacyPlatformObject(realm)
 {
 }
 
 NodeList::~NodeList() = default;
+
+void NodeList::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeListPrototype>(realm, "NodeList"));
+}
 
 JS::Value NodeList::item_value(size_t index) const
 {

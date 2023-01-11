@@ -13,12 +13,17 @@ namespace Web::HTML {
 HTMLModElement::HTMLModElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLModElement"));
 }
 
 HTMLModElement::~HTMLModElement() = default;
 
-FlyString HTMLModElement::default_role() const
+void HTMLModElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"));
+}
+
+DeprecatedFlyString HTMLModElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-del
     if (local_name() == TagNames::del)

@@ -12,8 +12,10 @@
 namespace Web::Painting {
 
 class ImagePaintable final : public PaintableBox {
+    JS_CELL(ImagePaintable, PaintableBox);
+
 public:
-    static NonnullRefPtr<ImagePaintable> create(Layout::ImageBox const&);
+    static JS::NonnullGCPtr<ImagePaintable> create(Layout::ImageBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

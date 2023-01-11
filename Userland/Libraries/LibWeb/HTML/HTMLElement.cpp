@@ -36,7 +36,6 @@ namespace Web::HTML {
 HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLElement"));
 }
 
 HTMLElement::~HTMLElement() = default;
@@ -44,6 +43,8 @@ HTMLElement::~HTMLElement() = default;
 void HTMLElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
+
     m_dataset = DOMStringMap::create(*this);
 }
 
@@ -232,7 +233,7 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     Element::parse_attribute(name, value);
 
@@ -270,7 +271,7 @@ void HTMLElement::focus()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fire-a-synthetic-pointer-event
-bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted)
+bool HTMLElement::fire_a_synthetic_pointer_event(DeprecatedFlyString const& type, DOM::Element& target, bool not_trusted)
 {
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
@@ -328,7 +329,7 @@ void HTMLElement::blur()
     // User agents may selectively or uniformly ignore calls to this method for usability reasons.
 }
 
-FlyString HTMLElement::default_role() const
+DeprecatedFlyString HTMLElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-article
     if (local_name() == TagNames::article)

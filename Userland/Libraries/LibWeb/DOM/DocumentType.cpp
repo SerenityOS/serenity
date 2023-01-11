@@ -17,7 +17,12 @@ JS::NonnullGCPtr<DocumentType> DocumentType::create(Document& document)
 DocumentType::DocumentType(Document& document)
     : Node(document, NodeType::DOCUMENT_TYPE_NODE)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "DocumentType"));
+}
+
+void DocumentType::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentTypePrototype>(realm, "DocumentType"));
 }
 
 }

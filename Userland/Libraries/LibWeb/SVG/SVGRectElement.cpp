@@ -16,10 +16,15 @@ namespace Web::SVG {
 SVGRectElement::SVGRectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGRectElement"));
 }
 
-void SVGRectElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGRectElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRectElementPrototype>(realm, "SVGRectElement"));
+}
+
+void SVGRectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

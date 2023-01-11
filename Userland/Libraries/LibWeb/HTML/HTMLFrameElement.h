@@ -19,6 +19,9 @@ public:
 
 private:
     HTMLFrameElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
+
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 };

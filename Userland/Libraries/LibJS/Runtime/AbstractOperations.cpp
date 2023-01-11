@@ -201,7 +201,7 @@ ThrowCompletionOr<Realm*> get_function_realm(VM& vm, FunctionObject const& funct
 }
 
 // 8.5.2.1 InitializeBoundName ( name, value, environment ), https://tc39.es/ecma262/#sec-initializeboundname
-ThrowCompletionOr<void> initialize_bound_name(VM& vm, FlyString const& name, Value value, Environment* environment)
+ThrowCompletionOr<void> initialize_bound_name(VM& vm, DeprecatedFlyString const& name, Value value, Environment* environment)
 {
     // 1. If environment is not undefined, then
     if (environment) {
@@ -594,7 +594,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         .in_class_field_initializer = in_class_field_initializer,
     };
 
-    Parser parser { Lexer { code_string.deprecated_string() }, Program::Type::Script, move(initial_state) };
+    Parser parser { Lexer { TRY(code_string.deprecated_string()) }, Program::Type::Script, move(initial_state) };
     auto program = parser.parse_program(strict_caller == CallerMode::Strict);
 
     //     b. If script is a List of errors, throw a SyntaxError exception.
@@ -794,7 +794,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     // 9. Let declaredFunctionNames be a new empty List.
-    HashTable<FlyString> declared_function_names;
+    HashTable<DeprecatedFlyString> declared_function_names;
 
     // 10. For each element d of varDeclarations, in reverse List order, do
     TRY(program.for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
@@ -835,7 +835,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     if (!strict) {
         // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
         // The spec here uses 'declaredVarNames' but that has not been declared yet.
-        HashTable<FlyString> hoisted_functions;
+        HashTable<DeprecatedFlyString> hoisted_functions;
 
         // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within body, do
         TRY(program.for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
@@ -926,7 +926,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     }
 
     // 12. Let declaredVarNames be a new empty List.
-    HashTable<FlyString> declared_var_names;
+    HashTable<DeprecatedFlyString> declared_var_names;
 
     // 13. For each element d of varDeclarations, do
     TRY(program.for_each_var_scoped_variable_declaration([&](VariableDeclaration const& declaration) {
@@ -1119,14 +1119,14 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     MUST(object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true }));
 
     // 17. Let mappedNames be a new empty List.
-    HashTable<FlyString> mapped_names;
+    HashTable<DeprecatedFlyString> mapped_names;
 
     // 18. Set index to numberOfParameters - 1.
     // 19. Repeat, while index ≥ 0,
     VERIFY(formals.size() <= NumericLimits<i32>::max());
     for (i32 index = static_cast<i32>(formals.size()) - 1; index >= 0; --index) {
         // a. Let name be parameterNames[index].
-        auto const& name = formals[index].binding.get<FlyString>();
+        auto const& name = formals[index].binding.get<DeprecatedFlyString>();
 
         // b. If name is not an element of mappedNames, then
         if (mapped_names.contains(name))
@@ -1233,39 +1233,39 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
     auto replace_string = TRY(replacement_template.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 
-    Vector<u16, 1> result;
+    Utf16Data result;
 
     for (size_t i = 0; i < replace_view.length_in_code_units(); ++i) {
         u16 curr = replace_view.code_unit_at(i);
 
         if ((curr != '$') || (i + 1 >= replace_view.length_in_code_units())) {
-            result.append(curr);
+            TRY_OR_THROW_OOM(vm, result.try_append(curr));
             continue;
         }
 
         u16 next = replace_view.code_unit_at(i + 1);
 
         if (next == '$') {
-            result.append('$');
+            TRY_OR_THROW_OOM(vm, result.try_append('$'));
             ++i;
         } else if (next == '&') {
-            result.append(matched.data(), matched.length_in_code_units());
+            TRY_OR_THROW_OOM(vm, result.try_append(matched.data(), matched.length_in_code_units()));
             ++i;
         } else if (next == '`') {
             auto substring = str.substring_view(0, position);
-            result.append(substring.data(), substring.length_in_code_units());
+            TRY_OR_THROW_OOM(vm, result.try_append(substring.data(), substring.length_in_code_units()));
             ++i;
         } else if (next == '\'') {
             auto tail_pos = position + matched.length_in_code_units();
             if (tail_pos < str.length_in_code_units()) {
                 auto substring = str.substring_view(tail_pos);
-                result.append(substring.data(), substring.length_in_code_units());
+                TRY_OR_THROW_OOM(vm, result.try_append(substring.data(), substring.length_in_code_units()));
             }
             ++i;
         } else if (is_ascii_digit(next)) {
             bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_position_string = replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
+            auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_deprecated_string());
             auto capture_position = capture_position_string.to_uint();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
@@ -1273,12 +1273,12 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
 
                 if (!value.is_undefined()) {
                     auto value_string = TRY(value.to_utf16_string(vm));
-                    result.append(value_string.view().data(), value_string.length_in_code_units());
+                    TRY_OR_THROW_OOM(vm, result.try_append(value_string.view().data(), value_string.length_in_code_units()));
                 }
 
                 i += is_two_digits ? 2 : 1;
             } else {
-                result.append(curr);
+                TRY_OR_THROW_OOM(vm, result.try_append(curr));
             }
         } else if (next == '<') {
             auto start_position = i + 2;
@@ -1292,26 +1292,26 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
             }
 
             if (named_captures.is_undefined() || !end_position.has_value()) {
-                result.append(curr);
+                TRY_OR_THROW_OOM(vm, result.try_append(curr));
             } else {
                 auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
-                auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
+                auto group_name = TRY_OR_THROW_OOM(vm, group_name_view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes));
 
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
                 if (!capture.is_undefined()) {
                     auto capture_string = TRY(capture.to_utf16_string(vm));
-                    result.append(capture_string.view().data(), capture_string.length_in_code_units());
+                    TRY_OR_THROW_OOM(vm, result.try_append(capture_string.view().data(), capture_string.length_in_code_units()));
                 }
 
                 i = *end_position;
             }
         } else {
-            result.append(curr);
+            TRY_OR_THROW_OOM(vm, result.try_append(curr));
         }
     }
 
-    return Utf16String(move(result)).to_utf8();
+    return TRY_OR_THROW_OOM(vm, Utf16View { result }.to_deprecated_string());
 }
 
 }

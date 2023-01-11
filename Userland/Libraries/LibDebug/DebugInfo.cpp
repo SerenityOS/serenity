@@ -86,8 +86,8 @@ void DebugInfo::prepare_lines()
         all_lines.extend(unit.line_program().lines());
     });
 
-    HashMap<FlyString, Optional<DeprecatedString>> memoized_full_paths;
-    auto compute_full_path = [&](FlyString const& file_path) -> Optional<DeprecatedString> {
+    HashMap<DeprecatedFlyString, Optional<DeprecatedString>> memoized_full_paths;
+    auto compute_full_path = [&](DeprecatedFlyString const& file_path) -> Optional<DeprecatedString> {
         if (file_path.view().contains("Toolchain/"sv) || file_path.view().contains("libgcc"sv))
             return {};
         if (file_path.view().starts_with("./"sv) && !m_source_root.is_null())

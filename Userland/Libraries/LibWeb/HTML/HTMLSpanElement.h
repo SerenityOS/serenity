@@ -18,10 +18,12 @@ public:
     virtual ~HTMLSpanElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-span
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::generic; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::generic; }
 
 private:
     HTMLSpanElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

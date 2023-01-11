@@ -390,39 +390,10 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
                     depth_test_passed = quad.depth >= depth;
                     break;
                 case GPU::DepthTestFunction::NotEqual:
-#ifdef __SSE__
                     depth_test_passed = quad.depth != depth;
-#else
-                    depth_test_passed = i32x4 {
-                        bit_cast<u32>(quad.depth[0]) != bit_cast<u32>(depth[0]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[1]) != bit_cast<u32>(depth[1]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[2]) != bit_cast<u32>(depth[2]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[3]) != bit_cast<u32>(depth[3]) ? -1 : 0,
-                    };
-#endif
                     break;
                 case GPU::DepthTestFunction::Equal:
-#ifdef __SSE__
                     depth_test_passed = quad.depth == depth;
-#else
-                    //
-                    // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
-                    // compiled for the i686 target. When we calculate our depth value to be stored in the buffer,
-                    // it is an 80-bit x87 floating point number, however, when stored into the depth buffer, this is
-                    // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
-                    // used here the comparison fails.
-                    // This could be solved by using a `long double` for the depth buffer, however this would take
-                    // up significantly more space and is completely overkill for a depth buffer. As such, comparing
-                    // the first 32-bits of this depth value is "good enough" that if we get a hit on it being
-                    // equal, we can pretty much guarantee that it's actually equal.
-                    //
-                    depth_test_passed = i32x4 {
-                        bit_cast<u32>(quad.depth[0]) == bit_cast<u32>(depth[0]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[1]) == bit_cast<u32>(depth[1]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[2]) == bit_cast<u32>(depth[2]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[3]) == bit_cast<u32>(depth[3]) ? -1 : 0,
-                    };
-#endif
                     break;
                 case GPU::DepthTestFunction::LessOrEqual:
                     depth_test_passed = quad.depth <= depth;

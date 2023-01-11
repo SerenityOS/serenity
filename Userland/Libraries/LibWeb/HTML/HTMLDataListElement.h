@@ -17,10 +17,12 @@ class HTMLDataListElement final : public HTMLElement {
 public:
     virtual ~HTMLDataListElement() override;
 
-    virtual FlyString default_role() const override { return DOM::ARIARoleNames::listbox; }
+    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::listbox; }
 
 private:
     HTMLDataListElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

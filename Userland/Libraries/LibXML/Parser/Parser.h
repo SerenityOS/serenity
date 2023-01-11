@@ -34,8 +34,8 @@ struct Listener {
     virtual void document_end() { }
     virtual void element_start(Name const&, HashMap<Name, DeprecatedString> const&) { }
     virtual void element_end(Name const&) { }
-    virtual void text(DeprecatedString const&) { }
-    virtual void comment(DeprecatedString const&) { }
+    virtual void text(StringView) { }
+    virtual void comment(StringView) { }
     virtual void error(ParseError const&) { }
 };
 
@@ -73,8 +73,8 @@ private:
 
     ErrorOr<void, ParseError> parse_internal();
     void append_node(NonnullOwnPtr<Node>);
-    void append_text(DeprecatedString);
-    void append_comment(DeprecatedString);
+    void append_text(StringView);
+    void append_comment(StringView);
     void enter_node(Node&);
     void leave_node();
 

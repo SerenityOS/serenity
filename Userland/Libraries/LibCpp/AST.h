@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
@@ -47,7 +47,7 @@ public:
         VERIFY(m_end.has_value());
         return m_end.value();
     }
-    FlyString const& filename() const
+    DeprecatedFlyString const& filename() const
     {
         return m_filename;
     }
@@ -78,7 +78,7 @@ private:
     ASTNode* m_parent { nullptr };
     Optional<Position> m_start;
     Optional<Position> m_end;
-    FlyString m_filename;
+    DeprecatedFlyString m_filename;
 };
 
 class TranslationUnit : public ASTNode {

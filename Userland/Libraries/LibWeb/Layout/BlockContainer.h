@@ -31,7 +31,7 @@ public:
 
     Painting::PaintableWithLines const* paint_box() const;
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_block_container() const final { return true; }

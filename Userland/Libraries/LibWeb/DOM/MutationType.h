@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 
 namespace Web::DOM::MutationType {
 
@@ -15,7 +15,7 @@ namespace Web::DOM::MutationType {
     __ENUMERATE_MUTATION_TYPE(characterData) \
     __ENUMERATE_MUTATION_TYPE(childList)
 
-#define __ENUMERATE_MUTATION_TYPE(name) extern FlyString name;
+#define __ENUMERATE_MUTATION_TYPE(name) extern DeprecatedFlyString name;
 ENUMERATE_MUTATION_TYPES
 #undef __ENUMERATE_MUTATION_TYPE
 

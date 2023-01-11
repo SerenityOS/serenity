@@ -64,8 +64,6 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
     : EventTarget(window.realm())
     , m_window(window)
 {
-    set_prototype(&Bindings::cached_web_prototype(window.realm(), "WebSocket"));
-
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
     auto origin_string = m_window->associated_document().origin().serialize();
     m_websocket = WebSocketClientManager::the().connect(url, origin_string);
@@ -96,6 +94,12 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
 }
 
 WebSocket::~WebSocket() = default;
+
+void WebSocket::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"));
+}
 
 void WebSocket::visit_edges(Cell::Visitor& visitor)
 {

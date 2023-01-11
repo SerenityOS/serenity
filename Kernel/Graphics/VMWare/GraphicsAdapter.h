@@ -26,7 +26,8 @@ class VMWareGraphicsAdapter final
     friend class GraphicsManagement;
 
 public:
-    static LockRefPtr<VMWareGraphicsAdapter> try_initialize(PCI::DeviceIdentifier const&);
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
     virtual ~VMWareGraphicsAdapter() = default;
 
     virtual StringView device_name() const override { return "VMWareGraphicsAdapter"sv; }
