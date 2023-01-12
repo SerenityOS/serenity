@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -573,6 +574,35 @@ void WebContentView::set_color_scheme(ColorScheme color_scheme)
         client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
         break;
     }
+}
+
+void WebContentView::zoom_in()
+{
+    if (m_zoom_level >= ZOOM_MAX_LEVEL)
+        return;
+    m_zoom_level += ZOOM_STEP;
+    update_zoom();
+}
+
+void WebContentView::zoom_out()
+{
+    if (m_zoom_level <= ZOOM_MIN_LEVEL)
+        return;
+    m_zoom_level -= ZOOM_STEP;
+    update_zoom();
+}
+
+void WebContentView::reset_zoom()
+{
+    m_zoom_level = 1.0f;
+    update_zoom();
+}
+
+void WebContentView::update_zoom()
+{
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    update_viewport_rect();
+    request_repaint();
 }
 
 void WebContentView::showEvent(QShowEvent* event)

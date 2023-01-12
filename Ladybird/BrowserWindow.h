@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,6 +43,9 @@ public slots:
     void enable_auto_color_scheme();
     void enable_light_color_scheme();
     void enable_dark_color_scheme();
+    void zoom_in();
+    void zoom_out();
+    void reset_zoom();
 
 private:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");

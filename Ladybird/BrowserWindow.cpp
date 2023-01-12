@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Matthew Costa <ucosty@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,6 +63,25 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     open_previous_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp));
     view_menu->addAction(open_previous_tab_action);
     QObject::connect(open_previous_tab_action, &QAction::triggered, this, &BrowserWindow::open_previous_tab);
+
+    view_menu->addSeparator();
+
+    auto* zoom_menu = view_menu->addMenu("&Zoom");
+
+    auto* zoom_in_action = new QAction("Zoom &In", this);
+    zoom_in_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus));
+    zoom_menu->addAction(zoom_in_action);
+    QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
+
+    auto* zoom_out_action = new QAction("Zoom &Out", this);
+    zoom_out_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus));
+    zoom_menu->addAction(zoom_out_action);
+    QObject::connect(zoom_out_action, &QAction::triggered, this, &BrowserWindow::zoom_out);
+
+    auto* reset_zoom_action = new QAction("&Reset Zoom", this);
+    reset_zoom_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
+    zoom_menu->addAction(reset_zoom_action);
+    QObject::connect(reset_zoom_action, &QAction::triggered, this, &BrowserWindow::reset_zoom);
 
     view_menu->addSeparator();
 
@@ -415,4 +435,22 @@ void BrowserWindow::enable_dark_color_scheme()
     for (auto& tab : m_tabs) {
         tab.view().set_color_scheme(ColorScheme::Dark);
     }
+}
+
+void BrowserWindow::zoom_in()
+{
+    if (m_current_tab)
+        m_current_tab->view().zoom_in();
+}
+
+void BrowserWindow::zoom_out()
+{
+    if (m_current_tab)
+        m_current_tab->view().zoom_out();
+}
+
+void BrowserWindow::reset_zoom()
+{
+    if (m_current_tab)
+        m_current_tab->view().reset_zoom();
 }
