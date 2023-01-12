@@ -2026,7 +2026,6 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
             swap(point1, point2);
     }
 
-    // FIXME: Implement clipping below.
     int const dx = point2.x() - point1.x();
     int const dy = point2.y() - point1.y();
     int error = 0;
