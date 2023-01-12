@@ -60,7 +60,8 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
 
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
-    m_inverse_pixel_scaling_ratio = 1.0 / devicePixelRatio();
+    m_device_pixel_ratio = devicePixelRatio();
+    m_inverse_pixel_scaling_ratio = 1.0 / m_device_pixel_ratio;
 
     verticalScrollBar()->setSingleStep(24);
     horizontalScrollBar()->setSingleStep(24);
@@ -672,6 +673,7 @@ void WebContentView::create_client()
         });
     };
 
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
     client().async_update_system_theme(MUST(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root))));
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
