@@ -40,19 +40,19 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* menu = menuBar()->addMenu("&File");
 
     auto* new_tab_action = new QAction("New &Tab", this);
-    new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
+    new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(new_tab_action);
 
     auto* settings_action = new QAction("&Settings", this);
-    settings_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    settings_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Preferences));
     menu->addAction(settings_action);
 
     auto* close_current_tab_action = new QAction("Close Current Tab", this);
-    close_current_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
+    close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
     auto* quit_action = new QAction("&Quit", this);
-    quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
+    quit_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Quit));
     menu->addAction(quit_action);
 
     auto* edit_menu = menuBar()->addMenu("&Edit");
@@ -84,12 +84,12 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* zoom_menu = view_menu->addMenu("&Zoom");
 
     auto* zoom_in_action = new QAction("Zoom &In", this);
-    zoom_in_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus));
+    zoom_in_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn));
     zoom_menu->addAction(zoom_in_action);
     QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
 
     auto* zoom_out_action = new QAction("Zoom &Out", this);
-    zoom_out_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus));
+    zoom_out_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomOut));
     zoom_menu->addAction(zoom_out_action);
     QObject::connect(zoom_out_action, &QAction::triggered, this, &BrowserWindow::zoom_out);
 
