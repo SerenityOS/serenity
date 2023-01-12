@@ -114,15 +114,14 @@ void PlaybackManager::next_buffer()
             return;
         }
 
-        auto maybe_buffer = m_loader->get_more_samples(m_samples_to_load_per_buffer);
-        if (!maybe_buffer.is_error()) {
-            m_current_buffer.swap(maybe_buffer.value());
-            VERIFY(m_resampler.has_value());
-            m_resampler->reset();
-            // FIXME: Handle OOM better.
-            auto resampled = MUST(FixedArray<Audio::Sample>::try_create(m_resampler->resample(move(m_current_buffer)).span()));
-            m_current_buffer.swap(resampled);
-            MUST(m_connection->async_enqueue(m_current_buffer));
-        }
+        // FIXME: This should handle parsing failures gracefully and show them to the user.
+        auto buffer = m_loader->get_more_samples(m_samples_to_load_per_buffer).release_value();
+        m_current_buffer.swap(buffer);
+        VERIFY(m_resampler.has_value());
+        m_resampler->reset();
+        // FIXME: Handle OOM better.
+        auto resampled = MUST(FixedArray<Audio::Sample>::try_create(m_resampler->resample(move(m_current_buffer)).span()));
+        m_current_buffer.swap(resampled);
+        MUST(m_connection->async_enqueue(m_current_buffer));
     }
 }
