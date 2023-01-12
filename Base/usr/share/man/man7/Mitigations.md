@@ -95,7 +95,7 @@ Kernel: Add a basic implementation of unveil()
 `jails` are mitigation originating from FreeBSD.
 It allows a program to be placed inside a lightweight OS-level virtualization environment.
 
-Current restrictions on jailed processes:
+Current restrictions on jailed processes (configurable when creating a Jail):
 - Process ID view isolation, being limited (both in `/proc` and `/sys/kernel/processes`) to only processes that share the same jail.
 
 Special restrictions on filesystem also apply:

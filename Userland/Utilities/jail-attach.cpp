@@ -31,7 +31,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (existing_jail_index.has_value()) {
         TRY(Core::System::join_jail(existing_jail_index.value()));
     } else {
-        u64 new_jail_index = TRY(Core::System::create_jail(new_jail_name.is_null() ? ""sv : new_jail_name));
+        // NOTE: We create a jail with "default" isolation options (as we define them in this program)
+        JailIsolationFlags default_flags = (JailIsolationFlags::PIDIsolation);
+        u64 new_jail_index = TRY(Core::System::create_jail(new_jail_name.is_null() ? ""sv : new_jail_name, default_flags));
         TRY(Core::System::join_jail(new_jail_index));
     }
     TRY(Core::System::exec_command(command, preserve_env));

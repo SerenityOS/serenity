@@ -6,6 +6,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Singleton.h>
+#include <Kernel/API/Jail.h>
 #include <Kernel/Jail.h>
 #include <Kernel/Process.h>
 
@@ -19,16 +20,19 @@ static JailIndex generate_jail_id()
     return s_jail_id.fetch_add(1);
 }
 
-NonnullRefPtr<ProcessList> Jail::process_list()
+RefPtr<ProcessList> Jail::process_list()
 {
     return m_process_list;
 }
 
-ErrorOr<NonnullRefPtr<Jail>> Jail::create(NonnullOwnPtr<KString> name)
+ErrorOr<NonnullRefPtr<Jail>> Jail::create(NonnullOwnPtr<KString> name, unsigned flags)
 {
+    RefPtr<ProcessList> jail_process_list;
+    if (flags & static_cast<unsigned>(JailIsolationFlags::PIDIsolation))
+        jail_process_list = TRY(ProcessList::create());
+
     return s_all_instances->with([&](auto& list) -> ErrorOr<NonnullRefPtr<Jail>> {
-        auto process_list = TRY(ProcessList::create());
-        auto jail = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Jail(move(name), generate_jail_id(), move(process_list))));
+        auto jail = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Jail(move(name), generate_jail_id(), jail_process_list)));
         list.append(jail);
         return jail;
     });
@@ -61,10 +65,10 @@ RefPtr<Jail> Jail::find_by_index(JailIndex index)
     });
 }
 
-Jail::Jail(NonnullOwnPtr<KString> name, JailIndex index, NonnullRefPtr<ProcessList> process_list)
+Jail::Jail(NonnullOwnPtr<KString> name, JailIndex index, RefPtr<ProcessList> process_list)
     : m_name(move(name))
     , m_index(index)
-    , m_process_list(move(process_list))
+    , m_process_list(process_list)
 {
 }
 

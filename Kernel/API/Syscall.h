@@ -343,6 +343,7 @@ struct SC_setkeymap_params {
 struct SC_jail_create_params {
     u64 index;
     StringArgument name;
+    int flags;
 };
 
 struct SC_jail_attach_params {

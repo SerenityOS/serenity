@@ -28,10 +28,10 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, JailIndex);
 class Jail : public AtomicRefCounted<Jail> {
 
 public:
-    NonnullRefPtr<ProcessList> process_list();
+    RefPtr<ProcessList> process_list();
 
     static RefPtr<Jail> find_by_index(JailIndex);
-    static ErrorOr<NonnullRefPtr<Jail>> create(NonnullOwnPtr<KString> name);
+    static ErrorOr<NonnullRefPtr<Jail>> create(NonnullOwnPtr<KString> name, unsigned flags);
     static ErrorOr<void> for_each_when_process_is_not_jailed(Function<ErrorOr<void>(Jail const&)> callback);
 
     StringView name() const { return m_name->view(); }
@@ -41,7 +41,7 @@ public:
     SpinlockProtected<size_t, LockRank::None>& attach_count() { return m_attach_count; }
 
 private:
-    Jail(NonnullOwnPtr<KString>, JailIndex, NonnullRefPtr<ProcessList>);
+    Jail(NonnullOwnPtr<KString>, JailIndex, RefPtr<ProcessList>);
 
     NonnullOwnPtr<KString> m_name;
     JailIndex const m_index;
@@ -52,7 +52,7 @@ public:
     using List = IntrusiveListRelaxedConst<&Jail::m_list_node>;
 
 private:
-    NonnullRefPtr<ProcessList> const m_process_list;
+    RefPtr<ProcessList> const m_process_list;
 
     SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
 };
