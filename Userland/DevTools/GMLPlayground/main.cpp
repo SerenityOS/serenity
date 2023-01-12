@@ -25,6 +25,7 @@
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/Toolbar.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
@@ -89,6 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     TRY(main_widget->load_from_gml(gml_playground_window_gml));
 
+    auto toolbar = main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     auto splitter = main_widget->find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
     auto editor = main_widget->find_descendant_of_type_named<GUI::TextEditor>("text_editor");
     auto preview_frame_widget = main_widget->find_descendant_of_type_named<GUI::Frame>("preview_frame");
@@ -168,7 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_title();
     });
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (window->is_modified()) {
             auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
             if (result == GUI::MessageBox::ExecResult::Yes)
@@ -190,8 +192,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor->set_text(buffer_or_error.release_value());
         editor->set_focus(true);
         update_title();
-    })));
+    });
 
+    TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(save_action));
     TRY(file_menu->try_add_action(save_as_action));
     TRY(file_menu->try_add_separator());
@@ -213,7 +216,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(editor->go_to_line_action()));
     TRY(edit_menu->try_add_separator());
 
-    TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
+    auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(editor->text());
         if (!formatted_gml_or_error.is_error()) {
             editor->replace_all_text_without_resetting_undo_stack(formatted_gml_or_error.release_value());
@@ -224,7 +227,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 "Error"sv,
                 GUI::MessageBox::Type::Error);
         }
-    })));
+    });
+    TRY(edit_menu->try_add_action(format_gml_action));
 
     auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
         if (action.is_checked())
@@ -273,6 +277,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/GMLPlayground.md"), "/bin/Help");
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("GML Playground", app_icon, window)));
+
+    (void)TRY(toolbar->try_add_action(open_action));
+    (void)TRY(toolbar->try_add_action(save_action));
+    (void)TRY(toolbar->try_add_action(save_as_action));
+    TRY(toolbar->try_add_separator());
+    (void)TRY(toolbar->try_add_action(editor->cut_action()));
+    (void)TRY(toolbar->try_add_action(editor->copy_action()));
+    (void)TRY(toolbar->try_add_action(editor->paste_action()));
+    TRY(toolbar->try_add_separator());
+    (void)TRY(toolbar->try_add_action(editor->undo_action()));
+    (void)TRY(toolbar->try_add_action(editor->redo_action()));
+    TRY(toolbar->try_add_separator());
+    (void)TRY(toolbar->try_add_action(format_gml_action));
 
     window->on_close_request = [&] {
         if (!window->is_modified())
