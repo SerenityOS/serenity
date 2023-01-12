@@ -1230,35 +1230,40 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
     for (auto& filter_function : filter_value_list()) {
         if (!first)
             builder.append(' ');
-        filter_function.visit(
-            [&](Filter::Blur const& blur) {
+        TRY(filter_function.visit(
+            [&](Filter::Blur const& blur) -> ErrorOr<void> {
                 builder.append("blur("sv);
                 if (blur.radius.has_value())
-                    builder.append(blur.radius->to_string().release_value());
+                    builder.append(TRY(blur.radius->to_string()));
+                return {};
             },
-            [&](Filter::DropShadow const& drop_shadow) {
+            [&](Filter::DropShadow const& drop_shadow) -> ErrorOr<void> {
                 builder.appendff("drop-shadow({} {}"sv,
                     drop_shadow.offset_x, drop_shadow.offset_y);
                 if (drop_shadow.radius.has_value())
-                    builder.appendff(" {}", drop_shadow.radius->to_string());
+                    builder.appendff(" {}", TRY(drop_shadow.radius->to_string()));
                 if (drop_shadow.color.has_value()) {
                     builder.append(' ');
                     serialize_a_srgb_value(builder, *drop_shadow.color);
                 }
+                return {};
             },
-            [&](Filter::HueRotate const& hue_rotate) {
+            [&](Filter::HueRotate const& hue_rotate) -> ErrorOr<void> {
                 builder.append("hue-rotate("sv);
                 if (hue_rotate.angle.has_value()) {
-                    hue_rotate.angle->visit(
-                        [&](Angle const& angle) {
-                            builder.append(angle.to_string().release_value());
+                    TRY(hue_rotate.angle->visit(
+                        [&](Angle const& angle) -> ErrorOr<void> {
+                            builder.append(TRY(angle.to_string()));
+                            return {};
                         },
-                        [&](auto&) {
+                        [&](auto&) -> ErrorOr<void> {
                             builder.append('0');
-                        });
+                            return {};
+                        }));
                 }
+                return {};
             },
-            [&](Filter::Color const& color) {
+            [&](Filter::Color const& color) -> ErrorOr<void> {
                 builder.appendff("{}(",
                     [&] {
                         switch (color.operation) {
@@ -1281,8 +1286,9 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                         }
                     }());
                 if (color.amount.has_value())
-                    builder.append(color.amount->to_string().release_value());
-            });
+                    builder.append(TRY(color.amount->to_string()));
+                return {};
+            }));
         builder.append(')');
         first = false;
     }
@@ -1738,7 +1744,7 @@ void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_r
         context.painter().draw_scaled_bitmap(dest_rect.to_type<int>(), *b, bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
 }
 
-static void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
+static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
 {
     bool first = true;
     for (auto const& element : color_stop_list) {
@@ -1746,16 +1752,17 @@ static void serialize_color_stop_list(StringBuilder& builder, auto const& color_
             builder.append(", "sv);
 
         if (element.transition_hint.has_value()) {
-            builder.appendff("{}, "sv, element.transition_hint->value.to_string());
+            builder.appendff("{}, "sv, TRY(element.transition_hint->value.to_string()));
         }
 
         serialize_a_srgb_value(builder, element.color_stop.color);
         for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
             if (position->has_value())
-                builder.appendff(" {}"sv, (*position)->to_string());
+                builder.appendff(" {}"sv, TRY((*position)->to_string()));
         }
         first = false;
     }
+    return {};
 }
 
 ErrorOr<String> LinearGradientStyleValue::to_string() const
@@ -1789,15 +1796,17 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
     if (is_repeating())
         builder.append("repeating-"sv);
     builder.append("linear-gradient("sv);
-    m_direction.visit(
-        [&](SideOrCorner side_or_corner) {
+    TRY(m_direction.visit(
+        [&](SideOrCorner side_or_corner) -> ErrorOr<void> {
             builder.appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
+            return {};
         },
-        [&](Angle const& angle) {
-            builder.appendff("{}, "sv, angle.to_string());
-        });
+        [&](Angle const& angle) -> ErrorOr<void> {
+            builder.appendff("{}, "sv, TRY(angle.to_string()));
+            return {};
+        }));
 
-    serialize_color_stop_list(builder, m_color_stop_list);
+    TRY(serialize_color_stop_list(builder, m_color_stop_list));
     builder.append(")"sv);
     return builder.to_string();
 }
@@ -1989,8 +1998,8 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
     builder.appendff("radial-gradient({} "sv,
         m_ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv);
 
-    m_size.visit(
-        [&](Extent extent) {
+    TRY(m_size.visit(
+        [&](Extent extent) -> ErrorOr<void> {
             builder.append([&] {
                 switch (extent) {
                 case Extent::ClosestCorner:
@@ -2005,9 +2014,16 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
                     VERIFY_NOT_REACHED();
                 }
             }());
+            return {};
         },
-        [&](CircleSize const& circle_size) { builder.append(circle_size.radius.to_string().release_value()); },
-        [&](EllipseSize const& ellipse_size) { builder.appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string()); });
+        [&](CircleSize const& circle_size) -> ErrorOr<void> {
+            builder.append(TRY(circle_size.radius.to_string()));
+            return {};
+        },
+        [&](EllipseSize const& ellipse_size) -> ErrorOr<void> {
+            builder.appendff("{} {}", TRY(ellipse_size.radius_a.to_string()), TRY(ellipse_size.radius_b.to_string()));
+            return {};
+        }));
 
     if (m_position != PositionValue::center()) {
         builder.appendff(" at "sv);
@@ -2015,7 +2031,7 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
     }
 
     builder.append(", "sv);
-    serialize_color_stop_list(builder, m_color_stop_list);
+    TRY(serialize_color_stop_list(builder, m_color_stop_list));
     builder.append(')');
     return builder.to_string();
 }
@@ -2201,7 +2217,7 @@ ErrorOr<String> ConicGradientStyleValue::to_string() const
     }
     if (has_from_angle || has_at_position)
         builder.append(", "sv);
-    serialize_color_stop_list(builder, m_color_stop_list);
+    TRY(serialize_color_stop_list(builder, m_color_stop_list));
     builder.append(')');
     return builder.to_string();
 }
