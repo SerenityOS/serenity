@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +32,7 @@ public:
     void set_palette_impl(Gfx::PaletteImpl const&);
     void set_viewport_rect(Web::DevicePixelRect const&);
     void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index].to_type<Web::DevicePixels>(); }
-    void set_screen_display_scale(float device_pixels_per_css_pixel) { m_screen_display_scale = device_pixels_per_css_pixel; }
+    void set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) { m_device_pixels_per_css_pixel = device_pixels_per_css_pixel; }
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
@@ -53,7 +53,7 @@ private:
     virtual bool is_connection_open() const override;
     virtual Gfx::Palette palette() const override;
     virtual Web::DevicePixelRect screen_rect() const override { return m_screen_rect; }
-    virtual float device_pixels_per_css_pixel() const override { return m_screen_display_scale; }
+    virtual float device_pixels_per_css_pixel() const override { return m_device_pixels_per_css_pixel; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
     virtual void page_did_invalidate(Web::CSSPixelRect const&) override;
     virtual void page_did_change_selection() override;
@@ -110,7 +110,7 @@ private:
     Web::DevicePixelRect m_screen_rect;
     Web::DevicePixelSize m_content_size;
     // FIXME: Actually set this based on the device's pixel ratio.
-    float m_screen_display_scale { 1.0f };
+    float m_device_pixels_per_css_pixel { 1.0f };
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };
 
