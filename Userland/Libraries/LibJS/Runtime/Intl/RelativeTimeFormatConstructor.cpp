@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -89,13 +89,13 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     // 3. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 4. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 5. Set opt.[[LocaleMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
-    // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
+    // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
     auto numbering_system = TRY(get_option(vm, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
 
     // 7. If numberingSystem is not undefined, then
@@ -125,13 +125,13 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     if (result.nu.has_value())
         relative_time_format.set_numbering_system(result.nu.release_value());
 
-    // 15. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
+    // 15. Let style be ? GetOption(options, "style", string, « "long", "short", "narrow" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 16. Set relativeTimeFormat.[[Style]] to style.
     relative_time_format.set_style(TRY(style.as_string().deprecated_string()));
 
-    // 17. Let numeric be ? GetOption(options, "numeric", "string", « "always", "auto" », "always").
+    // 17. Let numeric be ? GetOption(options, "numeric", string, « "always", "auto" », "always").
     auto numeric = TRY(get_option(vm, *options, vm.names.numeric, OptionType::String, { "always"sv, "auto"sv }, "always"sv));
 
     // 18. Set relativeTimeFormat.[[Numeric]] to numeric.

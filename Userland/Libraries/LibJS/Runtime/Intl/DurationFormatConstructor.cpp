@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -58,10 +58,10 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
     // 4. Let options be ? GetOptionsObject(options).
     auto* options = TRY(Temporal::get_options_object(vm, options_value));
 
-    // 5. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 5. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
-    // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
+    // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
     auto numbering_system = TRY(get_option(vm, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
 
     // 7. If numberingSystem is not undefined, then
@@ -89,7 +89,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
     if (result.nu.has_value())
         duration_format->set_numbering_system(result.nu.release_value());
 
-    // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow", "digital" », "short").
+    // 13. Let style be ? GetOption(options, "style", string, « "long", "short", "narrow", "digital" », "short").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv, "digital"sv }, "short"sv));
 
     // 14. Set durationFormat.[[Style]] to style.

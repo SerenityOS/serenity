@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -270,7 +270,7 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
 ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, DeprecatedString const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
 {
-    // 1. Let style be ? GetOption(options, unit, "string", stylesList, undefined).
+    // 1. Let style be ? GetOption(options, unit, string, stylesList, undefined).
     auto style_value = TRY(get_option(vm, options, unit, OptionType::String, styles_list, Empty {}));
 
     // 2. Let displayDefault be "always".
@@ -314,7 +314,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
     // 4. Let displayField be the string-concatenation of unit and "Display".
     auto display_field = DeprecatedString::formatted("{}Display", unit);
 
-    // 5. Let display be ? GetOption(options, displayField, "string", « "auto", "always" », displayDefault).
+    // 5. Let display be ? GetOption(options, displayField, string, « "auto", "always" », displayDefault).
     auto display = TRY(get_option(vm, options, display_field, OptionType::String, { "auto"sv, "always"sv }, display_default));
 
     // 6. If prevStyle is "numeric" or "2-digit", then
