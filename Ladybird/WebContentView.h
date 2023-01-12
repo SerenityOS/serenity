@@ -86,8 +86,6 @@ public:
     virtual void focusOutEvent(QFocusEvent*) override;
     virtual bool event(QEvent*) override;
 
-    void run_javascript(DeprecatedString const& js_source);
-
     void did_output_js_console_message(i32 message_index);
     void did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages);
 
