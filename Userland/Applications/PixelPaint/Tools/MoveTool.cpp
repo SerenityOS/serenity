@@ -93,7 +93,10 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
             auto aspect_ratio = m_layer_being_moved->size().aspect_ratio();
             scaling_origin = opposite_corner.end_point_for_aspect_ratio(scaling_origin, aspect_ratio);
         }
-        m_new_layer_rect = Gfx::IntRect::from_two_points(scaling_origin, opposite_corner);
+
+        auto scaled_rect = Gfx::IntRect::from_two_points(scaling_origin, opposite_corner);
+        if (!scaled_rect.is_empty())
+            m_new_layer_rect = scaled_rect;
     } else {
         m_layer_being_moved->set_location(m_layer_origin.translated(delta));
     }
