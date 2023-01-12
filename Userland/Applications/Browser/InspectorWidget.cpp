@@ -63,9 +63,9 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
     m_selection = move(selection);
 
     auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_selection.dom_node_id, m_selection.pseudo_element);
-    if (maybe_inspected_node_properties.has_value()) {
-        auto inspected_node_properties = maybe_inspected_node_properties.value();
-        load_style_json(inspected_node_properties.computed_values_json, inspected_node_properties.resolved_values_json, inspected_node_properties.custom_properties_json);
+    if (!maybe_inspected_node_properties.is_error()) {
+        auto inspected_node_properties = maybe_inspected_node_properties.release_value();
+        load_style_json(inspected_node_properties.computed_style_json, inspected_node_properties.resolved_style_json, inspected_node_properties.custom_properties_json);
         update_node_box_model(inspected_node_properties.node_box_sizing_json);
     } else {
         clear_style_json();

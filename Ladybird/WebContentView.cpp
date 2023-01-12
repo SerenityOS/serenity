@@ -532,28 +532,6 @@ bool WebContentView::is_inspector_open() const
     return m_inspector_widget && m_inspector_widget->isVisible();
 }
 
-void WebContentView::inspect_dom_tree()
-{
-    client().async_inspect_dom_tree();
-}
-
-ErrorOr<Ladybird::DOMNodeProperties> WebContentView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
-{
-    auto response = client().inspect_dom_node(node_id, pseudo_element);
-    if (!response.has_style())
-        return Error::from_string_view("Inspected node returned no style"sv);
-    return Ladybird::DOMNodeProperties {
-        .computed_style_json = TRY(String::from_deprecated_string(response.take_computed_style())),
-        .resolved_style_json = TRY(String::from_deprecated_string(response.take_resolved_style())),
-        .custom_properties_json = TRY(String::from_deprecated_string(response.take_custom_properties())),
-    };
-}
-
-void WebContentView::clear_inspected_dom_node()
-{
-    (void)inspect_dom_node(0, {});
-}
-
 void WebContentView::show_inspector()
 {
     ensure_inspector_widget();
