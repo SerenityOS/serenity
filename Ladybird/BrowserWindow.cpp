@@ -84,7 +84,9 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* zoom_menu = view_menu->addMenu("&Zoom");
 
     auto* zoom_in_action = new QAction("Zoom &In", this);
-    zoom_in_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn));
+    auto zoom_in_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn);
+    zoom_in_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Equal));
+    zoom_in_action->setShortcuts(zoom_in_shortcuts);
     zoom_menu->addAction(zoom_in_action);
     QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
 
