@@ -190,6 +190,9 @@ private:
     static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
     static constexpr auto ZOOM_STEP = 0.1f;
 
+    // ^WebView::ViewImplementation
+    virtual void create_client() override;
+
     void request_repaint();
     void update_viewport_rect();
     void handle_resize();
@@ -216,27 +219,9 @@ private:
 
     Gfx::IntRect m_viewport_rect;
 
-    void create_client();
-    WebContentClient& client();
-
     void handle_web_content_process_crash();
 
     AK::URL m_url;
-
-    struct SharedBitmap {
-        i32 id { -1 };
-        i32 pending_paints { 0 };
-        RefPtr<Gfx::Bitmap> bitmap;
-    };
-
-    struct ClientState {
-        RefPtr<WebContentClient> client;
-        SharedBitmap front_bitmap;
-        SharedBitmap back_bitmap;
-        i32 next_bitmap_id { 0 };
-        bool has_usable_bitmap { false };
-        bool got_repaint_requests_while_painting { false };
-    } m_client_state;
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
 

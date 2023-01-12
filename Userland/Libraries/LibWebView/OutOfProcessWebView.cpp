@@ -582,12 +582,6 @@ void OutOfProcessWebView::request_repaint()
     client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap.id);
 }
 
-WebContentClient& OutOfProcessWebView::client()
-{
-    VERIFY(m_client_state.client);
-    return *m_client_state.client;
-}
-
 void OutOfProcessWebView::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     client().async_debug_request(request, argument);
