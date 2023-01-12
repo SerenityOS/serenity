@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -196,6 +197,7 @@ private:
     void close_sub_widgets();
     ErrorOr<Ladybird::DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
 
+    float m_device_pixel_ratio { 1.0 };
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
