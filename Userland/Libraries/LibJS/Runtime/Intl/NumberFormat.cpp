@@ -386,24 +386,25 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
         // a. Let isNegative be true.
         is_negative = true;
 
-        // b. Let x be the mathematical value 0.
+        // b. Set x to 0.
         number = MathematicalValue(0.0);
     }
+    // 2. Else,
+    else {
+        // a. Assert: x is a mathematical value.
+        VERIFY(number.is_mathematical_value());
 
-    // 2. Assert: x is a mathematical value.
-    VERIFY(number.is_mathematical_value());
+        // b. If x < 0, let isNegative be true; else let isNegative be false.
+        is_negative = number.is_negative();
 
-    // 3. If x < 0, let isNegative be true; else let isNegative be false.
-    // FIXME: Spec issue: this step would override step 1a, see https://github.com/tc39/proposal-intl-numberformat-v3/issues/67
-    if (number.is_negative()) {
-        is_negative = true;
-
-        // 4. If isNegative, then
-        //     a. Let x be -x.
-        number.negate();
+        // c. If isNegative, then
+        if (is_negative) {
+            // i. Set x to -x.
+            number.negate();
+        }
     }
 
-    // 5. Let unsignedRoundingMode be GetUnsignedRoundingMode(intlObject.[[RoundingMode]], isNegative).
+    // 3. Let unsignedRoundingMode be GetUnsignedRoundingMode(intlObject.[[RoundingMode]], isNegative).
     // FIXME: Spec issue: Intl.PluralRules does not have [[RoundingMode]], see https://github.com/tc39/proposal-intl-numberformat-v3/issues/103
     Optional<NumberFormat::UnsignedRoundingMode> unsigned_rounding_mode;
     if (intl_object.rounding_mode() != NumberFormat::RoundingMode::Invalid)
@@ -412,19 +413,19 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
     RawFormatResult result {};
 
     switch (intl_object.rounding_type()) {
-    // 6. If intlObject.[[RoundingType]] is significantDigits, then
+    // 4. If intlObject.[[RoundingType]] is significantDigits, then
     case NumberFormatBase::RoundingType::SignificantDigits:
         // a. Let result be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]], unsignedRoundingMode).
         result = to_raw_precision(number, intl_object.min_significant_digits(), intl_object.max_significant_digits(), unsigned_rounding_mode);
         break;
 
-    // 7. Else if intlObject.[[RoundingType]] is fractionDigits, then
+    // 5. Else if intlObject.[[RoundingType]] is fractionDigits, then
     case NumberFormatBase::RoundingType::FractionDigits:
         // a. Let result be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]], intlObject.[[RoundingIncrement]], unsignedRoundingMode).
         result = to_raw_fixed(number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits(), intl_object.rounding_increment(), unsigned_rounding_mode);
         break;
 
-    // 8. Else,
+    // 6. Else,
     case NumberFormatBase::RoundingType::MorePrecision:
     case NumberFormatBase::RoundingType::LessPrecision: {
         // a. Let sResult be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]], unsignedRoundingMode).
@@ -470,13 +471,13 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
         VERIFY_NOT_REACHED();
     }
 
-    // 9. Let x be result.[[RoundedNumber]].
+    // 7. Let x be result.[[RoundedNumber]].
     number = move(result.rounded_number);
 
-    // 10. Let string be result.[[FormattedString]].
+    // 8. Let string be result.[[FormattedString]].
     auto string = move(result.formatted_string);
 
-    // 11. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
+    // 9. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
     if ((intl_object.trailing_zero_display() == NumberFormat::TrailingZeroDisplay::StripIfInteger) && number.modulo_is_zero(1)) {
         // a. If string contains ".", then
         if (auto index = string.find('.'); index.has_value()) {
@@ -485,13 +486,13 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
         }
     }
 
-    // 12. Let int be result.[[IntegerDigitsCount]].
+    // 10. Let int be result.[[IntegerDigitsCount]].
     int digits = result.digits;
 
-    // 13. Let minInteger be intlObject.[[MinimumIntegerDigits]].
+    // 11. Let minInteger be intlObject.[[MinimumIntegerDigits]].
     int min_integer = intl_object.min_integer_digits();
 
-    // 14. If int < minInteger, then
+    // 12. If int < minInteger, then
     if (digits < min_integer) {
         // a. Let forwardZeros be the String consisting of minInteger–int occurrences of the character "0".
         auto forward_zeros = DeprecatedString::repeated('0', min_integer - digits);
@@ -500,18 +501,18 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
         string = DeprecatedString::formatted("{}{}", forward_zeros, string);
     }
 
-    // 15. If isNegative and x is 0, then
+    // 13. If isNegative and x is 0, then
     if (is_negative && number.is_zero()) {
         // a. Let x be -0.
         number = MathematicalValue { MathematicalValue::Symbol::NegativeZero };
     }
-    // 16. Else if isNegative, then
+    // 14. Else if isNegative, then
     else if (is_negative) {
         // b. Let x be -x.
         number.negate();
     }
 
-    // 17. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
+    // 15. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
     return { move(string), move(number) };
 }
 
