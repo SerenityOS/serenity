@@ -26,7 +26,7 @@ public:
     {
         auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Preview()));
 
-        Gfx::IntPoint point { 30, 30 };
+        Gfx::IntPoint point { 25, 30 };
         TRY(preview->add_stack(point, Cards::CardStack::Type::Stock));
 
         point.translate_by(Cards::Card::width + 30, 0);
@@ -35,12 +35,18 @@ public:
         point.translate_by(Cards::Card::width + 30, 0);
         TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
 
+        point.translate_by(20, 10);
+        TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
+
         for (size_t i = 0; i < Cards::Card::card_count; ++i)
             preview->stack_at_location(0).push(TRY(Cards::Card::try_create(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i))));
         preview->stack_at_location(1).push(TRY(Cards::Card::try_create(Cards::Suit::Spades, Cards::Rank::Ace)));
         preview->stack_at_location(2).push(TRY(Cards::Card::try_create(Cards::Suit::Hearts, Cards::Rank::Queen)));
+        preview->stack_at_location(3).push(TRY(Cards::Card::try_create(Cards::Suit::Clubs, Cards::Rank::Jack)));
 
         preview->stack_at_location(0).peek().set_upside_down(true);
+        preview->stack_at_location(2).set_highlighted(true);
+
         return preview;
     }
 
