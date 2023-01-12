@@ -74,24 +74,6 @@ void OutOfProcessWebView::create_client()
     client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 }
 
-void OutOfProcessWebView::load(const AK::URL& url)
-{
-    m_url = url;
-    client().async_load_url(url);
-}
-
-void OutOfProcessWebView::load_html(StringView html, const AK::URL& url)
-{
-    m_url = url;
-    client().async_load_html(html, url);
-}
-
-void OutOfProcessWebView::load_empty_document()
-{
-    m_url = {};
-    client().async_load_html("", {});
-}
-
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
     Super::paint_event(event);

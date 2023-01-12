@@ -49,9 +49,6 @@ public:
     explicit WebContentView(StringView webdriver_content_ipc_path);
     virtual ~WebContentView() override;
 
-    void load(AK::URL const&);
-    void load_html(StringView html, AK::URL const&);
-
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
@@ -203,8 +200,6 @@ private:
     Gfx::IntRect m_viewport_rect;
 
     void handle_web_content_process_crash();
-
-    AK::URL m_url;
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
 

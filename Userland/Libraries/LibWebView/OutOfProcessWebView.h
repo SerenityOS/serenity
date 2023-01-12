@@ -33,12 +33,6 @@ class OutOfProcessWebView final
 public:
     virtual ~OutOfProcessWebView() override;
 
-    AK::URL url() const { return m_url; }
-    void load(const AK::URL&);
-
-    void load_html(StringView, const AK::URL&);
-    void load_empty_document();
-
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 
     void js_console_input(DeprecatedString const& js_source);
@@ -192,8 +186,6 @@ private:
     using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
     void enqueue_input_event(InputEvent const&);
     void process_next_input_event();
-
-    AK::URL m_url;
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
     RefPtr<GUI::Dialog> m_dialog;

@@ -22,6 +22,23 @@ WebContentClient const& ViewImplementation::client() const
     return *m_client_state.client;
 }
 
+void ViewImplementation::load(AK::URL const& url)
+{
+    m_url = url;
+    client().async_load_url(url);
+}
+
+void ViewImplementation::load_html(StringView html, AK::URL const& url)
+{
+    m_url = url;
+    client().async_load_html(html, url);
+}
+
+void ViewImplementation::load_empty_document()
+{
+    load_html(""sv, {});
+}
+
 void ViewImplementation::zoom_in()
 {
     if (m_zoom_level >= ZOOM_MAX_LEVEL)

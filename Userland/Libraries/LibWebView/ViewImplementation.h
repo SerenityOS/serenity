@@ -28,6 +28,12 @@ public:
         String node_box_sizing_json;
     };
 
+    AK::URL const& url() const { return m_url; }
+
+    void load(AK::URL const&);
+    void load_html(StringView, AK::URL const&);
+    void load_empty_document();
+
     void zoom_in();
     void zoom_out();
     void reset_zoom();
@@ -115,6 +121,8 @@ protected:
         bool has_usable_bitmap { false };
         bool got_repaint_requests_while_painting { false };
     } m_client_state;
+
+    AK::URL m_url;
 
     float m_zoom_level { 1.0 };
     float m_device_pixel_ratio { 1.0 };
