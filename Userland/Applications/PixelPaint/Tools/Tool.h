@@ -95,6 +95,8 @@ protected:
     void set_primary_slider(GUI::ValueSlider* primary) { m_primary_slider = primary; }
     void set_secondary_slider(GUI::ValueSlider* secondary) { m_secondary_slider = secondary; }
 
+    static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint start_pos, Gfx::IntPoint end_pos, float angle_increment = M_PI / 8);
+
     GUI::ValueSlider* m_primary_slider { nullptr };
     GUI::ValueSlider* m_secondary_slider { nullptr };
 };
