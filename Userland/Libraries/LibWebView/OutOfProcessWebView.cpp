@@ -577,11 +577,6 @@ void OutOfProcessWebView::set_proxy_mappings(Vector<DeprecatedString> proxies, H
     client().async_set_proxy_mappings(move(proxies), move(mappings));
 }
 
-void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
-{
-    client().async_set_preferred_color_scheme(color_scheme);
-}
-
 void OutOfProcessWebView::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     client().async_connect_to_webdriver(webdriver_ipc_path);

@@ -517,11 +517,6 @@ void WebContentView::show_inspector()
     inspect_dom_tree();
 }
 
-void WebContentView::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
-{
-    client().async_set_preferred_color_scheme(color_scheme);
-}
-
 void WebContentView::update_zoom()
 {
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
