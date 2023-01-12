@@ -1,6 +1,12 @@
+.github @bgianfo
+/AK @bgianfo
+/Kernel @bgianfo
 /Kernel/Devices/Audio @GMTA
+/Toolchain @bgianfo
+/Tests @bgianfo
 /Userland/Applications/CrashReporter @linusg
 /Userland/Applications/Spreadsheet @alimpfard
+/Userland/Libraries/LibC @bgianfo
 /Userland/Libraries/LibCrypto @alimpfard
 /Userland/Libraries/LibGL @GMTA
 /Userland/Libraries/LibGPU @GMTA
