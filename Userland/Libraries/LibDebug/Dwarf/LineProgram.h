@@ -130,6 +130,8 @@ public:
     };
     Vector<FileEntry> const& source_files() const { return m_source_files; }
 
+    bool looks_like_embedded_resource() const;
+
 private:
     void parse_unit_header();
     void parse_source_directories();
