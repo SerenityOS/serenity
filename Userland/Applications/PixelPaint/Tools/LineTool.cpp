@@ -22,19 +22,6 @@
 
 namespace PixelPaint {
 
-static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint start_pos, Gfx::IntPoint end_pos, float angle_increment)
-{
-    float current_angle = AK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
-
-    float constrained_angle = ((int)((current_angle + angle_increment / 2) / angle_increment)) * angle_increment;
-
-    auto diff = end_pos - start_pos;
-    float line_length = AK::hypot<float>(diff.x(), diff.y());
-
-    return { start_pos.x() + (int)(AK::cos(constrained_angle) * line_length),
-        start_pos.y() + (int)(AK::sin(constrained_angle) * line_length) };
-}
-
 void LineTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     if (!layer)
@@ -95,12 +82,10 @@ void LineTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (layer_event.shift()) {
-        constexpr auto ANGLE_STEP = M_PI / 8;
-        m_line_end_position = constrain_line_angle(m_drag_start_position, layer_event.position(), ANGLE_STEP);
-    } else {
+    if (layer_event.shift())
+        m_line_end_position = constrain_line_angle(m_drag_start_position, layer_event.position());
+    else
         m_line_end_position = layer_event.position();
-    }
 
     if (layer_event.alt()) {
         m_line_start_position = m_drag_start_position + (m_drag_start_position - m_line_end_position);

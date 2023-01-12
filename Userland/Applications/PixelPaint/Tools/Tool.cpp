@@ -70,4 +70,17 @@ Gfx::IntPoint Tool::editor_stroke_position(Gfx::IntPoint pixel_coords, int strok
     return position.to_type<int>();
 }
 
+Gfx::IntPoint Tool::constrain_line_angle(Gfx::IntPoint start_pos, Gfx::IntPoint end_pos, float angle_increment)
+{
+    float current_angle = AK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
+
+    float constrained_angle = ((int)((current_angle + angle_increment / 2) / angle_increment)) * angle_increment;
+
+    auto diff = end_pos - start_pos;
+    float line_length = AK::hypot<float>(diff.x(), diff.y());
+
+    return { start_pos.x() + (int)(AK::cos(constrained_angle) * line_length),
+        start_pos.y() + (int)(AK::sin(constrained_angle) * line_length) };
+}
+
 }

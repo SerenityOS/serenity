@@ -92,6 +92,8 @@ void PolygonalSelectTool::on_mousedown(Layer*, MouseEvent& event)
     m_selecting = true;
 
     auto new_point = event.layer_event().position();
+    if (!m_polygon_points.is_empty() && event.layer_event().shift())
+        new_point = Tool::constrain_line_angle(m_polygon_points.last(), new_point);
 
     // This point matches the first point exactly. Consider this polygon finished.
     if (m_polygon_points.size() > 0 && new_point == m_polygon_points.at(0)) {
@@ -115,8 +117,14 @@ void PolygonalSelectTool::on_mousedown(Layer*, MouseEvent& event)
 
 void PolygonalSelectTool::on_mousemove(Layer*, MouseEvent& event)
 {
-    if (m_selecting)
+    if (!m_selecting)
+        return;
+
+    if (event.layer_event().shift())
+        m_last_selecting_cursor_position = Tool::constrain_line_angle(m_polygon_points.last(), event.layer_event().position());
+    else
         m_last_selecting_cursor_position = event.layer_event().position();
+
     m_editor->update();
 }
 
