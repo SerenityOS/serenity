@@ -33,8 +33,6 @@ class OutOfProcessWebView final
 public:
     virtual ~OutOfProcessWebView() override;
 
-    void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
-
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
 

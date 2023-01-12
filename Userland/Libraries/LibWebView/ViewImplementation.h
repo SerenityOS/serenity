@@ -46,6 +46,8 @@ public:
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
+    void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
+
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
