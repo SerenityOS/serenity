@@ -56,8 +56,8 @@ describe("correct behavior", () => {
     test("approximately formatting", () => {
         const en1 = new Intl.NumberFormat("en", { maximumFractionDigits: 0 });
         expect(en1.formatRangeToParts(2.9, 3.1)).toEqual([
-            { type: "approximatelySign", value: "~", source: "" },
-            { type: "integer", value: "3", source: "" },
+            { type: "approximatelySign", value: "~", source: "shared" },
+            { type: "integer", value: "3", source: "shared" },
         ]);
 
         const en2 = new Intl.NumberFormat("en", {
@@ -66,15 +66,15 @@ describe("correct behavior", () => {
             maximumFractionDigits: 0,
         });
         expect(en2.formatRangeToParts(2.9, 3.1)).toEqual([
-            { type: "approximatelySign", value: "~", source: "" },
-            { type: "currency", value: "$", source: "" },
-            { type: "integer", value: "3", source: "" },
+            { type: "approximatelySign", value: "~", source: "shared" },
+            { type: "currency", value: "$", source: "shared" },
+            { type: "integer", value: "3", source: "shared" },
         ]);
 
         const ja1 = new Intl.NumberFormat("ja", { maximumFractionDigits: 0 });
         expect(ja1.formatRangeToParts(2.9, 3.1)).toEqual([
-            { type: "approximatelySign", value: "約", source: "" },
-            { type: "integer", value: "3", source: "" },
+            { type: "approximatelySign", value: "約", source: "shared" },
+            { type: "integer", value: "3", source: "shared" },
         ]);
 
         const ja2 = new Intl.NumberFormat("ja", {
@@ -83,9 +83,9 @@ describe("correct behavior", () => {
             maximumFractionDigits: 0,
         });
         expect(ja2.formatRangeToParts(2.9, 3.1)).toEqual([
-            { type: "approximatelySign", value: "約", source: "" },
-            { type: "currency", value: "￥", source: "" },
-            { type: "integer", value: "3", source: "" },
+            { type: "approximatelySign", value: "約", source: "shared" },
+            { type: "currency", value: "￥", source: "shared" },
+            { type: "integer", value: "3", source: "shared" },
         ]);
     });
 

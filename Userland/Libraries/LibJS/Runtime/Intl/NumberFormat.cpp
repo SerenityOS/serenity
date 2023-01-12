@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1744,9 +1744,20 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     auto raw_end_result = partition_number_pattern(vm, number_format, move(end));
     auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
 
-    // 5. If xResult is equal to yResult, return FormatApproximately(numberFormat, xResult).
-    if (start_result == end_result)
-        return format_approximately(number_format, move(start_result));
+    // 5. If xResult is equal to yResult, then
+    if (start_result == end_result) {
+        // a. Let appxResult be ? FormatApproximately(numberFormat, xResult).
+        auto approximate_result = format_approximately(number_format, move(start_result));
+
+        // b. For each r in appxResult, do
+        for (auto& result : approximate_result) {
+            // i. Set r.[[Source]] to "shared".
+            result.source = "shared"sv;
+        }
+
+        // c. Return appxResult.
+        return approximate_result;
+    }
 
     // 6. For each r in xResult, do
     for (auto& part : start_result) {
