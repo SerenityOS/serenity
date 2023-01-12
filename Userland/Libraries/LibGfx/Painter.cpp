@@ -2015,9 +2015,6 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         return;
     }
 
-    // FIXME: Implement dotted/dashed diagonal lines.
-    VERIFY(style == LineStyle::Solid);
-
     int const adx = abs(point2.x() - point1.x());
     int const ady = abs(point2.y() - point1.y());
 
@@ -2034,13 +2031,30 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
     int const dy = point2.y() - point1.y();
     int error = 0;
 
+    size_t number_of_pixels_drawn = 0;
+
+    auto draw_pixel_in_line = [&](int x, int y) {
+        bool should_draw_line = true;
+        if (style == LineStyle::Dotted && number_of_pixels_drawn % 2 == 1)
+            should_draw_line = false;
+        else if (style == LineStyle::Dashed && number_of_pixels_drawn % 6 >= 3)
+            should_draw_line = false;
+
+        if (should_draw_line)
+            draw_physical_pixel({ x, y }, color, thickness);
+        else if (!alternate_color_is_transparent)
+            draw_physical_pixel({ x, y }, alternate_color, thickness);
+
+        number_of_pixels_drawn++;
+    };
+
     if (dx > dy) {
         int const y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
         int const delta_error = 2 * abs(dy);
         int y = point1.y();
         for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_pixel_in_line(x, y);
             error += delta_error;
             if (error >= dx) {
                 y += y_step;
@@ -2053,7 +2067,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int x = point1.x();
         for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_pixel_in_line(x, y);
             error += delta_error;
             if (error >= dy) {
                 x += x_step;
