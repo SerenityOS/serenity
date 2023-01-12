@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Games Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->add_tab<CardSettingsWidget>("Cards"sv, "cards"sv));
+    (void)TRY(window->add_tab<GamesSettings::CardSettingsWidget>("Cards"sv, "cards"sv));
     window->set_active_tab(selected_tab);
 
     window->show();

@@ -11,6 +11,8 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGfx/Palette.h>
 
+namespace GamesSettings {
+
 static constexpr StringView default_card_back_image_path = "/res/icons/cards/buggie-deck.png"sv;
 
 CardSettingsWidget::CardSettingsWidget()
@@ -93,4 +95,6 @@ DeprecatedString CardSettingsWidget::card_back_image_path() const
     if (!card_back_selection.is_empty())
         card_back_image_index = card_back_selection.first();
     return static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index);
+}
+
 }
