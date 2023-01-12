@@ -270,17 +270,18 @@ private:
 class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:
-    ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text);
+    ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& new_text, GUI::TextRange const& range, DeprecatedString const& action_text);
     virtual ~ReplaceAllTextCommand() = default;
     void redo() override;
     void undo() override;
     bool merge_with(GUI::Command const&) override;
     DeprecatedString action_text() const override;
-    DeprecatedString const& text() const { return m_text; }
+    DeprecatedString const& text() const { return m_new_text; }
     TextRange const& range() const { return m_range; }
 
 private:
-    DeprecatedString m_text;
+    DeprecatedString m_original_text;
+    DeprecatedString m_new_text;
     GUI::TextRange m_range;
     DeprecatedString m_action_text;
 };

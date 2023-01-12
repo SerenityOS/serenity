@@ -970,7 +970,8 @@ DeprecatedString InsertLineCommand::action_text() const
 
 ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text)
     : TextDocumentUndoCommand(document)
-    , m_text(text)
+    , m_original_text(document.text())
+    , m_new_text(text)
     , m_range(range)
     , m_action_text(action_text)
 {
@@ -980,7 +981,7 @@ void ReplaceAllTextCommand::redo()
 {
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
-    auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
+    auto new_cursor = m_document.insert_at(m_range.start(), m_new_text, m_client);
     m_range.set_end(new_cursor);
     m_document.set_all_cursors(new_cursor);
 }
@@ -989,7 +990,7 @@ void ReplaceAllTextCommand::undo()
 {
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
-    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    auto new_cursor = m_document.insert_at(m_range.start(), m_original_text, m_client);
     m_range.set_end(new_cursor);
     m_document.set_all_cursors(new_cursor);
 }
