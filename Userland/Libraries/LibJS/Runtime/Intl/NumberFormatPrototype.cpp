@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
 }
 
 // 15.3.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formattoparts
-// 1.4.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formattoparts
+// 1.3.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formattoparts
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 {
     auto value = vm.argument(0);
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     return format_numeric_to_parts(vm, *number_format, move(mathematical_value));
 }
 
-// 1.4.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrange
+// 1.3.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrange
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
 {
     auto start = vm.argument(0);
@@ -107,7 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
     return PrimitiveString::create(vm, move(formatted));
 }
 
-// 1.4.6 Intl.NumberFormat.prototype.formatRangeToParts ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrangetoparts
+// 1.3.6 Intl.NumberFormat.prototype.formatRangeToParts ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrangetoparts
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
 {
     auto start = vm.argument(0);
@@ -134,6 +134,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
+// 1.3.7 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
 {
     auto& realm = *vm.current_realm();

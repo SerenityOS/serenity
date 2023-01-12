@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,7 +48,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     return PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality));
 }
 
-// 1.4.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
+// 1.3.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 {
     auto start = vm.argument(0);
@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 }
 
 // 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
-// 1.4.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
+// 1.3.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 {
     auto& realm = *vm.current_realm();
