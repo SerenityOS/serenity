@@ -141,6 +141,7 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 
 ErrorOr<FlatPtr> Process::sys$get_root_session_id(pid_t force_sid)
 {
+    TRY(require_promise(Pledge::stdio));
     pid_t sid = (force_sid == -1) ? this->sid().value() : force_sid;
     if (sid == 0)
         return 0;
