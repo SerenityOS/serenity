@@ -82,18 +82,6 @@ WebContentView::~WebContentView()
     close_sub_widgets();
 }
 
-void WebContentView::load(AK::URL const& url)
-{
-    m_url = url;
-    client().async_load_url(url);
-}
-
-void WebContentView::load_html(StringView html, AK::URL const& url)
-{
-    m_url = url;
-    client().async_load_html(html, url);
-}
-
 unsigned get_button_from_qt_event(QMouseEvent const& event)
 {
     if (event.button() == Qt::MouseButton::LeftButton)
