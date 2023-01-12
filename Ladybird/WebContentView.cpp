@@ -446,11 +446,6 @@ void WebContentView::update_viewport_rect()
     request_repaint();
 }
 
-void WebContentView::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
-{
-    client().async_debug_request(request, argument);
-}
-
 void WebContentView::run_javascript(DeprecatedString const& js_source)
 {
     client().async_run_javascript(js_source);

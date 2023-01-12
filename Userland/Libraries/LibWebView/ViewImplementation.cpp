@@ -99,4 +99,9 @@ i32 ViewImplementation::get_hovered_node_id()
     return client().get_hovered_node_id();
 }
 
+void ViewImplementation::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
+{
+    client().async_debug_request(request, argument);
+}
+
 }
