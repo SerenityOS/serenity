@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Jails.h>
-#include <Kernel/JailManagement.h>
+#include <Kernel/Jail.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSJails> SysFSJails::must_create(SysFSDire
 ErrorOr<void> SysFSJails::try_generate(KBufferBuilder& builder)
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
-    TRY(JailManagement::the().for_each_in_same_jail([&array](Jail& jail) -> ErrorOr<void> {
+    TRY(Jail::for_each_when_process_is_not_jailed([&array](Jail const& jail) -> ErrorOr<void> {
         auto obj = TRY(array.add_object());
         TRY(obj.add("index"sv, jail.index().value()));
         TRY(obj.add("name"sv, jail.name()));

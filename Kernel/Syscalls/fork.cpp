@@ -70,6 +70,26 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         return {};
     }));
 
+    ArmedScopeGuard remove_from_jail_process_list = [&]() {
+        m_jail_process_list.with([&](auto& list_ptr) {
+            if (list_ptr) {
+                list_ptr->attached_processes().with([&](auto& list) {
+                    list.remove(*child);
+                });
+            }
+        });
+    };
+    m_jail_process_list.with([&](auto& list_ptr) {
+        if (list_ptr) {
+            child->m_jail_process_list.with([&](auto& child_list_ptr) {
+                child_list_ptr = list_ptr;
+            });
+            list_ptr->attached_processes().with([&](auto& list) {
+                list.append(child);
+            });
+        }
+    });
+
     TRY(child->m_fds.with_exclusive([&](auto& child_fds) {
         return m_fds.with_exclusive([&](auto& parent_fds) {
             return child_fds.try_clone(parent_fds);
@@ -150,6 +170,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     }));
 
     thread_finalizer_guard.disarm();
+    remove_from_jail_process_list.disarm();
 
     Process::register_new(*child);
 

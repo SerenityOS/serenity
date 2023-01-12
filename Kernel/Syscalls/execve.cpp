@@ -516,6 +516,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     auto old_credentials = this->credentials();
     auto new_credentials = old_credentials;
     auto old_process_attached_jail = m_attached_jail.with([&](auto& jail) -> RefPtr<Jail> { return jail; });
+    auto old_scoped_list = m_jail_process_list.with([&](auto& list) -> RefPtr<ProcessList> { return list; });
 
     bool executable_is_setid = false;
 
@@ -578,6 +579,11 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     m_attached_jail.with([&](auto& jail) {
         jail = old_process_attached_jail;
     });
+
+    m_jail_process_list.with([&](auto& list) {
+        list = old_scoped_list;
+    });
+
     m_environment = move(environment);
 
     TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
