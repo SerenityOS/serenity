@@ -77,6 +77,10 @@ public:
 
     void set_system_visibility_state(bool visible);
 
+    void zoom_in();
+    void zoom_out();
+    void reset_zoom();
+
     Gfx::ShareableBitmap take_screenshot() const;
     Gfx::ShareableBitmap take_document_screenshot();
 
@@ -121,6 +125,10 @@ public:
     Function<void()> on_forward_button;
 
 private:
+    static constexpr auto ZOOM_MIN_LEVEL = 0.3f;
+    static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
+    static constexpr auto ZOOM_STEP = 0.1f;
+
     OutOfProcessWebView();
 
     // ^Widget
@@ -197,6 +205,7 @@ private:
 
     void request_repaint();
     void handle_resize();
+    void update_zoom();
 
     void create_client();
     WebContentClient& client();
@@ -231,6 +240,9 @@ private:
     Queue<InputEvent> m_pending_input_events;
 
     bool m_content_scales_to_viewport { false };
+
+    float m_zoom_level { 1.0 };
+    float m_device_pixel_ratio { 1.0 };
 };
 
 }

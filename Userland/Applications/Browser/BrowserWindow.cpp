@@ -180,6 +180,25 @@ void BrowserWindow::build_menus()
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
+    view_menu.add_action(GUI::CommonActions::make_zoom_in_action(
+        [this](auto&) {
+            auto& tab = active_tab();
+            tab.view().zoom_in();
+        },
+        this));
+    view_menu.add_action(GUI::CommonActions::make_zoom_out_action(
+        [this](auto&) {
+            auto& tab = active_tab();
+            tab.view().zoom_out();
+        },
+        this));
+    view_menu.add_action(GUI::CommonActions::make_reset_zoom_action(
+        [this](auto&) {
+            auto& tab = active_tab();
+            tab.view().reset_zoom();
+        },
+        this));
+    view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
         [this](auto&) {
             auto& tab = active_tab();
