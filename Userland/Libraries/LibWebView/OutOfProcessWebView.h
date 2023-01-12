@@ -40,7 +40,6 @@ public:
     void load_empty_document();
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
-    void get_source();
 
     void inspect_dom_tree();
     struct DOMNodeProperties {

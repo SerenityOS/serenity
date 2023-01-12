@@ -565,11 +565,6 @@ void OutOfProcessWebView::debug_request(DeprecatedString const& request, Depreca
     client().async_debug_request(request, argument);
 }
 
-void OutOfProcessWebView::get_source()
-{
-    client().async_get_source();
-}
-
 void OutOfProcessWebView::inspect_dom_tree()
 {
     client().async_inspect_dom_tree();

@@ -22,6 +22,7 @@ public:
     void zoom_in();
     void zoom_out();
     void reset_zoom();
+    void get_source();
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) = 0;
