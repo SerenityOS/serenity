@@ -566,28 +566,6 @@ void WebContentView::set_preferred_color_scheme(Web::CSS::PreferredColorScheme c
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
-void WebContentView::zoom_in()
-{
-    if (m_zoom_level >= ZOOM_MAX_LEVEL)
-        return;
-    m_zoom_level += ZOOM_STEP;
-    update_zoom();
-}
-
-void WebContentView::zoom_out()
-{
-    if (m_zoom_level <= ZOOM_MIN_LEVEL)
-        return;
-    m_zoom_level -= ZOOM_STEP;
-    update_zoom();
-}
-
-void WebContentView::reset_zoom()
-{
-    m_zoom_level = 1.0f;
-    update_zoom();
-}
-
 void WebContentView::update_zoom()
 {
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);

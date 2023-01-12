@@ -108,10 +108,6 @@ public:
 
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
-    void zoom_in();
-    void zoom_out();
-    void reset_zoom();
-
     DeprecatedString selected_text();
     void select_all();
 
@@ -186,17 +182,13 @@ signals:
     Gfx::IntRect fullscreen_window();
 
 private:
-    static constexpr auto ZOOM_MIN_LEVEL = 0.3f;
-    static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
-    static constexpr auto ZOOM_STEP = 0.1f;
-
     // ^WebView::ViewImplementation
     virtual void create_client() override;
+    virtual void update_zoom() override;
 
     void request_repaint();
     void update_viewport_rect();
     void handle_resize();
-    void update_zoom();
 
     void ensure_js_console_widget();
     void ensure_inspector_widget();
@@ -207,8 +199,6 @@ private:
     void close_sub_widgets();
     ErrorOr<Ladybird::DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
 
-    float m_zoom_level { 1.0 };
-    float m_device_pixel_ratio { 1.0 };
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
