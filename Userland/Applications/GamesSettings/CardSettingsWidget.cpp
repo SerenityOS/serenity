@@ -6,7 +6,10 @@
 
 #include "CardSettingsWidget.h"
 #include <Applications/GamesSettings/CardSettingsWidgetGML.h>
+#include <LibCards/Card.h>
+#include <LibCards/CardGame.h>
 #include <LibCards/CardPainter.h>
+#include <LibCards/CardStack.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGfx/Palette.h>
@@ -15,28 +18,63 @@ namespace GamesSettings {
 
 static constexpr StringView default_card_back_image_path = "/res/icons/cards/buggie-deck.png"sv;
 
+class Preview final : public Cards::CardGame {
+    C_OBJECT_ABSTRACT(Preview)
+
+public:
+    static ErrorOr<NonnullRefPtr<Preview>> try_create()
+    {
+        auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Preview()));
+
+        Gfx::IntPoint point { 30, 30 };
+        TRY(preview->add_stack(point, Cards::CardStack::Type::Stock));
+
+        point.translate_by(Cards::Card::width + 30, 0);
+        TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
+
+        point.translate_by(Cards::Card::width + 30, 0);
+        TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
+
+        for (size_t i = 0; i < Cards::Card::card_count; ++i)
+            preview->stack_at_location(0).push(TRY(Cards::Card::try_create(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i))));
+        preview->stack_at_location(1).push(TRY(Cards::Card::try_create(Cards::Suit::Spades, Cards::Rank::Ace)));
+        preview->stack_at_location(2).push(TRY(Cards::Card::try_create(Cards::Suit::Hearts, Cards::Rank::Queen)));
+
+        preview->stack_at_location(0).peek().set_upside_down(true);
+        return preview;
+    }
+
+private:
+    Preview() = default;
+
+    virtual void paint_event(GUI::PaintEvent& event) override
+    {
+        Cards::CardGame::paint_event(event);
+
+        GUI::Painter painter(*this);
+        painter.add_clip_rect(frame_inner_rect());
+        painter.add_clip_rect(event.rect());
+
+        auto background_color = this->background_color();
+        for (auto& stack : stacks())
+            stack.paint(painter, background_color);
+    }
+};
+
 CardSettingsWidget::CardSettingsWidget()
 {
     load_from_gml(card_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     auto background_color = Gfx::Color::from_string(Config::read_string("Games"sv, "Cards"sv, "BackgroundColor"sv)).value_or(Gfx::Color::from_rgb(0x008000));
 
-    m_preview_frame = find_descendant_of_type_named<GUI::Frame>("cards_preview");
-    set_cards_background_color(background_color);
-
-    m_preview_card_back = find_descendant_of_type_named<GUI::ImageWidget>("cards_preview_card_back");
-    m_preview_card_back->set_bitmap(Cards::CardPainter::the().card_back());
-
-    m_preview_card_front_ace = find_descendant_of_type_named<GUI::ImageWidget>("cards_preview_card_front_ace");
-    m_preview_card_front_ace->set_bitmap(Cards::CardPainter::the().card_front(Cards::Suit::Spades, Cards::Rank::Ace));
-    m_preview_card_front_queen = find_descendant_of_type_named<GUI::ImageWidget>("cards_preview_card_front_queen");
-    m_preview_card_front_queen->set_bitmap(Cards::CardPainter::the().card_front(Cards::Suit::Hearts, Cards::Rank::Queen));
+    m_preview_frame = find_descendant_of_type_named<Preview>("cards_preview");
+    m_preview_frame->set_background_color(background_color);
 
     m_background_color_input = find_descendant_of_type_named<GUI::ColorInput>("cards_background_color");
     m_background_color_input->set_color(background_color, GUI::AllowCallback::No);
     m_background_color_input->on_change = [&]() {
         set_modified(true);
-        set_cards_background_color(m_background_color_input->color());
+        m_preview_frame->set_background_color(m_background_color_input->color());
     };
 
     m_card_back_image_view = find_descendant_of_type_named<GUI::IconView>("cards_back_image");
@@ -51,7 +89,7 @@ CardSettingsWidget::CardSettingsWidget()
         m_last_selected_card_back = card_back_selection.first();
         set_modified(true);
         Cards::CardPainter::the().set_background_image_path(card_back_image_path());
-        m_preview_card_back->update();
+        m_preview_frame->update();
     };
 
     m_last_selected_card_back = m_card_back_image_view->selection().first();
@@ -69,20 +107,13 @@ void CardSettingsWidget::reset_default_values()
     set_card_back_image_path(default_card_back_image_path);
 }
 
-void CardSettingsWidget::set_cards_background_color(Gfx::Color color)
-{
-    auto new_palette = m_preview_frame->palette();
-    new_palette.set_color(Gfx::ColorRole::Background, color);
-    m_preview_frame->set_palette(new_palette);
-}
-
 bool CardSettingsWidget::set_card_back_image_path(DeprecatedString const& path)
 {
     auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path, m_card_back_image_view->model_column());
     if (index.is_valid()) {
         m_card_back_image_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
         Cards::CardPainter::the().set_background_image_path(path);
-        m_preview_card_back->update();
+        m_preview_frame->update();
         return true;
     }
     return false;
@@ -98,3 +129,5 @@ DeprecatedString CardSettingsWidget::card_back_image_path() const
 }
 
 }
+
+REGISTER_WIDGET(GamesSettings, Preview);

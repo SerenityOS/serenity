@@ -15,6 +15,8 @@
 
 namespace GamesSettings {
 
+class Preview;
+
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(CardSettingsWidget)
 public:
@@ -26,15 +28,10 @@ public:
 private:
     CardSettingsWidget();
 
-    void set_cards_background_color(Gfx::Color);
     bool set_card_back_image_path(DeprecatedString const&);
     DeprecatedString card_back_image_path() const;
 
-    RefPtr<GUI::Frame> m_preview_frame;
-    RefPtr<GUI::ImageWidget> m_preview_card_back;
-    RefPtr<GUI::ImageWidget> m_preview_card_front_ace;
-    RefPtr<GUI::ImageWidget> m_preview_card_front_queen;
-
+    RefPtr<Preview> m_preview_frame;
     RefPtr<GUI::ColorInput> m_background_color_input;
     RefPtr<GUI::IconView> m_card_back_image_view;
 
