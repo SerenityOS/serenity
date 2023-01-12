@@ -2,6 +2,12 @@
     layout: @GUI::VerticalBoxLayout {}
     fill_with_background_color: true
 
+    @GUI::ToolbarContainer {
+        @GUI::Toolbar {
+            name: "toolbar"
+        }
+    }
+
     @GUI::HorizontalSplitter {
         layout: @GUI::HorizontalBoxLayout {}
         name: "splitter"
