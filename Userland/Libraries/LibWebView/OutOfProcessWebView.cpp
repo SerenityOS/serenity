@@ -552,16 +552,6 @@ void OutOfProcessWebView::js_console_request_messages(i32 start_index)
     client().async_js_console_request_messages(start_index);
 }
 
-DeprecatedString OutOfProcessWebView::selected_text()
-{
-    return client().get_selected_text();
-}
-
-void OutOfProcessWebView::select_all()
-{
-    client().async_select_all();
-}
-
 DeprecatedString OutOfProcessWebView::dump_layout_tree()
 {
     return client().dump_layout_tree();

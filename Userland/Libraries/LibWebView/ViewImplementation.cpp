@@ -61,6 +61,16 @@ void ViewImplementation::reset_zoom()
     update_zoom();
 }
 
+DeprecatedString ViewImplementation::selected_text()
+{
+    return client().get_selected_text();
+}
+
+void ViewImplementation::select_all()
+{
+    client().async_select_all();
+}
+
 void ViewImplementation::get_source()
 {
     client().async_get_source();
