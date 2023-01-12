@@ -97,9 +97,6 @@ public:
 
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
-    DeprecatedString selected_text();
-    void select_all();
-
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) override;

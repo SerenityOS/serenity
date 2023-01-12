@@ -38,6 +38,9 @@ public:
     void zoom_out();
     void reset_zoom();
 
+    DeprecatedString selected_text();
+    void select_all();
+
     void get_source();
 
     void inspect_dom_tree();
