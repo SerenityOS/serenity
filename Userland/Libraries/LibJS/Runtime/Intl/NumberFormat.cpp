@@ -494,7 +494,7 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
 
     // 12. If int < minInteger, then
     if (digits < min_integer) {
-        // a. Let forwardZeros be the String consisting of minInteger–int occurrences of the character "0".
+        // a. Let forwardZeros be the String consisting of minInteger - int occurrences of the code unit 0x0030 (DIGIT ZERO).
         auto forward_zeros = DeprecatedString::repeated('0', min_integer - digits);
 
         // b. Set string to the string-concatenation of forwardZeros and string.
@@ -958,18 +958,18 @@ static DeprecatedString cut_trailing_zeroes(StringView string, int cut)
 {
     // These steps are exactly the same between ToRawPrecision and ToRawFixed.
 
-    // Repeat, while cut > 0 and the last character of m is "0",
+    // Repeat, while cut > 0 and the last code unit of m is 0x0030 (DIGIT ZERO),
     while ((cut > 0) && string.ends_with('0')) {
-        // Remove the last character from m.
+        // Remove the last code unit from m.
         string = string.substring_view(0, string.length() - 1);
 
         // Decrease cut by 1.
         --cut;
     }
 
-    // If the last character of m is ".", then
+    // If the last code unit of m is 0x002E (FULL STOP), then
     if (string.ends_with('.')) {
-        // Remove the last character from m.
+        // Remove the last code unit from m.
         string = string.substring_view(0, string.length() - 1);
     }
 
@@ -1034,7 +1034,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
 
     // 2. If x = 0, then
     if (number.is_zero()) {
-        // a. Let m be the String consisting of p occurrences of the character "0".
+        // a. Let m be the String consisting of p occurrences of the code unit 0x0030 (DIGIT ZERO).
         result.formatted_string = DeprecatedString::repeated('0', precision);
 
         // b. Let e be 0.
@@ -1085,7 +1085,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
 
     // 4. If e ≥ p–1, then
     if (exponent >= (precision - 1)) {
-        // a. Let m be the string-concatenation of m and e–p+1 occurrences of the character "0".
+        // a. Set m to the string-concatenation of m and e - p + 1 occurrences of the code unit 0x0030 (DIGIT ZERO).
         result.formatted_string = DeprecatedString::formatted(
             "{}{}",
             result.formatted_string,
@@ -1096,7 +1096,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
     }
     // 5. Else if e ≥ 0, then
     else if (exponent >= 0) {
-        // a. Let m be the string-concatenation of the first e+1 characters of m, the character ".", and the remaining p–(e+1) characters of m.
+        // a. Set m to the string-concatenation of the first e + 1 code units of m, the code unit 0x002E (FULL STOP), and the remaining p - (e + 1) code units of m.
         result.formatted_string = DeprecatedString::formatted(
             "{}.{}",
             result.formatted_string.substring_view(0, exponent + 1),
@@ -1108,7 +1108,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
     // 6. Else,
     else {
         // a. Assert: e < 0.
-        // b. Let m be the string-concatenation of "0.", –(e+1) occurrences of the character "0", and m.
+        // b. Set m to the string-concatenation of "0.", -(e + 1) occurrences of the code unit 0x0030 (DIGIT ZERO), and m.
         result.formatted_string = DeprecatedString::formatted(
             "0.{}{}",
             DeprecatedString::repeated('0', -1 * (exponent + 1)),
@@ -1118,7 +1118,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
         result.digits = 1;
     }
 
-    // 7. If m contains the character ".", and maxPrecision > minPrecision, then
+    // 7. If m contains the code unit 0x002E (FULL STOP) and maxPrecision > minPrecision, then
     if (result.formatted_string.contains('.') && (max_precision > min_precision)) {
         // a. Let cut be maxPrecision – minPrecision.
         int cut = max_precision - min_precision;
@@ -1223,12 +1223,12 @@ RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, 
 
     // 8. If f ≠ 0, then
     if (fraction != 0) {
-        // a. Let k be the number of characters in m.
+        // a. Let k be the length of m.
         auto decimals = result.formatted_string.length();
 
         // b. If k ≤ f, then
         if (decimals <= static_cast<size_t>(fraction)) {
-            // i. Let z be the String value consisting of f+1–k occurrences of the character "0".
+            // i. Let z be the String value consisting of f + 1 - k occurrences of the code unit 0x0030 (DIGIT ZERO).
             auto zeroes = DeprecatedString::repeated('0', fraction + 1 - decimals);
 
             // ii. Let m be the string-concatenation of z and m.
@@ -1238,17 +1238,17 @@ RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, 
             decimals = fraction + 1;
         }
 
-        // c. Let a be the first k–f characters of m, and let b be the remaining f characters of m.
+        // c. Let a be the first k - f code units of m, and let b be the remaining f code units of m.
         auto a = result.formatted_string.substring_view(0, decimals - fraction);
         auto b = result.formatted_string.substring_view(decimals - fraction, fraction);
 
         // d. Let m be the string-concatenation of a, ".", and b.
         result.formatted_string = DeprecatedString::formatted("{}.{}", a, b);
 
-        // e. Let int be the number of characters in a.
+        // e. Let int be the length of a.
         result.digits = a.length();
     }
-    // 9. Else, let int be the number of characters in m.
+    // 9. Else, let int be the length of m.
     else {
         result.digits = result.formatted_string.length();
     }
