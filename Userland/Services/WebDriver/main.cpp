@@ -100,7 +100,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/headless-browser", "rx"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res/icons", "r"));
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(webdriver_socket_path, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 

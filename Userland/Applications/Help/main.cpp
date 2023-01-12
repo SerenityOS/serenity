@@ -23,7 +23,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     // We specifically don't want to load this path from a library, as that can be hijacked with LD_PRELOAD.
     TRY(Core::System::unveil("/usr/share/man", "r"));

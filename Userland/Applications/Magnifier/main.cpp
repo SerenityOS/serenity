@@ -47,7 +47,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
     Config::pledge_domain("Magnifier");
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

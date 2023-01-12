@@ -36,7 +36,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     auto widget = TRY(window->set_main_widget<ChessWidget>());
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/ChessEngine", "x"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
