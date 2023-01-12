@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -572,7 +572,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     // 1. Set options to ? CoerceOptionsToObject(options).
     auto* options_object = TRY(coerce_options_to_object(vm, options));
 
-    // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 2. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options_object, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     Vector<DeprecatedString> supported_locales;

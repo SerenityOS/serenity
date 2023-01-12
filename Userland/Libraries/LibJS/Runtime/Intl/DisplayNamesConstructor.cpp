@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -69,7 +69,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
 
     // 7. Let localeData be %DisplayNames%.[[LocaleData]].
 
-    // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 8. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 9. Set opt.[[localeMatcher]] to matcher.
@@ -78,13 +78,13 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
     // 10. Let r be ResolveLocale(%DisplayNames%.[[AvailableLocales]], requestedLocales, opt, %DisplayNames%.[[RelevantExtensionKeys]]).
     auto result = TRY(resolve_locale(requested_locales, opt, {}));
 
-    // 11. Let style be ? GetOption(options, "style", "string", « "narrow", "short", "long" », "long").
+    // 11. Let style be ? GetOption(options, "style", string, « "narrow", "short", "long" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv));
 
     // 12. Set displayNames.[[Style]] to style.
     display_names->set_style(TRY(style.as_string().deprecated_string()));
 
-    // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency", "calendar", "dateTimeField" », undefined).
+    // 13. Let type be ? GetOption(options, "type", string, « "language", "region", "script", "currency", "calendar", "dateTimeField" », undefined).
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "language"sv, "region"sv, "script"sv, "currency"sv, "calendar"sv, "dateTimeField"sv }, Empty {}));
 
     // 14. If type is undefined, throw a TypeError exception.
@@ -94,7 +94,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
     // 15. Set displayNames.[[Type]] to type.
     display_names->set_type(TRY(type.as_string().deprecated_string()));
 
-    // 16. Let fallback be ? GetOption(options, "fallback", "string", « "code", "none" », "code").
+    // 16. Let fallback be ? GetOption(options, "fallback", string, « "code", "none" », "code").
     auto fallback = TRY(get_option(vm, *options, vm.names.fallback, OptionType::String, { "code"sv, "none"sv }, "code"sv));
 
     // 17. Set displayNames.[[Fallback]] to fallback.
@@ -110,7 +110,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
     // 21. Let types be dataLocaleData.[[types]].
     // 22. Assert: types is a Record (see 12.4.3).
 
-    // 23. Let languageDisplay be ? GetOption(options, "languageDisplay", "string", « "dialect", "standard" », "dialect").
+    // 23. Let languageDisplay be ? GetOption(options, "languageDisplay", string, « "dialect", "standard" », "dialect").
     auto language_display = TRY(get_option(vm, *options, vm.names.languageDisplay, OptionType::String, { "dialect"sv, "standard"sv }, "dialect"sv));
 
     // 24. Let typeFields be types.[[<type>]].

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,7 +63,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     // 6. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 7. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 7. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 8. Set opt.[[localeMatcher]] to matcher.
@@ -76,7 +77,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     // 11. Set segmenter.[[Locale]] to r.[[locale]].
     segmenter->set_locale(move(result.locale));
 
-    // 12. Let granularity be ? GetOption(options, "granularity", "string", « "grapheme", "word", "sentence" », "grapheme").
+    // 12. Let granularity be ? GetOption(options, "granularity", string, « "grapheme", "word", "sentence" », "grapheme").
     auto granularity = TRY(get_option(vm, *options, vm.names.granularity, OptionType::String, { "grapheme"sv, "word"sv, "sentence"sv }, "grapheme"sv));
 
     // 13. Set segmenter.[[SegmenterGranularity]] to granularity.

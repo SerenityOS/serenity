@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 2. Set options to ? CoerceOptionsToObject(options).
     auto* options = TRY(coerce_options_to_object(vm, options_value));
 
-    // 3. Let usage be ? GetOption(options, "usage", "string", « "sort", "search" », "sort").
+    // 3. Let usage be ? GetOption(options, "usage", string, « "sort", "search" », "sort").
     auto usage = TRY(get_option(vm, *options, vm.names.usage, OptionType::String, { "sort"sv, "search"sv }, "sort"sv));
 
     // 4. Set collator.[[Usage]] to usage.
@@ -37,13 +37,13 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 7. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 8. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 9. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
-    // 10. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
+    // 10. Let collation be ? GetOption(options, "collation", string, empty, undefined).
     auto collation = TRY(get_option(vm, *options, vm.names.collation, OptionType::String, {}, Empty {}));
 
     // 11. If collation is not undefined, then
@@ -56,7 +56,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
         opt.co = TRY(collation.as_string().deprecated_string());
     }
 
-    // 13. Let numeric be ? GetOption(options, "numeric", "boolean", undefined, undefined).
+    // 13. Let numeric be ? GetOption(options, "numeric", boolean, empty, undefined).
     auto numeric = TRY(get_option(vm, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
     // 14. If numeric is not undefined, then
@@ -65,7 +65,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     if (!numeric.is_undefined())
         opt.kn = MUST(numeric.to_string(vm));
 
-    // 16. Let caseFirst be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
+    // 16. Let caseFirst be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.
     auto case_first = TRY(get_option(vm, *options, vm.names.caseFirst, OptionType::String, { "upper"sv, "lower"sv, "false"sv }, Empty {}));
     if (!case_first.is_undefined())
@@ -97,7 +97,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
         collator.set_case_first(result.kf.release_value());
     }
 
-    // 26. Let sensitivity be ? GetOption(options, "sensitivity", "string", « "base", "accent", "case", "variant" », undefined).
+    // 26. Let sensitivity be ? GetOption(options, "sensitivity", string, « "base", "accent", "case", "variant" », undefined).
     auto sensitivity = TRY(get_option(vm, *options, vm.names.sensitivity, OptionType::String, { "base"sv, "accent"sv, "case"sv, "variant"sv }, Empty {}));
 
     // 27. If sensitivity is undefined, then
@@ -119,7 +119,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 28. Set collator.[[Sensitivity]] to sensitivity.
     collator.set_sensitivity(TRY(sensitivity.as_string().deprecated_string()));
 
-    // 29. Let ignorePunctuation be ? GetOption(options, "ignorePunctuation", "boolean", undefined, false).
+    // 29. Let ignorePunctuation be ? GetOption(options, "ignorePunctuation", boolean, empty, false).
     auto ignore_punctuation = TRY(get_option(vm, *options, vm.names.ignorePunctuation, OptionType::Boolean, {}, false));
 
     // 30. Set collator.[[IgnorePunctuation]] to ignorePunctuation.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,17 +50,17 @@ static ThrowCompletionOr<DeprecatedString> apply_options_to_tag(VM& vm, StringVi
     if (!locale_id.has_value())
         return vm.throw_completion<RangeError>(ErrorType::IntlInvalidLanguageTag, tag);
 
-    // 4. Let language be ? GetOption(options, "language", "string", undefined, undefined).
+    // 4. Let language be ? GetOption(options, "language", string, empty, undefined).
     // 5. If language is not undefined, then
     //     a. If language does not match the unicode_language_subtag production, throw a RangeError exception.
     auto language = TRY(get_string_option(vm, options, vm.names.language, ::Locale::is_unicode_language_subtag));
 
-    // 6. Let script be ? GetOption(options, "script", "string", undefined, undefined).
+    // 6. Let script be ? GetOption(options, "script", string, empty, undefined).
     // 7. If script is not undefined, then
     //     a. If script does not match the unicode_script_subtag production, throw a RangeError exception.
     auto script = TRY(get_string_option(vm, options, vm.names.script, ::Locale::is_unicode_script_subtag));
 
-    // 8. Let region be ? GetOption(options, "region", "string", undefined, undefined).
+    // 8. Let region be ? GetOption(options, "region", string, empty, undefined).
     // 9. If region is not undefined, then
     //     a. If region does not match the unicode_region_subtag production, throw a RangeError exception.
     auto region = TRY(get_string_option(vm, options, vm.names.region, ::Locale::is_unicode_region_subtag));
@@ -287,27 +287,27 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 12. Let opt be a new Record.
     LocaleAndKeys opt {};
 
-    // 13. Let calendar be ? GetOption(options, "calendar", "string", undefined, undefined).
+    // 13. Let calendar be ? GetOption(options, "calendar", string, empty, undefined).
     // 14. If calendar is not undefined, then
     //     a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 15. Set opt.[[ca]] to calendar.
     opt.ca = TRY(get_string_option(vm, *options, vm.names.calendar, ::Locale::is_type_identifier));
 
-    // 16. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
+    // 16. Let collation be ? GetOption(options, "collation", string, empty, undefined).
     // 17. If collation is not undefined, then
     //     a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 18. Set opt.[[co]] to collation.
     opt.co = TRY(get_string_option(vm, *options, vm.names.collation, ::Locale::is_type_identifier));
 
-    // 19. Let hc be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
+    // 19. Let hc be ? GetOption(options, "hourCycle", string, « "h11", "h12", "h23", "h24" », undefined).
     // 20. Set opt.[[hc]] to hc.
     opt.hc = TRY(get_string_option(vm, *options, vm.names.hourCycle, nullptr, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }));
 
-    // 21. Let kf be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
+    // 21. Let kf be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
     // 22. Set opt.[[kf]] to kf.
     opt.kf = TRY(get_string_option(vm, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
 
-    // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
+    // 23. Let kn be ? GetOption(options, "numeric", boolean, empty, undefined).
     auto kn = TRY(get_option(vm, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
     // 24. If kn is not undefined, set kn to ! ToString(kn).
@@ -315,7 +315,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     if (!kn.is_undefined())
         opt.kn = TRY(kn.to_string(vm));
 
-    // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
+    // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
     // 27. If numberingSystem is not undefined, then
     //     a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 28. Set opt.[[nu]] to numberingSystem.
