@@ -109,7 +109,6 @@ private:
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Web::DevicePixelRect m_screen_rect;
     Web::DevicePixelSize m_content_size;
-    // FIXME: Actually set this based on the device's pixel ratio.
     float m_device_pixels_per_css_pixel { 1.0f };
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
@@ -528,6 +528,11 @@ void ConnectionFromClient::set_has_focus(bool has_focus)
 void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
 {
     m_page_host->set_is_scripting_enabled(is_scripting_enabled);
+}
+
+void ConnectionFromClient::set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel)
+{
+    m_page_host->set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
 }
 
 void ConnectionFromClient::set_window_position(Gfx::IntPoint position)
