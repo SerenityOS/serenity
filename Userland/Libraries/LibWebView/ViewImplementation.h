@@ -11,6 +11,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
 #include <LibWebView/Forward.h>
+#include <LibWebView/WebContentClient.h>
 
 namespace WebView {
 
@@ -68,6 +69,26 @@ public:
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() = 0;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32) = 0;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
+
+protected:
+    WebContentClient& client();
+    WebContentClient const& client() const;
+    virtual void create_client() = 0;
+
+    struct SharedBitmap {
+        i32 id { -1 };
+        i32 pending_paints { 0 };
+        RefPtr<Gfx::Bitmap> bitmap;
+    };
+
+    struct ClientState {
+        RefPtr<WebContentClient> client;
+        SharedBitmap front_bitmap;
+        SharedBitmap back_bitmap;
+        i32 next_bitmap_id { 0 };
+        bool has_usable_bitmap { false };
+        bool got_repaint_requests_while_painting { false };
+    } m_client_state;
 };
 
 }

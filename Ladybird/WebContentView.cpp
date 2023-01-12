@@ -607,12 +607,6 @@ void WebContentView::hideEvent(QHideEvent* event)
     client().async_set_system_visibility_state(false);
 }
 
-WebContentClient& WebContentView::client()
-{
-    VERIFY(m_client_state.client);
-    return *m_client_state.client;
-}
-
 void WebContentView::create_client()
 {
     m_client_state = {};

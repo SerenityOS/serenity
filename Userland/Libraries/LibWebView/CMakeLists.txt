@@ -4,6 +4,7 @@ set(SOURCES
     OutOfProcessWebView.cpp
     RequestServerAdapter.cpp
     StylePropertiesModel.cpp
+    ViewImplementation.cpp
     WebContentClient.cpp
     WebSocketClientAdapter.cpp
 )

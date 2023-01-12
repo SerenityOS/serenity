@@ -152,6 +152,7 @@ private:
     virtual void did_scroll() override;
 
     // ^WebView::ViewImplementation
+    virtual void create_client() override;
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) override;
@@ -207,9 +208,6 @@ private:
     void handle_resize();
     void update_zoom();
 
-    void create_client();
-    WebContentClient& client();
-
     void handle_web_content_process_crash();
 
     using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
@@ -217,21 +215,6 @@ private:
     void process_next_input_event();
 
     AK::URL m_url;
-
-    struct SharedBitmap {
-        i32 id { -1 };
-        i32 pending_paints { 0 };
-        RefPtr<Gfx::Bitmap> bitmap;
-    };
-
-    struct ClientState {
-        RefPtr<WebContentClient> client;
-        SharedBitmap front_bitmap;
-        SharedBitmap back_bitmap;
-        i32 next_bitmap_id { 0 };
-        bool has_usable_bitmap { false };
-        bool got_repaint_requests_while_painting { false };
-    } m_client_state;
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
     RefPtr<GUI::Dialog> m_dialog;
