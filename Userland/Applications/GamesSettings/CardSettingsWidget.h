@@ -13,6 +13,8 @@
 #include <LibGUI/ModelIndex.h>
 #include <LibGUI/SettingsWindow.h>
 
+namespace GamesSettings {
+
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(CardSettingsWidget)
 public:
@@ -38,3 +40,5 @@ private:
 
     GUI::ModelIndex m_last_selected_card_back;
 };
+
+}
