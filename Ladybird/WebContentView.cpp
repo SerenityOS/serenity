@@ -925,11 +925,6 @@ void WebContentView::notify_server_did_request_dismiss_dialog(Badge<WebContentCl
         m_dialog->reject();
 }
 
-void WebContentView::get_source()
-{
-    client().async_get_source();
-}
-
 void WebContentView::notify_server_did_get_source(AK::URL const& url, DeprecatedString const& source)
 {
     emit got_source(url, qstring_from_ak_deprecated_string(source));

@@ -93,8 +93,6 @@ public:
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
-    void get_source();
-
     void run_javascript(DeprecatedString const& js_source);
 
     void did_output_js_console_message(i32 message_index);

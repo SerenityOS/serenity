@@ -42,4 +42,9 @@ void ViewImplementation::reset_zoom()
     update_zoom();
 }
 
+void ViewImplementation::get_source()
+{
+    client().async_get_source();
+}
+
 }
