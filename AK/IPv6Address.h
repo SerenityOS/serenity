@@ -284,7 +284,7 @@ template<>
 struct Formatter<IPv6Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>> {
     ErrorOr<void> format(FormatBuilder& builder, IPv6Address const& value)
     {
-        return Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>>::format(builder, value.to_string());
+        return Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>>::format(builder, TRY(value.to_string()));
     }
 };
 #else
