@@ -104,4 +104,9 @@ void ViewImplementation::debug_request(DeprecatedString const& request, Deprecat
     client().async_debug_request(request, argument);
 }
 
+void ViewImplementation::run_javascript(StringView js_source)
+{
+    client().async_run_javascript(js_source);
+}
+
 }

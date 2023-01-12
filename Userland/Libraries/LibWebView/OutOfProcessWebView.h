@@ -36,8 +36,6 @@ public:
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
 
-    void run_javascript(StringView);
-
     DeprecatedString selected_text();
     void select_all();
 
