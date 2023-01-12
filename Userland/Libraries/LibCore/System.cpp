@@ -1172,9 +1172,9 @@ ErrorOr<void> join_jail(u64 jail_index)
     HANDLE_SYSCALL_RETURN_VALUE("jail_attach", rc, {});
 }
 
-ErrorOr<u64> create_jail(StringView jail_name)
+ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags flags)
 {
-    Syscall::SC_jail_create_params params { 0, { jail_name.characters_without_null_termination(), jail_name.length() } };
+    Syscall::SC_jail_create_params params { 0, { jail_name.characters_without_null_termination(), jail_name.length() }, static_cast<int>(flags) };
     int rc = syscall(SC_jail_create, &params);
     HANDLE_SYSCALL_RETURN_VALUE("jail_create", rc, static_cast<u64>(params.index));
 }

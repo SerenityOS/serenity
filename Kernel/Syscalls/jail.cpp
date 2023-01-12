@@ -5,7 +5,7 @@
  */
 
 #include <AK/Userspace.h>
-#include <Kernel/API/Ioctl.h>
+#include <Kernel/API/Jail.h>
 #include <Kernel/Jail.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
@@ -30,7 +30,7 @@ ErrorOr<FlatPtr> Process::sys$jail_create(Userspace<Syscall::SC_jail_create_para
         // any info leak about the "outside world" jail metadata.
         if (my_jail)
             return Error::from_errno(EPERM);
-        auto jail = TRY(Jail::create(move(jail_name)));
+        auto jail = TRY(Jail::create(move(jail_name), static_cast<unsigned>(params.flags)));
         return jail->index().value();
     }));
     // Note: We do the copy_to_user outside of the m_attached_jail Spinlock locked scope because
