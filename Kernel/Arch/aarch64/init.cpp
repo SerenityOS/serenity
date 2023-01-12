@@ -26,7 +26,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
-#include <Kernel/JailManagement.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
@@ -174,8 +173,6 @@ extern "C" [[noreturn]] void init()
     // Note: We have to disable interrupts otherwise Scheduler::timer_tick might be called before the scheduler is started.
     Processor::disable_interrupts();
     TimeManagement::initialize(0);
-
-    JailManagement::the();
 
     Process::initialize();
     Scheduler::initialize();

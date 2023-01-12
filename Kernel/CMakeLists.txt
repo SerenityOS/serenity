@@ -93,7 +93,6 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     IOWindow.cpp
     Jail.cpp
-    JailManagement.cpp
     SanCov.cpp
     Storage/ATA/AHCI/Controller.cpp
     Storage/ATA/AHCI/Port.cpp
@@ -256,6 +255,7 @@ set(KERNEL_SOURCES
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessGroup.cpp
+    ProcessList.cpp
     Random.cpp
     Scheduler.cpp
     ScopedCritical.cpp

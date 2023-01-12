@@ -7,7 +7,6 @@
 #include <AK/Userspace.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/Jail.h>
-#include <Kernel/JailManagement.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
 
@@ -31,7 +30,7 @@ ErrorOr<FlatPtr> Process::sys$jail_create(Userspace<Syscall::SC_jail_create_para
         // any info leak about the "outside world" jail metadata.
         if (my_jail)
             return Error::from_errno(EPERM);
-        auto jail = TRY(JailManagement::the().create_jail(move(jail_name)));
+        auto jail = TRY(Jail::create(move(jail_name)));
         return jail->index().value();
     }));
     // Note: We do the copy_to_user outside of the m_attached_jail Spinlock locked scope because
@@ -64,12 +63,20 @@ ErrorOr<FlatPtr> Process::sys$jail_attach(Userspace<Syscall::SC_jail_attach_para
         // in the system, just return EPERM before doing anything else.
         if (my_jail)
             return EPERM;
-        auto jail = JailManagement::the().find_jail_by_index(static_cast<JailIndex>(params.index));
+        auto jail = Jail::find_by_index(static_cast<JailIndex>(params.index));
         if (!jail)
             return EINVAL;
         my_jail = *jail;
         my_jail->attach_count().with([&](auto& attach_count) {
             attach_count++;
+        });
+        m_jail_process_list.with([&](auto& list_ptr) {
+            list_ptr = my_jail->process_list();
+            if (list_ptr) {
+                list_ptr->attached_processes().with([&](auto& list) {
+                    list.append(*this);
+                });
+            }
         });
         return 0;
     });

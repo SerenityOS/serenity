@@ -104,6 +104,8 @@ static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
 struct LoadResult;
 
+class ProcessList;
+
 class Process final
     : public ListedRefCounted<Process, LockType::Spinlock>
     , public LockWeakable<Process> {
@@ -665,8 +667,6 @@ private:
         return nullptr;
     }
 
-    IntrusiveListNode<Process> m_list_node;
-
     SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> m_name;
 
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
@@ -852,7 +852,15 @@ private:
 
     LockWeakPtr<Memory::Region> m_master_tls_region;
 
-    IntrusiveListNode<Process> m_jail_list_node;
+    IntrusiveListNode<Process> m_jail_process_list_node;
+    IntrusiveListNode<Process> m_all_processes_list_node;
+
+public:
+    using AllProcessesList = IntrusiveListRelaxedConst<&Process::m_all_processes_list_node>;
+    using JailProcessList = IntrusiveListRelaxedConst<&Process::m_jail_process_list_node>;
+
+private:
+    SpinlockProtected<RefPtr<ProcessList>, LockRank::None> m_jail_process_list;
     SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail {};
 
     size_t m_master_tls_size { 0 };
@@ -895,8 +903,18 @@ private:
     u8 m_protected_values_padding[PAGE_SIZE - sizeof(ProtectedValues)];
 
 public:
-    using List = IntrusiveListRelaxedConst<&Process::m_list_node>;
-    static SpinlockProtected<Process::List, LockRank::None>& all_instances();
+    static SpinlockProtected<Process::AllProcessesList, LockRank::None>& all_instances();
+};
+
+class ProcessList : public RefCounted<ProcessList> {
+public:
+    static ErrorOr<NonnullRefPtr<ProcessList>> create();
+    SpinlockProtected<Process::JailProcessList, LockRank::None>& attached_processes() { return m_attached_processes; }
+    SpinlockProtected<Process::JailProcessList, LockRank::None> const& attached_processes() const { return m_attached_processes; }
+
+private:
+    ProcessList() = default;
+    SpinlockProtected<Process::JailProcessList, LockRank::None> m_attached_processes;
 };
 
 // Note: Process object should be 2 pages of 4096 bytes each.
