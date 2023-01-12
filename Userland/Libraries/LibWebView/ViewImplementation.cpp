@@ -61,6 +61,11 @@ void ViewImplementation::reset_zoom()
     update_zoom();
 }
 
+void ViewImplementation::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
+{
+    client().async_set_preferred_color_scheme(color_scheme);
+}
+
 DeprecatedString ViewImplementation::selected_text()
 {
     return client().get_selected_text();

@@ -43,7 +43,6 @@ public:
 
     void set_content_filters(Vector<DeprecatedString>);
     void set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings);
-    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
 
     void set_window_position(Gfx::IntPoint);

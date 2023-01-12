@@ -38,6 +38,8 @@ public:
     void zoom_out();
     void reset_zoom();
 
+    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
+
     DeprecatedString selected_text();
     void select_all();
 
