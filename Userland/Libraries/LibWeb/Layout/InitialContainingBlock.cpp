@@ -79,7 +79,23 @@ void InitialContainingBlock::recompute_selection_states()
     auto* start_container = range->start_container();
     auto* end_container = range->end_container();
 
-    // 3. If the selection starts and ends in the same text node, mark it as StartAndEnd and return.
+    // 3. If the selection starts and ends in the same node:
+    if (start_container == end_container) {
+        // 1. If the selection starts and ends at the same offset, return.
+        if (range->start_offset() == range->end_offset()) {
+            // NOTE: A zero-length selection should not be visible.
+            return;
+        }
+
+        // 2. If it's a text node, mark it as StartAndEnd and return.
+        if (is<DOM::Text>(*start_container)) {
+            if (auto* layout_node = start_container->layout_node()) {
+                layout_node->set_selection_state(SelectionState::StartAndEnd);
+            }
+            return;
+        }
+    }
+
     if (start_container == end_container && is<DOM::Text>(*start_container)) {
         if (auto* layout_node = start_container->layout_node()) {
             layout_node->set_selection_state(SelectionState::StartAndEnd);
