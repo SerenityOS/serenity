@@ -233,8 +233,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
     auto& buffer = maybe_buffer.value();
 
     size_t old_reservoir_size = m_bit_reservoir.size();
-    if (LOADER_TRY(m_bitstream->read(buffer)).size() != buffer.size())
-        return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Could not find another whole frame." };
+    LOADER_TRY(m_bitstream->read_entire_buffer(buffer));
     if (m_bit_reservoir.write(buffer) != header.slot_count)
         return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Could not write frame into bit reservoir." };
 
