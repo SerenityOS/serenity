@@ -489,32 +489,29 @@ ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& r
             }
         }
 
-        // iv. If keyLocaleData contains optionsValue, then
-        if (options_value.has_value() && key_locale_data.contains_slow(*options_value)) {
-            // 1. If SameValue(optionsValue, value) is false, then
-            if (options_value != value) {
-                // a. Let value be optionsValue.
-                value = move(options_value);
+        // iv. If SameValue(optionsValue, value) is false and keyLocaleData contains optionsValue, then
+        if (options_value.has_value() && (options_value != value) && key_locale_data.contains_slow(*options_value)) {
+            // 1. Let value be optionsValue.
+            value = move(options_value);
 
-                // b. Let supportedExtensionAddition be "".
-                supported_extension_addition.clear();
-            }
+            // 2. Let supportedExtensionAddition be "".
+            supported_extension_addition.clear();
         }
 
         // j. Set result.[[<key>]] to value.
         find_key_in_value(result, key) = move(value);
 
-        // k. Append supportedExtensionAddition to supportedExtension.
+        // k. Set supportedExtension to the string-concatenation of supportedExtension and supportedExtensionAddition.
         if (supported_extension_addition.has_value())
             supported_extension.keywords.append(supported_extension_addition.release_value());
     }
 
-    // 10. If the number of elements in supportedExtension is greater than 2, then
+    // 10. If supportedExtension is not "-u", then
     if (!supported_extension.keywords.is_empty()) {
         auto locale_id = ::Locale::parse_unicode_locale_id(found_locale);
         VERIFY(locale_id.has_value());
 
-        // a. Let foundLocale be InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
+        // a. Set foundLocale to InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
         found_locale = insert_unicode_extension_and_canonicalize(locale_id.release_value(), move(supported_extension));
     }
 
