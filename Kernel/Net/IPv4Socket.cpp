@@ -480,9 +480,9 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(OpenFileDescription cons
     StringBuilder builder;
     TRY(builder.try_append("socket:"sv));
 
-    TRY(builder.try_appendff("{}:{}", m_local_address.to_string(), m_local_port));
+    TRY(builder.try_appendff("{}:{}", TRY(m_local_address.to_string()), m_local_port));
     if (m_role == Role::Accepted || m_role == Role::Connected)
-        TRY(builder.try_appendff(" / {}:{}", m_peer_address.to_string(), m_peer_port));
+        TRY(builder.try_appendff(" / {}:{}", TRY(m_peer_address.to_string()), m_peer_port));
 
     switch (m_role) {
     case Role::Listener:
