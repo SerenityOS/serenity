@@ -56,6 +56,7 @@ endpoint WebContentServer
     set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
     set_has_focus(bool has_focus) =|
     set_is_scripting_enabled(bool is_scripting_enabled) =|
+    set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) =|
 
     set_window_position(Gfx::IntPoint position) =|
     set_window_size(Gfx::IntSize size) =|
