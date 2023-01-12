@@ -561,19 +561,9 @@ void WebContentView::show_inspector()
     inspect_dom_tree();
 }
 
-void WebContentView::set_color_scheme(ColorScheme color_scheme)
+void WebContentView::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
 {
-    switch (color_scheme) {
-    case ColorScheme::Auto:
-        client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
-        break;
-    case ColorScheme::Light:
-        client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
-        break;
-    case ColorScheme::Dark:
-        client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
-        break;
-    }
+    client().async_set_preferred_color_scheme(color_scheme);
 }
 
 void WebContentView::zoom_in()

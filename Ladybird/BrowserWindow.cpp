@@ -14,6 +14,7 @@
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
 #include <Browser/CookieJar.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
 #include <QActionGroup>
@@ -419,21 +420,21 @@ void BrowserWindow::open_previous_tab()
 void BrowserWindow::enable_auto_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_color_scheme(ColorScheme::Auto);
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
     }
 }
 
 void BrowserWindow::enable_light_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_color_scheme(ColorScheme::Light);
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
     }
 }
 
 void BrowserWindow::enable_dark_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_color_scheme(ColorScheme::Dark);
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
     }
 }
 

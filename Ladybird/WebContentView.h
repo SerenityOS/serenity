@@ -17,6 +17,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWebView/ViewImplementation.h>
 
@@ -39,12 +40,6 @@ class WebContentClient;
 }
 
 using WebView::WebContentClient;
-
-enum class ColorScheme {
-    Auto,
-    Light,
-    Dark,
-};
 
 class Tab;
 
@@ -111,7 +106,7 @@ public:
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
 
-    void set_color_scheme(ColorScheme);
+    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     void zoom_in();
     void zoom_out();
