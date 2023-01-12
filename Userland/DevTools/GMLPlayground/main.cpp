@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,6 +28,7 @@
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <Userland/DevTools/GMLPlayground/GMLPlaygroundWindowGML.h>
 
 namespace {
 
@@ -84,9 +86,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
-    auto splitter = TRY(window->set_main_widget<GUI::HorizontalSplitter>());
-    auto editor = TRY(splitter->try_add<GUI::TextEditor>());
-    auto preview_frame_widget = TRY(splitter->try_add<GUI::Frame>());
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(main_widget->load_from_gml(gml_playground_window_gml));
+
+    auto splitter = main_widget->find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
+    auto editor = main_widget->find_descendant_of_type_named<GUI::TextEditor>("text_editor");
+    auto preview_frame_widget = main_widget->find_descendant_of_type_named<GUI::Frame>("preview_frame");
 
     auto preview_window = TRY(GUI::Window::try_create());
     preview_window->set_title("Preview - GML Playground");
