@@ -308,7 +308,13 @@ LineProgram::DirectoryAndFile LineProgram::get_directory_and_file(size_t file_in
 
 bool LineProgram::looks_like_embedded_resource() const
 {
-    return source_files().size() == 1 && source_files()[0].name.view().contains("serenity_icon_"sv);
+    if (source_files().size() == 1)
+        return source_files()[0].name.view().contains("serenity_icon_"sv);
+
+    if (source_files().size() == 2 && source_files()[0].name.view() == "."sv)
+        return source_files()[1].name.view().contains("serenity_icon_"sv);
+
+    return false;
 }
 
 }
