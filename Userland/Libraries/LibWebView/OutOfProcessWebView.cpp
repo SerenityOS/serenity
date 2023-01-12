@@ -565,34 +565,6 @@ void OutOfProcessWebView::debug_request(DeprecatedString const& request, Depreca
     client().async_debug_request(request, argument);
 }
 
-void OutOfProcessWebView::inspect_dom_tree()
-{
-    client().async_inspect_dom_tree();
-}
-
-Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
-{
-    auto response = client().inspect_dom_node(node_id, pseudo_element);
-    if (!response.has_style())
-        return {};
-    return DOMNodeProperties {
-        .computed_values_json = response.computed_style(),
-        .resolved_values_json = response.resolved_style(),
-        .custom_properties_json = response.custom_properties(),
-        .node_box_sizing_json = response.node_box_sizing()
-    };
-}
-
-void OutOfProcessWebView::clear_inspected_dom_node()
-{
-    client().inspect_dom_node(0, {});
-}
-
-i32 OutOfProcessWebView::get_hovered_node_id()
-{
-    return client().get_hovered_node_id();
-}
-
 void OutOfProcessWebView::js_console_input(DeprecatedString const& js_source)
 {
     client().async_js_console_input(js_source);
@@ -827,11 +799,6 @@ void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool eve
     }
 
     process_next_input_event();
-}
-
-void OutOfProcessWebView::inspect_accessibility_tree()
-{
-    client().async_inspect_accessibility_tree();
 }
 
 void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)

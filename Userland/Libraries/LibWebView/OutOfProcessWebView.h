@@ -41,18 +41,6 @@ public:
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 
-    void inspect_dom_tree();
-    struct DOMNodeProperties {
-        DeprecatedString computed_values_json;
-        DeprecatedString resolved_values_json;
-        DeprecatedString custom_properties_json;
-        DeprecatedString node_box_sizing_json;
-    };
-    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement>);
-    void inspect_accessibility_tree();
-    void clear_inspected_dom_node();
-    i32 get_hovered_node_id();
-
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
 

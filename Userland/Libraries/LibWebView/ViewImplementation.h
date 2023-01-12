@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
@@ -19,10 +21,24 @@ class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
 
+    struct DOMNodeProperties {
+        String computed_style_json;
+        String resolved_style_json;
+        String custom_properties_json;
+        String node_box_sizing_json;
+    };
+
     void zoom_in();
     void zoom_out();
     void reset_zoom();
+
     void get_source();
+
+    void inspect_dom_tree();
+    void inspect_accessibility_tree();
+    ErrorOr<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
+    void clear_inspected_dom_node();
+    i32 get_hovered_node_id();
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) = 0;

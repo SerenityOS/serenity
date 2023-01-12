@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "DOMNodeProperties.h"
 #include "ModelTranslator.h"
+#include "WebContentView.h"
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <LibWeb/CSS/Selector.h>
@@ -36,7 +36,7 @@ public:
     void load_style_json(StringView computed_style_json, StringView resolved_style_json, StringView custom_properties_json);
     void clear_style_json();
 
-    Function<ErrorOr<DOMNodeProperties>(i32, Optional<Web::CSS::Selector::PseudoElement>)> on_dom_node_inspected;
+    Function<ErrorOr<WebContentView::DOMNodeProperties>(i32, Optional<Web::CSS::Selector::PseudoElement>)> on_dom_node_inspected;
     Function<void()> on_close;
 
 private:
