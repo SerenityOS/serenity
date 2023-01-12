@@ -1083,7 +1083,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
         result.formatted_string = n.to_deprecated_string();
     }
 
-    // 4. If e ≥ p–1, then
+    // 4. If e ≥ (p – 1), then
     if (exponent >= (precision - 1)) {
         // a. Set m to the string-concatenation of m and e - p + 1 occurrences of the code unit 0x0030 (DIGIT ZERO).
         result.formatted_string = DeprecatedString::formatted(
@@ -1091,7 +1091,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
             result.formatted_string,
             DeprecatedString::repeated('0', exponent - precision + 1));
 
-        // b. Let int be e+1.
+        // b. Let int be e + 1.
         result.digits = exponent + 1;
     }
     // 5. Else if e ≥ 0, then
@@ -1102,7 +1102,7 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
             result.formatted_string.substring_view(0, exponent + 1),
             result.formatted_string.substring_view(exponent + 1));
 
-        // b. Let int be e+1.
+        // b. Let int be e + 1.
         result.digits = exponent + 1;
     }
     // 6. Else,
@@ -1234,7 +1234,7 @@ RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, 
             // ii. Let m be the string-concatenation of z and m.
             result.formatted_string = DeprecatedString::formatted("{}{}", zeroes, result.formatted_string);
 
-            // iii. Let k be f+1.
+            // iii. Let k be f + 1.
             decimals = fraction + 1;
         }
 
@@ -1514,7 +1514,7 @@ int compute_exponent(NumberFormat& number_format, MathematicalValue number)
     // 8. Let newMagnitude be the base 10 logarithm of formatNumberResult.[[RoundedNumber]] rounded down to the nearest integer.
     int new_magnitude = format_number_result.rounded_number.logarithmic_floor();
 
-    // 9. If newMagnitude is magnitude – exponent, then
+    // 9. If newMagnitude is magnitude - exponent, then
     if (new_magnitude == magnitude - exponent) {
         // a. Return exponent.
         return exponent;
