@@ -19,6 +19,10 @@ class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
 
+    void zoom_in();
+    void zoom_out();
+    void reset_zoom();
+
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
@@ -71,9 +75,14 @@ public:
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 
 protected:
+    static constexpr auto ZOOM_MIN_LEVEL = 0.3f;
+    static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
+    static constexpr auto ZOOM_STEP = 0.1f;
+
     WebContentClient& client();
     WebContentClient const& client() const;
     virtual void create_client() = 0;
+    virtual void update_zoom() = 0;
 
     struct SharedBitmap {
         i32 id { -1 };
@@ -89,6 +98,9 @@ protected:
         bool has_usable_bitmap { false };
         bool got_repaint_requests_while_painting { false };
     } m_client_state;
+
+    float m_zoom_level { 1.0 };
+    float m_device_pixel_ratio { 1.0 };
 };
 
 }
