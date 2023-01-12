@@ -146,12 +146,15 @@ else
     echo "done"
 fi
 
+[ -z "${FUSERMOUNT_PATH:-}" ] && \
+    FUSERMOUNT_PATH="fusermount"
+
 cleanup() {
     if [ -d mnt ]; then
         if [ $use_genext2fs = 0 ] ; then
             printf "unmounting filesystem... "
             if [ $USE_FUSE2FS -eq 1 ]; then
-                fusermount -u mnt || (sleep 1 && sync && fusermount -u mnt)
+                "$FUSERMOUNT_PATH" -u mnt || (sleep 1 && sync && "$FUSERMOUNT_PATH" -u mnt)
             else
                 umount mnt || ( sleep 1 && sync && umount mnt )
             fi

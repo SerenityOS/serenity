@@ -69,6 +69,21 @@ sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qe
 ```
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
+### NixOS
+
+If `nix-command` and `flakes` are enabled on your system, you can enter a development shell with all
+dependencies installed with:
+
+```console
+nix develop
+```
+
+You can enable these features as follows: 
+
+```console
+echo "experimental-features = nix-command flakes" | sudo tee -a /etc/nix/nix.conf
+```
+
 ### Other systems
 
 There is also documentation for installing the build prerequisites for some less commonly used systems:

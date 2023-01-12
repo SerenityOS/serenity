@@ -94,7 +94,7 @@ else
     TARGET="${SERENITY_ARCH:-"x86_64"}"
 fi
 
-CMAKE_ARGS=()
+readarray -t CMAKE_ARGS <<< "${SERENITY_CMAKE_ARGS:-}"
 HOST_COMPILER=""
 
 # Toolchain selection only applies to non-lagom targets.
