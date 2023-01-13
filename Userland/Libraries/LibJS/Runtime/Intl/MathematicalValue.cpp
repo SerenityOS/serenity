@@ -296,7 +296,7 @@ bool MathematicalValue::is_zero() const
 DeprecatedString MathematicalValue::to_deprecated_string() const
 {
     return m_value.visit(
-        [](double value) { return number_to_string(value, NumberToStringMode::WithoutExponent); },
+        [](double value) { return number_to_deprecated_string(value, NumberToStringMode::WithoutExponent); },
         [](Crypto::SignedBigInteger const& value) { return value.to_base_deprecated(10); },
         [](auto) -> DeprecatedString { VERIFY_NOT_REACHED(); });
 }
