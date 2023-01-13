@@ -1302,11 +1302,11 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         // h. Let days be days + monthsWeeksInDays.
         days += months_weeks_in_days;
 
-        // i. Let daysDuration be ? CreateTemporalDuration(0, 0, 0, days, 0, 0, 0, 0, 0, 0).
-        auto* days_duration = TRY(create_temporal_duration(vm, 0, 0, 0, days, 0, 0, 0, 0, 0, 0));
+        // i. Let wholeDaysDuration be ? CreateTemporalDuration(0, 0, 0, truncate(days), 0, 0, 0, 0, 0, 0).
+        auto* whole_days_duration = TRY(create_temporal_duration(vm, 0, 0, 0, trunc(days), 0, 0, 0, 0, 0, 0));
 
-        // j. Let daysLater be ? CalendarDateAdd(calendar, relativeTo, daysDuration, undefined, dateAdd).
-        auto* days_later = TRY(calendar_date_add(vm, *calendar, relative_to, *days_duration, nullptr, date_add));
+        // j. Let wholeDaysLater be ? CalendarDateAdd(calendar, relativeTo, wholeDaysDuration, undefined, dateAdd).
+        auto* whole_days_later = TRY(calendar_date_add(vm, *calendar, relative_to, *whole_days_duration, nullptr, date_add));
 
         // k. Let untilOptions be OrdinaryObjectCreate(null).
         auto until_options = Object::create(realm, nullptr);
@@ -1314,8 +1314,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         // l. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "year"sv)));
 
-        // m. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, daysLater, untilOptions).
-        auto* time_passed = TRY(calendar_date_until(vm, *calendar, relative_to, days_later, *until_options));
+        // m. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, wholeDaysLater, untilOptions).
+        auto* time_passed = TRY(calendar_date_until(vm, *calendar, relative_to, whole_days_later, *until_options));
 
         // n. Let yearsPassed be timePassed.[[Years]].
         auto years_passed = time_passed->years();
