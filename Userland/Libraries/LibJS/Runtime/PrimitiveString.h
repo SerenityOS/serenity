@@ -35,7 +35,7 @@ public:
     u32 hash() const;
 
     ThrowCompletionOr<DeprecatedString> deprecated_string() const;
-    bool has_utf8_string() const { return m_utf8_string.has_value(); }
+    bool has_deprecated_string() const { return m_deprecated_string.has_value(); }
 
     ThrowCompletionOr<Utf16String> utf16_string() const;
     ThrowCompletionOr<Utf16View> utf16_string_view() const;
@@ -57,7 +57,7 @@ private:
     mutable PrimitiveString* m_lhs { nullptr };
     mutable PrimitiveString* m_rhs { nullptr };
 
-    mutable Optional<DeprecatedString> m_utf8_string;
+    mutable Optional<DeprecatedString> m_deprecated_string;
     mutable Optional<Utf16String> m_utf16_string;
 };
 
