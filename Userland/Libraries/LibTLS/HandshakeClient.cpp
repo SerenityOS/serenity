@@ -240,7 +240,7 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
     dh.Ys.clear();
 
     if constexpr (TLS_DEBUG) {
-        dbgln("dh_random: {}", dh_random.to_base(16));
+        dbgln("dh_random: {}", dh_random.to_base_deprecated(16));
         dbgln("dh_Yc: {:hex-dump}", (ReadonlyBytes)dh_Yc_bytes);
         dbgln("premaster key: {:hex-dump}", (ReadonlyBytes)m_context.premaster_key);
     }

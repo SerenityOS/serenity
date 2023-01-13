@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
         if (radix < 2 || radix > 36)
             return vm.throw_completion<RangeError>(ErrorType::InvalidRadix);
     }
-    return PrimitiveString::create(vm, bigint->big_integer().to_base(radix));
+    return PrimitiveString::create(vm, bigint->big_integer().to_base_deprecated(radix));
 }
 
 // 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
