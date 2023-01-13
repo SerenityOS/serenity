@@ -98,7 +98,7 @@ public:
     template<typename... Parameters>
     static ErrorOr<String> formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        VariadicFormatParams variadic_format_parameters { parameters... };
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_parameters { parameters... };
         return vformatted(fmtstr.view(), variadic_format_parameters);
     }
 

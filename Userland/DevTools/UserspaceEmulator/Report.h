@@ -14,7 +14,7 @@ template<typename... Ts>
 void reportln(StringView format, Ts... args)
 {
     if (g_report_to_debug) {
-        AK::VariadicFormatParams variadic_format_params { args... };
+        AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, Ts...> variadic_format_params { args... };
         AK::vdbgln(format, variadic_format_params);
     } else {
         warnln(format, args...);

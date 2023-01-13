@@ -33,11 +33,25 @@ struct Formatter {
     using __no_formatter_defined = void;
 };
 
+enum AllowDebugOnlyFormatters {
+    No,
+    Yes
+};
+
 template<typename T, typename = void>
 inline constexpr bool HasFormatter = true;
 
 template<typename T>
 inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
+
+template<typename Formatter>
+inline constexpr bool is_debug_only_formatter()
+{
+    constexpr bool has_is_debug_only = requires(Formatter const& formatter) { formatter.is_debug_only(); };
+    if constexpr (has_is_debug_only)
+        return Formatter::is_debug_only();
+    return false;
+}
 
 template<typename T>
 concept Formattable = HasFormatter<T>;
@@ -270,7 +284,7 @@ ErrorOr<void> __format_value(TypeErasedFormatParams& params, FormatBuilder& buil
     return formatter.format(builder, *static_cast<T const*>(value));
 }
 
-template<typename... Parameters>
+template<AllowDebugOnlyFormatters allow_debug_formatters, typename... Parameters>
 class VariadicFormatParams : public TypeErasedFormatParams {
 public:
     static_assert(sizeof...(Parameters) <= max_format_arguments);
@@ -278,6 +292,9 @@ public:
     explicit VariadicFormatParams(Parameters const&... parameters)
         : m_data({ TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), __format_value<Parameters> }... })
     {
+        constexpr bool any_debug_formatters = (is_debug_only_formatter<Formatter<Parameters>>() || ...);
+        static_assert(!any_debug_formatters || allow_debug_formatters == AllowDebugOnlyFormatters::Yes,
+            "You are attempting to use a debug-only formatter outside of a debug log! Maybe one of your format values is an ErrorOr<T>?");
         this->set_parameters(m_data);
     }
 
@@ -574,14 +591,14 @@ void vout(FILE*, StringView fmtstr, TypeErasedFormatParams&, bool newline = fals
 template<typename... Parameters>
 void out(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
-    VariadicFormatParams variadic_format_params { parameters... };
+    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
     vout(file, fmtstr.view(), variadic_format_params);
 }
 
 template<typename... Parameters>
 void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
-    VariadicFormatParams variadic_format_params { parameters... };
+    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
     vout(file, fmtstr.view(), variadic_format_params, true);
 }
 
@@ -625,7 +642,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams&);
 template<typename... Parameters>
 void dbgln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
-    VariadicFormatParams variadic_format_params { parameters... };
+    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
     vdbgln(fmtstr.view(), variadic_format_params);
 }
 
@@ -639,7 +656,7 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams&);
 template<typename... Parameters>
 void dmesgln(CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters)
 {
-    VariadicFormatParams variadic_format_params { parameters... };
+    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
     vdmesgln(fmt.view(), variadic_format_params);
 }
 
@@ -650,7 +667,7 @@ void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams&);
 template<typename... Parameters>
 void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters)
 {
-    VariadicFormatParams variadic_format_params { parameters... };
+    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
     v_critical_dmesgln(fmt.view(), variadic_format_params);
 }
 #endif
@@ -695,7 +712,7 @@ struct Formatter<FormatString> : Formatter<StringView> {
     template<typename... Parameters>
     ErrorOr<void> format(FormatBuilder& builder, StringView fmtstr, Parameters const&... parameters)
     {
-        VariadicFormatParams variadic_format_params { parameters... };
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         return vformat(builder, fmtstr, variadic_format_params);
     }
     ErrorOr<void> vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params);
@@ -722,6 +739,8 @@ struct Formatter<Error> : Formatter<FormatString> {
 
 template<typename T, typename ErrorType>
 struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
+    static constexpr bool is_debug_only() { return true; }
+
     ErrorOr<void> format(FormatBuilder& builder, ErrorOr<T, ErrorType> const& error_or)
     {
         if (error_or.is_error())

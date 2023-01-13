@@ -43,7 +43,7 @@ public:
     template<typename... Parameters>
     static DecoderError format(DecoderErrorCategory category, CheckedFormatString<Parameters...>&& format_string, Parameters const&... parameters)
     {
-        AK::VariadicFormatParams variadic_format_params { parameters... };
+        AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         return DecoderError::with_description(category, DeprecatedString::vformatted(format_string.view(), variadic_format_params));
     }
 

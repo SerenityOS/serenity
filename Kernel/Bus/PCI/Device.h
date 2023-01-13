@@ -48,7 +48,7 @@ void dmesgln_pci(Device const& device, AK::CheckedFormatString<Parameters...>&& 
         return;
     if (builder.try_append(fmt.view()).is_error())
         return;
-    AK::VariadicFormatParams variadic_format_params { device.device_name(), device.pci_address(), parameters... };
+    AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, StringView, Address, Parameters...> variadic_format_params { device.device_name(), device.pci_address(), parameters... };
     vdmesgln(builder.string_view(), variadic_format_params);
 }
 
