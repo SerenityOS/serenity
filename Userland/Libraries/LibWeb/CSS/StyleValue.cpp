@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1934,14 +1935,14 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
     return CSSPixelPoint { rect.x() + x, rect.y() + y };
 }
 
-void PositionValue::serialize(StringBuilder& builder) const
+ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
 {
     // Note: This means our serialization with simplify any with explicit edges that are just `top left`.
     bool has_relative_edges = x_relative_to == HorizontalEdge::Right || y_relative_to == VerticalEdge::Bottom;
     if (has_relative_edges)
         builder.append(x_relative_to == HorizontalEdge::Left ? "left "sv : "right "sv);
-    horizontal_position.visit(
-        [&](HorizontalPreset preset) {
+    TRY(horizontal_position.visit(
+        [&](HorizontalPreset preset) -> ErrorOr<void> {
             builder.append([&] {
                 switch (preset) {
                 case HorizontalPreset::Left:
@@ -1954,15 +1955,17 @@ void PositionValue::serialize(StringBuilder& builder) const
                     VERIFY_NOT_REACHED();
                 }
             }());
+            return {};
         },
-        [&](LengthPercentage length_percentage) {
-            builder.append(length_percentage.to_string().release_value_but_fixme_should_propagate_errors());
-        });
+        [&](LengthPercentage length_percentage) -> ErrorOr<void> {
+            builder.appendff(TRY(length_percentage.to_string()));
+            return {};
+        }));
     builder.append(' ');
     if (has_relative_edges)
         builder.append(y_relative_to == VerticalEdge::Top ? "top "sv : "bottom "sv);
-    vertical_position.visit(
-        [&](VerticalPreset preset) {
+    TRY(vertical_position.visit(
+        [&](VerticalPreset preset) -> ErrorOr<void> {
             builder.append([&] {
                 switch (preset) {
                 case VerticalPreset::Top:
@@ -1975,10 +1978,13 @@ void PositionValue::serialize(StringBuilder& builder) const
                     VERIFY_NOT_REACHED();
                 }
             }());
+            return {};
         },
-        [&](LengthPercentage length_percentage) {
-            builder.append(length_percentage.to_string().release_value_but_fixme_should_propagate_errors());
-        });
+        [&](LengthPercentage length_percentage) -> ErrorOr<void> {
+            builder.append(TRY(length_percentage.to_string()));
+            return {};
+        }));
+    return {};
 }
 
 bool PositionValue::operator==(PositionValue const& other) const
@@ -2027,7 +2033,7 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
 
     if (m_position != PositionValue::center()) {
         builder.appendff(" at "sv);
-        m_position.serialize(builder);
+        TRY(m_position.serialize(builder));
     }
 
     builder.append(", "sv);
@@ -2213,7 +2219,7 @@ ErrorOr<String> ConicGradientStyleValue::to_string() const
         if (has_from_angle)
             builder.append(' ');
         builder.appendff("at "sv);
-        m_position.serialize(builder);
+        TRY(m_position.serialize(builder));
     }
     if (has_from_angle || has_at_position)
         builder.append(", "sv);
@@ -2464,7 +2470,7 @@ ErrorOr<String> UnresolvedStyleValue::to_string() const
 {
     StringBuilder builder;
     for (auto& value : m_values)
-        builder.append(String::from_deprecated_string(value.to_deprecated_string()).release_value());
+        builder.append(value.to_deprecated_string());
     return builder.to_string();
 }
 
