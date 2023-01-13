@@ -26,7 +26,7 @@ PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
 }
 
 PrimitiveString::PrimitiveString(DeprecatedString string)
-    : m_utf8_string(move(string))
+    : m_deprecated_string(move(string))
 {
 }
 
@@ -37,8 +37,8 @@ PrimitiveString::PrimitiveString(Utf16String string)
 
 PrimitiveString::~PrimitiveString()
 {
-    if (has_utf8_string())
-        vm().string_cache().remove(*m_utf8_string);
+    if (has_deprecated_string())
+        vm().string_cache().remove(*m_deprecated_string);
 }
 
 void PrimitiveString::visit_edges(Cell::Visitor& visitor)
@@ -59,8 +59,8 @@ bool PrimitiveString::is_empty() const
 
     if (has_utf16_string())
         return m_utf16_string->is_empty();
-    if (has_utf8_string())
-        return m_utf8_string->is_empty();
+    if (has_deprecated_string())
+        return m_deprecated_string->is_empty();
     VERIFY_NOT_REACHED();
 }
 
@@ -68,12 +68,12 @@ ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
 {
     TRY(resolve_rope_if_needed());
 
-    if (!has_utf8_string()) {
+    if (!has_deprecated_string()) {
         VERIFY(has_utf16_string());
-        m_utf8_string = TRY(m_utf16_string->to_utf8(vm()));
+        m_deprecated_string = TRY(m_utf16_string->to_utf8(vm()));
     }
 
-    return *m_utf8_string;
+    return *m_deprecated_string;
 }
 
 ThrowCompletionOr<Utf16String> PrimitiveString::utf16_string() const
@@ -81,8 +81,8 @@ ThrowCompletionOr<Utf16String> PrimitiveString::utf16_string() const
     TRY(resolve_rope_if_needed());
 
     if (!has_utf16_string()) {
-        VERIFY(has_utf8_string());
-        m_utf16_string = TRY(Utf16String::create(vm(), *m_utf8_string));
+        VERIFY(has_deprecated_string());
+        m_utf16_string = TRY(Utf16String::create(vm(), *m_deprecated_string));
     }
 
     return *m_utf16_string;
@@ -274,7 +274,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         previous = current;
     }
 
-    m_utf8_string = builder.to_deprecated_string();
+    m_deprecated_string = builder.to_deprecated_string();
     m_is_rope = false;
     m_lhs = nullptr;
     m_rhs = nullptr;
