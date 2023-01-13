@@ -38,7 +38,7 @@ PrimitiveString::PrimitiveString(Utf16String string)
 PrimitiveString::~PrimitiveString()
 {
     if (has_deprecated_string())
-        vm().string_cache().remove(*m_deprecated_string);
+        vm().deprecated_string_cache().remove(*m_deprecated_string);
 }
 
 void PrimitiveString::visit_edges(Cell::Visitor& visitor)
@@ -139,7 +139,7 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString s
             return vm.single_ascii_character_string(ch);
     }
 
-    auto& string_cache = vm.string_cache();
+    auto& string_cache = vm.deprecated_string_cache();
     auto it = string_cache.find(string);
     if (it == string_cache.end()) {
         auto new_string = vm.heap().allocate_without_realm<PrimitiveString>(string);
