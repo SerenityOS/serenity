@@ -158,18 +158,18 @@ struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
 
 #ifdef KERNEL
 template<>
-struct Formatter<IPv4Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>> {
+struct Formatter<IPv4Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
-        return Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>>::format(builder, TRY(value.to_string()));
+        return Formatter<StringView>::format(builder, TRY(value.to_string())->view());
     }
 };
 #else
 template<>
-struct Formatter<IPv4Address> : Formatter<DeprecatedString> {
+struct Formatter<IPv4Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 #endif
