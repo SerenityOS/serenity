@@ -221,7 +221,8 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     if (request == "dump-style-sheets") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
-                Web::dump_sheet(sheet);
+                if (auto result = Web::dump_sheet(sheet); result.is_error())
+                    dbgln("Failed to dump style sheets: {}", result.error());
             }
         }
     }
