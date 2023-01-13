@@ -281,18 +281,18 @@ struct Traits<IPv6Address> : public GenericTraits<IPv6Address> {
 
 #ifdef KERNEL
 template<>
-struct Formatter<IPv6Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>> {
+struct Formatter<IPv6Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv6Address const& value)
     {
-        return Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>>::format(builder, TRY(value.to_string()));
+        return Formatter<StringView>::format(builder, TRY(value.to_string())->view());
     }
 };
 #else
 template<>
-struct Formatter<IPv6Address> : Formatter<DeprecatedString> {
+struct Formatter<IPv6Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv6Address const& value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 #endif
