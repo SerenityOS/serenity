@@ -29,6 +29,8 @@ public:
     const URL& url() const { return m_request.url(); }
     Core::Stream::Socket const* socket() const { return m_socket; }
 
+    ErrorOr<size_t> response_length() const;
+
 protected:
     void finish_up();
     void on_socket_connected();
