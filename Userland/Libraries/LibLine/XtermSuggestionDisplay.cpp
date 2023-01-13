@@ -13,30 +13,30 @@
 
 namespace Line {
 
-void XtermSuggestionDisplay::display(SuggestionManager const& manager)
+ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
 {
     did_display();
 
-    auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+    auto stderr_stream = TRY(Core::Stream::File::standard_error());
 
     size_t longest_suggestion_length = 0;
     size_t longest_suggestion_byte_length = 0;
     size_t longest_suggestion_byte_length_without_trivia = 0;
 
     manager.set_start_index(0);
-    manager.for_each_suggestion([&](auto& suggestion, auto) {
+    TRY(manager.for_each_suggestion([&](auto& suggestion, auto) {
         longest_suggestion_length = max(longest_suggestion_length, suggestion.text_view.length() + suggestion.display_trivia_view.length());
         longest_suggestion_byte_length = max(longest_suggestion_byte_length, suggestion.text_string.length() + suggestion.display_trivia_string.length());
         longest_suggestion_byte_length_without_trivia = max(longest_suggestion_byte_length_without_trivia, suggestion.text_string.length());
         return IterationDecision::Continue;
-    });
+    }));
 
     size_t num_printed = 0;
     size_t lines_used = 1;
 
-    VT::save_cursor(*stderr_stream);
-    VT::clear_lines(0, m_lines_used_for_last_suggestions, *stderr_stream);
-    VT::restore_cursor(*stderr_stream);
+    TRY(VT::save_cursor(*stderr_stream));
+    TRY(VT::clear_lines(0, m_lines_used_for_last_suggestions, *stderr_stream));
+    TRY(VT::restore_cursor(*stderr_stream));
 
     auto spans_entire_line { false };
     Vector<StringMetrics::LineMetrics> lines;
@@ -50,12 +50,12 @@ void XtermSuggestionDisplay::display(SuggestionManager const& manager)
         // the suggestion list to fit in the prompt line.
         auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
         for (size_t i = start; i < max_line_count; ++i)
-            stderr_stream->write("\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
+            TRY(stderr_stream->write("\n"sv.bytes()));
         lines_used += max_line_count;
         longest_suggestion_length = 0;
     }
 
-    VT::move_absolute(max_line_count + m_origin_row, 1, *stderr_stream);
+    TRY(VT::move_absolute(max_line_count + m_origin_row, 1, *stderr_stream));
 
     if (m_pages.is_empty()) {
         size_t num_printed = 0;
@@ -63,7 +63,7 @@ void XtermSuggestionDisplay::display(SuggestionManager const& manager)
         // Cache the pages.
         manager.set_start_index(0);
         size_t page_start = 0;
-        manager.for_each_suggestion([&](auto& suggestion, auto index) {
+        TRY(manager.for_each_suggestion([&](auto& suggestion, auto index) {
             size_t next_column = num_printed + suggestion.text_view.length() + longest_suggestion_length + 2;
             if (next_column > m_num_columns) {
                 auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
@@ -84,7 +84,7 @@ void XtermSuggestionDisplay::display(SuggestionManager const& manager)
                 num_printed += longest_suggestion_length + 2;
 
             return IterationDecision::Continue;
-        });
+        }));
         // Append the last page.
         m_pages.append({ page_start, manager.count() });
     }
@@ -92,13 +92,13 @@ void XtermSuggestionDisplay::display(SuggestionManager const& manager)
     auto page_index = fit_to_page_boundary(manager.next_index());
 
     manager.set_start_index(m_pages[page_index].start);
-    manager.for_each_suggestion([&](auto& suggestion, auto index) {
+    TRY(manager.for_each_suggestion([&](auto& suggestion, auto index) -> ErrorOr<IterationDecision> {
         size_t next_column = num_printed + suggestion.text_view.length() + longest_suggestion_length + 2;
 
         if (next_column > m_num_columns) {
             auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
             lines_used += lines;
-            stderr_stream->write("\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
+            TRY(stderr_stream->write("\n"sv.bytes()));
             num_printed = 0;
         }
 
@@ -109,23 +109,23 @@ void XtermSuggestionDisplay::display(SuggestionManager const& manager)
 
         // Only apply color to the selection if something is *actually* added to the buffer.
         if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
-            VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) }, *stderr_stream);
+            TRY(VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) }, *stderr_stream));
         }
 
         if (spans_entire_line) {
             num_printed += m_num_columns;
-            stderr_stream->write(suggestion.text_string.bytes()).release_value_but_fixme_should_propagate_errors();
-            stderr_stream->write(suggestion.display_trivia_string.bytes()).release_value_but_fixme_should_propagate_errors();
+            TRY(stderr_stream->write(suggestion.text_string.bytes()));
+            TRY(stderr_stream->write(suggestion.display_trivia_string.bytes()));
         } else {
             auto field = DeprecatedString::formatted("{: <{}}  {}", suggestion.text_string, longest_suggestion_byte_length_without_trivia, suggestion.display_trivia_string);
-            stderr_stream->write(DeprecatedString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()).release_value_but_fixme_should_propagate_errors();
+            TRY(stderr_stream->write(DeprecatedString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()));
             num_printed += longest_suggestion_length + 2;
         }
 
         if (manager.is_current_suggestion_complete() && index == manager.next_index())
-            VT::apply_style(Style::reset_style(), *stderr_stream);
+            TRY(VT::apply_style(Style::reset_style(), *stderr_stream));
         return IterationDecision::Continue;
-    });
+    }));
 
     m_lines_used_for_last_suggestions = lines_used;
 
@@ -144,23 +144,25 @@ void XtermSuggestionDisplay::display(SuggestionManager const& manager)
 
         if (string.length() > m_num_columns - 1) {
             // This would overflow into the next line, so just don't print an indicator.
-            return;
+            return {};
         }
 
-        VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1, *stderr_stream);
-        VT::apply_style({ Style::Background(Style::XtermColor::Green) }, *stderr_stream);
-        stderr_stream->write(string.bytes()).release_value_but_fixme_should_propagate_errors();
-        VT::apply_style(Style::reset_style(), *stderr_stream);
+        TRY(VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1, *stderr_stream));
+        TRY(VT::apply_style({ Style::Background(Style::XtermColor::Green) }, *stderr_stream));
+        TRY(stderr_stream->write(string.bytes()));
+        TRY(VT::apply_style(Style::reset_style(), *stderr_stream));
     }
+
+    return {};
 }
 
-bool XtermSuggestionDisplay::cleanup()
+ErrorOr<bool> XtermSuggestionDisplay::cleanup()
 {
     did_cleanup();
 
     if (m_lines_used_for_last_suggestions) {
-        auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
-        VT::clear_lines(0, m_lines_used_for_last_suggestions, *stderr_stream);
+        auto stderr_stream = TRY(Core::Stream::File::standard_error());
+        TRY(VT::clear_lines(0, m_lines_used_for_last_suggestions, *stderr_stream));
         m_lines_used_for_last_suggestions = 0;
         return true;
     }

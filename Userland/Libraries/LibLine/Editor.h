@@ -183,8 +183,8 @@ public:
 
 #undef __ENUMERATE_EDITOR_INTERNAL_FUNCTION
 
-    void interrupted();
-    void resized();
+    ErrorOr<void> interrupted();
+    ErrorOr<void> resized();
 
     size_t cursor() const { return m_cursor; }
     void set_cursor(size_t cursor)
@@ -252,7 +252,7 @@ public:
             [this, previous_value] {
                 m_prohibit_input_processing = previous_value;
                 if (!m_prohibit_input_processing && m_have_unprocessed_read_event)
-                    handle_read_event();
+                    handle_read_event().release_value_but_fixme_should_propagate_errors();
             }
         };
     }
@@ -270,10 +270,10 @@ private:
     // FIXME: Port to Core::Property
     void save_to(JsonObject&);
 
-    void try_update_once();
+    ErrorOr<void> try_update_once();
     void handle_interrupt_event();
-    void handle_read_event();
-    void handle_resize_event(bool reset_origin);
+    ErrorOr<void> handle_read_event();
+    ErrorOr<void> handle_resize_event(bool reset_origin);
 
     void ensure_free_lines_from_origin(size_t count);
 
@@ -326,10 +326,10 @@ private:
         m_paste_buffer.clear_with_capacity();
     }
 
-    void refresh_display();
-    void cleanup();
-    void cleanup_suggestions();
-    void really_quit_event_loop();
+    ErrorOr<void> refresh_display();
+    ErrorOr<void> cleanup();
+    ErrorOr<void> cleanup_suggestions();
+    ErrorOr<void> really_quit_event_loop();
 
     void restore()
     {
@@ -393,7 +393,7 @@ private:
     }
 
     void recalculate_origin();
-    void reposition_cursor(Core::Stream::Stream&, bool to_end = false);
+    ErrorOr<void> reposition_cursor(Core::Stream::Stream&, bool to_end = false);
 
     struct CodepointRange {
         size_t start { 0 };

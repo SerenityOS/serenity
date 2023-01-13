@@ -182,13 +182,13 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
     return result;
 }
 
-size_t SuggestionManager::for_each_suggestion(Function<IterationDecision(CompletionSuggestion const&, size_t)> callback) const
+ErrorOr<size_t> SuggestionManager::for_each_suggestion(Function<ErrorOr<IterationDecision>(CompletionSuggestion const&, size_t)> callback) const
 {
     size_t start_index { 0 };
     for (auto& suggestion : m_suggestions) {
         if (start_index++ < m_last_displayed_suggestion_index)
             continue;
-        if (callback(suggestion, start_index - 1) == IterationDecision::Break)
+        if (TRY(callback(suggestion, start_index - 1)) == IterationDecision::Break)
             break;
     }
     return start_index;
