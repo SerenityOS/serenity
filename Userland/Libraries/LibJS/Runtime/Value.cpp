@@ -401,7 +401,7 @@ ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
         return DeprecatedString::number(as_i32());
     // 8. If argument is a BigInt, return BigInt::toString(argument, 10).
     case BIGINT_TAG:
-        return as_bigint().big_integer().to_base(10);
+        return as_bigint().big_integer().to_base_deprecated(10);
     // 9. Assert: argument is an Object.
     case OBJECT_TAG: {
         // 10. Let primValue be ? ToPrimitive(argument, string).

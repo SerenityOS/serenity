@@ -128,7 +128,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
             ENTER_SCOPE_WITHOUT_TYPECHECK("Certificate::version");
             READ_OBJECT_OR_FAIL(Integer, Crypto::UnsignedBigInteger, value, "Certificate::version");
             if (!(value < 3)) {
-                dbgln_if(TLS_DEBUG, "Certificate::version Invalid value for version: {}", value.to_base(10));
+                dbgln_if(TLS_DEBUG, "Certificate::version Invalid value for version: {}", value.to_base_deprecated(10));
                 return {};
             }
             certificate.version = value.words()[0];

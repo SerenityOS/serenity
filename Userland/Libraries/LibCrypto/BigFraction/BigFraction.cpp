@@ -203,7 +203,7 @@ DeprecatedString BigFraction::to_deprecated_string(unsigned rounding_threshold) 
     auto const rounded_fraction = rounded(rounding_threshold);
 
     // We take the unsigned value as we already manage the '-'
-    auto const full_value = rounded_fraction.m_numerator.unsigned_value().to_base(10);
+    auto const full_value = rounded_fraction.m_numerator.unsigned_value().to_base_deprecated(10);
     int split = full_value.length() - (number_of_digits(rounded_fraction.m_denominator) - 1);
 
     if (split < 0)

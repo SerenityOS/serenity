@@ -63,7 +63,7 @@ public:
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
     [[nodiscard]] static UnsignedBigInteger from_base(u16 N, StringView str);
-    [[nodiscard]] DeprecatedString to_base(u16 N) const;
+    [[nodiscard]] DeprecatedString to_base_deprecated(u16 N) const;
 
     [[nodiscard]] u64 to_u64() const;
 

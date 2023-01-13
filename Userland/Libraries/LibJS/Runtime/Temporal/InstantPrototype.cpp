@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
     auto [s, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000'000 });
 
     // 5. Return 𝔽(s).
-    return Value((double)s.to_base(10).to_int<i64>().value());
+    return Value((double)s.to_base_deprecated(10).to_int<i64>().value());
 }
 
 // 8.3.4 get Temporal.Instant.prototype.epochMilliseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
     auto [ms, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 });
 
     // 5. Return 𝔽(ms).
-    return Value((double)ms.to_base(10).to_int<i64>().value());
+    return Value((double)ms.to_base_deprecated(10).to_int<i64>().value());
 }
 
 // 8.3.5 get Temporal.Instant.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmicroseconds

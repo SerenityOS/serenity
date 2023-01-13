@@ -237,7 +237,7 @@ int MathematicalValue::logarithmic_floor() const
         },
         [](Crypto::SignedBigInteger const& value) {
             // FIXME: Can we do this without string conversion?
-            return static_cast<int>(value.to_base(10).length() - 1);
+            return static_cast<int>(value.to_base_deprecated(10).length() - 1);
         },
         [](auto) -> int { VERIFY_NOT_REACHED(); });
 }
@@ -297,7 +297,7 @@ DeprecatedString MathematicalValue::to_deprecated_string() const
 {
     return m_value.visit(
         [](double value) { return number_to_string(value, NumberToStringMode::WithoutExponent); },
-        [](Crypto::SignedBigInteger const& value) { return value.to_base(10); },
+        [](Crypto::SignedBigInteger const& value) { return value.to_base_deprecated(10); },
         [](auto) -> DeprecatedString { VERIFY_NOT_REACHED(); });
 }
 
