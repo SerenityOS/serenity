@@ -145,22 +145,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         statusbar.set_text(2, "Timer starts after your first move");
     };
 
-    window->on_close_request = [&]() {
+    auto confirm_end_current_game = [&]() {
         auto game_in_progress = timer->is_active();
         if (game_in_progress) {
             auto result = GUI::MessageBox::show(window,
-                "A game is still in progress, are you sure you would like to quit?"sv,
+                "A game is still in progress, are you sure you would like to end it?"sv,
                 "Game in progress"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::YesNo);
 
-            if (result == GUI::MessageBox::ExecResult::Yes)
-                return GUI::Window::CloseRequestDecision::Close;
-            else
-                return GUI::Window::CloseRequestDecision::StayOpen;
+            return result == GUI::MessageBox::ExecResult::Yes;
         }
 
-        return GUI::Window::CloseRequestDecision::Close;
+        return true;
+    };
+
+    window->on_close_request = [&]() {
+        if (confirm_end_current_game())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
     GUI::ActionGroup draw_setting_actions;
@@ -168,6 +171,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto single_card_draw_action = GUI::Action::create_checkable("&Single Card Draw", [&](auto&) {
         update_mode(Solitaire::Mode::SingleCardDraw);
+
+        if (!confirm_end_current_game())
+            return;
+
         statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
         game.setup(mode);
     });
@@ -177,6 +184,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto three_card_draw_action = GUI::Action::create_checkable("&Three Card Draw", [&](auto&) {
         update_mode(Solitaire::Mode::ThreeCardDraw);
+
+        if (!confirm_end_current_game())
+            return;
+
         statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
         game.setup(mode);
     });
@@ -196,6 +207,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+        if (!confirm_end_current_game())
+            return;
+
         game.setup(mode);
     })));
     TRY(game_menu->try_add_separator());
