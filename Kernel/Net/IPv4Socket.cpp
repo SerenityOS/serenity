@@ -6,6 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
@@ -693,9 +694,54 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
         ifreq ifr;
         TRY(copy_from_user(&ifr, user_ifr));
 
+        if (request == SIOCGIFNAME) {
+            // NOTE: Network devices are 1-indexed since index 0 denotes an invalid device
+            if (ifr.ifr_index == 0)
+                return EINVAL;
+
+            size_t index = 1;
+            Optional<StringView> result {};
+
+            NetworkingManagement::the().for_each([&ifr, &index, &result](auto& adapter) {
+                if (index == ifr.ifr_index)
+                    result = adapter.name();
+                ++index;
+            });
+
+            if (result.has_value()) {
+                auto name = result.release_value();
+                auto succ = name.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+                if (!succ) {
+                    return EFAULT;
+                }
+                return copy_to_user(user_ifr, &ifr);
+            }
+
+            return ENODEV;
+        }
+
         char namebuf[IFNAMSIZ + 1];
         memcpy(namebuf, ifr.ifr_name, IFNAMSIZ);
         namebuf[sizeof(namebuf) - 1] = '\0';
+
+        if (request == SIOCGIFINDEX) {
+            StringView name { namebuf, strlen(namebuf) };
+            size_t index = 1;
+            Optional<size_t> result {};
+
+            NetworkingManagement::the().for_each([&name, &index, &result](auto& adapter) {
+                if (adapter.name() == name)
+                    result = index;
+                ++index;
+            });
+
+            if (result.has_value()) {
+                ifr.ifr_index = result.release_value();
+                return copy_to_user(user_ifr, &ifr);
+            }
+
+            return ENODEV;
+        }
 
         auto adapter = NetworkingManagement::the().lookup_by_name({ namebuf, strlen(namebuf) });
         if (!adapter)
@@ -800,6 +846,8 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
     case SIOCGIFMTU:
     case SIOCGIFFLAGS:
     case SIOCGIFCONF:
+    case SIOCGIFNAME:
+    case SIOCGIFINDEX:
         return ioctl_interface();
 
     case SIOCADDRT:
