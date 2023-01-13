@@ -329,10 +329,10 @@ ErrorOr<String> BackgroundStyleValue::to_string() const
     StringBuilder builder;
     for (size_t i = 0; i < m_layer_count; i++) {
         if (i)
-            builder.append(", "sv);
+            TRY(builder.try_append(", "sv));
         if (i == m_layer_count - 1)
-            builder.appendff("{} ", TRY(m_color->to_string()));
-        builder.appendff("{} {} {} {} {} {} {}", TRY(get_layer_value_string(m_image, i)), TRY(get_layer_value_string(m_position, i)), TRY(get_layer_value_string(m_size, i)), TRY(get_layer_value_string(m_repeat, i)), TRY(get_layer_value_string(m_attachment, i)), TRY(get_layer_value_string(m_origin, i)), TRY(get_layer_value_string(m_clip, i)));
+            TRY(builder.try_appendff("{} ", TRY(m_color->to_string())));
+        TRY(builder.try_appendff("{} {} {} {} {} {} {}", TRY(get_layer_value_string(m_image, i)), TRY(get_layer_value_string(m_position, i)), TRY(get_layer_value_string(m_size, i)), TRY(get_layer_value_string(m_repeat, i)), TRY(get_layer_value_string(m_attachment, i)), TRY(get_layer_value_string(m_origin, i)), TRY(get_layer_value_string(m_clip, i))));
     }
 
     return builder.to_string();
@@ -647,27 +647,27 @@ ErrorOr<String> CalculatedStyleValue::CalcValue::to_string() const
 ErrorOr<String> CalculatedStyleValue::CalcSum::to_string() const
 {
     StringBuilder builder;
-    builder.append(TRY(first_calc_product->to_string()));
+    TRY(builder.try_append(TRY(first_calc_product->to_string())));
     for (auto const& item : zero_or_more_additional_calc_products)
-        builder.append(TRY(item.to_string()));
+        TRY(builder.try_append(TRY(item.to_string())));
     return builder.to_string();
 }
 
 ErrorOr<String> CalculatedStyleValue::CalcNumberSum::to_string() const
 {
     StringBuilder builder;
-    builder.append(TRY(first_calc_number_product->to_string()));
+    TRY(builder.try_append(TRY(first_calc_number_product->to_string())));
     for (auto const& item : zero_or_more_additional_calc_number_products)
-        builder.append(TRY(item.to_string()));
+        TRY(builder.try_append(TRY(item.to_string())));
     return builder.to_string();
 }
 
 ErrorOr<String> CalculatedStyleValue::CalcProduct::to_string() const
 {
     StringBuilder builder;
-    builder.append(TRY(first_calc_value.to_string()));
+    TRY(builder.try_append(TRY(first_calc_value.to_string())));
     for (auto const& item : zero_or_more_additional_calc_values)
-        builder.append(TRY(item.to_string()));
+        TRY(builder.try_append(TRY(item.to_string())));
     return builder.to_string();
 }
 
@@ -687,9 +687,9 @@ ErrorOr<String> CalculatedStyleValue::CalcProductPartWithOperator::to_string() c
 ErrorOr<String> CalculatedStyleValue::CalcNumberProduct::to_string() const
 {
     StringBuilder builder;
-    builder.append(TRY(first_calc_number_value.to_string()));
+    TRY(builder.try_append(TRY(first_calc_number_value.to_string())));
     for (auto const& item : zero_or_more_additional_calc_number_values)
-        builder.append(TRY(item.to_string()));
+        TRY(builder.try_append(TRY(item.to_string())));
     return builder.to_string();
 }
 
@@ -1230,42 +1230,40 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
     bool first = true;
     for (auto& filter_function : filter_value_list()) {
         if (!first)
-            builder.append(' ');
+            TRY(builder.try_append(' '));
         TRY(filter_function.visit(
             [&](Filter::Blur const& blur) -> ErrorOr<void> {
-                builder.append("blur("sv);
+                TRY(builder.try_append("blur("sv));
                 if (blur.radius.has_value())
-                    builder.append(TRY(blur.radius->to_string()));
+                    TRY(builder.try_append(TRY(blur.radius->to_string())));
                 return {};
             },
             [&](Filter::DropShadow const& drop_shadow) -> ErrorOr<void> {
-                builder.appendff("drop-shadow({} {}"sv,
-                    drop_shadow.offset_x, drop_shadow.offset_y);
+                TRY(builder.try_appendff("drop-shadow({} {}"sv,
+                    drop_shadow.offset_x, drop_shadow.offset_y));
                 if (drop_shadow.radius.has_value())
-                    builder.appendff(" {}", TRY(drop_shadow.radius->to_string()));
+                    TRY(builder.try_appendff(" {}", TRY(drop_shadow.radius->to_string())));
                 if (drop_shadow.color.has_value()) {
-                    builder.append(' ');
+                    TRY(builder.try_append(' '));
                     serialize_a_srgb_value(builder, *drop_shadow.color);
                 }
                 return {};
             },
             [&](Filter::HueRotate const& hue_rotate) -> ErrorOr<void> {
-                builder.append("hue-rotate("sv);
+                TRY(builder.try_append("hue-rotate("sv));
                 if (hue_rotate.angle.has_value()) {
                     TRY(hue_rotate.angle->visit(
                         [&](Angle const& angle) -> ErrorOr<void> {
-                            builder.append(TRY(angle.to_string()));
-                            return {};
+                            return builder.try_append(TRY(angle.to_string()));
                         },
                         [&](auto&) -> ErrorOr<void> {
-                            builder.append('0');
-                            return {};
+                            return builder.try_append('0');
                         }));
                 }
                 return {};
             },
             [&](Filter::Color const& color) -> ErrorOr<void> {
-                builder.appendff("{}(",
+                TRY(builder.try_appendff("{}(",
                     [&] {
                         switch (color.operation) {
                         case Filter::Color::Operation::Brightness:
@@ -1285,12 +1283,12 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                         default:
                             VERIFY_NOT_REACHED();
                         }
-                    }());
+                    }()));
                 if (color.amount.has_value())
-                    builder.append(TRY(color.amount->to_string()));
+                    TRY(builder.try_append(TRY(color.amount->to_string())));
                 return {};
             }));
-        builder.append(')');
+        TRY(builder.try_append(')'));
         first = false;
     }
     return builder.to_string();
@@ -1750,16 +1748,15 @@ static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto cons
     bool first = true;
     for (auto const& element : color_stop_list) {
         if (!first)
-            builder.append(", "sv);
+            TRY(builder.try_append(", "sv));
 
-        if (element.transition_hint.has_value()) {
-            builder.appendff("{}, "sv, TRY(element.transition_hint->value.to_string()));
-        }
+        if (element.transition_hint.has_value())
+            TRY(builder.try_appendff("{}, "sv, TRY(element.transition_hint->value.to_string())));
 
         serialize_a_srgb_value(builder, element.color_stop.color);
         for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
             if (position->has_value())
-                builder.appendff(" {}"sv, TRY((*position)->to_string()));
+                TRY(builder.try_appendff(" {}"sv, TRY((*position)->to_string())));
         }
         first = false;
     }
@@ -1793,22 +1790,20 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
     };
 
     if (m_gradient_type == GradientType::WebKit)
-        builder.append("-webkit-"sv);
+        TRY(builder.try_append("-webkit-"sv));
     if (is_repeating())
-        builder.append("repeating-"sv);
-    builder.append("linear-gradient("sv);
+        TRY(builder.try_append("repeating-"sv));
+    TRY(builder.try_append("linear-gradient("sv));
     TRY(m_direction.visit(
         [&](SideOrCorner side_or_corner) -> ErrorOr<void> {
-            builder.appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
-            return {};
+            return builder.try_appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
         },
         [&](Angle const& angle) -> ErrorOr<void> {
-            builder.appendff("{}, "sv, TRY(angle.to_string()));
-            return {};
+            return builder.try_appendff("{}, "sv, TRY(angle.to_string()));
         }));
 
     TRY(serialize_color_stop_list(builder, m_color_stop_list));
-    builder.append(")"sv);
+    TRY(builder.try_append(")"sv));
     return builder.to_string();
 }
 
@@ -1940,10 +1935,10 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
     // Note: This means our serialization with simplify any with explicit edges that are just `top left`.
     bool has_relative_edges = x_relative_to == HorizontalEdge::Right || y_relative_to == VerticalEdge::Bottom;
     if (has_relative_edges)
-        builder.append(x_relative_to == HorizontalEdge::Left ? "left "sv : "right "sv);
+        TRY(builder.try_append(x_relative_to == HorizontalEdge::Left ? "left "sv : "right "sv));
     TRY(horizontal_position.visit(
         [&](HorizontalPreset preset) -> ErrorOr<void> {
-            builder.append([&] {
+            return builder.try_append([&] {
                 switch (preset) {
                 case HorizontalPreset::Left:
                     return "left"sv;
@@ -1955,18 +1950,16 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
                     VERIFY_NOT_REACHED();
                 }
             }());
-            return {};
         },
         [&](LengthPercentage length_percentage) -> ErrorOr<void> {
-            builder.appendff(TRY(length_percentage.to_string()));
-            return {};
+            return builder.try_appendff(TRY(length_percentage.to_string()));
         }));
-    builder.append(' ');
+    TRY(builder.try_append(' '));
     if (has_relative_edges)
-        builder.append(y_relative_to == VerticalEdge::Top ? "top "sv : "bottom "sv);
+        TRY(builder.try_append(y_relative_to == VerticalEdge::Top ? "top "sv : "bottom "sv));
     TRY(vertical_position.visit(
         [&](VerticalPreset preset) -> ErrorOr<void> {
-            builder.append([&] {
+            return builder.try_append([&] {
                 switch (preset) {
                 case VerticalPreset::Top:
                     return "top"sv;
@@ -1978,11 +1971,9 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
                     VERIFY_NOT_REACHED();
                 }
             }());
-            return {};
         },
         [&](LengthPercentage length_percentage) -> ErrorOr<void> {
-            builder.append(TRY(length_percentage.to_string()));
-            return {};
+            return builder.try_append(TRY(length_percentage.to_string()));
         }));
     return {};
 }
@@ -2000,13 +1991,13 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
 {
     StringBuilder builder;
     if (is_repeating())
-        builder.append("repeating-"sv);
-    builder.appendff("radial-gradient({} "sv,
-        m_ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv);
+        TRY(builder.try_append("repeating-"sv));
+    TRY(builder.try_appendff("radial-gradient({} "sv,
+        m_ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv));
 
     TRY(m_size.visit(
         [&](Extent extent) -> ErrorOr<void> {
-            builder.append([&] {
+            return builder.try_append([&] {
                 switch (extent) {
                 case Extent::ClosestCorner:
                     return "closest-corner"sv;
@@ -2020,25 +2011,22 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
                     VERIFY_NOT_REACHED();
                 }
             }());
-            return {};
         },
         [&](CircleSize const& circle_size) -> ErrorOr<void> {
-            builder.append(TRY(circle_size.radius.to_string()));
-            return {};
+            return builder.try_append(TRY(circle_size.radius.to_string()));
         },
         [&](EllipseSize const& ellipse_size) -> ErrorOr<void> {
-            builder.appendff("{} {}", TRY(ellipse_size.radius_a.to_string()), TRY(ellipse_size.radius_b.to_string()));
-            return {};
+            return builder.try_appendff("{} {}", TRY(ellipse_size.radius_a.to_string()), TRY(ellipse_size.radius_b.to_string()));
         }));
 
     if (m_position != PositionValue::center()) {
-        builder.appendff(" at "sv);
+        TRY(builder.try_appendff(" at "sv));
         TRY(m_position.serialize(builder));
     }
 
-    builder.append(", "sv);
+    TRY(builder.try_append(", "sv));
     TRY(serialize_color_stop_list(builder, m_color_stop_list));
-    builder.append(')');
+    TRY(builder.try_append(')'));
     return builder.to_string();
 }
 
@@ -2209,22 +2197,22 @@ ErrorOr<String> ConicGradientStyleValue::to_string() const
 {
     StringBuilder builder;
     if (is_repeating())
-        builder.append("repeating-"sv);
-    builder.append("conic-gradient("sv);
+        TRY(builder.try_append("repeating-"sv));
+    TRY(builder.try_append("conic-gradient("sv));
     bool has_from_angle = false;
     bool has_at_position = false;
     if ((has_from_angle = m_from_angle.to_degrees() != 0))
-        builder.appendff("from {}", TRY(m_from_angle.to_string()));
+        TRY(builder.try_appendff("from {}", TRY(m_from_angle.to_string())));
     if ((has_at_position = m_position != PositionValue::center())) {
         if (has_from_angle)
-            builder.append(' ');
-        builder.appendff("at "sv);
+            TRY(builder.try_append(' '));
+        TRY(builder.try_appendff("at "sv));
         TRY(m_position.serialize(builder));
     }
     if (has_from_angle || has_at_position)
-        builder.append(", "sv);
+        TRY(builder.try_append(", "sv));
     TRY(serialize_color_stop_list(builder, m_color_stop_list));
-    builder.append(')');
+    TRY(builder.try_append(')'));
     return builder.to_string();
 }
 
@@ -2390,9 +2378,9 @@ bool ResolutionStyleValue::equals(StyleValue const& other) const
 ErrorOr<String> ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
-    builder.appendff("{} {} {} {} {}", m_color.to_deprecated_string(), TRY(m_offset_x.to_string()), TRY(m_offset_y.to_string()), TRY(m_blur_radius.to_string()), TRY(m_spread_distance.to_string()));
+    TRY(builder.try_appendff("{} {} {} {} {}", m_color.to_deprecated_string(), TRY(m_offset_x.to_string()), TRY(m_offset_y.to_string()), TRY(m_blur_radius.to_string()), TRY(m_spread_distance.to_string())));
     if (m_placement == ShadowPlacement::Inner)
-        builder.append(" inset"sv);
+        TRY(builder.try_append(" inset"sv));
     return builder.to_string();
 }
 
@@ -2442,10 +2430,10 @@ bool TimeStyleValue::equals(StyleValue const& other) const
 ErrorOr<String> TransformationStyleValue::to_string() const
 {
     StringBuilder builder;
-    builder.append(CSS::to_string(m_transform_function));
-    builder.append('(');
-    builder.join(", "sv, m_values);
-    builder.append(')');
+    TRY(builder.try_append(CSS::to_string(m_transform_function)));
+    TRY(builder.try_append('('));
+    TRY(builder.try_join(", "sv, m_values));
+    TRY(builder.try_append(')'));
 
     return builder.to_string();
 }
@@ -2470,7 +2458,7 @@ ErrorOr<String> UnresolvedStyleValue::to_string() const
 {
     StringBuilder builder;
     for (auto& value : m_values)
-        builder.append(value.to_deprecated_string());
+        TRY(builder.try_append(value.to_deprecated_string()));
     return builder.to_string();
 }
 
