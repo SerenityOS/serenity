@@ -35,7 +35,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
     auto element_value = TRY(descriptor->get("element"));
     if (!element_value.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
-    auto const& element = TRY(element_value.as_string().deprecated_string());
+    auto element = TRY(element_value.as_string().deprecated_string());
 
     Optional<Wasm::ValueType> reference_type;
     if (element == "anyfunc"sv)

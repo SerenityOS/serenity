@@ -34,10 +34,10 @@ public:
     bool is_empty() const;
     u32 hash() const;
 
-    ThrowCompletionOr<DeprecatedString const&> deprecated_string() const;
+    ThrowCompletionOr<DeprecatedString> deprecated_string() const;
     bool has_utf8_string() const { return m_utf8_string.has_value(); }
 
-    ThrowCompletionOr<Utf16String const&> utf16_string() const;
+    ThrowCompletionOr<Utf16String> utf16_string() const;
     ThrowCompletionOr<Utf16View> utf16_string_view() const;
     bool has_utf16_string() const { return m_utf16_string.has_value(); }
 
