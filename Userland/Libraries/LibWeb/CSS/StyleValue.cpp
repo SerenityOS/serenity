@@ -631,16 +631,16 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
 ErrorOr<String> CalculatedStyleValue::CalcNumberValue::to_string() const
 {
     return value.visit(
-        [](Number const& number) { return String::number(number.value()); },
-        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+        [](Number const& number) -> ErrorOr<String> { return String::number(number.value()); },
+        [](NonnullOwnPtr<CalcNumberSum> const& sum) -> ErrorOr<String> { return String::formatted("({})", TRY(sum->to_string())); });
 }
 
 ErrorOr<String> CalculatedStyleValue::CalcValue::to_string() const
 {
     return value.visit(
-        [](Number const& number) { return String::number(number.value()); },
-        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); },
-        [](auto const& v) { return v.to_string(); });
+        [](Number const& number) -> ErrorOr<String> { return String::number(number.value()); },
+        [](NonnullOwnPtr<CalcSum> const& sum) -> ErrorOr<String> { return String::formatted("({})", TRY(sum->to_string())); },
+        [](auto const& v) -> ErrorOr<String> { return v.to_string(); });
 }
 
 ErrorOr<String> CalculatedStyleValue::CalcSum::to_string() const
@@ -677,9 +677,9 @@ ErrorOr<String> CalculatedStyleValue::CalcSumPartWithOperator::to_string() const
 
 ErrorOr<String> CalculatedStyleValue::CalcProductPartWithOperator::to_string() const
 {
-    auto value_string = value.visit(
+    auto value_string = TRY(value.visit(
         [](CalcValue const& v) { return v.to_string(); },
-        [](CalcNumberValue const& v) { return v.to_string(); });
+        [](CalcNumberValue const& v) { return v.to_string(); }));
     return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value_string);
 }
 
@@ -2347,7 +2347,7 @@ ErrorOr<String> PositionStyleValue::to_string() const
         VERIFY_NOT_REACHED();
     };
 
-    return String::formatted("{} {} {} {}", to_string(m_edge_x), m_offset_x.to_string(), to_string(m_edge_y), TRY(m_offset_y.to_string()));
+    return String::formatted("{} {} {} {}", to_string(m_edge_x), TRY(m_offset_x.to_string()), to_string(m_edge_y), TRY(m_offset_y.to_string()));
 }
 
 bool PositionStyleValue::equals(StyleValue const& other) const
@@ -2384,7 +2384,7 @@ bool ResolutionStyleValue::equals(StyleValue const& other) const
 ErrorOr<String> ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
-    builder.appendff("{} {} {} {} {}", String::from_deprecated_string(m_color.to_deprecated_string()), TRY(m_offset_x.to_string()), TRY(m_offset_y.to_string()), TRY(m_blur_radius.to_string()), TRY(m_spread_distance.to_string()));
+    builder.appendff("{} {} {} {} {}", m_color.to_deprecated_string(), TRY(m_offset_x.to_string()), TRY(m_offset_y.to_string()), TRY(m_blur_radius.to_string()), TRY(m_spread_distance.to_string()));
     if (m_placement == ShadowPlacement::Inner)
         builder.append(" inset"sv);
     return builder.to_string();
