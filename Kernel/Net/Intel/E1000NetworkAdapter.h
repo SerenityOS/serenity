@@ -33,6 +33,7 @@ public:
 
     virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return "E1000"sv; }
+    virtual Type adapter_type() const override { return Type::Ethernet; }
 
 protected:
     static constexpr size_t rx_buffer_size = 8192;
