@@ -579,7 +579,7 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
 #if defined(AK_OS_SERENITY)
     return Core::System::recvfd(m_helper.fd(), flags);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD)
     union {
         struct cmsghdr cmsghdr;
         char control[CMSG_SPACE(sizeof(int))];
@@ -620,7 +620,7 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
 {
 #if defined(AK_OS_SERENITY)
     return Core::System::sendfd(m_helper.fd(), fd);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD)
     char c = 'F';
     struct iovec iov {
         .iov_base = &c,
