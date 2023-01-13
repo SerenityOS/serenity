@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <AK/Vector.h>
 #include <stdlib.h>
 
 namespace AK {
@@ -317,6 +318,25 @@ ErrorOr<void> Formatter<String>::format(FormatBuilder& builder, String const& ut
 ErrorOr<String> String::replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const
 {
     return StringUtils::replace(*this, needle, replacement, replace_mode);
+}
+
+ErrorOr<String> String::reverse() const
+{
+    // FIXME: This handles multi-byte code points, but not e.g. grapheme clusters.
+    // FIXME: We could avoid allocating a temporary vector if Utf8View supports reverse iteration.
+    auto code_point_length = code_points().length();
+
+    Vector<u32> code_points;
+    TRY(code_points.try_ensure_capacity(code_point_length));
+
+    for (auto code_point : this->code_points())
+        code_points.unchecked_append(code_point);
+
+    auto builder = TRY(StringBuilder::create(code_point_length * sizeof(u32)));
+    while (!code_points.is_empty())
+        TRY(builder.try_append_code_point(code_points.take_last()));
+
+    return builder.to_string();
 }
 
 bool String::is_short_string() const

@@ -69,6 +69,7 @@ public:
     [[nodiscard]] StringView bytes_as_string_view() const;
 
     ErrorOr<String> replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const;
+    ErrorOr<String> reverse() const;
 
     [[nodiscard]] bool operator==(String const&) const;
     [[nodiscard]] bool operator!=(String const& other) const { return !(*this == other); }
