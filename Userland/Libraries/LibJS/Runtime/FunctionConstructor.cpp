@@ -145,7 +145,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 
             // ii. Let nextArgString be ? ToString(nextArg).
             // iii. Set P to the string-concatenation of P, "," (a comma), and nextArgString.
-            parameters.append(TRY(next_arg.to_string(vm)));
+            parameters.append(TRY(next_arg.to_deprecated_string(vm)));
 
             // iv. Set k to k + 1.
         }
@@ -156,7 +156,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     }
 
     // 13. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-    auto body_string = DeprecatedString::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_string(vm)) : "");
+    auto body_string = DeprecatedString::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_deprecated_string(vm)) : "");
 
     // 14. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
     // 15. Let sourceText be StringToCodePoints(sourceString).

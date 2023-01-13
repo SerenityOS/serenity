@@ -31,7 +31,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                 auto& object = value.as_object();
                 if (is<JS::Error>(object)) {
                     auto message = object.get_without_side_effects("message");
-                    auto error = message.to_string(vm);
+                    auto error = message.to_deprecated_string(vm);
                     if (error.is_throw_completion())
                         builder.append(message.to_string_without_side_effects());
                     else
@@ -39,7 +39,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                     return builder.to_deprecated_string();
                 }
             }
-            auto error_message = value.to_string(vm);
+            auto error_message = value.to_deprecated_string(vm);
 
             if (error_message.is_throw_completion())
                 return to_deprecated_string_as_exception(*error_message.release_error().value());

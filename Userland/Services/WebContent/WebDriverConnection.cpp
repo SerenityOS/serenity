@@ -1033,7 +1033,7 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
 
         // 5. Let result be the value of property if not undefined, or null.
         if (!property.is_undefined()) {
-            if (auto string_or_error = property.to_string(element->vm()); !string_or_error.is_error())
+            if (auto string_or_error = property.to_deprecated_string(element->vm()); !string_or_error.is_error())
                 result = string_or_error.release_value();
         }
     }

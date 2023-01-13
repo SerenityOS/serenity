@@ -122,7 +122,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(VM& vm, Value item, Optional<Stri
         auto* calendar = TRY(get_temporal_calendar_with_iso_default(vm, item_object));
 
         // e. If ? ToString(calendar) is not "iso8601", then
-        auto calendar_identifier = TRY(Value(calendar).to_string(vm));
+        auto calendar_identifier = TRY(Value(calendar).to_deprecated_string(vm));
         if (calendar_identifier != "iso8601"sv) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
@@ -137,7 +137,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(VM& vm, Value item, Optional<Stri
     // 4. Else,
     else {
         // a. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(vm));
+        auto string = TRY(item.to_deprecated_string(vm));
 
         // b. Let result be ? ParseTemporalTimeString(string).
         result = TRY(parse_temporal_time_string(vm, string));

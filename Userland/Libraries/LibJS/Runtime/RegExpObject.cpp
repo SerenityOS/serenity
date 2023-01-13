@@ -169,13 +169,13 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM
     // 2. Else, let P be ? ToString(pattern).
     auto pattern = pattern_value.is_undefined()
         ? DeprecatedString::empty()
-        : TRY(pattern_value.to_string(vm));
+        : TRY(pattern_value.to_deprecated_string(vm));
 
     // 3. If flags is undefined, let F be the empty String.
     // 4. Else, let F be ? ToString(flags).
     auto flags = flags_value.is_undefined()
         ? DeprecatedString::empty()
-        : TRY(flags_value.to_string(vm));
+        : TRY(flags_value.to_deprecated_string(vm));
 
     // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
     // 6. If F contains "i", let i be true; else let i be false.

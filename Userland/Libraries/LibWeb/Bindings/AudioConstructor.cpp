@@ -52,7 +52,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> AudioConstructor::construct(
     // 4. If src is given, then set an attribute value for audio using "src" and src.
     //    (This will cause the user agent to invoke the object's resource selection algorithm before returning.)
     if (!src_value.is_undefined()) {
-        auto src = TRY(src_value.to_string(vm));
+        auto src = TRY(src_value.to_deprecated_string(vm));
         MUST(audio->set_attribute(HTML::AttributeNames::src, move(src)));
     }
 

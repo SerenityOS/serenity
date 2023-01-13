@@ -47,7 +47,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> CalendarConstructor::construct(FunctionO
     auto& vm = this->vm();
 
     // 2. Set id to ? ToString(id).
-    auto identifier = TRY(vm.argument(0).to_string(vm));
+    auto identifier = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 3. If IsBuiltinCalendar(id) is false, then
     if (!is_builtin_calendar(identifier)) {

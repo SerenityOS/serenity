@@ -61,7 +61,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                     return JS::make_handle(static_cast<Request&>(arg0_object));
             }
         }
-        return TRY(arg0.to_string(vm));
+        return TRY(arg0.to_deprecated_string(vm));
     };
     Variant<JS::Handle<Request>, DeprecatedString> input = TRY(arg0_to_variant(arg0));
     auto arg1 = vm.argument(1);
@@ -89,7 +89,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                 if (is<JS::ArrayBuffer>(body_property_value_object))
                     return JS::make_handle(body_property_value_object);
             }
-            return TRY(body_property_value.to_string(vm));
+            return TRY(body_property_value.to_deprecated_string(vm));
         };
         Optional<Variant<JS::Handle<ReadableStream>, JS::Handle<Blob>, JS::Handle<JS::Object>, JS::Handle<URLSearchParams>, DeprecatedString>> body_value;
         if (!body_property_value.is_nullish())
@@ -102,7 +102,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (!cache_property_value.is_undefined()) {
         RequestCache cache_value { RequestCache::Default };
         if (!cache_property_value.is_undefined()) {
-            auto cache_property_value_string = TRY(cache_property_value.to_string(vm));
+            auto cache_property_value_string = TRY(cache_property_value.to_deprecated_string(vm));
             if (cache_property_value_string == "only-if-cached"sv)
                 cache_value = RequestCache::OnlyIfCached;
             else if (cache_property_value_string == "default"sv)
@@ -126,7 +126,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (!credentials_property_value.is_undefined()) {
         RequestCredentials credentials_value { RequestCredentials::Omit };
         if (!credentials_property_value.is_undefined()) {
-            auto credentials_property_value_string = TRY(credentials_property_value.to_string(vm));
+            auto credentials_property_value_string = TRY(credentials_property_value.to_deprecated_string(vm));
             if (credentials_property_value_string == "same-origin"sv)
                 credentials_value = RequestCredentials::SameOrigin;
             else if (credentials_property_value_string == "include"sv)
@@ -144,7 +144,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (!duplex_property_value.is_undefined()) {
         RequestDuplex duplex_value { RequestDuplex::Half };
         if (!duplex_property_value.is_undefined()) {
-            auto duplex_property_value_string = TRY(duplex_property_value.to_string(vm));
+            auto duplex_property_value_string = TRY(duplex_property_value.to_deprecated_string(vm));
             if (duplex_property_value_string == "half"sv)
                 duplex_value = RequestDuplex::Half;
             else
@@ -187,7 +187,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                             if (next_item2.is_null() && false) {
                                 sequence_item2 = DeprecatedString::empty();
                             } else {
-                                sequence_item2 = TRY(next_item2.to_string(vm));
+                                sequence_item2 = TRY(next_item2.to_deprecated_string(vm));
                             }
                             sequence_item1.append(sequence_item2);
                         }
@@ -206,14 +206,14 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                     if (key1.is_null() && false) {
                         typed_key1 = DeprecatedString::empty();
                     } else {
-                        typed_key1 = TRY(key1.to_string(vm));
+                        typed_key1 = TRY(key1.to_deprecated_string(vm));
                     }
                     auto value1 = TRY(headers_property_value_object.get(property_key1));
                     DeprecatedString typed_value1;
                     if (value1.is_null() && false) {
                         typed_value1 = DeprecatedString::empty();
                     } else {
-                        typed_value1 = TRY(value1.to_string(vm));
+                        typed_value1 = TRY(value1.to_deprecated_string(vm));
                     }
                     record_union_type.set(typed_key1, typed_value1);
                 }
@@ -235,7 +235,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
             if (integrity_property_value.is_null() && false)
                 integrity_value = DeprecatedString::empty();
             else
-                integrity_value = TRY(integrity_property_value.to_string(vm));
+                integrity_value = TRY(integrity_property_value.to_deprecated_string(vm));
         }
         init.integrity = integrity_value;
     }
@@ -257,7 +257,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
             if (method_property_value.is_null() && false)
                 method_value = DeprecatedString::empty();
             else
-                method_value = TRY(method_property_value.to_string(vm));
+                method_value = TRY(method_property_value.to_deprecated_string(vm));
         }
         init.method = method_value;
     }
@@ -267,7 +267,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (!mode_property_value.is_undefined()) {
         RequestMode mode_value { RequestMode::Navigate };
         if (!mode_property_value.is_undefined()) {
-            auto mode_property_value_string = TRY(mode_property_value.to_string(vm));
+            auto mode_property_value_string = TRY(mode_property_value.to_deprecated_string(vm));
             if (mode_property_value_string == "navigate"sv)
                 mode_value = RequestMode::Navigate;
             else if (mode_property_value_string == "same-origin"sv)
@@ -287,7 +287,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (!redirect_property_value.is_undefined()) {
         RequestRedirect redirect_value { RequestRedirect::Follow };
         if (!redirect_property_value.is_undefined()) {
-            auto redirect_property_value_string = TRY(redirect_property_value.to_string(vm));
+            auto redirect_property_value_string = TRY(redirect_property_value.to_deprecated_string(vm));
             if (redirect_property_value_string == "follow"sv)
                 redirect_value = RequestRedirect::Follow;
             else if (redirect_property_value_string == "manual"sv)
@@ -308,7 +308,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
             if (referrer_property_value.is_null() && false)
                 referrer_value = DeprecatedString::empty();
             else
-                referrer_value = TRY(referrer_property_value.to_string(vm));
+                referrer_value = TRY(referrer_property_value.to_deprecated_string(vm));
         }
         init.referrer = referrer_value;
     }
@@ -318,7 +318,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (!referrer_policy_property_value.is_undefined()) {
         ReferrerPolicy referrer_policy_value { ReferrerPolicy::Empty };
         if (!referrer_policy_property_value.is_undefined()) {
-            auto referrer_policy_property_value_string = TRY(referrer_policy_property_value.to_string(vm));
+            auto referrer_policy_property_value_string = TRY(referrer_policy_property_value.to_deprecated_string(vm));
             if (referrer_policy_property_value_string == ""sv)
                 referrer_policy_value = ReferrerPolicy::Empty;
             else if (referrer_policy_property_value_string == "same-origin"sv)

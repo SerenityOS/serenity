@@ -15,7 +15,7 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
     auto& realm = *vm.current_realm();
-    auto filename = TRY(vm.argument(0).to_string(vm));
+    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(strerror(file.error().code()));
@@ -159,7 +159,7 @@ void WebAssemblyModule::initialize(JS::Realm& realm)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
-    auto name = TRY(vm.argument(0).to_string(vm));
+    auto name = TRY(vm.argument(0).to_deprecated_string(vm));
     auto this_value = vm.this_value();
     auto* object = TRY(this_value.to_object(vm));
     if (!is<WebAssemblyModule>(object))

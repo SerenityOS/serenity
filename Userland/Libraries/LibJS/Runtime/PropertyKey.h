@@ -35,7 +35,7 @@ public:
             return PropertyKey { value.as_symbol() };
         if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
             return static_cast<u32>(value.as_double());
-        return TRY(value.to_string(vm));
+        return TRY(value.to_deprecated_string(vm));
     }
 
     PropertyKey() = default;

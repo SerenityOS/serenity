@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> SymbolConstructor::call()
     auto& vm = this->vm();
     if (vm.argument(0).is_undefined())
         return Symbol::create(vm, {}, false);
-    return Symbol::create(vm, TRY(vm.argument(0).to_string(vm)), false);
+    return Symbol::create(vm, TRY(vm.argument(0).to_deprecated_string(vm)), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
@@ -55,7 +55,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SymbolConstructor::construct(FunctionObj
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     // 1. Let stringKey be ? ToString(key).
-    auto string_key = TRY(vm.argument(0).to_string(vm));
+    auto string_key = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 2. For each element e of the GlobalSymbolRegistry List, do
     auto result = vm.global_symbol_registry().get(string_key);

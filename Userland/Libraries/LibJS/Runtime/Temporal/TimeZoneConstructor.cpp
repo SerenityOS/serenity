@@ -48,7 +48,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> TimeZoneConstructor::construct(FunctionO
     auto& vm = this->vm();
 
     // 2. Set identifier to ? ToString(identifier).
-    auto identifier = TRY(vm.argument(0).to_string(vm));
+    auto identifier = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 3. If IsTimeZoneOffsetString(identifier) is false, then
     if (!is_time_zone_offset_string(identifier)) {

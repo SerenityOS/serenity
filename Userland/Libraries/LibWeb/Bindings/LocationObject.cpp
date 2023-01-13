@@ -109,7 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
     // FIXME: 1. If this's relevant Document is null, then return.
 
     // 2. Parse the given value relative to the entry settings object. If that failed, throw a TypeError exception.
-    auto new_href = TRY(vm.argument(0).to_string(vm));
+    auto new_href = TRY(vm.argument(0).to_deprecated_string(vm));
     auto href_url = window.associated_document().parse_url(new_href);
     if (!href_url.is_valid())
         return vm.throw_completion<JS::URIError>(DeprecatedString::formatted("Invalid URL '{}'", new_href));
@@ -247,7 +247,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
 {
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    auto url = TRY(vm.argument(0).to_string(vm));
+    auto url = TRY(vm.argument(0).to_deprecated_string(vm));
     // FIXME: This needs spec compliance work.
     window.did_call_location_replace({}, move(url));
     return JS::js_undefined();

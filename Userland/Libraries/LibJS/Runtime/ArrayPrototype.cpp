@@ -1000,7 +1000,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     auto length = TRY(length_of_array_like(vm, *this_object));
     DeprecatedString separator = ",";
     if (!vm.argument(0).is_undefined())
-        separator = TRY(vm.argument(0).to_string(vm));
+        separator = TRY(vm.argument(0).to_deprecated_string(vm));
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
@@ -1008,7 +1008,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         auto value = TRY(this_object->get(i));
         if (value.is_nullish())
             continue;
-        auto string = TRY(value.to_string(vm));
+        auto string = TRY(value.to_deprecated_string(vm));
         builder.append(string);
     }
 
@@ -1735,7 +1735,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
             auto locale_string_result = TRY(value.invoke(vm, vm.names.toLocaleString, locales, options));
 
             // ii. Set R to the string-concatenation of R and S.
-            auto string = TRY(locale_string_result.to_string(vm));
+            auto string = TRY(locale_string_result.to_deprecated_string(vm));
             builder.append(string);
         }
 

@@ -332,7 +332,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
     }
 
     // 2. Let identifier be ? ToString(temporalTimeZoneLike).
-    auto identifier = TRY(temporal_time_zone_like.to_string(vm));
+    auto identifier = TRY(temporal_time_zone_like.to_deprecated_string(vm));
 
     // 3. Let parseResult be ? ParseTemporalTimeZoneString(identifier).
     auto parse_result = TRY(parse_temporal_time_zone_string(vm, identifier));
@@ -603,10 +603,10 @@ ThrowCompletionOr<bool> time_zone_equals(VM& vm, Object& one, Object& two)
         return true;
 
     // 2. Let timeZoneOne be ? ToString(one).
-    auto time_zone_one = TRY(Value(&one).to_string(vm));
+    auto time_zone_one = TRY(Value(&one).to_deprecated_string(vm));
 
     // 3. Let timeZoneTwo be ? ToString(two).
-    auto time_zone_two = TRY(Value(&two).to_string(vm));
+    auto time_zone_two = TRY(Value(&two).to_deprecated_string(vm));
 
     // 4. If timeZoneOne is timeZoneTwo, return true.
     if (time_zone_one == time_zone_two)

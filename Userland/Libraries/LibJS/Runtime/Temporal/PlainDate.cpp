@@ -140,7 +140,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(VM& vm, Value item, Object const*
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 5. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(vm));
+    auto string = TRY(item.to_deprecated_string(vm));
 
     // 6. Let result be ? ParseTemporalDateString(string).
     auto result = TRY(parse_temporal_date_string(vm, string));

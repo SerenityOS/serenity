@@ -98,7 +98,7 @@ JS::ThrowCompletionOr<WebGLContextAttributes> convert_value_to_context_attribute
     WebGLPowerPreference power_preference_value { WebGLPowerPreference::Default };
 
     if (!power_preference.is_undefined()) {
-        auto power_preference_string = TRY(power_preference.to_string(vm));
+        auto power_preference_string = TRY(power_preference.to_deprecated_string(vm));
 
         if (power_preference_string == "high-performance"sv)
             power_preference_value = WebGLPowerPreference::HighPerformance;

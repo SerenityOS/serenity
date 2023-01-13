@@ -224,7 +224,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 31. Else,
     else {
         // a. Set timeZone to ? ToString(timeZone).
-        time_zone = TRY(time_zone_value.to_string(vm));
+        time_zone = TRY(time_zone_value.to_deprecated_string(vm));
 
         // b. If IsAvailableTimeZoneName(timeZone) is false, then
         if (!Temporal::is_available_time_zone_name(time_zone)) {

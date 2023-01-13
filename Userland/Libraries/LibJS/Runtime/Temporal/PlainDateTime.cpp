@@ -165,7 +165,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(VM& vm, Value item, Obje
         (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(vm));
+        auto string = TRY(item.to_deprecated_string(vm));
 
         // c. Let result be ? ParseTemporalDateTimeString(string).
         result = TRY(parse_temporal_date_time_string(vm, string));

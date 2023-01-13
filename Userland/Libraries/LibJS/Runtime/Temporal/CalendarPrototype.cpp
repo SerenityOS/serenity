@@ -627,7 +627,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(calendar).
-    return PrimitiveString::create(vm, TRY(Value(calendar).to_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(calendar).to_deprecated_string(vm)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era

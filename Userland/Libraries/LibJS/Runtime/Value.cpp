@@ -388,12 +388,12 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 {
     if (is_string())
         return &as_string();
-    auto string = TRY(to_string(vm));
+    auto string = TRY(to_deprecated_string(vm));
     return PrimitiveString::create(vm, string).ptr();
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
-ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
+ThrowCompletionOr<DeprecatedString> Value::to_deprecated_string(VM& vm) const
 {
     if (is_double())
         return number_to_deprecated_string(m_value.as_double);
@@ -430,7 +430,7 @@ ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
         VERIFY(!primitive_value.is_object());
 
         // 12. Return ? ToString(primValue).
-        return primitive_value.to_string(vm);
+        return primitive_value.to_deprecated_string(vm);
     }
     default:
         VERIFY_NOT_REACHED();
@@ -442,7 +442,7 @@ ThrowCompletionOr<Utf16String> Value::to_utf16_string(VM& vm) const
     if (is_string())
         return TRY(as_string().utf16_string());
 
-    auto utf8_string = TRY(to_string(vm));
+    auto utf8_string = TRY(to_deprecated_string(vm));
     return Utf16String::create(vm, utf8_string);
 }
 
@@ -887,7 +887,7 @@ ThrowCompletionOr<PropertyKey> Value::to_property_key(VM& vm) const
     }
 
     // 3. Return ! ToString(key).
-    return MUST(key.to_string(vm));
+    return MUST(key.to_deprecated_string(vm));
 }
 
 // 7.1.6 ToInt32 ( argument ), https://tc39.es/ecma262/#sec-toint32

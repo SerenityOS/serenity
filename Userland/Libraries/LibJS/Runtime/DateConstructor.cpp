@@ -316,7 +316,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     if (!vm.argument_count())
         return js_nan();
 
-    auto date_string = TRY(vm.argument(0).to_string(vm));
+    auto date_string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     return Value(parse_date_string(date_string));
 }
