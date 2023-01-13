@@ -77,15 +77,17 @@ private:
     DeprecatedString m_description;
 };
 
-#define DECODER_TRY(category, expression)                                  \
-    ({                                                                     \
-        auto _result = ((expression));                                     \
-        if (_result.is_error()) [[unlikely]] {                             \
-            auto _error_string = _result.release_error().string_literal(); \
-            return DecoderError::from_source_location(                     \
-                ((category)), _error_string, SourceLocation::current());   \
-        }                                                                  \
-        _result.release_value();                                           \
+#define DECODER_TRY(category, expression)                                    \
+    ({                                                                       \
+        auto _result = ((expression));                                       \
+        if (_result.is_error()) [[unlikely]] {                               \
+            auto _error_string = _result.release_error().string_literal();   \
+            return DecoderError::from_source_location(                       \
+                ((category)), _error_string, SourceLocation::current());     \
+        }                                                                    \
+        static_assert(!IsLvalueReference<decltype(_result.release_value())>, \
+            "Do not return a reference from a fallible expression");         \
+        _result.release_value();                                             \
     })
 
 #define DECODER_TRY_ALLOC(expression) DECODER_TRY(DecoderErrorCategory::Memory, expression)
