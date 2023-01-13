@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/String.h>
+#include <AK/Utf8View.h>
 #include <LibCore/Stream.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
@@ -127,6 +128,8 @@ void Job::on_socket_connected()
         if (m_state == State::Failed)
             return;
 
+        // https://gemini.circumlunar.space/docs/specification.gmi
+
         if (m_state == State::InStatus) {
             if (!can_read_line())
                 return;
@@ -140,6 +143,19 @@ void Job::on_socket_connected()
 
             auto line = line_or_error.release_value();
             auto view = line.bytes_as_string_view();
+
+            auto first_code_point = line.code_points().begin().peek();
+            if (!first_code_point.has_value()) {
+                dbgln("Job: empty status line");
+                m_state = State::Failed;
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+            }
+
+            if (first_code_point.release_value() == 0xFEFF) {
+                dbgln("Job: Byte order mark as first character of status line");
+                m_state = State::Failed;
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+            }
 
             auto maybe_space_index = view.find(' ');
             if (!maybe_space_index.has_value()) {
@@ -155,6 +171,19 @@ void Job::on_socket_connected()
             auto status = first_part.to_uint();
             if (!status.has_value()) {
                 dbgln("Job: Expected numeric status code");
+                m_state = State::Failed;
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+            }
+
+            auto meta_first_code_point = Utf8View(second_part).begin().peek();
+            if (meta_first_code_point.release_value() == 0xFEFF) {
+                dbgln("Job: Byte order mark as first character of meta");
+                m_state = State::Failed;
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+            }
+
+            if (second_part.length() > 1024) {
+                dbgln("Job: Meta too long");
                 m_state = State::Failed;
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
