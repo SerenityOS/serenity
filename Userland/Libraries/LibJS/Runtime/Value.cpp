@@ -393,34 +393,34 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
-ThrowCompletionOr<DeprecatedString> Value::to_deprecated_string(VM& vm) const
+ThrowCompletionOr<String> Value::to_string(VM& vm) const
 {
     if (is_double())
-        return number_to_deprecated_string(m_value.as_double);
+        return number_to_string(vm, m_value.as_double);
 
     switch (m_value.tag) {
     // 1. If argument is a String, return argument.
     case STRING_TAG:
-        return TRY(as_string().deprecated_string());
+        return TRY(as_string().utf8_string());
     // 2. If argument is a Symbol, throw a TypeError exception.
     case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");
     // 3. If argument is undefined, return "undefined".
     case UNDEFINED_TAG:
-        return "undefined"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8("undefined"sv));
     // 4. If argument is null, return "null".
     case NULL_TAG:
-        return "null"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8("null"sv));
     // 5. If argument is true, return "true".
     // 6. If argument is false, return "false".
     case BOOLEAN_TAG:
-        return as_bool() ? "true"sv : "false"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8(as_bool() ? "true"sv : "false"sv));
     // 7. If argument is a Number, return Number::toString(argument, 10).
     case INT32_TAG:
-        return DeprecatedString::number(as_i32());
+        return TRY_OR_THROW_OOM(vm, String::number(as_i32()));
     // 8. If argument is a BigInt, return BigInt::toString(argument, 10).
     case BIGINT_TAG:
-        return as_bigint().big_integer().to_base_deprecated(10);
+        return TRY_OR_THROW_OOM(vm, as_bigint().big_integer().to_base(10));
     // 9. Assert: argument is an Object.
     case OBJECT_TAG: {
         // 10. Let primValue be ? ToPrimitive(argument, string).
@@ -430,11 +430,17 @@ ThrowCompletionOr<DeprecatedString> Value::to_deprecated_string(VM& vm) const
         VERIFY(!primitive_value.is_object());
 
         // 12. Return ? ToString(primValue).
-        return primitive_value.to_deprecated_string(vm);
+        return primitive_value.to_string(vm);
     }
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+// 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
+ThrowCompletionOr<DeprecatedString> Value::to_deprecated_string(VM& vm) const
+{
+    return TRY(to_string(vm)).to_deprecated_string();
 }
 
 ThrowCompletionOr<Utf16String> Value::to_utf16_string(VM& vm) const

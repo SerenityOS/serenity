@@ -367,6 +367,7 @@ public:
 
     u64 encoded() const { return m_value.encoded; }
 
+    ThrowCompletionOr<String> to_string(VM&) const;
     ThrowCompletionOr<DeprecatedString> to_deprecated_string(VM&) const;
     ThrowCompletionOr<Utf16String> to_utf16_string(VM&) const;
     ThrowCompletionOr<PrimitiveString*> to_primitive_string(VM&);
