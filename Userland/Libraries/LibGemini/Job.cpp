@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Error.h>
 #include <LibCore/Stream.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
@@ -222,5 +223,13 @@ void Job::finish_up()
     deferred_invoke([this, response] {
         did_finish(move(response));
     });
+}
+
+ErrorOr<size_t> Job::response_length() const
+{
+    if (m_state != State::Finished)
+        return AK::Error::from_string_literal("Gemini response has not finished");
+
+    return m_received_size;
 }
 }
