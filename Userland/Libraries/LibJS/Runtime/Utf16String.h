@@ -50,6 +50,7 @@ public:
     Utf16View substring_view(size_t code_unit_offset, size_t code_unit_length) const;
     Utf16View substring_view(size_t code_unit_offset) const;
 
+    ThrowCompletionOr<String> to_utf8(VM&) const;
     ThrowCompletionOr<DeprecatedString> to_deprecated_string(VM&) const;
     u16 code_unit_at(size_t index) const;
 
