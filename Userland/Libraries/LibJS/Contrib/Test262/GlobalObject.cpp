@@ -34,7 +34,7 @@ void GlobalObject::visit_edges(Cell::Visitor& visitor)
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::print)
 {
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
     outln("{}", string);
     return js_undefined();
 }

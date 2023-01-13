@@ -120,7 +120,7 @@ ThrowCompletionOr<Value> Console::count()
     auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-count
-    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_deprecated_string(vm)) : "default";
 
     // 1. Let map be the associated count map.
     auto& map = m_counters;
@@ -151,7 +151,7 @@ ThrowCompletionOr<Value> Console::count_reset()
     auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-countreset
-    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_deprecated_string(vm)) : "default";
 
     // 1. Let map be the associated count map.
     auto& map = m_counters;
@@ -212,7 +212,7 @@ ThrowCompletionOr<Value> Console::assert_()
         // 3. Otherwise:
         else {
             // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = PrimitiveString::create(vm, DeprecatedString::formatted("{}: {}", TRY(message->deprecated_string()), first.to_string(vm).value()));
+            auto concat = PrimitiveString::create(vm, DeprecatedString::formatted("{}: {}", TRY(message->deprecated_string()), first.to_deprecated_string(vm).value()));
             // 2. Set data[0] to concat.
             data[0] = concat;
         }
@@ -312,7 +312,7 @@ ThrowCompletionOr<Value> Console::time()
     auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-time
-    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_deprecated_string(vm)) : "default";
 
     // 1. If the associated timer table contains an entry with key label, return, optionally reporting
     // a warning to the console indicating that a timer with label `label` has already been started.
@@ -336,7 +336,7 @@ ThrowCompletionOr<Value> Console::time_log()
     auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timelog
-    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_deprecated_string(vm)) : "default";
 
     // 1. Let timerTable be the associated timer table.
 
@@ -379,7 +379,7 @@ ThrowCompletionOr<Value> Console::time_end()
     auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timeend
-    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_deprecated_string(vm)) : "default";
 
     // 1. Let timerTable be the associated timer table.
 
@@ -464,7 +464,7 @@ ThrowCompletionOr<DeprecatedString> Console::value_vector_to_deprecated_string(M
     for (auto const& item : values) {
         if (!builder.is_empty())
             builder.append(' ');
-        builder.append(TRY(item.to_string(vm)));
+        builder.append(TRY(item.to_deprecated_string(vm)));
     }
     return builder.to_deprecated_string();
 }
@@ -539,7 +539,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
         return args;
 
     // 2. Let target be the first element of args.
-    auto target = (!args.is_empty()) ? TRY(args.first().to_string(vm)) : "";
+    auto target = (!args.is_empty()) ? TRY(args.first().to_deprecated_string(vm)) : "";
 
     // 3. Let current be the second element of args.
     auto current = (args.size() > 1) ? args[1] : js_undefined();
@@ -621,13 +621,13 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
         // 6. TODO: process %c
         else if (specifier == "%c"sv) {
             // NOTE: This has no spec yet. `%c` specifiers treat the argument as CSS styling for the log message.
-            add_css_style_to_current_message(TRY(current.to_string(vm)));
+            add_css_style_to_current_message(TRY(current.to_deprecated_string(vm)));
             converted = PrimitiveString::create(vm, "");
         }
 
         // 7. If any of the previous steps set converted, replace specifier in target with converted.
         if (converted.has_value())
-            target = target.replace(specifier, TRY(converted->to_string(vm)), ReplaceMode::FirstOnly);
+            target = target.replace(specifier, TRY(converted->to_deprecated_string(vm)), ReplaceMode::FirstOnly);
     }
 
     // 7. Let result be a list containing target together with the elements of args starting from the third onward.

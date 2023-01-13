@@ -3385,7 +3385,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
     // 7. Let specifierString be Completion(ToString(specifier)).
     // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
-    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier->to_string(vm));
+    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier->to_deprecated_string(vm));
 
     // 9. Let assertions be a new empty List.
     Vector<ModuleRequest::Assertion> assertions;
@@ -3623,7 +3623,7 @@ Completion TemplateLiteral::execute(Interpreter& interpreter) const
         auto sub = TRY(expression.execute(interpreter)).release_value();
 
         // 4. Let middle be ? ToString(sub).
-        auto string = TRY(sub.to_string(vm));
+        auto string = TRY(sub.to_deprecated_string(vm));
         string_builder.append(string);
 
         // 5. Let tail be the result of evaluating TemplateSpans.

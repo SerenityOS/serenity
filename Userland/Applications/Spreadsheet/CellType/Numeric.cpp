@@ -24,7 +24,7 @@ JS::ThrowCompletionOr<DeprecatedString> NumericCell::display(Cell& cell, CellTyp
         auto value = TRY(js_value(cell, metadata));
         DeprecatedString string;
         if (metadata.format.is_empty())
-            string = TRY(value.to_string(vm));
+            string = TRY(value.to_deprecated_string(vm));
         else
             string = format_double(metadata.format.characters(), TRY(value.to_double(vm)));
 

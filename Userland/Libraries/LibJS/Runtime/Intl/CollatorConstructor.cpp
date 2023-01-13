@@ -63,7 +63,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     //     a. Let numeric be ! ToString(numeric).
     // 15. Set opt.[[kn]] to numeric.
     if (!numeric.is_undefined())
-        opt.kn = MUST(numeric.to_string(vm));
+        opt.kn = MUST(numeric.to_deprecated_string(vm));
 
     // 16. Let caseFirst be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.

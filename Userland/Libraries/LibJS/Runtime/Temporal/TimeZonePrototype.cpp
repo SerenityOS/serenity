@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
     auto* time_zone = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(timeZone).
-    return PrimitiveString::create(vm, TRY(Value(time_zone).to_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(time_zone).to_deprecated_string(vm)));
 }
 
 }

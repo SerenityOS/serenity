@@ -100,7 +100,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
     }
 
     // 2. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(vm));
+    auto string = TRY(item.to_deprecated_string(vm));
 
     // 3. Let epochNanoseconds be ? ParseTemporalInstant(string).
     auto* epoch_nanoseconds = TRY(parse_temporal_instant(vm, string));

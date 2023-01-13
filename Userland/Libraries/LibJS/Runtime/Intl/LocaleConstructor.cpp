@@ -275,7 +275,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 9. Else,
     else {
         // a. Let tag be ? ToString(tag).
-        tag = TRY(tag_value.to_string(vm));
+        tag = TRY(tag_value.to_deprecated_string(vm));
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
@@ -313,7 +313,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.
     if (!kn.is_undefined())
-        opt.kn = TRY(kn.to_string(vm));
+        opt.kn = TRY(kn.to_deprecated_string(vm));
 
     // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
     // 27. If numberingSystem is not undefined, then

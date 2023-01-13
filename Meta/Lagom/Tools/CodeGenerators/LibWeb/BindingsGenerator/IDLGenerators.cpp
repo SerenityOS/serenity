@@ -266,7 +266,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
     for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = TRY(vm.argument(i).to_string(vm));
+        auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
         @cpp_name@.append(move(to_string_result));
     }
 )~~~");
@@ -277,14 +277,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
         @cpp_name@ = DeprecatedString::empty();
     } else {
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
     }
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
     DeprecatedString @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
             }
         } else {
@@ -294,7 +294,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
             @cpp_name@ = DeprecatedString::empty();
         else
-            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+            @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
     })~~~");
             if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
                 scoped_generator.append(R"~~~( else {
@@ -586,7 +586,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
 
         enum_generator.append(R"~~~(
-    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(vm));
+    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
         auto first = true;
         VERIFY(enumeration.translated_cpp_names.size() >= 1);
@@ -1152,7 +1152,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 14. If types includes a string type, then return the result of converting V to that type.
             // NOTE: Currently all string types are converted to String.
             union_generator.append(R"~~~(
-        return TRY(@js_name@@js_suffix@.to_string(vm));
+        return TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
         } else if (numeric_type && includes_bigint) {
             // 15. If types includes a numeric type and bigint, then return the result of converting V to either that numeric type or bigint.

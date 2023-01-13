@@ -390,7 +390,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM& vm, Ob
         // a. If fractionalDigitsVal is not undefined, then
         if (!fractional_digits_value.is_undefined()) {
             // i. If ? ToString(fractionalDigitsVal) is not "auto", throw a RangeError exception.
-            if (TRY(fractional_digits_value.to_string(vm)) != "auto"sv)
+            if (TRY(fractional_digits_value.to_deprecated_string(vm)) != "auto"sv)
                 return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
         }
 
@@ -628,7 +628,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     // 7. Else,
     else {
         // a. Let string be ? ToString(value).
-        auto string = TRY(value.to_string(vm));
+        auto string = TRY(value.to_deprecated_string(vm));
 
         // b. Let result be ? ParseTemporalRelativeToString(string).
         result = TRY(parse_temporal_relative_to_string(vm, string));
@@ -690,7 +690,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     if (offset_behavior == OffsetBehavior::Option) {
         // a. Set offsetString to ? ToString(offsetString).
         // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
-        auto actual_offset_string = TRY(offset_string.to_string(vm));
+        auto actual_offset_string = TRY(offset_string.to_deprecated_string(vm));
 
         // b. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
         if (!is_time_zone_offset_string(actual_offset_string))

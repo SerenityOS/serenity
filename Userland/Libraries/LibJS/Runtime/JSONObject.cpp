@@ -65,11 +65,11 @@ ThrowCompletionOr<DeprecatedString> JSONObject::stringify_impl(VM& vm, Value val
                     if (replacer_value.is_string()) {
                         item = TRY(replacer_value.as_string().deprecated_string());
                     } else if (replacer_value.is_number()) {
-                        item = MUST(replacer_value.to_string(vm));
+                        item = MUST(replacer_value.to_deprecated_string(vm));
                     } else if (replacer_value.is_object()) {
                         auto& value_object = replacer_value.as_object();
                         if (is<StringObject>(value_object) || is<NumberObject>(value_object))
-                            item = TRY(replacer_value.to_string(vm));
+                            item = TRY(replacer_value.to_deprecated_string(vm));
                     }
                     if (!item.is_null() && !list.contains_slow(item)) {
                         list.append(item);
@@ -191,7 +191,7 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_property(VM& vm, 
     if (value.is_number()) {
         // a. If value is finite, return ! ToString(value).
         if (value.is_finite_number())
-            return MUST(value.to_string(vm));
+            return MUST(value.to_deprecated_string(vm));
 
         // b. Return "null".
         return "null"sv;
@@ -393,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
     auto& realm = *vm.current_realm();
 
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto reviver = vm.argument(1);
 
     auto json = JsonValue::from_string(string);

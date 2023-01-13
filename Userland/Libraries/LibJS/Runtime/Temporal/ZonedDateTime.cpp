@@ -175,7 +175,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         // k. Else,
         else {
             // i. Set offsetString to ? ToString(offsetString).
-            offset_string = TRY(offset_string_value.to_string(vm));
+            offset_string = TRY(offset_string_value.to_deprecated_string(vm));
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
@@ -187,7 +187,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(vm));
+        auto string = TRY(item.to_deprecated_string(vm));
 
         // c. Let result be ? ParseTemporalZonedDateTimeString(string).
         result = TRY(parse_temporal_zoned_date_time_string(vm, string));
@@ -342,7 +342,7 @@ ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, Z
     // 13. Else,
     else {
         // a. Let timeZoneID be ? ToString(timeZone).
-        auto time_zone_id = TRY(Value(&time_zone).to_string(vm));
+        auto time_zone_id = TRY(Value(&time_zone).to_deprecated_string(vm));
 
         // b. If showTimeZone is "critical", let flag be "!"; else let flag be the empty String.
         auto flag = show_time_zone == "critical"sv ? "!"sv : ""sv;

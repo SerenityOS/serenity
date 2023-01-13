@@ -43,7 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     auto* display_names = TRY(typed_this_object(vm));
 
     // 3. Let code be ? ToString(code).
-    auto code_string = TRY(code.to_string(vm));
+    auto code_string = TRY(code.to_deprecated_string(vm));
     code = PrimitiveString::create(vm, move(code_string));
 
     // 4. Let code be ? CanonicalCodeForDisplayNames(displayNames.[[Type]], code).

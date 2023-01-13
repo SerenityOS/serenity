@@ -141,7 +141,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     // 16. If numeric is equal to "auto", then
     if (relative_time_format.numeric() == RelativeTimeFormat::Numeric::Auto) {
         // a. Let valueString be ToString(value).
-        auto value_string = MUST(Value(value).to_string(vm));
+        auto value_string = MUST(Value(value).to_deprecated_string(vm));
 
         // b. If patterns has a field [[<valueString>]], then
         if (auto patterns = find_patterns_for_tense_or_number(value_string); !patterns.is_empty()) {

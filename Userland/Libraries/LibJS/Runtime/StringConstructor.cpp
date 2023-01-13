@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     for (size_t i = 0; i < literal_segments; ++i) {
         auto next_key = DeprecatedString::number(i);
         auto next_segment_value = TRY(raw->get(next_key));
-        auto next_segment = TRY(next_segment_value.to_string(vm));
+        auto next_segment = TRY(next_segment_value.to_deprecated_string(vm));
 
         builder.append(next_segment);
 
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 
         if (i < number_of_substituions) {
             auto next = vm.argument(i + 1);
-            auto next_sub = TRY(next.to_string(vm));
+            auto next_sub = TRY(next.to_deprecated_string(vm));
             builder.append(next_sub);
         }
     }

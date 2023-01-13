@@ -48,7 +48,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObje
     // 3. If message is not undefined, then
     if (!message.is_undefined()) {
         // a. Let msg be ? ToString(message).
-        auto msg = TRY(message.to_string(vm));
+        auto msg = TRY(message.to_deprecated_string(vm));
 
         // b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
         error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, move(msg)));
@@ -101,7 +101,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObje
         /* 3. If message is not undefined, then */                                                                              \
         if (!message.is_undefined()) {                                                                                          \
             /* a. Let msg be ? ToString(message). */                                                                            \
-            auto msg = TRY(message.to_string(vm));                                                                              \
+            auto msg = TRY(message.to_deprecated_string(vm));                                                                   \
                                                                                                                                 \
             /* b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                         \
             error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, move(msg)));      \

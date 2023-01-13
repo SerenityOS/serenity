@@ -240,7 +240,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Val
             // iv. Else,
             else {
                 // 1. Let tag be ? ToString(kValue).
-                tag = TRY(key_value.to_string(vm));
+                tag = TRY(key_value.to_deprecated_string(vm));
             }
 
             // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
@@ -628,7 +628,7 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
         return falsy_value;
 
     // 6. Let value be ? ToString(value).
-    auto value_string = TRY(value.to_string(vm));
+    auto value_string = TRY(value.to_deprecated_string(vm));
 
     // 7. NOTE: For historical reasons, the strings "true" and "false" are treated the same as the boolean value true.
     // 8. If value is "true" or "false", return fallback.

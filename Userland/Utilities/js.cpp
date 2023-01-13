@@ -345,7 +345,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 {
     auto& realm = *vm.current_realm();
 
-    auto filename = TRY(vm.argument(0).to_string(vm));
+    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
@@ -365,7 +365,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
-    auto filename = TRY(vm.argument(0).to_string(vm));
+    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));

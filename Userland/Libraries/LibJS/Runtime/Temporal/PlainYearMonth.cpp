@@ -66,7 +66,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(VM& vm, Value item, Ob
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 5. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(vm));
+    auto string = TRY(item.to_deprecated_string(vm));
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
     auto result = TRY(parse_temporal_year_month_string(vm, string));
@@ -212,7 +212,7 @@ ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainY
     auto result = DeprecatedString::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
-    auto calendar_id = TRY(Value(&year_month.calendar()).to_string(vm));
+    auto calendar_id = TRY(Value(&year_month.calendar()).to_deprecated_string(vm));
 
     // 7. If showCalendar is one of "always" or "critical", or if calendarID is not "iso8601", then
     if (show_calendar.is_one_of("always"sv, "critical"sv) || calendar_id != "iso8601") {

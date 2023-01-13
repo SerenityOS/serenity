@@ -1203,17 +1203,17 @@ JS_DEFINE_NATIVE_FUNCTION(Window::open)
     // optional USVString url = ""
     DeprecatedString url = "";
     if (!vm.argument(0).is_undefined())
-        url = TRY(vm.argument(0).to_string(vm));
+        url = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // optional DOMString target = "_blank"
     DeprecatedString target = "_blank";
     if (!vm.argument(1).is_undefined())
-        target = TRY(vm.argument(1).to_string(vm));
+        target = TRY(vm.argument(1).to_deprecated_string(vm));
 
     // optional [LegacyNullToEmptyString] DOMString features = "")
     DeprecatedString features = "";
     if (!vm.argument(2).is_nullish())
-        features = TRY(vm.argument(2).to_string(vm));
+        features = TRY(vm.argument(2).to_deprecated_string(vm));
 
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
 }
@@ -1227,7 +1227,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::alert)
     auto* impl = TRY(impl_from(vm));
     DeprecatedString message = "";
     if (vm.argument_count())
-        message = TRY(vm.argument(0).to_string(vm));
+        message = TRY(vm.argument(0).to_deprecated_string(vm));
     impl->alert_impl(message);
     return JS::js_undefined();
 }
@@ -1237,7 +1237,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::confirm)
     auto* impl = TRY(impl_from(vm));
     DeprecatedString message = "";
     if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_string(vm));
+        message = TRY(vm.argument(0).to_deprecated_string(vm));
     return JS::Value(impl->confirm_impl(message));
 }
 
@@ -1247,9 +1247,9 @@ JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
     DeprecatedString message = "";
     DeprecatedString default_ = "";
     if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_string(vm));
+        message = TRY(vm.argument(0).to_deprecated_string(vm));
     if (!vm.argument(1).is_undefined())
-        default_ = TRY(vm.argument(1).to_string(vm));
+        default_ = TRY(vm.argument(1).to_deprecated_string(vm));
     auto response = impl->prompt_impl(message, default_);
     if (response.is_null())
         return JS::js_null();
@@ -1260,7 +1260,7 @@ static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Va
 {
     if (handler.is_function())
         return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
-    return TRY(handler.to_string(vm));
+    return TRY(handler.to_deprecated_string(vm));
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
@@ -1400,7 +1400,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
-    auto deprecated_string = TRY(vm.argument(0).to_string(vm));
+    auto deprecated_string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto string = String::from_utf8(deprecated_string).release_value_but_fixme_should_propagate_errors();
 
     // must throw an "InvalidCharacterError" DOMException if data contains any character whose code point is greater than U+00FF
@@ -1428,7 +1428,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "btoa");
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     Vector<u8> byte_string;
     byte_string.ensure_capacity(string.length());
@@ -1665,7 +1665,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
 JS_DEFINE_NATIVE_FUNCTION(Window::match_media)
 {
     auto* impl = TRY(impl_from(vm));
-    auto media = TRY(vm.argument(0).to_string(vm));
+    auto media = TRY(vm.argument(0).to_deprecated_string(vm));
     return impl->match_media_impl(move(media));
 }
 
@@ -1721,7 +1721,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
 
         auto behavior_string_value = TRY(options->get("behavior"));
         if (!behavior_string_value.is_undefined())
-            behavior_string = TRY(behavior_string_value.to_string(vm));
+            behavior_string = TRY(behavior_string_value.to_deprecated_string(vm));
         if (behavior_string != "smooth" && behavior_string != "auto")
             return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
 
@@ -1784,7 +1784,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     top = top + static_cast<double>(current_scroll_position.y());
 
     auto behavior_string_value = TRY(options->get("behavior"));
-    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_string(vm));
+    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_deprecated_string(vm));
     if (behavior_string != "smooth" && behavior_string != "auto")
         return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
@@ -1841,7 +1841,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::outer_height_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::post_message)
 {
     auto* impl = TRY(impl_from(vm));
-    auto target_origin = TRY(vm.argument(1).to_string(vm));
+    auto target_origin = TRY(vm.argument(1).to_deprecated_string(vm));
     TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
         return impl->post_message_impl(vm.argument(0), target_origin);
     }));
@@ -1884,7 +1884,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::name_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
 {
     auto* impl = TRY(impl_from(vm));
-    impl->set_name(TRY(vm.argument(0).to_string(vm)));
+    impl->set_name(TRY(vm.argument(0).to_deprecated_string(vm)));
     return JS::js_undefined();
 }
 

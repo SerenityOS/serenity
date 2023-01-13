@@ -143,7 +143,7 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(VM& vm, Value temp
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
         // a. Let string be ? ToString(temporalDurationLike).
-        auto string = TRY(temporal_duration_like.to_string(vm));
+        auto string = TRY(temporal_duration_like.to_deprecated_string(vm));
 
         // b. Return ? ParseTemporalDurationString(string).
         return parse_temporal_duration_string(vm, string);

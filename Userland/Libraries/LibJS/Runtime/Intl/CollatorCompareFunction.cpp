@@ -58,9 +58,9 @@ ThrowCompletionOr<Value> CollatorCompareFunction::call()
     // 4. If y is not provided, let y be undefined.
 
     // 5. Let X be ? ToString(x).
-    auto x = TRY(vm.argument(0).to_string(vm));
+    auto x = TRY(vm.argument(0).to_deprecated_string(vm));
     // 6. Let Y be ? ToString(y).
-    auto y = TRY(vm.argument(1).to_string(vm));
+    auto y = TRY(vm.argument(1).to_deprecated_string(vm));
 
     // 7. Return CompareStrings(collator, X, Y).
     return compare_strings(m_collator, Utf8View(x), Utf8View(y));
