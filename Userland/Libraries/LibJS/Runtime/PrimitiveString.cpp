@@ -70,7 +70,7 @@ ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
 
     if (!has_deprecated_string()) {
         VERIFY(has_utf16_string());
-        m_deprecated_string = TRY(m_utf16_string->to_utf8(vm()));
+        m_deprecated_string = TRY(m_utf16_string->to_deprecated_string(vm()));
     }
 
     return *m_deprecated_string;
