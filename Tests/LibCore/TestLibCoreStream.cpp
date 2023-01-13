@@ -523,6 +523,53 @@ TEST_CASE(allocating_memory_stream_empty)
         auto read_bytes = MUST(stream.read(array));
         EXPECT_EQ(read_bytes.size(), 0ul);
     }
+
+    {
+        auto offset = MUST(stream.offset_of("test"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+}
+
+TEST_CASE(allocating_memory_stream_offset_of)
+{
+    Core::Stream::AllocatingMemoryStream stream;
+    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
+
+    {
+        auto offset = MUST(stream.offset_of(" "sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 4ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("W"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 0ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of(")"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 22ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("-"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+
+    MUST(stream.discard(1));
+
+    {
+        auto offset = MUST(stream.offset_of("W"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("e"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 0ul);
+    }
 }
 
 TEST_CASE(allocating_memory_stream_10kb)
