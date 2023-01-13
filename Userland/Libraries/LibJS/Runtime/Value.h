@@ -15,6 +15,7 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/Result.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
@@ -566,6 +567,7 @@ enum class NumberToStringMode {
     WithExponent,
     WithoutExponent,
 };
+ThrowCompletionOr<String> number_to_string(VM& vm, double, NumberToStringMode = NumberToStringMode::WithExponent);
 DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 Optional<Value> string_to_number(StringView);
 

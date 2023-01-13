@@ -72,7 +72,7 @@ ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 
 // 6.1.6.1.20 Number::toString ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-tostring
 // Implementation for radix = 10
-DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
+static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, NumberToStringMode mode)
 {
     auto convert_to_decimal_digits_array = [](auto x, auto& digits, auto& length) {
         for (; x; x /= 10)
@@ -82,22 +82,27 @@ DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
     };
 
     // 1. If x is NaN, return "NaN".
-    if (isnan(d))
-        return "NaN";
+    if (isnan(d)) {
+        TRY(builder.try_append("NaN"sv));
+        return {};
+    }
 
     // 2. If x is +0𝔽 or -0𝔽, return "0".
-    if (d == +0.0 || d == -0.0)
-        return "0";
+    if (d == +0.0 || d == -0.0) {
+        TRY(builder.try_append("0"sv));
+        return {};
+    }
 
     // 4. If x is +∞𝔽, return "Infinity".
     if (isinf(d)) {
-        if (d > 0)
-            return "Infinity";
-        else
-            return "-Infinity";
-    }
+        if (d > 0) {
+            TRY(builder.try_append("Infinity"sv));
+            return {};
+        }
 
-    StringBuilder builder;
+        TRY(builder.try_append("-Infinity"sv));
+        return {};
+    }
 
     // 5. Let n, k, and s be integers such that k ≥ 1, radix ^ (k - 1) ≤ s < radix ^ k,
     // 𝔽(s × radix ^ (n - k)) is x, and k is as small as possible. Note that k is the number of
@@ -115,7 +120,7 @@ DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
 
     // 3. If x < -0𝔽, return the string-concatenation of "-" and Number::toString(-x, radix).
     if (sign)
-        builder.append('-');
+        TRY(builder.try_append('-'));
 
     // Non-standard: Intl needs number-to-string conversions for extremely large numbers without any
     // exponential formatting, as it will handle such formatting itself in a locale-aware way.
@@ -127,34 +132,34 @@ DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
         if (n >= k) {
             // i. Return the string-concatenation of:
             // the code units of the k digits of the representation of s using radix radix
-            builder.append(mantissa_digits.data(), k);
+            TRY(builder.try_append(mantissa_digits.data(), k));
             // n - k occurrences of the code unit 0x0030 (DIGIT ZERO)
-            builder.append_repeated('0', n - k);
+            TRY(builder.try_append_repeated('0', n - k));
             // b. Else if n > 0, then
         } else if (n > 0) {
             // i. Return the string-concatenation of:
             // the code units of the most significant n digits of the representation of s using radix radix
-            builder.append(mantissa_digits.data(), n);
+            TRY(builder.try_append(mantissa_digits.data(), n));
             // the code unit 0x002E (FULL STOP)
-            builder.append('.');
+            TRY(builder.try_append('.'));
             // the code units of the remaining k - n digits of the representation of s using radix radix
-            builder.append(mantissa_digits.data() + n, k - n);
+            TRY(builder.try_append(mantissa_digits.data() + n, k - n));
             // c. Else,
         } else {
             // i. Assert: n ≤ 0.
             VERIFY(n <= 0);
             // ii. Return the string-concatenation of:
             // the code unit 0x0030 (DIGIT ZERO)
-            builder.append('0');
+            TRY(builder.try_append('0'));
             // the code unit 0x002E (FULL STOP)
-            builder.append('.');
+            TRY(builder.try_append('.'));
             // -n occurrences of the code unit 0x0030 (DIGIT ZERO)
-            builder.append_repeated('0', -n);
+            TRY(builder.try_append_repeated('0', -n));
             // the code units of the k digits of the representation of s using radix radix
-            builder.append(mantissa_digits.data(), k);
+            TRY(builder.try_append(mantissa_digits.data(), k));
         }
 
-        return builder.to_deprecated_string();
+        return {};
     }
 
     // 7. NOTE: In this case, the input will be represented using scientific E notation, such as 1.2e+3.
@@ -173,31 +178,45 @@ DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
     if (k == 1) {
         // a. Return the string-concatenation of:
         // the code unit of the single digit of s
-        builder.append(mantissa_digits[0]);
+        TRY(builder.try_append(mantissa_digits[0]));
         // the code unit 0x0065 (LATIN SMALL LETTER E)
-        builder.append('e');
+        TRY(builder.try_append('e'));
         // exponentSign
-        builder.append(exponent_sign);
+        TRY(builder.try_append(exponent_sign));
         // the code units of the decimal representation of abs(n - 1)
-        builder.append(exponent_digits.data(), exponent_length);
+        TRY(builder.try_append(exponent_digits.data(), exponent_length));
 
-        return builder.to_deprecated_string();
+        return {};
     }
 
     // 12. Return the string-concatenation of:
     // the code unit of the most significant digit of the decimal representation of s
-    builder.append(mantissa_digits[0]);
+    TRY(builder.try_append(mantissa_digits[0]));
     // the code unit 0x002E (FULL STOP)
-    builder.append('.');
+    TRY(builder.try_append('.'));
     // the code units of the remaining k - 1 digits of the decimal representation of s
-    builder.append(mantissa_digits.data() + 1, k - 1);
+    TRY(builder.try_append(mantissa_digits.data() + 1, k - 1));
     // the code unit 0x0065 (LATIN SMALL LETTER E)
-    builder.append('e');
+    TRY(builder.try_append('e'));
     // exponentSign
-    builder.append(exponent_sign);
+    TRY(builder.try_append(exponent_sign));
     // the code units of the decimal representation of abs(n - 1)
-    builder.append(exponent_digits.data(), exponent_length);
+    TRY(builder.try_append(exponent_digits.data(), exponent_length));
 
+    return {};
+}
+
+ThrowCompletionOr<String> number_to_string(VM& vm, double d, NumberToStringMode mode)
+{
+    StringBuilder builder;
+    TRY_OR_THROW_OOM(vm, number_to_string_impl(builder, d, mode));
+    return TRY_OR_THROW_OOM(vm, builder.to_string());
+}
+
+DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
+{
+    StringBuilder builder;
+    MUST(number_to_string_impl(builder, d, mode));
     return builder.to_deprecated_string();
 }
 
