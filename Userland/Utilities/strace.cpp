@@ -489,7 +489,7 @@ static void format_ioctl(FormattedSyscallBuilder& builder, int fd, unsigned requ
     builder.add_arguments(fd, ioctl_request_name(request));
     if (request == FIONBIO) {
         auto value = copy_from_process(reinterpret_cast<int*>(arg));
-        builder.add_argument(value);
+        builder.add_argument(value.release_value_but_fixme_should_propagate_errors());
     } else
         builder.add_argument(PointerArgument { arg });
 }
@@ -542,7 +542,7 @@ static void format_chdir(FormattedSyscallBuilder& builder, char const* path_p, s
 static void format_fstat(FormattedSyscallBuilder& builder, int fd, struct stat* buf_p)
 {
     auto buf = copy_from_process(buf_p);
-    builder.add_arguments(fd, buf);
+    builder.add_arguments(fd, buf.release_value_but_fixme_should_propagate_errors());
 }
 
 static ErrorOr<void> format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_params* params_p)
@@ -552,7 +552,7 @@ static ErrorOr<void> format_stat(FormattedSyscallBuilder& builder, Syscall::SC_s
         builder.add_argument("AT_FDCWD");
     else
         builder.add_argument(params.dirfd);
-    builder.add_arguments(StringArgument { params.path }, copy_from_process(params.statbuf), params.follow_symlinks);
+    builder.add_arguments(StringArgument { params.path }, TRY(copy_from_process(params.statbuf)), params.follow_symlinks);
     return {};
 }
 
@@ -583,7 +583,7 @@ static ErrorOr<void> format_poll(FormattedSyscallBuilder& builder, Syscall::SC_p
     builder.add_arguments(
         params.nfds,
         PointerArgument { params.fds },
-        copy_from_process(params.timeout),
+        TRY(copy_from_process(params.timeout)),
         PointerArgument { params.sigmask });
     return {};
 }
@@ -622,7 +622,7 @@ static void format_socket(FormattedSyscallBuilder& builder, int domain, int type
 
 static void format_connect(FormattedSyscallBuilder& builder, int socket, const struct sockaddr* address_p, socklen_t address_len)
 {
-    builder.add_arguments(socket, copy_from_process(address_p), address_len);
+    builder.add_arguments(socket, copy_from_process(address_p).release_value_but_fixme_should_propagate_errors(), address_len);
 }
 
 struct MsgOptions : BitflagBase {
@@ -681,7 +681,7 @@ static ErrorOr<void> format_set_mmap_name(FormattedSyscallBuilder& builder, Sysc
 
 static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clockid, struct timespec* time)
 {
-    builder.add_arguments(clockid_name(clockid), copy_from_process(time));
+    builder.add_arguments(clockid_name(clockid), copy_from_process(time).release_value_but_fixme_should_propagate_errors());
 }
 
 static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters, size_t size)
