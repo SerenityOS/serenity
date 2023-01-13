@@ -124,6 +124,8 @@ void Job::on_socket_connected()
     register_on_ready_to_read([this] {
         if (is_cancelled())
             return;
+        if (m_state == State::Failed)
+            return;
 
         if (m_state == State::InStatus) {
             if (!can_read_line())
@@ -132,6 +134,7 @@ void Job::on_socket_connected()
             auto line_or_error = read_line(PAGE_SIZE);
             if (line_or_error.is_error()) {
                 dbgln("Job: Error getting status line {}", line_or_error.error());
+                m_state = State::Failed;
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
 
@@ -141,6 +144,7 @@ void Job::on_socket_connected()
             auto maybe_space_index = view.find(' ');
             if (!maybe_space_index.has_value()) {
                 dbgln("Job: Expected 2-part status line, got '{}'", line);
+                m_state = State::Failed;
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
@@ -151,6 +155,7 @@ void Job::on_socket_connected()
             auto status = first_part.to_uint();
             if (!status.has_value()) {
                 dbgln("Job: Expected numeric status code");
+                m_state = State::Failed;
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
@@ -171,6 +176,7 @@ void Job::on_socket_connected()
                 m_state = State::InBody;
             } else {
                 dbgln("Job: Expected status between 10 and 69; instead got {}", m_status);
+                m_state = State::Failed;
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
@@ -188,6 +194,7 @@ void Job::on_socket_connected()
             auto payload_or_error = receive(read_size);
             if (payload_or_error.is_error()) {
                 dbgln("Job: Error in receive {}", payload_or_error.error());
+                m_state = State::Failed;
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
             auto payload = payload_or_error.release_value();

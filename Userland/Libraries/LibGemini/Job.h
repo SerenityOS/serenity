@@ -46,6 +46,7 @@ protected:
         InStatus,
         InBody,
         Finished,
+        Failed,
     };
 
     GeminiRequest m_request;
