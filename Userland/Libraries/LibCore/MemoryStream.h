@@ -60,6 +60,8 @@ public:
 
     size_t used_buffer_size() const;
 
+    ErrorOr<Optional<size_t>> offset_of(ReadonlyBytes needle) const;
+
 private:
     // Note: We set the inline buffer capacity to zero to make moving chunks as efficient as possible.
     using Chunk = AK::Detail::ByteBuffer<0>;

@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FixedArray.h>
+#include <AK/MemMem.h>
 #include <LibCore/MemoryStream.h>
 
 namespace Core::Stream {
@@ -196,6 +198,31 @@ void AllocatingMemoryStream::close()
 size_t AllocatingMemoryStream::used_buffer_size() const
 {
     return m_write_offset - m_read_offset;
+}
+
+ErrorOr<Optional<size_t>> AllocatingMemoryStream::offset_of(ReadonlyBytes needle) const
+{
+    VERIFY(m_write_offset >= m_read_offset);
+
+    if (m_chunks.size() == 0)
+        return Optional<size_t> {};
+
+    // Ensure that we don't have to trim away more than one block.
+    VERIFY(m_read_offset < chunk_size);
+    VERIFY(m_chunks.size() * chunk_size - m_write_offset < chunk_size);
+
+    auto chunk_count = m_chunks.size();
+    auto search_spans = TRY(FixedArray<ReadonlyBytes>::try_create(chunk_count));
+
+    for (size_t i = 0; i < chunk_count; i++) {
+        search_spans[i] = m_chunks[i].span();
+    }
+
+    // Trimming is done first to ensure that we don't unintentionally shift around if the first and last chunks are the same.
+    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(chunk_count * chunk_size - m_write_offset);
+    search_spans[0] = search_spans[0].slice(m_read_offset);
+
+    return AK::memmem(search_spans.begin(), search_spans.end(), needle);
 }
 
 ErrorOr<ReadonlyBytes> AllocatingMemoryStream::next_read_range()
