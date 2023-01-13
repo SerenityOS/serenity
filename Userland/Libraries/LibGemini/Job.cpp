@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Error.h>
+#include <AK/String.h>
 #include <LibCore/Stream.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
@@ -54,19 +55,18 @@ bool Job::can_read_line() const
     return MUST(m_socket->can_read_line());
 }
 
-DeprecatedString Job::read_line(size_t size)
+ErrorOr<String> Job::read_line(size_t size)
 {
-    ByteBuffer buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
-    auto bytes_read = MUST(m_socket->read_until(buffer, "\r\n"sv));
-    return DeprecatedString::copy(bytes_read);
+    ByteBuffer buffer = TRY(ByteBuffer::create_uninitialized(size));
+    auto bytes_read = TRY(m_socket->read_until(buffer, "\r\n"sv));
+    return String::from_utf8(StringView { bytes_read.data(), bytes_read.size() });
 }
 
-ByteBuffer Job::receive(size_t size)
+ErrorOr<ByteBuffer> Job::receive(size_t size)
 {
-    ByteBuffer buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
-    auto nread = MUST(m_socket->read(buffer)).size();
-    // FIXME: Propagate errors.
-    return MUST(buffer.slice(0, nread));
+    ByteBuffer buffer = TRY(ByteBuffer::create_uninitialized(size));
+    auto nread = TRY(m_socket->read(buffer)).size();
+    return buffer.slice(0, nread);
 }
 
 bool Job::can_read() const
@@ -129,26 +129,33 @@ void Job::on_socket_connected()
             if (!can_read_line())
                 return;
 
-            auto line = read_line(PAGE_SIZE);
-            if (line.is_null()) {
-                dbgln("Job: Expected status line");
+            auto line_or_error = read_line(PAGE_SIZE);
+            if (line_or_error.is_error()) {
+                dbgln("Job: Error getting status line {}", line_or_error.error());
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
 
-            auto parts = line.split_limit(' ', 2);
-            if (parts.size() != 2) {
+            auto line = line_or_error.release_value();
+            auto view = line.bytes_as_string_view();
+
+            auto maybe_space_index = view.find(' ');
+            if (!maybe_space_index.has_value()) {
                 dbgln("Job: Expected 2-part status line, got '{}'", line);
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
-            auto status = parts[0].to_uint();
+            auto space_index = maybe_space_index.release_value();
+            auto first_part = view.substring_view(0, space_index);
+            auto second_part = view.substring_view(space_index + 1);
+
+            auto status = first_part.to_uint();
             if (!status.has_value()) {
                 dbgln("Job: Expected numeric status code");
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
-            m_status = status.value();
-            m_meta = parts[1];
+            m_status = status.release_value();
+            m_meta = second_part;
 
             if (m_status >= 10 && m_status < 20) {
                 m_state = State::Finished;
@@ -178,7 +185,13 @@ void Job::on_socket_connected()
         while (MUST(m_socket->can_read_without_blocking())) {
             auto read_size = 64 * KiB;
 
-            auto payload = receive(read_size);
+            auto payload_or_error = receive(read_size);
+            if (payload_or_error.is_error()) {
+                dbgln("Job: Error in receive {}", payload_or_error.error());
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+            }
+            auto payload = payload_or_error.release_value();
+
             if (payload.is_empty()) {
                 if (m_socket->is_eof()) {
                     finish_up();

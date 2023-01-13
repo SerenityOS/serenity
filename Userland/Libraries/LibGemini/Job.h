@@ -37,9 +37,9 @@ protected:
     void flush_received_buffers();
     void register_on_ready_to_read(Function<void()>);
     bool can_read_line() const;
-    DeprecatedString read_line(size_t);
+    ErrorOr<String> read_line(size_t);
     bool can_read() const;
-    ByteBuffer receive(size_t);
+    ErrorOr<ByteBuffer> receive(size_t);
     bool write(ReadonlyBytes);
 
     enum class State {
