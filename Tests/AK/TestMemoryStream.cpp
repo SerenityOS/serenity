@@ -100,44 +100,6 @@ TEST_CASE(seeking_slicing_offset)
     EXPECT_EQ(expected2, actual2);
 }
 
-TEST_CASE(duplex_simple)
-{
-    DuplexMemoryStream stream;
-
-    EXPECT(stream.eof());
-    stream << 42;
-    EXPECT(!stream.eof());
-
-    int value;
-    stream >> value;
-    EXPECT_EQ(value, 42);
-    EXPECT(stream.eof());
-}
-
-TEST_CASE(duplex_large_buffer)
-{
-    DuplexMemoryStream stream;
-
-    Array<u8, 1024> one_kibibyte;
-
-    EXPECT_EQ(stream.size(), 0ul);
-
-    for (size_t idx = 0; idx < 256; ++idx)
-        stream << one_kibibyte;
-
-    EXPECT_EQ(stream.size(), 256 * 1024ul);
-
-    for (size_t idx = 0; idx < 128; ++idx)
-        stream >> one_kibibyte;
-
-    EXPECT_EQ(stream.size(), 128 * 1024ul);
-
-    for (size_t idx = 0; idx < 128; ++idx)
-        stream >> one_kibibyte;
-
-    EXPECT(stream.eof());
-}
-
 TEST_CASE(read_endian_values)
 {
     Array<u8, 8> const input { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -149,17 +111,6 @@ TEST_CASE(read_endian_values)
 
     EXPECT_EQ(value1, 0x03020100u);
     EXPECT_EQ(value2, 0x04050607u);
-}
-
-TEST_CASE(write_endian_values)
-{
-    Array<u8, 8> const expected { 4, 3, 2, 1, 1, 2, 3, 4 };
-
-    DuplexMemoryStream stream;
-    stream << LittleEndian<u32> { 0x01020304 } << BigEndian<u32> { 0x01020304 };
-
-    EXPECT_EQ(stream.size(), 8u);
-    EXPECT(expected.span() == stream.copy_into_contiguous_buffer().span());
 }
 
 TEST_CASE(new_output_memory_stream)
@@ -183,40 +134,4 @@ TEST_CASE(new_output_memory_stream)
 
     EXPECT_EQ(stream.bytes().data(), buffer.data());
     EXPECT_EQ(stream.bytes().size(), 2u);
-}
-
-TEST_CASE(offset_of_out_of_bounds)
-{
-    Array<u8, 4> target { 0xff, 0xff, 0xff, 0xff };
-
-    Array<u8, DuplexMemoryStream::chunk_size> whole_chunk;
-    whole_chunk.span().fill(0);
-
-    DuplexMemoryStream stream;
-
-    stream << whole_chunk;
-
-    EXPECT(!stream.offset_of(target).has_value());
-}
-
-TEST_CASE(unsigned_integer_underflow_regression)
-{
-    Array<u8, DuplexMemoryStream::chunk_size + 1> buffer;
-
-    DuplexMemoryStream stream;
-    stream << buffer;
-}
-
-TEST_CASE(offset_calculation_error_regression)
-{
-    Array<u8, DuplexMemoryStream::chunk_size> input, output;
-    input.span().fill(0xff);
-
-    DuplexMemoryStream stream;
-    stream << 0x00000000 << input << 0x00000000;
-
-    stream.discard_or_error(sizeof(int));
-    stream.read(output);
-
-    EXPECT_EQ(input, output);
 }
