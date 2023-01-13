@@ -159,7 +159,7 @@ void Editor::finish_edit()
     if (!m_always_refresh) {
         m_input_error = Error::Eof;
         finish();
-        really_quit_event_loop();
+        really_quit_event_loop().release_value_but_fixme_should_propagate_errors();
     }
 }
 
@@ -233,7 +233,7 @@ void Editor::enter_search()
 
         m_search_editor->on_display_refresh = [this](Editor& search_editor) {
             // Remove the search editor prompt before updating ourselves (this avoids artifacts when we move the search editor around).
-            search_editor.cleanup();
+            search_editor.cleanup().release_value_but_fixme_should_propagate_errors();
 
             StringBuilder builder;
             builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
@@ -244,7 +244,7 @@ void Editor::enter_search()
                 m_cursor = 0;
             }
 
-            refresh_display();
+            refresh_display().release_value_but_fixme_should_propagate_errors();
 
             // Move the search prompt below ours and tell it to redraw itself.
             auto prompt_end_line = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
@@ -264,7 +264,7 @@ void Editor::enter_search()
             search_editor.finish();
             m_reset_buffer_on_search_end = true;
             search_editor.end_search();
-            search_editor.deferred_invoke([&search_editor] { search_editor.really_quit_event_loop(); });
+            search_editor.deferred_invoke([&search_editor] { search_editor.really_quit_event_loop().release_value_but_fixme_should_propagate_errors(); });
             return false;
         });
 
@@ -293,7 +293,7 @@ void Editor::enter_search()
                 TemporaryChange refresh_change { m_always_refresh, true };
                 set_origin(1, 1);
                 m_refresh_needed = true;
-                refresh_display();
+                refresh_display().release_value_but_fixme_should_propagate_errors();
             }
 
             // move the search prompt below ours
@@ -342,12 +342,12 @@ void Editor::enter_search()
 
         // Manually cleanup the search line.
         auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
-        reposition_cursor(*stderr_stream);
+        reposition_cursor(*stderr_stream).release_value_but_fixme_should_propagate_errors();
         auto search_metrics = actual_rendered_string_metrics(search_string, {});
         auto metrics = actual_rendered_string_metrics(search_prompt, {});
-        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1, *stderr_stream);
+        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1, *stderr_stream).release_value_but_fixme_should_propagate_errors();
 
-        reposition_cursor(*stderr_stream);
+        reposition_cursor(*stderr_stream).release_value_but_fixme_should_propagate_errors();
 
         m_refresh_needed = true;
         m_cached_prompt_valid = false;
@@ -434,7 +434,7 @@ void Editor::clear_screen()
 {
     warn("\033[3J\033[H\033[2J");
     auto stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
-    VT::move_absolute(1, 1, *stream);
+    VT::move_absolute(1, 1, *stream).release_value_but_fixme_should_propagate_errors();
     set_origin(1, 1);
     m_refresh_needed = true;
     m_cached_prompt_valid = false;
@@ -569,11 +569,7 @@ void Editor::edit_in_external_editor()
     }
 
     {
-        auto file_or_error = Core::Stream::File::open({ file_path, strlen(file_path) }, Core::Stream::OpenMode::Read);
-        if (file_or_error.is_error())
-            return;
-
-        auto file = file_or_error.release_value();
+        auto file = Core::Stream::File::open({ file_path, strlen(file_path) }, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
         auto contents = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
         StringView data { contents };
         while (data.ends_with('\n'))
