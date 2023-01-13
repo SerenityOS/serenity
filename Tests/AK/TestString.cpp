@@ -108,6 +108,23 @@ TEST_CASE(replace)
     }
 }
 
+TEST_CASE(reverse)
+{
+    auto test_reverse = [](auto test, auto expected) {
+        auto string = MUST(String::from_utf8(test));
+        auto result = MUST(string.reverse());
+
+        EXPECT_EQ(result, expected);
+    };
+
+    test_reverse(""sv, ""sv);
+    test_reverse("a"sv, "a"sv);
+    test_reverse("ab"sv, "ba"sv);
+    test_reverse("ab cd ef"sv, "fe dc ba"sv);
+    test_reverse("😀"sv, "😀"sv);
+    test_reverse("ab😀cd"sv, "dc😀ba"sv);
+}
+
 TEST_CASE(to_lowercase)
 {
     {
