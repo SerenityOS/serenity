@@ -73,11 +73,18 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
+    HashMap<String, PrimitiveString*>& string_cache()
+    {
+        return m_string_cache;
+    }
+
     HashMap<DeprecatedString, PrimitiveString*>& deprecated_string_cache()
     {
         return m_deprecated_string_cache;
     }
+
     PrimitiveString& empty_string() { return *m_empty_string; }
+
     PrimitiveString& single_ascii_character_string(u8 character)
     {
         VERIFY(character < 0x80);
@@ -257,6 +264,7 @@ private:
     void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
 
+    HashMap<String, PrimitiveString*> m_string_cache;
     HashMap<DeprecatedString, PrimitiveString*> m_deprecated_string_cache;
 
     Heap m_heap;

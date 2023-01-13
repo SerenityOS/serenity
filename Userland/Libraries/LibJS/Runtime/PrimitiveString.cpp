@@ -25,6 +25,11 @@ PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
 {
 }
 
+PrimitiveString::PrimitiveString(String string)
+    : m_utf8_string(move(string))
+{
+}
+
 PrimitiveString::PrimitiveString(DeprecatedString string)
     : m_deprecated_string(move(string))
 {
@@ -37,6 +42,8 @@ PrimitiveString::PrimitiveString(Utf16String string)
 
 PrimitiveString::~PrimitiveString()
 {
+    if (has_utf8_string())
+        vm().string_cache().remove(*m_utf8_string);
     if (has_deprecated_string())
         vm().deprecated_string_cache().remove(*m_deprecated_string);
 }
@@ -59,9 +66,28 @@ bool PrimitiveString::is_empty() const
 
     if (has_utf16_string())
         return m_utf16_string->is_empty();
+    if (has_utf8_string())
+        return m_utf8_string->is_empty();
     if (has_deprecated_string())
         return m_deprecated_string->is_empty();
     VERIFY_NOT_REACHED();
+}
+
+ThrowCompletionOr<String> PrimitiveString::utf8_string() const
+{
+    auto& vm = this->vm();
+    TRY(resolve_rope_if_needed());
+
+    if (!has_utf8_string()) {
+        if (has_deprecated_string())
+            m_utf8_string = TRY_OR_THROW_OOM(vm, String::from_utf8(*m_deprecated_string));
+        else if (has_utf16_string())
+            m_utf8_string = TRY(m_utf16_string->to_utf8(vm));
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    return *m_utf8_string;
 }
 
 ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
@@ -69,8 +95,12 @@ ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
     TRY(resolve_rope_if_needed());
 
     if (!has_deprecated_string()) {
-        VERIFY(has_utf16_string());
-        m_deprecated_string = TRY(m_utf16_string->to_deprecated_string(vm()));
+        if (has_utf8_string())
+            m_deprecated_string = m_utf8_string->to_deprecated_string();
+        else if (has_utf16_string())
+            m_deprecated_string = TRY(m_utf16_string->to_deprecated_string(vm()));
+        else
+            VERIFY_NOT_REACHED();
     }
 
     return *m_deprecated_string;
@@ -81,8 +111,12 @@ ThrowCompletionOr<Utf16String> PrimitiveString::utf16_string() const
     TRY(resolve_rope_if_needed());
 
     if (!has_utf16_string()) {
-        VERIFY(has_deprecated_string());
-        m_utf16_string = TRY(Utf16String::create(vm(), *m_deprecated_string));
+        if (has_utf8_string()) {
+            m_utf16_string = TRY(Utf16String::create(vm(), m_utf8_string->bytes_as_string_view()));
+        } else {
+            VERIFY(has_deprecated_string());
+            m_utf16_string = TRY(Utf16String::create(vm(), *m_deprecated_string));
+        }
     }
 
     return *m_utf16_string;
@@ -126,6 +160,26 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16String string
     }
 
     return vm.heap().allocate_without_realm<PrimitiveString>(move(string));
+}
+
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, String string)
+{
+    if (string.is_empty())
+        return vm.empty_string();
+
+    if (auto bytes = string.bytes_as_string_view(); bytes.length() == 1) {
+        auto ch = static_cast<u8>(bytes[0]);
+        if (is_ascii(ch))
+            return vm.single_ascii_character_string(ch);
+    }
+
+    auto& string_cache = vm.string_cache();
+    if (auto it = string_cache.find(string); it != string_cache.end())
+        return *it->value;
+
+    auto new_string = vm.heap().allocate_without_realm<PrimitiveString>(string);
+    string_cache.set(move(string), new_string);
+    return *new_string;
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString string)
