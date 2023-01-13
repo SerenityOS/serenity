@@ -19,7 +19,7 @@ template<typename... Args>
 ThrowCompletionOr<DeprecatedString> deprecated_format(VM& vm, CheckedFormatString<Args...>&& fmtstr, Args const&... args)
 {
     StringBuilder builder;
-    AK::VariadicFormatParams parameters { args... };
+    AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Args...> parameters { args... };
 
     TRY_OR_THROW_OOM(vm, vformat(builder, fmtstr.view(), parameters));
     return builder.to_deprecated_string();

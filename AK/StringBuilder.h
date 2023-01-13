@@ -33,7 +33,7 @@ public:
     template<typename... Parameters>
     ErrorOr<void> try_appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        VariadicFormatParams variadic_format_params { parameters... };
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         return vformat(*this, fmtstr.view(), variadic_format_params);
     }
     ErrorOr<void> try_append(char const*, size_t);
@@ -57,7 +57,7 @@ public:
     template<typename... Parameters>
     void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        VariadicFormatParams variadic_format_params { parameters... };
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         MUST(vformat(*this, fmtstr.view(), variadic_format_params));
     }
 

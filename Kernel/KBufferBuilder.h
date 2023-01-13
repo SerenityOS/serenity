@@ -37,7 +37,7 @@ public:
     {
         // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;
-        AK::VariadicFormatParams variadic_format_params { parameters... };
+        AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         TRY(vformat(builder, fmtstr.view(), variadic_format_params));
         return append_bytes(builder.string_view().bytes());
     }
