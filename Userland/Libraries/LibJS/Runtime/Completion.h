@@ -25,6 +25,8 @@ namespace JS {
             VERIFY(_temporary_result.error().code() == ENOMEM);                        \
             return vm.throw_completion<JS::InternalError>(JS::ErrorType::OutOfMemory); \
         }                                                                              \
+        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                   \
         _temporary_result.release_value();                                             \
     })
 

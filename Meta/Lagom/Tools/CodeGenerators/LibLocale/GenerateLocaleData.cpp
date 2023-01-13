@@ -231,12 +231,14 @@ struct CLDR {
 
 // Some parsing is expected to fail. For example, the CLDR contains language mappings
 // with locales such as "en-GB-oed" that are canonically invalid locale IDs.
-#define TRY_OR_DISCARD(expression)             \
-    ({                                         \
-        auto _temporary_result = (expression); \
-        if (_temporary_result.is_error())      \
-            return;                            \
-        _temporary_result.release_value();     \
+#define TRY_OR_DISCARD(expression)                                                     \
+    ({                                                                                 \
+        auto _temporary_result = (expression);                                         \
+        if (_temporary_result.is_error())                                              \
+            return;                                                                    \
+        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                   \
+        _temporary_result.release_value();                                             \
     })
 
 static ErrorOr<LanguageMapping> parse_language_mapping(CLDR& cldr, StringView key, StringView alias)

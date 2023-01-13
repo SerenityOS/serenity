@@ -66,10 +66,12 @@ struct LoaderError {
 }
 
 // Convenience TRY-like macro to convert an Error to a LoaderError
-#define LOADER_TRY(expression)                                     \
-    ({                                                             \
-        auto _temporary_result = (expression);                     \
-        if (_temporary_result.is_error())                          \
-            return LoaderError(_temporary_result.release_error()); \
-        _temporary_result.release_value();                         \
+#define LOADER_TRY(expression)                                                         \
+    ({                                                                                 \
+        auto _temporary_result = (expression);                                         \
+        if (_temporary_result.is_error())                                              \
+            return LoaderError(_temporary_result.release_error());                     \
+        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                   \
+        _temporary_result.release_value();                                             \
     })

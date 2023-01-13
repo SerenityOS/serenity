@@ -17,6 +17,8 @@
             outln("Encountered a parsing error: {}", _temporary_result.error().string_literal()); \
             return Error::from_string_literal("Failed to parse :(");                              \
         }                                                                                         \
+        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>,            \
+            "Do not return a reference from a fallible expression");                              \
         _temporary_result.release_value();                                                        \
     })
 
