@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Types.h>
 
 #define JS_DECLARE_NATIVE_FUNCTION(name) \
@@ -282,6 +283,7 @@ struct PartialDurationRecord;
 };
 
 template<typename T>
+requires(!IsLvalueReference<T>)
 class ThrowCompletionOr;
 
 template<class T>

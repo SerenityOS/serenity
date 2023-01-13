@@ -246,6 +246,7 @@ private:
 namespace JS {
 
 template<typename ValueType>
+requires(!IsLvalueReference<ValueType>)
 class [[nodiscard]] ThrowCompletionOr {
 public:
     ThrowCompletionOr()
