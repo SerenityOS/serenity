@@ -141,7 +141,7 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
     if (m_scaling)
         return true;
 
-    if (event.modifiers() != 0)
+    if (!(event.modifiers() == Mod_None || event.modifiers() == Mod_Shift))
         return false;
 
     auto* layer = m_editor->active_layer();
@@ -149,19 +149,19 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
         return false;
 
     auto new_location = layer->location();
-
+    auto speed = event.shift() ? 10 : 1;
     switch (event.key()) {
     case Key_Up:
-        new_location.translate_by(0, -1);
+        new_location.translate_by(0, -speed);
         break;
     case Key_Down:
-        new_location.translate_by(0, 1);
+        new_location.translate_by(0, speed);
         break;
     case Key_Left:
-        new_location.translate_by(-1, 0);
+        new_location.translate_by(-speed, 0);
         break;
     case Key_Right:
-        new_location.translate_by(1, 0);
+        new_location.translate_by(speed, 0);
         break;
     default:
         return false;
