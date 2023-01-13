@@ -9,6 +9,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -23,6 +24,7 @@ class PrimitiveString final : public Cell {
 
 public:
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16String);
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, String);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedString);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, PrimitiveString&, PrimitiveString&);
 
@@ -33,6 +35,9 @@ public:
 
     bool is_empty() const;
     u32 hash() const;
+
+    ThrowCompletionOr<String> utf8_string() const;
+    bool has_utf8_string() const { return m_utf8_string.has_value(); }
 
     ThrowCompletionOr<DeprecatedString> deprecated_string() const;
     bool has_deprecated_string() const { return m_deprecated_string.has_value(); }
@@ -45,6 +50,7 @@ public:
 
 private:
     explicit PrimitiveString(PrimitiveString&, PrimitiveString&);
+    explicit PrimitiveString(String);
     explicit PrimitiveString(DeprecatedString);
     explicit PrimitiveString(Utf16String);
 
@@ -57,6 +63,7 @@ private:
     mutable PrimitiveString* m_lhs { nullptr };
     mutable PrimitiveString* m_rhs { nullptr };
 
+    mutable Optional<String> m_utf8_string;
     mutable Optional<DeprecatedString> m_deprecated_string;
     mutable Optional<Utf16String> m_utf16_string;
 };
