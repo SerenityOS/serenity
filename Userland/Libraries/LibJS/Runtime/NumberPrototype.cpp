@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
         number = round(number / pow(10, exponent - fraction_digits));
 
         // c. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        number_string = number_to_string(number, NumberToStringMode::WithoutExponent);
+        number_string = number_to_deprecated_string(number, NumberToStringMode::WithoutExponent);
     }
 
     // 11. If f ≠ 0, then
@@ -349,7 +349,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
         number = round(number / pow(10, exponent - precision + 1));
 
         // b. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        number_string = number_to_string(number, NumberToStringMode::WithoutExponent);
+        number_string = number_to_deprecated_string(number, NumberToStringMode::WithoutExponent);
 
         // c. If e < -6 or e ≥ p, then
         if ((exponent < -6) || (exponent >= precision)) {

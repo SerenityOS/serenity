@@ -72,7 +72,7 @@ ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 
 // 6.1.6.1.20 Number::toString ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-tostring
 // Implementation for radix = 10
-DeprecatedString number_to_string(double d, NumberToStringMode mode)
+DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
 {
     auto convert_to_decimal_digits_array = [](auto x, auto& digits, auto& length) {
         for (; x; x /= 10)
@@ -339,7 +339,7 @@ DeprecatedString Value::typeof() const
 DeprecatedString Value::to_string_without_side_effects() const
 {
     if (is_double())
-        return number_to_string(m_value.as_double);
+        return number_to_deprecated_string(m_value.as_double);
 
     switch (m_value.tag) {
     case UNDEFINED_TAG:
@@ -377,7 +377,7 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 ThrowCompletionOr<DeprecatedString> Value::to_string(VM& vm) const
 {
     if (is_double())
-        return number_to_string(m_value.as_double);
+        return number_to_deprecated_string(m_value.as_double);
 
     switch (m_value.tag) {
     // 1. If argument is a String, return argument.

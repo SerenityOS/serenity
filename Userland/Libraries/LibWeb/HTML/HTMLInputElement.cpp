@@ -728,7 +728,7 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):value-sanitization-algorithm
         auto maybe_double = value.to_double(TrimWhitespace::Yes);
         if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
-            return JS::number_to_string(maybe_double.value_or(0));
+            return JS::number_to_deprecated_string(maybe_double.value_or(0));
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
         // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;
