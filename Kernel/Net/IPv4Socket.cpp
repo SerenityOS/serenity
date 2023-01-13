@@ -740,7 +740,16 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 
         case SIOCGIFHWADDR: {
             auto mac_address = adapter->mac_address();
-            ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER; // FIXME: Query the underlying network interface for it's type
+            switch (adapter->adapter_type()) {
+            case NetworkAdapter::Type::Loopback:
+                ifr.ifr_hwaddr.sa_family = ARPHRD_LOOPBACK;
+                break;
+            case NetworkAdapter::Type::Ethernet:
+                ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
             mac_address.copy_to(Bytes { ifr.ifr_hwaddr.sa_data, sizeof(ifr.ifr_hwaddr.sa_data) });
             return copy_to_user(user_ifr, &ifr);
         }

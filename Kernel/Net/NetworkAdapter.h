@@ -47,11 +47,17 @@ class NetworkAdapter
     : public AtomicRefCounted<NetworkAdapter>
     , public LockWeakable<NetworkAdapter> {
 public:
+    enum class Type {
+        Loopback,
+        Ethernet
+    };
+
     static constexpr i32 LINKSPEED_INVALID = -1;
 
     virtual ~NetworkAdapter();
 
     virtual StringView class_name() const = 0;
+    virtual Type adapter_type() const = 0;
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) = 0;
 
     StringView name() const { return m_name->view(); }
