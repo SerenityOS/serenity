@@ -779,7 +779,7 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
 
     // 6. Assert: Type(monthCode) is String.
     VERIFY(month_code.is_string());
-    auto const& month_code_string = TRY(month_code.as_string().deprecated_string());
+    auto month_code_string = TRY(month_code.as_string().deprecated_string());
 
     // 7. If the length of monthCode is not 3, throw a RangeError exception.
     auto month_length = month_code_string.length();

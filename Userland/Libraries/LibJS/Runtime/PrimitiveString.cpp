@@ -64,7 +64,7 @@ bool PrimitiveString::is_empty() const
     VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<DeprecatedString const&> PrimitiveString::deprecated_string() const
+ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
 {
     TRY(resolve_rope_if_needed());
 
@@ -76,7 +76,7 @@ ThrowCompletionOr<DeprecatedString const&> PrimitiveString::deprecated_string() 
     return *m_utf8_string;
 }
 
-ThrowCompletionOr<Utf16String const&> PrimitiveString::utf16_string() const
+ThrowCompletionOr<Utf16String> PrimitiveString::utf16_string() const
 {
     TRY(resolve_rope_if_needed());
 
@@ -90,7 +90,8 @@ ThrowCompletionOr<Utf16String const&> PrimitiveString::utf16_string() const
 
 ThrowCompletionOr<Utf16View> PrimitiveString::utf16_string_view() const
 {
-    return TRY(utf16_string()).view();
+    (void)TRY(utf16_string());
+    return m_utf16_string->view();
 }
 
 ThrowCompletionOr<Optional<Value>> PrimitiveString::get(VM& vm, PropertyKey const& property_key) const
@@ -178,8 +179,8 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
     // NOTE: Special case for two concatenated UTF-16 strings.
     //       This is here as an optimization, although I'm unsure how valuable it is.
     if (m_lhs->has_utf16_string() && m_rhs->has_utf16_string()) {
-        auto const& lhs_string = TRY(m_lhs->utf16_string());
-        auto const& rhs_string = TRY(m_rhs->utf16_string());
+        auto const& lhs_string = m_lhs->m_utf16_string.value();
+        auto const& rhs_string = m_rhs->m_utf16_string.value();
 
         Utf16Data combined;
         TRY_OR_THROW_OOM(vm, combined.try_ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units()));
@@ -226,8 +227,8 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         }
 
         // Get the UTF-8 representations for both strings.
-        auto const& previous_string_as_utf8 = TRY(previous->deprecated_string());
-        auto const& current_string_as_utf8 = TRY(current->deprecated_string());
+        auto previous_string_as_utf8 = TRY(previous->deprecated_string());
+        auto current_string_as_utf8 = TRY(current->deprecated_string());
 
         // NOTE: Now we need to look at the end of the previous string and the start
         //       of the current string, to see if they should be combined into a surrogate.

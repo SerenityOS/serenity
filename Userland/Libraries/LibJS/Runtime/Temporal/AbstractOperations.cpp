@@ -146,7 +146,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     if (!values.is_empty()) {
         // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        if (auto const& value_string = TRY(value.as_string().deprecated_string()); !values.contains_slow(value_string))
+        if (auto value_string = TRY(value.as_string().deprecated_string()); !values.contains_slow(value_string))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
     }
 

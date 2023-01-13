@@ -234,7 +234,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
         return vm.throw_completion<JS::TypeError>("Expected the second argument of set_real_cell_contents() to be a String");
 
     auto& cell = sheet_object->m_sheet.ensure(position.value());
-    auto const& new_contents = TRY(new_contents_value.as_string().deprecated_string());
+    auto new_contents = TRY(new_contents_value.as_string().deprecated_string());
     cell.set_data(new_contents);
     return JS::js_null();
 }
@@ -301,7 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
     if (!column_name.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "String");
 
-    auto const& column_name_str = TRY(column_name.as_string().deprecated_string());
+    auto column_name_str = TRY(column_name.as_string().deprecated_string());
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
@@ -326,7 +326,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
     if (!column_name.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "String");
 
-    auto const& column_name_str = TRY(column_name.as_string().deprecated_string());
+    auto column_name_str = TRY(column_name.as_string().deprecated_string());
 
     auto offset = TRY(vm.argument(1).to_number(vm));
     auto offset_number = static_cast<i32>(offset.as_double());
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
     if (!column_name.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "String");
 
-    auto const& column_name_str = TRY(column_name.as_string().deprecated_string());
+    auto column_name_str = TRY(column_name.as_string().deprecated_string());
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (!is<SheetGlobalObject>(this_object))
@@ -405,7 +405,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
     auto& workbook = static_cast<WorkbookObject*>(this_object)->m_workbook;
 
     if (name_value.is_string()) {
-        auto const& name = TRY(name_value.as_string().deprecated_string());
+        auto name = TRY(name_value.as_string().deprecated_string());
         for (auto& sheet : workbook.sheets()) {
             if (sheet.name() == name)
                 return JS::Value(&sheet.global_object());
