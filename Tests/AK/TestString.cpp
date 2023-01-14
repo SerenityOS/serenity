@@ -162,3 +162,19 @@ TEST_CASE(to_uppercase)
         EXPECT_EQ(result, "ʼN"sv);
     }
 }
+
+TEST_CASE(is_one_of)
+{
+    auto foo = MUST(String::from_utf8("foo"sv));
+    auto bar = MUST(String::from_utf8("bar"sv));
+
+    EXPECT(foo.is_one_of(foo));
+    EXPECT(foo.is_one_of(foo, bar));
+    EXPECT(foo.is_one_of(bar, foo));
+    EXPECT(!foo.is_one_of(bar));
+
+    EXPECT(!bar.is_one_of("foo"sv));
+    EXPECT(bar.is_one_of("foo"sv, "bar"sv));
+    EXPECT(bar.is_one_of("bar"sv, "foo"sv));
+    EXPECT(bar.is_one_of("bar"sv));
+}
