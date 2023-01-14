@@ -272,11 +272,11 @@ MainWidget::MainWidget()
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;
 
-        read_file(*response.value());
+        read_file(response.value().filename(), response.value().stream());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -284,18 +284,18 @@ MainWidget::MainWidget()
         if (extension.is_null() && m_editor->syntax_highlighter())
             extension = Syntax::common_language_extension(m_editor->syntax_highlighter()->language());
 
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_name, extension);
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, extension);
         if (response.is_error())
             return;
 
         auto file = response.release_value();
-        if (!m_editor->write_to_file(*file)) {
+        if (auto result = m_editor->write_to_file(file.stream()); result.is_error()) {
             GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
-        set_path(file->filename());
-        dbgln("Wrote document to {}", file->filename());
+        set_path(file.filename());
+        dbgln("Wrote document to {}", file.filename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -303,11 +303,11 @@ MainWidget::MainWidget()
             m_save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path, Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
         if (response.is_error())
             return;
 
-        if (!m_editor->write_to_file(*response.value())) {
+        if (auto result = m_editor->write_to_file(response.value().stream()); result.is_error()) {
             GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
         }
     });
@@ -746,10 +746,13 @@ void MainWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-bool MainWidget::read_file(Core::File& file)
+bool MainWidget::read_file(String const& filename, Core::Stream::File& file)
 {
-    m_editor->set_text(file.read_all());
-    set_path(file.filename());
+    auto result = file.read_until_eof();
+    if (result.is_error())
+        return false;
+    m_editor->set_text(result.value());
+    set_path(filename);
     m_editor->set_focus(true);
     return true;
 }
@@ -804,10 +807,10 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
         if (response.is_error())
             return;
-        read_file(*response.value());
+        read_file(response.value().filename(), response.value().stream());
     }
 }
 

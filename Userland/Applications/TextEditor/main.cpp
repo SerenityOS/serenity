@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (file_to_edit) {
         FileArgument parsed_argument(file_to_edit);
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, parsed_argument.filename());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, parsed_argument.filename());
 
         if (response.is_error()) {
             if (response.error().code() == ENOENT)
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             else
                 return 1;
         } else {
-            if (!text_widget->read_file(*response.value()))
+            if (!text_widget->read_file(response.value().filename(), response.value().stream()))
                 return 1;
             text_widget->editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
         }
