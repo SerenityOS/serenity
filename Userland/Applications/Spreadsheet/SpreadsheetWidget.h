@@ -9,6 +9,7 @@
 #include "SpreadsheetView.h"
 #include "Workbook.h"
 #include <AK/NonnullRefPtrVector.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
@@ -23,9 +24,9 @@ class SpreadsheetWidget final
 public:
     virtual ~SpreadsheetWidget() override = default;
 
-    void save(Core::File&);
-    void load_file(Core::File&);
-    void import_sheets(Core::File&);
+    void save(String const& filename, Core::Stream::File&);
+    void load_file(String const& filename, Core::Stream::File&);
+    void import_sheets(String const& filename, Core::Stream::File&);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);

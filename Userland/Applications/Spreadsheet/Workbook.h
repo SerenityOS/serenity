@@ -16,10 +16,10 @@ class Workbook {
 public:
     Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window);
 
-    ErrorOr<void, DeprecatedString> open_file(Core::File&);
-    ErrorOr<void> write_to_file(Core::File&);
+    ErrorOr<void, DeprecatedString> open_file(String const& filename, Core::Stream::File&);
+    ErrorOr<void> write_to_file(String const& filename, Core::Stream::File&);
 
-    ErrorOr<bool, DeprecatedString> import_file(Core::File&);
+    ErrorOr<bool, DeprecatedString> import_file(String const& filename, Core::Stream::File&);
 
     DeprecatedString const& current_filename() const { return m_current_filename; }
     bool set_filename(DeprecatedString const& filename);

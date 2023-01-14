@@ -55,7 +55,7 @@ private:
 };
 
 struct ImportDialog {
-    static ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook&);
+    static ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::Stream::File& file, Workbook&);
 };
 
 }
