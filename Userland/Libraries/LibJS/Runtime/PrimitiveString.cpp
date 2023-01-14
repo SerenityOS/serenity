@@ -275,21 +275,24 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
     for (auto const* current : pieces) {
         if (!previous) {
             // This is the very first piece, just append it and continue.
-            TRY(builder.append(TRY(current->deprecated_string())));
+            TRY(builder.append(TRY(current->utf8_string())));
             previous = current;
             continue;
         }
 
         // Get the UTF-8 representations for both strings.
-        auto previous_string_as_utf8 = TRY(previous->deprecated_string());
-        auto current_string_as_utf8 = TRY(current->deprecated_string());
+        auto current_string_as_utf8_string = TRY(current->utf8_string());
+        auto current_string_as_utf8 = current_string_as_utf8_string.bytes_as_string_view();
+
+        auto previous_string_as_utf8_string = TRY(previous->utf8_string());
+        auto previous_string_as_utf8 = previous_string_as_utf8_string.bytes_as_string_view();
 
         // NOTE: Now we need to look at the end of the previous string and the start
         //       of the current string, to see if they should be combined into a surrogate.
 
         // Surrogates encoded as UTF-8 are 3 bytes.
         if ((previous_string_as_utf8.length() < 3) || (current_string_as_utf8.length() < 3)) {
-            TRY(builder.append(TRY(current->deprecated_string())));
+            TRY(builder.append(current_string_as_utf8));
             previous = current;
             continue;
         }
@@ -297,7 +300,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         // Might the previous string end with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(previous_string_as_utf8[previous_string_as_utf8.length() - 3]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            TRY(builder.append(TRY(current->deprecated_string())));
+            TRY(builder.append(current_string_as_utf8));
             previous = current;
             continue;
         }
@@ -305,7 +308,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         // Might the current string begin with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(current_string_as_utf8[0]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            TRY(builder.append(TRY(current->deprecated_string())));
+            TRY(builder.append(current_string_as_utf8));
             previous = current;
             continue;
         }
@@ -314,7 +317,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         auto low_surrogate = *Utf8View(current_string_as_utf8).begin();
 
         if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate)) {
-            TRY(builder.append(TRY(current->deprecated_string())));
+            TRY(builder.append(current_string_as_utf8));
             previous = current;
             continue;
         }
@@ -328,7 +331,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         previous = current;
     }
 
-    m_deprecated_string = builder.to_deprecated_string();
+    m_utf8_string = TRY(builder.to_string());
     m_is_rope = false;
     m_lhs = nullptr;
     m_rhs = nullptr;
