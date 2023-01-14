@@ -38,6 +38,7 @@ enum class BitmapFormat {
     Indexed8,
     BGRx8888,
     BGRA8888,
+    RGBx8888,
     RGBA8888,
 };
 
@@ -51,6 +52,7 @@ inline bool is_valid_bitmap_format(unsigned format)
     case (unsigned)BitmapFormat::Indexed8:
     case (unsigned)BitmapFormat::BGRx8888:
     case (unsigned)BitmapFormat::BGRA8888:
+    case (unsigned)BitmapFormat::RGBx8888:
     case (unsigned)BitmapFormat::RGBA8888:
         return true;
     }
@@ -61,6 +63,7 @@ enum class StorageFormat {
     Indexed8,
     BGRx8888,
     BGRA8888,
+    RGBx8888,
     RGBA8888,
 };
 
@@ -308,6 +311,32 @@ inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 }
 
 template<>
+inline Color Bitmap::get_pixel<StorageFormat::RGBA8888>(int x, int y) const
+{
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
+    auto color = Color::from_rgb(scanline(y)[x]);
+    auto red = color.red();
+    auto blue = color.blue();
+    color.set_blue(red);
+    color.set_red(blue);
+    return color;
+}
+
+template<>
+inline Color Bitmap::get_pixel<StorageFormat::RGBx8888>(int x, int y) const
+{
+    VERIFY(x >= 0);
+    VERIFY(x < physical_width());
+    auto color = Color::from_rgb(scanline(y)[x]);
+    auto red = color.red();
+    auto blue = color.blue();
+    color.set_blue(red);
+    color.set_red(blue);
+    return color;
+}
+
+template<>
 inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
     VERIFY(x >= 0);
@@ -322,6 +351,10 @@ inline Color Bitmap::get_pixel(int x, int y) const
         return get_pixel<StorageFormat::BGRx8888>(x, y);
     case StorageFormat::BGRA8888:
         return get_pixel<StorageFormat::BGRA8888>(x, y);
+    case StorageFormat::RGBA8888:
+        return get_pixel<StorageFormat::RGBA8888>(x, y);
+    case StorageFormat::RGBx8888:
+        return get_pixel<StorageFormat::RGBx8888>(x, y);
     case StorageFormat::Indexed8:
         return get_pixel<StorageFormat::Indexed8>(x, y);
     default:
