@@ -276,7 +276,8 @@ MainWidget::MainWidget()
         if (response.is_error())
             return;
 
-        read_file(response.value().filename(), response.value().stream());
+        if (auto result = read_file(response.value().filename(), response.value().stream()); result.is_error())
+            GUI::MessageBox::show(window(), "Unable to open file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -746,15 +747,12 @@ void MainWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-bool MainWidget::read_file(String const& filename, Core::Stream::File& file)
+ErrorOr<void> MainWidget::read_file(String const& filename, Core::Stream::File& file)
 {
-    auto result = file.read_until_eof();
-    if (result.is_error())
-        return false;
-    m_editor->set_text(result.value());
+    m_editor->set_text(TRY(file.read_until_eof()));
     set_path(filename);
     m_editor->set_focus(true);
-    return true;
+    return {};
 }
 
 void MainWidget::open_nonexistent_file(DeprecatedString const& path)
@@ -809,7 +807,8 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().path());
         if (response.is_error())
             return;
-        read_file(response.value().filename(), response.value().stream());
+        if (auto result = read_file(response.value().filename(), response.value().stream()); result.is_error())
+            GUI::MessageBox::show(window(), "Unable to open file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
     }
 }
 
