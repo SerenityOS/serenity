@@ -79,14 +79,20 @@ public:
     template<class SeparatorType, class CollectionType>
     void join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
     {
+        MUST(try_join(separator, collection, fmtstr));
+    }
+
+    template<class SeparatorType, class CollectionType>
+    ErrorOr<void> try_join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
+    {
         bool first = true;
         for (auto& item : collection) {
-            if (first)
-                first = false;
-            else
-                append(separator);
-            appendff(fmtstr, item);
+            if (!first)
+                TRY(try_append(separator));
+            TRY(try_appendff(fmtstr, item));
+            first = false;
         }
+        return {};
     }
 
 private:
