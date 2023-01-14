@@ -102,52 +102,47 @@ private:
     bool m_might_be_wrong { false };
 };
 
+/// Wraps a stream to silently ignore writes when the condition isn't true.
 template<typename ConditionT>
-class ConditionalOutputFileStream final : public OutputFileStream {
+class ConditionalOutputStream final : public Core::Stream::Stream {
 public:
-    template<typename... Args>
-    ConditionalOutputFileStream(ConditionT&& condition, Args... args)
-        : OutputFileStream(args...)
+    ConditionalOutputStream(ConditionT&& condition, Core::Stream::Handle<Core::Stream::Stream> stream)
+        : m_stream(move(stream))
         , m_condition(condition)
     {
     }
 
-    ~ConditionalOutputFileStream()
+    virtual ErrorOr<Bytes> read(Bytes) override
     {
-        if (!m_condition())
-            return;
+        return Error::from_errno(EBADF);
+    }
 
-        if (!m_buffer.is_empty()) {
-            OutputFileStream::write(m_buffer);
-            m_buffer.clear();
-        }
+    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    {
+        // Pretend that we wrote the whole buffer if the condition is untrue.
+        if (!m_condition())
+            return bytes.size();
+
+        return m_stream->write(bytes);
+    }
+
+    virtual bool is_eof() const override
+    {
+        return true;
+    }
+
+    virtual bool is_open() const override
+    {
+        return m_stream->is_open();
+    }
+
+    virtual void close() override
+    {
     }
 
 private:
-    size_t write(ReadonlyBytes bytes) override
-    {
-        if (!m_condition()) {
-        write_to_buffer:;
-            // FIXME: Propagate errors.
-            if (m_buffer.try_append(bytes.data(), bytes.size()).is_error())
-                return 0;
-            return bytes.size();
-        }
-
-        if (!m_buffer.is_empty()) {
-            auto size = OutputFileStream::write(m_buffer);
-            // FIXME: Propagate errors.
-            m_buffer = MUST(m_buffer.slice(size, m_buffer.size() - size));
-        }
-
-        if (!m_buffer.is_empty())
-            goto write_to_buffer;
-
-        return OutputFileStream::write(bytes);
-    }
-
+    Core::Stream::Handle<Core::Stream::Stream> m_stream;
     ConditionT m_condition;
-    ByteBuffer m_buffer;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -210,6 +205,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(arguments);
 
+    // If writing to a file was requested, we'll open a new file descriptor with the same number later.
+    // Until then, we just clone the stdout file descriptor, because we shouldn't be reopening the actual stdout.
+    int const output_fd = TRY(Core::System::dup(STDOUT_FILENO));
+
     if (!method_override.is_empty()) {
         method = method_override;
     } else if (data) {
@@ -243,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    auto output_stream = ConditionalOutputFileStream { [&] { return should_save_stream_data; }, stdout };
+    auto output_stream = ConditionalOutputStream { [&] { return should_save_stream_data; }, TRY(Core::Stream::File::adopt_fd(output_fd, Core::Stream::OpenMode::Write)) };
 
     // https://httpwg.org/specs/rfc9110.html#authentication
     auto const has_credentials = !credentials.is_empty();
@@ -343,8 +342,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     } while (Core::File::exists(output_name));
                 }
 
-                if (freopen(output_name.characters(), "w", stdout) == nullptr) {
-                    perror("freopen");
+                int target_file_fd = open(output_name.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (target_file_fd < 0) {
+                    perror("target file open");
+                    loop.quit(1);
+                    return;
+                }
+
+                if (dup2(target_file_fd, output_fd) < 0) {
+                    perror("target file dup2");
+                    loop.quit(1);
+                    return;
+                }
+
+                if (close(target_file_fd) < 0) {
+                    perror("target file close");
                     loop.quit(1);
                     return;
                 }
@@ -394,7 +406,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     dbgln("started request with id {}", request->id());
 
-    auto rc = loop.exec();
-    fflush(stdout);
-    return rc;
+    return loop.exec();
 }
