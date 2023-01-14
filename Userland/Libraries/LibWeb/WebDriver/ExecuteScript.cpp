@@ -31,14 +31,14 @@
 
 namespace Web::WebDriver {
 
-#define TRY_OR_JS_ERROR(expression)                                                    \
-    ({                                                                                 \
-        auto _temporary_result = (expression);                                         \
-        if (_temporary_result.is_error()) [[unlikely]]                                 \
-            return ExecuteScriptResultType::JavaScriptError;                           \
-        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>, \
-            "Do not return a reference from a fallible expression");                   \
-        _temporary_result.release_value();                                             \
+#define TRY_OR_JS_ERROR(expression)                                                                  \
+    ({                                                                                               \
+        auto _temporary_result = (expression);                                                       \
+        if (_temporary_result.is_error()) [[unlikely]]                                               \
+            return ExecuteScriptResultType::JavaScriptError;                                         \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        _temporary_result.release_value();                                                           \
     })
 
 static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm(JS::Realm&, JS::Value, HashTable<JS::Object*>& seen);
