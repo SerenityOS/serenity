@@ -71,6 +71,7 @@ void InputBox::build(InputType input_type)
 
     switch (input_type) {
     case InputType::Text:
+    case InputType::NonemptyText:
         m_text_editor = label_editor_container.add<TextBox>();
         break;
     case InputType::Password:
@@ -112,6 +113,13 @@ void InputBox::build(InputType input_type)
         m_cancel_button->click();
     };
     m_text_editor->set_focus(true);
+
+    if (input_type == InputType::NonemptyText) {
+        m_text_editor->on_change = [this] {
+            m_ok_button->set_enabled(!m_text_editor->text().is_empty());
+        };
+        m_text_editor->on_change();
+    }
 
     set_rect(x(), y(), max_width + 140, widget->effective_preferred_size().height().as_int());
 }
