@@ -126,6 +126,7 @@ void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 void ClipboardHistoryModel::remove_item(int index)
 {
     m_history_items.remove(index);
+    invalidate();
 }
 
 void ClipboardHistoryModel::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value_string)
