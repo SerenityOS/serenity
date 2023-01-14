@@ -58,7 +58,7 @@ private:
 };
 
 struct ExportDialog {
-    static ErrorOr<void> make_and_run_for(StringView mime, NonnullOwnPtr<Core::Stream::File>, DeprecatedString filename, Workbook&);
+    static ErrorOr<void> make_and_run_for(StringView mime, Core::Stream::File&, DeprecatedString filename, Workbook&);
 };
 
 }

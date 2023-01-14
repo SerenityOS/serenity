@@ -175,15 +175,17 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook& workbook)
+ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::Stream::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(&parent);
     wizard->set_title("File Import Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
     auto import_xsv = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
-        auto contents = file.read_all();
-        CSVImportDialogPage page { contents };
+        auto contents_or_error = file.read_until_eof();
+        if (contents_or_error.is_error())
+            return DeprecatedString::formatted("{}", contents_or_error.release_error());
+        CSVImportDialogPage page { contents_or_error.release_value() };
         wizard->replace_page(page.page());
         auto result = wizard->exec();
 
@@ -209,13 +211,16 @@ ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run
     };
 
     auto import_worksheet = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
-        auto json_value_option = JsonParser(file.read_all()).parse();
+        auto contents_or_error = file.read_until_eof();
+        if (contents_or_error.is_error())
+            return DeprecatedString::formatted("{}", contents_or_error.release_error());
+        auto json_value_option = JsonParser(contents_or_error.release_value()).parse();
         if (json_value_option.is_error())
-            return DeprecatedString::formatted("Failed to parse {}", file.filename());
+            return DeprecatedString::formatted("Failed to parse {}", filename);
 
         auto& json_value = json_value_option.value();
         if (!json_value.is_array())
-            return DeprecatedString::formatted("Did not find a spreadsheet in {}", file.filename());
+            return DeprecatedString::formatted("Did not find a spreadsheet in {}", filename);
 
         NonnullRefPtrVector<Sheet> sheets;
 
@@ -240,7 +245,7 @@ ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run
     } else {
         auto page = GUI::WizardPage::construct(
             "Import File Format",
-            DeprecatedString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(file.filename())));
+            DeprecatedString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(filename.to_deprecated_string())));
 
         page->on_next_page = [] { return nullptr; };
 
