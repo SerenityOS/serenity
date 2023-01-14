@@ -127,18 +127,18 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;
-        load_file(*response.value());
+        load_file(response.value().filename(), response.value().stream());
     });
 
     m_import_action = GUI::Action::create("Import sheets...", [&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;
 
-        import_sheets(*response.value());
+        import_sheets(response.value().filename(), response.value().stream());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -147,18 +147,18 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), current_filename(), Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename(), Core::Stream::OpenMode::Write);
         if (response.is_error())
             return;
-        save(*response.value());
+        save(response.value().filename(), response.value().stream());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         DeprecatedString name = "workbook";
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), name, "sheets");
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), name, "sheets");
         if (response.is_error())
             return;
-        save(*response.value());
+        save(response.value().filename(), response.value().stream());
         update_window_title();
     });
 
@@ -493,9 +493,9 @@ void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType 
     }
 }
 
-void SpreadsheetWidget::save(Core::File& file)
+void SpreadsheetWidget::save(String const& filename, Core::Stream::File& file)
 {
-    auto result = m_workbook->write_to_file(file);
+    auto result = m_workbook->write_to_file(filename, file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Cannot save file: {}", result.error()));
         return;
@@ -504,9 +504,9 @@ void SpreadsheetWidget::save(Core::File& file)
     window()->set_modified(false);
 }
 
-void SpreadsheetWidget::load_file(Core::File& file)
+void SpreadsheetWidget::load_file(String const& filename, Core::Stream::File& file)
 {
-    auto result = m_workbook->open_file(file);
+    auto result = m_workbook->open_file(filename, file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
         return;
@@ -523,9 +523,9 @@ void SpreadsheetWidget::load_file(Core::File& file)
     update_window_title();
 }
 
-void SpreadsheetWidget::import_sheets(Core::File& file)
+void SpreadsheetWidget::import_sheets(String const& filename, Core::Stream::File& file)
 {
-    auto result = m_workbook->import_file(file);
+    auto result = m_workbook->import_file(filename, file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
         return;

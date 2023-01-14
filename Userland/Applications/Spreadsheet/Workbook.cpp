@@ -8,13 +8,11 @@
 #include "ExportDialog.h"
 #include "ImportDialog.h"
 #include "JSIntegration.h"
-#include "Readers/CSV.h"
 #include <AK/ByteBuffer.h>
 #include <AK/StringView.h>
-#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/Stream.h>
 #include <LibFileSystemAccessClient/Client.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -52,37 +50,35 @@ bool Workbook::set_filename(DeprecatedString const& filename)
     return true;
 }
 
-ErrorOr<void, DeprecatedString> Workbook::open_file(Core::File& file)
+ErrorOr<void, DeprecatedString> Workbook::open_file(String const& filename, Core::Stream::File& file)
 {
-    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
+    auto mime = Core::guess_mime_type_based_on_filename(filename);
 
     // Make an import dialog, we might need to import it.
-    m_sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, file, *this));
+    m_sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, filename, file, *this));
 
-    set_filename(file.filename());
+    set_filename(filename.to_deprecated_string());
 
     return {};
 }
 
-ErrorOr<void> Workbook::write_to_file(Core::File& file)
+ErrorOr<void> Workbook::write_to_file(String const& filename, Core::Stream::File& stream)
 {
-    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
-
-    auto file_stream = TRY(Core::Stream::File::adopt_fd(file.leak_fd(), Core::Stream::OpenMode::Write));
+    auto mime = Core::guess_mime_type_based_on_filename(filename);
 
     // Make an export dialog, we might need to import it.
-    TRY(ExportDialog::make_and_run_for(mime, move(file_stream), file.filename(), *this));
+    TRY(ExportDialog::make_and_run_for(mime, stream, filename.to_deprecated_string(), *this));
 
-    set_filename(file.filename());
+    set_filename(filename.to_deprecated_string());
     set_dirty(false);
     return {};
 }
 
-ErrorOr<bool, DeprecatedString> Workbook::import_file(Core::File& file)
+ErrorOr<bool, DeprecatedString> Workbook::import_file(String const& filename, Core::Stream::File& file)
 {
-    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
+    auto mime = Core::guess_mime_type_based_on_filename(filename);
 
-    auto sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, file, *this));
+    auto sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, filename, file, *this));
     auto has_any_changes = !sheets.is_empty();
     m_sheets.extend(move(sheets));
 

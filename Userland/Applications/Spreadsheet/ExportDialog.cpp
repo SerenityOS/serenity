@@ -178,7 +178,7 @@ void CSVExportDialogPage::update_preview()
         m_data_preview_text_editor->set_text(DeprecatedString::formatted("Cannot update preview: {}", maybe_error.error()));
 }
 
-ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core::Stream::File> file, DeprecatedString filename, Workbook& workbook)
+ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::Stream::File& file, DeprecatedString filename, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
     wizard->set_title("File Export Wizard");
@@ -195,7 +195,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core
         if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return Error::from_string_literal("CSV Export was cancelled");
 
-        TRY(page.generate(*file, CSVExportDialogPage::GenerationType::Normal));
+        TRY(page.generate(file, CSVExportDialogPage::GenerationType::Normal));
         return {};
     };
 
@@ -205,7 +205,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core
             array.append(sheet.to_json());
 
         auto file_content = array.to_deprecated_string();
-        return file->write_entire_buffer(file_content.bytes());
+        return file.write_entire_buffer(file_content.bytes());
     };
 
     if (mime == "text/csv") {
