@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Srikavin Ramkumar <me@srikavin.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,9 @@
 #pragma once
 
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
+#include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -44,7 +48,71 @@ private:
     virtual void did_remove_attribute(DeprecatedFlyString const&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    void resource_did_load_stylesheet();
+    struct LinkProcessingOptions {
+        // href (default the empty string)
+        String href {};
+        // destination (default the empty string)
+        Optional<Fetch::Infrastructure::Request::Destination> destination {};
+        // initiator (default "link")
+        Optional<Fetch::Infrastructure::Request::InitiatorType> initiator { Fetch::Infrastructure::Request::InitiatorType::Link };
+        // integrity (default the empty string)
+        String integrity {};
+        // type (default the empty string)
+        String type {};
+        // cryptographic nonce metadata (default the empty string)
+        //     A string
+        String cryptographic_nonce_metadata {};
+        // crossorigin (default No CORS)
+        //     A CORS settings attribute state
+        CORSSettingAttribute crossorigin { CORSSettingAttribute::NoCORS };
+        // referrer policy (default the empty string)
+        //      A referrer policy
+        Optional<ReferrerPolicy::ReferrerPolicy> referrer_policy {};
+        // FIXME: source set (default null)
+        //          Null or a source set
+        // base URL
+        //      A URL
+        AK::URL base_url;
+        // origin
+        //      An origin
+        HTML::Origin origin;
+        // environment
+        //      An environment
+        HTML::EnvironmentSettingsObject* environment;
+        // policy container
+        //      A policy container
+        HTML::PolicyContainer policy_container;
+        // document (default null)
+        //      Null or a Document
+        Web::DOM::Document* document { nullptr };
+        // FIXME: on document ready (default null)
+        //          Null or an algorithm accepting a Document
+    };
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#create-link-options-from-element
+    LinkProcessingOptions create_link_options();
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#create-a-link-request
+    JS::GCPtr<Fetch::Infrastructure::Request> create_link_request(LinkProcessingOptions const&);
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#linked-resource-fetch-setup-steps
+    bool linked_resource_fetch_setup_steps(Fetch::Infrastructure::Request&);
+
+    // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:linked-resource-fetch-setup-steps
+    bool stylesheet_linked_resource_fetch_setup_steps(Fetch::Infrastructure::Request&);
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#fetch-and-process-the-linked-resource
+    void fetch_and_process_linked_resource();
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#process-the-linked-resource
+    void process_linked_resource(bool success, Fetch::Infrastructure::Response const&, Variant<Empty, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag, ByteBuffer>);
+
+    // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:process-the-linked-resource
+    void process_stylesheet_resource(bool success, Fetch::Infrastructure::Response const&, Variant<Empty, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag, ByteBuffer>);
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#default-fetch-and-process-the-linked-resource
+    void default_fetch_and_process_linked_resource();
+
     void resource_did_load_favicon();
 
     struct Relationship {
