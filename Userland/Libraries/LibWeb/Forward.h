@@ -454,6 +454,7 @@ class NodeWithStyle;
 class NodeWithStyleAndBoxModelMetrics;
 class RadioButton;
 class ReplacedBox;
+class TableWrapper;
 class TextNode;
 }
 

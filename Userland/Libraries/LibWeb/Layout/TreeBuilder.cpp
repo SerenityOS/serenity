@@ -24,6 +24,7 @@
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
+#include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
@@ -598,7 +599,7 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
         mutable_wrapper_computed_values.set_margin(table_box->computed_values().margin());
         table_box->reset_table_box_computed_values_used_by_wrapper_to_init_values();
 
-        auto wrapper = parent.heap().allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(wrapper_computed_values));
+        auto wrapper = parent.heap().allocate_without_realm<TableWrapper>(parent.document(), nullptr, move(wrapper_computed_values));
 
         parent.remove_child(*table_box);
         wrapper->append_child(*table_box);
