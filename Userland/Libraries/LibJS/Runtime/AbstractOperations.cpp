@@ -1228,7 +1228,7 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
 }
 
 // 22.1.3.18.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacementTemplate ), https://tc39.es/ecma262/#sec-getsubstitution
-ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement_template)
+ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement_template)
 {
     auto replace_string = TRY(replacement_template.to_utf16_string(vm));
     auto replace_view = replace_string.view();
@@ -1265,8 +1265,8 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
         } else if (is_ascii_digit(next)) {
             bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_deprecated_string());
-            auto capture_position = capture_position_string.to_uint();
+            auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8());
+            auto capture_position = capture_position_string.to_number<u32>();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
                 auto& value = captures[*capture_position - 1];
@@ -1311,7 +1311,7 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
         }
     }
 
-    return TRY_OR_THROW_OOM(vm, Utf16View { result }.to_deprecated_string());
+    return TRY_OR_THROW_OOM(vm, Utf16View { result }.to_utf8());
 }
 
 }
