@@ -175,13 +175,13 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook& workbook)
+ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(&parent);
     wizard->set_title("File Import Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
-    auto import_xsv = [&]() -> Result<NonnullRefPtrVector<Sheet>, DeprecatedString> {
+    auto import_xsv = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
         auto contents = file.read_all();
         CSVImportDialogPage page { contents };
         wizard->replace_page(page.page());
@@ -203,29 +203,19 @@ Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_
             }
 
             return sheets;
-        } else {
-            return DeprecatedString { "CSV Import was cancelled" };
         }
+
+        return DeprecatedString { "CSV Import was cancelled" };
     };
 
-    auto import_worksheet = [&]() -> Result<NonnullRefPtrVector<Sheet>, DeprecatedString> {
+    auto import_worksheet = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
         auto json_value_option = JsonParser(file.read_all()).parse();
-        if (json_value_option.is_error()) {
-            StringBuilder sb;
-            sb.append("Failed to parse "sv);
-            sb.append(file.filename());
-
-            return sb.to_deprecated_string();
-        }
+        if (json_value_option.is_error())
+            return DeprecatedString::formatted("Failed to parse {}", file.filename());
 
         auto& json_value = json_value_option.value();
-        if (!json_value.is_array()) {
-            StringBuilder sb;
-            sb.append("Did not find a spreadsheet in "sv);
-            sb.append(file.filename());
-
-            return sb.to_deprecated_string();
-        }
+        if (!json_value.is_array())
+            return DeprecatedString::formatted("Did not find a spreadsheet in {}", file.filename());
 
         NonnullRefPtrVector<Sheet> sheets;
 

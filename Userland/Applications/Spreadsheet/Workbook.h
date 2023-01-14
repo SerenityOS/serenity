@@ -9,7 +9,6 @@
 #include "Forward.h"
 #include "Spreadsheet.h"
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/Result.h>
 
 namespace Spreadsheet {
 
@@ -17,10 +16,10 @@ class Workbook {
 public:
     Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window);
 
-    Result<bool, DeprecatedString> open_file(Core::File&);
+    ErrorOr<void, DeprecatedString> open_file(Core::File&);
     ErrorOr<void> write_to_file(Core::File&);
 
-    Result<bool, DeprecatedString> import_file(Core::File&);
+    ErrorOr<bool, DeprecatedString> import_file(Core::File&);
 
     DeprecatedString const& current_filename() const { return m_current_filename; }
     bool set_filename(DeprecatedString const& filename);

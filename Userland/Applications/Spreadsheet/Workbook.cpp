@@ -52,7 +52,7 @@ bool Workbook::set_filename(DeprecatedString const& filename)
     return true;
 }
 
-Result<bool, DeprecatedString> Workbook::open_file(Core::File& file)
+ErrorOr<void, DeprecatedString> Workbook::open_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
@@ -61,7 +61,7 @@ Result<bool, DeprecatedString> Workbook::open_file(Core::File& file)
 
     set_filename(file.filename());
 
-    return true;
+    return {};
 }
 
 ErrorOr<void> Workbook::write_to_file(Core::File& file)
@@ -78,7 +78,7 @@ ErrorOr<void> Workbook::write_to_file(Core::File& file)
     return {};
 }
 
-Result<bool, DeprecatedString> Workbook::import_file(Core::File& file)
+ErrorOr<bool, DeprecatedString> Workbook::import_file(Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
