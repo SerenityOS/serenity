@@ -109,8 +109,8 @@ public:
     }
 
     template<typename T>
-    requires(IsTriviallyDestructible<T>)
-    ErrorOr<T> read_trivial_value()
+    requires(Traits<T>::is_trivially_serializable())
+    ErrorOr<T> read_value()
     {
         alignas(T) u8 buffer[sizeof(T)] = {};
         TRY(read_entire_buffer({ &buffer, sizeof(buffer) }));
@@ -118,8 +118,8 @@ public:
     }
 
     template<typename T>
-    requires(IsTriviallyDestructible<T>)
-    ErrorOr<void> write_trivial_value(T const& value)
+    requires(Traits<T>::is_trivially_serializable())
+    ErrorOr<void> write_value(T const& value)
     {
         return write_entire_buffer({ &value, sizeof(value) });
     }

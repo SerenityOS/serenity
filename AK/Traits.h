@@ -20,6 +20,7 @@ struct GenericTraits {
     using PeekType = T&;
     using ConstPeekType = T const&;
     static constexpr bool is_trivial() { return false; }
+    static constexpr bool is_trivially_serializable() { return false; }
     static constexpr bool equals(T const& a, T const& b) { return a == b; }
     template<Concepts::HashCompatible<T> U>
     static bool equals(U const& a, T const& b) { return a == b; }
@@ -32,6 +33,7 @@ struct Traits : public GenericTraits<T> {
 template<Integral T>
 struct Traits<T> : public GenericTraits<T> {
     static constexpr bool is_trivial() { return true; }
+    static constexpr bool is_trivially_serializable() { return true; }
     static constexpr unsigned hash(T value)
     {
         if constexpr (sizeof(T) < 8)
@@ -45,6 +47,7 @@ struct Traits<T> : public GenericTraits<T> {
 template<FloatingPoint T>
 struct Traits<T> : public GenericTraits<T> {
     static constexpr bool is_trivial() { return true; }
+    static constexpr bool is_trivially_serializable() { return true; }
     static constexpr unsigned hash(T value)
     {
         if constexpr (sizeof(T) < 8)
@@ -65,6 +68,7 @@ template<Enum T>
 struct Traits<T> : public GenericTraits<T> {
     static unsigned hash(T value) { return Traits<UnderlyingType<T>>::hash(to_underlying(value)); }
     static constexpr bool is_trivial() { return Traits<UnderlyingType<T>>::is_trivial(); }
+    static constexpr bool is_trivially_serializable() { return Traits<UnderlyingType<T>>::is_trivially_serializable(); }
 };
 
 template<typename T>
