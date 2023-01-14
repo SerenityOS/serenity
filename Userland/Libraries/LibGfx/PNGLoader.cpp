@@ -11,7 +11,6 @@
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PNGShared.h>
-#include <string.h>
 
 namespace Gfx {
 
@@ -912,9 +911,8 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
     if (!streamer.read(chunk_size))
         return Error::from_string_literal("Bail at chunk_size");
 
-    u8 chunk_type[5];
-    chunk_type[4] = '\0';
-    if (!streamer.read_bytes(chunk_type, 4))
+    Array<u8, 4> chunk_type;
+    if (!streamer.read_bytes(chunk_type.data(), chunk_type.size()))
         return Error::from_string_literal("Bail at chunk_type");
 
     ReadonlyBytes chunk_data;
@@ -925,25 +923,25 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
     if (!streamer.read(chunk_crc))
         return Error::from_string_literal("Bail at chunk_crc");
 
-    dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
+    dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", StringView(chunk_type), chunk_size, chunk_crc);
 
-    if (!strcmp((char const*)chunk_type, "IHDR"))
+    if (chunk_type == "IHDR"sv.bytes())
         return process_IHDR(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "IDAT"))
+    if (chunk_type == "IDAT"sv.bytes())
         return process_IDAT(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "PLTE"))
+    if (chunk_type == "PLTE"sv.bytes())
         return process_PLTE(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "cHRM"))
+    if (chunk_type == "cHRM"sv.bytes())
         return process_cHRM(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "cICP"))
+    if (chunk_type == "cICP"sv.bytes())
         return process_cICP(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "iCCP"))
+    if (chunk_type == "iCCP"sv.bytes())
         return process_iCCP(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "gAMA"))
+    if (chunk_type == "gAMA"sv.bytes())
         return process_gAMA(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "sRGB"))
+    if (chunk_type == "sRGB"sv.bytes())
         return process_sRGB(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "tRNS"))
+    if (chunk_type == "tRNS"sv.bytes())
         return process_tRNS(chunk_data, context);
     return {};
 }
