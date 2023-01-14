@@ -51,23 +51,23 @@ ErrorOr<ByteBuffer> Packet::to_byte_buffer() const
 
     Core::Stream::AllocatingMemoryStream stream;
 
-    TRY(stream.write_trivial_value(header));
+    TRY(stream.write_value(header));
     for (auto& question : m_questions) {
         TRY(question.name().write_to_stream(stream));
-        TRY(stream.write_trivial_value(htons((u16)question.record_type())));
-        TRY(stream.write_trivial_value(htons(question.raw_class_code())));
+        TRY(stream.write_value(htons((u16)question.record_type())));
+        TRY(stream.write_value(htons(question.raw_class_code())));
     }
     for (auto& answer : m_answers) {
         TRY(answer.name().write_to_stream(stream));
-        TRY(stream.write_trivial_value(htons((u16)answer.type())));
-        TRY(stream.write_trivial_value(htons(answer.raw_class_code())));
-        TRY(stream.write_trivial_value(htonl(answer.ttl())));
+        TRY(stream.write_value(htons((u16)answer.type())));
+        TRY(stream.write_value(htons(answer.raw_class_code())));
+        TRY(stream.write_value(htonl(answer.ttl())));
         if (answer.type() == RecordType::PTR) {
             Name name { answer.record_data() };
-            TRY(stream.write_trivial_value(htons(name.serialized_size())));
+            TRY(stream.write_value(htons(name.serialized_size())));
             TRY(name.write_to_stream(stream));
         } else {
-            TRY(stream.write_trivial_value(htons(answer.record_data().length())));
+            TRY(stream.write_value(htons(answer.record_data().length())));
             TRY(stream.write_entire_buffer(answer.record_data().bytes()));
         }
     }
