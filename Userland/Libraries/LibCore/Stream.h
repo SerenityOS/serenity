@@ -99,15 +99,6 @@ public:
     /// contents are written or an error occurs.
     virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);
 
-    // This is a wrapper around `write_entire_buffer` that is compatible with
-    // `write_or_error`. This is required by some templated code in LibProtocol
-    // that needs to work with either type of stream.
-    // TODO: Fully port or wrap `Request::stream_into_impl` into `Core::Stream` and remove this.
-    bool write_or_error(ReadonlyBytes buffer)
-    {
-        return !write_entire_buffer(buffer).is_error();
-    }
-
     template<typename T>
     requires(Traits<T>::is_trivially_serializable())
     ErrorOr<T> read_value()
