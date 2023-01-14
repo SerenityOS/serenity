@@ -104,6 +104,15 @@ public:
         return formatted("{}", value);
     }
 
+    template<Arithmetic T>
+    Optional<T> to_number(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const
+    {
+        if constexpr (IsSigned<T>)
+            return StringUtils::convert_to_int<T>(bytes_as_string_view(), trim_whitespace);
+        else
+            return StringUtils::convert_to_uint<T>(bytes_as_string_view(), trim_whitespace);
+    }
+
     static ErrorOr<String> vformatted(StringView fmtstr, TypeErasedFormatParams&);
 
     template<typename... Parameters>
