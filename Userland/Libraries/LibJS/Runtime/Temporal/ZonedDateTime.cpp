@@ -167,15 +167,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         // i. Let offsetString be ! Get(fields, "offset").
         auto offset_string_value = MUST(fields->get(vm.names.offset));
 
-        // j. If offsetString is undefined, then
+        // j. Assert: offsetString is a String or undefined.
+        VERIFY(offset_string_value.is_string() || offset_string_value.is_undefined());
+
+        // k. If offsetString is undefined, then
         if (offset_string_value.is_undefined()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
-        }
-        // k. Else,
-        else {
-            // i. Set offsetString to ? ToString(offsetString).
-            offset_string = TRY(offset_string_value.to_deprecated_string(vm));
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
