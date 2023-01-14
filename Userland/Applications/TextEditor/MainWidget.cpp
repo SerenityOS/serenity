@@ -806,8 +806,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (!request_close())
             return;
 
-        // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().path());
         if (response.is_error())
             return;
         read_file(response.value().filename(), response.value().stream());
