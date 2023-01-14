@@ -25,7 +25,7 @@ class MainWidget final : public GUI::Widget {
 
 public:
     virtual ~MainWidget() override = default;
-    bool read_file(Core::File&);
+    bool read_file(String const& filename, Core::Stream::File&);
     void open_nonexistent_file(DeprecatedString const& path);
     bool request_close();
 
