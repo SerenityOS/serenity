@@ -16,18 +16,18 @@
 
 namespace JS {
 
-#define TRY_OR_THROW_OOM(vm, expression)                                               \
-    ({                                                                                 \
-        /* Ignore -Wshadow to allow nesting the macro. */                              \
-        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                               \
-            auto _temporary_result = (expression));                                    \
-        if (_temporary_result.is_error()) {                                            \
-            VERIFY(_temporary_result.error().code() == ENOMEM);                        \
-            return vm.throw_completion<JS::InternalError>(JS::ErrorType::OutOfMemory); \
-        }                                                                              \
-        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>, \
-            "Do not return a reference from a fallible expression");                   \
-        _temporary_result.release_value();                                             \
+#define TRY_OR_THROW_OOM(vm, expression)                                                             \
+    ({                                                                                               \
+        /* Ignore -Wshadow to allow nesting the macro. */                                            \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
+            auto _temporary_result = (expression));                                                  \
+        if (_temporary_result.is_error()) {                                                          \
+            VERIFY(_temporary_result.error().code() == ENOMEM);                                      \
+            return vm.throw_completion<JS::InternalError>(JS::ErrorType::OutOfMemory);               \
+        }                                                                                            \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        _temporary_result.release_value();                                                           \
     })
 
 // 6.2.3 The Completion Record Specification Type, https://tc39.es/ecma262/#sec-completion-record-specification-type

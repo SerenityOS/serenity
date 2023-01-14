@@ -273,7 +273,7 @@ bool PlaybackManager::decode_and_queue_one_sample()
             m_present_timer->start(0);                                                                                  \
             return false;                                                                                               \
         }                                                                                                               \
-        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>,                                  \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                    \
             "Do not return a reference from a fallible expression");                                                    \
         _temporary_result.release_value();                                                                              \
     })

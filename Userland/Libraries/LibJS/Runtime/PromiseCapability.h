@@ -53,7 +53,7 @@ private:
             return (capability)->promise();                                                                                              \
         }                                                                                                                                \
                                                                                                                                          \
-        static_assert(!IsLvalueReference<decltype(_temporary_try_or_reject_result.release_value())>,                                     \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_try_or_reject_result.release_value())>,                       \
             "Do not return a reference from a fallible expression");                                                                     \
                                                                                                                                          \
         /* 2. Else if value is a Completion Record, set value to value.[[Value]]. */                                                     \
@@ -79,7 +79,7 @@ private:
             return Value { (capability)->promise() };                                                                             \
         }                                                                                                                         \
                                                                                                                                   \
-        static_assert(!IsLvalueReference<decltype(_temporary_try_or_reject_result.release_value())>,                              \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_try_or_reject_result.release_value())>,                \
             "Do not return a reference from a fallible expression");                                                              \
                                                                                                                                   \
         /* 2. Else if value is a Completion Record, set value to value.[[Value]]. */                                              \

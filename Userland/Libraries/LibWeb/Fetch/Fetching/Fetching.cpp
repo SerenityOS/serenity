@@ -42,14 +42,14 @@
 
 namespace Web::Fetch::Fetching {
 
-#define TRY_OR_IGNORE(expression)                                                      \
-    ({                                                                                 \
-        auto _temporary_result = (expression);                                         \
-        if (_temporary_result.is_error())                                              \
-            return;                                                                    \
-        static_assert(!IsLvalueReference<decltype(_temporary_result.release_value())>, \
-            "Do not return a reference from a fallible expression");                   \
-        _temporary_result.release_value();                                             \
+#define TRY_OR_IGNORE(expression)                                                                    \
+    ({                                                                                               \
+        auto _temporary_result = (expression);                                                       \
+        if (_temporary_result.is_error())                                                            \
+            return;                                                                                  \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        _temporary_result.release_value();                                                           \
     })
 
 // https://fetch.spec.whatwg.org/#concept-fetch
