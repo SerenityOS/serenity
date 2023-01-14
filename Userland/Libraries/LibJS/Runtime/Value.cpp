@@ -388,8 +388,8 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 {
     if (is_string())
         return &as_string();
-    auto string = TRY(to_deprecated_string(vm));
-    return PrimitiveString::create(vm, string).ptr();
+    auto string = TRY(to_string(vm));
+    return PrimitiveString::create(vm, move(string)).ptr();
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
@@ -448,8 +448,8 @@ ThrowCompletionOr<Utf16String> Value::to_utf16_string(VM& vm) const
     if (is_string())
         return TRY(as_string().utf16_string());
 
-    auto utf8_string = TRY(to_deprecated_string(vm));
-    return Utf16String::create(vm, utf8_string);
+    auto utf8_string = TRY(to_string(vm));
+    return Utf16String::create(vm, utf8_string.bytes_as_string_view());
 }
 
 // 7.1.2 ToBoolean ( argument ), https://tc39.es/ecma262/#sec-toboolean
