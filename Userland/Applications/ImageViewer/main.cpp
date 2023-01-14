@@ -46,9 +46,53 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("filetype-image"sv);
 
     char const* path = nullptr;
+    Optional<size_t> raw_width;
+    Optional<size_t> raw_height;
+    Optional<Gfx::BitmapFormat> raw_bitmap_format;
+    bool fallback_to_decode_binary_pixel_bitmap = false;
     Core::ArgsParser args_parser;
+    args_parser.add_option(raw_width, "Force width", "width", 'w', "width");
+    args_parser.add_option(raw_height, "Force height", "height", 'h', "height");
+    args_parser.add_option({ Core::ArgsParser::OptionArgumentMode::Required,
+        "Force bitmap format (bgrx, bgra, rgbx, rgba)",
+        nullptr,
+        'b',
+        "bitmap-format",
+        [&raw_bitmap_format](char const* s) {
+            StringView value = { s, strlen(s) };
+            if (value == "bgrx") {
+                raw_bitmap_format = Gfx::BitmapFormat::BGRx8888;
+            } else if (value == "bgra") {
+                raw_bitmap_format = Gfx::BitmapFormat::BGRA8888;
+            } else if (value == "rgbx") {
+                raw_bitmap_format = Gfx::BitmapFormat::RGBx8888;
+            } else if (value == "rgba") {
+                raw_bitmap_format = Gfx::BitmapFormat::RGBA8888;
+            } else {
+                return false;
+            }
+            return true;
+        } });
+    args_parser.add_option(fallback_to_decode_binary_pixel_bitmap, "Force fallback to decode as binary pixel bitmap", "fallback-binary", 'f');
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    bool force_dimensions = false;
+    if (raw_height.has_value() && !raw_width.has_value())
+        return Error::from_string_literal("ImageViewer: The forced width dimension value is not specified");
+    if (!raw_height.has_value() && raw_width.has_value())
+        return Error::from_string_literal("ImageViewer: The forced height dimension value is not specified");
+    if (raw_height.has_value() && raw_width.has_value())
+        force_dimensions = true;
+
+    if (fallback_to_decode_binary_pixel_bitmap) {
+        if (!raw_height.has_value())
+            return Error::from_string_literal("ImageViewer: The raw height dimension value is not specified");
+        if (!raw_width.has_value())
+            return Error::from_string_literal("ImageViewer: The raw width dimension value is not specified");
+        if (!raw_bitmap_format.has_value())
+            return Error::from_string_literal("ImageViewer: The bitmap format value is not specified");
+    }
 
     auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(true);
@@ -65,6 +109,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
     auto widget = TRY(root_widget->try_add<ViewWidget>());
+    if (fallback_to_decode_binary_pixel_bitmap) {
+        widget->set_forced_bitmap_format(raw_bitmap_format.value());
+    }
+    if (force_dimensions) {
+        widget->set_forced_dimensions({ raw_width.value(), raw_height.value() });
+    }
     if (path) {
         widget->set_path(path);
     }

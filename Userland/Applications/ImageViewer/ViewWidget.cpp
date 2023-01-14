@@ -29,6 +29,16 @@ ViewWidget::ViewWidget()
     set_fill_with_background_color(false);
 }
 
+void ViewWidget::set_forced_dimensions(Gfx::IntSize dimensions)
+{
+    m_forced_dimensions = dimensions;
+}
+
+void ViewWidget::set_forced_bitmap_format(Gfx::BitmapFormat bitmap_format)
+{
+    m_forced_bitmap_format = bitmap_format;
+}
+
 void ViewWidget::clear()
 {
     m_timer->stop();
@@ -38,6 +48,10 @@ void ViewWidget::clear()
         on_image_change(m_bitmap);
     set_original_rect({});
     m_path = {};
+    if (m_forced_dimensions.has_value())
+        m_forced_dimensions.clear();
+    if (m_forced_bitmap_format.has_value())
+        m_forced_bitmap_format.clear();
 
     reset_view();
     update();
@@ -170,22 +184,44 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
 
     auto decoded_image_or_error = client->decode_image(mapped_file.bytes());
     if (!decoded_image_or_error.has_value()) {
+        if (m_forced_dimensions.has_value() && m_forced_bitmap_format.has_value()) {
+            auto bitmap_or_error = Gfx::Bitmap::try_create_from_raw_bytes(m_forced_bitmap_format.value(), m_forced_dimensions.value(), 1, mapped_file.bytes());
+            m_forced_dimensions.clear();
+            m_forced_bitmap_format.clear();
+            if (bitmap_or_error.is_error()) {
+                show_error();
+                return;
+            }
+            m_bitmap = bitmap_or_error.release_value();
+        } else {
+            show_error();
+            return;
+        }
+    } else {
+        m_decoded_image = decoded_image_or_error.release_value();
+        m_bitmap = m_decoded_image->frames[0].bitmap;
+    }
+
+    if (m_bitmap.is_null()) {
         show_error();
         return;
     }
 
-    m_decoded_image = decoded_image_or_error.release_value();
-    m_bitmap = m_decoded_image->frames[0].bitmap;
-    if (m_bitmap.is_null()) {
-        show_error();
-        return;
+    if (m_forced_dimensions.has_value()) {
+        auto bitmap_or_error = m_bitmap->cropped({ 0, 0, m_forced_dimensions.value().width(), m_forced_dimensions.value().height() }, m_bitmap->format());
+        m_forced_dimensions.clear();
+        if (bitmap_or_error.is_error()) {
+            show_error();
+            return;
+        }
+        m_bitmap = bitmap_or_error.release_value();
     }
 
     set_original_rect(m_bitmap->rect());
     if (on_image_change)
         on_image_change(m_bitmap);
 
-    if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
+    if (m_decoded_image.has_value() && m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
         auto const& first_frame = m_decoded_image->frames[0];
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };

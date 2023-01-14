@@ -36,6 +36,8 @@ public:
     bool scaled_for_first_image() { return m_scaled_for_first_image; }
     void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
     void set_path(DeprecatedString const& path);
+    void set_forced_dimensions(Gfx::IntSize dimensions);
+    void set_forced_bitmap_format(Gfx::BitmapFormat dimensions);
     void resize_window();
     void set_scaling_mode(Gfx::Painter::ScalingMode);
 
@@ -78,6 +80,8 @@ private:
     Vector<DeprecatedString> m_files_in_same_dir;
     Optional<size_t> m_current_index;
     Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::NearestNeighbor };
+    Optional<Gfx::IntSize> m_forced_dimensions;
+    Optional<Gfx::BitmapFormat> m_forced_bitmap_format;
 };
 
 }
