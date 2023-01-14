@@ -52,6 +52,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(contenteditable)            \
     __ENUMERATE_HTML_ATTRIBUTE(controls)                   \
     __ENUMERATE_HTML_ATTRIBUTE(coords)                     \
+    __ENUMERATE_HTML_ATTRIBUTE(crossorigin)                \
     __ENUMERATE_HTML_ATTRIBUTE(data)                       \
     __ENUMERATE_HTML_ATTRIBUTE(datetime)                   \
     __ENUMERATE_HTML_ATTRIBUTE(declare)                    \
