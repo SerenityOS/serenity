@@ -39,7 +39,6 @@ public:
     int fd() const { return m_fd; }
     bool stop();
 
-    void stream_into(OutputStream&);
     void stream_into(Core::Stream::Stream&);
 
     bool should_buffer_all_input() const { return m_should_buffer_all_input; }
@@ -63,8 +62,6 @@ public:
 
 private:
     explicit Request(RequestClient&, i32 request_id);
-    template<typename T>
-    void stream_into_impl(T&);
 
     WeakPtr<RequestClient> m_client;
     int m_request_id { -1 };
