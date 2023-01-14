@@ -210,7 +210,9 @@ void TableFormattingContext::compute_table_width()
 
     auto& computed_values = table_box().computed_values();
 
-    CSSPixels width_of_table_containing_block = m_state.get(*table_box().containing_block()).content_width();
+    // Percentages on 'width' and 'height' on the table are relative to the table wrapper box's containing block,
+    // not the table wrapper box itself.
+    CSSPixels width_of_table_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
 
     // The row/column-grid width minimum (GRIDMIN) width is the sum of the min-content width
     // of all the columns plus cell spacing or borders.
