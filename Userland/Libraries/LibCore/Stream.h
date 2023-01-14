@@ -113,8 +113,8 @@ public:
     ErrorOr<T> read_trivial_value()
     {
         alignas(T) u8 buffer[sizeof(T)] = {};
-        TRY(read_entire_buffer(buffer));
-        return *bit_cast<T>(buffer);
+        TRY(read_entire_buffer({ &buffer, sizeof(buffer) }));
+        return bit_cast<T>(buffer);
     }
 
     template<typename T>
