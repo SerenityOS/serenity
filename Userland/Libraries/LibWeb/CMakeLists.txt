@@ -172,6 +172,7 @@ set(SOURCES
     HTML/CanvasPattern.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/CloseEvent.cpp
+    HTML/CORSSettingAttribute.cpp
     HTML/CrossOrigin/AbstractOperations.cpp
     HTML/CrossOrigin/Reporting.cpp
     HTML/DOMParser.cpp
@@ -282,6 +283,7 @@ set(SOURCES
     HTML/Path2D.cpp
     HTML/Plugin.cpp
     HTML/PluginArray.cpp
+    HTML/PotentialCORSRequest.cpp
     HTML/PromiseRejectionEvent.cpp
     HTML/RemoteBrowsingContext.cpp
     HTML/Scripting/ClassicScript.cpp
