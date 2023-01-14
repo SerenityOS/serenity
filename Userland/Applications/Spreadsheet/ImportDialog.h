@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Readers/XSV.h"
-#include <AK/Result.h>
 #include <AK/StringView.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Wizards/WizardPage.h>
@@ -56,7 +55,7 @@ private:
 };
 
 struct ImportDialog {
-    static Result<NonnullRefPtrVector<Sheet>, DeprecatedString> make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook&);
+    static ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook&);
 };
 
 }
