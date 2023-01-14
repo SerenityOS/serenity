@@ -20,8 +20,7 @@ bool Request::stop()
     return m_client->stop_request({}, *this);
 }
 
-template<typename T>
-void Request::stream_into_impl(T& stream)
+void Request::stream_into(Core::Stream::Stream& stream)
 {
     VERIFY(!m_internal_stream_data);
 
@@ -54,10 +53,8 @@ void Request::stream_into_impl(T& stream)
             auto read_bytes = result.release_value();
             if (read_bytes.is_empty())
                 break;
-            if (!stream.write_or_error(read_bytes)) {
-                // FIXME: What do we do here?
-                TODO();
-            }
+            // FIXME: What do we do if this fails?
+            stream.write_entire_buffer(read_bytes).release_value_but_fixme_should_propagate_errors();
             break;
         } while (true);
 
@@ -67,16 +64,6 @@ void Request::stream_into_impl(T& stream)
         if (m_internal_stream_data->request_done)
             m_internal_stream_data->on_finish();
     };
-}
-
-void Request::stream_into(Core::Stream::Stream& stream)
-{
-    stream_into_impl(stream);
-}
-
-void Request::stream_into(OutputStream& stream)
-{
-    stream_into_impl(stream);
 }
 
 void Request::set_should_buffer_all_input(bool value)
