@@ -35,6 +35,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto table_view = TRY(main_window->set_main_widget<GUI::TableView>());
     auto model = ClipboardHistoryModel::create();
+
+    auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
+    if (!(data_and_type.data.is_empty() && data_and_type.mime_type.is_empty() && data_and_type.metadata.is_empty()))
+        model->add_item(data_and_type);
+
     table_view->set_model(model);
 
     table_view->on_activation = [&](GUI::ModelIndex const& index) {
