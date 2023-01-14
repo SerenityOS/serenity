@@ -339,6 +339,16 @@ ErrorOr<String> String::reverse() const
     return builder.to_string();
 }
 
+bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::contains(bytes_as_string_view(), needle, case_sensitivity);
+}
+
+bool String::contains(char needle, CaseSensitivity case_sensitivity) const
+{
+    return contains(StringView { &needle, 1 }, case_sensitivity);
+}
+
 bool String::is_short_string() const
 {
     return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));

@@ -12,6 +12,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -91,6 +92,9 @@ public:
     {
         return (this->operator==(forward<Ts>(strings)) || ...);
     }
+
+    [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool contains(char, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
     [[nodiscard]] u32 hash() const;
 
