@@ -555,7 +555,7 @@ static ErrorOr<void> decode_png_chunks(PNGLoadingContext& context)
     u8 const* data_ptr = context.data + sizeof(PNG::header);
     int data_remaining = context.data_size - sizeof(PNG::header);
 
-    context.compressed_data.ensure_capacity(context.data_size);
+    TRY(context.compressed_data.try_ensure_capacity(context.data_size));
 
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
@@ -584,12 +584,12 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
             return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
-        context.scanlines.append({ filter });
-        auto& scanline_buffer = context.scanlines.last().data;
+        Scanline scanline { filter };
         auto row_size = TRY(context.compute_row_size_for_width(context.width));
-        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
+        if (!streamer.wrap_bytes(scanline.data, row_size)) {
             return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
+        TRY(context.scanlines.try_append(scanline));
     }
 
     context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
@@ -673,13 +673,12 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
             return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
-        subimage_context.scanlines.append({ filter });
-        auto& scanline_buffer = subimage_context.scanlines.last().data;
-
+        Scanline scanline { filter };
         auto row_size = TRY(context.compute_row_size_for_width(subimage_context.width));
-        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
+        if (!streamer.wrap_bytes(scanline.data, row_size)) {
             return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
+        TRY(subimage_context.scanlines.try_append(scanline));
     }
 
     subimage_context.bitmap = TRY(Bitmap::create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
@@ -724,7 +723,7 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
     context.decompression_buffer = &result.value();
     context.compressed_data.clear();
 
-    context.scanlines.ensure_capacity(context.height);
+    TRY(context.scanlines.try_ensure_capacity(context.height));
     switch (context.interlace_method) {
     case PngInterlaceMethod::Null:
         TRY(decode_png_bitmap_simple(context));
@@ -818,14 +817,12 @@ static ErrorOr<void> process_IHDR(ReadonlyBytes data, PNGLoadingContext& context
 
 static ErrorOr<void> process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
 {
-    context.compressed_data.append(data.data(), data.size());
-    return {};
+    return context.compressed_data.try_append(data.data(), data.size());
 }
 
 static ErrorOr<void> process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 {
-    context.palette_data.append((PaletteEntry const*)data.data(), data.size() / 3);
-    return {};
+    return context.palette_data.try_append((PaletteEntry const*)data.data(), data.size() / 3);
 }
 
 static ErrorOr<void> process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
@@ -834,7 +831,7 @@ static ErrorOr<void> process_tRNS(ReadonlyBytes data, PNGLoadingContext& context
     case PNG::ColorType::Greyscale:
     case PNG::ColorType::Truecolor:
     case PNG::ColorType::IndexedColor:
-        context.palette_transparency_data.append(data.data(), data.size());
+        TRY(context.palette_transparency_data.try_append(data.data(), data.size()));
         break;
     default:
         break;
