@@ -38,6 +38,7 @@ public:
     ClipboardItem const& item_at(int index) const { return m_history_items[index]; }
     void add_item(const GUI::Clipboard::DataAndType& item);
     void remove_item(int index);
+    void clear();
     bool is_empty() { return m_history_items.is_empty(); }
 
     // ^GUI::Model

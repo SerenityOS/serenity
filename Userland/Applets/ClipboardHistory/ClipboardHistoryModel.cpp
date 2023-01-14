@@ -136,6 +136,12 @@ void ClipboardHistoryModel::remove_item(int index)
     invalidate();
 }
 
+void ClipboardHistoryModel::clear()
+{
+    m_history_items.clear();
+    invalidate();
+}
+
 void ClipboardHistoryModel::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value_string)
 {
     if (domain != "ClipboardHistory" || group != "ClipboardHistory")
