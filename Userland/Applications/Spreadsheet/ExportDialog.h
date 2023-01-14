@@ -18,12 +18,16 @@ class Sheet;
 class Workbook;
 
 struct CSVExportDialogPage {
-    using XSV = Writer::XSV<Vector<Vector<DeprecatedString>>, Vector<DeprecatedString>>;
-
     explicit CSVExportDialogPage(Sheet const&);
 
     NonnullRefPtr<GUI::WizardPage> page() { return *m_page; }
-    ErrorOr<NonnullOwnPtr<XSV>> make_writer(Core::Stream::Handle<Core::Stream::Stream>);
+
+    enum class GenerationType {
+        Normal,
+        Preview
+    };
+
+    ErrorOr<void> generate(Core::Stream::Stream&, GenerationType);
 
 protected:
     void update_preview();

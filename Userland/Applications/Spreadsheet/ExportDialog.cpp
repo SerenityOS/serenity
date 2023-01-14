@@ -88,7 +88,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     update_preview();
 }
 
-auto CSVExportDialogPage::make_writer(Core::Stream::Handle<Core::Stream::Stream> stream) -> ErrorOr<NonnullOwnPtr<XSV>>
+auto CSVExportDialogPage::generate(Core::Stream::Stream& stream, GenerationType type) -> ErrorOr<void>
 {
     auto delimiter = TRY([this]() -> ErrorOr<DeprecatedString> {
         if (m_delimiter_other_radio->is_checked()) {
@@ -150,15 +150,25 @@ auto CSVExportDialogPage::make_writer(Core::Stream::Handle<Core::Stream::Stream>
     if (should_quote_all_fields)
         behaviors = behaviors | Writer::WriterBehavior::QuoteAll;
 
-    return try_make<XSV>(move(stream), m_data, move(traits), *headers, behaviors);
+    switch (type) {
+    case GenerationType::Normal:
+        TRY((Writer::XSV<decltype(m_data), Vector<DeprecatedString>>::generate(stream, m_data, move(traits), *headers, behaviors)));
+        break;
+    case GenerationType::Preview:
+        TRY((Writer::XSV<decltype(m_data), decltype(*headers)>::generate_preview(stream, m_data, move(traits), *headers, behaviors)));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    return {};
 }
 
 void CSVExportDialogPage::update_preview()
 {
     auto maybe_error = [this]() -> ErrorOr<void> {
         Core::Stream::AllocatingMemoryStream memory_stream;
-        auto writer = TRY(make_writer(Core::Stream::Handle<Core::Stream::Stream>(memory_stream)));
-        TRY(writer->generate_preview());
+        TRY(generate(memory_stream, GenerationType::Preview));
         auto buffer = TRY(memory_stream.read_until_eof());
         m_data_preview_text_editor->set_text(StringView(buffer));
         m_data_preview_text_editor->update();
@@ -185,8 +195,8 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, NonnullOwnPtr<Core
         if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return Error::from_string_literal("CSV Export was cancelled");
 
-        auto writer = TRY(page.make_writer(move(file)));
-        return writer->generate();
+        TRY(page.generate(*file, CSVExportDialogPage::GenerationType::Normal));
+        return {};
     };
 
     auto export_worksheet = [&]() -> ErrorOr<void> {
