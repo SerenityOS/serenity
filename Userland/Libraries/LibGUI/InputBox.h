@@ -14,6 +14,7 @@ namespace GUI {
 
 enum class InputType {
     Text,
+    NonemptyText,
     Password
 };
 
