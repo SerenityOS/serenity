@@ -366,7 +366,7 @@ void TableFormattingContext::determine_intrisic_size_of_table_container(Availabl
     }
 }
 
-void TableFormattingContext::calculate_row_heights()
+void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
 {
     for (auto& cell : m_cells) {
         auto& cell_state = m_state.get_mutable(cell.box);
@@ -395,10 +395,10 @@ void TableFormattingContext::calculate_row_heights()
         cell_state.border_right = (should_hide_borders && is_right_most_cell) ? 0 : cell.box.computed_values().border_right().width;
 
         cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
-        auto independent_formatting_context = layout_inside(cell.box, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(*m_available_space));
-        VERIFY(independent_formatting_context);
-        cell_state.set_content_height(independent_formatting_context->automatic_content_height());
-        independent_formatting_context->parent_context_did_dimension_child_root_box();
+        if (auto independent_formatting_context = layout_inside(cell.box, layout_mode, cell_state.available_inner_space_or_constraints_from(*m_available_space))) {
+            cell_state.set_content_height(independent_formatting_context->automatic_content_height());
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
+        }
 
         cell.baseline = box_baseline(m_state, cell.box);
 
@@ -484,7 +484,7 @@ void TableFormattingContext::position_cell_boxes()
     }
 }
 
-void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
+void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
 
@@ -507,7 +507,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
     // Distribute the width of the table among columns.
     distribute_width_to_columns();
 
-    calculate_row_heights();
+    calculate_row_heights(layout_mode);
     position_row_boxes();
     position_cell_boxes();
 
