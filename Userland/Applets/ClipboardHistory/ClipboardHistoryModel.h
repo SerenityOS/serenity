@@ -36,6 +36,7 @@ public:
     virtual ~ClipboardHistoryModel() override = default;
 
     ClipboardItem const& item_at(int index) const { return m_history_items[index]; }
+    void add_item(const GUI::Clipboard::DataAndType& item);
     void remove_item(int index);
     bool is_empty() { return m_history_items.is_empty(); }
 
@@ -47,7 +48,6 @@ public:
 
 private:
     ClipboardHistoryModel();
-    void add_item(const GUI::Clipboard::DataAndType& item);
 
     // ^GUI::Model
     virtual int row_count(const GUI::ModelIndex&) const override { return m_history_items.size(); }
