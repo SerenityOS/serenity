@@ -81,8 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             else
                 return 1;
         } else {
-            if (!text_widget->read_file(response.value().filename(), response.value().stream()))
-                return 1;
+            TRY(text_widget->read_file(response.value().filename(), response.value().stream()));
             text_widget->editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
         }
 
