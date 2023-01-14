@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/BitStream.h>
 #include <AK/Span.h>
 
 namespace Audio::MP3::Tables::Huffman {

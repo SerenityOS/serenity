@@ -43,8 +43,6 @@ class Utf8View;
 class InputStream;
 class InputMemoryStream;
 class OutputStream;
-class InputBitStream;
-class OutputBitStream;
 class OutputMemoryStream;
 
 template<typename T>
@@ -167,7 +165,6 @@ using AK::Function;
 using AK::GenericLexer;
 using AK::HashMap;
 using AK::HashTable;
-using AK::InputBitStream;
 using AK::InputMemoryStream;
 using AK::InputStream;
 using AK::IPv4Address;
@@ -179,7 +176,6 @@ using AK::NonnullOwnPtrVector;
 using AK::NonnullRefPtr;
 using AK::NonnullRefPtrVector;
 using AK::Optional;
-using AK::OutputBitStream;
 using AK::OutputMemoryStream;
 using AK::OutputStream;
 using AK::OwnPtr;
