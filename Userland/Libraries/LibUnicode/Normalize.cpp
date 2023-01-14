@@ -302,7 +302,7 @@ static ErrorOr<Vector<u32>> normalize_implementation(Utf8View string, Normalizat
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<DeprecatedString> normalize(StringView string, NormalizationForm form)
+ErrorOr<String> normalize(StringView string, NormalizationForm form)
 {
     auto const code_points = TRY(normalize_implementation(Utf8View { string }, form));
 
@@ -310,7 +310,7 @@ ErrorOr<DeprecatedString> normalize(StringView string, NormalizationForm form)
     for (auto code_point : code_points)
         TRY(builder.try_append_code_point(code_point));
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 }
