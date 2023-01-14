@@ -17,6 +17,8 @@
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TableWrapper.h>
 
 namespace Web::Layout {
 
@@ -193,6 +195,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     };
 
     auto input_width = [&] {
+        if (is<TableWrapper>(box))
+            return CSS::Length::make_px(compute_width_for_table_wrapper(box, available_space));
         if (should_treat_width_as_auto(box, available_space))
             return CSS::Length::make_auto();
         return calculate_inner_width(box, available_space.width, computed_values.width());
@@ -310,6 +314,18 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box, AvailableSpace const& available_space)
 {
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
+}
+
+CSSPixels BlockFormattingContext::compute_width_for_table_wrapper(Box const& box, AvailableSpace const& available_space)
+{
+    // 17.5.2
+    // Table wrapper width should be equal to width of table box it contains
+    LayoutState throwaway_state(&m_state);
+    auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
+    auto const* table_box = box.first_child_of_type<TableBox>();
+    return throwaway_state.get(*table_box).content_width();
 }
 
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
