@@ -16,7 +16,6 @@ set(AK_TEST_SOURCES
     TestChecked.cpp
     TestCircularBuffer.cpp
     TestCircularDeque.cpp
-    TestCircularDuplexStream.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
     TestDeprecatedString.cpp

@@ -14,8 +14,6 @@ namespace AK {
 
 template<typename T, size_t Capacity>
 class CircularQueue {
-    friend CircularDuplexStream<Capacity>;
-
 public:
     CircularQueue() = default;
 

@@ -48,9 +48,6 @@ class InputBitStream;
 class OutputBitStream;
 class OutputMemoryStream;
 
-template<size_t Capacity>
-class CircularDuplexStream;
-
 template<typename T>
 class Span;
 
@@ -159,7 +156,6 @@ using AK::Bitmap;
 using AK::ByteBuffer;
 using AK::Bytes;
 using AK::CircularBuffer;
-using AK::CircularDuplexStream;
 using AK::CircularQueue;
 using AK::DeprecatedFlyString;
 using AK::DeprecatedString;
