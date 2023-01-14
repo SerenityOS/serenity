@@ -42,59 +42,48 @@ constexpr WriterBehavior default_behaviors()
 template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(Core::Stream::Handle<Core::Stream::Stream> output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
-        : m_data(data)
-        , m_traits(move(traits))
-        , m_behaviors(behaviors)
-        , m_names(headers)
-        , m_output(move(output))
+    static ErrorOr<void> generate(Core::Stream::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
     {
-        if (!headers.is_empty())
-            m_behaviors = m_behaviors | WriterBehavior::WriteHeaders;
-    }
-
-    virtual ~XSV() = default;
-
-    ErrorOr<void> generate()
-    {
-        auto with_headers = has_flag(m_behaviors, WriterBehavior::WriteHeaders);
+        auto writer = XSV(output, data, traits, headers, behaviors);
+        auto with_headers = has_flag(writer.m_behaviors, WriterBehavior::WriteHeaders);
         if (with_headers) {
-            TRY(write_row(m_names));
-            TRY(m_output->write_entire_buffer({ "\n", 1 }));
+            TRY(writer.write_row(writer.m_names));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
         }
 
-        for (auto&& row : m_data) {
+        for (auto&& row : writer.m_data) {
             if (with_headers) {
-                if (row.size() != m_names.size())
+                if (row.size() != writer.m_names.size())
                     return Error::from_string_literal("Header count does not match given column count");
             }
 
-            TRY(write_row(row));
-            TRY(m_output->write_entire_buffer({ "\n", 1 }));
+            TRY(writer.write_row(row));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
         }
         return {};
     }
 
-    ErrorOr<void> generate_preview()
+    static ErrorOr<void> generate_preview(Core::Stream::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
     {
+        auto writer = XSV(output, data, traits, headers, behaviors);
         auto lines_written = 0;
         constexpr auto max_preview_lines = 8;
 
-        auto with_headers = has_flag(m_behaviors, WriterBehavior::WriteHeaders);
+        auto with_headers = has_flag(writer.m_behaviors, WriterBehavior::WriteHeaders);
         if (with_headers) {
-            TRY(write_row(m_names));
-            TRY(m_output->write_entire_buffer({ "\n", 1 }));
+            TRY(writer.write_row(writer.m_names));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
             ++lines_written;
         }
 
-        for (auto&& row : m_data) {
+        for (auto&& row : writer.m_data) {
             if (with_headers) {
-                if (row.size() != m_names.size())
+                if (row.size() != writer.m_names.size())
                     return Error::from_string_literal("Header count does not match given column count");
             }
 
-            TRY(write_row(row));
-            TRY(m_output->write_entire_buffer({ "\n", 1 }));
+            TRY(writer.write_row(row));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
             ++lines_written;
 
             if (lines_written >= max_preview_lines)
@@ -104,13 +93,24 @@ public:
     }
 
 private:
+    XSV(Core::Stream::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
+        : m_data(data)
+        , m_traits(move(traits))
+        , m_behaviors(behaviors)
+        , m_names(headers)
+        , m_output(output)
+    {
+        if (!headers.is_empty())
+            m_behaviors = m_behaviors | WriterBehavior::WriteHeaders;
+    }
+
     template<typename T>
     ErrorOr<void> write_row(T&& row)
     {
         bool first = true;
         for (auto&& entry : row) {
             if (!first) {
-                TRY(m_output->write_entire_buffer(m_traits.separator.bytes()));
+                TRY(m_output.write_entire_buffer(m_traits.separator.bytes()));
             }
             first = false;
             TRY(write_entry(entry));
@@ -136,33 +136,33 @@ private:
 
         if (safe_to_write_normally) {
             if (!string.is_empty())
-                TRY(m_output->write_entire_buffer(string.bytes()));
+                TRY(m_output.write_entire_buffer(string.bytes()));
             return {};
         }
 
-        TRY(m_output->write_entire_buffer(m_traits.quote.bytes()));
+        TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
 
         GenericLexer lexer(string);
         while (!lexer.is_eof()) {
             if (lexer.consume_specific(m_traits.quote)) {
                 switch (m_traits.quote_escape) {
                 case WriterTraits::Repeat:
-                    TRY(m_output->write_entire_buffer(m_traits.quote.bytes()));
-                    TRY(m_output->write_entire_buffer(m_traits.quote.bytes()));
+                    TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
+                    TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
                     break;
                 case WriterTraits::Backslash:
-                    TRY(m_output->write_entire_buffer({ "\\", 1 }));
-                    TRY(m_output->write_entire_buffer(m_traits.quote.bytes()));
+                    TRY(m_output.write_entire_buffer({ "\\", 1 }));
+                    TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
                     break;
                 }
                 continue;
             }
 
             auto ch = lexer.consume();
-            TRY(m_output->write_entire_buffer({ &ch, 1 }));
+            TRY(m_output.write_entire_buffer({ &ch, 1 }));
         }
 
-        TRY(m_output->write_entire_buffer(m_traits.quote.bytes()));
+        TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
         return {};
     }
 
@@ -170,7 +170,7 @@ private:
     WriterTraits m_traits;
     WriterBehavior m_behaviors;
     HeaderType m_names;
-    Core::Stream::Handle<Core::Stream::Stream> m_output;
+    Core::Stream::Stream& m_output;
 };
 
 }
