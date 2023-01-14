@@ -86,6 +86,12 @@ public:
     // NOTE: UTF-8 is defined in a way that lexicographic ordering of code points is equivalent to lexicographic ordering of bytes.
     [[nodiscard]] int operator<=>(String const& other) const { return this->bytes_as_string_view().compare(other.bytes_as_string_view()); }
 
+    template<typename... Ts>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
+    {
+        return (this->operator==(forward<Ts>(strings)) || ...);
+    }
+
     [[nodiscard]] u32 hash() const;
 
     template<Arithmetic T>
