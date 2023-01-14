@@ -765,7 +765,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // j. Let namedCaptures be ? Get(result, "groups").
         auto named_captures = TRY(result->get(vm.names.groups));
 
-        DeprecatedString replacement;
+        String replacement;
 
         // k. If functionalReplace is true, then
         if (replace_value.is_function()) {
@@ -790,7 +790,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             auto replace_result = TRY(call(vm, replace_value.as_function(), js_undefined(), move(replacer_args)));
 
             // vi. Let replacement be ? ToString(replValue).
-            replacement = TRY(replace_result.to_deprecated_string(vm));
+            replacement = TRY(replace_result.to_string(vm));
         }
         // l. Else,
         else {
