@@ -318,7 +318,8 @@ bool GLContextWidget::load_file(Core::DeprecatedFile& file)
         return false;
     }
 
-    auto new_mesh = m_mesh_loader->load(file);
+    auto new_mesh = m_mesh_loader->load(String::from_deprecated_string(file.filename()).release_value_but_fixme_should_propagate_errors(),
+        Core::File::adopt_fd(file.leak_fd(), Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors());
     if (new_mesh.is_error()) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
