@@ -136,7 +136,7 @@ struct PNGLoadingContext {
     Optional<ByteBuffer> decompressed_icc_profile;
     Optional<RenderingIntent> sRGB_rendering_intent;
 
-    Checked<int> compute_row_size_for_width(int width) const
+    ErrorOr<int> compute_row_size_for_width(int width) const
     {
         Checked<int> row_size = width;
         row_size *= channels;
@@ -144,8 +144,8 @@ struct PNGLoadingContext {
         row_size += 7;
         row_size /= 8;
         if (row_size.has_overflow())
-            dbgln("PNG too large, integer overflow while computing row size");
-        return row_size;
+            return Error::from_string_literal("PNG too large, integer overflow while computing row size");
+        return row_size.value();
     }
 };
 
@@ -596,11 +596,8 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
-        auto row_size = context.compute_row_size_for_width(context.width);
-        if (row_size.has_overflow())
-            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
-
-        if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
+        auto row_size = TRY(context.compute_row_size_for_width(context.width));
+        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
             return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
     }
@@ -689,10 +686,8 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         subimage_context.scanlines.append({ filter });
         auto& scanline_buffer = subimage_context.scanlines.last().data;
 
-        auto row_size = context.compute_row_size_for_width(subimage_context.width);
-        if (row_size.has_overflow())
-            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
-        if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
+        auto row_size = TRY(context.compute_row_size_for_width(subimage_context.width));
+        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
             return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
     }
