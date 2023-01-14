@@ -33,7 +33,7 @@ inline ErrorOr<T> decode(Decoder&)
 
 class Decoder {
 public:
-    Decoder(InputMemoryStream& stream, Core::Stream::LocalSocket& socket)
+    Decoder(Core::Stream::Stream& stream, Core::Stream::LocalSocket& socket)
         : m_stream(stream)
         , m_socket(socket)
     {
@@ -45,8 +45,13 @@ public:
     template<typename T>
     ErrorOr<void> decode_into(T& value)
     {
-        m_stream >> value;
-        TRY(m_stream.try_handle_any_error());
+        value = TRY(m_stream.read_value<T>());
+        return {};
+    }
+
+    ErrorOr<void> decode_into(Bytes bytes)
+    {
+        TRY(m_stream.read_entire_buffer(bytes));
         return {};
     }
 
@@ -55,7 +60,7 @@ public:
     Core::Stream::LocalSocket& socket() { return m_socket; }
 
 private:
-    InputMemoryStream& m_stream;
+    Core::Stream::Stream& m_stream;
     Core::Stream::LocalSocket& m_socket;
 };
 

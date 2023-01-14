@@ -293,21 +293,6 @@ DeprecatedString constructor_for_message(DeprecatedString const& name, Vector<Pa
     return builder.to_deprecated_string();
 }
 
-static void append_handle_stream_error(SourceGenerator& generator, StringView error_message)
-{
-    if constexpr (GENERATE_DEBUG) {
-        generator.set("error_message"sv, error_message);
-        generator.append(R"~~~(
-        if (stream.handle_any_error()) {
-            dbgln("@error_message@");
-            return Error::from_string_literal("@error_message@");
-        })~~~");
-    } else {
-        generator.append(R"~~~(
-        TRY(stream.try_handle_any_error());)~~~");
-    }
-}
-
 void do_message(SourceGenerator message_generator, DeprecatedString const& name, Vector<Parameter> const& parameters, DeprecatedString const& response_type = {})
 {
     auto pascal_name = pascal_case(name);
@@ -353,7 +338,7 @@ public:)~~~");
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(InputMemoryStream& stream, Core::Stream::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Core::Stream::Stream& stream, Core::Stream::LocalSocket& socket)
     {
         IPC::Decoder decoder { stream, socket };)~~~");
 
@@ -387,7 +372,6 @@ public:)~~~");
     }
 
     message_generator.set("message.constructor_call_parameters", builder.build());
-    append_handle_stream_error(message_generator, "Failed to read the message"sv);
     message_generator.appendln(R"~~~(
         return make<@message.pascal_name@>(@message.constructor_call_parameters@);
     })~~~");
@@ -602,10 +586,8 @@ public:
 
     static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::Stream::LocalSocket& socket)
     {
-        InputMemoryStream stream { buffer };
-        u32 message_endpoint_magic = 0;
-        stream >> message_endpoint_magic;)~~~");
-    append_handle_stream_error(generator, "Failed to read message endpoint magic"sv);
+        auto stream = TRY(Core::Stream::FixedMemoryStream::construct(buffer));
+        auto message_endpoint_magic = TRY(stream->read_value<u32>());)~~~");
     generator.append(R"~~~(
 
         if (message_endpoint_magic != @endpoint.magic@) {)~~~");
@@ -617,9 +599,7 @@ public:
             return Error::from_string_literal("Endpoint magic number mismatch, not my message!");
         }
 
-        i32 message_id = 0;
-        stream >> message_id;)~~~");
-    append_handle_stream_error(generator, "Failed to read message ID"sv);
+        auto message_id = TRY(stream->read_value<i32>());)~~~");
     generator.appendln(R"~~~(
 
         switch (message_id) {)~~~");
@@ -633,7 +613,7 @@ public:
 
             message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@:
-            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(stream, socket));)~~~");
+            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(*stream, socket));)~~~");
         };
 
         do_decode_message(message.name);
@@ -787,11 +767,11 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
         }
     }
 
-    generator.appendln(R"~~~(#include <AK/MemoryStream.h>
-#include <AK/Error.h>
+    generator.appendln(R"~~~(#include <AK/Error.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
 #include <AK/Utf8View.h>
+#include <LibCore/MemoryStream.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
