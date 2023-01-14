@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Layout/FormattingContext.h>
+#include <LibWeb/Layout/TableWrapper.h>
 
 namespace Web::Layout {
 
@@ -20,6 +21,10 @@ public:
     virtual CSSPixels automatic_content_height() const override;
 
     TableBox const& table_box() const { return static_cast<TableBox const&>(context_box()); }
+    TableWrapper const& table_wrapper() const
+    {
+        return verify_cast<TableWrapper>(*table_box().containing_block());
+    }
 
 private:
     void calculate_row_column_grid(Box const&);
