@@ -32,7 +32,7 @@ private:
     void compute_table_width();
     void distribute_width_to_columns();
     void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
-    void calculate_row_heights();
+    void calculate_row_heights(LayoutMode layout_mode);
     void position_row_boxes();
     void position_cell_boxes();
 
