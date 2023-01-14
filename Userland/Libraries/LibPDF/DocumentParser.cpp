@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
+#include <LibCore/BitStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/DocumentParser.h>
@@ -251,7 +252,7 @@ PDFErrorOr<void> DocumentParser::initialize_hint_tables()
     }
 
     auto hint_table = TRY(parse_page_offset_hint_table(hint_stream_bytes));
-    auto hint_table_entries = parse_all_page_offset_hint_table_entries(hint_table, hint_stream_bytes);
+    auto hint_table_entries = TRY(parse_all_page_offset_hint_table_entries(hint_table, hint_stream_bytes));
 
     // FIXME: Do something with the hint tables
     return {};
@@ -593,12 +594,12 @@ PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offse
     return hint_table;
 }
 
-Vector<DocumentParser::PageOffsetHintTableEntry> DocumentParser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes hint_stream_bytes)
+PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes hint_stream_bytes)
 {
-    InputMemoryStream input_stream(hint_stream_bytes);
-    input_stream.seek(sizeof(PageOffsetHintTable));
+    auto input_stream = TRY(Core::Stream::FixedMemoryStream::construct(hint_stream_bytes));
+    TRY(input_stream->seek(sizeof(PageOffsetHintTable)));
 
-    InputBitStream bit_stream(input_stream);
+    auto bit_stream = TRY(Core::Stream::LittleEndianInputBitStream::construct(move(input_stream)));
 
     auto number_of_pages = m_linearization_dictionary.value().number_of_pages;
     Vector<PageOffsetHintTableEntry> entries;
@@ -613,19 +614,21 @@ Vector<DocumentParser::PageOffsetHintTableEntry> DocumentParser::parse_all_page_
     auto bits_required_for_greatest_shared_obj_identifier = hint_table.bits_required_for_greatest_shared_obj_identifier;
     auto bits_required_for_fraction_numerator = hint_table.bits_required_for_fraction_numerator;
 
-    auto parse_int_entry = [&](u32 PageOffsetHintTableEntry::*field, u32 bit_size) {
+    auto parse_int_entry = [&](u32 PageOffsetHintTableEntry::*field, u32 bit_size) -> ErrorOr<void> {
         if (bit_size <= 0)
-            return;
+            return {};
 
         for (int i = 0; i < number_of_pages; i++) {
             auto& entry = entries[i];
-            entry.*field = bit_stream.read_bits(bit_size);
+            entry.*field = TRY(bit_stream->read_bits(bit_size));
         }
+
+        return {};
     };
 
-    auto parse_vector_entry = [&](Vector<u32> PageOffsetHintTableEntry::*field, u32 bit_size) {
+    auto parse_vector_entry = [&](Vector<u32> PageOffsetHintTableEntry::*field, u32 bit_size) -> ErrorOr<void> {
         if (bit_size <= 0)
-            return;
+            return {};
 
         for (int page = 1; page < number_of_pages; page++) {
             auto number_of_shared_objects = entries[page].number_of_shared_objects;
@@ -633,19 +636,21 @@ Vector<DocumentParser::PageOffsetHintTableEntry> DocumentParser::parse_all_page_
             items.ensure_capacity(number_of_shared_objects);
 
             for (size_t i = 0; i < number_of_shared_objects; i++)
-                items.unchecked_append(bit_stream.read_bits(bit_size));
+                items.unchecked_append(TRY(bit_stream->read_bits(bit_size)));
 
             entries[page].*field = move(items);
         }
+
+        return {};
     };
 
-    parse_int_entry(&PageOffsetHintTableEntry::objects_in_page_number, bits_required_for_object_number);
-    parse_int_entry(&PageOffsetHintTableEntry::page_length_number, bits_required_for_page_length);
-    parse_int_entry(&PageOffsetHintTableEntry::number_of_shared_objects, bits_required_for_number_of_shared_obj_refs);
-    parse_vector_entry(&PageOffsetHintTableEntry::shared_object_identifiers, bits_required_for_greatest_shared_obj_identifier);
-    parse_vector_entry(&PageOffsetHintTableEntry::shared_object_location_numerators, bits_required_for_fraction_numerator);
-    parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_offset_number, bits_required_for_content_stream_offsets);
-    parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_length_number, bits_required_for_content_stream_length);
+    TRY(parse_int_entry(&PageOffsetHintTableEntry::objects_in_page_number, bits_required_for_object_number));
+    TRY(parse_int_entry(&PageOffsetHintTableEntry::page_length_number, bits_required_for_page_length));
+    TRY(parse_int_entry(&PageOffsetHintTableEntry::number_of_shared_objects, bits_required_for_number_of_shared_obj_refs));
+    TRY(parse_vector_entry(&PageOffsetHintTableEntry::shared_object_identifiers, bits_required_for_greatest_shared_obj_identifier));
+    TRY(parse_vector_entry(&PageOffsetHintTableEntry::shared_object_location_numerators, bits_required_for_fraction_numerator));
+    TRY(parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_offset_number, bits_required_for_content_stream_offsets));
+    TRY(parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_length_number, bits_required_for_content_stream_length));
 
     return entries;
 }
