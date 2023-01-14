@@ -37,7 +37,7 @@ static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
     TRY(Core::System::fcntl(socket_fd, F_SETFD, FD_CLOEXEC));
 #    endif
 
-#    if !defined(AK_OS_MACOS) && !defined(AK_OS_FREEBSD)
+#    if !defined(AK_OS_MACOS) && !defined(AK_OS_FREEBSD) && !defined(AK_OS_OPENBSD)
     TRY(Core::System::fchmod(socket_fd, 0600));
 #    endif
 
