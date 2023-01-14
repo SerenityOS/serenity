@@ -166,6 +166,24 @@ Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch
     allocate_palette_from_format(format, {});
 }
 
+static bool check_not_exceeding_max_size(IntSize size, int scale_factor, BitmapFormat format, unsigned actual_size)
+{
+    // FIXME: Code duplication of size_in_bytes() and m_pitch
+    unsigned expected_size_max = Bitmap::minimum_pitch(size.width() * scale_factor, format) * size.height() * scale_factor;
+    if (actual_size < expected_size_max) {
+        // Getting here is most likely an error.
+        dbgln("Constructing a shared bitmap for format {} and size {} @ {}x, which demands {} bytes.",
+            static_cast<int>(format),
+            size,
+            scale_factor,
+            expected_size_max);
+
+        dbgln("However, we were given {} bytes, which is outside this range?! Refusing cowardly.", actual_size);
+        return false;
+    }
+    return true;
+}
+
 static bool check_size(IntSize size, int scale_factor, BitmapFormat format, unsigned actual_size)
 {
     // FIXME: Code duplication of size_in_bytes() and m_pitch
@@ -197,6 +215,22 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_with_anonymous_buffer(BitmapFo
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 {
     return try_create_from_serialized_bytes(buffer.bytes());
+}
+
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_raw_bytes(BitmapFormat format, IntSize dimensions, int scale_factor, ReadonlyBytes bytes)
+{
+    if (format > BitmapFormat::RGBA8888 || format < BitmapFormat::Indexed1)
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_raw_bytes: decode failed");
+
+    if (Checked<size_t>::multiplication_would_overflow(dimensions.width(), dimensions.height(), sizeof(size_t)))
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_raw_bytes: decode failed");
+
+    if (!check_not_exceeding_max_size({ dimensions.width(), dimensions.height() }, scale_factor, format, bytes.size()))
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_raw_bytes: decode failed");
+
+    auto bitmap = TRY(Bitmap::try_create(format, dimensions, scale_factor));
+    bytes.slice(0, bitmap->size_in_bytes()).copy_to({ bitmap->scanline(0), bitmap->size_in_bytes() });
+    return bitmap;
 }
 
 /// Read a bitmap as described by:

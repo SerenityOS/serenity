@@ -102,6 +102,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_fd_and_close(int fd, StringView path);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale, Vector<ARGB32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_serialized_bytes(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_raw_bytes(BitmapFormat, IntSize dimensions, int scale_factor, ReadonlyBytes);
     static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_serialized_byte_buffer(ByteBuffer&&);
 
     static bool is_path_a_supported_image_format(StringView path)
