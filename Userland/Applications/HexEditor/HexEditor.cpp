@@ -153,14 +153,13 @@ ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::Stream::File> new_file)
     return {};
 }
 
-bool HexEditor::save()
+ErrorOr<void> HexEditor::save()
 {
-    if (m_document->type() != HexDocument::Type::File) {
-        return false;
-    }
+    if (m_document->type() != HexDocument::Type::File)
+        return Error::from_string_literal("Unable to save from a memory document");
 
-    static_cast<HexDocumentFile*>(m_document.ptr())->write_to_file();
-    return true;
+    TRY(static_cast<HexDocumentFile*>(m_document.ptr())->write_to_file());
+    return {};
 }
 
 size_t HexEditor::selection_size()

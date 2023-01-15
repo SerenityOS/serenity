@@ -132,8 +132,8 @@ HexEditorWidget::HexEditorWidget()
         if (m_path.is_empty())
             return m_save_as_action->activate();
 
-        if (!m_editor->save()) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        if (auto result = m_editor->save(); result.is_error()) {
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
         } else {
             window()->set_modified(false);
             m_editor->update();

@@ -39,7 +39,7 @@ public:
     ErrorOr<void> fill_selection(u8 fill_byte);
     Optional<u8> get_byte(size_t position);
     ErrorOr<void> save_as(NonnullOwnPtr<Core::Stream::File>);
-    bool save();
+    ErrorOr<void> save();
 
     bool undo();
     bool redo();
