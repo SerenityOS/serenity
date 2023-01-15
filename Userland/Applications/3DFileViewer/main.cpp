@@ -291,14 +291,14 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
 bool GLContextWidget::load_path(DeprecatedString const& filename)
 {
-    auto file = Core::File::construct(filename);
+    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window(), filename);
 
-    if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
+    if (!file.is_error() && file.error().code() != ENOENT) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
-    return load_file(file);
+    return load_file(file.value());
 }
 
 bool GLContextWidget::load_file(Core::File& file)
