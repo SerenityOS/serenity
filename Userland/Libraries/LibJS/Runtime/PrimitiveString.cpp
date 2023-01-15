@@ -90,6 +90,12 @@ ThrowCompletionOr<String> PrimitiveString::utf8_string() const
     return *m_utf8_string;
 }
 
+ThrowCompletionOr<StringView> PrimitiveString::utf8_string_view() const
+{
+    (void)TRY(utf8_string());
+    return m_utf8_string->bytes_as_string_view();
+}
+
 ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
 {
     TRY(resolve_rope_if_needed());
@@ -281,11 +287,8 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed() const
         }
 
         // Get the UTF-8 representations for both strings.
-        auto current_string_as_utf8_string = TRY(current->utf8_string());
-        auto current_string_as_utf8 = current_string_as_utf8_string.bytes_as_string_view();
-
-        auto previous_string_as_utf8_string = TRY(previous->utf8_string());
-        auto previous_string_as_utf8 = previous_string_as_utf8_string.bytes_as_string_view();
+        auto current_string_as_utf8 = TRY(current->utf8_string_view());
+        auto previous_string_as_utf8 = TRY(previous->utf8_string_view());
 
         // NOTE: Now we need to look at the end of the previous string and the start
         //       of the current string, to see if they should be combined into a surrogate.
