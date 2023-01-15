@@ -1172,6 +1172,25 @@ Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_elem
     return enabled;
 }
 
+// 12.4.9 Get Computed Role, https://w3c.github.io/webdriver/#dfn-get-computed-role
+Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_computed_role(DeprecatedString const& element_id)
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let role be the result of computing the WAI-ARIA role of element.
+    auto role = element->role_or_default();
+
+    // 5. Return success with data role.
+    return DeprecatedString { role };
+}
+
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
 Messages::WebDriverClient::ClickResponse WebDriverConnection::click(DeprecatedString const& element_id)
 {

@@ -533,6 +533,15 @@ Web::WebDriver::Response Client::is_element_enabled(Web::WebDriver::Parameters p
     return session->web_content_connection().is_element_enabled(parameters[1]);
 }
 
+// 12.4.9 https://w3c.github.io/webdriver/#dfn-get-computed-role
+// GET /session/{session id}/element/{element id}/computedrole
+Web::WebDriver::Response Client::get_computed_role(Web::WebDriver::Parameters parameters, AK::JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/element/<element id>/computedrole");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().get_computed_role(parameters[1]);
+}
+
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
 // POST /session/{session id}/element/{element id}/click
 Web::WebDriver::Response Client::click(Web::WebDriver::Parameters parameters, JsonValue)
