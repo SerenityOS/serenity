@@ -341,6 +341,8 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
     m_mesh = new_mesh.release_value();
     dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
 
+    window()->set_title(DeprecatedString::formatted("{} - 3D File Viewer", filename));
+
     return true;
 }
 
@@ -382,10 +384,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         auto file = response.release_value();
-        if (widget->load_file(file.filename(), file.release_stream())) {
-            auto canonical_path = Core::DeprecatedFile::absolute_path(file.filename().to_deprecated_string());
-            window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
-        }
+        widget->load_file(file.filename(), file.release_stream());
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -571,10 +570,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     auto filename = arguments.argc > 1 ? arguments.argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
-    if (widget->load_path(filename)) {
-        auto canonical_path = Core::DeprecatedFile::absolute_path(filename);
-        window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
-    }
+    widget->load_path(filename);
 
     return app->exec();
 }
