@@ -56,10 +56,10 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     // Set up the menu bar.
     auto& file_menu = window->add_menu("&File");
     auto open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(this->window());
+        auto response = FileSystemAccessClient::Client::the().open_file(this->window());
         if (response.is_error())
             return;
-        this->set_file(response.value()->filename());
+        this->set_file(response.value().filename());
     });
     auto about_action = GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-display-settings"sv));
 
