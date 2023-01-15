@@ -372,10 +372,9 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
     if (!m_active_tool)
         return;
 
-    if (is<MoveTool>(*m_active_tool)) {
-        if (auto* other_layer = layer_at_editor_position(event.position())) {
-            set_active_layer(other_layer);
-        }
+    if (auto* tool = dynamic_cast<MoveTool*>(m_active_tool); tool && tool->layer_selection_mode() == MoveTool::LayerSelectionMode::ForegroundLayer) {
+        if (auto* foreground_layer = layer_at_editor_position(event.position()))
+            set_active_layer(foreground_layer);
     }
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;

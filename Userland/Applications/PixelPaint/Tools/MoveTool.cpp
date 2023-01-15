@@ -11,6 +11,8 @@
 #include "../Layer.h"
 #include <AK/String.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -138,6 +140,9 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
     if (event.key() == Key_Shift)
         m_keep_aspect_ratio = true;
 
+    if (event.key() == Key_Alt)
+        toggle_selection_mode();
+
     if (m_scaling)
         return true;
 
@@ -176,6 +181,9 @@ void MoveTool::on_keyup(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift)
         m_keep_aspect_ratio = false;
+
+    if (event.key() == Key_Alt)
+        toggle_selection_mode();
 }
 
 void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
@@ -241,6 +249,46 @@ Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
         }
     }
     return Gfx::StandardCursor::Move;
+}
+
+GUI::Widget* MoveTool::get_properties_widget()
+{
+    if (!m_properties_widget) {
+        m_properties_widget = GUI::Widget::construct();
+        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& selection_mode_container = m_properties_widget->add<GUI::Widget>();
+        selection_mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        selection_mode_container.set_fixed_height(46);
+        auto& selection_mode_label = selection_mode_container.add<GUI::Label>("Selection Mode:");
+        selection_mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        selection_mode_label.set_fixed_size(80, 40);
+
+        auto& mode_radio_container = selection_mode_container.add<GUI::Widget>();
+        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
+        m_selection_mode_foreground = mode_radio_container.add<GUI::RadioButton>("Foreground");
+
+        m_selection_mode_active = mode_radio_container.add<GUI::RadioButton>("Active Layer");
+
+        m_selection_mode_foreground->on_checked = [&](bool) {
+            m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;
+        };
+        m_selection_mode_active->on_checked = [&](bool) {
+            m_layer_selection_mode = LayerSelectionMode::ActiveLayer;
+        };
+
+        m_selection_mode_foreground->set_checked(true);
+    }
+
+    return m_properties_widget.ptr();
+}
+
+void MoveTool::toggle_selection_mode()
+{
+    if (m_selection_mode_foreground->is_checked())
+        m_selection_mode_active->set_checked(true);
+    else
+        m_selection_mode_foreground->set_checked(true);
 }
 
 }
