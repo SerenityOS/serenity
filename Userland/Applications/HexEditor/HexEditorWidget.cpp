@@ -17,7 +17,7 @@
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
@@ -121,11 +121,11 @@ HexEditorWidget::HexEditorWidget()
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), {}, Core::StandardPaths::home_directory(), Core::Stream::OpenMode::ReadWrite);
         if (response.is_error())
             return;
 
-        open_file(response.value());
+        open_file(response.value().filename(), response.value().release_stream());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -142,18 +142,18 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, m_extension, Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
         if (response.is_error())
             return;
         auto file = response.release_value();
-        if (!m_editor->save_as(file)) {
+        if (!m_editor->save_as(file.release_stream())) {
             GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
         window()->set_modified(false);
-        set_path(file->filename());
-        dbgln("Wrote document to {}", file->filename());
+        set_path(file.filename());
+        dbgln("Wrote document to {}", file.filename());
     });
 
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
@@ -525,11 +525,11 @@ void HexEditorWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-void HexEditorWidget::open_file(NonnullRefPtr<Core::File> file)
+void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
 {
     window()->set_modified(false);
-    m_editor->open_file(file);
-    set_path(file->filename());
+    m_editor->open_file(move(file));
+    set_path(filename.to_deprecated_string());
 }
 
 bool HexEditorWidget::request_close()
@@ -586,9 +586,9 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
         if (response.is_error())
             return;
-        open_file(response.value());
+        open_file(response.value().filename(), response.value().release_stream());
     }
 }
