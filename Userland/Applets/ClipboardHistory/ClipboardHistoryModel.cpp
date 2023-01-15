@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -108,6 +108,13 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+void ClipboardHistoryModel::clipboard_content_did_change(DeprecatedString const&)
+{
+    auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
+    if (!(data_and_type.data.is_empty() && data_and_type.mime_type.is_empty() && data_and_type.metadata.is_empty()))
+        add_item(data_and_type);
 }
 
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
