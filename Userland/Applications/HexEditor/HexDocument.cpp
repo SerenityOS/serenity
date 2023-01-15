@@ -58,17 +58,15 @@ void HexDocumentMemory::clear_changes()
     m_changes.clear();
 }
 
-bool HexDocumentMemory::write_to_file(Core::Stream::File& file)
+ErrorOr<void> HexDocumentMemory::write_to_file(Core::Stream::File& file)
 {
-    if (file.seek(0, SeekMode::SetPosition).is_error())
-        return false;
-    if (file.write(m_buffer).is_error())
-        return false;
+    TRY(file.seek(0, SeekMode::SetPosition));
+    TRY(file.write(m_buffer));
     for (auto& change : m_changes) {
-        file.seek(change.key, SeekMode::SetPosition).release_value_but_fixme_should_propagate_errors();
-        file.write({ &change.value, 1 }).release_value_but_fixme_should_propagate_errors();
+        TRY(file.seek(change.key, SeekMode::SetPosition));
+        TRY(file.write({ &change.value, 1 }));
     }
-    return true;
+    return {};
 }
 
 ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullOwnPtr<Core::Stream::File> file)
@@ -96,30 +94,27 @@ void HexDocumentFile::write_to_file()
     m_buffer_file_pos = m_file_size + 1;
 }
 
-bool HexDocumentFile::write_to_file(Core::Stream::File& file)
+ErrorOr<void> HexDocumentFile::write_to_file(Core::Stream::File& file)
 {
-    if (file.truncate(size()).is_error()) {
-        return false;
-    }
+    TRY(file.truncate(size()));
 
-    if (file.seek(0, SeekMode::SetPosition).is_error() || m_file->seek(0, SeekMode::SetPosition).is_error()) {
-        return false;
-    }
+    TRY(file.seek(0, SeekMode::SetPosition));
+    TRY(m_file->seek(0, SeekMode::SetPosition));
 
     while (true) {
         Array<u8, 64 * KiB> buffer;
-        auto copy_buffer = m_file->read(buffer).release_value_but_fixme_should_propagate_errors();
+        auto copy_buffer = TRY(m_file->read(buffer));
         if (copy_buffer.size() == 0)
             break;
-        file.write(copy_buffer).release_value_but_fixme_should_propagate_errors();
+        TRY(file.write(copy_buffer));
     }
 
     for (auto& change : m_changes) {
-        file.seek(change.key, SeekMode::SetPosition).release_value_but_fixme_should_propagate_errors();
-        file.write({ &change.value, 1 }).release_value_but_fixme_should_propagate_errors();
+        TRY(file.seek(change.key, SeekMode::SetPosition));
+        TRY(file.write({ &change.value, 1 }));
     }
 
-    return true;
+    return {};
 }
 
 HexDocument::Cell HexDocumentFile::get(size_t position)

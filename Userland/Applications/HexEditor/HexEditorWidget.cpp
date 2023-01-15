@@ -146,8 +146,8 @@ HexEditorWidget::HexEditorWidget()
         if (response.is_error())
             return;
         auto file = response.release_value();
-        if (!m_editor->save_as(file.release_stream())) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        if (auto result = m_editor->save_as(file.release_stream()); result.is_error()) {
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
