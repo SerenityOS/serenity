@@ -1465,49 +1465,6 @@ ErrorOr<void> TextEditor::write_to_file(StringView path)
     return {};
 }
 
-bool TextEditor::write_to_file(Core::File& file)
-{
-    off_t file_size = 0;
-    if (line_count() == 1 && line(0).is_empty()) {
-        // Truncate to zero.
-    } else {
-        // Compute the final file size and ftruncate() to make writing fast.
-        // FIXME: Remove this once the kernel is smart enough to do this instead.
-        for (size_t i = 0; i < line_count(); ++i)
-            file_size += line(i).length();
-        file_size += line_count();
-    }
-
-    if (!file.truncate(file_size)) {
-        perror("ftruncate");
-        return false;
-    }
-
-    if (file_size == 0) {
-        // A size 0 file doesn't need a data copy.
-    } else {
-        for (size_t i = 0; i < line_count(); ++i) {
-            auto& line = this->line(i);
-            if (line.length()) {
-                auto line_as_utf8 = line.to_utf8();
-                ssize_t nwritten = file.write(line_as_utf8);
-                if (nwritten < 0) {
-                    perror("write");
-                    return false;
-                }
-            }
-            char ch = '\n';
-            ssize_t nwritten = file.write((u8*)&ch, 1);
-            if (nwritten != 1) {
-                perror("write");
-                return false;
-            }
-        }
-    }
-    document().set_unmodified();
-    return true;
-}
-
 ErrorOr<void> TextEditor::write_to_file(Core::Stream::File& file)
 {
     off_t file_size = 0;
