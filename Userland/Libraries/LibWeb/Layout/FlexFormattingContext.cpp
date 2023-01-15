@@ -1846,7 +1846,18 @@ CSSPixels FlexFormattingContext::calculate_cross_max_content_contribution(FlexIt
 
 CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_min_content_width(item.box) : calculate_min_content_height(item.box, m_available_space_for_items->space.width);
+    if (is_row_layout()) {
+        return calculate_min_content_width(item.box);
+    }
+    return calculate_min_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : AvailableSize::make_indefinite());
+}
+
+CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
+{
+    if (is_row_layout()) {
+        return calculate_max_content_width(item.box);
+    }
+    return calculate_max_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : AvailableSize::make_indefinite());
 }
 
 CSSPixels FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
@@ -1859,11 +1870,6 @@ CSSPixels FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const
 {
     return !is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space)
                             : calculate_fit_content_height(item.box, m_available_space_for_items->space);
-}
-
-CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
-{
-    return is_row_layout() ? calculate_max_content_width(item.box) : calculate_max_content_height(item.box, m_available_space_for_items->space.width);
 }
 
 CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& item) const
