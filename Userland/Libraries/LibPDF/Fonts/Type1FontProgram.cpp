@@ -23,8 +23,16 @@ enum Command {
     Extended,
     HSbW,
     EndChar,
-    RMoveTo = 21,
+    HStemHM = 18,
+    Hintmask,
+    Cntrmask,
+    RMoveTo,
     HMoveTo,
+    VStemHM,
+    RCurveLine,
+    RLineCurve,
+    VVCurveTo,
+    HHCurveTo,
     VHCurveTo = 30,
     HVCurveTo
 };
@@ -99,7 +107,7 @@ Gfx::AffineTransform Type1FontProgram::glyph_transform_to_device_space(Glyph con
     return transform;
 }
 
-PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& subroutines, GlyphParserState& state)
+PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& subroutines, GlyphParserState& state, bool is_type2)
 {
     auto push = [&](float value) -> PDFErrorOr<void> {
         if (state.sp >= state.stack.size())
@@ -109,10 +117,102 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
     };
 
     auto pop = [&]() -> float {
-        return state.sp ? state.stack[--state.sp] : 0.0f;
+        return state.stack[--state.sp];
+    };
+
+    auto pop_front = [&]() {
+        auto value = state.stack[0];
+        --state.sp;
+        for (size_t i = 0; i < state.sp; i++)
+            state.stack[i] = state.stack[i + 1];
+        return value;
     };
 
     auto& path = state.glyph.path;
+    auto& point = state.point;
+
+    // Core operations: move to, line to, curve to
+    auto move_to = [&](float dx, float dy) {
+        point.translate_by(dx, dy);
+        if (is_type2)
+            path.close();
+        if (state.flex_feature) {
+            state.flex_sequence[state.flex_index++] = state.point.x();
+            state.flex_sequence[state.flex_index++] = state.point.y();
+        } else {
+            path.move_to(point);
+        }
+    };
+
+    auto line_to = [&](float dx, float dy) {
+        point.translate_by(dx, dy);
+        path.line_to(point);
+    };
+
+    auto cube_bezier_curve_to = [&](float dx1, float dy1, float dx2, float dy2, float dx3, float dy3) {
+        path.cubic_bezier_curve_to(
+            point + Gfx::FloatPoint(dx1, dy1),
+            point + Gfx::FloatPoint(dx1 + dx2, dy1 + dy2),
+            point + Gfx::FloatPoint(dx1 + dx2 + dx3, dy1 + dy2 + dy3));
+        point.translate_by(dx1 + dx2 + dx3, dy1 + dy2 + dy3);
+    };
+
+    // Shared operator logic
+    auto rline_to = [&]() {
+        auto dx = pop_front();
+        auto dy = pop_front();
+        line_to(dx, dy);
+    };
+
+    auto hvline_to = [&](bool horizontal) {
+        while (state.sp > 0) {
+            auto d = pop_front();
+            float dx = horizontal ? d : 0;
+            float dy = horizontal ? 0 : d;
+            line_to(dx, dy);
+            horizontal = !horizontal;
+        }
+    };
+
+    auto rrcurve_to = [&]() {
+        auto dx1 = pop_front();
+        auto dy1 = pop_front();
+        auto dx2 = pop_front();
+        auto dy2 = pop_front();
+        auto dx3 = pop_front();
+        auto dy3 = pop_front();
+        cube_bezier_curve_to(dx1, dy1, dx2, dy2, dx3, dy3);
+    };
+
+    auto hvcurve_to = [&](bool first_tangent_horizontal) {
+        while (state.sp > 0) {
+            auto d1 = pop_front();
+            auto dx2 = pop_front();
+            auto dy2 = pop_front();
+            auto d3 = pop_front();
+            float d4 = state.sp == 1 ? pop_front() : 0;
+
+            auto dx1 = first_tangent_horizontal ? d1 : 0;
+            auto dy1 = first_tangent_horizontal ? 0 : d1;
+            auto dx3 = first_tangent_horizontal ? d4 : d3;
+            auto dy3 = first_tangent_horizontal ? d3 : d4;
+            cube_bezier_curve_to(dx1, dy1, dx2, dy2, dx3, dy3);
+            first_tangent_horizontal = !first_tangent_horizontal;
+        }
+    };
+
+    // Potential font width parsing for some commands (type2 only)
+    bool is_first_command = true;
+    enum EvenOrOdd {
+        Even,
+        Odd
+    };
+    auto maybe_read_width = [&](EvenOrOdd required_argument_count) {
+        if (!is_type2 || !is_first_command || state.sp % 2 != required_argument_count)
+            return;
+        state.glyph.width = pop_front();
+        state.glyph.width_specified = true;
+    };
 
     // Parse the stream of parameters and commands that make up a glyph outline.
     for (size_t i = 0; i < data.size(); ++i) {
@@ -129,7 +229,12 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
             int b = data[++i];
             int c = data[++i];
             int d = data[++i];
-            TRY(push((a << 24) + (b << 16) + (c << 8) + d));
+            if (is_type2) {
+                auto integer = float((a << 8) | b);
+                auto fraction = float((c << 8) | d) / AK::NumericLimits<u16>::max();
+                TRY(push(integer + fraction));
+            } else
+                TRY(push((a << 24) + (b << 16) + (c << 8) + d));
         } else if (v >= 251) {
             TRY(require(1));
             auto w = data[++i];
@@ -143,71 +248,79 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
         } else {
             // Not a parameter but a command byte.
             switch (v) {
+
+            // hints operators
+            case HStemHM:
+                state.n_hints++;
+                [[fallthrough]];
             case HStem:
+                maybe_read_width(Odd);
+                state.sp = 0;
+                break;
+
+            case VStemHM:
+                state.n_hints++;
+                [[fallthrough]];
             case VStem:
+                maybe_read_width(Odd);
                 state.sp = 0;
                 break;
 
+            case Hintmask:
+            case Cntrmask: {
+                maybe_read_width(Odd);
+                auto hint_bytes = (state.n_hints + 8 - 1) / 8;
+                TRY(require(hint_bytes));
+                i += hint_bytes;
+                break;
+            }
+
+            // move-to operators
+            case RMoveTo: {
+                maybe_read_width(Odd);
+                auto dy = pop();
+                auto dx = pop();
+                move_to(dx, dy);
+                state.sp = 0;
+                break;
+            }
+            case HMoveTo: {
+                maybe_read_width(Even);
+                auto dx = pop();
+                move_to(dx, 0);
+                state.sp = 0;
+                break;
+            }
             case VMoveTo: {
+                maybe_read_width(Even);
                 auto dy = pop();
-
-                state.point.translate_by(0.0f, dy);
-
-                if (state.flex_feature) {
-                    state.flex_sequence[state.flex_index++] = state.point.x();
-                    state.flex_sequence[state.flex_index++] = state.point.y();
-                } else {
-                    path.move_to(state.point);
-                }
+                move_to(0, dy);
                 state.sp = 0;
                 break;
             }
 
+            // line-to operators
             case RLineTo: {
-                auto dy = pop();
-                auto dx = pop();
-
-                state.point.translate_by(dx, dy);
-                path.line_to(state.point);
+                while (state.sp >= 2)
+                    rline_to();
                 state.sp = 0;
                 break;
             }
-
             case HLineTo: {
-                auto dx = pop();
-
-                state.point.translate_by(dx, 0.0f);
-                path.line_to(state.point);
+                hvline_to(true);
                 state.sp = 0;
                 break;
             }
-
             case VLineTo: {
-                auto dy = pop();
-
-                state.point.translate_by(0.0f, dy);
-                path.line_to(state.point);
+                hvline_to(false);
                 state.sp = 0;
                 break;
             }
 
             case RRCurveTo: {
-                auto dy3 = pop();
-                auto dx3 = pop();
-                auto dy2 = pop();
-                auto dx2 = pop();
-                auto dy1 = pop();
-                auto dx1 = pop();
-
-                auto& point = state.point;
-
-                path.cubic_bezier_curve_to(
-                    point + Gfx::FloatPoint(dx1, dy1),
-                    point + Gfx::FloatPoint(dx1 + dx2, dy1 + dy2),
-                    point + Gfx::FloatPoint(dx1 + dx2 + dx3, dy1 + dy2 + dy3));
-
-                point.translate_by(dx1 + dx2 + dx3, dy1 + dy2 + dy3);
-                state.sp = 0;
+                while (state.sp >= 6)
+                    rrcurve_to();
+                VERIFY(state.sp == 0);
                 break;
             }
 
@@ -246,11 +359,11 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 } else if (subr_number == 2) {
                     state.sp = 0;
                 } else {
-                    auto subr = subroutines[subr_number];
+                    auto const& subr = subroutines[subr_number];
                     if (subr.is_empty())
                         return error("Empty subroutine");
 
-                    TRY(parse_glyph(subr, subroutines, state));
+                    TRY(parse_glyph(subr, subroutines, state, is_type2));
                 }
                 break;
             }
@@ -278,21 +391,10 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 }
 
                 case CallOtherSubr: {
-                    auto othersubr_number = pop();
+                    [[maybe_unused]] auto othersubr_number = pop();
                     auto n = static_cast<int>(pop());
-
-                    if (othersubr_number == 0) {
+                    for (int i = 0; i < n; ++i)
                         state.postscript_stack[state.postscript_sp++] = pop();
-                        state.postscript_stack[state.postscript_sp++] = pop();
-                        pop();
-                    } else if (othersubr_number == 3) {
-                        state.postscript_stack[state.postscript_sp++] = 3;
-                    } else {
-                        for (int i = 0; i < n; ++i)
-                            state.postscript_stack[state.postscript_sp++] = pop();
-                    }
-
-                    (void)othersubr_number;
                     break;
                 }
 
@@ -321,84 +423,85 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 auto sbx = pop();
 
                 state.glyph.width = wx;
+                state.glyph.width_specified = true;
                 state.point = { sbx, 0.0f };
                 state.sp = 0;
                 break;
             }
 
-            case EndChar:
-                break;
-
-            case RMoveTo: {
-                auto dy = pop();
-                auto dx = pop();
-
-                state.point.translate_by(dx, dy);
-
-                if (state.flex_feature) {
-                    state.flex_sequence[state.flex_index++] = state.point.x();
-                    state.flex_sequence[state.flex_index++] = state.point.y();
-                } else {
-                    path.move_to(state.point);
-                }
-                state.sp = 0;
-                break;
-            }
-
-            case HMoveTo: {
-                auto dx = pop();
-
-                state.point.translate_by(dx, 0.0f);
-
-                if (state.flex_feature) {
-                    state.flex_sequence[state.flex_index++] = state.point.x();
-                    state.flex_sequence[state.flex_index++] = state.point.y();
-                } else {
-                    path.move_to(state.point);
-                }
-                state.sp = 0;
+            case EndChar: {
+                maybe_read_width(Odd);
+                if (is_type2)
+                    path.close();
                 break;
             }
 
             case VHCurveTo: {
-                auto dx3 = pop();
-                auto dy2 = pop();
-                auto dx2 = pop();
-                auto dy1 = pop();
-
-                auto& point = state.point;
-
-                path.cubic_bezier_curve_to(
-                    point + Gfx::FloatPoint(0.0f, dy1),
-                    point + Gfx::FloatPoint(dx2, dy1 + dy2),
-                    point + Gfx::FloatPoint(dx2 + dx3, dy1 + dy2));
-
-                point.translate_by(dx2 + dx3, dy1 + dy2);
+                hvcurve_to(false);
                 state.sp = 0;
                 break;
             }
 
             case HVCurveTo: {
-                auto dy3 = pop();
-                auto dy2 = pop();
-                auto dx2 = pop();
-                auto dx1 = pop();
-
-                auto& point = state.point;
-
-                path.cubic_bezier_curve_to(
-                    point + Gfx::FloatPoint(dx1, 0.0f),
-                    point + Gfx::FloatPoint(dx1 + dx2, dy2),
-                    point + Gfx::FloatPoint(dx1 + dx2, dy2 + dy3));
-
-                point.translate_by(dx1 + dx2, dy2 + dy3);
+                hvcurve_to(true);
                 state.sp = 0;
+                break;
+            }
+
+            case VVCurveTo: {
+                float dx1 = 0;
+                if (state.sp % 2 == 1)
+                    dx1 = pop_front();
+                do {
+                    auto dy1 = pop_front();
+                    auto dx2 = pop_front();
+                    auto dy2 = pop_front();
+                    auto dy3 = pop_front();
+                    cube_bezier_curve_to(dx1, dy1, dx2, dy2, 0, dy3);
+                    dx1 = 0;
+                } while (state.sp >= 4);
+                state.sp = 0;
+                break;
+            }
+
+            case HHCurveTo: {
+                float dy1 = 0;
+                if (state.sp % 2 == 1)
+                    dy1 = pop_front();
+                do {
+                    auto dx1 = pop_front();
+                    auto dx2 = pop_front();
+                    auto dy2 = pop_front();
+                    auto dx3 = pop_front();
+                    cube_bezier_curve_to(dx1, dy1, dx2, dy2, dx3, 0);
+                    dy1 = 0;
+                } while (state.sp >= 4);
+                state.sp = 0;
+                break;
+            }
+
+            case RCurveLine: {
+                while (state.sp >= 8) {
+                    rrcurve_to();
+                }
+                rline_to();
+                state.sp = 0;
+                break;
+            }
+
+            case RLineCurve: {
+                while (state.sp >= 8) {
+                    rline_to();
+                }
+                rrcurve_to();
                 break;
             }
 
             default:
                 return error(DeprecatedString::formatted("Unhandled command: {}", v));
             }
+
+            is_first_command = false;
         }
     }
 
