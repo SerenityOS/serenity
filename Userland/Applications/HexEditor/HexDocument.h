@@ -66,7 +66,7 @@ public:
 
     void set_file(NonnullOwnPtr<Core::Stream::File> file);
     NonnullOwnPtr<Core::Stream::File> const& file() const;
-    void write_to_file();
+    ErrorOr<void> write_to_file();
     ErrorOr<void> write_to_file(Core::Stream::File& file);
     Cell get(size_t position) override;
     u8 get_unchanged(size_t position) override;

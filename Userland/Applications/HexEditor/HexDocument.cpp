@@ -83,15 +83,16 @@ HexDocumentFile::HexDocumentFile(NonnullOwnPtr<Core::Stream::File> file)
 {
 }
 
-void HexDocumentFile::write_to_file()
+ErrorOr<void> HexDocumentFile::write_to_file()
 {
     for (auto& change : m_changes) {
-        m_file->seek(change.key, SeekMode::SetPosition).release_value_but_fixme_should_propagate_errors();
-        m_file->write({ &change.value, 1 }).release_value_but_fixme_should_propagate_errors();
+        TRY(m_file->seek(change.key, SeekMode::SetPosition));
+        TRY(m_file->write({ &change.value, 1 }));
     }
     clear_changes();
     // make sure the next get operation triggers a read
     m_buffer_file_pos = m_file_size + 1;
+    return {};
 }
 
 ErrorOr<void> HexDocumentFile::write_to_file(Core::Stream::File& file)
