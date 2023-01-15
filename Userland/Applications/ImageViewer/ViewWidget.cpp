@@ -168,7 +168,7 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = ImageDecoderClient::Client::try_create().release_value_but_fixme_should_propagate_errors();
 
-    auto decoded_image_or_error = client->decode_image(mapped_file.bytes());
+    auto decoded_image_or_error = client->decode_image_with_known_path(path, mapped_file.bytes());
     if (!decoded_image_or_error.has_value()) {
         show_error();
         return;

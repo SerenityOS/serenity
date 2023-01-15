@@ -40,7 +40,7 @@ static Optional<Web::Platform::DecodedImage> decode_image_with_qt(ReadonlyBytes 
 
 static Optional<Web::Platform::DecodedImage> decode_image_with_libgfx(ReadonlyBytes data)
 {
-    auto decoder = Gfx::ImageDecoder::try_create(data);
+    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(data);
 
     if (!decoder || !decoder->frame_count()) {
         return {};

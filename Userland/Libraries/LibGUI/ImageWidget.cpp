@@ -76,7 +76,7 @@ void ImageWidget::load_from_file(StringView path)
         return;
 
     auto& mapped_file = *file_or_error.value();
-    m_image_decoder = Gfx::ImageDecoder::try_create(mapped_file.bytes());
+    m_image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes_with_known_path(path, mapped_file.bytes());
     VERIFY(m_image_decoder);
 
     auto frame = m_image_decoder->frame(0).release_value_but_fixme_should_propagate_errors();

@@ -31,6 +31,7 @@ class Client final
 
 public:
     Optional<DecodedImage> decode_image(ReadonlyBytes);
+    Optional<DecodedImage> decode_image_with_known_path(DeprecatedString const& path, ReadonlyBytes);
 
     Function<void()> on_death;
 

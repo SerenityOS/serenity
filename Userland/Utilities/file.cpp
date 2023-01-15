@@ -33,7 +33,7 @@ static Optional<DeprecatedString> image_details(DeprecatedString const& descript
         return {};
 
     auto& mapped_file = *file_or_error.value();
-    auto image_decoder = Gfx::ImageDecoder::try_create(mapped_file.bytes());
+    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes_with_known_path(path, mapped_file.bytes());
     if (!image_decoder)
         return {};
 
