@@ -309,16 +309,6 @@ bool GLContextWidget::load_file(Core::File& file)
         return false;
     }
 
-    if (file.is_device()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    if (file.is_directory()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
-
     auto new_mesh = m_mesh_loader->load(MUST(String::from_deprecated_string(file.filename())), MUST(Core::Stream::File::adopt_fd(file.leak_fd(), Core::Stream::OpenMode::Read)));
     if (new_mesh.is_error()) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
