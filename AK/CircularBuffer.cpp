@@ -60,15 +60,15 @@ Optional<size_t> CircularBuffer::offset_of(StringView needle, Optional<size_t> f
 
     Array<ReadonlyBytes, 2> spans {};
     spans[0] = next_read_span();
+    auto const original_span_0_size = spans[0].size();
 
     if (read_from > 0)
         spans[0] = spans[0].slice(min(spans[0].size(), read_from));
 
     if (spans[0].size() + read_from > read_until)
         spans[0] = spans[0].trim(read_until - read_from);
-
-    if (is_wrapping_around())
-        spans[1] = m_buffer.span().slice(max(spans[0].size(), read_from) - spans[0].size(), min(read_until, m_used_space) - spans[0].size());
+    else if (is_wrapping_around())
+        spans[1] = m_buffer.span().slice(max(original_span_0_size, read_from) - original_span_0_size, min(read_until, m_used_space) - original_span_0_size);
 
     auto maybe_found = AK::memmem(spans.begin(), spans.end(), needle.bytes());
     if (maybe_found.has_value())
