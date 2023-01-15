@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/StringIteratorPrototype.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS {
 
@@ -42,11 +42,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
         return create_iterator_result_object(vm, js_undefined(), true);
     }
 
-    StringBuilder builder;
+    ThrowableStringBuilder builder(vm);
     builder.append_code_point(*utf8_iterator);
     ++utf8_iterator;
 
-    return create_iterator_result_object(vm, PrimitiveString::create(vm, builder.to_deprecated_string()), false);
+    return create_iterator_result_object(vm, PrimitiveString::create(vm, TRY(builder.to_string())), false);
 }
 
 }
