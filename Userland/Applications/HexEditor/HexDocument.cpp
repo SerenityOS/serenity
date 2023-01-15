@@ -73,8 +73,7 @@ ErrorOr<void> HexDocumentMemory::write_to_file(Core::Stream::File& file)
 ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullOwnPtr<Core::Stream::File> file)
 {
     auto document = TRY(adopt_nonnull_own_or_enomem(new HexDocumentFile(move(file))));
-    // FIXME: Remove this hackery
-    TRY(document->set_file(move(document->m_file)));
+    TRY(document->initialize_internal_state());
 
     return document;
 }
@@ -154,7 +153,12 @@ void HexDocumentFile::clear_changes()
 ErrorOr<void> HexDocumentFile::set_file(NonnullOwnPtr<Core::Stream::File> file)
 {
     m_file = move(file);
+    TRY(initialize_internal_state());
+    return {};
+}
 
+ErrorOr<void> HexDocumentFile::initialize_internal_state()
+{
     if (auto result = m_file->seek(0, Core::Stream::SeekMode::FromEndPosition); result.is_error())
         m_file_size = 0;
     else
