@@ -65,7 +65,7 @@ ErrorOr<void> HexEditor::open_new_file(size_t size)
 
 void HexEditor::open_file(NonnullRefPtr<Core::File> file)
 {
-    m_document = make<HexDocumentFile>(file);
+    m_document = HexDocumentFile::create(move(file)).release_value_but_fixme_should_propagate_errors();
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
@@ -146,7 +146,7 @@ bool HexEditor::save_as(NonnullRefPtr<Core::File> new_file)
         auto& memory_document = static_cast<HexDocumentMemory&>(*m_document);
         if (!memory_document.write_to_file(new_file))
             return false;
-        m_document = make<HexDocumentFile>(new_file);
+        m_document = HexDocumentFile::create(move(new_file)).release_value_but_fixme_should_propagate_errors();
     }
 
     update();
