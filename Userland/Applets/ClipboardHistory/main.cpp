@@ -46,7 +46,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (table_view->selection().is_empty())
             return;
 
-        model->remove_item(table_view->selection().first().row());
+        auto index = table_view->selection().first();
+        model->remove_item(index.row());
+        if (model->is_empty()) {
+            GUI::Clipboard::the().clear();
+        } else if (index.row() == 0) {
+            auto const& data_and_type = model->item_at(index.row()).data_and_type;
+            GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
+        }
     });
 
     auto debug_dump_action = GUI::Action::create("Dump to debug console", [&](const GUI::Action&) {

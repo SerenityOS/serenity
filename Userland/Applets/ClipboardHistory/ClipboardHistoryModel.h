@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,6 +37,7 @@ public:
 
     ClipboardItem const& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);
+    bool is_empty() { return m_history_items.is_empty(); }
 
     // ^GUI::Model
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
@@ -54,7 +55,7 @@ private:
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(DeprecatedString const&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
+    virtual void clipboard_content_did_change(DeprecatedString const&) override;
 
     Vector<ClipboardItem> m_history_items;
     size_t m_history_limit;
