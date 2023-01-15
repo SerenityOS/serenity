@@ -70,10 +70,18 @@ bool HexDocumentMemory::write_to_file(NonnullRefPtr<Core::File> file)
     return true;
 }
 
+ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullRefPtr<Core::File> file)
+{
+    auto document = TRY(adopt_nonnull_own_or_enomem(new HexDocumentFile(move(file))));
+    // FIXME: Remove this hackery
+    document->set_file(move(document->m_file));
+
+    return document;
+}
+
 HexDocumentFile::HexDocumentFile(NonnullRefPtr<Core::File> file)
     : m_file(file)
 {
-    set_file(file);
 }
 
 void HexDocumentFile::write_to_file()
