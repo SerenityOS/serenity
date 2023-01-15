@@ -37,6 +37,7 @@ public:
     u32 hash() const;
 
     ThrowCompletionOr<String> utf8_string() const;
+    ThrowCompletionOr<StringView> utf8_string_view() const;
     bool has_utf8_string() const { return m_utf8_string.has_value(); }
 
     ThrowCompletionOr<DeprecatedString> deprecated_string() const;
