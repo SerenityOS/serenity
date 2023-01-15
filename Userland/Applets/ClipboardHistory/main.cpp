@@ -43,6 +43,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
+        if (table_view->selection().is_empty())
+            return;
+
         model->remove_item(table_view->selection().first().row());
     });
 
