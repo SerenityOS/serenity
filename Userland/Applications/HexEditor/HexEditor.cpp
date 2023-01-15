@@ -135,23 +135,22 @@ void HexEditor::set_selection(size_t position, size_t length)
     scroll_position_into_view(position);
     update_status();
 }
-bool HexEditor::save_as(NonnullOwnPtr<Core::Stream::File> new_file)
+
+ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::Stream::File> new_file)
 {
     if (m_document->type() == HexDocument::Type::File) {
         auto& file_document = static_cast<HexDocumentFile&>(*m_document);
-        if (!file_document.write_to_file(*new_file))
-            return false;
+        TRY(file_document.write_to_file(*new_file));
         file_document.set_file(move(new_file));
     } else {
         auto& memory_document = static_cast<HexDocumentMemory&>(*m_document);
-        if (!memory_document.write_to_file(*new_file))
-            return false;
+        TRY(memory_document.write_to_file(*new_file));
         m_document = HexDocumentFile::create(move(new_file)).release_value_but_fixme_should_propagate_errors();
     }
 
     update();
 
-    return true;
+    return {};
 }
 
 bool HexEditor::save()

@@ -50,7 +50,7 @@ public:
     size_t size() const override;
     Type type() const override;
     void clear_changes() override;
-    bool write_to_file(Core::Stream::File& file);
+    ErrorOr<void> write_to_file(Core::Stream::File& file);
 
 private:
     ByteBuffer m_buffer;
@@ -67,7 +67,7 @@ public:
     void set_file(NonnullOwnPtr<Core::Stream::File> file);
     NonnullOwnPtr<Core::Stream::File> const& file() const;
     void write_to_file();
-    bool write_to_file(Core::Stream::File& file);
+    ErrorOr<void> write_to_file(Core::Stream::File& file);
     Cell get(size_t position) override;
     u8 get_unchanged(size_t position) override;
     size_t size() const override;

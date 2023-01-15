@@ -38,7 +38,7 @@ public:
     void open_file(NonnullOwnPtr<Core::Stream::File> file);
     ErrorOr<void> fill_selection(u8 fill_byte);
     Optional<u8> get_byte(size_t position);
-    bool save_as(NonnullOwnPtr<Core::Stream::File>);
+    ErrorOr<void> save_as(NonnullOwnPtr<Core::Stream::File>);
     bool save();
 
     bool undo();
