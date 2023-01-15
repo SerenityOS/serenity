@@ -316,7 +316,8 @@ public:
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode) override;
     virtual ErrorOr<void> truncate(off_t length) override;
 
-    int leak_fd(Badge<::IPC::File>)
+    template<OneOf<::IPC::File, ::Core::MappedFile> VIP>
+    int leak_fd(Badge<VIP>)
     {
         m_should_close_file_descriptor = ShouldCloseFileDescriptor::No;
         return m_fd;
