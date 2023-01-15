@@ -151,8 +151,6 @@ private:
 
 struct TGALoadingContext {
     TGAHeader header;
-    ReadonlyBytes bytes;
-    size_t file_size;
     OwnPtr<TGAReader> reader = { nullptr };
     RefPtr<Gfx::Bitmap> bitmap;
 };
@@ -160,9 +158,7 @@ struct TGALoadingContext {
 TGAImageDecoderPlugin::TGAImageDecoderPlugin(u8 const* file_data, size_t file_size)
 {
     m_context = make<TGALoadingContext>();
-    m_context->bytes = ReadonlyBytes(file_data, file_size);
-    m_context->file_size = move(file_size);
-    m_context->reader = make<TGAReader>(m_context->bytes);
+    m_context->reader = make<TGAReader>(ReadonlyBytes { file_data, file_size });
 }
 
 TGAImageDecoderPlugin::~TGAImageDecoderPlugin() = default;
@@ -188,6 +184,9 @@ bool TGAImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 bool TGAImageDecoderPlugin::decode_tga_header()
 {
     auto& reader = m_context->reader;
+    if (reader->data().size() < sizeof(TGAHeader))
+        return false;
+
     m_context->header = TGAHeader();
     m_context->header.id_length = reader->read_u8();
     m_context->header.color_map_type = reader->read_u8();
