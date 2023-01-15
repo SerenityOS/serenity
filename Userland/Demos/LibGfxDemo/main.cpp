@@ -100,10 +100,10 @@ void Canvas::draw()
     painter.draw_line({ 590, 140 }, { 590, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Dashed);
     painter.draw_line({ 605, 140 }, { 605, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Dashed);
 
-    painter.draw_line({ 640, 190 }, { 740, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 640, 190 }, { 740, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dashed);
     painter.draw_line({ 640, 140 }, { 740, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
     painter.draw_line({ 690, 140 }, { 740, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 740, 190 }, { 640, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 740, 190 }, { 640, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dotted);
     painter.draw_line({ 740, 140 }, { 640, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
     painter.draw_line({ 690, 140 }, { 640, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
 
