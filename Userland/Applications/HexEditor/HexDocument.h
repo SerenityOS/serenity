@@ -76,6 +76,8 @@ public:
 
 private:
     explicit HexDocumentFile(NonnullOwnPtr<Core::Stream::File> file);
+    ErrorOr<void> initialize_internal_state();
+
     void ensure_position_in_buffer(size_t position);
 
     NonnullOwnPtr<Core::Stream::File> m_file;
