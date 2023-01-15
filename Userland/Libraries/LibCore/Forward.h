@@ -25,6 +25,7 @@ class File;
 class IODevice;
 class LocalServer;
 class LocalSocket;
+class MappedFile;
 class MimeData;
 class NetworkJob;
 class NetworkResponse;
