@@ -251,7 +251,7 @@ function(lagom_test source)
     cmake_parse_arguments(LAGOM_TEST "" "WORKING_DIRECTORY" "LIBS" ${ARGN})
     get_filename_component(name ${source} NAME_WE)
     add_executable(${name} ${source})
-    target_link_libraries(${name} LibCore LibTest LibTestMain ${LAGOM_TEST_LIBS})
+    target_link_libraries(${name} PRIVATE LibCore LibTest LibTestMain ${LAGOM_TEST_LIBS})
     add_test(
             NAME ${name}
             COMMAND ${name}
@@ -562,7 +562,7 @@ if (BUILD_LAGOM)
         foreach(source ${AK_TEST_SOURCES})
             lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
         endforeach()
-        target_link_libraries(TestString LibUnicode)
+        target_link_libraries(TestString PRIVATE LibUnicode)
 
         # LibAudio
         file(GLOB LIBAUDIO_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibAudio/*.cpp")
