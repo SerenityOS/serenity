@@ -27,7 +27,8 @@ public:
 protected:
     struct Glyph {
         Gfx::Path path;
-        float width;
+        float width { 0 };
+        bool width_specified { false };
     };
 
     struct GlyphParserState {
@@ -41,12 +42,13 @@ protected:
 
         size_t sp { 0 };
         Array<float, 24> stack;
+        u8 n_hints { 0 };
 
         size_t postscript_sp { 0 };
         Array<float, 24> postscript_stack;
     };
 
-    static PDFErrorOr<Glyph> parse_glyph(ReadonlyBytes const&, Vector<ByteBuffer> const&, GlyphParserState&);
+    static PDFErrorOr<Glyph> parse_glyph(ReadonlyBytes const&, Vector<ByteBuffer> const&, GlyphParserState&, bool is_type2);
 
     static Error error(
         DeprecatedString const& message

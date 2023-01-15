@@ -95,7 +95,7 @@ PDFErrorOr<void> PS1FontProgram::parse_encrypted_portion(ByteBuffer const& buffe
                 auto name_mapping = encoding()->name_mapping();
                 auto char_code = name_mapping.ensure(word.substring_view(1));
                 GlyphParserState state;
-                TRY(add_glyph(char_code, TRY(parse_glyph(line, subroutines, state))));
+                TRY(add_glyph(char_code, TRY(parse_glyph(line, subroutines, state, false))));
             }
         }
     }
