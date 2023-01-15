@@ -108,10 +108,10 @@ GalleryWidget::GalleryWidget()
     m_file_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_file_button->on_click = [&](auto) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;
-        m_text_editor->set_text(response.release_value()->filename());
+        m_text_editor->set_text(response.release_value().filename());
     };
 
     m_input_button = basics_tab->find_descendant_of_type_named<GUI::Button>("input_button");
