@@ -1458,15 +1458,11 @@ void TextEditor::timer_event(Core::TimerEvent&)
         update_cursor();
 }
 
-bool TextEditor::write_to_file(DeprecatedString const& path)
+ErrorOr<void> TextEditor::write_to_file(StringView path)
 {
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)) {
-        warnln("Error opening {}: {}", path, strerror(file->error()));
-        return false;
-    }
-
-    return write_to_file(*file);
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write | Core::Stream::OpenMode::Truncate));
+    TRY(write_to_file(*file));
+    return {};
 }
 
 bool TextEditor::write_to_file(Core::File& file)

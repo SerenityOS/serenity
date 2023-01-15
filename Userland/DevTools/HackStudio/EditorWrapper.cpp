@@ -79,7 +79,7 @@ void EditorWrapper::save()
         });
         file_picker_action->activate();
     }
-    editor().write_to_file(filename());
+    editor().write_to_file(filename()).release_value_but_fixme_should_propagate_errors();
     update_diff();
     editor().update();
 }
