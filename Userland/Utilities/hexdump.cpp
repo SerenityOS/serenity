@@ -29,14 +29,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     StringView path;
     bool verbose = false;
     Optional<size_t> max_bytes;
+    Optional<size_t> seek_to;
 
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
     args_parser.add_option(verbose, "Display all input data", "verbose", 'v');
     args_parser.add_option(max_bytes, "Truncate to a fixed number of bytes", nullptr, 'n', "bytes");
-
+    args_parser.add_option(seek_to, "Seek to a byte offset", "seek", 's', "offset");
     args_parser.parse(args);
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
+    if (seek_to.has_value())
+        TRY(file->seek(seek_to.value(), Core::Stream::SeekMode::SetPosition));
 
     auto print_line = [](Bytes line) {
         VERIFY(line.size() <= LINE_LENGTH_BYTES);
