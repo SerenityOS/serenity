@@ -11,6 +11,7 @@
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <LibCore/AnonymousBuffer.h>
+#include <LibCore/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
@@ -96,6 +97,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_file(StringView path, int scale_factor = 1);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_stream(NonnullOwnPtr<Core::Stream::File>, StringView path);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_fd_and_close(int fd, StringView path);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale, Vector<ARGB32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_serialized_bytes(ReadonlyBytes);

@@ -16,6 +16,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
@@ -138,6 +139,18 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int s
 
     auto fd = TRY(Core::System::open(path, O_RDONLY));
     return try_load_from_fd_and_close(fd, path);
+}
+
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_stream(NonnullOwnPtr<Core::Stream::File> file, StringView path)
+{
+    auto mapped_file = TRY(Core::MappedFile::map_from_stream(move(file), path));
+    if (auto decoder = ImageDecoder::try_create(mapped_file->bytes())) {
+        auto frame = TRY(decoder->frame(0));
+        if (auto& bitmap = frame.image)
+            return bitmap.release_nonnull();
+    }
+
+    return Error::from_string_literal("Gfx::Bitmap unable to load from stream");
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, StringView path)
