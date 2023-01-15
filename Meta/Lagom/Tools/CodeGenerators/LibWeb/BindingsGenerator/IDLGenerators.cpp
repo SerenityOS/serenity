@@ -27,6 +27,7 @@ static bool is_platform_object(Type const& type)
         "AbortSignal"sv,
         "Attr"sv,
         "Blob"sv,
+        "CanvasGradient"sv,
         "CanvasRenderingContext2D"sv,
         "Document"sv,
         "DocumentType"sv,
