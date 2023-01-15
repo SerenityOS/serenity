@@ -33,7 +33,7 @@ static ThrowCompletionOr<Optional<DeprecatedString>> get_string_option(VM& vm, O
     if (option.is_undefined())
         return Optional<DeprecatedString> {};
 
-    if (validator && !validator(TRY(option.as_string().deprecated_string())))
+    if (validator && !validator(TRY(option.as_string().utf8_string_view())))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
 
     return TRY(option.as_string().deprecated_string());

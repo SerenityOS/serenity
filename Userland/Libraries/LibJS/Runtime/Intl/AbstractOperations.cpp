@@ -383,7 +383,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& r
     MatcherResult matcher_result;
 
     // 2. If matcher is "lookup", then
-    if (matcher.is_string() && (TRY(matcher.as_string().deprecated_string()) == "lookup"sv)) {
+    if (matcher.is_string() && (TRY(matcher.as_string().utf8_string_view()) == "lookup"sv)) {
         // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
         matcher_result = lookup_matcher(requested_locales);
     }
@@ -575,7 +575,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     Vector<DeprecatedString> supported_locales;
 
     // 3. If matcher is "best fit", then
-    if (TRY(matcher.as_string().deprecated_string()) == "best fit"sv) {
+    if (TRY(matcher.as_string().utf8_string_view()) == "best fit"sv) {
         // a. Let supportedLocales be BestFitSupportedLocales(availableLocales, requestedLocales).
         supported_locales = best_fit_supported_locales(requested_locales);
     }
@@ -628,7 +628,7 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
         return falsy_value;
 
     // 6. Let value be ? ToString(value).
-    auto value_string = TRY(value.to_deprecated_string(vm));
+    auto value_string = TRY(value.to_string(vm));
 
     // 7. NOTE: For historical reasons, the strings "true" and "false" are treated the same as the boolean value true.
     // 8. If value is "true" or "false", return fallback.
@@ -636,7 +636,7 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
         return fallback;
 
     // 9. If values does not contain an element equal to value, throw a RangeError exception.
-    auto it = find(values.begin(), values.end(), value_string);
+    auto it = find(values.begin(), values.end(), value_string.bytes_as_string_view());
     if (it == values.end())
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
 

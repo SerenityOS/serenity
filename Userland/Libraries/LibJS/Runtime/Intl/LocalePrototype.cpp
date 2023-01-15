@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
     VERIFY(locale.has_value());
 
     // 4. Return the substring of locale corresponding to the unicode_language_id production.
-    return PrimitiveString::create(vm, locale->language_id.to_deprecated_string());
+    return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, locale->language_id.to_string()));
 }
 
 #define JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES \
