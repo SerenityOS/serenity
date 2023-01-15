@@ -906,25 +906,31 @@ DeprecatedString resolve_most_likely_territory_alias(LanguageID const& language_
     return aliases[0].to_deprecated_string();
 }
 
-DeprecatedString LanguageID::to_deprecated_string() const
+ErrorOr<String> LanguageID::to_string() const
 {
     StringBuilder builder;
 
-    auto append_segment = [&](Optional<DeprecatedString> const& segment) {
+    auto append_segment = [&](Optional<DeprecatedString> const& segment) -> ErrorOr<void> {
         if (!segment.has_value())
-            return;
+            return {};
         if (!builder.is_empty())
-            builder.append('-');
-        builder.append(*segment);
+            TRY(builder.try_append('-'));
+        TRY(builder.try_append(*segment));
+        return {};
     };
 
-    append_segment(language);
-    append_segment(script);
-    append_segment(region);
+    TRY(append_segment(language));
+    TRY(append_segment(script));
+    TRY(append_segment(region));
     for (auto const& variant : variants)
-        append_segment(variant);
+        TRY(append_segment(variant));
 
-    return builder.build();
+    return builder.to_string();
+}
+
+DeprecatedString LanguageID::to_deprecated_string() const
+{
+    return MUST(to_string()).to_deprecated_string();
 }
 
 DeprecatedString LocaleID::to_deprecated_string() const
