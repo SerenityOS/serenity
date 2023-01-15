@@ -73,7 +73,7 @@ ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullOwnPtr<Co
 {
     auto document = TRY(adopt_nonnull_own_or_enomem(new HexDocumentFile(move(file))));
     // FIXME: Remove this hackery
-    document->set_file(move(document->m_file));
+    TRY(document->set_file(move(document->m_file)));
 
     return document;
 }
@@ -150,7 +150,7 @@ void HexDocumentFile::clear_changes()
     m_changes.clear();
 }
 
-void HexDocumentFile::set_file(NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<void> HexDocumentFile::set_file(NonnullOwnPtr<Core::Stream::File> file)
 {
     m_file = move(file);
 
@@ -159,11 +159,12 @@ void HexDocumentFile::set_file(NonnullOwnPtr<Core::Stream::File> file)
     else
         m_file_size = result.value();
 
-    m_file->seek(0, SeekMode::SetPosition).release_value_but_fixme_should_propagate_errors();
+    TRY(m_file->seek(0, SeekMode::SetPosition));
 
     clear_changes();
     // make sure the next get operation triggers a read
     m_buffer_file_pos = m_file_size + 1;
+    return {};
 }
 
 NonnullOwnPtr<Core::Stream::File> const& HexDocumentFile::file() const
