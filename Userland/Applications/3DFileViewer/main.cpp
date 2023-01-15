@@ -33,7 +33,7 @@ class GLContextWidget final : public GUI::Frame {
 
 public:
     bool load_path(DeprecatedString const& fname);
-    bool load_file(Core::DeprecatedFile& file);
+    bool load_file(String const& filename, NonnullOwnPtr<Core::File> file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -146,10 +146,10 @@ void GLContextWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), url.path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), url.path());
         if (response.is_error())
             return;
-        load_file(response.value());
+        load_file(response.value().filename(), response.value().release_stream());
     }
 }
 
@@ -290,26 +290,24 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
 bool GLContextWidget::load_path(DeprecatedString const& filename)
 {
-    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window(), filename);
+    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), filename);
 
-    if (!file.is_error() && file.error().code() != ENOENT) {
+    if (file.is_error() && file.error().code() != ENOENT) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
-    return load_file(file.value());
+    return load_file(file.value().filename(), file.value().release_stream());
 }
 
-bool GLContextWidget::load_file(Core::DeprecatedFile& file)
+bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto const& filename = file.filename();
-    if (!filename.ends_with(".obj"sv)) {
+    if (!filename.bytes_as_string_view().ends_with(".obj"sv)) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
-    auto new_mesh = m_mesh_loader->load(String::from_deprecated_string(file.filename()).release_value_but_fixme_should_propagate_errors(),
-        Core::File::adopt_fd(file.leak_fd(), Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors());
+    auto new_mesh = m_mesh_loader->load(filename, move(file));
     if (new_mesh.is_error()) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
@@ -317,7 +315,7 @@ bool GLContextWidget::load_file(Core::DeprecatedFile& file)
 
     // Determine whether or not a texture for this model resides within the same directory
     StringBuilder builder;
-    builder.append(filename.split('.').at(0));
+    builder.append(filename.bytes_as_string_view().split_view('.').at(0));
     builder.append(".bmp"sv);
 
     DeprecatedString texture_path = Core::DeprecatedFile::absolute_path(builder.string_view());
@@ -329,10 +327,10 @@ bool GLContextWidget::load_file(Core::DeprecatedFile& file)
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), builder.string_view(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), builder.string_view());
         if (!response.is_error()) {
-            auto texture_file = response.value();
-            auto bitmap_or_error = Gfx::Bitmap::load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
+            auto texture_file = response.release_value();
+            auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_file.release_stream(), texture_file.filename());
             if (!bitmap_or_error.is_error())
                 texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         }
@@ -387,13 +385,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window);
+        auto response = FileSystemAccessClient::Client::the().open_file(window);
         if (response.is_error())
             return;
 
-        auto file = response.value();
-        if (widget->load_file(*file)) {
-            auto canonical_path = Core::DeprecatedFile::absolute_path(file->filename());
+        auto file = response.release_value();
+        if (widget->load_file(file.filename(), file.release_stream())) {
+            auto canonical_path = Core::DeprecatedFile::absolute_path(file.filename().to_deprecated_string());
             window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
         }
     }));
