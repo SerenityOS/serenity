@@ -1025,13 +1025,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     return PrimitiveString::create(vm, TRY(result.to_string()));
 }
 
-ThrowCompletionOr<DeprecatedString> trim_string(VM& vm, Value input_value, TrimMode where)
+ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
 {
     // 1. Let str be ? RequireObjectCoercible(string).
     auto input_string = TRY(require_object_coercible(vm, input_value));
 
     // 2. Let S be ? ToString(str).
-    auto string = TRY(input_string.to_deprecated_string(vm));
+    auto string = TRY(input_string.to_string(vm));
 
     // 3. If where is start, let T be the String value that is a copy of S with leading white space removed.
     // 4. Else if where is end, let T be the String value that is a copy of S with trailing white space removed.
@@ -1041,7 +1041,7 @@ ThrowCompletionOr<DeprecatedString> trim_string(VM& vm, Value input_value, TrimM
     auto trimmed_string = Utf8View(string).trim(whitespace_characters, where).as_string();
 
     // 6. Return T.
-    return trimmed_string;
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(trimmed_string));
 }
 
 // 22.1.3.30 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
