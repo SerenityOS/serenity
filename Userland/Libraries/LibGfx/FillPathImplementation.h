@@ -41,16 +41,40 @@ enum class FillPathMode {
     AllowFloatingPoints,
 };
 
-template<FillPathMode fill_path_mode, typename Painter>
-void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::WindingRule winding_rule)
+template<FillPathMode fill_path_mode, typename ColorFunction>
+void fill_path(Painter& painter, Path const& path, ColorFunction color_function, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset = {})
 {
     using GridCoordinateType = Conditional<fill_path_mode == FillPathMode::PlaceOnIntGrid, int, float>;
     using PointType = Point<GridCoordinateType>;
-    auto draw_line = [&](auto... args) {
-        if constexpr (requires { painter.draw_line_for_fill_path(args...); })
-            painter.draw_line_for_fill_path(args...);
-        else
-            painter.draw_line(args...);
+
+    auto draw_scanline = [&](int y, float x1, float x2) {
+        const auto draw_offset = offset.value_or({ 0, 0 });
+        const auto draw_origin = (path.bounding_box().top_left() + draw_offset).to_type<int>();
+        // FIMXE: Offset is added here to handle floating point translations in the AA painter,
+        // really this should be done there but this function is a bit too specialised.
+        y = floorf(y + draw_offset.y());
+        x1 += draw_offset.x();
+        x2 += draw_offset.x();
+        if (x1 > x2)
+            swap(x1, x2);
+        auto set_pixel = [&](int x, int y, Color color) {
+            painter.set_pixel(x, y, color, true);
+        };
+        if constexpr (fill_path_mode == FillPathMode::AllowFloatingPoints) {
+            int int_x1 = ceilf(x1);
+            int int_x2 = floorf(x2);
+            float left_subpixel = int_x1 - x1;
+            float right_subpixel = x2 - int_x2;
+            auto left_color = color_function(IntPoint(int_x1 - 1, y) - draw_origin);
+            auto right_color = color_function(IntPoint(int_x2, y) - draw_origin);
+            set_pixel(int_x1 - 1, y, left_color.with_alpha(left_color.alpha() * left_subpixel));
+            set_pixel(int_x2, y, right_color.with_alpha(right_color.alpha() * right_subpixel));
+            for (int x = int_x1; x < int_x2; x++)
+                set_pixel(x, y, color_function(IntPoint(x, y) - draw_origin));
+        } else {
+            for (int x = x1; x < int(x2); x++)
+                set_pixel(x, y, color_function(IntPoint(x, y) - draw_origin));
+        }
     };
 
     auto const& segments = path.split_lines();
@@ -136,7 +160,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
                         // inside the shape
 
                         dbgln_if(FILL_PATH_DEBUG, "y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
-                        draw_line(from, to, color, 1);
+                        draw_scanline(floorf(scanline), from.x(), to.x());
                     }
 
                     auto is_passing_through_maxima = scanline == previous.maximum_y
@@ -159,7 +183,7 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
                 active_list.last().x -= active_list.last().inverse_slope;
             } else {
                 auto point = PointType(active_list[0].x, scanline);
-                draw_line(point, point, color);
+                draw_scanline(floorf(scanline), point.x(), point.x());
 
                 // update the x coord
                 active_list.first().x -= active_list.first().inverse_slope;
@@ -183,13 +207,6 @@ void fill_path(Painter& painter, Path const& path, Color color, Gfx::Painter::Wi
                 continue;
 
             active_list.append(segment);
-        }
-    }
-
-    if constexpr (FILL_PATH_DEBUG) {
-        size_t i { 0 };
-        for (auto& segment : segments) {
-            draw_line(PointType(segment.from), PointType(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);
         }
     }
 }

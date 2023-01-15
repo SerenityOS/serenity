@@ -29,12 +29,10 @@ public:
     void draw_line(IntPoint, IntPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
     void draw_line(FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
     void draw_line_for_path(FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
-    void draw_line_for_fill_path(FloatPoint from, FloatPoint to, Color color, float thickness = 1)
-    {
-        draw_line_for_path(from, to, color, thickness, Painter::LineStyle::Solid, Color {}, LineLengthMode::Distance);
-    }
 
-    void fill_path(Path&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
+    void fill_path(Path const&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
+    void fill_path(Path const&, PaintStyle const& paint_style, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
+
     void stroke_path(Path const&, Color, float thickness);
     void draw_quadratic_bezier_curve(FloatPoint control_point, FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
     void draw_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
@@ -74,6 +72,8 @@ public:
     };
 
     void fill_rect_with_rounded_corners(IntRect const&, Color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left, BlendMode blend_mode = BlendMode::Normal);
+
+    Gfx::Painter& underlying_painter() { return m_underlying_painter; }
 
 private:
     struct Range {
