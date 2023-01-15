@@ -27,6 +27,7 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual Messages::ImageDecoderServer::DecodeImageResponse decode_image(Core::AnonymousBuffer const&) override;
+    virtual Messages::ImageDecoderServer::DecodeImageWithKnownPathResponse decode_image_with_known_path(DeprecatedString const& path, Core::AnonymousBuffer const&) override;
 };
 
 }

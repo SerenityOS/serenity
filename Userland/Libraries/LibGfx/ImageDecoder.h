@@ -47,7 +47,8 @@ protected:
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
-    static RefPtr<ImageDecoder> try_create(ReadonlyBytes);
+    static RefPtr<ImageDecoder> try_create_for_raw_bytes(ReadonlyBytes);
+    static RefPtr<ImageDecoder> try_create_for_raw_bytes_with_known_path(StringView path, ReadonlyBytes);
     ~ImageDecoder() = default;
 
     IntSize size() const { return m_plugin->size(); }

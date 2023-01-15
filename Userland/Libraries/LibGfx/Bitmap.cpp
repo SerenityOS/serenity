@@ -143,7 +143,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int s
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, StringView path)
 {
     auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
-    if (auto decoder = ImageDecoder::try_create(file->bytes())) {
+    if (auto decoder = ImageDecoder::try_create_for_raw_bytes_with_known_path(path, file->bytes())) {
         auto frame = TRY(decoder->frame(0));
         if (auto& bitmap = frame.image)
             return bitmap.release_nonnull();

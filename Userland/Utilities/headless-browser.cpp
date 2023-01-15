@@ -265,7 +265,7 @@ public:
 
     virtual Optional<Web::Platform::DecodedImage> decode_image(ReadonlyBytes data) override
     {
-        auto decoder = Gfx::ImageDecoder::try_create(data);
+        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(data);
 
         if (!decoder)
             return Web::Platform::DecodedImage { false, 0, Vector<Web::Platform::Frame> {} };
