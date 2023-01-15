@@ -12,6 +12,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
+#include <LibPDF/Error.h>
 
 namespace PDF {
 
@@ -57,6 +58,16 @@ public:
         T value = reinterpret_cast<T const*>(m_bytes.offset(m_offset))[0];
         move_by(sizeof(T));
         return value;
+    }
+
+    template<typename T = char>
+    PDFErrorOr<T> try_read()
+    {
+        if (sizeof(T) + m_offset >= m_bytes.size()) {
+            auto message = DeprecatedString::formatted("Cannot read {} bytes at offset {} of ReadonlyBytes of size {}", sizeof(T), m_offset, m_bytes.size());
+            return Error { Error::Type::Parse, message };
+        }
+        return read<T>();
     }
 
     char peek(size_t shift = 0) const
