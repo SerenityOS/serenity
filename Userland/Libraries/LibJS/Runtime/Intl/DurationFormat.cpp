@@ -276,7 +276,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
     // 2. Let displayDefault be "always".
     auto display_default = "always"sv;
 
-    DeprecatedString style;
+    StringView style;
 
     // 3. If style is undefined, then
     if (style_value.is_undefined()) {
@@ -308,7 +308,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
             }
         }
     } else {
-        style = TRY(style_value.as_string().deprecated_string());
+        style = TRY(style_value.as_string().utf8_string_view());
     }
 
     // 4. Let displayField be the string-concatenation of unit and "Display".

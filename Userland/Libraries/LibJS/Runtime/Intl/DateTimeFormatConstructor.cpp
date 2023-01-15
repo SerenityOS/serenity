@@ -106,7 +106,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 7. If calendar is not undefined, then
     if (!calendar.is_undefined()) {
         // a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!::Locale::is_type_identifier(TRY(calendar.as_string().deprecated_string())))
+        if (!::Locale::is_type_identifier(TRY(calendar.as_string().utf8_string_view())))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
 
         // 8. Set opt.[[ca]] to calendar.
@@ -119,7 +119,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 10. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!::Locale::is_type_identifier(TRY(numbering_system.as_string().deprecated_string())))
+        if (!::Locale::is_type_identifier(TRY(numbering_system.as_string().utf8_string_view())))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 11. Set opt.[[nu]] to numberingSystem.
@@ -277,7 +277,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
             // d. Set formatOptions.[[<prop>]] to value.
             if (!value.is_undefined()) {
-                option = ::Locale::calendar_pattern_style_from_string(TRY(value.as_string().deprecated_string()));
+                option = ::Locale::calendar_pattern_style_from_string(TRY(value.as_string().utf8_string_view()));
 
                 // e. If value is not undefined, then
                 //     i. Set hasExplicitFormatComponents to true.
@@ -296,14 +296,14 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 39. Set dateTimeFormat.[[DateStyle]] to dateStyle.
     if (!date_style.is_undefined())
-        date_time_format.set_date_style(TRY(date_style.as_string().deprecated_string()));
+        date_time_format.set_date_style(TRY(date_style.as_string().utf8_string_view()));
 
     // 40. Let timeStyle be ? GetOption(options, "timeStyle", string, « "full", "long", "medium", "short" », undefined).
     auto time_style = TRY(get_option(vm, *options, vm.names.timeStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
     // 41. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
     if (!time_style.is_undefined())
-        date_time_format.set_time_style(TRY(time_style.as_string().deprecated_string()));
+        date_time_format.set_time_style(TRY(time_style.as_string().utf8_string_view()));
 
     Optional<::Locale::CalendarPattern> best_format {};
 
@@ -325,7 +325,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         auto formats = ::Locale::get_calendar_available_formats(data_locale, date_time_format.calendar());
 
         // b. If matcher is "basic", then
-        if (TRY(matcher.as_string().deprecated_string()) == "basic"sv) {
+        if (TRY(matcher.as_string().utf8_string_view()) == "basic"sv) {
             // i. Let bestFormat be BasicFormatMatcher(formatOptions, formats).
             best_format = basic_format_matcher(format_options, move(formats));
         }
