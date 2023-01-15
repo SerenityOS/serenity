@@ -8,7 +8,9 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -17,6 +19,7 @@
 namespace Locale {
 
 struct LanguageID {
+    ErrorOr<String> to_string() const;
     DeprecatedString to_deprecated_string() const;
     bool operator==(LanguageID const&) const = default;
 
