@@ -223,26 +223,41 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 // 19.2.4 parseFloat ( string ), https://tc39.es/ecma262/#sec-parsefloat-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
+    // OPTIMIZATION: We can skip the number-to-string-to-number round trip when the value is already a number.
     if (vm.argument(0).is_number())
         return vm.argument(0);
+
+    // 1. Let inputString be ? ToString(string).
     auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+
+    // 2. Let trimmedString be ! TrimString(inputString, start).
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto trimmed_string = TRY(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
     if (trimmed_string.is_empty())
         return js_nan();
 
-    auto result = parse_first_floating_point<double>(trimmed_string.characters(), trimmed_string.characters() + trimmed_string.length());
-    if (result.parsed_value())
-        return result.value;
+    // 3. If neither trimmedString nor any prefix of trimmedString satisfies the syntax of a StrDecimalLiteral (see 7.1.4.1), return NaN.
+    // 4. Let numberString be the longest prefix of trimmedString, which might be trimmedString itself, that satisfies the syntax of a StrDecimalLiteral.
+    // 5. Let parsedNumber be ParseText(StringToCodePoints(numberString), StrDecimalLiteral).
+    // 6. Assert: parsedNumber is a Parse Node.
+    // 7. Return StringNumericValue of parsedNumber.
+    auto trimmed_string_view = trimmed_string.bytes_as_string_view();
+    auto const* begin = trimmed_string_view.characters_without_null_termination();
+    auto const* end = begin + trimmed_string_view.length();
 
-    bool starts_with_sign = trimmed_string[0] == '-' || trimmed_string[0] == '+';
-    auto signless_view = starts_with_sign ? trimmed_string.substring_view(1) : trimmed_string.view();
-    if (signless_view.starts_with("Infinity"sv, AK::CaseSensitivity::CaseSensitive)) {
+    auto parsed_number = parse_first_floating_point<double>(begin, end);
+    if (parsed_number.parsed_value())
+        return parsed_number.value;
+
+    auto first_code_point = *trimmed_string.code_points().begin();
+    if (first_code_point == '-' || first_code_point == '+')
+        trimmed_string_view = trimmed_string_view.substring_view(1);
+
+    if (trimmed_string_view.starts_with("Infinity"sv, AK::CaseSensitivity::CaseSensitive)) {
         // Only an immediate - means we should return negative infinity
-        if (trimmed_string[0] == '-')
-            return js_negative_infinity();
-
-        return js_infinity();
+        return first_code_point == '-' ? js_negative_infinity() : js_infinity();
     }
+
     return js_nan();
 }
 
@@ -253,17 +268,20 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
-    auto string = MUST(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto string = TRY(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
 
     // 3. Let sign be 1.
     auto sign = 1;
 
     // 4. If S is not empty and the first code unit of S is the code unit 0x002D (HYPHEN-MINUS), set sign to -1.
-    if (!string.is_empty() && string[0] == 0x2D)
+    auto first_code_point = string.is_empty() ? OptionalNone {} : Optional<u32> { *string.code_points().begin() };
+    if (first_code_point == 0x2Du)
         sign = -1;
+
     // 5. If S is not empty and the first code unit of S is the code unit 0x002B (PLUS SIGN) or the code unit 0x002D (HYPHEN-MINUS), remove the first code unit from S.
-    auto trimmed_view = string.view();
-    if (!string.is_empty() && (string[0] == 0x2B || string[0] == 0x2D))
+    auto trimmed_view = string.bytes_as_string_view();
+    if (first_code_point == 0x2Bu || first_code_point == 0x2Du)
         trimmed_view = trimmed_view.substring_view(1);
 
     // 6. Let R be ℝ(? ToInt32(radix)).
