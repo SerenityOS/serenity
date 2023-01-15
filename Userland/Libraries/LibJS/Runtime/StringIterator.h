@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -15,7 +16,7 @@ class StringIterator final : public Object {
     JS_OBJECT(StringIterator, Object);
 
 public:
-    static NonnullGCPtr<StringIterator> create(Realm&, DeprecatedString string);
+    static NonnullGCPtr<StringIterator> create(Realm&, String string);
 
     virtual ~StringIterator() override = default;
 
@@ -23,11 +24,11 @@ public:
     bool done() const { return m_done; }
 
 private:
-    explicit StringIterator(DeprecatedString string, Object& prototype);
+    explicit StringIterator(String string, Object& prototype);
 
     friend class StringIteratorPrototype;
 
-    DeprecatedString m_string;
+    String m_string;
     Utf8CodePointIterator m_iterator;
     bool m_done { false };
 };

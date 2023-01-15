@@ -1074,7 +1074,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
     auto& realm = *vm.current_realm();
 
     auto this_object = TRY(require_object_coercible(vm, vm.this_value()));
-    auto string = TRY(this_object.to_deprecated_string(vm));
+    auto string = TRY(this_object.to_string(vm));
     return StringIterator::create(realm, string);
 }
 
