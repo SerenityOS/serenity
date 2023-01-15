@@ -15,6 +15,7 @@
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/System.h>
@@ -139,6 +140,19 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
 
     auto fd = TRY(Core::System::open(path, O_RDONLY));
     return load_from_fd_and_close(fd, path);
+}
+
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> file, StringView path)
+{
+    auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
+    auto mime_type = Core::guess_mime_type_based_on_filename(path);
+    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type)) {
+        auto frame = TRY(decoder->frame(0));
+        if (auto& bitmap = frame.image)
+            return bitmap.release_nonnull();
+    }
+
+    return Error::from_string_literal("Gfx::Bitmap unable to load from file");
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_fd_and_close(int fd, StringView path)
