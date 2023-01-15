@@ -7,6 +7,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -18,6 +19,24 @@ ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(StringView path)
 {
     auto fd = TRY(Core::System::open(path, O_RDONLY | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path);
+}
+
+ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_stream(NonnullOwnPtr<Core::Stream::File> stream, StringView path)
+{
+    auto const fd = stream->leak_fd(Badge<MappedFile> {});
+
+    TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
+
+    ScopeGuard fd_close_guard = [fd] {
+        close(fd);
+    };
+
+    auto stat = TRY(Core::System::fstat(fd));
+    auto size = stat.st_size;
+
+    auto* ptr = TRY(Core::System::mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0, 0, path));
+
+    return adopt_ref(*new MappedFile(ptr, size));
 }
 
 ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path)
