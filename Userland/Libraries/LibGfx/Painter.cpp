@@ -151,6 +151,25 @@ void Painter::fill_rect(IntRect const& a_rect, Color color)
     fill_physical_rect(rect * scale(), color);
 }
 
+void Painter::fill_rect(IntRect const& rect, PaintStyle const& paint_style)
+{
+    auto a_rect = rect.translated(translation());
+    auto clipped_rect = a_rect.intersected(clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    a_rect *= scale();
+    clipped_rect *= scale();
+    auto start_offset = clipped_rect.location() - a_rect.location();
+    paint_style.paint(a_rect, [&](PaintStyle::SamplerFunction sample) {
+        for (int y = 0; y < clipped_rect.height(); ++y) {
+            for (int x = 0; x < clipped_rect.width(); ++x) {
+                IntPoint point(x, y);
+                set_physical_pixel(point + clipped_rect.location(), sample(point + start_offset), true);
+            }
+        }
+    });
+}
+
 void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a, Color color_b)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
