@@ -24,6 +24,7 @@ struct FontPixelMetrics;
 template<typename T>
 class Line;
 
+class AntiAliasingPainter;
 class Painter;
 class Palette;
 class PaletteImpl;
