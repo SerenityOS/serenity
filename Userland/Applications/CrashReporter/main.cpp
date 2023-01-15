@@ -12,6 +12,7 @@
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>

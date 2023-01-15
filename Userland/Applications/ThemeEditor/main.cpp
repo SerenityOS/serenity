@@ -9,8 +9,8 @@
  */
 
 #include "MainWidget.h"
-#include "PreviewWidget.h"
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
