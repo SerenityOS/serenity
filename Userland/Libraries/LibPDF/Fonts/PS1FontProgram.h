@@ -35,8 +35,6 @@ private:
     static PDFErrorOr<ByteBuffer> decrypt(ReadonlyBytes const&, u16 key, size_t skip);
     static bool seek_name(Reader&, DeprecatedString const&);
 
-    Vector<ByteBuffer> m_character_names;
-
     u16 m_encryption_key { 4330 };
     int m_lenIV { 4 };
 };
