@@ -58,7 +58,7 @@ private:
 
 class HexDocumentFile final : public HexDocument {
 public:
-    explicit HexDocumentFile(NonnullRefPtr<Core::File> file);
+    static ErrorOr<NonnullOwnPtr<HexDocumentFile>> create(NonnullRefPtr<Core::File> file);
     virtual ~HexDocumentFile() = default;
 
     HexDocumentFile(HexDocumentFile&&) = default;
@@ -75,6 +75,7 @@ public:
     void clear_changes() override;
 
 private:
+    explicit HexDocumentFile(NonnullRefPtr<Core::File> file);
     void ensure_position_in_buffer(size_t position);
 
     NonnullRefPtr<Core::File> m_file;
