@@ -1578,7 +1578,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
 
     auto request = fetch_params.request();
 
-    auto load_request = LoadRequest::create_for_url_on_page(request->current_url(), nullptr);
+    Page* page = nullptr;
+    auto& global_object = realm.global_object();
+    if (is<HTML::Window>(global_object))
+        page = static_cast<HTML::Window&>(global_object).page();
+
+    auto load_request = LoadRequest::create_for_url_on_page(request->current_url(), page);
     load_request.set_method(DeprecatedString::copy(request->method()));
     for (auto const& header : *request->header_list())
         load_request.set_header(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value));
