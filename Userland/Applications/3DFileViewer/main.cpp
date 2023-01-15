@@ -318,22 +318,14 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
     builder.append(filename.bytes_as_string_view().split_view('.').at(0));
     builder.append(".bmp"sv);
 
-    DeprecatedString texture_path = Core::DeprecatedFile::absolute_path(builder.string_view());
-
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
-    if (Core::DeprecatedFile::exists(texture_path)) {
-        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_path);
+    auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), builder.string_view());
+    if (!response.is_error()) {
+        auto texture_file = response.release_value();
+        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_file.release_stream(), texture_file.filename());
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-    } else {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), builder.string_view());
-        if (!response.is_error()) {
-            auto texture_file = response.release_value();
-            auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_file.release_stream(), texture_file.filename());
-            if (!bitmap_or_error.is_error())
-                texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-        }
     }
 
     GLuint tex;
