@@ -7,6 +7,7 @@
 
 #include <LibGfx/Painter.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Fonts/CFF.h>
 #include <LibPDF/Fonts/PS1FontProgram.h>
 #include <LibPDF/Fonts/Type1Font.h>
 
@@ -19,6 +20,16 @@ PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRef
 
     if (!data.is_standard_font) {
         auto descriptor = TRY(dict->get_dict(document, CommonNames::FontDescriptor));
+        if (descriptor->contains(CommonNames::FontFile3)) {
+            auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile3));
+            auto font_file_dict = font_file_stream->dict();
+            if (font_file_dict->contains(CommonNames::Subtype) && font_file_dict->get_name(CommonNames::Subtype)->name() == CommonNames::Type1C) {
+                data.font_program = TRY(CFF::create(font_file_stream->bytes(), data.encoding));
+                if (!data.encoding)
+                    data.encoding = data.font_program->encoding();
+                return data;
+            }
+        }
         if (!descriptor->contains(CommonNames::FontFile))
             return data;
 

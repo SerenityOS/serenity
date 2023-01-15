@@ -132,6 +132,7 @@
     A(Title)                      \
     A(ToUnicode)                  \
     A(Type)                       \
+    A(Type1C)                     \
     A(U)                          \
     A(UCR)                        \
     A(UseBlackPTComp)             \
