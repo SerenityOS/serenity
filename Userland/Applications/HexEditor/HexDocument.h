@@ -64,7 +64,7 @@ public:
     HexDocumentFile(HexDocumentFile&&) = default;
     HexDocumentFile(HexDocumentFile const&) = delete;
 
-    void set_file(NonnullOwnPtr<Core::Stream::File> file);
+    ErrorOr<void> set_file(NonnullOwnPtr<Core::Stream::File> file);
     NonnullOwnPtr<Core::Stream::File> const& file() const;
     ErrorOr<void> write_to_file();
     ErrorOr<void> write_to_file(Core::Stream::File& file);

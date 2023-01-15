@@ -141,7 +141,7 @@ ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::Stream::File> new_file)
     if (m_document->type() == HexDocument::Type::File) {
         auto& file_document = static_cast<HexDocumentFile&>(*m_document);
         TRY(file_document.write_to_file(*new_file));
-        file_document.set_file(move(new_file));
+        TRY(file_document.set_file(move(new_file)));
     } else {
         auto& memory_document = static_cast<HexDocumentMemory&>(*m_document);
         TRY(memory_document.write_to_file(*new_file));
