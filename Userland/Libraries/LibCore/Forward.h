@@ -22,6 +22,7 @@ class EventLoop;
 class File;
 class IODevice;
 class LocalServer;
+class MappedFile;
 class MimeData;
 class NetworkJob;
 class NetworkResponse;
