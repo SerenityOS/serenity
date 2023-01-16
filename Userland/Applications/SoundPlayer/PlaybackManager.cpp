@@ -114,10 +114,16 @@ void PlaybackManager::next_buffer()
             return;
         }
 
-        // FIXME: This should handle parsing failures gracefully and show them to the user.
-        auto buffer = m_loader->get_more_samples(m_samples_to_load_per_buffer).release_value();
+        auto buffer_or_error = m_loader->get_more_samples(m_samples_to_load_per_buffer);
+        if (buffer_or_error.is_error()) {
+            // FIXME: These errors should be shown to the user instead of being logged and then ignored
+            dbgln("Error while loading samples: {}", buffer_or_error.error().description);
+            return;
+        }
+        auto buffer = buffer_or_error.release_value();
         m_current_buffer.swap(buffer);
         VERIFY(m_resampler.has_value());
+
         m_resampler->reset();
         // FIXME: Handle OOM better.
         auto resampled = MUST(FixedArray<Audio::Sample>::try_create(m_resampler->resample(move(m_current_buffer)).span()));
