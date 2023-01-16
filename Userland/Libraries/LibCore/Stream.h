@@ -819,6 +819,11 @@ public:
         m_buffer.clear();
     }
 
+    ErrorOr<void> discard_bytes(size_t count)
+    {
+        return m_buffer.discard(count);
+    }
+
 private:
     ErrorOr<size_t> populate_read_buffer()
     {
@@ -875,8 +880,15 @@ public:
     virtual void close() override { m_helper.stream().close(); }
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode mode) override
     {
-        if (mode == SeekMode::FromCurrentPosition)
+        if (mode == SeekMode::FromCurrentPosition) {
+            // If possible, seek using the buffer alone.
+            if (0 <= offset && static_cast<u64>(offset) <= m_helper.buffered_data_size()) {
+                MUST(m_helper.discard_bytes(offset));
+                return TRY(m_helper.stream().tell()) - m_helper.buffered_data_size();
+            }
+
             offset = offset - m_helper.buffered_data_size();
+        }
 
         auto result = TRY(m_helper.stream().seek(offset, mode));
         m_helper.clear_buffer();

@@ -470,8 +470,9 @@ TEST_CASE(buffered_small_file_read)
 
 TEST_CASE(buffered_file_tell_and_seek)
 {
+    // We choose a buffer size of 12 bytes to cover half of the input file.
     auto file = Core::Stream::File::open("/usr/Tests/LibCore/small.txt"sv, Core::Stream::OpenMode::Read).release_value();
-    auto buffered_file = Core::Stream::BufferedFile::create(move(file)).release_value();
+    auto buffered_file = Core::Stream::BufferedFile::create(move(file), 12).release_value();
 
     // Initial state.
     {
@@ -529,12 +530,26 @@ TEST_CASE(buffered_file_tell_and_seek)
         EXPECT_EQ(current_offset, 0);
     }
 
-    // Read the first character.
+    // Read the first character. This should prime the buffer if it hasn't happened already.
     {
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'W');
         auto current_offset = buffered_file->tell().release_value();
         EXPECT_EQ(current_offset, 1);
+    }
+
+    // Seek beyond the buffer size, which should invalidate the buffer.
+    {
+        auto current_offset = buffered_file->seek(12, Core::Stream::SeekMode::SetPosition).release_value();
+        EXPECT_EQ(current_offset, 12);
+    }
+
+    // Ensure that we still read the correct contents from the new offset with a (presumably) freshly filled buffer.
+    {
+        auto character = buffered_file->read_value<char>().release_value();
+        EXPECT_EQ(character, 'r');
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 13);
     }
 }
 
