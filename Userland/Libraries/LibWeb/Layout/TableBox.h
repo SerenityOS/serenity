@@ -18,7 +18,12 @@ public:
     TableBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableBox() override;
 
-    static CSS::Display static_display() { return CSS::Display::from_short(CSS::Display::Short::Table); }
+    static CSS::Display static_display(bool inline_outside)
+    {
+        if (inline_outside)
+            return CSS::Display::from_short(CSS::Display::Short::InlineTable);
+        return CSS::Display::from_short(CSS::Display::Short::Table);
+    }
 };
 
 }

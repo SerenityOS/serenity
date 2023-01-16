@@ -18,7 +18,7 @@ public:
     TableRowBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableRowBox() override;
 
-    static CSS::Display static_display() { return CSS::Display { CSS::Display::Internal::TableRow }; }
+    static CSS::Display static_display(bool) { return CSS::Display { CSS::Display::Internal::TableRow }; }
 };
 
 }
