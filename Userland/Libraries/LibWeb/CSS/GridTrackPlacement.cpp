@@ -5,7 +5,7 @@
  */
 
 #include "GridTrackPlacement.h"
-#include <AK/DeprecatedString.h>
+#include <AK/StringBuilder.h>
 
 namespace Web::CSS {
 
@@ -15,14 +15,14 @@ GridTrackPlacement::GridTrackPlacement(int span_count_or_position, bool has_span
 {
 }
 
-GridTrackPlacement::GridTrackPlacement(DeprecatedString line_name, int span_count_or_position, bool has_span)
+GridTrackPlacement::GridTrackPlacement(String line_name, int span_count_or_position, bool has_span)
     : m_type(has_span ? Type::Span : Type::Position)
     , m_span_count_or_position(span_count_or_position)
     , m_line_name(line_name)
 {
 }
 
-GridTrackPlacement::GridTrackPlacement(DeprecatedString line_name, bool has_span)
+GridTrackPlacement::GridTrackPlacement(String line_name, bool has_span)
     : m_type(has_span ? Type::Span : Type::Position)
     , m_line_name(line_name)
 {

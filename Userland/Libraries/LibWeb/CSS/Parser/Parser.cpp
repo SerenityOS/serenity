@@ -6014,11 +6014,11 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
         return {};
 
     Vector<CSS::ExplicitGridTrack> repeat_params;
-    Vector<Vector<DeprecatedString>> line_names_list;
+    Vector<Vector<String>> line_names_list;
     auto last_object_was_line_names = false;
     while (part_two_tokens.has_next_token()) {
         auto token = part_two_tokens.next_token();
-        Vector<DeprecatedString> line_names;
+        Vector<String> line_names;
         if (token.is_block()) {
             if (last_object_was_line_names)
                 return {};
@@ -6028,7 +6028,10 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
-                line_names.append(current_block_token.token().ident());
+                auto maybe_string = String::from_utf8(current_block_token.token().ident());
+                if (maybe_string.is_error())
+                    return {};
+                line_names.append(maybe_string.value());
                 block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
@@ -6112,7 +6115,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
 {
     Vector<CSS::ExplicitGridTrack> track_list;
-    Vector<Vector<DeprecatedString>> line_names_list;
+    Vector<Vector<String>> line_names_list;
     auto last_object_was_line_names = false;
     TokenStream tokens { component_values };
     while (tokens.has_next_token()) {
@@ -6121,13 +6124,16 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             if (last_object_was_line_names)
                 return GridTrackSizeStyleValue::make_auto();
             last_object_was_line_names = true;
-            Vector<DeprecatedString> line_names;
+            Vector<String> line_names;
             if (!token.block().is_square())
                 return GridTrackSizeStyleValue::make_auto();
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
-                line_names.append(current_block_token.token().ident());
+                auto maybe_string = String::from_utf8(current_block_token.token().ident());
+                if (maybe_string.is_error())
+                    return {};
+                line_names.append(maybe_string.value());
                 block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
@@ -6189,14 +6195,17 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
         if (is_valid_integer(current_token))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
-        if (is_line_name(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(current_token.ident()));
+        if (is_line_name(current_token)) {
+            auto maybe_string = String::from_utf8(current_token.ident());
+            if (!maybe_string.is_error())
+                return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(maybe_string.value()));
+        }
         return {};
     }
 
     auto span_value = false;
     auto span_or_position_value = 0;
-    DeprecatedString line_name_value;
+    String line_name_value;
     while (true) {
         if (is_auto(current_token))
             return {};
@@ -6213,10 +6222,14 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
                 return {};
         }
         if (is_line_name(current_token)) {
-            if (line_name_value.is_empty())
-                line_name_value = current_token.ident();
-            else
+            if (line_name_value.is_empty()) {
+                auto maybe_string = String::from_utf8(current_token.ident());
+                if (maybe_string.is_error())
+                    return {};
+                line_name_value = maybe_string.release_value();
+            } else {
                 return {};
+            }
         }
         tokens.skip_whitespace();
         if (tokens.has_next_token())
