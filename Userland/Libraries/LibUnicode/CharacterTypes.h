@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
@@ -60,6 +61,7 @@ bool code_point_has_word_break_property(u32 code_point, WordBreakProperty proper
 bool code_point_has_sentence_break_property(u32 code_point, SentenceBreakProperty property);
 
 Vector<size_t> find_grapheme_segmentation_boundaries(Utf16View const&);
+Vector<size_t> find_word_segmentation_boundaries(Utf8View const&);
 Vector<size_t> find_word_segmentation_boundaries(Utf16View const&);
 Vector<size_t> find_sentence_segmentation_boundaries(Utf16View const&);
 
