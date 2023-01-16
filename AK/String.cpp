@@ -251,6 +251,36 @@ ErrorOr<String> String::vformatted(StringView fmtstr, TypeErasedFormatParams& pa
     return builder.to_string();
 }
 
+ErrorOr<Vector<String>> String::split(u32 separator, SplitBehavior split_behavior) const
+{
+    return split_limit(separator, 0, split_behavior);
+}
+
+ErrorOr<Vector<String>> String::split_limit(u32 separator, size_t limit, SplitBehavior split_behavior) const
+{
+    Vector<String> result;
+
+    if (is_empty())
+        return result;
+
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+
+    size_t substring_start = 0;
+    for (auto it = code_points().begin(); it != code_points().end() && (result.size() + 1) != limit; ++it) {
+        u32 code_point = *it;
+        if (code_point == separator) {
+            size_t substring_length = code_points().iterator_offset(it) - substring_start;
+            if (substring_length != 0 || keep_empty)
+                TRY(result.try_append(TRY(substring_from_byte_offset_with_shared_superstring(substring_start, substring_length))));
+            substring_start = code_points().iterator_offset(it) + it.underlying_code_point_length_in_bytes();
+        }
+    }
+    size_t tail_length = code_points().byte_length() - substring_start;
+    if (tail_length != 0 || keep_empty)
+        TRY(result.try_append(TRY(substring_from_byte_offset_with_shared_superstring(substring_start, tail_length))));
+    return result;
+}
+
 bool String::operator==(String const& other) const
 {
     if (is_short_string())

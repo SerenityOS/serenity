@@ -272,3 +272,23 @@ TEST_CASE(is_one_of)
     EXPECT(bar.is_one_of("bar"sv, "foo"sv));
     EXPECT(bar.is_one_of("bar"sv));
 }
+
+TEST_CASE(split)
+{
+    {
+        auto test = MUST(String::from_utf8("foo bar baz"sv));
+        auto parts = MUST(test.split(' '));
+        EXPECT_EQ(parts.size(), 3u);
+        EXPECT_EQ(parts[0], "foo");
+        EXPECT_EQ(parts[1], "bar");
+        EXPECT_EQ(parts[2], "baz");
+    }
+    {
+        auto test = MUST(String::from_utf8("ωΣ2ωΣω"sv));
+        auto parts = MUST(test.split(0x03A3u));
+        EXPECT_EQ(parts.size(), 3u);
+        EXPECT_EQ(parts[0], "ω"sv);
+        EXPECT_EQ(parts[1], "2ω"sv);
+        EXPECT_EQ(parts[2], "ω"sv);
+    }
+}
