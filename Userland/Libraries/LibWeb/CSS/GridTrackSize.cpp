@@ -152,7 +152,7 @@ ErrorOr<String> ExplicitGridTrack::to_string() const
     }
 }
 
-GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<DeprecatedString>> line_names)
+GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names)
     : m_track_list(track_list)
     , m_line_names(line_names)
 {

@@ -92,13 +92,13 @@ private:
 
 class GridTrackSizeList {
 public:
-    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<DeprecatedString>> line_names);
+    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names);
     GridTrackSizeList();
 
     static GridTrackSizeList make_auto();
 
     Vector<CSS::ExplicitGridTrack> track_list() const { return m_track_list; }
-    Vector<Vector<DeprecatedString>> line_names() const { return m_line_names; }
+    Vector<Vector<String>> line_names() const { return m_line_names; }
 
     ErrorOr<String> to_string() const;
     bool operator==(GridTrackSizeList const& other) const
@@ -108,7 +108,7 @@ public:
 
 private:
     Vector<CSS::ExplicitGridTrack> m_track_list;
-    Vector<Vector<DeprecatedString>> m_line_names;
+    Vector<Vector<String>> m_line_names;
 };
 
 class GridRepeat {
