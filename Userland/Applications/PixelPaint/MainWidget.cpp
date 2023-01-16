@@ -307,7 +307,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             dbgln("try_copy_bitmap() from Layer failed");
             return;
         }
-        GUI::Clipboard::the().set_bitmap(*bitmap);
+        auto layer_rect = editor->active_layer()->relative_rect();
+        HashMap<DeprecatedString, DeprecatedString> layer_metadata;
+        layer_metadata.set("pixelpaint-layer-x", DeprecatedString::number(layer_rect.x()));
+        layer_metadata.set("pixelpaint-layer-y", DeprecatedString::number(layer_rect.y()));
+
+        GUI::Clipboard::the().set_bitmap(*bitmap, layer_metadata);
     });
 
     m_copy_merged_action = GUI::Action::create(
@@ -333,7 +338,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         }
 
-        auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
+        auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
+        auto bitmap = data_and_type.as_bitmap();
         if (!bitmap)
             return;
 
@@ -343,6 +349,27 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         }
         auto layer = layer_result.release_value();
+
+        auto layer_x_position = data_and_type.metadata.get("pixelpaint-layer-x");
+        auto layer_y_position = data_and_type.metadata.get("pixelpaint-layer-y");
+        if (layer_x_position.has_value() && layer_y_position.has_value()) {
+            auto x = layer_x_position.value().to_int();
+            auto y = layer_y_position.value().to_int();
+            if (x.has_value() && x.value()) {
+                auto pasted_layer_location = Gfx::IntPoint { x.value(), y.value() };
+
+                auto pasted_layer_frame_rect = editor->content_to_frame_rect({ pasted_layer_location, layer->size() }).to_type<int>();
+                // If the pasted layer is entirely outside the canvas bounds, default to the top left.
+                if (!editor->content_rect().intersects(pasted_layer_frame_rect))
+                    pasted_layer_location = {};
+
+                layer->set_location(pasted_layer_location);
+                // Ensure the pasted layer is visible to the user.
+                if (!editor->frame_inner_rect().intersects(pasted_layer_frame_rect))
+                    editor->fit_content_to_view();
+            }
+        }
+
         editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
         editor->image().selection().clear();
