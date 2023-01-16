@@ -32,6 +32,8 @@ public:
     unsigned current_slide_number() const { return m_current_slide.value(); }
     unsigned current_frame_in_slide_number() const { return m_current_frame_in_slide.value(); }
 
+    bool has_a_next_frame() const;
+    bool has_a_previous_frame() const;
     void next_frame();
     void previous_frame();
     void go_to_first_slide();
