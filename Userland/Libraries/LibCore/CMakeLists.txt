@@ -18,8 +18,6 @@ set(SOURCES
     NetworkJob.cpp
     Notifier.cpp
     Object.cpp
-    Process.cpp
-    ProcessStatisticsReader.cpp
     Property.cpp
     SecretString.cpp
     SessionManagement.cpp
@@ -27,13 +25,13 @@ set(SOURCES
     StandardPaths.cpp
     Stream.cpp
     System.cpp
-    SystemServerTakeover.cpp
     TCPServer.cpp
     TempFile.cpp
     Timer.cpp
     UDPServer.cpp
     Version.cpp
 )
+
 if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
     list(APPEND SOURCES
         Account.cpp
@@ -41,6 +39,14 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
         GetPassword.cpp
         Group.cpp
         LocalServer.cpp
+    )
+endif()
+
+if (NOT WIN32)
+    list(APPEND SOURCES
+        Process.cpp
+        ProcessStatisticsReader.cpp
+        SystemServerTakeover.cpp
     )
 endif()
 
