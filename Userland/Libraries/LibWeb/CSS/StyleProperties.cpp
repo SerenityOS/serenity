@@ -745,4 +745,10 @@ Optional<CSS::BorderCollapse> StyleProperties::border_collapse() const
     return value_id_to_border_collapse(value->to_identifier());
 }
 
+Vector<Vector<String>> StyleProperties::grid_template_areas() const
+{
+    auto value = property(CSS::PropertyID::GridTemplateAreas);
+    return value->as_grid_template_area().grid_template_area();
+}
+
 }

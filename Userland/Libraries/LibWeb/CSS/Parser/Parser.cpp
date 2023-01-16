@@ -6292,6 +6292,22 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
+{
+    Vector<Vector<String>> grid_area_rows;
+    for (auto& component_value : component_values) {
+        Vector<String> grid_area_columns;
+        if (component_value.is(Token::Type::String)) {
+            auto const parts = String::from_utf8(component_value.token().string()).release_value_but_fixme_should_propagate_errors().split(' ').release_value_but_fixme_should_propagate_errors();
+            for (auto& part : parts) {
+                grid_area_columns.append(part);
+            }
+        }
+        grid_area_rows.append(move(grid_area_columns));
+    }
+    return GridTemplateAreaStyleValue::create(grid_area_rows);
+}
+
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     auto function_contains_var_or_attr = [](Function const& function, auto&& recurse) -> bool {
@@ -6428,6 +6444,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridColumn:
         if (auto parsed_value = parse_grid_track_placement_shorthand_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridTemplateAreas:
+        if (auto parsed_value = parse_grid_template_areas_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridColumnEnd:
