@@ -38,6 +38,7 @@ u32 canonical_combining_class(u32 code_point);
 // Use the full-string transformations for full case folding.
 u32 to_unicode_lowercase(u32 code_point);
 u32 to_unicode_uppercase(u32 code_point);
+u32 to_unicode_titlecase(u32 code_point);
 
 ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView, Optional<StringView> const& locale = {});
 ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView, Optional<StringView> const& locale = {});
