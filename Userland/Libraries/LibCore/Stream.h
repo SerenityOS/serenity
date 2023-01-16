@@ -875,8 +875,12 @@ public:
     virtual void close() override { m_helper.stream().close(); }
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode mode) override
     {
+        if (mode == SeekMode::FromCurrentPosition)
+            offset = offset - m_helper.buffered_data_size();
+
         auto result = TRY(m_helper.stream().seek(offset, mode));
         m_helper.clear_buffer();
+
         return result;
     }
     virtual ErrorOr<void> truncate(off_t length) override
