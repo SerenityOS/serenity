@@ -65,6 +65,7 @@ class FrequencyStyleValue;
 class GridMinMax;
 class GridRepeat;
 class GridSize;
+class GridTemplateAreaStyleValue;
 class GridTrackPlacement;
 class GridTrackPlacementShorthandStyleValue;
 class GridTrackPlacementStyleValue;

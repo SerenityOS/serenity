@@ -228,6 +228,7 @@ public:
         FlexFlow,
         Font,
         Frequency,
+        GridTemplateArea,
         GridTrackPlacement,
         GridTrackPlacementShorthand,
         GridTrackSizeList,
@@ -275,6 +276,7 @@ public:
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_frequency() const { return type() == Type::Frequency; }
+    bool is_grid_template_area() const { return type() == Type::GridTemplateArea; }
     bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
     bool is_grid_track_placement_shorthand() const { return type() == Type::GridTrackPlacementShorthand; }
     bool is_grid_track_size_list() const { return type() == Type::GridTrackSizeList; }
@@ -320,6 +322,7 @@ public:
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
     FrequencyStyleValue const& as_frequency() const;
+    GridTemplateAreaStyleValue const& as_grid_template_area() const;
     GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
     GridTrackSizeStyleValue const& as_grid_track_size_list() const;
@@ -363,6 +366,7 @@ public:
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
+    GridTemplateAreaStyleValue& as_grid_template_area() { return const_cast<GridTemplateAreaStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_template_area()); }
     GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
     GridTrackSizeStyleValue& as_grid_track_size_list() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list()); }
@@ -1050,6 +1054,25 @@ private:
     }
 
     Frequency m_frequency;
+};
+
+class GridTemplateAreaStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridTemplateAreaStyleValue> create(Vector<Vector<String>> grid_template_area);
+    virtual ~GridTemplateAreaStyleValue() override = default;
+
+    Vector<Vector<String>> const& grid_template_area() const { return m_grid_template_area; }
+    virtual ErrorOr<String> to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    explicit GridTemplateAreaStyleValue(Vector<Vector<String>> grid_template_area)
+        : StyleValue(Type::GridTemplateArea)
+        , m_grid_template_area(grid_template_area)
+    {
+    }
+
+    Vector<Vector<String>> m_grid_template_area;
 };
 
 class GridTrackPlacementStyleValue final : public StyleValue {

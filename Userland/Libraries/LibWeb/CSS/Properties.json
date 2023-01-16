@@ -855,6 +855,16 @@
       "string"
     ]
   },
+  "grid-template-areas": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "string"
+    ]
+  },
   "grid-template-columns": {
     "inherited": false,
     "initial": "auto",

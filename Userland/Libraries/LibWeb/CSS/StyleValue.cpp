@@ -140,6 +140,12 @@ GridTrackPlacementShorthandStyleValue const& StyleValue::as_grid_track_placement
     return static_cast<GridTrackPlacementShorthandStyleValue const&>(*this);
 }
 
+GridTemplateAreaStyleValue const& StyleValue::as_grid_template_area() const
+{
+    VERIFY(is_grid_template_area());
+    return static_cast<GridTemplateAreaStyleValue const&>(*this);
+}
+
 GridTrackPlacementStyleValue const& StyleValue::as_grid_track_placement() const
 {
     VERIFY(is_grid_track_placement());
@@ -1434,6 +1440,29 @@ bool GridTrackPlacementStyleValue::equals(StyleValue const& other) const
     return m_grid_track_placement == typed_other.grid_track_placement();
 }
 
+ErrorOr<String> GridTemplateAreaStyleValue::to_string() const
+{
+    StringBuilder builder;
+    for (size_t y = 0; y < m_grid_template_area.size(); ++y) {
+        for (size_t x = 0; x < m_grid_template_area[y].size(); ++x) {
+            builder.appendff("{}", m_grid_template_area[y][x]);
+            if (x < m_grid_template_area[y].size() - 1)
+                builder.append(" "sv);
+        }
+        if (y < m_grid_template_area.size() - 1)
+            builder.append(", "sv);
+    }
+    return builder.to_string();
+}
+
+bool GridTemplateAreaStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_grid_template_area();
+    return m_grid_template_area == typed_other.grid_template_area();
+}
+
 ErrorOr<String> GridTrackSizeStyleValue::to_string() const
 {
     return m_grid_track_size_list.to_string();
@@ -2526,6 +2555,11 @@ NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
     }
 
     return adopt_ref(*new ColorStyleValue(color));
+}
+
+NonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
+{
+    return adopt_ref(*new GridTemplateAreaStyleValue(grid_template_area));
 }
 
 NonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement grid_track_placement)
