@@ -57,6 +57,13 @@ ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView string, Optional<
     return builder.to_deprecated_string();
 }
 
+ErrorOr<String> to_unicode_titlecase_full(StringView string, Optional<StringView> const& locale)
+{
+    StringBuilder builder;
+    TRY(Detail::build_titlecase_string(Utf8View { string }, builder, locale));
+    return builder.to_string();
+}
+
 Optional<GeneralCategory> __attribute__((weak)) general_category_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_general_category(u32, GeneralCategory) { return {}; }
 Optional<Property> __attribute__((weak)) property_from_string(StringView) { return {}; }
