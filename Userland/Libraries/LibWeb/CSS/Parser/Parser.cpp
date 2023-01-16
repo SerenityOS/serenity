@@ -5934,6 +5934,10 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
     }
     if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
         return GridSize::make_auto();
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("max-content"sv))
+        return GridSize(GridSize::Type::MaxContent);
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("min-content"sv))
+        return GridSize(GridSize::Type::MinContent);
     auto dimension = parse_dimension(token);
     if (!dimension.has_value())
         return {};
