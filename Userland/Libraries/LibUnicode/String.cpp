@@ -26,4 +26,11 @@ ErrorOr<String> String::to_uppercase(Optional<StringView> const& locale) const
     return builder.to_string();
 }
 
+ErrorOr<String> String::to_titlecase(Optional<StringView> const& locale) const
+{
+    StringBuilder builder;
+    TRY(Unicode::Detail::build_titlecase_string(code_points(), builder, locale));
+    return builder.to_string();
+}
+
 }

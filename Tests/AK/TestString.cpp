@@ -163,6 +163,30 @@ TEST_CASE(to_uppercase)
     }
 }
 
+TEST_CASE(to_titlecase)
+{
+    {
+        auto string = MUST(String::from_utf8("foo bar baz"sv));
+        auto result = MUST(string.to_titlecase());
+        EXPECT_EQ(result, "Foo Bar Baz"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("foo \n \r bar \t baz"sv));
+        auto result = MUST(string.to_titlecase());
+        EXPECT_EQ(result, "Foo \n \r Bar \t Baz"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("f\"oo\" b'ar'"sv));
+        auto result = MUST(string.to_titlecase());
+        EXPECT_EQ(result, "F\"Oo\" B'Ar'"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("123dollars"sv));
+        auto result = MUST(string.to_titlecase());
+        EXPECT_EQ(result, "123Dollars"sv);
+    }
+}
+
 TEST_CASE(is_one_of)
 {
     auto foo = MUST(String::from_utf8("foo"sv));
