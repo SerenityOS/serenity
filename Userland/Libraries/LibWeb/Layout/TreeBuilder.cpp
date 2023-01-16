@@ -501,7 +501,7 @@ static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_
     VERIFY(!sequence.is_empty());
     auto& parent = *sequence.first()->parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
-    static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display());
+    static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display(parent.display().is_inline_outside()));
     auto wrapper = parent.heap().template allocate_without_realm<WrapperBoxType>(parent.document(), nullptr, move(computed_values));
     for (auto& child : sequence) {
         parent.remove_child(*child);
@@ -591,7 +591,10 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
         // all other values of non-inheritable properties are used on the table box and not the table wrapper box.
         // (Where the table element's values are not used on the table and table wrapper boxes, the initial values are used instead.)
         auto& mutable_wrapper_computed_values = static_cast<CSS::MutableComputedValues&>(wrapper_computed_values);
-        mutable_wrapper_computed_values.set_display(CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::FlowRoot));
+        if (table_box->display().is_inline_outside())
+            mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
+        else
+            mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::FlowRoot));
         mutable_wrapper_computed_values.set_position(table_box->computed_values().position());
         mutable_wrapper_computed_values.set_inset(table_box->computed_values().inset());
         mutable_wrapper_computed_values.set_float(table_box->computed_values().float_());

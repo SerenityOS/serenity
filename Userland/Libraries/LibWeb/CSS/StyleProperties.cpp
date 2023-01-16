@@ -555,6 +555,8 @@ CSS::Display StyleProperties::display() const
         return CSS::Display::from_short(CSS::Display::Short::ListItem);
     case CSS::ValueID::Table:
         return CSS::Display::from_short(CSS::Display::Short::Table);
+    case CSS::ValueID::InlineTable:
+        return CSS::Display::from_short(CSS::Display::Short::InlineTable);
     case CSS::ValueID::TableRow:
         return CSS::Display { CSS::Display::Internal::TableRow };
     case CSS::ValueID::TableCell:
