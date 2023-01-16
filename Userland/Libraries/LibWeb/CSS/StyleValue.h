@@ -228,6 +228,7 @@ public:
         FlexFlow,
         Font,
         Frequency,
+        GridAreaShorthand,
         GridTemplateArea,
         GridTrackPlacement,
         GridTrackPlacementShorthand,
@@ -276,6 +277,7 @@ public:
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_frequency() const { return type() == Type::Frequency; }
+    bool is_grid_area_shorthand() const { return type() == Type::GridAreaShorthand; }
     bool is_grid_template_area() const { return type() == Type::GridTemplateArea; }
     bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
     bool is_grid_track_placement_shorthand() const { return type() == Type::GridTrackPlacementShorthand; }
@@ -322,6 +324,7 @@ public:
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
     FrequencyStyleValue const& as_frequency() const;
+    GridAreaShorthandStyleValue const& as_grid_area_shorthand() const;
     GridTemplateAreaStyleValue const& as_grid_template_area() const;
     GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
@@ -366,6 +369,7 @@ public:
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
+    GridAreaShorthandStyleValue& as_grid_area_shorthand() { return const_cast<GridAreaShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_area_shorthand()); }
     GridTemplateAreaStyleValue& as_grid_template_area() { return const_cast<GridTemplateAreaStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_template_area()); }
     GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
@@ -1122,6 +1126,42 @@ private:
 
     NonnullRefPtr<GridTrackPlacementStyleValue> m_start;
     NonnullRefPtr<GridTrackPlacementStyleValue> m_end;
+};
+
+class GridAreaShorthandStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridAreaShorthandStyleValue> create(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
+    {
+        return adopt_ref(*new GridAreaShorthandStyleValue(row_start, column_start, row_end, column_end));
+    }
+    static NonnullRefPtr<GridAreaShorthandStyleValue> create(GridTrackPlacement row_start, GridTrackPlacement column_start, GridTrackPlacement row_end, GridTrackPlacement column_end)
+    {
+        return adopt_ref(*new GridAreaShorthandStyleValue(GridTrackPlacementStyleValue::create(row_start), GridTrackPlacementStyleValue::create(column_start), GridTrackPlacementStyleValue::create(row_end), GridTrackPlacementStyleValue::create(column_end)));
+    }
+    virtual ~GridAreaShorthandStyleValue() override = default;
+
+    NonnullRefPtr<GridTrackPlacementStyleValue> row_start() const { return m_row_start; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> column_start() const { return m_column_start; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> row_end() const { return m_row_end; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> column_end() const { return m_column_end; }
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    GridAreaShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
+        : StyleValue(Type::GridAreaShorthand)
+        , m_row_start(row_start)
+        , m_column_start(column_start)
+        , m_row_end(row_end)
+        , m_column_end(column_end)
+    {
+    }
+
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_row_start;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_column_start;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_row_end;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_column_end;
 };
 
 class GridTrackSizeStyleValue final : public StyleValue {

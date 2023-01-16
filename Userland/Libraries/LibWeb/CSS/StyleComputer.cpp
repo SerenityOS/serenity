@@ -520,6 +520,22 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::GridArea) {
+        if (value.is_grid_area_shorthand()) {
+            auto const& shorthand = value.as_grid_area_shorthand();
+            style.set_property(CSS::PropertyID::GridRowStart, shorthand.row_start());
+            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.column_start());
+            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.row_end());
+            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.column_end());
+            return;
+        }
+        style.set_property(CSS::PropertyID::GridRowStart, value);
+        style.set_property(CSS::PropertyID::GridColumnStart, value);
+        style.set_property(CSS::PropertyID::GridRowEnd, value);
+        style.set_property(CSS::PropertyID::GridColumnEnd, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::GridColumn) {
         if (value.is_grid_track_placement_shorthand()) {
             auto const& shorthand = value.as_grid_track_placement_shorthand();

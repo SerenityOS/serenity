@@ -92,6 +92,7 @@ public:
     CSS::GridTrackPlacement grid_row_start() const;
     Optional<CSS::BorderCollapse> border_collapse() const;
     Vector<Vector<String>> grid_template_areas() const;
+    String grid_area() const;
 
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;

@@ -740,6 +740,22 @@
       "column-gap"
     ]
   },
+  "grid-area": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "string"
+    ],
+    "longhands": [
+      "grid-column-end",
+      "grid-column-start",
+      "grid-row-end",
+      "grid-row-start"
+    ]
+  },
   "grid-column": {
     "inherited": false,
     "initial": "auto",

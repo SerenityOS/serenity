@@ -6292,6 +6292,82 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    Token current_token;
+
+    auto parse_placement_tokens = [&](Vector<ComponentValue>& placement_tokens, bool check_for_delimiter = true) -> void {
+        current_token = tokens.next_token().token();
+        while (true) {
+            if (check_for_delimiter && current_token.is(Token::Type::Delim) && current_token.delim() == "/"sv)
+                break;
+            placement_tokens.append(current_token);
+            tokens.skip_whitespace();
+            if (!tokens.has_next_token())
+                break;
+            current_token = tokens.next_token().token();
+        }
+    };
+
+    Vector<ComponentValue> row_start_placement_tokens;
+    parse_placement_tokens(row_start_placement_tokens);
+
+    Vector<ComponentValue> column_start_placement_tokens;
+    if (tokens.has_next_token())
+        parse_placement_tokens(column_start_placement_tokens);
+
+    Vector<ComponentValue> row_end_placement_tokens;
+    if (tokens.has_next_token())
+        parse_placement_tokens(row_end_placement_tokens);
+
+    Vector<ComponentValue> column_end_placement_tokens;
+    if (tokens.has_next_token())
+        parse_placement_tokens(column_end_placement_tokens, false);
+
+    // https://www.w3.org/TR/css-grid-2/#placement-shorthands
+    // The grid-area property is a shorthand for grid-row-start, grid-column-start, grid-row-end and
+    // grid-column-end.
+    auto row_start_style_value = parse_grid_track_placement(row_start_placement_tokens);
+    auto column_start_style_value = parse_grid_track_placement(column_start_placement_tokens);
+    auto row_end_style_value = parse_grid_track_placement(row_end_placement_tokens);
+    auto column_end_style_value = parse_grid_track_placement(column_end_placement_tokens);
+
+    // If four <grid-line> values are specified, grid-row-start is set to the first value, grid-column-start
+    // is set to the second value, grid-row-end is set to the third value, and grid-column-end is set to the
+    // fourth value.
+    auto row_start = GridTrackPlacement::make_auto();
+    auto column_start = GridTrackPlacement::make_auto();
+    auto row_end = GridTrackPlacement::make_auto();
+    auto column_end = GridTrackPlacement::make_auto();
+
+    if (row_start_style_value)
+        row_start = row_start_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+
+    // When grid-column-start is omitted, if grid-row-start is a <custom-ident>, all four longhands are set to
+    // that value. Otherwise, it is set to auto.
+    if (column_start_style_value)
+        column_start = column_start_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+    else
+        column_start = row_start;
+
+    // When grid-row-end is omitted, if grid-row-start is a <custom-ident>, grid-row-end is set to that
+    // <custom-ident>; otherwise, it is set to auto.
+    if (row_end_style_value)
+        row_end = row_end_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+    else
+        row_end = column_start;
+
+    // When grid-column-end is omitted, if grid-column-start is a <custom-ident>, grid-column-end is set to
+    // that <custom-ident>; otherwise, it is set to auto.
+    if (column_end_style_value)
+        column_end = column_end_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+    else
+        column_end = row_end;
+
+    return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end);
+}
+
 RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
 {
     Vector<Vector<String>> grid_area_rows;
@@ -6444,6 +6520,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridColumn:
         if (auto parsed_value = parse_grid_track_placement_shorthand_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridArea:
+        if (auto parsed_value = parse_grid_area_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateAreas:

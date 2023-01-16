@@ -62,6 +62,7 @@ class FontStyleValue;
 class Frequency;
 class FrequencyPercentage;
 class FrequencyStyleValue;
+class GridAreaShorthandStyleValue;
 class GridMinMax;
 class GridRepeat;
 class GridSize;
