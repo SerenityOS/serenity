@@ -554,6 +554,8 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     });
 
     m_margin_state.block_container_y_position_update_callback = {};
+    m_left_floats.clear();
+    m_right_floats.clear();
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
