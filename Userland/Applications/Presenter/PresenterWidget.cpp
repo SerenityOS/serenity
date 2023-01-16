@@ -71,12 +71,14 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         if (m_current_presentation) {
             m_current_presentation->next_frame();
             update_web_view();
+            update_slides_actions();
         }
     });
     auto previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->previous_frame();
             update_web_view();
+            update_slides_actions();
         }
     });
     TRY(presentation_menu.try_add_action(next_slide_action));
@@ -103,6 +105,14 @@ void PresenterWidget::update_web_view()
     m_web_view->run_javascript(DeprecatedString::formatted("goto({}, {})", m_current_presentation->current_slide_number(), m_current_presentation->current_frame_in_slide_number()));
 }
 
+void PresenterWidget::update_slides_actions()
+{
+    if (m_current_presentation) {
+        m_next_slide_action->set_enabled(m_current_presentation->has_a_next_frame());
+        m_previous_slide_action->set_enabled(m_current_presentation->has_a_previous_frame());
+    }
+}
+
 void PresenterWidget::set_file(StringView file_name)
 {
     auto presentation = Presentation::load_from_file(file_name);
@@ -113,6 +123,7 @@ void PresenterWidget::set_file(StringView file_name)
         window()->set_title(DeprecatedString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
         set_min_size(m_current_presentation->normative_size());
         m_web_view->load_html(MUST(m_current_presentation->render()), "presenter://slide.html"sv);
+        update_slides_actions();
     }
 }
 
