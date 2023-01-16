@@ -259,6 +259,12 @@ function(lagom_test source)
     )
 endfunction()
 
+function(serenity_test test_src sub_dir)
+    cmake_parse_arguments(PARSE_ARGV 2 SERENITY_TEST "MAIN_ALREADY_DEFINED" "CUSTOM_MAIN" "LIBS")
+    # FIXME: Pass MAIN_ALREADY_DEFINED and CUSTOM_MAIN to support tests that use them.
+    lagom_test(${test_src} LIBS ${SERENITY_TEST_LIBS} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endfunction()
+
 function(serenity_bin name)
     add_executable(${name} ${SOURCES} ${GENERATED_SOURCES})
     add_executable(Lagom::${name} ALIAS ${name})
@@ -557,17 +563,29 @@ if (BUILD_LAGOM)
         )
 
         # LibTest tests from Tests/
-        # AK
-        file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
-        foreach(source ${AK_TEST_SOURCES})
-            lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
-        endforeach()
-        target_link_libraries(TestString PRIVATE LibUnicode)
+        set(TEST_DIRECTORIES
+            AK
+            LibAudio
+            LibCrypto
+            LibCompress
+            LibGL
+            LibLocale
+            LibMarkdown
+            LibPDF
+            LibSQL
+            LibTextCodec
+            LibTLS
+            LibTTF
+            LibTimeZone
+            LibUnicode
+            LibVideo
+        )
+        if (ENABLE_LAGOM_LIBWEB)
+            list(APPEND TEST_DIRECTORIES LibWeb)
+        endif()
 
-        # LibAudio
-        file(GLOB LIBAUDIO_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibAudio/*.cpp")
-        foreach(source ${LIBAUDIO_TEST_SOURCES})
-            lagom_test(${source} LIBS LibAudio WORKING_DIRECTORY ${FLAC_TEST_PATH})
+        foreach (dir IN LISTS TEST_DIRECTORIES)
+            add_serenity_subdirectory("Tests/${dir}")
         endforeach()
 
         # LibCore
@@ -577,104 +595,9 @@ if (BUILD_LAGOM)
             lagom_test(../../Tests/LibCore/TestLibCoreFileWatcher.cpp)
         endif()
 
-        # Crypto
-        file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
-        foreach(source ${LIBCRYPTO_TESTS})
-            lagom_test(${source} LIBS LibCrypto)
-        endforeach()
-
-        # Compress
-        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibCompress/brotli-test-files" DESTINATION "./")
-        file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
-        foreach(source ${LIBCOMPRESS_TESTS})
-            lagom_test(${source} LIBS LibCompress)
-        endforeach()
-
-        # GL
-        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibGL/reference-images" DESTINATION "./")
-        file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
-        foreach(source ${LIBGL_TESTS})
-            lagom_test(${source} LIBS LibGfx LibGL LibGPU LibSoftGPU)
-        endforeach()
-
-        # Locale
-        file(GLOB LIBLOCALE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibLocale/*.cpp")
-        foreach(source ${LIBLOCALE_TEST_SOURCES})
-            lagom_test(${source} LIBS LibLocale LibUnicode)
-        endforeach()
-
-        # PDF
-        file(GLOB LIBPDF_TESTS CONFIGURE_DEPENDS "../../Tests/LibPDF/*.cpp")
-        foreach(source ${LIBPDF_TESTS})
-            lagom_test(${source} LIBS LibPDF WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Base/home/anon/Documents/pdf/)
-        endforeach()
-
-        # Regex
-        file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Tests/LibRegex/*.cpp")
         # RegexLibC test POSIX <regex.h> and contains many Serenity extensions
-        # It is therefore not reasonable to run it on Lagom
-        list(REMOVE_ITEM LIBREGEX_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibRegex/RegexLibC.cpp")
-        foreach(source ${LIBREGEX_TESTS})
-            lagom_test(${source} LIBS LibRegex)
-        endforeach()
-
-        # SQL
-        file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibSQL/*.cpp")
-        foreach(source ${LIBSQL_TEST_SOURCES})
-            lagom_test(${source} LIBS LibSQL)
-        endforeach()
-
-        # TextCodec
-        file(GLOB LIBTEXTCODEC_TESTS CONFIGURE_DEPENDS "../../Tests/LibTextCodec/*.cpp")
-        foreach(source ${LIBTEXTCODEC_TESTS})
-            lagom_test(${source} LIBS LibTextCodec
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTextCodec)
-        endforeach()
-
-        # TLS
-        file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
-        foreach(source ${LIBTLS_TESTS})
-            lagom_test(${source} LIBS LibCrypto LibTLS
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
-        endforeach()
-
-        # TTF
-        file(GLOB LIBTTF_TESTS CONFIGURE_DEPENDS "../../Tests/LibTTF/*.cpp")
-        foreach(source ${LIBTTF_TESTS})
-            lagom_test(${source} LIBS LibGfx)
-        endforeach()
-
-        # LibTimeZone
-        file(GLOB LIBTIMEZONE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibTimeZone/*.cpp")
-        foreach(source ${LIBTIMEZONE_TEST_SOURCES})
-            lagom_test(${source} LIBS LibTimeZone)
-
-            get_filename_component(target "${source}" NAME_WLE)
-            target_compile_definitions("${target}" PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
-        endforeach()
-
-        # Unicode
-        file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
-        foreach(source ${LIBUNICODE_TEST_SOURCES})
-            lagom_test(${source} LIBS LibUnicode)
-        endforeach()
-
-        # Video
-        file(GLOB LIBVIDEO_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibVideo/*.cpp")
-        foreach(source ${LIBVIDEO_TEST_SOURCES})
-            lagom_test(${source} LIBS LibVideo
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibVideo)
-        endforeach()
-
-        # Web
-        if (ENABLE_LAGOM_LIBWEB)
-            file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibWeb/tokenizer-test.html" DESTINATION "./")
-            file(GLOB LIBWEB_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibWeb/*.cpp")
-            foreach(source ${LIBWEB_TEST_SOURCES})
-                lagom_test(${source} LIBS LibWeb
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibWeb)
-            endforeach()
-        endif()
+        # It is therefore not reasonable to run it on Lagom, and we only run the Regex test
+        lagom_test(../../Tests/LibRegex/Regex.cpp LIBS LibRegex WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibRegex)
 
         # JavaScriptTestRunner + LibTest tests
         # test-js
@@ -703,15 +626,6 @@ if (BUILD_LAGOM)
                 COMMAND test-spreadsheet --show-progress=false
         )
         set_tests_properties(Spreadsheet PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
-
-
-        # Markdown
-        include(commonmark_spec)
-        file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
-        foreach(source ${LIBMARKDOWN_TEST_SOURCES})
-            lagom_test(${source} LIBS LibMarkdown)
-        endforeach()
-        set_tests_properties(TestCommonmark PROPERTIES DISABLED YES)
 
         # test-wasm
         add_executable(test-wasm
