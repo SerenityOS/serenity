@@ -322,6 +322,11 @@ public:
         return m_fd;
     }
 
+    int fd() const
+    {
+        return m_fd;
+    }
+
     virtual ~File() override
     {
         if (m_should_close_file_descriptor == ShouldCloseFileDescriptor::Yes)
