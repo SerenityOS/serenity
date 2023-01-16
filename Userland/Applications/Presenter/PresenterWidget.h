@@ -39,6 +39,7 @@ protected:
 
 private:
     void update_web_view();
+    void update_slides_actions();
 
     RefPtr<WebView::OutOfProcessWebView> m_web_view;
 
